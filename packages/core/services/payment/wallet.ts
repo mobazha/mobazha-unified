@@ -50,10 +50,11 @@ class WalletService {
 
   // 获取以太坊提供者
   private getEthereumProvider(): BrowserProvider | null {
-    if (!this.hasEthereumProvider()) {
+    if (!this.hasEthereumProvider() || !window.ethereum) {
       return null;
     }
-    return new BrowserProvider(window.ethereum);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new BrowserProvider(window.ethereum as any);
   }
 
   // 连接钱包
@@ -125,7 +126,7 @@ class WalletService {
 
   // 切换链
   async switchChain(chainId: ChainId): Promise<boolean> {
-    if (!this.hasEthereumProvider()) {
+    if (!this.hasEthereumProvider() || !window.ethereum) {
       return false;
     }
 
@@ -138,9 +139,11 @@ class WalletService {
       return false;
     }
 
+    const ethereum = window.ethereum;
+
     try {
       // 尝试切换链
-      await window.ethereum.request({
+      await ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chainIdToHex(chainId) }],
       });
@@ -150,7 +153,7 @@ class WalletService {
       const error = switchError as { code?: number };
       if (error.code === 4902) {
         try {
-          await window.ethereum.request({
+          await ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [
               {
@@ -178,7 +181,7 @@ class WalletService {
 
   // 检测钱包提供者名称
   private detectProviderName(): string {
-    if (!this.hasEthereumProvider()) return 'Unknown';
+    if (!this.hasEthereumProvider() || !window.ethereum) return 'Unknown';
 
     const ethereum = window.ethereum;
     if (ethereum.isMetaMask) return 'MetaMask';
@@ -191,20 +194,32 @@ class WalletService {
 
   // 设置提供者事件监听
   private setupProviderListeners(): void {
-    if (!this.hasEthereumProvider()) return;
+    if (!this.hasEthereumProvider() || !window.ethereum) return;
 
-    window.ethereum.on('accountsChanged', this.handleAccountsChanged);
-    window.ethereum.on('chainChanged', this.handleChainChanged);
-    window.ethereum.on('disconnect', this.handleDisconnect);
+    window.ethereum.on(
+      'accountsChanged',
+      this.handleAccountsChanged as (...args: unknown[]) => void
+    );
+    window.ethereum.on('chainChanged', this.handleChainChanged as (...args: unknown[]) => void);
+    window.ethereum.on('disconnect', this.handleDisconnect as (...args: unknown[]) => void);
   }
 
   // 移除提供者事件监听
   private removeProviderListeners(): void {
-    if (!this.hasEthereumProvider()) return;
+    if (!this.hasEthereumProvider() || !window.ethereum) return;
 
-    window.ethereum.removeListener('accountsChanged', this.handleAccountsChanged);
-    window.ethereum.removeListener('chainChanged', this.handleChainChanged);
-    window.ethereum.removeListener('disconnect', this.handleDisconnect);
+    window.ethereum.removeListener(
+      'accountsChanged',
+      this.handleAccountsChanged as (...args: unknown[]) => void
+    );
+    window.ethereum.removeListener(
+      'chainChanged',
+      this.handleChainChanged as (...args: unknown[]) => void
+    );
+    window.ethereum.removeListener(
+      'disconnect',
+      this.handleDisconnect as (...args: unknown[]) => void
+    );
   }
 
   // 处理账户变更
