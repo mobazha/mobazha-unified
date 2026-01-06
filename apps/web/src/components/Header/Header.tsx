@@ -28,7 +28,7 @@ export const Header: React.FC = () => {
             <Input
               placeholder="Search products, stores..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               fullWidth
               leftIcon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,9 @@ export const Header: React.FC = () => {
               <Input
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSearchQuery(e.target.value)
+                }
                 fullWidth
               />
             </div>

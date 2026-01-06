@@ -67,7 +67,7 @@ export interface Address {
 /**
  * 加密货币类型
  */
-export type CryptoType = 'BTC' | 'ETH' | 'LTC' | 'BCH' | 'ZEC' | 'BSC' | 'USDT';
+export type CryptoType = 'BTC' | 'ETH' | 'TETH' | 'LTC' | 'BCH' | 'ZEC' | 'BSC' | 'USDT';
 
 /**
  * 法币类型

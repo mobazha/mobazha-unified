@@ -55,7 +55,7 @@ export function useSales() {
     } finally {
       setIsLoading(false);
     }
-  }, [refetch]);
+  }, []);
 
   useEffect(() => {
     refetch();

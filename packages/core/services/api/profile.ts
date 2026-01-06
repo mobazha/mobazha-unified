@@ -3,7 +3,7 @@
  */
 
 import type { UserProfile, UserSettings } from '../../types';
-import { get, post, put, safeRequest } from './client';
+import { get, post, put } from './client';
 import { getGatewayUrl, getSearchUrl, getAuthHeaders, getHeadersWithContext } from './config';
 
 /**

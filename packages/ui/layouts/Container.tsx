@@ -1,6 +1,6 @@
 'use client';
 
-import React, { HTMLAttributes, forwardRef } from 'react';
+import { HTMLAttributes, forwardRef } from 'react';
 import { cn } from '../lib/utils';
 
 export type ContainerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';

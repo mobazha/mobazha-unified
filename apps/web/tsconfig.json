@@ -18,7 +18,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@mobazha/ui": ["../../packages/ui/index.ts"],
+      "@mobazha/ui/*": ["../../packages/ui/*"],
+      "@mobazha/core": ["../../packages/core/index.ts"],
+      "@mobazha/core/*": ["../../packages/core/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -2,7 +2,9 @@
  * API 客户端基础
  */
 
-import type { ApiResponse } from '../../types';
+// ApiResponse type imported but used only for documentation
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { ApiResponse as _ApiResponse } from '../../types';
 
 /**
  * 请求选项
