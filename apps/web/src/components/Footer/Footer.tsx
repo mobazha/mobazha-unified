@@ -65,7 +65,7 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-background-alt border-t border-border pt-16 pb-8">
+    <footer className="hidden md:block bg-background-alt border-t border-border pt-16 pb-8">
       <Container size="xl">
         {/* Main Footer Content */}
         <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
