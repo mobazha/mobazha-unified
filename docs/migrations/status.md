@@ -3,11 +3,11 @@
 ## 总体进度
 
 - 总功能数: 待完善
-- 已完成: 5 (核心层)
-- 进行中: 1 (Matrix 服务)
-- 未开始: UI 组件、页面
+- 已完成: 15+ (核心层 + 部分页面)
+- 进行中: Matrix 服务完善
+- 未开始: 部分 UI 组件、部分页面
 
-## Phase 1: 核心层迁移 (进行中)
+## Phase 1: 核心层迁移 (基本完成)
 
 | 模块 | 功能         | RN 源文件                   | Web 目标                                 | 状态 | 说明                      |
 | ---- | ------------ | --------------------------- | ---------------------------------------- | ---- | ------------------------- |
@@ -24,25 +24,48 @@
 | Core | 商品 Hooks   | N/A                         | `packages/core/hooks/useProducts.ts`     | ✅   | 列表/详情/搜索            |
 | Core | 订单 Hooks   | N/A                         | `packages/core/hooks/useOrders.ts`       | ✅   | 列表/详情/操作            |
 | Core | 用户 Hooks   | N/A                         | `packages/core/hooks/useProfile.ts`      | ✅   | 资料/在线状态             |
-| Core | Matrix 服务  | `services/matrixService.js` | `packages/core/services/matrix/`         | 🔄   | 聊天/加密/社区            |
+| Core | Matrix 服务  | `services/matrixService.js` | `packages/core/services/matrix/`         | ✅   | 基础框架已完成            |
 
-## Phase 2: UI 组件库 (待开始)
+## Phase 2: UI 组件库 (部分完成)
 
-| 组件        | RN 源                | Web 目标               | 状态 | 说明     |
-| ----------- | -------------------- | ---------------------- | ---- | -------- |
-| Button      | components/atoms     | packages/ui/components | ⏳   | 基础按钮 |
-| Avatar      | components/atoms     | packages/ui/components | ⏳   | 用户头像 |
-| ProductCard | components/templates | packages/ui/components | ⏳   | 商品卡片 |
-| ...         | ...                  | ...                    | ⏳   | ...      |
+| 组件            | RN 源                | Web 目标                   | 状态 | 说明       |
+| --------------- | -------------------- | -------------------------- | ---- | ---------- |
+| Button          | components/atoms     | packages/ui/components     | ✅   | 基础按钮   |
+| Avatar          | components/atoms     | packages/ui/components     | ✅   | 用户头像   |
+| Card            | components/atoms     | packages/ui/components     | ✅   | 卡片容器   |
+| Container       | N/A                  | packages/ui/layouts        | ✅   | 响应式容器 |
+| Grid            | N/A                  | packages/ui/layouts        | ✅   | 网格布局   |
+| Stack           | N/A                  | packages/ui/layouts        | ✅   | 堆叠布局   |
+| ChatList        | N/A                  | apps/web/components/Chat   | ✅   | 聊天列表   |
+| ChatMessages    | N/A                  | apps/web/components/Chat   | ✅   | 消息显示   |
+| WalletCard      | N/A                  | apps/web/components/Wallet | ✅   | 钱包卡片   |
+| TransactionList | N/A                  | apps/web/components/Wallet | ✅   | 交易列表   |
+| OrderCard       | N/A                  | apps/web/components/Order  | ✅   | 订单卡片   |
+| ProductCard     | components/templates | packages/ui/components     | ⏳   | 商品卡片   |
+| ProductSection  | N/A                  | apps/web/components        | ✅   | 商品区块   |
 
-## Phase 3: 页面迁移 (待开始)
+## Phase 3: 页面迁移 (部分完成)
 
-| 页面     | RN 源                  | Web 目标                    | 状态 |
-| -------- | ---------------------- | --------------------------- | ---- |
-| 首页     | screens/Home.js        | apps/web/app/page.tsx       | ⏳   |
-| 商品详情 | screens/Listing.js     | apps/web/app/listing/[slug] | ⏳   |
-| 店铺页   | screens/StoreDetail.js | apps/web/app/store/[peerId] | ⏳   |
-| ...      | ...                    | ...                         | ⏳   |
+| 页面       | RN 源                  | Web 目标                      | 状态 | 说明      |
+| ---------- | ---------------------- | ----------------------------- | ---- | --------- |
+| 首页       | screens/Home.js        | apps/web/app/page.tsx         | ✅   | 基础结构  |
+| 店铺页     | screens/StoreDetail.js | apps/web/app/store/[peerId]   | ✅   | 基础结构  |
+| 聊天列表   | screens/Chat.js        | apps/web/app/chat/page.tsx    | ✅   | Mock 数据 |
+| 聊天详情   | screens/ChatRoom.js    | apps/web/app/chat/[roomId]    | ✅   | Mock 数据 |
+| 钱包页     | screens/Wallet.js      | apps/web/app/wallet/page.tsx  | ✅   | Mock 数据 |
+| 订单列表   | screens/Orders.js      | apps/web/app/orders/page.tsx  | ✅   | Mock 数据 |
+| 订单详情   | screens/OrderDetail.js | apps/web/app/orders/[orderId] | ✅   | Mock 数据 |
+| 商品详情   | screens/Listing.js     | apps/web/app/listing/[slug]   | ⏳   | 待迁移    |
+| 搜索页     | screens/Search.js      | apps/web/app/search           | ⏳   | 待迁移    |
+| 设置页     | screens/Settings.js    | apps/web/app/settings         | ⏳   | 待迁移    |
+| 用户资料页 | screens/Profile.js     | apps/web/app/profile          | ⏳   | 待迁移    |
+
+## 下一步计划
+
+1. **商品详情页** - 迁移 Listing 页面
+2. **搜索功能** - 实现商品搜索页面
+3. **用户资料** - 个人资料和设置页面
+4. **真实 API 对接** - 替换 Mock 数据
 
 ---
 
