@@ -3,7 +3,7 @@
 ## 总体进度
 
 - 总功能数: 待完善
-- 已完成: 65+ (核心层 + 全部页面 + Mock/API 切换 + 响应式优化 + 真实API对接 + Matrix聊天 + PWA + i18n + 性能优化 + 测试覆盖 + E2E加密 + CI/CD + 监控告警)
+- 已完成: 70+ (核心层 + 全部页面 + Mock/API 切换 + 响应式优化 + 真实API对接 + Matrix聊天 + PWA + i18n + 性能优化 + 测试覆盖 + E2E加密 + CI/CD + 监控告警 + 主题系统)
 - 进行中: 功能完善
 - 未开始: 更多测试覆盖
 
@@ -44,6 +44,8 @@
 | ProductCard     | components/templates | packages/ui/components     | ✅   | 商品卡片（含骨架） |
 | ProductSection  | N/A                  | apps/web/components        | ✅   | 商品区块           |
 | MobileNav       | N/A                  | apps/web/components        | ✅   | 移动端底部导航     |
+| ThemeProvider   | N/A                  | apps/web/components        | ✅   | 主题上下文提供者   |
+| ThemeSwitcher   | N/A                  | apps/web/components        | ✅   | 主题切换器         |
 
 ## Phase 3: 页面迁移 (部分完成)
 
@@ -64,6 +66,20 @@
 | 商品编辑   | screens/editListing    | apps/web/app/listing/edit     | ✅   | 完整功能  |
 | 购物车     | screens/ShoppingCart   | apps/web/app/cart             | ✅   | 完整功能  |
 | 结算页     | screens/Checkout       | apps/web/app/checkout         | ✅   | 完整功能  |
+
+## Phase 4: 基础设施 (已完成)
+
+| 功能     | 目标路径                                | 状态 | 说明                          |
+| -------- | --------------------------------------- | ---- | ----------------------------- |
+| PWA 支持 | apps/web/public/manifest.json, sw.js    | ✅   | 离线支持、安装提示            |
+| 国际化   | packages/core/i18n/                     | ✅   | 9 种语言支持                  |
+| 性能优化 | packages/core/utils/performance.ts      | ✅   | 防抖、节流、缓存、懒加载      |
+| 测试覆盖 | packages/core/**tests**/                | ✅   | Vitest + Testing Library      |
+| E2E 加密 | packages/core/services/matrix/crypto.ts | ✅   | Matrix 端对端加密             |
+| CI/CD    | .github/workflows/                      | ✅   | GitHub Actions 自动化         |
+| 监控告警 | packages/core/services/monitoring/      | ✅   | 错误追踪、性能监控            |
+| 主题系统 | packages/core/theme/                    | ✅   | 6 种主题 + 亮色/暗色/跟随系统 |
+| 外部钱包 | packages/core/hooks/useWallet.ts        | ✅   | Web3Modal + 多链支持          |
 
 ## 下一步计划
 
