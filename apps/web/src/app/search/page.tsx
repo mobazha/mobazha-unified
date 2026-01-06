@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Avatar, Card, Skeleton } from '@mobazha/ui';
+import { Button, Avatar, Card, Skeleton, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
+import type { ProductContractType } from '@mobazha/ui';
 
 // Types
 interface Product {
@@ -22,7 +23,7 @@ interface Product {
   };
   rating: number;
   reviewCount: number;
-  contractType: 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
+  contractType: ProductContractType;
 }
 
 interface User {
@@ -153,53 +154,20 @@ export default function SearchPage() {
     setRecentSearches([]);
   };
 
-  // Product Card Component
-  const ProductCard = ({ product }: { product: Product }) => (
-    <Link href={`/product/${product.slug}`}>
-      <Card hoverable className="overflow-hidden h-full">
-        <div className="aspect-square relative bg-slate-100 dark:bg-slate-800">
-          <img
-            src={product.image}
-            alt={product.title}
-            className="w-full h-full object-cover"
-            onError={e => {
-              (e.target as HTMLImageElement).src =
-                'https://via.placeholder.com/400x400?text=No+Image';
-            }}
-          />
-          {product.contractType === 'RWA_TOKEN' && (
-            <span className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
-              RWA
-            </span>
-          )}
-          {product.contractType === 'DIGITAL_GOOD' && (
-            <span className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              Digital
-            </span>
-          )}
-          {product.contractType === 'SERVICE' && (
-            <span className="absolute top-2 right-2 bg-emerald-600 text-white text-xs px-2 py-1 rounded-full">
-              Service
-            </span>
-          )}
-        </div>
-        <div className="p-4">
-          <h3 className="font-medium text-slate-900 dark:text-white line-clamp-2 mb-2">
-            {product.title}
-          </h3>
-          <p className="text-lg font-bold text-emerald-600">
-            {product.currency}
-            {product.price.toFixed(2)}
-          </p>
-          <HStack gap="xs" align="center" className="mt-2 text-sm text-slate-500">
-            <span className="text-amber-500">★</span>
-            <span>
-              {product.rating} ({product.reviewCount})
-            </span>
-          </HStack>
-          <p className="text-sm text-slate-500 mt-1 truncate">{product.vendor.name}</p>
-        </div>
-      </Card>
+  // Render product item using imported ProductCard
+  const renderProductCard = (product: Product) => (
+    <Link key={product.id} href={`/product/${product.slug}`}>
+      <ProductCard
+        title={product.title}
+        imageUrl={product.image}
+        price={product.price}
+        currency={product.currency}
+        vendorName={product.vendor.name}
+        vendorAvatar={product.vendor.avatar}
+        rating={product.rating}
+        reviewCount={product.reviewCount}
+        contractType={product.contractType}
+      />
     </Link>
   );
 
@@ -468,21 +436,13 @@ export default function SearchPage() {
               {isLoading ? (
                 <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <Card key={i} className="overflow-hidden">
-                      <Skeleton variant="rounded" className="aspect-square" />
-                      <div className="p-4">
-                        <Skeleton variant="text" height={20} className="mb-2" />
-                        <Skeleton variant="text" height={24} width="60%" />
-                      </div>
-                    </Card>
+                    <ProductCardSkeleton key={i} />
                   ))}
                 </Grid>
               ) : activeTab === 'listings' ? (
                 products.length > 0 ? (
                   <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
-                    {products.map(product => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
+                    {products.map(product => renderProductCard(product))}
                   </Grid>
                 ) : (
                   <Card padding="xl" className="text-center">

@@ -6,6 +6,9 @@ import { Card } from '../Card';
 import { Avatar } from '../Avatar';
 import { Skeleton } from '../Skeleton';
 
+/** 商品合约类型 */
+export type ProductContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
+
 export interface ProductCardProps {
   /** 商品标题 */
   title: string;
@@ -27,8 +30,12 @@ export interface ProductCardProps {
   reviewCount?: number;
   /** 是否免费配送 */
   freeShipping?: boolean;
-  /** 是否数字商品 */
+  /** 是否数字商品 (已弃用，请使用 contractType) */
   isDigital?: boolean;
+  /** 商品合约类型 */
+  contractType?: ProductContractType;
+  /** 是否显示紧凑模式 */
+  compact?: boolean;
   /** 点击回调 */
   onClick?: () => void;
   /** 自定义类名 */
@@ -52,6 +59,14 @@ export interface ProductCardProps {
  * />
  * ```
  */
+// 商品类型标签配置
+const contractTypeConfig: Record<ProductContractType, { label: string; color: string }> = {
+  PHYSICAL_GOOD: { label: '', color: '' }, // 实物商品不显示标签
+  DIGITAL_GOOD: { label: 'Digital', color: 'bg-blue-500' },
+  SERVICE: { label: 'Service', color: 'bg-emerald-500' },
+  RWA_TOKEN: { label: 'RWA', color: 'bg-purple-600' },
+};
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   title,
   imageUrl,
@@ -64,6 +79,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   reviewCount,
   freeShipping = false,
   isDigital = false,
+  contractType,
+  compact = false,
   onClick,
   className,
 }) => {
@@ -71,6 +88,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const discountPercent = hasDiscount
     ? Math.round((1 - Number(price) / Number(originalPrice)) * 100)
     : 0;
+
+  // 确定显示的商品类型标签
+  const typeConfig = contractType
+    ? contractTypeConfig[contractType]
+    : isDigital
+      ? contractTypeConfig.DIGITAL_GOOD
+      : null;
 
   return (
     <Card
@@ -86,6 +110,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             src={imageUrl}
             alt={title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400">
@@ -107,24 +132,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         )}
 
-        {/* 数字商品标签 */}
-        {isDigital && (
-          <span className="absolute top-2 right-2 bg-emerald-500 text-white text-xs font-medium px-2 py-1 rounded">
-            Digital
+        {/* 商品类型标签 */}
+        {typeConfig?.label && (
+          <span
+            className={cn(
+              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded',
+              typeConfig.color
+            )}
+          >
+            {typeConfig.label}
           </span>
         )}
       </div>
 
       {/* 商品信息 */}
-      <div className="p-3 space-y-2">
+      <div className={cn('space-y-2', compact ? 'p-2' : 'p-3')}>
         {/* 标题 */}
-        <h3 className="font-medium text-slate-900 dark:text-white line-clamp-2 min-h-[2.5rem]">
+        <h3
+          className={cn(
+            'font-medium text-slate-900 dark:text-white line-clamp-2',
+            compact ? 'text-sm min-h-[2rem]' : 'min-h-[2.5rem]'
+          )}
+        >
           {title}
         </h3>
 
         {/* 价格 */}
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+          <span
+            className={cn(
+              'font-bold text-emerald-600 dark:text-emerald-400',
+              compact ? 'text-base' : 'text-lg'
+            )}
+          >
             {currency}
             {typeof price === 'number' ? price.toFixed(2) : price}
           </span>
@@ -136,23 +176,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* 评分 */}
+        {/* 评分 - 简化显示 */}
         {rating !== undefined && (
           <div className="flex items-center gap-1 text-sm">
-            <div className="flex items-center text-amber-500">
-              {[...Array(5)].map((_, i) => (
-                <svg
-                  key={i}
-                  className={cn(
-                    'w-4 h-4',
-                    i < Math.floor(rating) ? 'fill-current' : 'fill-slate-300'
-                  )}
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
+            <span className="text-amber-500">★</span>
             <span className="text-slate-500">
               {rating.toFixed(1)}
               {reviewCount !== undefined && ` (${reviewCount})`}
@@ -161,19 +188,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* 卖家信息 & 配送标签 */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
-          {vendorName && (
-            <div className="flex items-center gap-2 min-w-0">
-              <Avatar src={vendorAvatar} name={vendorName} size="xs" />
-              <span className="text-sm text-slate-500 truncate">{vendorName}</span>
-            </div>
-          )}
-          {freeShipping && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex-shrink-0">
-              Free Shipping
-            </span>
-          )}
-        </div>
+        {(vendorName || freeShipping) && (
+          <div
+            className={cn(
+              'flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700',
+              compact && 'pt-1'
+            )}
+          >
+            {vendorName && (
+              <div className="flex items-center gap-2 min-w-0">
+                {!compact && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
+                <span className={cn('text-slate-500 truncate', compact ? 'text-xs' : 'text-sm')}>
+                  {vendorName}
+                </span>
+              </div>
+            )}
+            {freeShipping && (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex-shrink-0">
+                Free Shipping
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   );
