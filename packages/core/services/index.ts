@@ -1,6 +1,6 @@
-// Services exports
-// 随着迁移进行逐步添加
+// API 服务
+export * from './api';
 
+// 其他服务（随迁移进行添加）
 // export * from './matrix';
-// export * from './api';
 // export * from './wallet';
