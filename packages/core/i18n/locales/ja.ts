@@ -231,6 +231,24 @@ export const ja: TranslationResource = {
     version: 'バージョン',
     termsOfService: '利用規約',
     privacyPolicy: 'プライバシーポリシー',
+    appearance: '外観',
+    chooseTheme: 'テーマを選択',
+    displayMode: '表示モード',
+  },
+
+  theme: {
+    classic: 'クラシックシアン',
+    classicDesc: 'Mobazhaブランドのクラシックカラー、爽やかで活気ある',
+    crypto: 'クリプトナイト',
+    cryptoDesc: 'ネオングリーンの暗い背景、暗号トレーダー向け',
+    business: 'ビジネスブルー',
+    businessDesc: 'プロフェッショナルなブルートーン、ビジネス向け',
+    cyberpunk: 'サイバーパンク',
+    cyberpunkDesc: '紫ピンクのグラデーション、NFTやデジタルアートに最適',
+    nature: 'トラストオアシス',
+    natureDesc: 'フォレストグリーン、信頼と持続可能性を伝える',
+    luxury: 'ラグジュアリーゴールド',
+    luxuryDesc: 'ブラックとゴールド、高級品取引向け',
   },
 
   errors: {

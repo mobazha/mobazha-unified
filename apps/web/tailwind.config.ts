@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class', // 启用 class 模式，支持主题切换
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,36 +11,49 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Mobazha 品牌色
+        // 语义化颜色 - 使用 CSS 变量支持动态主题
         primary: {
-          DEFAULT: '#00BCD4',
-          50: '#E0F7FA',
-          100: '#B2EBF2',
-          200: '#80DEEA',
-          300: '#4DD0E1',
-          400: '#26C6DA',
-          500: '#00BCD4',
-          600: '#00ACC1',
-          700: '#0097A7',
-          800: '#00838F',
-          900: '#006064',
+          DEFAULT: 'var(--color-primary)',
+          light: 'var(--color-primaryLight)',
+          dark: 'var(--color-primaryDark)',
         },
         secondary: {
-          DEFAULT: '#FF5722',
-          50: '#FBE9E7',
-          100: '#FFCCBC',
-          200: '#FFAB91',
-          300: '#FF8A65',
-          400: '#FF7043',
-          500: '#FF5722',
-          600: '#F4511E',
-          700: '#E64A19',
-          800: '#D84315',
-          900: '#BF360C',
+          DEFAULT: 'var(--color-secondary)',
+          light: 'var(--color-secondaryLight)',
+          dark: 'var(--color-secondaryDark)',
         },
+        accent: 'var(--color-accent)',
+        success: 'var(--color-success)',
+        warning: 'var(--color-warning)',
+        error: 'var(--color-error)',
+        info: 'var(--color-info)',
+
+        // 背景色
+        background: 'var(--color-background)',
+        'background-alt': 'var(--color-backgroundAlt)',
+        surface: 'var(--color-surface)',
+        'surface-hover': 'var(--color-surfaceHover)',
+
+        // 文字色
+        'text-primary': 'var(--color-textPrimary)',
+        'text-secondary': 'var(--color-textSecondary)',
+        'text-muted': 'var(--color-textMuted)',
+        'text-inverse': 'var(--color-textInverse)',
+
+        // 边框色
+        border: 'var(--color-border)',
+        'border-light': 'var(--color-borderLight)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['var(--font-heading, Inter)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono, JetBrains Mono)', 'monospace'],
+      },
+      boxShadow: {
+        glow: '0 0 20px var(--color-glow, transparent)',
+      },
+      backgroundImage: {
+        'theme-gradient': 'var(--color-gradient, none)',
       },
     },
   },

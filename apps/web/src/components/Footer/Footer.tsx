@@ -6,7 +6,7 @@ import { Container, Grid, HStack, VStack } from '@mobazha/ui';
 
 const footerLinks = {
   marketplace: [
-    { label: 'Browse Products', href: '/market' },
+    { label: 'Browse Products', href: '/marketplace' },
     { label: 'Categories', href: '/categories' },
     { label: 'Featured Stores', href: '/stores' },
     { label: 'Start Selling', href: '/sell' },
@@ -65,19 +65,19 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8">
+    <footer className="bg-background-alt border-t border-border pt-16 pb-8">
       <Container size="xl">
         {/* Main Footer Content */}
         <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">M</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                <span className="text-text-inverse font-bold text-lg">M</span>
               </div>
-              <span className="font-bold text-xl text-white">Mobazha</span>
+              <span className="font-bold text-xl text-text-primary">Mobazha</span>
             </Link>
-            <p className="text-sm text-slate-400 mb-4">
+            <p className="text-sm text-text-secondary mb-4">
               The decentralized marketplace for the future of commerce.
             </p>
             <HStack gap="sm">
@@ -87,7 +87,7 @@ export const Footer: React.FC = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-lg hover:bg-surface-hover transition-colors text-text-secondary hover:text-primary"
                   aria-label={social.label}
                 >
                   {social.icon}
@@ -98,12 +98,12 @@ export const Footer: React.FC = () => {
 
           {/* Links */}
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-white mb-2">Marketplace</h4>
+            <h4 className="font-semibold text-text-primary mb-2">Marketplace</h4>
             {footerLinks.marketplace.map(link => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm hover:text-emerald-400 transition-colors"
+                className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -111,12 +111,12 @@ export const Footer: React.FC = () => {
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-white mb-2">Resources</h4>
+            <h4 className="font-semibold text-text-primary mb-2">Resources</h4>
             {footerLinks.resources.map(link => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm hover:text-emerald-400 transition-colors"
+                className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -124,12 +124,12 @@ export const Footer: React.FC = () => {
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-white mb-2">Company</h4>
+            <h4 className="font-semibold text-text-primary mb-2">Company</h4>
             {footerLinks.company.map(link => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm hover:text-emerald-400 transition-colors"
+                className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -138,8 +138,8 @@ export const Footer: React.FC = () => {
         </Grid>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-500">
+        <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-text-muted">
             © {new Date().getFullYear()} Mobazha. All rights reserved.
           </p>
           <HStack gap="md">
@@ -147,7 +147,7 @@ export const Footer: React.FC = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-slate-500 hover:text-emerald-400 transition-colors"
+                className="text-sm text-text-muted hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>

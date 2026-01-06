@@ -231,6 +231,24 @@ export const de: TranslationResource = {
     version: 'Version',
     termsOfService: 'Nutzungsbedingungen',
     privacyPolicy: 'Datenschutzrichtlinie',
+    appearance: 'Erscheinungsbild',
+    chooseTheme: 'Design wählen',
+    displayMode: 'Anzeigemodus',
+  },
+
+  theme: {
+    classic: 'Klassisches Cyan',
+    classicDesc: 'Klassische Mobazha-Markenfarben, frisch und lebendig',
+    crypto: 'Krypto-Nacht',
+    cryptoDesc: 'Dunkler Hintergrund mit Neongrün, für Krypto-Händler',
+    business: 'Business-Blau',
+    businessDesc: 'Professionelle Blautöne für formelle Geschäfte',
+    cyberpunk: 'Cyberpunk',
+    cyberpunkDesc: 'Lila-Rosa-Verläufe, perfekt für NFT und digitale Kunst',
+    nature: 'Vertrauensoase',
+    natureDesc: 'Waldgrüne Töne, vermitteln Vertrauen und Nachhaltigkeit',
+    luxury: 'Luxus-Gold',
+    luxuryDesc: 'Schwarz und Gold für den Luxusgüterhandel',
   },
 
   errors: {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card } from '@mobazha/ui';
+import { useTheme, THEME_INFO } from '@mobazha/core';
 
 // Mock data
 const countries = [
@@ -112,6 +113,7 @@ const SettingGroup = ({ title, children }: SettingGroupProps) => (
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
 
   // State
   const [country, setCountry] = useState('US');
@@ -120,7 +122,7 @@ export default function SettingsPage() {
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [analytics, setAnalytics] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
 
   // Modal states
   const [showCountryModal, setShowCountryModal] = useState(false);
@@ -254,11 +256,17 @@ export default function SettingsPage() {
           {/* Appearance */}
           <SettingGroup title="Appearance">
             <SettingItem
+              title="Theme"
+              description={THEME_INFO[theme]?.displayName || 'Classic'}
+              value={THEME_INFO[theme]?.icon || '🌊'}
+              onClick={() => setShowThemeModal(true)}
+            />
+            <SettingItem
               title="Dark Mode"
-              description="Use dark theme"
+              description={mode === 'system' ? 'Following system' : isDark ? 'Enabled' : 'Disabled'}
               toggle
-              toggleValue={darkMode}
-              onToggle={setDarkMode}
+              toggleValue={isDark}
+              onToggle={value => setMode(value ? 'dark' : 'light')}
             />
           </SettingGroup>
 
@@ -417,6 +425,79 @@ export default function SettingsPage() {
                   )}
                 </button>
               ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Theme Modal */}
+      {showThemeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-lg">
+            <div className="p-4 border-b border-border flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-text-primary">Choose Theme</h2>
+              <button
+                onClick={() => setShowThemeModal(false)}
+                className="p-2 hover:bg-surface-hover rounded-lg"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {themes.map(t => (
+                  <button
+                    key={t.name}
+                    onClick={() => {
+                      setTheme(t.name as typeof theme);
+                    }}
+                    className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all ${
+                      theme === t.name
+                        ? 'bg-primary/10 border-2 border-primary'
+                        : 'bg-background-alt hover:bg-surface-hover border-2 border-transparent'
+                    }`}
+                  >
+                    <span className="text-3xl">{t.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-text-primary">{t.displayName}</p>
+                      <p className="text-xs text-text-muted truncate">{t.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="border-t border-border pt-4">
+                <h3 className="text-sm font-medium text-text-secondary mb-3">Display Mode</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'light', label: 'Light', icon: '☀️' },
+                    { value: 'dark', label: 'Dark', icon: '🌙' },
+                    { value: 'system', label: 'System', icon: '💻' },
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => setMode(option.value as typeof mode)}
+                      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                        mode === option.value
+                          ? 'bg-primary text-text-inverse'
+                          : 'bg-background-alt hover:bg-surface-hover text-text-primary'
+                      }`}
+                    >
+                      <span>{option.icon}</span>
+                      <span className="text-sm">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button fullWidth className="mt-6" onClick={() => setShowThemeModal(false)}>
+                Done
+              </Button>
             </div>
           </Card>
         </div>

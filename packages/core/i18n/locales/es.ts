@@ -231,6 +231,24 @@ export const es: TranslationResource = {
     version: 'Versión',
     termsOfService: 'Términos de servicio',
     privacyPolicy: 'Política de privacidad',
+    appearance: 'Apariencia',
+    chooseTheme: 'Elegir tema',
+    displayMode: 'Modo de visualización',
+  },
+
+  theme: {
+    classic: 'Cian clásico',
+    classicDesc: 'Colores clásicos de Mobazha, frescos y vibrantes',
+    crypto: 'Noche cripto',
+    cryptoDesc: 'Fondo oscuro con verde neón, para traders de cripto',
+    business: 'Azul empresarial',
+    businessDesc: 'Tonos azules profesionales para negocios formales',
+    cyberpunk: 'Cyberpunk',
+    cyberpunkDesc: 'Gradientes púrpura-rosa, perfecto para NFT y arte digital',
+    nature: 'Oasis de confianza',
+    natureDesc: 'Tonos verdes bosque, transmiten confianza y sostenibilidad',
+    luxury: 'Oro de lujo',
+    luxuryDesc: 'Negro y oro para comercio de artículos de lujo',
   },
 
   errors: {

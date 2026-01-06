@@ -62,10 +62,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <div className={cn('flex flex-col gap-1.5', fullWidth && 'w-full')}>
         {/* Label */}
         {label && (
-          <label
-            htmlFor={inputId}
-            className="text-sm font-medium text-slate-700 dark:text-slate-300"
-          >
+          <label htmlFor={inputId} className="text-sm font-medium text-text-secondary">
             {label}
           </label>
         )}
@@ -76,7 +73,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {leftIcon && (
             <div
               className={cn(
-                'absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none',
+                'absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none',
                 iconSizeStyles[size]
               )}
             >
@@ -90,19 +87,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             className={cn(
               // 基础样式
-              'w-full rounded-lg border bg-white dark:bg-slate-800',
-              'text-slate-900 dark:text-white placeholder:text-slate-400',
+              'w-full rounded-lg border bg-surface',
+              'text-text-primary placeholder:text-text-muted',
               'transition-all duration-200',
               // 边框状态
               error
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                ? 'border-error focus:border-error focus:ring-error/20'
                 : focused
-                  ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                  : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500',
+                  ? 'border-primary ring-2 ring-primary/20'
+                  : 'border-border hover:border-text-muted',
               // Focus 样式
-              'focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500',
+              'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
               // Disabled 样式
-              'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900',
+              'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-background-alt',
               // 尺寸
               sizeStyles[size],
               // 图标 padding
@@ -127,7 +124,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {rightIcon && (
             <div
               className={cn(
-                'absolute right-3 top-1/2 -translate-y-1/2 text-slate-400',
+                'absolute right-3 top-1/2 -translate-y-1/2 text-text-muted',
                 iconSizeStyles[size]
               )}
             >
@@ -138,9 +135,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {/* Error or Hint */}
         {(error || hint) && (
-          <p
-            className={cn('text-sm', error ? 'text-red-500' : 'text-slate-500 dark:text-slate-400')}
-          >
+          <p className={cn('text-sm', error ? 'text-error' : 'text-text-secondary')}>
             {error || hint}
           </p>
         )}

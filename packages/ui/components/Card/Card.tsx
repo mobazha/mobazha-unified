@@ -10,9 +10,9 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
-  outlined: 'bg-transparent border-2 border-slate-200 dark:border-slate-700',
-  elevated: 'bg-white dark:bg-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50',
+  default: 'bg-surface border border-border',
+  outlined: 'bg-transparent border-2 border-border',
+  elevated: 'bg-surface shadow-lg',
 };
 
 const paddingStyles = {
@@ -66,14 +66,8 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div ref={ref} className={cn('flex items-start justify-between mb-4', className)} {...props}>
         <div className="flex-1 min-w-0">
-          {title && (
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white truncate">
-              {title}
-            </h3>
-          )}
-          {subtitle && (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
-          )}
+          {title && <h3 className="text-lg font-semibold text-text-primary truncate">{title}</h3>}
+          {subtitle && <p className="text-sm text-text-secondary mt-0.5">{subtitle}</p>}
           {children}
         </div>
         {action && <div className="flex-shrink-0 ml-4">{action}</div>}
@@ -90,7 +84,7 @@ CardHeader.displayName = 'CardHeader';
 export const CardBody = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ children, className, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn('text-slate-700 dark:text-slate-300', className)} {...props}>
+      <div ref={ref} className={cn('text-text-secondary', className)} {...props}>
         {children}
       </div>
     );
@@ -108,7 +102,7 @@ export const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
       <div
         ref={ref}
         className={cn(
-          'flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700',
+          'flex items-center justify-end gap-3 mt-4 pt-4 border-t border-border',
           className
         )}
         {...props}

@@ -231,6 +231,24 @@ export const ru: TranslationResource = {
     version: 'Версия',
     termsOfService: 'Условия использования',
     privacyPolicy: 'Политика конфиденциальности',
+    appearance: 'Внешний вид',
+    chooseTheme: 'Выбрать тему',
+    displayMode: 'Режим отображения',
+  },
+
+  theme: {
+    classic: 'Классический голубой',
+    classicDesc: 'Классические цвета бренда Mobazha, свежие и яркие',
+    crypto: 'Крипто-ночь',
+    cryptoDesc: 'Тёмный фон с неоново-зелёным, для криптотрейдеров',
+    business: 'Деловой синий',
+    businessDesc: 'Профессиональные синие тона для бизнеса',
+    cyberpunk: 'Киберпанк',
+    cyberpunkDesc: 'Фиолетово-розовые градиенты, идеально для NFT',
+    nature: 'Оазис доверия',
+    natureDesc: 'Лесные зелёные тона, передают доверие и экологичность',
+    luxury: 'Роскошное золото',
+    luxuryDesc: 'Чёрный и золотой для торговли предметами роскоши',
   },
 
   errors: {

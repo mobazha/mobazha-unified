@@ -231,6 +231,24 @@ export const zh: TranslationResource = {
     version: '版本',
     termsOfService: '服务条款',
     privacyPolicy: '隐私政策',
+    appearance: '外观',
+    chooseTheme: '选择主题',
+    displayMode: '显示模式',
+  },
+
+  theme: {
+    classic: '经典青橙',
+    classicDesc: 'Mobazha 品牌经典配色，清新活力',
+    crypto: '暗夜交易',
+    cryptoDesc: '深色背景配霓虹绿，加密交易者的最爱',
+    business: '商务蓝调',
+    businessDesc: '专业稳重的蓝色调，适合正式商业交易',
+    cyberpunk: '赛博朋克',
+    cyberpunkDesc: '紫粉渐变的科技感，适合 NFT 和数字艺术',
+    nature: '信任绿洲',
+    natureDesc: '森林绿色调，传递信任与可持续理念',
+    luxury: '极简黑金',
+    luxuryDesc: '黑金配色，适合高端商品和奢侈品交易',
   },
 
   errors: {

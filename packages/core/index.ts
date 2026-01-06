@@ -1,6 +1,9 @@
 // Config
 export * from './config';
 
+// Theme (主题系统)
+export * from './theme';
+
 // Services
 export * from './services';
 

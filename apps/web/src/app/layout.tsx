@@ -1,7 +1,13 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { DevTools, MobileNav, PWAInstall, ServiceWorkerProvider } from '@/components';
+import {
+  DevTools,
+  MobileNav,
+  PWAInstall,
+  ServiceWorkerProvider,
+  ThemeProvider,
+} from '@/components';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,21 +40,46 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* 防闪烁脚本 - 在页面加载前立即应用主题 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const theme = localStorage.getItem('mobazha-theme') || 'classic';
+                  const mode = localStorage.getItem('mobazha-theme-mode') || 'system';
+                  let resolvedMode = mode;
+                  if (mode === 'system') {
+                    resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                  if (resolvedMode === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <ServiceWorkerProvider>
-          {/* Main content with bottom padding for mobile nav */}
-          <div className="pb-16 md:pb-0">{children}</div>
+        <ThemeProvider>
+          <ServiceWorkerProvider>
+            {/* Main content with bottom padding for mobile nav */}
+            <div className="pb-16 md:pb-0">{children}</div>
 
-          {/* Mobile bottom navigation */}
-          <MobileNav />
+            {/* Mobile bottom navigation */}
+            <MobileNav />
 
-          {/* PWA install prompt */}
-          <PWAInstall />
+            {/* PWA install prompt */}
+            <PWAInstall />
 
-          {/* Dev tools (only in development) */}
-          <DevTools />
-        </ServiceWorkerProvider>
+            {/* Dev tools (only in development) */}
+            <DevTools />
+          </ServiceWorkerProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

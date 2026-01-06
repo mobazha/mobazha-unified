@@ -41,18 +41,9 @@ const verifiedSizeStyles: Record<AvatarSize, string> = {
   xl: 'h-6 w-6',
 };
 
-// 根据名字生成颜色
+// 根据名字生成颜色 - 使用主题感知的颜色
 const getColorFromName = (name: string): string => {
-  const colors = [
-    'bg-emerald-500',
-    'bg-blue-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-orange-500',
-    'bg-teal-500',
-    'bg-indigo-500',
-    'bg-rose-500',
-  ];
+  const colors = ['bg-primary', 'bg-secondary', 'bg-accent', 'bg-info', 'bg-success', 'bg-warning'];
   const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[index % colors.length];
 };
@@ -105,7 +96,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       {/* Avatar Image or Fallback */}
       <div
         className={cn(
-          'rounded-full overflow-hidden flex items-center justify-center font-semibold text-white',
+          'rounded-full overflow-hidden flex items-center justify-center font-semibold text-text-inverse',
           sizeStyles[size],
           showFallback && bgColor
         )}
@@ -126,8 +117,8 @@ export const Avatar: React.FC<AvatarProps> = ({
       {showOnlineStatus && (
         <span
           className={cn(
-            'absolute bottom-0 right-0 rounded-full border-white',
-            isOnline ? 'bg-emerald-500' : 'bg-slate-400',
+            'absolute bottom-0 right-0 rounded-full border-surface',
+            isOnline ? 'bg-success' : 'bg-text-muted',
             statusSizeStyles[size]
           )}
         />
@@ -137,11 +128,11 @@ export const Avatar: React.FC<AvatarProps> = ({
       {verified && (
         <span
           className={cn(
-            'absolute -bottom-0.5 -right-0.5 bg-white rounded-full flex items-center justify-center',
+            'absolute -bottom-0.5 -right-0.5 bg-surface rounded-full flex items-center justify-center',
             verifiedSizeStyles[size]
           )}
         >
-          <svg className="h-full w-full text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-full w-full text-primary" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"

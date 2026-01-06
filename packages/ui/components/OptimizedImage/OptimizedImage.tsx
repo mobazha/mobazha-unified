@@ -112,14 +112,14 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-slate-100 dark:bg-slate-800',
+        'relative overflow-hidden bg-background-alt',
         aspectRatioClass,
         containerClassName
       )}
     >
       {/* 加载骨架 */}
       {showSkeleton && isLoading && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700" />
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-background-alt via-surface to-background-alt" />
       )}
 
       {/* 图片 */}

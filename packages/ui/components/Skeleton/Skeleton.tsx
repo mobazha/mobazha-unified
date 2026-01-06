@@ -37,7 +37,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
   const animationStyles = {
     pulse: 'animate-pulse',
-    wave: 'animate-shimmer bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]',
+    wave: 'animate-shimmer bg-gradient-to-r from-background-alt via-surface to-background-alt bg-[length:200%_100%]',
     none: '',
   };
 
@@ -49,7 +49,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   return (
     <div
       className={cn(
-        'bg-slate-200 dark:bg-slate-700',
+        'bg-background-alt',
         variantStyles[variant],
         animationStyles[animation],
         className
@@ -91,7 +91,7 @@ export interface SkeletonCardProps {
 
 export const SkeletonCard: React.FC<SkeletonCardProps> = ({ hasImage = true, className }) => {
   return (
-    <div className={cn('bg-white dark:bg-slate-800 rounded-xl p-4 space-y-4', className)}>
+    <div className={cn('bg-surface rounded-xl p-4 space-y-4', className)}>
       {hasImage && <Skeleton variant="rounded" height={160} />}
       <Skeleton variant="text" width="70%" />
       <Skeleton variant="text" width="40%" />

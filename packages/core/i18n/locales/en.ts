@@ -231,6 +231,24 @@ export const en: TranslationResource = {
     version: 'Version',
     termsOfService: 'Terms of Service',
     privacyPolicy: 'Privacy Policy',
+    appearance: 'Appearance',
+    chooseTheme: 'Choose Theme',
+    displayMode: 'Display Mode',
+  },
+
+  theme: {
+    classic: 'Classic Cyan',
+    classicDesc: 'Mobazha brand classic colors, fresh and vibrant',
+    crypto: 'Crypto Night',
+    cryptoDesc: 'Dark background with neon green, for crypto traders',
+    business: 'Business Blue',
+    businessDesc: 'Professional blue tones for formal business',
+    cyberpunk: 'Cyberpunk',
+    cyberpunkDesc: 'Purple-pink gradients, perfect for NFT and digital art',
+    nature: 'Trust Oasis',
+    natureDesc: 'Forest green tones, conveying trust and sustainability',
+    luxury: 'Luxury Gold',
+    luxuryDesc: 'Black and gold for luxury goods trading',
   },
 
   errors: {

@@ -62,9 +62,9 @@ export interface ProductCardProps {
 // 商品类型标签配置
 const contractTypeConfig: Record<ProductContractType, { label: string; color: string }> = {
   PHYSICAL_GOOD: { label: '', color: '' }, // 实物商品不显示标签
-  DIGITAL_GOOD: { label: 'Digital', color: 'bg-blue-500' },
-  SERVICE: { label: 'Service', color: 'bg-emerald-500' },
-  RWA_TOKEN: { label: 'RWA', color: 'bg-purple-600' },
+  DIGITAL_GOOD: { label: 'Digital', color: 'bg-info' },
+  SERVICE: { label: 'Service', color: 'bg-primary' },
+  RWA_TOKEN: { label: 'RWA', color: 'bg-secondary' },
 };
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -104,7 +104,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       className={cn('overflow-hidden group', className)}
     >
       {/* 商品图片 */}
-      <div className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-700">
+      <div className="relative aspect-square overflow-hidden bg-background-alt">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -113,7 +113,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-400">
+          <div className="w-full h-full flex items-center justify-center text-text-muted">
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -127,7 +127,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* 折扣标签 */}
         {hasDiscount && (
-          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+          <span className="absolute top-2 left-2 bg-error text-text-inverse text-xs font-bold px-2 py-1 rounded">
             -{discountPercent}%
           </span>
         )}
@@ -136,7 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {typeConfig?.label && (
           <span
             className={cn(
-              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded',
+              'absolute top-2 right-2 text-text-inverse text-xs font-medium px-2 py-1 rounded',
               typeConfig.color
             )}
           >
@@ -150,7 +150,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* 标题 */}
         <h3
           className={cn(
-            'font-medium text-slate-900 dark:text-white line-clamp-2',
+            'font-medium text-text-primary line-clamp-2',
             compact ? 'text-sm min-h-[2rem]' : 'min-h-[2.5rem]'
           )}
         >
@@ -159,17 +159,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* 价格 */}
         <div className="flex items-baseline gap-2">
-          <span
-            className={cn(
-              'font-bold text-emerald-600 dark:text-emerald-400',
-              compact ? 'text-base' : 'text-lg'
-            )}
-          >
+          <span className={cn('font-bold text-primary', compact ? 'text-base' : 'text-lg')}>
             {currency}
             {typeof price === 'number' ? price.toFixed(2) : price}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-slate-400 line-through">
+            <span className="text-sm text-text-muted line-through">
               {currency}
               {typeof originalPrice === 'number' ? originalPrice.toFixed(2) : originalPrice}
             </span>
@@ -179,8 +174,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* 评分 - 简化显示 */}
         {rating !== undefined && (
           <div className="flex items-center gap-1 text-sm">
-            <span className="text-amber-500">★</span>
-            <span className="text-slate-500">
+            <span className="text-warning">★</span>
+            <span className="text-text-secondary">
               {rating.toFixed(1)}
               {reviewCount !== undefined && ` (${reviewCount})`}
             </span>
@@ -191,22 +186,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {(vendorName || freeShipping) && (
           <div
             className={cn(
-              'flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700',
+              'flex items-center justify-between pt-2 border-t border-border-light',
               compact && 'pt-1'
             )}
           >
             {vendorName && (
               <div className="flex items-center gap-2 min-w-0">
                 {!compact && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
-                <span className={cn('text-slate-500 truncate', compact ? 'text-xs' : 'text-sm')}>
+                <span
+                  className={cn('text-text-secondary truncate', compact ? 'text-xs' : 'text-sm')}
+                >
                   {vendorName}
                 </span>
               </div>
             )}
             {freeShipping && (
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex-shrink-0">
-                Free Shipping
-              </span>
+              <span className="text-xs text-primary font-medium flex-shrink-0">Free Shipping</span>
             )}
           </div>
         )}

@@ -16,13 +16,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-sm',
-  secondary: 'bg-slate-700 text-white hover:bg-slate-600 active:bg-slate-800 shadow-sm',
-  outline:
-    'border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 dark:hover:bg-emerald-900/20',
-  ghost:
-    'text-slate-700 hover:bg-slate-100 active:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800',
-  danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm',
+  primary: 'bg-primary text-text-inverse hover:bg-primary-dark active:bg-primary-dark shadow-sm',
+  secondary:
+    'bg-secondary text-text-inverse hover:bg-secondary-dark active:bg-secondary-dark shadow-sm',
+  outline: 'border-2 border-primary text-primary hover:bg-primary/10 active:bg-primary/20',
+  ghost: 'text-text-secondary hover:bg-surface-hover active:bg-background-alt',
+  danger: 'bg-error text-text-inverse hover:opacity-90 active:opacity-80 shadow-sm',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -65,7 +64,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           // 基础样式
           'inline-flex items-center justify-center font-medium transition-all duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2',
+          'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
           'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
           // 变体样式
           variantStyles[variant],
