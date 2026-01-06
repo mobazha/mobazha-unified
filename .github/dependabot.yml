@@ -1,0 +1,56 @@
+# Dependabot 配置
+# 自动更新依赖
+version: 2
+updates:
+  # npm 依赖更新
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 10
+    groups:
+      # React 相关
+      react:
+        patterns:
+          - 'react*'
+          - '@types/react*'
+      # Next.js 相关
+      next:
+        patterns:
+          - 'next*'
+          - '@next/*'
+      # TypeScript 相关
+      typescript:
+        patterns:
+          - 'typescript'
+          - '@typescript-eslint/*'
+      # Testing 相关
+      testing:
+        patterns:
+          - 'vitest*'
+          - '@testing-library/*'
+      # Linting 相关
+      linting:
+        patterns:
+          - 'eslint*'
+          - 'prettier*'
+    ignore:
+      # 忽略主版本更新
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
+
+  # GitHub Actions 更新
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci'

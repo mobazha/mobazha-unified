@@ -1,0 +1,49 @@
+name: 功能请求
+description: 建议一个新功能
+title: '[Feature]: '
+labels: ['enhancement', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你提交功能请求！请尽可能详细地描述你的想法。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 请描述你想要解决的问题
+      placeholder: 我总是因为...而感到沮丧
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 建议的解决方案
+      description: 请描述你希望实现的功能
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案
+      description: 请描述你考虑过的任何替代解决方案或功能
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      description: 你认为这个功能的优先级如何
+      options:
+        - 低 - 可以等待
+        - 中 - 希望尽快实现
+        - 高 - 非常需要
+      default: 0
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 其他信息
+      description: 任何其他你认为相关的信息、截图或设计稿
