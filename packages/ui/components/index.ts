@@ -1,12 +1,18 @@
-// UI Components exports
-// 随着迁移进行逐步添加
+/**
+ * UI 组件导出
+ */
 
-// Primitives
-// export * from './Button';
-// export * from './Input';
-// export * from './Card';
+// 基础组件
+export * from './Button';
+export * from './Avatar';
+export * from './Card';
+export * from './Input';
+export * from './Skeleton';
 
-// Business Components
-// export * from './ProductCard';
-// export * from './OrderItem';
-// export * from './UserAvatar';
+// 业务组件
+export * from './ProductCard';
+
+// TODO: 后续迁移
+// export * from './OrderCard';
+// export * from './ChatBubble';
+// export * from './RatingStars';
