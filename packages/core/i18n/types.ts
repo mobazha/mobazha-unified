@@ -273,6 +273,25 @@ export interface TranslationResource {
     version: string;
     termsOfService: string;
     privacyPolicy: string;
+    appearance: string;
+    chooseTheme: string;
+    displayMode: string;
+  };
+
+  // 主题
+  theme: {
+    classic: string;
+    classicDesc: string;
+    crypto: string;
+    cryptoDesc: string;
+    business: string;
+    businessDesc: string;
+    cyberpunk: string;
+    cyberpunkDesc: string;
+    nature: string;
+    natureDesc: string;
+    luxury: string;
+    luxuryDesc: string;
   };
 
   // 错误消息

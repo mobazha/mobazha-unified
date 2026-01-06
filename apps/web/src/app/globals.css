@@ -2,10 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== 主题 CSS 变量 ===== */
+
+/* 默认主题 (Classic Light) */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+  /* 主要色彩 */
+  --color-primary: #00bcd4;
+  --color-primaryLight: #4dd0e1;
+  --color-primaryDark: #0097a7;
+
+  /* 次要色彩 */
+  --color-secondary: #ff5722;
+  --color-secondaryLight: #ff8a65;
+  --color-secondaryDark: #e64a19;
+
+  /* 强调色 */
+  --color-accent: #00bcd4;
+
+  /* 功能色 */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* 背景色 */
+  --color-background: #ffffff;
+  --color-backgroundAlt: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f1f5f9;
+
+  /* 文字色 */
+  --color-textPrimary: #0f172a;
+  --color-textSecondary: #475569;
+  --color-textMuted: #94a3b8;
+  --color-textInverse: #ffffff;
+
+  /* 边框色 */
+  --color-border: #e2e8f0;
+  --color-borderLight: #f1f5f9;
 
   /* Safe area insets for iOS */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -14,24 +48,299 @@
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 15, 23, 42;
-    --background-end-rgb: 15, 23, 42;
-  }
+/* Classic Dark */
+.dark {
+  --color-primary: #26c6da;
+  --color-primaryLight: #4dd0e1;
+  --color-primaryDark: #00acc1;
+  --color-secondary: #ff7043;
+  --color-secondaryLight: #ff8a65;
+  --color-secondaryDark: #f4511e;
+  --color-accent: #26c6da;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-info: #60a5fa;
+  --color-background: #0f172a;
+  --color-backgroundAlt: #1e293b;
+  --color-surface: #1e293b;
+  --color-surfaceHover: #334155;
+  --color-textPrimary: #f8fafc;
+  --color-textSecondary: #cbd5e1;
+  --color-textMuted: #64748b;
+  --color-textInverse: #0f172a;
+  --color-border: #334155;
+  --color-borderLight: #475569;
 }
 
+/* ===== Crypto Theme ===== */
+[data-theme='crypto'] {
+  --color-primary: #00d26a;
+  --color-primaryLight: #4ade80;
+  --color-primaryDark: #059669;
+  --color-secondary: #8b5cf6;
+  --color-secondaryLight: #a78bfa;
+  --color-secondaryDark: #7c3aed;
+  --color-accent: #00d26a;
+  --color-success: #00d26a;
+  --color-warning: #facc15;
+  --color-error: #f43f5e;
+  --color-info: #06b6d4;
+  --color-background: #fafafa;
+  --color-backgroundAlt: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f0f0f0;
+  --color-textPrimary: #171717;
+  --color-textSecondary: #525252;
+  --color-textMuted: #a3a3a3;
+  --color-textInverse: #ffffff;
+  --color-border: #e5e5e5;
+  --color-borderLight: #f5f5f5;
+  --color-glow: rgba(0, 210, 106, 0.3);
+}
+
+[data-theme='crypto'].dark {
+  --color-primary: #00ff85;
+  --color-primaryLight: #4aff9f;
+  --color-primaryDark: #00d26a;
+  --color-secondary: #a78bfa;
+  --color-secondaryLight: #c4b5fd;
+  --color-secondaryDark: #8b5cf6;
+  --color-accent: #00ff85;
+  --color-success: #00ff85;
+  --color-warning: #ffd600;
+  --color-error: #ff4757;
+  --color-info: #00d9ff;
+  --color-background: #0a0a0a;
+  --color-backgroundAlt: #141414;
+  --color-surface: #1a1a1a;
+  --color-surfaceHover: #262626;
+  --color-textPrimary: #fafafa;
+  --color-textSecondary: #a3a3a3;
+  --color-textMuted: #525252;
+  --color-textInverse: #0a0a0a;
+  --color-border: #262626;
+  --color-borderLight: #333333;
+  --color-glow: rgba(0, 255, 133, 0.4);
+  --color-gradient: linear-gradient(135deg, #00ff85 0%, #00d9ff 100%);
+}
+
+/* ===== Business Theme ===== */
+[data-theme='business'] {
+  --color-primary: #2563eb;
+  --color-primaryLight: #3b82f6;
+  --color-primaryDark: #1d4ed8;
+  --color-secondary: #d97706;
+  --color-secondaryLight: #f59e0b;
+  --color-secondaryDark: #b45309;
+  --color-accent: #2563eb;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0284c7;
+  --color-background: #ffffff;
+  --color-backgroundAlt: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f1f5f9;
+  --color-textPrimary: #1e293b;
+  --color-textSecondary: #475569;
+  --color-textMuted: #94a3b8;
+  --color-textInverse: #ffffff;
+  --color-border: #cbd5e1;
+  --color-borderLight: #e2e8f0;
+}
+
+[data-theme='business'].dark {
+  --color-primary: #3b82f6;
+  --color-primaryLight: #60a5fa;
+  --color-primaryDark: #2563eb;
+  --color-secondary: #f59e0b;
+  --color-secondaryLight: #fbbf24;
+  --color-secondaryDark: #d97706;
+  --color-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #0ea5e9;
+  --color-background: #0f172a;
+  --color-backgroundAlt: #1e293b;
+  --color-surface: #1e293b;
+  --color-surfaceHover: #334155;
+  --color-textPrimary: #f1f5f9;
+  --color-textSecondary: #94a3b8;
+  --color-textMuted: #64748b;
+  --color-textInverse: #0f172a;
+  --color-border: #334155;
+  --color-borderLight: #475569;
+}
+
+/* ===== Cyberpunk Theme ===== */
+[data-theme='cyberpunk'] {
+  --color-primary: #9333ea;
+  --color-primaryLight: #a855f7;
+  --color-primaryDark: #7e22ce;
+  --color-secondary: #ec4899;
+  --color-secondaryLight: #f472b6;
+  --color-secondaryDark: #db2777;
+  --color-accent: #ec4899;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #06b6d4;
+  --color-background: #fafafa;
+  --color-backgroundAlt: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f5f5f5;
+  --color-textPrimary: #18181b;
+  --color-textSecondary: #52525b;
+  --color-textMuted: #a1a1aa;
+  --color-textInverse: #ffffff;
+  --color-border: #e4e4e7;
+  --color-borderLight: #f4f4f5;
+  --color-gradient: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+}
+
+[data-theme='cyberpunk'].dark {
+  --color-primary: #a855f7;
+  --color-primaryLight: #c084fc;
+  --color-primaryDark: #9333ea;
+  --color-secondary: #f472b6;
+  --color-secondaryLight: #f9a8d4;
+  --color-secondaryDark: #ec4899;
+  --color-accent: #f472b6;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-error: #f87171;
+  --color-info: #22d3ee;
+  --color-background: #09090b;
+  --color-backgroundAlt: #18181b;
+  --color-surface: #18181b;
+  --color-surfaceHover: #27272a;
+  --color-textPrimary: #fafafa;
+  --color-textSecondary: #a1a1aa;
+  --color-textMuted: #52525b;
+  --color-textInverse: #09090b;
+  --color-border: #27272a;
+  --color-borderLight: #3f3f46;
+  --color-glow: rgba(168, 85, 247, 0.4);
+  --color-gradient: linear-gradient(135deg, #a855f7 0%, #f472b6 100%);
+}
+
+/* ===== Nature Theme ===== */
+[data-theme='nature'] {
+  --color-primary: #059669;
+  --color-primaryLight: #10b981;
+  --color-primaryDark: #047857;
+  --color-secondary: #b45309;
+  --color-secondaryLight: #d97706;
+  --color-secondaryDark: #92400e;
+  --color-accent: #059669;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0891b2;
+  --color-background: #fefdfb;
+  --color-backgroundAlt: #fef7ed;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f5f0e8;
+  --color-textPrimary: #1c1917;
+  --color-textSecondary: #57534e;
+  --color-textMuted: #a8a29e;
+  --color-textInverse: #ffffff;
+  --color-border: #d6d3d1;
+  --color-borderLight: #e7e5e4;
+}
+
+[data-theme='nature'].dark {
+  --color-primary: #34d399;
+  --color-primaryLight: #6ee7b7;
+  --color-primaryDark: #10b981;
+  --color-secondary: #fbbf24;
+  --color-secondaryLight: #fcd34d;
+  --color-secondaryDark: #f59e0b;
+  --color-accent: #34d399;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-info: #22d3ee;
+  --color-background: #0c0a09;
+  --color-backgroundAlt: #1c1917;
+  --color-surface: #1c1917;
+  --color-surfaceHover: #292524;
+  --color-textPrimary: #fafaf9;
+  --color-textSecondary: #a8a29e;
+  --color-textMuted: #57534e;
+  --color-textInverse: #0c0a09;
+  --color-border: #292524;
+  --color-borderLight: #44403c;
+}
+
+/* ===== Luxury Theme ===== */
+[data-theme='luxury'] {
+  --color-primary: #b8860b;
+  --color-primaryLight: #daa520;
+  --color-primaryDark: #8b6914;
+  --color-secondary: #1f2937;
+  --color-secondaryLight: #374151;
+  --color-secondaryDark: #111827;
+  --color-accent: #b8860b;
+  --color-success: #059669;
+  --color-warning: #b8860b;
+  --color-error: #991b1b;
+  --color-info: #1e40af;
+  --color-background: #fafafa;
+  --color-backgroundAlt: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f0f0f0;
+  --color-textPrimary: #111827;
+  --color-textSecondary: #4b5563;
+  --color-textMuted: #9ca3af;
+  --color-textInverse: #ffffff;
+  --color-border: #d1d5db;
+  --color-borderLight: #e5e7eb;
+}
+
+[data-theme='luxury'].dark {
+  --color-primary: #ffd700;
+  --color-primaryLight: #ffe44d;
+  --color-primaryDark: #daa520;
+  --color-secondary: #e5e7eb;
+  --color-secondaryLight: #f3f4f6;
+  --color-secondaryDark: #d1d5db;
+  --color-accent: #ffd700;
+  --color-success: #34d399;
+  --color-warning: #ffd700;
+  --color-error: #fca5a5;
+  --color-info: #93c5fd;
+  --color-background: #000000;
+  --color-backgroundAlt: #0a0a0a;
+  --color-surface: #111111;
+  --color-surfaceHover: #1a1a1a;
+  --color-textPrimary: #ffffff;
+  --color-textSecondary: #d1d5db;
+  --color-textMuted: #6b7280;
+  --color-textInverse: #000000;
+  --color-border: #262626;
+  --color-borderLight: #333333;
+  --color-glow: rgba(255, 215, 0, 0.3);
+  --color-gradient: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+}
+
+/* ===== 基础样式 ===== */
+
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
-    rgb(var(--background-start-rgb));
+  color: var(--color-textPrimary);
+  background-color: var(--color-background);
   /* Prevent pull-to-refresh on mobile */
   overscroll-behavior-y: contain;
   /* Smooth scrolling */
   scroll-behavior: smooth;
   /* Prevent text size adjustment on orientation change */
   -webkit-text-size-adjust: 100%;
+  /* 主题切换过渡动画 */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Safe area utilities */
@@ -81,7 +390,9 @@ body {
 /* Improved focus styles for accessibility */
 @layer base {
   *:focus-visible {
-    @apply outline-none ring-2 ring-emerald-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+    @apply outline-none ring-2 ring-offset-2;
+    ring-color: var(--color-primary);
+    ring-offset-color: var(--color-background);
   }
 }
 
@@ -95,16 +406,23 @@ body {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--color-border);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: var(--color-textMuted);
   }
-  .dark ::-webkit-scrollbar-thumb {
-    background: #475569;
-  }
-  .dark ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
-  }
+}
+
+/* Glow effect utility */
+.glow {
+  box-shadow: 0 0 20px var(--color-glow, transparent);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: var(--color-gradient, var(--color-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

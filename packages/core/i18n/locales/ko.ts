@@ -231,6 +231,24 @@ export const ko: TranslationResource = {
     version: '버전',
     termsOfService: '서비스 약관',
     privacyPolicy: '개인정보 처리방침',
+    appearance: '외관',
+    chooseTheme: '테마 선택',
+    displayMode: '표시 모드',
+  },
+
+  theme: {
+    classic: '클래식 시안',
+    classicDesc: 'Mobazha 브랜드 클래식 색상, 상쾌하고 활기찬',
+    crypto: '크립토 나이트',
+    cryptoDesc: '네온 그린의 어두운 배경, 암호화폐 트레이더용',
+    business: '비즈니스 블루',
+    businessDesc: '전문적인 블루 톤, 공식 비즈니스용',
+    cyberpunk: '사이버펑크',
+    cyberpunkDesc: '퍼플-핑크 그라데이션, NFT와 디지털 아트에 적합',
+    nature: '트러스트 오아시스',
+    natureDesc: '포레스트 그린 톤, 신뢰와 지속 가능성 전달',
+    luxury: '럭셔리 골드',
+    luxuryDesc: '블랙과 골드, 럭셔리 상품 거래용',
   },
 
   errors: {

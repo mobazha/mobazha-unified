@@ -129,15 +129,7 @@ function getChainIcon(chainId: ChainId): string {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const {
-    isConnected,
-    isConnecting,
-    walletInfo,
-    connect,
-    disconnect,
-    switchChain,
-    getCurrentChainId,
-  } = useWallet();
+  const { isConnected, isConnecting, walletInfo, connect, disconnect, switchChain } = useWallet();
 
   const [selectedAddress, setSelectedAddress] = useState<string>(
     mockAddresses.find(a => a.isDefault)?.id || ''
@@ -154,13 +146,12 @@ export default function CheckoutPage() {
   // 获取可用链
   const availableChains = getMainnetChains();
 
-  // 同步钱包链
+  // 同步钱包链 - 只依赖 walletInfo?.chainId，避免函数引用导致无限循环
   useEffect(() => {
-    const currentChain = getCurrentChainId();
-    if (currentChain) {
-      setSelectedChain(currentChain);
+    if (walletInfo?.chainId) {
+      setSelectedChain(walletInfo.chainId as ChainId);
     }
-  }, [walletInfo?.chainId, getCurrentChainId]);
+  }, [walletInfo?.chainId]);
 
   // Calculate totals
   const subtotal = mockItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -170,9 +161,9 @@ export default function CheckoutPage() {
       : 0;
   const total = subtotal + moderatorFee;
 
-  // 获取当前链信息
+  // 获取当前链信息 - 完整空值检查避免运行时错误
   const currentChainInfo = getChainInfo(selectedChain);
-  const nativeSymbol = currentChainInfo?.nativeCurrency.symbol || 'ETH';
+  const nativeSymbol = currentChainInfo?.nativeCurrency?.symbol || 'ETH';
 
   // Mock exchange rate (实际应从 API 获取)
   const exchangeRate = 2500; // USD per ETH

@@ -9,3 +9,5 @@ export { MobileNav } from './MobileNav';
 export { PWAInstall } from './PWAInstall';
 export { ServiceWorkerProvider } from './ServiceWorkerProvider';
 export { LanguageSwitcher } from './LanguageSwitcher';
+export { ThemeProvider } from './ThemeProvider';
+export { ThemeSwitcher } from './ThemeSwitcher';

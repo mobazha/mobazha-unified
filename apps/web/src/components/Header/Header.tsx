@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container, HStack } from '@mobazha/ui';
 import { Button, Input, Avatar } from '@mobazha/ui';
+import { ThemeSwitcher } from '../ThemeSwitcher';
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -20,17 +21,15 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 tap-highlight-none">
+    <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-lg border-b border-border tap-highlight-none">
       <Container size="xl">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-lg">M</span>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-sm">
+              <span className="text-text-inverse font-bold text-lg">M</span>
             </div>
-            <span className="font-bold text-xl text-slate-900 dark:text-white hidden sm:block">
-              Mobazha
-            </span>
+            <span className="font-bold text-xl text-text-primary hidden sm:block">Mobazha</span>
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -55,7 +54,7 @@ export const Header: React.FC = () => {
 
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="hidden md:flex">
-            <Link href="/market">
+            <Link href="/marketplace">
               <Button variant="ghost" size="sm">
                 Market
               </Button>
@@ -82,7 +81,9 @@ export const Header: React.FC = () => {
                 </svg>
               </Button>
             </Link>
-            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-2" />
+            <div className="w-px h-6 bg-border mx-2" />
+            {/* Theme Switcher */}
+            <ThemeSwitcher compact />
             <Link href="/profile">
               <Avatar name="Guest" size="sm" />
             </Link>
@@ -92,7 +93,7 @@ export const Header: React.FC = () => {
           <HStack gap="xs" className="md:hidden">
             {/* Search Button - Mobile */}
             <button
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-lg hover:bg-surface-hover transition-colors"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               aria-label="Search"
             >
@@ -106,10 +107,13 @@ export const Header: React.FC = () => {
               </svg>
             </button>
 
+            {/* Theme Switcher - Mobile (compact) */}
+            <ThemeSwitcher compact />
+
             {/* Cart - Mobile */}
             <Link
               href="/cart"
-              className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="relative p-2 rounded-lg hover:bg-surface-hover transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -120,7 +124,7 @@ export const Header: React.FC = () => {
                 />
               </svg>
               {/* Cart badge */}
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-text-inverse text-[10px] font-bold rounded-full flex items-center justify-center">
                 3
               </span>
             </Link>
@@ -129,7 +133,7 @@ export const Header: React.FC = () => {
 
         {/* Mobile Search Bar */}
         {isSearchOpen && (
-          <div className="md:hidden py-3 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden py-3 border-t border-border animate-in slide-in-from-top-2 duration-200">
             <form onSubmit={handleSearch}>
               <Input
                 placeholder="Search products, stores..."
