@@ -26,7 +26,9 @@ export * from './useI18n';
 // 监控相关
 export * from './useMonitoring';
 
+// 钱包相关
+export * from './useWallet';
+
 // TODO: 后续迁移
 // export * from './useAuth';
 // export * from './useCart';
-// export * from './useWallet';

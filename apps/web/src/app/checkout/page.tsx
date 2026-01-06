@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Avatar } from '@mobazha/ui';
+import { Button, Card } from '@mobazha/ui';
+import { useWallet, ChainId, getChainInfo, getMainnetChains } from '@mobazha/core';
 
 // Types
 interface ShippingAddress {
@@ -20,15 +21,6 @@ interface ShippingAddress {
   isDefault: boolean;
 }
 
-interface PaymentMethod {
-  type: string;
-  name: string;
-  icon: string;
-  color: string;
-  address?: string;
-  balance?: number;
-}
-
 interface CheckoutItem {
   id: string;
   title: string;
@@ -39,6 +31,15 @@ interface CheckoutItem {
     name: string;
     peerID: string;
   };
+}
+
+interface Moderator {
+  id: string;
+  name: string;
+  avatar: string;
+  fee: number; // 百分比
+  rating: number;
+  verified: boolean;
 }
 
 // Mock data
@@ -67,10 +68,31 @@ const mockAddresses: ShippingAddress[] = [
   },
 ];
 
-const paymentMethods: PaymentMethod[] = [
-  { type: 'BTC', name: 'Bitcoin', icon: '₿', color: '#F7931A', balance: 0.0523 },
-  { type: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627EEA', balance: 1.245 },
-  { type: 'USDT', name: 'Tether', icon: '₮', color: '#26A17B', balance: 1500.0 },
+const mockModerators: Moderator[] = [
+  {
+    id: 'mod1',
+    name: 'TrustGuard',
+    avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=mod1',
+    fee: 1,
+    rating: 4.9,
+    verified: true,
+  },
+  {
+    id: 'mod2',
+    name: 'SafeEscrow',
+    avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=mod2',
+    fee: 0.5,
+    rating: 4.7,
+    verified: true,
+  },
+  {
+    id: 'mod3',
+    name: 'CryptoMediator',
+    avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=mod3',
+    fee: 1.5,
+    rating: 4.8,
+    verified: false,
+  },
 ];
 
 const mockItems: CheckoutItem[] = [
@@ -92,53 +114,133 @@ const mockItems: CheckoutItem[] = [
   },
 ];
 
-// Mock exchange rates
-const exchangeRates: Record<string, number> = {
-  BTC: 43000,
-  ETH: 2400,
-  USDT: 1,
-};
+// 获取链图标
+function getChainIcon(chainId: ChainId): string {
+  const icons: Record<number, string> = {
+    [ChainId.ETHEREUM]: '⟠',
+    [ChainId.BSC]: '⬡',
+    [ChainId.POLYGON]: '⬡',
+    [ChainId.ARBITRUM]: '◈',
+    [ChainId.OPTIMISM]: '◎',
+    [ChainId.AVALANCHE]: '◆',
+  };
+  return icons[chainId] || '○';
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const {
+    isConnected,
+    isConnecting,
+    walletInfo,
+    connect,
+    disconnect,
+    switchChain,
+    getCurrentChainId,
+  } = useWallet();
+
   const [selectedAddress, setSelectedAddress] = useState<string>(
     mockAddresses.find(a => a.isDefault)?.id || ''
   );
-  const [selectedPayment, setSelectedPayment] = useState<string>('BTC');
+  const [selectedChain, setSelectedChain] = useState<ChainId>(ChainId.ETHEREUM);
+  const [selectedModerator, setSelectedModerator] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [orderNote, setOrderNote] = useState('');
+  const [step, _setStep] = useState<'shipping' | 'payment' | 'confirm'>('shipping');
+  // _setStep will be used in future for multi-step checkout
+  void _setStep;
+
+  // 获取可用链
+  const availableChains = getMainnetChains();
+
+  // 同步钱包链
+  useEffect(() => {
+    const currentChain = getCurrentChainId();
+    if (currentChain) {
+      setSelectedChain(currentChain);
+    }
+  }, [walletInfo?.chainId, getCurrentChainId]);
 
   // Calculate totals
   const subtotal = mockItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 0; // Free shipping
-  const total = subtotal + shipping;
+  const moderatorFee =
+    selectedModerator && mockModerators.find(m => m.id === selectedModerator)?.fee
+      ? subtotal * (mockModerators.find(m => m.id === selectedModerator)!.fee / 100)
+      : 0;
+  const total = subtotal + moderatorFee;
 
-  // Convert to crypto
-  const cryptoAmount = total / exchangeRates[selectedPayment];
-  const selectedMethod = paymentMethods.find(m => m.type === selectedPayment);
+  // 获取当前链信息
+  const currentChainInfo = getChainInfo(selectedChain);
+  const nativeSymbol = currentChainInfo?.nativeCurrency.symbol || 'ETH';
 
+  // Mock exchange rate (实际应从 API 获取)
+  const exchangeRate = 2500; // USD per ETH
+  const cryptoAmount = total / exchangeRate;
+
+  // 连接钱包
+  const handleConnect = useCallback(async () => {
+    await connect();
+  }, [connect]);
+
+  // 切换链
+  const handleSwitchChain = useCallback(
+    async (chainId: ChainId) => {
+      const success = await switchChain(chainId);
+      if (success) {
+        setSelectedChain(chainId);
+      }
+    },
+    [switchChain]
+  );
+
+  // 处理支付
   const handlePlaceOrder = useCallback(async () => {
     if (!selectedAddress) {
       alert('Please select a shipping address');
       return;
     }
 
+    if (!isConnected) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    if (!selectedModerator) {
+      alert('Please select a moderator for escrow protection');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
+      // TODO: 实际的托管合约调用
+      // const escrowService = getEscrowService();
+      // const result = await escrowService.createNativeEscrow({
+      //   orderId: 'ORD-' + Date.now(),
+      //   amount: cryptoAmount.toString(),
+      //   seller: 'SELLER_ADDRESS',
+      //   moderator: 'MODERATOR_ADDRESS',
+      //   releaseTime: 30 * 24 * 60 * 60, // 30 days
+      // });
+
       // Mock order creation
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Success
       alert('Order placed successfully! Redirecting to order details...');
       router.push('/orders/ORD-NEW');
-    } catch {
-      alert('Failed to place order. Please try again.');
+    } catch (error) {
+      alert('Failed to place order: ' + (error as Error).message);
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedAddress, router]);
+  }, [selectedAddress, selectedModerator, isConnected, router]);
+
+  // 缩短地址显示
+  const shortenAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -164,9 +266,130 @@ export default function CheckoutPage() {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Checkout</h1>
           </HStack>
 
+          {/* Progress Steps */}
+          <div className="mb-8">
+            <HStack justify="center" gap="lg">
+              {['shipping', 'payment', 'confirm'].map((s, i) => (
+                <HStack key={s} gap="sm" align="center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      step === s
+                        ? 'bg-emerald-500 text-white'
+                        : i < ['shipping', 'payment', 'confirm'].indexOf(step)
+                          ? 'bg-emerald-100 text-emerald-600'
+                          : 'bg-slate-200 text-slate-500'
+                    }`}
+                  >
+                    {i + 1}
+                  </div>
+                  <span
+                    className={`text-sm capitalize ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}
+                  >
+                    {s}
+                  </span>
+                  {i < 2 && <div className="w-16 h-0.5 bg-slate-200 dark:bg-slate-700" />}
+                </HStack>
+              ))}
+            </HStack>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Wallet Connection */}
+              <Card padding="lg">
+                <HStack justify="between" align="center" className="mb-4">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Connect Wallet
+                  </h2>
+                  {isConnected && (
+                    <Button variant="ghost" size="sm" onClick={disconnect}>
+                      Disconnect
+                    </Button>
+                  )}
+                </HStack>
+
+                {!isConnected ? (
+                  <VStack gap="md" align="center" className="py-6">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-center max-w-sm">
+                      Connect your external wallet (MetaMask, Trust Wallet, etc.) to pay with
+                      cryptocurrency
+                    </p>
+                    <Button onClick={handleConnect} disabled={isConnecting} size="lg">
+                      {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                    </Button>
+                  </VStack>
+                ) : (
+                  <VStack gap="md">
+                    {/* Connected Wallet Info */}
+                    <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                      <HStack justify="between" align="center">
+                        <HStack gap="md" align="center">
+                          <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
+                            {walletInfo?.provider?.[0] || 'W'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900 dark:text-white">
+                              {walletInfo?.provider || 'Wallet'}
+                            </p>
+                            <p className="text-sm text-slate-500 font-mono">
+                              {walletInfo?.address && shortenAddress(walletInfo.address)}
+                            </p>
+                          </div>
+                        </HStack>
+                        <div className="text-right">
+                          <p className="font-bold text-slate-900 dark:text-white">
+                            {parseFloat(walletInfo?.balance || '0').toFixed(4)} {nativeSymbol}
+                          </p>
+                        </div>
+                      </HStack>
+                    </div>
+
+                    {/* Chain Selection */}
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Select Network
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {availableChains.map(chain => (
+                          <button
+                            key={chain.id}
+                            onClick={() => handleSwitchChain(chain.id)}
+                            className={`p-3 rounded-lg border-2 text-left transition-all ${
+                              selectedChain === chain.id
+                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                            }`}
+                          >
+                            <HStack gap="sm" align="center">
+                              <span className="text-xl">{getChainIcon(chain.id)}</span>
+                              <span className="font-medium text-slate-900 dark:text-white text-sm">
+                                {chain.shortName}
+                              </span>
+                            </HStack>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </VStack>
+                )}
+              </Card>
+
               {/* Shipping Address */}
               <Card padding="lg">
                 <HStack justify="between" align="center" className="mb-4">
@@ -243,48 +466,67 @@ export default function CheckoutPage() {
                 </VStack>
               </Card>
 
-              {/* Payment Method */}
+              {/* Moderator Selection */}
               <Card padding="lg">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Payment Method
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                  Select Moderator
                 </h2>
+                <p className="text-sm text-slate-500 mb-4">
+                  A moderator helps resolve disputes between buyers and sellers. Choose one to
+                  enable escrow protection.
+                </p>
 
                 <VStack gap="md">
-                  {paymentMethods.map(method => (
+                  {mockModerators.map(moderator => (
                     <button
-                      key={method.type}
-                      onClick={() => setSelectedPayment(method.type)}
+                      key={moderator.id}
+                      onClick={() => setSelectedModerator(moderator.id)}
                       className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                        selectedPayment === method.type
+                        selectedModerator === moderator.id
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                           : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                       }`}
                     >
                       <HStack justify="between" align="center">
                         <HStack gap="md" align="center">
-                          <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                            style={{ backgroundColor: method.color }}
-                          >
-                            {method.icon}
-                          </div>
+                          <img
+                            src={moderator.avatar}
+                            alt={moderator.name}
+                            className="w-12 h-12 rounded-full bg-slate-200"
+                          />
                           <div>
-                            <p className="font-medium text-slate-900 dark:text-white">
-                              {method.name}
-                            </p>
-                            <p className="text-sm text-slate-500">
-                              Balance: {method.balance?.toFixed(4)} {method.type}
-                            </p>
+                            <HStack gap="sm" align="center">
+                              <span className="font-medium text-slate-900 dark:text-white">
+                                {moderator.name}
+                              </span>
+                              {moderator.verified && (
+                                <svg
+                                  className="w-4 h-4 text-blue-500"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </HStack>
+                            <HStack gap="md" className="mt-1">
+                              <span className="text-sm text-slate-500">Fee: {moderator.fee}%</span>
+                              <span className="text-sm text-slate-500">⭐ {moderator.rating}</span>
+                            </HStack>
                           </div>
                         </HStack>
                         <div
                           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                            selectedPayment === method.type
+                            selectedModerator === moderator.id
                               ? 'border-emerald-500 bg-emerald-500'
                               : 'border-slate-300 dark:border-slate-600'
                           }`}
                         >
-                          {selectedPayment === method.type && (
+                          {selectedModerator === moderator.id && (
                             <svg
                               className="w-3 h-3 text-white"
                               fill="currentColor"
@@ -301,34 +543,14 @@ export default function CheckoutPage() {
                       </HStack>
                     </button>
                   ))}
-                </VStack>
 
-                {/* Insufficient balance warning */}
-                {selectedMethod &&
-                  selectedMethod.balance !== undefined &&
-                  cryptoAmount > selectedMethod.balance && (
-                    <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                      <HStack gap="sm" align="center">
-                        <svg
-                          className="w-5 h-5 text-amber-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                          />
-                        </svg>
-                        <span className="text-amber-700 dark:text-amber-400 text-sm">
-                          Insufficient balance. Please deposit more {selectedPayment} to your
-                          wallet.
-                        </span>
-                      </HStack>
-                    </div>
-                  )}
+                  <Link
+                    href="/moderators"
+                    className="text-sm text-emerald-600 hover:text-emerald-700 text-center"
+                  >
+                    Browse all moderators →
+                  </Link>
+                </VStack>
               </Card>
 
               {/* Order Note */}
@@ -386,6 +608,15 @@ export default function CheckoutPage() {
                     <span className="font-medium text-emerald-600">Free</span>
                   </HStack>
 
+                  {selectedModerator && (
+                    <HStack justify="between">
+                      <span className="text-slate-600 dark:text-slate-400">Moderator Fee</span>
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        ${moderatorFee.toFixed(2)}
+                      </span>
+                    </HStack>
+                  )}
+
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
                     <HStack justify="between">
                       <span className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -393,24 +624,37 @@ export default function CheckoutPage() {
                       </span>
                       <div className="text-right">
                         <p className="text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
-                        <p className="text-sm text-slate-500">
-                          ≈ {cryptoAmount.toFixed(6)} {selectedPayment}
-                        </p>
+                        {isConnected && (
+                          <p className="text-sm text-slate-500">
+                            ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
+                          </p>
+                        )}
                       </div>
                     </HStack>
                   </div>
                 </div>
+
+                {/* Payment Info */}
+                {isConnected && (
+                  <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <HStack justify="between" align="center">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Pay with</span>
+                      <HStack gap="sm" align="center">
+                        <span className="text-lg">{getChainIcon(selectedChain)}</span>
+                        <span className="font-medium text-slate-900 dark:text-white">
+                          {currentChainInfo?.name}
+                        </span>
+                      </HStack>
+                    </HStack>
+                  </div>
+                )}
 
                 <Button
                   fullWidth
                   size="lg"
                   className="mt-6"
                   onClick={handlePlaceOrder}
-                  disabled={
-                    isProcessing ||
-                    !selectedAddress ||
-                    (selectedMethod?.balance !== undefined && cryptoAmount > selectedMethod.balance)
-                  }
+                  disabled={isProcessing || !isConnected || !selectedAddress || !selectedModerator}
                 >
                   {isProcessing ? (
                     <HStack gap="sm" align="center" justify="center">
@@ -431,10 +675,21 @@ export default function CheckoutPage() {
                       </svg>
                       <span>Processing...</span>
                     </HStack>
+                  ) : !isConnected ? (
+                    'Connect Wallet to Pay'
                   ) : (
-                    `Pay ${cryptoAmount.toFixed(6)} ${selectedPayment}`
+                    `Pay ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
                   )}
                 </Button>
+
+                {/* Warnings */}
+                {!selectedModerator && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      Please select a moderator for escrow protection
+                    </p>
+                  </div>
+                )}
 
                 {/* Security Note */}
                 <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
@@ -446,7 +701,7 @@ export default function CheckoutPage() {
                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                     />
                   </svg>
-                  <span>Secure payment with escrow protection</span>
+                  <span>Secure payment with multi-sig escrow protection</span>
                 </div>
               </Card>
             </div>

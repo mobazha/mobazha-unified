@@ -21,3 +21,12 @@ export * as profileApi from './profile';
 
 // 钱包 API
 export * as walletApi from './wallet';
+
+// 仲裁员 API
+export * as moderatorsApi from './moderators';
+
+// 集市 API
+export * as marketplaceApi from './marketplace';
+
+// 权限控制 API
+export * as accessApi from './access';
