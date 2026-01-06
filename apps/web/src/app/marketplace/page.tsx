@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
 interface Marketplace {
@@ -185,29 +186,31 @@ export default function MarketplacesPage() {
                 />
               </div>
               <div>
-                <select
-                  value={selectedCategory}
-                  onChange={e => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white h-[42px]"
-                >
-                  <option value="">All Categories</option>
-                  {allCategories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    {allCategories.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white h-[42px]"
-                >
-                  <option value="members">Most Members</option>
-                  <option value="products">Most Products</option>
-                  <option value="name">Alphabetical</option>
-                </select>
+                <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="members">Most Members</SelectItem>
+                    <SelectItem value="products">Most Products</SelectItem>
+                    <SelectItem value="name">Alphabetical</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </Card>

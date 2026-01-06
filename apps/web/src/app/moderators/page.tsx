@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
 interface Moderator {
@@ -168,18 +169,19 @@ export default function ModeratorsPage() {
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
                       Language
                     </label>
-                    <select
-                      value={selectedLanguage}
-                      onChange={e => setSelectedLanguage(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="">All Languages</option>
-                      {allLanguages.map(lang => (
-                        <option key={lang} value={lang}>
-                          {lang}
-                        </option>
-                      ))}
-                    </select>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Languages" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Languages</SelectItem>
+                        {allLanguages.map(lang => (
+                          <SelectItem key={lang} value={lang}>
+                            {lang}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Max Fee Filter */}
@@ -187,17 +189,21 @@ export default function ModeratorsPage() {
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
                       Max Fee (%)
                     </label>
-                    <select
-                      value={maxFee ?? ''}
-                      onChange={e => setMaxFee(e.target.value ? Number(e.target.value) : null)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    <Select
+                      value={maxFee?.toString() ?? ''}
+                      onValueChange={value => setMaxFee(value ? Number(value) : null)}
                     >
-                      <option value="">Any Fee</option>
-                      <option value="0.5">Up to 0.5%</option>
-                      <option value="1">Up to 1%</option>
-                      <option value="1.5">Up to 1.5%</option>
-                      <option value="2">Up to 2%</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Any Fee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Any Fee</SelectItem>
+                        <SelectItem value="0.5">Up to 0.5%</SelectItem>
+                        <SelectItem value="1">Up to 1%</SelectItem>
+                        <SelectItem value="1.5">Up to 1.5%</SelectItem>
+                        <SelectItem value="2">Up to 2%</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Verified Only */}
@@ -218,15 +224,19 @@ export default function ModeratorsPage() {
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
                       Sort by
                     </label>
-                    <select
+                    <Select
                       value={sortBy}
-                      onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      onValueChange={value => setSortBy(value as typeof sortBy)}
                     >
-                      <option value="rating">Highest Rating</option>
-                      <option value="fee">Lowest Fee</option>
-                      <option value="disputes">Most Disputes Handled</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rating">Highest Rating</SelectItem>
+                        <SelectItem value="fee">Lowest Fee</SelectItem>
+                        <SelectItem value="disputes">Most Disputes Handled</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Reset */}

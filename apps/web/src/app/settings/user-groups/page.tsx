@@ -5,6 +5,16 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui';
 
 // Types
 interface UserGroup {
@@ -89,6 +99,7 @@ export default function UserGroupsPage() {
     color: GROUP_COLORS[0],
     discountPercentage: 0,
   });
+  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
 
   const handleCreateGroup = () => {
     const group: UserGroup = {
@@ -111,10 +122,12 @@ export default function UserGroupsPage() {
     alert('User group created!');
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    if (!confirm('Are you sure you want to delete this group?')) return;
-    setGroups(prev => prev.filter(g => g.id !== groupId));
-    alert('Group deleted!');
+  const handleDeleteGroupConfirm = () => {
+    if (deleteGroupId) {
+      setGroups(prev => prev.filter(g => g.id !== deleteGroupId));
+      alert('Group deleted!');
+      setDeleteGroupId(null);
+    }
   };
 
   return (
@@ -200,7 +213,7 @@ export default function UserGroupsPage() {
                         size="sm"
                         variant="ghost"
                         className="text-red-500 hover:text-red-600"
-                        onClick={() => handleDeleteGroup(group.id)}
+                        onClick={() => setDeleteGroupId(group.id)}
                       >
                         Delete
                       </Button>
@@ -370,6 +383,28 @@ export default function UserGroupsPage() {
           </Card>
         </div>
       )}
+
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={!!deleteGroupId} onOpenChange={open => !open && setDeleteGroupId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this user group? Members in this group will be moved
+              to the default group.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteGroupConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

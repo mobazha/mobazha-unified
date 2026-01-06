@@ -5,6 +5,21 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui';
 
 // Types
 interface ProductGroup {
@@ -76,6 +91,7 @@ export default function ProductGroupsPage() {
     color: GROUP_COLORS[0],
     visibility: 'public' as ProductGroup['visibility'],
   });
+  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
 
   const handleCreateGroup = () => {
     const group: ProductGroup = {
@@ -93,10 +109,12 @@ export default function ProductGroupsPage() {
     alert('Product group created!');
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    if (!confirm('Are you sure you want to delete this group?')) return;
-    setGroups(prev => prev.filter(g => g.id !== groupId));
-    alert('Group deleted!');
+  const handleDeleteGroupConfirm = () => {
+    if (deleteGroupId) {
+      setGroups(prev => prev.filter(g => g.id !== deleteGroupId));
+      alert('Group deleted!');
+      setDeleteGroupId(null);
+    }
   };
 
   const getVisibilityLabel = (visibility: ProductGroup['visibility']) => {
@@ -181,7 +199,7 @@ export default function ProductGroupsPage() {
                       size="sm"
                       variant="ghost"
                       className="text-red-500"
-                      onClick={() => handleDeleteGroup(group.id)}
+                      onClick={() => setDeleteGroupId(group.id)}
                     >
                       Delete
                     </Button>
@@ -314,27 +332,31 @@ export default function ProductGroupsPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Visibility
                 </label>
-                <select
+                <Select
                   value={editingGroup?.visibility || newGroup.visibility}
-                  onChange={e =>
+                  onValueChange={value =>
                     editingGroup
                       ? setEditingGroup({
                           ...editingGroup,
-                          visibility: e.target.value as ProductGroup['visibility'],
+                          visibility: value as ProductGroup['visibility'],
                         })
                       : setNewGroup(prev => ({
                           ...prev,
-                          visibility: e.target.value as ProductGroup['visibility'],
+                          visibility: value as ProductGroup['visibility'],
                         }))
                   }
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  {visibilityOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label} - {option.description}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {visibilityOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label} - {option.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </VStack>
 
@@ -368,6 +390,28 @@ export default function ProductGroupsPage() {
           </Card>
         </div>
       )}
+
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={!!deleteGroupId} onOpenChange={open => !open && setDeleteGroupId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this product group? Products in this group will be
+              moved to the default group.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteGroupConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

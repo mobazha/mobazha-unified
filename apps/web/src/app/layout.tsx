@@ -8,6 +8,7 @@ import {
   ServiceWorkerProvider,
   ThemeProvider,
 } from '@/components';
+import { Toaster } from '@/components/ui';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -78,6 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Dev tools (only in development) */}
             <DevTools />
+
+            {/* Toast notifications */}
+            <Toaster />
           </ServiceWorkerProvider>
         </ThemeProvider>
       </body>
