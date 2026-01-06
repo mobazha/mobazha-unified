@@ -23,6 +23,9 @@ export * from './useCrypto';
 // 国际化相关
 export * from './useI18n';
 
+// 监控相关
+export * from './useMonitoring';
+
 // TODO: 后续迁移
 // export * from './useAuth';
 // export * from './useCart';
