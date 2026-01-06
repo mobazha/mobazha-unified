@@ -3,8 +3,8 @@
 ## 总体进度
 
 - 总功能数: 待完善
-- 已完成: 25+ (核心层 + 全部页面 + Mock/API 切换)
-- 进行中: 真实 API 对接、响应式优化
+- 已完成: 28+ (核心层 + 全部页面 + Mock/API 切换 + 响应式优化)
+- 进行中: 真实 API 对接
 - 未开始: Matrix 聊天集成
 
 ## Phase 1: 核心层迁移 (基本完成)
@@ -28,21 +28,22 @@
 
 ## Phase 2: UI 组件库 (部分完成)
 
-| 组件            | RN 源                | Web 目标                   | 状态 | 说明       |
-| --------------- | -------------------- | -------------------------- | ---- | ---------- |
-| Button          | components/atoms     | packages/ui/components     | ✅   | 基础按钮   |
-| Avatar          | components/atoms     | packages/ui/components     | ✅   | 用户头像   |
-| Card            | components/atoms     | packages/ui/components     | ✅   | 卡片容器   |
-| Container       | N/A                  | packages/ui/layouts        | ✅   | 响应式容器 |
-| Grid            | N/A                  | packages/ui/layouts        | ✅   | 网格布局   |
-| Stack           | N/A                  | packages/ui/layouts        | ✅   | 堆叠布局   |
-| ChatList        | N/A                  | apps/web/components/Chat   | ✅   | 聊天列表   |
-| ChatMessages    | N/A                  | apps/web/components/Chat   | ✅   | 消息显示   |
-| WalletCard      | N/A                  | apps/web/components/Wallet | ✅   | 钱包卡片   |
-| TransactionList | N/A                  | apps/web/components/Wallet | ✅   | 交易列表   |
-| OrderCard       | N/A                  | apps/web/components/Order  | ✅   | 订单卡片   |
-| ProductCard     | components/templates | packages/ui/components     | ⏳   | 商品卡片   |
-| ProductSection  | N/A                  | apps/web/components        | ✅   | 商品区块   |
+| 组件            | RN 源                | Web 目标                   | 状态 | 说明           |
+| --------------- | -------------------- | -------------------------- | ---- | -------------- |
+| Button          | components/atoms     | packages/ui/components     | ✅   | 基础按钮       |
+| Avatar          | components/atoms     | packages/ui/components     | ✅   | 用户头像       |
+| Card            | components/atoms     | packages/ui/components     | ✅   | 卡片容器       |
+| Container       | N/A                  | packages/ui/layouts        | ✅   | 响应式容器     |
+| Grid            | N/A                  | packages/ui/layouts        | ✅   | 网格布局       |
+| Stack           | N/A                  | packages/ui/layouts        | ✅   | 堆叠布局       |
+| ChatList        | N/A                  | apps/web/components/Chat   | ✅   | 聊天列表       |
+| ChatMessages    | N/A                  | apps/web/components/Chat   | ✅   | 消息显示       |
+| WalletCard      | N/A                  | apps/web/components/Wallet | ✅   | 钱包卡片       |
+| TransactionList | N/A                  | apps/web/components/Wallet | ✅   | 交易列表       |
+| OrderCard       | N/A                  | apps/web/components/Order  | ✅   | 订单卡片       |
+| ProductCard     | components/templates | packages/ui/components     | ⏳   | 商品卡片       |
+| ProductSection  | N/A                  | apps/web/components        | ✅   | 商品区块       |
+| MobileNav       | N/A                  | apps/web/components        | ✅   | 移动端底部导航 |
 
 ## Phase 3: 页面迁移 (部分完成)
 
@@ -68,8 +69,8 @@
 
 1. **真实 API 对接** - 替换 Mock 数据，连接后端服务
 2. **Matrix 聊天集成** - 对接真实 Matrix 服务
-3. **响应式优化** - 移动端适配完善
-4. **ProductCard 组件** - 迁移商品卡片组件到 packages/ui
+3. **ProductCard 组件** - 迁移商品卡片组件到 packages/ui
+4. **PWA 完善** - 添加 Service Worker、离线支持
 
 ---
 
