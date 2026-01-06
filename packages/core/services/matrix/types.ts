@@ -173,3 +173,73 @@ export interface MatrixStorage {
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
 }
+
+// ============ E2E Crypto Types ============
+
+// 加密配置
+export interface CryptoConfig {
+  keyBackupEnabled: boolean;
+  crossSigningEnabled: boolean;
+  autoVerifyOwnDevices: boolean;
+}
+
+// 设备信息
+export interface DeviceInfo {
+  deviceId: string;
+  displayName: string;
+  lastSeenIp?: string;
+  lastSeenTs?: number;
+  verified: boolean;
+}
+
+// 验证请求
+export interface VerificationRequest {
+  transactionId: string;
+  userId: string;
+  deviceId?: string;
+  methods: string[];
+  status: 'pending' | 'started' | 'cancelled' | 'done';
+  timestamp: number;
+  sasEmojis?: SasEmoji[];
+  sasDecimals?: number[];
+}
+
+// SAS Emoji (用于验证显示)
+export interface SasEmoji {
+  emoji: string;
+  description: string;
+}
+
+// 密钥备份信息
+export interface KeyBackupInfo {
+  version: string;
+  algorithm: string;
+  authData: Record<string, unknown>;
+  count: number;
+  etag: string;
+}
+
+// 交叉签名状态
+export interface CrossSigningStatus {
+  publicKeysOnDevice: boolean;
+  privateKeysInStorage: boolean;
+  privateKeysCachedLocally: {
+    masterKey: boolean;
+    selfSigningKey: boolean;
+    userSigningKey: boolean;
+  };
+}
+
+// 加密错误
+export interface CryptoError {
+  code: string;
+  message: string;
+  roomId?: string;
+  deviceId?: string;
+}
+
+// 恢复密钥
+export interface RecoveryKey {
+  privateKey: Uint8Array;
+  encodedKey: string;
+}

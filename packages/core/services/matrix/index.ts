@@ -20,3 +20,6 @@ export {
 
 // 客户端
 export { matrixClient } from './client';
+
+// E2E 加密
+export { matrixCrypto, CRYPTO_EVENTS } from './crypto';
