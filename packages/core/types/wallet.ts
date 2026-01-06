@@ -106,3 +106,16 @@ export interface ExternalWallet {
   chainName: string;
   connected: boolean;
 }
+
+/**
+ * 钱包信息 (用于 UI 显示)
+ */
+export interface Wallet {
+  type: CryptoType;
+  name: string;
+  address: string;
+  balance: number;
+  balanceUSD: number;
+  icon?: string;
+  color?: string;
+}

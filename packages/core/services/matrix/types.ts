@@ -27,6 +27,12 @@ export const MATRIX_EVENTS = {
   VERIFICATION_SHOW_SAS: 'matrix_verification_show_sas',
   VERIFICATION_COMPLETED: 'matrix_verification_completed',
   VERIFICATION_CANCELLED: 'matrix_verification_cancelled',
+  // Crypto events (for useCrypto hook)
+  CRYPTO_VERIFICATION_REQUEST: 'crypto.verification_request',
+  CRYPTO_VERIFICATION_DONE: 'crypto.verification_done',
+  CRYPTO_VERIFICATION_CANCEL: 'crypto.verification_cancel',
+  CRYPTO_DEVICE_VERIFIED: 'crypto.device_verified',
+  CRYPTO_KEY_BACKUP_ENABLED: 'crypto.key_backup_enabled',
 } as const;
 
 export type MatrixEventType = (typeof MATRIX_EVENTS)[keyof typeof MATRIX_EVENTS];

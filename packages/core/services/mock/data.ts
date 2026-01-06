@@ -1,20 +1,146 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Mock Data for Development
  *
  * Centralized mock data that can be used across all services
+ * Note: Mock types are simplified and may not match actual API types exactly
  */
 
-import type { Product, ProductCategory } from '../../types/product';
-import type { Order } from '../../types/order';
-import type { User, UserProfile } from '../../types/user';
-import type { Wallet, Transaction } from '../../types/wallet';
+// Mock ProductCategory type
+export interface MockProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  count?: number;
+}
+
+// Mock Order type (simplified)
+export interface MockOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  type?: 'purchase' | 'sale';
+  items: Array<{
+    productId: string;
+    title: string;
+    price: number;
+    quantity: number;
+    image?: string;
+  }>;
+  total: number;
+  currency: string;
+  cryptoAmount: number;
+  cryptoCurrency: string;
+  vendor: {
+    peerID: string;
+    name: string;
+    avatar?: string;
+  };
+  shippingAddress: {
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+  };
+  timeline: Array<{
+    status: string;
+    timestamp: string;
+    description: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Mock UserProfile type (simplified)
+export interface MockUserProfile {
+  peerID: string;
+  name: string;
+  shortDescription?: string;
+  location?: string;
+  about?: string;
+  avatarHashes?: { medium?: string };
+  headerHashes?: { large?: string };
+  contactInfo?: {
+    email?: string;
+    phoneNumber?: string;
+    website?: string;
+  };
+  stats?: {
+    listingCount: number;
+    followerCount: number;
+    followingCount: number;
+    ratingCount: number;
+    averageRating: number;
+    postCount?: number;
+  };
+}
+
+// Mock Wallet type
+export interface MockWallet {
+  type: string;
+  name: string;
+  address: string;
+  balance: number;
+  balanceUSD: number;
+  icon?: string;
+  color?: string;
+}
+
+// Mock Transaction type
+export interface MockTransaction {
+  id: string;
+  type: 'send' | 'receive';
+  amount: number;
+  currency: string;
+  amountUSD: number;
+  timestamp: string;
+  status: 'pending' | 'confirmed';
+  from: string;
+  to: string;
+  txHash: string;
+  confirmations: number;
+  description: string;
+}
+
+// Mock Product type (simplified for mock data)
+export interface MockProduct {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  price: number;
+  currency: string;
+  images: string[];
+  category: string;
+  tags: string[];
+  stock: number;
+  vendor: {
+    peerID: string;
+    name: string;
+    avatar?: string;
+    rating: number;
+    reviewCount: number;
+  };
+  rating: number;
+  reviewCount: number;
+  contractType: 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE';
+  acceptedCurrencies: string[];
+  shipping: {
+    freeShipping: boolean;
+    estimatedDays: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Helper to generate random IDs
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
 // ============ Products ============
 
-export const mockCategories: ProductCategory[] = [
+export const mockCategories: MockProductCategory[] = [
   { id: '1', name: 'Electronics', slug: 'electronics', count: 150 },
   { id: '2', name: 'Fashion', slug: 'fashion', count: 200 },
   { id: '3', name: 'Home & Garden', slug: 'home-garden', count: 120 },
@@ -23,7 +149,7 @@ export const mockCategories: ProductCategory[] = [
   { id: '6', name: 'RWA Tokens', slug: 'rwa-tokens', count: 25 },
 ];
 
-export const mockProducts: Product[] = [
+export const mockProducts: MockProduct[] = [
   {
     id: '1',
     slug: 'premium-headphones',
@@ -116,7 +242,7 @@ export const mockProducts: Product[] = [
 ];
 
 // Generate more mock products
-export const generateMockProducts = (count: number = 20): Product[] => {
+export const generateMockProducts = (count: number = 20): MockProduct[] => {
   const titles = [
     'Wireless Earbuds',
     'Laptop Stand',
@@ -164,7 +290,7 @@ export const generateMockProducts = (count: number = 20): Product[] => {
 
 // ============ Orders ============
 
-export const mockOrders: Order[] = [
+export const mockOrders: MockOrder[] = [
   {
     id: 'ORD-001',
     orderNumber: 'ORD-2024-001',
@@ -284,7 +410,7 @@ export const mockOrders: Order[] = [
 
 // ============ Users ============
 
-export const mockCurrentUser: UserProfile = {
+export const mockCurrentUser: MockUserProfile = {
   peerID: 'QmMyPeerID123456',
   name: 'John Doe',
   shortDescription:
@@ -313,7 +439,7 @@ I specialize in electronics, collectibles, and handmade crafts. Every item is ca
   },
 };
 
-export const mockUsers: User[] = [
+export const mockUsers: MockUserProfile[] = [
   {
     peerID: 'QmUser001',
     name: 'Alice Chen',
@@ -346,7 +472,7 @@ export const mockUsers: User[] = [
 
 // ============ Wallet ============
 
-export const mockWallets: Wallet[] = [
+export const mockWallets: MockWallet[] = [
   {
     type: 'BTC',
     name: 'Bitcoin',
@@ -376,7 +502,7 @@ export const mockWallets: Wallet[] = [
   },
 ];
 
-export const mockTransactions: Transaction[] = [
+export const mockTransactions: MockTransaction[] = [
   {
     id: 'tx1',
     type: 'receive',
@@ -528,8 +654,8 @@ export const generateMockMessages = (_roomId: string): ChatMessage[] => {
 // ============ Search ============
 
 export interface SearchResult {
-  products: Product[];
-  users: User[];
+  products: MockProduct[];
+  users: MockUserProfile[];
   total: number;
   page: number;
   pageSize: number;

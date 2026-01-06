@@ -202,37 +202,57 @@ class PerformanceMonitorService {
   private async collectWebVitals(): Promise<void> {
     try {
       // 动态导入 web-vitals (如果可用)
-      const { onCLS, onFID, onLCP, onFCP, onTTFB, onINP } = await import('web-vitals');
+      // @ts-expect-error - web-vitals is an optional dependency
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const webVitals = (await import('web-vitals').catch(() => null)) as any;
+      if (!webVitals) {
+        this.collectWebVitalsFallback();
+        return;
+      }
 
-      onCLS(metric => {
-        this.webVitals.CLS = metric.value;
-        this.recordMetric('web_vitals_cls', metric.value, 'count', { rating: metric.rating });
-      });
+      const { onCLS, onFID, onLCP, onFCP, onTTFB, onINP } = webVitals;
 
-      onFID(metric => {
-        this.webVitals.FID = metric.value;
-        this.recordMetric('web_vitals_fid', metric.value, 'ms', { rating: metric.rating });
-      });
+      if (onCLS) {
+        onCLS((metric: { value: number; rating: string }) => {
+          this.webVitals.CLS = metric.value;
+          this.recordMetric('web_vitals_cls', metric.value, 'count', { rating: metric.rating });
+        });
+      }
 
-      onLCP(metric => {
-        this.webVitals.LCP = metric.value;
-        this.recordMetric('web_vitals_lcp', metric.value, 'ms', { rating: metric.rating });
-      });
+      if (onFID) {
+        onFID((metric: { value: number; rating: string }) => {
+          this.webVitals.FID = metric.value;
+          this.recordMetric('web_vitals_fid', metric.value, 'ms', { rating: metric.rating });
+        });
+      }
 
-      onFCP(metric => {
-        this.webVitals.FCP = metric.value;
-        this.recordMetric('web_vitals_fcp', metric.value, 'ms', { rating: metric.rating });
-      });
+      if (onLCP) {
+        onLCP((metric: { value: number; rating: string }) => {
+          this.webVitals.LCP = metric.value;
+          this.recordMetric('web_vitals_lcp', metric.value, 'ms', { rating: metric.rating });
+        });
+      }
 
-      onTTFB(metric => {
-        this.webVitals.TTFB = metric.value;
-        this.recordMetric('web_vitals_ttfb', metric.value, 'ms', { rating: metric.rating });
-      });
+      if (onFCP) {
+        onFCP((metric: { value: number; rating: string }) => {
+          this.webVitals.FCP = metric.value;
+          this.recordMetric('web_vitals_fcp', metric.value, 'ms', { rating: metric.rating });
+        });
+      }
 
-      onINP(metric => {
-        this.webVitals.INP = metric.value;
-        this.recordMetric('web_vitals_inp', metric.value, 'ms', { rating: metric.rating });
-      });
+      if (onTTFB) {
+        onTTFB((metric: { value: number; rating: string }) => {
+          this.webVitals.TTFB = metric.value;
+          this.recordMetric('web_vitals_ttfb', metric.value, 'ms', { rating: metric.rating });
+        });
+      }
+
+      if (onINP) {
+        onINP((metric: { value: number; rating: string }) => {
+          this.webVitals.INP = metric.value;
+          this.recordMetric('web_vitals_inp', metric.value, 'ms', { rating: metric.rating });
+        });
+      }
     } catch {
       // web-vitals 不可用时使用降级方案
       this.collectWebVitalsFallback();
