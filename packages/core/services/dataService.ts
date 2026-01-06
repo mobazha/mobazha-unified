@@ -491,35 +491,160 @@ export const walletDataService = {
 
 // ============ Chat Data Service ============
 
+// Import Matrix client for real chat operations
+import { matrixClient } from './matrix/client';
+import type { MatrixRoom, MatrixMessage, MatrixConfig, InvitePolicy } from './matrix/types';
+
 export const chatDataService = {
-  async getRooms() {
+  /**
+   * 初始化 Matrix 客户端
+   */
+  async initialize(config?: Partial<MatrixConfig>): Promise<boolean> {
+    if (isMockMode()) {
+      return true;
+    }
+    return await matrixClient.initialize(config);
+  },
+
+  /**
+   * 登录 Matrix
+   */
+  async login(username: string, password: string): Promise<boolean> {
+    if (isMockMode()) {
+      return true;
+    }
+    return await matrixClient.login(username, password);
+  },
+
+  /**
+   * 登出 Matrix
+   */
+  async logout(): Promise<void> {
+    if (isMockMode()) {
+      return;
+    }
+    await matrixClient.logout();
+  },
+
+  /**
+   * 启动同步
+   */
+  async startSync(): Promise<void> {
+    if (isMockMode()) {
+      return;
+    }
+    await matrixClient.startSync();
+  },
+
+  /**
+   * 停止同步
+   */
+  async stopSync(): Promise<void> {
+    if (isMockMode()) {
+      return;
+    }
+    await matrixClient.stopSync();
+  },
+
+  /**
+   * 获取房间列表
+   */
+  async getRooms(): Promise<MatrixRoom[]> {
     if (isMockMode()) {
       return mockServices.chat.getRooms();
     }
-    // Real Matrix API call - to be implemented
-    return [];
+    return await matrixClient.getRooms();
   },
 
-  async getMessages(roomId: string) {
+  /**
+   * 获取房间消息
+   */
+  async getMessages(roomId: string, limit = 50): Promise<MatrixMessage[]> {
     if (isMockMode()) {
       return mockServices.chat.getMessages(roomId);
     }
-    // Real Matrix API call - to be implemented
-    return [];
+    return await matrixClient.getMessages(roomId, limit);
   },
 
-  async sendMessage(roomId: string, content: string) {
+  /**
+   * 发送消息
+   */
+  async sendMessage(roomId: string, content: string): Promise<MatrixMessage | null> {
     if (isMockMode()) {
-      return mockServices.chat.sendMessage(roomId, content);
+      const result = await mockServices.chat.sendMessage(roomId, content);
+      return result as unknown as MatrixMessage;
     }
-    // Real Matrix API call - to be implemented
-    return {
-      id: `msg-${Date.now()}`,
-      content,
-      senderId: 'me',
-      timestamp: new Date().toISOString(),
-      status: 'sent' as const,
-    };
+    return await matrixClient.sendMessage(roomId, content);
+  },
+
+  /**
+   * 创建直接聊天房间
+   */
+  async createDirectRoom(userId: string, displayName?: string): Promise<string | null> {
+    if (isMockMode()) {
+      return `mock-room-${Date.now()}`;
+    }
+    return await matrixClient.createDirectRoom(userId, displayName);
+  },
+
+  /**
+   * 加入房间
+   */
+  async joinRoom(roomIdOrAlias: string): Promise<boolean> {
+    if (isMockMode()) {
+      return true;
+    }
+    return await matrixClient.joinRoom(roomIdOrAlias);
+  },
+
+  /**
+   * 离开房间
+   */
+  async leaveRoom(roomId: string): Promise<boolean> {
+    if (isMockMode()) {
+      return true;
+    }
+    return await matrixClient.leaveRoom(roomId);
+  },
+
+  /**
+   * 检查连接状态
+   */
+  isConnected(): boolean {
+    if (isMockMode()) {
+      return true;
+    }
+    return matrixClient.isClientConnected();
+  },
+
+  /**
+   * 获取当前用户 ID
+   */
+  getUserId(): string | null {
+    if (isMockMode()) {
+      return '@mock_user:matrix.org';
+    }
+    return matrixClient.getUserId();
+  },
+
+  /**
+   * 设置邀请策略
+   */
+  setInvitePolicy(policy: InvitePolicy): void {
+    if (isMockMode()) {
+      return;
+    }
+    matrixClient.setInvitePolicy(policy);
+  },
+
+  /**
+   * 获取邀请策略
+   */
+  getInvitePolicy(): InvitePolicy {
+    if (isMockMode()) {
+      return 'auto_mobazha';
+    }
+    return matrixClient.getInvitePolicy();
   },
 };
 
