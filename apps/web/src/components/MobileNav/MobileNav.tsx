@@ -160,16 +160,15 @@ export const MobileNav: React.FC = () => {
                   active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                {/* Badge */}
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute top-1 right-1/4 w-4 h-4 bg-error text-text-inverse text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
-
-                {/* Icon */}
-                <span className={`transition-transform ${active ? 'scale-110' : ''}`}>
+                {/* Icon with badge */}
+                <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
                   {active ? item.activeIcon || item.icon : item.icon}
+                  {/* Badge - small red circle with number */}
+                  {item.badge && item.badge > 0 && (
+                    <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
                 </span>
 
                 {/* Label */}

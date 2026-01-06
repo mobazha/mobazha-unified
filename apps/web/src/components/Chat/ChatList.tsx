@@ -90,38 +90,39 @@ export const ChatList: React.FC<ChatListProps> = ({
                   activeRoomId === room.id ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                 }`}
               >
-                <div className="relative">
-                  <Avatar
-                    src={room.avatar}
-                    name={room.name}
-                    size="md"
-                    showOnlineStatus
-                    isOnline={room.isOnline}
-                  />
-                  {room.isEncrypted && (
-                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-2.5 h-2.5 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
+                {/* Avatar with online status */}
+                <div className="relative flex-shrink-0">
+                  <Avatar src={room.avatar} name={room.name} size="md" />
+                  {/* Online status indicator - bottom right */}
+                  {room.isOnline && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <HStack justify="between" align="center">
-                    <span className="font-medium text-slate-900 dark:text-white truncate">
-                      {room.name}
-                    </span>
+                    <HStack gap="xs" align="center" className="min-w-0 flex-1">
+                      <span className="font-medium text-slate-900 dark:text-white truncate">
+                        {room.name}
+                      </span>
+                      {/* Encrypted indicator - next to name */}
+                      {room.isEncrypted && (
+                        <svg
+                          className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          aria-label="End-to-end encrypted"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </HStack>
                     {room.lastMessageTime && (
-                      <span className="text-xs text-slate-400 flex-shrink-0">
+                      <span className="text-xs text-slate-400 flex-shrink-0 ml-2">
                         {room.lastMessageTime}
                       </span>
                     )}

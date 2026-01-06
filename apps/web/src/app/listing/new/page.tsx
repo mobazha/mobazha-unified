@@ -394,20 +394,24 @@ export default function CreateListingPage() {
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Product Type
                   </h2>
-                  <Grid cols={2} colsMobile={1} gap="md">
+                  <Grid cols={2} colsMobile={2} gap="sm">
                     {productTypes.map(type => (
                       <button
                         key={type.value}
                         type="button"
                         onClick={() => handleChange('productType', type.value)}
-                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${
                           formData.productType === type.value
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                             : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                         }`}
                       >
-                        <p className="font-medium text-slate-900 dark:text-white">{type.label}</p>
-                        <p className="text-sm text-slate-500 mt-1">{type.description}</p>
+                        <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          {type.label}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
+                          {type.description}
+                        </p>
                       </button>
                     ))}
                   </Grid>

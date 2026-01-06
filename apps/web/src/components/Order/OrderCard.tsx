@@ -237,9 +237,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
               </span>
             </VStack>
 
-            <HStack gap="sm">
-              <Button variant="outline" size="sm" onClick={onContact}>
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <HStack gap="sm" className="flex-shrink-0">
+              <Button variant="outline" size="sm" onClick={onContact} className="whitespace-nowrap">
+                <svg
+                  className="w-4 h-4 mr-1 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -249,8 +254,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
                 </svg>
                 Contact
               </Button>
-              <Button size="sm" onClick={onViewDetails}>
-                View Details
+              <Button size="sm" onClick={onViewDetails} className="whitespace-nowrap">
+                Details
               </Button>
             </HStack>
           </HStack>
