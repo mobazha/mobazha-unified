@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { matrixCrypto, CRYPTO_EVENTS } from '../services/matrix/crypto';
+import type { NodeBackupInfo, KeyBackupResult } from '../services/matrix/crypto';
 import { matrixEvents } from '../services/matrix/events';
 import type {
   DeviceInfo,
@@ -23,8 +24,8 @@ export interface UseCryptoState {
   pendingVerifications: VerificationRequest[];
   /** 当前验证请求 */
   currentVerification: VerificationRequest | null;
-  /** 密钥备份信息 */
-  keyBackupInfo: KeyBackupInfo | null;
+  /** 密钥备份信息 (来自 Mobazha 节点) */
+  keyBackupInfo: NodeBackupInfo | null;
   /** 交叉签名状态 */
   crossSigningStatus: CrossSigningStatus | null;
   /** 是否正在加载 */
@@ -50,16 +51,26 @@ export interface UseCryptoActions {
   confirmVerification: (transactionId: string) => Promise<boolean>;
   /** 手动验证设备 */
   verifyDevice: (userId: string, deviceId: string) => Promise<boolean>;
-  /** 创建密钥备份 */
+  /** 创建密钥备份 (标准 Matrix 备份) */
   createKeyBackup: (passphrase?: string) => Promise<KeyBackupInfo | null>;
-  /** 恢复密钥备份 */
-  restoreKeyBackup: (recoveryKey: string) => Promise<boolean>;
+  /** 备份房间密钥到 Mobazha 节点 */
+  backupRoomKeys: () => Promise<KeyBackupResult>;
+  /** 从 Mobazha 节点恢复房间密钥 */
+  restoreRoomKeys: (deviceId?: string) => Promise<KeyBackupResult>;
+  /** 恢复密钥备份 (旧 API 别名) */
+  restoreKeyBackup: () => Promise<boolean>;
+  /** 删除密钥备份 */
+  deleteKeyBackup: (deviceId?: string) => Promise<boolean>;
   /** 导出房间密钥 */
-  exportRoomKeys: (passphrase: string) => Promise<string | null>;
+  exportRoomKeys: () => Promise<string | null>;
   /** 导入房间密钥 */
-  importRoomKeys: (keysData: string, passphrase: string) => Promise<boolean>;
+  importRoomKeys: (keysJson: string) => Promise<boolean>;
   /** 初始化交叉签名 */
   bootstrapCrossSigning: () => Promise<boolean>;
+  /** 备份交叉签名密钥包 */
+  backupSecretsBundle: () => Promise<KeyBackupResult>;
+  /** 恢复交叉签名密钥包 */
+  restoreSecretsBundle: () => Promise<KeyBackupResult>;
   /** 刷新状态 */
   refresh: () => Promise<void>;
 }
@@ -227,35 +238,68 @@ export function useCrypto(): UseCryptoReturn {
     [refreshDevices]
   );
 
-  // 创建密钥备份
+  // 创建密钥备份 (Matrix 标准备份，非 Mobazha 节点)
+  // 注意: 此方法用于 Matrix 标准备份，不更新 keyBackupInfo 状态
+  // Mobazha 使用 backupRoomKeys() 进行去中心化备份
   const createKeyBackup = useCallback(
     async (passphrase?: string): Promise<KeyBackupInfo | null> => {
-      const backupInfo = await matrixCrypto.createKeyBackup(passphrase);
-      if (backupInfo) {
-        safeSetState(prev => ({ ...prev, keyBackupInfo: backupInfo }));
+      return matrixCrypto.createKeyBackup(passphrase);
+    },
+    []
+  );
+
+  // 备份房间密钥到 Mobazha 节点
+  const backupRoomKeys = useCallback(async (): Promise<KeyBackupResult> => {
+    const result = await matrixCrypto.backupRoomKeys();
+    if (result.success) {
+      const keyBackupInfo = await matrixCrypto.getKeyBackupInfo();
+      safeSetState(prev => ({ ...prev, keyBackupInfo }));
+    }
+    return result;
+  }, [safeSetState]);
+
+  // 从 Mobazha 节点恢复房间密钥
+  const restoreRoomKeys = useCallback(async (deviceId?: string): Promise<KeyBackupResult> => {
+    return matrixCrypto.restoreRoomKeys(deviceId);
+  }, []);
+
+  // 恢复密钥备份 (旧 API 别名)
+  const restoreKeyBackup = useCallback(async (): Promise<boolean> => {
+    return matrixCrypto.restoreKeyBackup();
+  }, []);
+
+  // 删除密钥备份
+  const deleteKeyBackup = useCallback(
+    async (deviceId?: string): Promise<boolean> => {
+      const success = await matrixCrypto.deleteKeyBackup(deviceId);
+      if (success) {
+        const keyBackupInfo = await matrixCrypto.getKeyBackupInfo();
+        safeSetState(prev => ({ ...prev, keyBackupInfo }));
       }
-      return backupInfo;
+      return success;
     },
     [safeSetState]
   );
 
-  // 恢复密钥备份
-  const restoreKeyBackup = useCallback(async (recoveryKey: string): Promise<boolean> => {
-    return matrixCrypto.restoreKeyBackup(recoveryKey);
-  }, []);
-
   // 导出房间密钥
-  const exportRoomKeys = useCallback(async (passphrase: string): Promise<string | null> => {
-    return matrixCrypto.exportRoomKeys(passphrase);
+  const exportRoomKeys = useCallback(async (): Promise<string | null> => {
+    return matrixCrypto.exportRoomKeys();
   }, []);
 
   // 导入房间密钥
-  const importRoomKeys = useCallback(
-    async (keysData: string, passphrase: string): Promise<boolean> => {
-      return matrixCrypto.importRoomKeys(keysData, passphrase);
-    },
-    []
-  );
+  const importRoomKeys = useCallback(async (keysJson: string): Promise<boolean> => {
+    return matrixCrypto.importRoomKeys(keysJson);
+  }, []);
+
+  // 备份交叉签名密钥包
+  const backupSecretsBundle = useCallback(async (): Promise<KeyBackupResult> => {
+    return matrixCrypto.backupSecretsBundle();
+  }, []);
+
+  // 恢复交叉签名密钥包
+  const restoreSecretsBundle = useCallback(async (): Promise<KeyBackupResult> => {
+    return matrixCrypto.restoreSecretsBundle();
+  }, []);
 
   // 初始化交叉签名
   const bootstrapCrossSigning = useCallback(async (): Promise<boolean> => {
@@ -300,8 +344,10 @@ export function useCrypto(): UseCryptoReturn {
       refreshDevices();
     };
 
-    const handleKeyBackupEnabled = (backupInfo: unknown) => {
-      safeSetState(prev => ({ ...prev, keyBackupInfo: backupInfo as KeyBackupInfo }));
+    const handleKeyBackupEnabled = async () => {
+      // 备份完成后，从节点获取最新的备份信息
+      const backupInfo = await matrixCrypto.getKeyBackupInfo();
+      safeSetState(prev => ({ ...prev, keyBackupInfo: backupInfo }));
     };
 
     // 订阅事件
@@ -335,10 +381,15 @@ export function useCrypto(): UseCryptoReturn {
     confirmVerification,
     verifyDevice,
     createKeyBackup,
+    backupRoomKeys,
+    restoreRoomKeys,
     restoreKeyBackup,
+    deleteKeyBackup,
     exportRoomKeys,
     importRoomKeys,
     bootstrapCrossSigning,
+    backupSecretsBundle,
+    restoreSecretsBundle,
     refresh,
   };
 }
