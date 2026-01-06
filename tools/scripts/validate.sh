@@ -1,5 +1,6 @@
 #!/bin/bash
 # 完整验证脚本 - 提交前使用
+# 兼容 macOS 默认 bash 3.x
 
 set -e
 
@@ -20,8 +21,9 @@ mkdir -p "$REPORT_DIR/history"
 echo "# 验证报告 - $TIMESTAMP" > "$REPORT_FILE"
 echo "" >> "$REPORT_FILE"
 
-# 记录结果
-declare -A RESULTS
+# 计数器
+PASS_COUNT=0
+FAIL_COUNT=0
 
 log_step() {
   echo -e "${YELLOW}▶ $1${NC}"
@@ -33,7 +35,7 @@ log_success() {
   echo -e "${GREEN}✅ $1${NC}"
   echo "✅ **通过**: $1" >> "$REPORT_FILE"
   echo "" >> "$REPORT_FILE"
-  RESULTS["$1"]="pass"
+  PASS_COUNT=$((PASS_COUNT + 1))
 }
 
 log_failure() {
@@ -46,7 +48,7 @@ log_failure() {
     echo '```' >> "$REPORT_FILE"
     echo "" >> "$REPORT_FILE"
   fi
-  RESULTS["$1"]="fail"
+  FAIL_COUNT=$((FAIL_COUNT + 1))
 }
 
 echo -e "${YELLOW}🔍 Running full validation...${NC}"
@@ -93,22 +95,13 @@ echo "---" >> "$REPORT_FILE"
 echo "## 验证摘要" >> "$REPORT_FILE"
 echo "" >> "$REPORT_FILE"
 
-PASS_COUNT=0
-FAIL_COUNT=0
-
-for key in "${!RESULTS[@]}"; do
-  if [ "${RESULTS[$key]}" == "pass" ]; then
-    ((PASS_COUNT++))
-  else
-    ((FAIL_COUNT++))
-  fi
-done
+TOTAL=$((PASS_COUNT + FAIL_COUNT))
 
 echo "| 指标 | 结果 |" >> "$REPORT_FILE"
 echo "|------|------|" >> "$REPORT_FILE"
 echo "| 通过 | $PASS_COUNT |" >> "$REPORT_FILE"
 echo "| 失败 | $FAIL_COUNT |" >> "$REPORT_FILE"
-echo "| 总计 | $((PASS_COUNT + FAIL_COUNT)) |" >> "$REPORT_FILE"
+echo "| 总计 | $TOTAL |" >> "$REPORT_FILE"
 
 # 复制为最新报告
 cp "$REPORT_FILE" "$LATEST_REPORT"
@@ -128,4 +121,3 @@ else
   echo -e "查看详细报告: ${YELLOW}$LATEST_REPORT${NC}"
   exit 1
 fi
-
