@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { DevTools, MobileNav } from '@/components';
+import { DevTools, MobileNav, PWAInstall, ServiceWorkerProvider } from '@/components';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -13,6 +13,10 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'Mobazha',
+  },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'mobile-web-app-capable': 'yes',
   },
 };
 
@@ -32,14 +36,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.className}>
-        {/* Main content with bottom padding for mobile nav */}
-        <div className="pb-16 md:pb-0">{children}</div>
+        <ServiceWorkerProvider>
+          {/* Main content with bottom padding for mobile nav */}
+          <div className="pb-16 md:pb-0">{children}</div>
 
-        {/* Mobile bottom navigation */}
-        <MobileNav />
+          {/* Mobile bottom navigation */}
+          <MobileNav />
 
-        {/* Dev tools (only in development) */}
-        <DevTools />
+          {/* PWA install prompt */}
+          <PWAInstall />
+
+          {/* Dev tools (only in development) */}
+          <DevTools />
+        </ServiceWorkerProvider>
       </body>
     </html>
   );

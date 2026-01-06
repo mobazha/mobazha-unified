@@ -6,3 +6,5 @@ export { ChatList, ChatMessages } from './Chat';
 export type { ChatListProps, ChatRoom, ChatMessagesProps, Message } from './Chat';
 export { DevTools } from './DevTools';
 export { MobileNav } from './MobileNav';
+export { PWAInstall } from './PWAInstall';
+export { ServiceWorkerProvider } from './ServiceWorkerProvider';
