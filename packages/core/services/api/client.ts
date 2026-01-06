@@ -130,3 +130,15 @@ export async function safeRequest<T>(
     return fallback;
   }
 }
+
+/**
+ * API 客户端对象 (用于对象风格调用)
+ */
+export const apiClient = {
+  request,
+  get,
+  post,
+  put,
+  delete: del,
+  safeRequest,
+};

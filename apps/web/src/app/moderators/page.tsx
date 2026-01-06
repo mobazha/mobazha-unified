@@ -128,7 +128,7 @@ export default function ModeratorsPage() {
     });
 
   // Get unique languages
-  const allLanguages = [...new Set(mockModerators.flatMap(m => m.languages))];
+  const allLanguages = Array.from(new Set(mockModerators.flatMap(m => m.languages)));
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">

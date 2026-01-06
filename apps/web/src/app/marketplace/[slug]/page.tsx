@@ -321,11 +321,10 @@ export default function MarketplaceDetailPage() {
                 {mockProducts.map(product => (
                   <ProductCard
                     key={product.id}
-                    id={product.id}
                     title={product.title}
                     price={product.price}
                     currency={product.currency}
-                    image={product.image}
+                    imageUrl={product.image}
                     rating={product.rating}
                   />
                 ))}
