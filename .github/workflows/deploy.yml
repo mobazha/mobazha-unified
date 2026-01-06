@@ -1,8 +1,12 @@
 name: Deploy
 
 on:
-  push:
+  # 等待 CI workflow 完成后触发
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: [main]
+  # 手动触发
   workflow_dispatch:
     inputs:
       environment:
@@ -19,11 +23,74 @@ env:
   NODE_VERSION: 20
 
 jobs:
-  # ============ 构建 ============
-  build:
-    name: Build for ${{ github.event.inputs.environment || 'staging' }}
+  # ============ 部署到 Vercel (Staging) ============
+  deploy-staging:
+    name: Deploy to Staging
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'staging' }}
+    # 只在 CI 成功或手动触发时运行
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set environment variables
+        run: |
+          echo "NEXT_PUBLIC_API_URL=${{ vars.API_URL || 'http://localhost:5000' }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_MATRIX_HOMESERVER=${{ vars.MATRIX_HOMESERVER || 'https://matrix.org' }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_USE_MOCK_DATA=false" >> $GITHUB_ENV
+
+      - name: Build
+        run: pnpm build
+
+      - name: Deploy to Vercel (Staging)
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./apps/web
+        continue-on-error: true
+
+      - name: Deploy result
+        run: |
+          if [ "${{ steps.deploy.outcome }}" == "success" ]; then
+            echo "✅ Deployed to: ${{ steps.deploy.outputs.url }}"
+          else
+            echo "⚠️ Vercel deployment skipped (missing secrets or configuration)"
+            echo "To enable Vercel deployment, add the following secrets:"
+            echo "  - VERCEL_TOKEN"
+            echo "  - VERCEL_ORG_ID"
+            echo "  - VERCEL_PROJECT_ID"
+          fi
+
+  # ============ 部署到 Vercel (Production) ============
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,72 +118,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build-${{ github.sha }}
-          path: apps/web/.next
-          retention-days: 7
-
-  # ============ 部署到 Vercel (Staging) ============
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event.inputs.environment == 'staging' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build-${{ github.sha }}
-          path: apps/web/.next
-
-      - name: Deploy to Vercel (Staging)
-        id: deploy
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./apps/web
-
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🚀 Deployed to staging: ${{ steps.deploy.outputs.url }}`
-            })
-
-  # ============ 部署到 Vercel (Production) ============
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event.inputs.environment == 'production'
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build-${{ github.sha }}
-          path: apps/web/.next
-
       - name: Deploy to Vercel (Production)
         id: deploy
         uses: amondnet/vercel-action@v25
@@ -131,8 +132,7 @@ jobs:
   deploy-docker:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: build
-    if: github.event.inputs.environment == 'production'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
