@@ -143,7 +143,7 @@ export const MobileNav: React.FC = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden" data-testid="mobile-nav">
       {/* Backdrop blur */}
       <div className="absolute inset-0 bg-surface/90 backdrop-blur-lg border-t border-border" />
 
