@@ -258,12 +258,12 @@ export default function CheckoutPage() {
           </HStack>
 
           {/* Progress Steps */}
-          <div className="mb-8">
-            <HStack justify="center" gap="lg">
+          <div className="mb-8 overflow-x-hidden">
+            <div className="flex justify-center items-center gap-2 sm:gap-4 px-2">
               {['shipping', 'payment', 'confirm'].map((s, i) => (
-                <HStack key={s} gap="sm" align="center">
+                <div key={s} className="flex items-center gap-1 sm:gap-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium flex-shrink-0 ${
                       step === s
                         ? 'bg-emerald-500 text-white'
                         : i < ['shipping', 'payment', 'confirm'].indexOf(step)
@@ -274,14 +274,16 @@ export default function CheckoutPage() {
                     {i + 1}
                   </div>
                   <span
-                    className={`text-sm capitalize ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}
+                    className={`text-xs sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}
                   >
                     {s}
                   </span>
-                  {i < 2 && <div className="w-16 h-0.5 bg-slate-200 dark:bg-slate-700" />}
-                </HStack>
+                  {i < 2 && (
+                    <div className="w-6 sm:w-12 h-0.5 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+                  )}
+                </div>
               ))}
-            </HStack>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
