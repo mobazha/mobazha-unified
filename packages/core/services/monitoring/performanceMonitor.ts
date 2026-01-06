@@ -202,7 +202,6 @@ class PerformanceMonitorService {
   private async collectWebVitals(): Promise<void> {
     try {
       // 动态导入 web-vitals (如果可用)
-      // @ts-expect-error - web-vitals is an optional dependency
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const webVitals = (await import('web-vitals').catch(() => null)) as any;
       if (!webVitals) {
