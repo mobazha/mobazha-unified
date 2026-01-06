@@ -1,0 +1,256 @@
+---
+description: TypeScript 规范 - 所有 TypeScript 文件应用
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+alwaysApply: false
+---
+
+# TypeScript 规范
+
+## 类型定义
+
+### 优先使用 interface
+
+```typescript
+// ✅ 对象类型用 interface
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+}
+
+// ✅ 联合类型/工具类型用 type
+type ProductStatus = 'active' | 'inactive' | 'draft';
+type ProductWithStore = Product & { store: Store };
+```
+
+### 避免 any
+
+```typescript
+// ❌ 避免 any
+const data: any = response;
+
+// ✅ 使用 unknown + 类型守卫
+const data: unknown = response;
+if (isProduct(data)) {
+  console.log(data.title); // data 是 Product 类型
+}
+
+// ✅ 使用泛型
+function parseResponse<T>(response: unknown): T {
+  return response as T; // 或进行验证
+}
+```
+
+### 类型守卫
+
+```typescript
+// 类型守卫函数
+function isProduct(value: unknown): value is Product {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'title' in value
+  );
+}
+```
+
+## 函数类型
+
+### 参数和返回值类型
+
+```typescript
+// ✅ 明确参数和返回值类型
+function calculateTotal(items: CartItem[]): number {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+
+// ✅ 异步函数
+async function fetchProducts(category: string): Promise<Product[]> {
+  const response = await api.get(`/products?category=${category}`);
+  return response.data;
+}
+```
+
+### 可选参数和默认值
+
+```typescript
+// 可选参数
+function greet(name: string, greeting?: string): string {
+  return `${greeting ?? 'Hello'}, ${name}`;
+}
+
+// 默认值
+function paginate<T>(items: T[], page = 1, pageSize = 10): T[] {
+  const start = (page - 1) * pageSize;
+  return items.slice(start, start + pageSize);
+}
+```
+
+## React 组件类型
+
+### Props 类型
+
+```typescript
+// 使用 interface 定义 Props
+interface ButtonProps {
+  /** 按钮文本 */
+  children: React.ReactNode;
+  /** 点击回调 */
+  onClick?: () => void;
+  /** 是否禁用 */
+  disabled?: boolean;
+  /** 按钮类型 */
+  variant?: 'primary' | 'secondary' | 'ghost';
+}
+
+// 使用 Props
+export function Button({ 
+  children, 
+  onClick, 
+  disabled = false,
+  variant = 'primary',
+}: ButtonProps) {
+  // ...
+}
+```
+
+### 事件类型
+
+```typescript
+// 表单事件
+function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+}
+
+// 输入事件
+function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  setValue(e.target.value);
+}
+
+// 点击事件
+function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+  // ...
+}
+```
+
+### Ref 类型
+
+```typescript
+const inputRef = useRef<HTMLInputElement>(null);
+const divRef = useRef<HTMLDivElement>(null);
+```
+
+## 泛型
+
+### 基本泛型
+
+```typescript
+// 泛型函数
+function first<T>(array: T[]): T | undefined {
+  return array[0];
+}
+
+// 泛型接口
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+}
+
+// 使用
+const response: ApiResponse<Product[]> = await fetchProducts();
+```
+
+### 泛型约束
+
+```typescript
+// 约束泛型必须有 id 属性
+interface HasId {
+  id: string;
+}
+
+function findById<T extends HasId>(items: T[], id: string): T | undefined {
+  return items.find(item => item.id === id);
+}
+```
+
+## Zustand Store 类型
+
+```typescript
+import { create } from 'zustand';
+
+interface UserState {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  setUser: (user: User) => void;
+  logout: () => void;
+  fetchUser: (id: string) => Promise<void>;
+}
+
+export const useUserStore = create<UserState>((set) => ({
+  user: null,
+  isLoading: false,
+  error: null,
+  setUser: (user) => set({ user }),
+  logout: () => set({ user: null }),
+  fetchUser: async (id) => {
+    set({ isLoading: true, error: null });
+    try {
+      const user = await api.getUser(id);
+      set({ user, isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+}));
+```
+
+## 导入/导出
+
+### 类型导入
+
+```typescript
+// ✅ 使用 type 导入（仅类型）
+import type { Product, Order } from './types';
+
+// ✅ 混合导入
+import { fetchProducts, type Product } from './products';
+```
+
+### 重导出
+
+```typescript
+// packages/core/types/index.ts
+export type { Product } from './product';
+export type { Order } from './order';
+export type { User } from './user';
+```
+
+## 工具类型
+
+### 常用内置工具类型
+
+```typescript
+// Partial - 所有属性可选
+type PartialProduct = Partial<Product>;
+
+// Required - 所有属性必需
+type RequiredProduct = Required<Product>;
+
+// Pick - 选取部分属性
+type ProductPreview = Pick<Product, 'id' | 'title' | 'price'>;
+
+// Omit - 排除部分属性
+type ProductInput = Omit<Product, 'id' | 'createdAt'>;
+
+// Record - 键值对类型
+type ProductMap = Record<string, Product>;
+```
+
+---
+
+**注意**: 此规则会随项目进展动态调整。

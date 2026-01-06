@@ -1,0 +1,14 @@
+echo "🚀 Pre-push validation..."
+
+# 运行完整验证
+./tools/scripts/validate.sh
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ 验证失败，推送已取消"
+  echo "请修复问题后重试"
+  exit 1
+fi
+
+echo ""
+echo "✅ 验证通过，继续推送..."

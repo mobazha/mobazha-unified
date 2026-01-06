@@ -1,0 +1,10 @@
+echo "🔍 Pre-commit validation..."
+
+# 运行 lint-staged
+pnpm lint-staged
+
+echo ""
+echo "💡 提示: 提交前请确认已完成 Code Review"
+echo "   运行: pnpm review"
+echo "   或在 Cursor 中输入: review staged"
+echo ""

@@ -1,0 +1,99 @@
+---
+description: 迁移开发规则 - 始终应用于迁移相关工作
+alwaysApply: true
+---
+
+# 迁移开发规则
+
+## 核心目标
+
+**优先级排序**:
+1. **用户体验** - 响应式设计、流畅交互、现代 UI
+2. **功能完整** - 与原 RN 功能对齐，无遗漏
+3. **代码质量** - 可维护、可测试、TypeScript 类型安全
+
+## 迁移原则
+
+### 1. 增量迁移
+
+每次迁移聚焦单一模块或功能，便于验证和回滚。
+
+**迁移顺序**:
+```
+Core Services → Stores → Hooks → UI Components → Pages
+```
+
+### 2. 功能对齐检查
+
+迁移时必须参考：
+- 源文件 (`mobazha-mobile/`) 的完整功能
+- `docs/features/` 中的功能规格文档
+- `docs/migrations/status.md` 中的迁移状态
+
+### 3. TypeScript 优先
+
+- 所有新代码必须使用 TypeScript
+- 迁移时同步添加类型定义
+- 避免使用 `any`，必要时使用 `unknown` 并进行类型收窄
+
+## 文件命名规范
+
+```
+packages/core/
+├── services/
+│   └── matrixService.ts      # 服务：camelCase
+├── stores/
+│   └── userStore.ts          # Store：camelCase + Store 后缀
+├── hooks/
+│   └── useProducts.ts        # Hook：use 前缀 + PascalCase
+└── types/
+    └── product.ts            # 类型：camelCase
+
+packages/ui/
+├── components/
+│   └── ProductCard/          # 组件：PascalCase 目录
+│       ├── index.tsx
+│       ├── ProductCard.tsx
+│       └── ProductCard.test.tsx
+└── layouts/
+    └── AppLayout.tsx         # 布局：PascalCase
+```
+
+## 响应式设计要求
+
+### 断点定义
+
+```typescript
+const BREAKPOINTS = {
+  mobile: 0,      // < 768px
+  tablet: 768,    // 768-1023px
+  desktop: 1024,  // 1024-1439px
+  large: 1440,    // >= 1440px
+};
+```
+
+### 必须测试的视口
+
+- Mobile: 375x667 (iPhone SE)
+- Tablet: 768x1024 (iPad)
+- Desktop: 1440x900
+
+## 验证流程
+
+每次修改后运行：
+
+```bash
+# 快速验证
+pnpm validate:quick
+
+# 完整验证 (提交前)
+pnpm validate
+```
+
+## 迁移状态更新
+
+完成迁移后，更新 `docs/migrations/status.md`。
+
+---
+
+**注意**: 此规则会随项目进展动态调整。

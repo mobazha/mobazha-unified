@@ -1,0 +1,120 @@
+---
+description: 当用户要求 Code Review 或提交前自动应用
+globs:
+alwaysApply: false
+---
+
+# Code Review 规则
+
+当用户提到以下关键词时，自动进入 Code Review 模式：
+- "review"、"审查"、"检查代码"、"code review"
+- "帮我看看这个代码"、"这段代码有问题吗"
+- "review staged"、"提交前检查"
+
+## Review 流程
+
+### 1. 确认 Review 范围
+
+- 如果是 staged changes，使用 `git diff --staged`
+- 如果是整个功能，确认相关文件列表
+- 优先 review 最近修改的文件
+
+### 2. Review 维度和权重
+
+| 维度 | 权重 | 检查点 |
+|------|------|--------|
+| 代码质量 | 25% | 命名、结构、可读性、DRY |
+| React 最佳实践 | 20% | Hooks、性能、组件设计 |
+| TypeScript | 15% | 类型安全、泛型使用、避免 any |
+| 迁移一致性 | 15% | 与原 RN 功能对齐 |
+| 响应式设计 | 10% | 断点、布局适配 |
+| 错误处理 | 10% | try-catch、用户反馈 |
+| 测试覆盖 | 5% | 单元测试完整性 |
+
+### 3. 常见问题检查
+
+#### React/Hooks
+```typescript
+// ❌ 内存泄漏 - 缺少清理
+useEffect(() => {
+  const subscription = subscribe();
+  // 缺少 return () => subscription.unsubscribe();
+}, []);
+
+// ❌ 依赖数组不完整
+useEffect(() => {
+  fetchData(userId); // userId 不在依赖中
+}, []);
+
+// ❌ 不必要的重渲染
+<Button onClick={() => handleClick(id)} /> // 应用 useCallback
+```
+
+#### TypeScript
+```typescript
+// ❌ 使用 any
+const data: any = response;
+
+// ✅ 使用 unknown + 类型收窄
+const data: unknown = response;
+if (isProduct(data)) {
+  // data 现在是 Product 类型
+}
+```
+
+#### 响应式设计
+```typescript
+// ❌ 硬编码尺寸
+width: 375 // 应该用百分比或响应式值
+
+// ❌ 缺少响应式处理
+// 没有针对不同断点的布局
+```
+
+### 4. 迁移一致性检查
+
+- [ ] 功能与原 RN 实现一致
+- [ ] API 调用参数相同
+- [ ] 状态管理逻辑相同
+- [ ] 错误处理方式相同
+
+### 5. 输出 Review 报告
+
+```markdown
+## Code Review 报告
+
+### 📁 审查文件
+- file1.ts (+X 行)
+- file2.tsx (+X 行)
+
+### 📊 评分：X/10
+
+### 🔴 必须修复
+#### Issue #1: [标题]
+- 位置：`文件:行号`
+- 问题：描述
+- 建议修复：代码示例
+
+### 🟡 建议改进
+1. ...
+
+### ✅ 功能对齐检查
+- [x] 与原 RN 逻辑一致
+- [ ] 缺少 XX 功能
+
+### ✨ 代码亮点
+1. ...
+
+### 结论
+- [ ] 可以提交
+- [ ] 需要修复后重新 Review
+```
+
+## 跟进
+
+- 修复后可以请求 re-review
+- 严重问题标记为阻断性
+
+---
+
+**注意**: 此规则会随项目进展动态调整。

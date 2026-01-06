@@ -1,0 +1,108 @@
+---
+description: 提交规范规则 - 提交相关时应用
+globs:
+alwaysApply: false
+---
+
+# 提交规范规则
+
+## 提交信息格式
+
+```
+<type>(<scope>): <subject>
+
+[optional body]
+
+[optional footer]
+```
+
+## 类型 (type)
+
+| 类型 | 描述 | 示例 |
+|------|------|------|
+| `feat` | 新功能 | feat(core): add useProducts hook |
+| `refactor` | 重构/迁移 | refactor(core): migrate matrixService to TS |
+| `fix` | Bug 修复 | fix(ui): ProductCard responsive layout |
+| `test` | 测试 | test(core): add useProducts unit tests |
+| `docs` | 文档 | docs(features): add product list spec |
+| `chore` | 配置/构建 | chore: setup eslint rules |
+| `style` | 格式调整 | style(ui): format with prettier |
+| `perf` | 性能优化 | perf(core): optimize product query |
+
+## 范围 (scope)
+
+| 范围 | 对应目录 |
+|------|----------|
+| `core` | packages/core |
+| `ui` | packages/ui |
+| `web` | apps/web |
+| `config` | packages/config 或根配置 |
+| `scripts` | tools/scripts |
+| `docs` | docs/ |
+
+## 提交粒度
+
+**原则**: 每次提交聚焦单一职责
+
+### 好的提交序列 ✅
+
+```
+feat(core): add Product type definition
+feat(core): add useProducts hook skeleton
+feat(core): implement useProducts fetch logic
+feat(core): add useProducts error handling
+test(core): add useProducts unit tests
+docs(migrations): update product module status
+```
+
+### 不好的提交 ❌
+
+```
+feat: add product feature  # 太大，不清晰
+fix stuff                  # 信息不足
+WIP                        # 无意义
+```
+
+## 提交前检查清单
+
+在提交前确保：
+
+- [ ] `pnpm validate:quick` 通过
+- [ ] 已运行 Code Review (`pnpm review`)
+- [ ] 功能与原 RN 逻辑对齐 (如适用)
+- [ ] 相关测试已添加/更新
+- [ ] 迁移状态文档已更新 (如适用)
+
+## 推荐工作流
+
+```bash
+# 1. 完成一个小的修改
+# 2. 快速验证
+pnpm validate:quick
+
+# 3. 暂存
+git add .
+
+# 4. Code Review
+pnpm review
+# 或在 Cursor 中输入 "review staged"
+
+# 5. 修复 Review 发现的问题 (如有)
+
+# 6. 提交
+git commit -m "feat(core): add useProducts hook"
+
+# 7. 继续下一个小修改...
+```
+
+## 提交钩子
+
+项目配置了 Git hooks:
+
+- `pre-commit`: lint-staged (自动格式化)
+- `commit-msg`: 提交信息格式检查
+- `pre-push`: 完整验证
+
+---
+
+**注意**: 此规则会随项目进展动态调整。
