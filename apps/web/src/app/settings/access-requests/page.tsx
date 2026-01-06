@@ -108,55 +108,49 @@ export default function AccessRequestsPage() {
     return req.status === filter;
   });
 
-  const handleApprove = useCallback(
-    async (reqId: string) => {
-      setProcessingId(reqId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleApprove = useCallback(async (reqId: string, note: string) => {
+    setProcessingId(reqId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setRequests(prev =>
-        prev.map(req =>
-          req.id === reqId
-            ? {
-                ...req,
-                status: 'approved' as const,
-                reviewedAt: new Date().toISOString(),
-                reviewNote,
-              }
-            : req
-        )
-      );
-      setProcessingId(null);
-      setSelectedRequest(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setRequests(prev =>
+      prev.map(req =>
+        req.id === reqId
+          ? {
+              ...req,
+              status: 'approved' as const,
+              reviewedAt: new Date().toISOString(),
+              reviewNote: note,
+            }
+          : req
+      )
+    );
+    setProcessingId(null);
+    setSelectedRequest(null);
+    setReviewNote('');
+  }, []);
 
-  const handleReject = useCallback(
-    async (reqId: string) => {
-      setProcessingId(reqId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleReject = useCallback(async (reqId: string, note: string) => {
+    setProcessingId(reqId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setRequests(prev =>
-        prev.map(req =>
-          req.id === reqId
-            ? {
-                ...req,
-                status: 'rejected' as const,
-                reviewedAt: new Date().toISOString(),
-                reviewNote,
-              }
-            : req
-        )
-      );
-      setProcessingId(null);
-      setSelectedRequest(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setRequests(prev =>
+      prev.map(req =>
+        req.id === reqId
+          ? {
+              ...req,
+              status: 'rejected' as const,
+              reviewedAt: new Date().toISOString(),
+              reviewNote: note,
+            }
+          : req
+      )
+    );
+    setProcessingId(null);
+    setSelectedRequest(null);
+    setReviewNote('');
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -321,7 +315,7 @@ export default function AccessRequestsPage() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleApprove(req.id)}
+                          onClick={() => handleApprove(req.id, '')}
                           disabled={processingId === req.id}
                         >
                           {processingId === req.id ? 'Processing...' : 'Approve'}
@@ -437,14 +431,14 @@ export default function AccessRequestsPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => handleReject(selectedRequest.id)}
+                onClick={() => handleReject(selectedRequest.id, reviewNote)}
                 disabled={processingId === selectedRequest.id}
                 className="border-red-500 text-red-500 hover:bg-red-50"
               >
                 Reject
               </Button>
               <Button
-                onClick={() => handleApprove(selectedRequest.id)}
+                onClick={() => handleApprove(selectedRequest.id, reviewNote)}
                 disabled={processingId === selectedRequest.id}
               >
                 {processingId === selectedRequest.id ? 'Processing...' : 'Approve'}

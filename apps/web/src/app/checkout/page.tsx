@@ -155,10 +155,10 @@ export default function CheckoutPage() {
 
   // Calculate totals
   const subtotal = mockItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const moderatorFee =
-    selectedModerator && mockModerators.find(m => m.id === selectedModerator)?.fee
-      ? subtotal * (mockModerators.find(m => m.id === selectedModerator)!.fee / 100)
-      : 0;
+  const selectedModeratorData = selectedModerator
+    ? mockModerators.find(m => m.id === selectedModerator)
+    : null;
+  const moderatorFee = selectedModeratorData ? subtotal * (selectedModeratorData.fee / 100) : 0;
   const total = subtotal + moderatorFee;
 
   // 获取当前链信息 - 完整空值检查避免运行时错误
