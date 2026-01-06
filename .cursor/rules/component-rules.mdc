@@ -3,10 +3,30 @@ description: 组件开发规则 - 创建或修改 UI 组件时应用
 globs:
   - packages/ui/**/*.tsx
   - apps/web/components/**/*.tsx
+  - apps/web/src/components/**/*.tsx
 alwaysApply: false
 ---
 
 # 组件开发规则
+
+## UI 组件库
+
+项目使用两套 UI 组件库：
+
+1. **`@mobazha/ui`** - 自定义业务组件 (ProductCard, Avatar, Grid 等)
+2. **`@/components/ui`** - shadcn/ui 组件 (Dialog, Select, Toast 等)
+
+### 组件选择指南
+
+| 场景 | 使用 |
+|------|------|
+| 表单控件 (Input, Select, Switch) | `@/components/ui` |
+| 对话框 (Dialog, AlertDialog) | `@/components/ui` |
+| 消息通知 (Toast) | `@/components/ui` |
+| 业务卡片 (ProductCard, OrderCard) | `@mobazha/ui` |
+| 布局组件 (Container, Grid) | `@mobazha/ui` |
+
+详细指南请参考: [UI 组件库使用指南](../../docs/features/ui-components.md)
 
 ## 组件结构
 
