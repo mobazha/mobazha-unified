@@ -7,5 +7,5 @@ export * from './matrix';
 // 监控服务
 export * from './monitoring';
 
-// 其他服务（随迁移进行添加）
-// export * from './wallet';
+// 支付服务
+export * from './payment';
