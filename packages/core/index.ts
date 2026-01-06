@@ -22,3 +22,6 @@ export * from './types';
 
 // Utils
 export * from './utils';
+
+// i18n (国际化)
+export * from './i18n';

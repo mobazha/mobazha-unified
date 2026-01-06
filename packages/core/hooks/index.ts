@@ -17,6 +17,9 @@ export * from './useProfile';
 // 聊天相关
 export * from './useMatrix';
 
+// 国际化相关
+export * from './useI18n';
+
 // TODO: 后续迁移
 // export * from './useAuth';
 // export * from './useCart';
