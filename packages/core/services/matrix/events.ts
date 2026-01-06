@@ -3,9 +3,11 @@
  * 跨平台事件处理
  */
 
-import type { MatrixEventType, MatrixEventListener } from './types';
+import type { MatrixEventListener } from './types';
 
-type ListenerMap = Map<MatrixEventType, Set<MatrixEventListener>>;
+// 事件类型 - 使用 string 以支持动态事件 (如 crypto 事件)
+type EventType = string;
+type ListenerMap = Map<EventType, Set<MatrixEventListener>>;
 
 class MatrixEventEmitter {
   private listeners: ListenerMap = new Map();
@@ -13,7 +15,7 @@ class MatrixEventEmitter {
   /**
    * 添加事件监听器
    */
-  on(event: MatrixEventType, listener: MatrixEventListener): () => void {
+  on(event: EventType, listener: MatrixEventListener): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -26,7 +28,7 @@ class MatrixEventEmitter {
   /**
    * 移除事件监听器
    */
-  off(event: MatrixEventType, listener: MatrixEventListener): void {
+  off(event: EventType, listener: MatrixEventListener): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
       eventListeners.delete(listener);
@@ -36,13 +38,14 @@ class MatrixEventEmitter {
   /**
    * 触发事件
    */
-  emit(event: MatrixEventType, data?: unknown): void {
+  emit(event: EventType, data?: unknown): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
       eventListeners.forEach(listener => {
         try {
           listener(data);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error(`[Matrix] Event listener error for ${event}:`, error);
         }
       });
@@ -52,7 +55,7 @@ class MatrixEventEmitter {
   /**
    * 一次性监听
    */
-  once(event: MatrixEventType, listener: MatrixEventListener): () => void {
+  once(event: EventType, listener: MatrixEventListener): () => void {
     const onceWrapper: MatrixEventListener = data => {
       this.off(event, onceWrapper);
       listener(data);
@@ -63,7 +66,7 @@ class MatrixEventEmitter {
   /**
    * 移除所有监听器
    */
-  removeAllListeners(event?: MatrixEventType): void {
+  removeAllListeners(event?: EventType): void {
     if (event) {
       this.listeners.delete(event);
     } else {

@@ -17,7 +17,8 @@ import * as walletApi from './api/wallet';
 import type { Product, ProductCategory, ProductListItem } from '../types/product';
 import type { Order } from '../types/order';
 import type { UserProfile, User } from '../types/user';
-import type { Wallet, Transaction } from '../types/wallet';
+import type { Wallet, Transaction, FeeLevel, SendTransactionRequest } from '../types/wallet';
+import type { CryptoType } from '../types/common';
 
 // ============ Product Data Service ============
 
@@ -137,7 +138,7 @@ export const orderDataService = {
    */
   async getPurchases(limit?: string, offsetId?: string): Promise<Order[]> {
     if (isMockMode()) {
-      return mockServices.orders.getPurchases();
+      return mockServices.orders.getPurchases() as unknown as Order[];
     }
     return (await ordersApi.getPurchases(
       undefined,
@@ -152,7 +153,7 @@ export const orderDataService = {
    */
   async getSales(limit?: string, offsetId?: string): Promise<Order[]> {
     if (isMockMode()) {
-      return mockServices.orders.getSales();
+      return mockServices.orders.getSales() as unknown as Order[];
     }
     return (await ordersApi.getSales(undefined, undefined, limit, offsetId)) as unknown as Order[];
   },
@@ -162,7 +163,7 @@ export const orderDataService = {
    */
   async getOrder(orderId: string): Promise<Order | null> {
     if (isMockMode()) {
-      return mockServices.orders.getOrder(orderId);
+      return mockServices.orders.getOrder(orderId) as unknown as Order | null;
     }
     return await ordersApi.getOrderDetails(orderId);
   },
@@ -372,16 +373,20 @@ export const walletDataService = {
    */
   async getAllBalances(): Promise<Record<string, Wallet>> {
     if (isMockMode()) {
-      return mockServices.wallet.getAllBalances();
+      return mockServices.wallet.getAllBalances() as unknown as Record<string, Wallet>;
     }
     const balances = await walletApi.getAllBalances();
     // Convert to Wallet type
     const wallets: Record<string, Wallet> = {};
     for (const [coin, balance] of Object.entries(balances)) {
       wallets[coin] = {
-        type: coin,
+        type: coin as CryptoType,
+        name: coin,
+        address: '',
+        balance: balance.confirmed,
+        balanceUSD: 0,
         ...balance,
-      } as Wallet;
+      };
     }
     return wallets;
   },
@@ -391,14 +396,18 @@ export const walletDataService = {
    */
   async getBalance(coin: string): Promise<Wallet | null> {
     if (isMockMode()) {
-      return mockServices.wallet.getBalance(coin);
+      return mockServices.wallet.getBalance(coin) as unknown as Wallet | null;
     }
-    const balance = await walletApi.getBalance(coin);
+    const balance = await walletApi.getBalance(coin as CryptoType);
     if (!balance) return null;
     return {
-      type: coin,
+      type: coin as CryptoType,
+      name: coin,
+      address: '',
+      balance: balance.confirmed,
+      balanceUSD: 0,
       ...balance,
-    } as Wallet;
+    };
   },
 
   /**
@@ -406,9 +415,9 @@ export const walletDataService = {
    */
   async getTransactions(coin: string, limit = 20): Promise<Transaction[]> {
     if (isMockMode()) {
-      return mockServices.wallet.getTransactions(coin);
+      return mockServices.wallet.getTransactions(coin) as unknown as Transaction[];
     }
-    return await walletApi.getTransactions(coin, limit);
+    return await walletApi.getTransactions(coin as CryptoType, limit);
   },
 
   /**
@@ -418,7 +427,7 @@ export const walletDataService = {
     if (isMockMode()) {
       return mockServices.wallet.getAddress(coin);
     }
-    return await walletApi.getAddress(coin);
+    return await walletApi.getAddress(coin as CryptoType);
   },
 
   /**
@@ -428,7 +437,7 @@ export const walletDataService = {
     if (isMockMode()) {
       return mockServices.wallet.estimateFee(coin, amount);
     }
-    return await walletApi.estimateFee(coin, amount);
+    return await walletApi.estimateFee(coin as CryptoType, amount);
   },
 
   /**
@@ -438,14 +447,22 @@ export const walletDataService = {
     currency: string;
     address: string;
     amount: number;
-    feeLevel?: 'PRIORITY' | 'NORMAL' | 'ECONOMIC';
+    feeLevel?: FeeLevel;
     memo?: string;
     spendAll?: boolean;
   }) {
     if (isMockMode()) {
       return mockServices.wallet.sendTransaction(params);
     }
-    return await walletApi.sendTransaction(params);
+    const request: SendTransactionRequest = {
+      currency: params.currency as CryptoType,
+      address: params.address,
+      amount: params.amount,
+      feeLevel: params.feeLevel || 'NORMAL',
+      memo: params.memo,
+      spendAll: params.spendAll,
+    };
+    return await walletApi.sendTransaction(request);
   },
 
   /**

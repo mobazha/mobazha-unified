@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'outlined' | 'elevated';
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   hoverable?: boolean;
 }
 
@@ -20,6 +20,7 @@ const paddingStyles = {
   sm: 'p-3',
   md: 'p-4',
   lg: 'p-6',
+  xl: 'p-8',
 };
 
 /**

@@ -91,3 +91,8 @@ export interface AuthCredentials {
   username: string;
   password: string;
 }
+
+/**
+ * 用户别名 (兼容 Mock 数据)
+ */
+export type User = UserProfile;

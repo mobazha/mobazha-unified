@@ -17,25 +17,62 @@ import {
   generateMockProducts,
   generateMockMessages,
 } from './data';
-import type { Product, ProductCategory, ProductListItem } from '../../types/product';
-import type { Order } from '../../types/order';
-import type { UserProfile, User } from '../../types/user';
-import type { Wallet, Transaction } from '../../types/wallet';
+import type { ProductCategory, ProductListItem, Product } from '../../types/product';
+import type { UserProfile } from '../../types/user';
+import type { MockOrder, MockWallet, MockTransaction, MockUserProfile } from './data';
 
 // Simulate network delay
 const delay = (ms: number = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Convert Product to ProductListItem
-const toListItem = (p: Product): ProductListItem => ({
+// Mock Product type (for internal use)
+interface MockProduct {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  price: number;
+  currency: string;
+  images: string[];
+  category: string;
+  tags: string[];
+  stock: number;
+  vendor: {
+    peerID: string;
+    name: string;
+    avatar?: string;
+    rating: number;
+    reviewCount: number;
+  };
+  rating: number;
+  reviewCount: number;
+  contractType: 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE';
+  acceptedCurrencies: string[];
+  shipping: {
+    freeShipping: boolean;
+    estimatedDays: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Convert MockProduct to ProductListItem
+const toListItem = (p: MockProduct): ProductListItem => ({
   slug: p.slug,
-  hash: p.hash || `Qm${p.slug}`,
   title: p.title,
-  thumbnail: p.images?.[0] || p.thumbnail || '',
-  price: typeof p.price === 'number' ? p.price : parseFloat(p.price as string) || 0,
-  freeShipping: p.freeShipping,
-  acceptedCurrencies: p.acceptedCurrencies || ['BTC', 'ETH'],
+  thumbnail: {
+    tiny: p.images?.[0] || '',
+    small: p.images?.[0] || '',
+    medium: p.images?.[0] || '',
+    large: p.images?.[0] || '',
+    original: p.images?.[0] || '',
+  },
+  price: {
+    amount: p.price,
+    currencyCode: p.currency || 'USD',
+  },
+  freeShipping: p.shipping?.freeShipping ? ['WORLDWIDE'] : undefined,
   contractType: p.contractType || 'PHYSICAL_GOOD',
-  vendorPeerID: p.vendorPeerID || p.vendor?.peerID || '',
+  vendorPeerID: p.vendor?.peerID || '',
   averageRating: p.rating || 0,
   ratingCount: p.reviewCount || 0,
 });
@@ -66,7 +103,54 @@ export const mockProductService = {
   async getProduct(slug: string): Promise<Product | null> {
     await delay();
     const allProducts = [...mockProducts, ...generateMockProducts(20)];
-    return allProducts.find(p => p.slug === slug) || null;
+    const found = allProducts.find(p => p.slug === slug);
+    if (!found) return null;
+
+    // Convert MockProduct to Product
+    return {
+      slug: found.slug,
+      vendorID: {
+        peerID: found.vendor.peerID,
+        handle: found.vendor.name,
+      },
+      metadata: {
+        version: 1,
+        contractType: found.contractType,
+        format: 'FIXED_PRICE',
+        expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        acceptedCurrencies: found.acceptedCurrencies as (
+          | 'BTC'
+          | 'ETH'
+          | 'TETH'
+          | 'LTC'
+          | 'BCH'
+          | 'ZEC'
+          | 'BSC'
+          | 'USDT'
+        )[],
+        pricingCurrency: {
+          code: found.currency,
+          divisibility: 2,
+        },
+        escrowTimeoutHours: 24,
+      },
+      item: {
+        title: found.title,
+        description: found.description,
+        processingTime: '2-3 days',
+        price: found.price,
+        nsfw: false,
+        tags: found.tags,
+        images: found.images.map(img => ({
+          tiny: img,
+          small: img,
+          medium: img,
+          large: img,
+          original: img,
+        })),
+        categories: [found.category],
+      },
+    };
   },
 
   async createListing(_productDetails: Partial<Product>): Promise<{ slug: string }> {
@@ -101,17 +185,17 @@ export const mockProductService = {
 // ============ Order Services ============
 
 export const mockOrderService = {
-  async getPurchases(): Promise<Order[]> {
+  async getPurchases(): Promise<MockOrder[]> {
     await delay();
     return mockOrders.filter(o => o.type === 'purchase' || !o.type);
   },
 
-  async getSales(): Promise<Order[]> {
+  async getSales(): Promise<MockOrder[]> {
     await delay();
     return mockOrders.filter(o => o.type === 'sale');
   },
 
-  async getOrder(orderId: string): Promise<Order | null> {
+  async getOrder(orderId: string): Promise<MockOrder | null> {
     await delay();
     return mockOrders.find(o => o.id === orderId || o.orderNumber === orderId) || null;
   },
@@ -165,7 +249,7 @@ export const mockOrderService = {
 export const mockProfileService = {
   async getCurrentUser(): Promise<UserProfile> {
     await delay();
-    return mockCurrentUser;
+    return mockCurrentUser as unknown as UserProfile;
   },
 
   async updateProfile(_data: Partial<UserProfile>): Promise<{ success: boolean }> {
@@ -176,9 +260,9 @@ export const mockProfileService = {
   async getUser(peerID: string): Promise<UserProfile | null> {
     await delay();
     if (peerID === mockCurrentUser.peerID) {
-      return mockCurrentUser;
+      return mockCurrentUser as unknown as UserProfile;
     }
-    return (mockUsers.find(u => u.peerID === peerID) as UserProfile) || null;
+    return (mockUsers.find(u => u.peerID === peerID) as unknown as UserProfile) || null;
   },
 
   async getSettings() {
@@ -213,7 +297,7 @@ export const mockProfileService = {
     return { success: true };
   },
 
-  async searchUsers(query: string): Promise<User[]> {
+  async searchUsers(query: string): Promise<MockUserProfile[]> {
     await delay();
     return mockUsers.filter(
       u =>
@@ -226,21 +310,21 @@ export const mockProfileService = {
 // ============ Wallet Services ============
 
 export const mockWalletService = {
-  async getAllBalances(): Promise<Record<string, Wallet>> {
+  async getAllBalances(): Promise<Record<string, MockWallet>> {
     await delay();
-    const balances: Record<string, Wallet> = {};
+    const balances: Record<string, MockWallet> = {};
     for (const wallet of mockWallets) {
       balances[wallet.type] = wallet;
     }
     return balances;
   },
 
-  async getBalance(coin: string): Promise<Wallet | null> {
+  async getBalance(coin: string): Promise<MockWallet | null> {
     await delay();
     return mockWallets.find(w => w.type === coin) || null;
   },
 
-  async getTransactions(coin: string): Promise<Transaction[]> {
+  async getTransactions(coin: string): Promise<MockTransaction[]> {
     await delay();
     return mockTransactions.filter(t => t.currency === coin);
   },
@@ -296,25 +380,66 @@ export const mockWalletService = {
 
 // ============ Chat Services ============
 
+import type { MatrixRoom, MatrixMessage } from '../matrix/types';
+
 export const mockChatService = {
-  async getRooms() {
+  async getRooms(): Promise<MatrixRoom[]> {
     await delay();
-    return mockChatRooms;
+    // Convert ChatRoom to MatrixRoom format
+    return mockChatRooms.map(room => ({
+      roomId: room.id,
+      name: room.name,
+      avatarUrl: room.avatar,
+      isDirect: true,
+      isEncrypted: true,
+      lastMessage: room.lastMessage
+        ? {
+            id: `msg-${room.id}`,
+            roomId: room.id,
+            sender: room.peerID,
+            content: room.lastMessage,
+            type: 'text' as const,
+            timestamp: new Date(room.lastMessageTime || Date.now()).getTime(),
+          }
+        : undefined,
+      unreadCount: room.unreadCount,
+      members: [
+        {
+          userId: room.peerID,
+          displayName: room.name,
+          avatarUrl: room.avatar,
+        },
+      ],
+      timestamp: room.lastMessageTime ? new Date(room.lastMessageTime).getTime() : undefined,
+    }));
   },
 
-  async getMessages(roomId: string) {
+  async getMessages(roomId: string): Promise<MatrixMessage[]> {
     await delay();
-    return generateMockMessages(roomId);
+    const messages = generateMockMessages(roomId);
+    // Convert ChatMessage to MatrixMessage format
+    return messages.map(msg => ({
+      id: msg.id,
+      roomId: roomId,
+      sender: msg.senderId,
+      senderName: msg.senderName,
+      content: msg.content,
+      type: 'text' as const,
+      timestamp: new Date(msg.timestamp).getTime(),
+      status: msg.status === 'sending' ? 'sending' : msg.status === 'failed' ? 'failed' : 'sent',
+    }));
   },
 
-  async sendMessage(roomId: string, content: string) {
+  async sendMessage(roomId: string, content: string): Promise<MatrixMessage> {
     await delay(200);
     return {
       id: `msg-${Date.now()}`,
+      roomId,
+      sender: 'me',
       content,
-      senderId: 'me',
-      timestamp: new Date().toISOString(),
-      status: 'sent' as const,
+      type: 'text' as const,
+      timestamp: Date.now(),
+      status: 'sent',
     };
   },
 };

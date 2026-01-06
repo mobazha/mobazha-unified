@@ -1,6 +1,18 @@
 import type { Image, Price, CryptoType } from './common';
 
 /**
+ * 商品分类
+ */
+export interface ProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  count?: number;
+  parentId?: string;
+  icon?: string;
+}
+
+/**
  * 商品列表项（简略）
  */
 export interface ProductListItem {
