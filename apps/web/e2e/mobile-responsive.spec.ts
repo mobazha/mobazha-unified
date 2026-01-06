@@ -14,8 +14,13 @@
 
 import { test, expect } from '@playwright/test';
 
-// 跳过桌面浏览器
-test.skip(({ browserName }) => !['chromium', 'webkit'].includes(browserName), 'Mobile only test');
+// 只在移动端项目中运行测试（通过项目名称判断，而非浏览器名称）
+test.beforeEach(async (_fixtures, testInfo) => {
+  const isMobileProject = testInfo.project.name.toLowerCase().includes('mobile');
+  if (!isMobileProject) {
+    test.skip();
+  }
+});
 
 // 要测试的页面列表
 const pagesToTest = [

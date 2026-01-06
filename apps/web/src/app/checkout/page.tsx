@@ -146,12 +146,15 @@ export default function CheckoutPage() {
   // 获取可用链
   const availableChains = getMainnetChains();
 
-  // 同步钱包链 - 只依赖 walletInfo?.chainId，避免函数引用导致无限循环
+  // 提取 chainId 为独立变量，确保依赖稳定
+  const walletChainId = walletInfo?.chainId;
+
+  // 同步钱包链 - 只依赖提取的 chainId 原始值，避免对象引用导致无限循环
   useEffect(() => {
-    if (walletInfo?.chainId) {
-      setSelectedChain(walletInfo.chainId as ChainId);
+    if (walletChainId) {
+      setSelectedChain(walletChainId as ChainId);
     }
-  }, [walletInfo?.chainId]);
+  }, [walletChainId]);
 
   // Calculate totals
   const subtotal = mockItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
