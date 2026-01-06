@@ -55,17 +55,17 @@
 | 钱包页     | screens/Wallet.js      | apps/web/app/wallet/page.tsx  | ✅   | Mock 数据 |
 | 订单列表   | screens/Orders.js      | apps/web/app/orders/page.tsx  | ✅   | Mock 数据 |
 | 订单详情   | screens/OrderDetail.js | apps/web/app/orders/[orderId] | ✅   | Mock 数据 |
-| 商品详情   | screens/Listing.js     | apps/web/app/listing/[slug]   | ⏳   | 待迁移    |
-| 搜索页     | screens/Search.js      | apps/web/app/search           | ⏳   | 待迁移    |
-| 设置页     | screens/Settings.js    | apps/web/app/settings         | ⏳   | 待迁移    |
-| 用户资料页 | screens/Profile.js     | apps/web/app/profile          | ⏳   | 待迁移    |
+| 商品详情   | screens/Listing.js     | apps/web/app/product/[slug]   | ✅   | 完整功能  |
+| 搜索页     | screens/Search.js      | apps/web/app/search           | ✅   | 完整功能  |
+| 设置页     | screens/Settings.js    | apps/web/app/settings         | ✅   | 完整功能  |
+| 用户资料页 | screens/Profile.js     | apps/web/app/profile          | ✅   | 完整功能  |
 
 ## 下一步计划
 
-1. **商品详情页** - 迁移 Listing 页面
-2. **搜索功能** - 实现商品搜索页面
-3. **用户资料** - 个人资料和设置页面
-4. **真实 API 对接** - 替换 Mock 数据
+1. **真实 API 对接** - 替换 Mock 数据，连接后端服务
+2. **商品创建/编辑** - 实现 /listing/new 和 /listing/edit 页面
+3. **购物车结算** - 实现购物车和结算流程
+4. **Matrix 聊天集成** - 对接真实 Matrix 服务
 
 ---
 
