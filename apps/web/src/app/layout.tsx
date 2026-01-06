@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <ServiceWorkerProvider>
             {/* Main content with bottom padding for mobile nav */}
-            <div className="pb-16 md:pb-0">{children}</div>
+            <div className="pb-20 md:pb-0">{children}</div>
 
             {/* Mobile bottom navigation */}
             <MobileNav />

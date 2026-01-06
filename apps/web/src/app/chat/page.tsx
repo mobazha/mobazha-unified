@@ -123,10 +123,11 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
       <Header />
 
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main content area - account for mobile nav height */}
+      <div className="flex-1 flex overflow-hidden h-[calc(100vh-64px-80px)] md:h-[calc(100vh-64px)]">
         {/* Chat List - Hidden on mobile when a room is selected */}
         <div
           className={`w-full lg:w-80 xl:w-96 flex-shrink-0 ${
