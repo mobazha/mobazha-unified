@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 const config: Config = {
   darkMode: 'class', // 启用 class 模式，支持主题切换
@@ -43,6 +44,9 @@ const config: Config = {
         // 边框色
         border: 'var(--color-border)',
         'border-light': 'var(--color-borderLight)',
+
+        // shadcn/ui 兼容 - ring 颜色
+        ring: 'var(--color-primary)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -55,9 +59,24 @@ const config: Config = {
       backgroundImage: {
         'theme-gradient': 'var(--color-gradient, none)',
       },
+      // shadcn/ui 动画
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+      },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;
