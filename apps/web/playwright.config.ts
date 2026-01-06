@@ -48,7 +48,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true, // 总是重用已运行的服务器
     timeout: 120 * 1000,
   },
 });
