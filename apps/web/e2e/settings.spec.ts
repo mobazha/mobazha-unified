@@ -129,51 +129,148 @@ test.describe('Access Requests Management', () => {
     await page.goto('/settings/access-requests');
   });
 
-  test.skip('should display access requests page', async ({ page }) => {
-    // Skip: Page not yet implemented
+  test('should display access requests page', async ({ page }) => {
     await page.waitForLoadState('networkidle');
+
+    const heading = page.locator('h1');
+    await expect(heading).toContainText('Access Requests');
 
     const content = page.locator('main');
     await expect(content).toBeVisible();
+  });
+
+  test('should show stats cards', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    // Should show pending, approved, rejected counts
+    const pendingText = page.getByText('Pending');
+    const approvedText = page.getByText('Approved');
+    const rejectedText = page.getByText('Rejected');
+
+    await expect(pendingText.first()).toBeVisible();
+    await expect(approvedText.first()).toBeVisible();
+    await expect(rejectedText.first()).toBeVisible();
   });
 
   test('should show pending requests', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    const requests = page.locator('[data-testid="access-request"], .request-card');
-    expect(requests).toBeDefined();
+    const requests = page.locator('[data-testid="access-request-item"]');
+    expect(await requests.count()).toBeGreaterThan(0);
   });
 
-  test('should show approve/reject buttons', async ({ page }) => {
+  test('should show approve/reject buttons for pending requests', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    const approveButton = page.locator('button').filter({ hasText: /approve|批准|同意/i });
-    const rejectButton = page.locator('button').filter({ hasText: /reject|deny|拒绝/i });
+    const approveButton = page.locator('button').filter({ hasText: /Approve/i });
+    const reviewButton = page.locator('button').filter({ hasText: /Review/i });
 
-    // These may or may not be present based on whether there are pending requests
-    expect(approveButton).toBeDefined();
-    expect(rejectButton).toBeDefined();
+    // Should have action buttons for pending requests
+    expect(await approveButton.count()).toBeGreaterThan(0);
+    expect(await reviewButton.count()).toBeGreaterThan(0);
+  });
+
+  test('should filter requests by status', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    // Click "All" filter
+    const allFilter = page.locator('button').filter({ hasText: 'All' });
+    await allFilter.click();
+
+    // Should show all requests
+    const requests = page.locator('[data-testid="access-request-item"]');
+    expect(await requests.count()).toBeGreaterThanOrEqual(2);
+  });
+
+  test('should open review modal', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const reviewButton = page
+      .locator('button')
+      .filter({ hasText: /Review/i })
+      .first();
+    await reviewButton.click();
+
+    // Modal should appear
+    const modal = page.locator('text=Review Request');
+    await expect(modal).toBeVisible();
+
+    // Should have Cancel and Approve buttons in modal
+    const cancelButton = page.locator('button').filter({ hasText: 'Cancel' });
+    await expect(cancelButton).toBeVisible();
   });
 });
 
 test.describe('Blocked Users Management', () => {
-  test('should navigate to blocked users section', async ({ page }) => {
-    await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
-
-    const blockedSection = page.getByText(/block|屏蔽/i);
-
-    if (await blockedSection.count()) {
-      await blockedSection.first().click();
-    }
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/settings/blocked-users');
   });
 
-  test.skip('should show blocked users list', async ({ page }) => {
-    // Skip: Page not yet implemented
-    await page.goto('/settings/blocked-users');
+  test('should display blocked users page', async ({ page }) => {
     await page.waitForLoadState('networkidle');
+
+    const heading = page.locator('h1');
+    await expect(heading).toContainText('Blocked Users');
 
     const content = page.locator('main');
     await expect(content).toBeVisible();
+  });
+
+  test('should show blocked users list', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const blockedUsers = page.locator('[data-testid="blocked-user-item"]');
+    expect(await blockedUsers.count()).toBeGreaterThan(0);
+  });
+
+  test('should show block user button', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const blockButton = page.locator('button').filter({ hasText: 'Block User' });
+    await expect(blockButton).toBeVisible();
+  });
+
+  test('should show unblock button for each user', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const unblockButtons = page.locator('button').filter({ hasText: 'Unblock' });
+    expect(await unblockButtons.count()).toBeGreaterThan(0);
+  });
+
+  test('should open add block modal', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const blockButton = page.locator('button').filter({ hasText: 'Block User' });
+    await blockButton.click();
+
+    // Modal should appear
+    const modal = page.locator('text=Block a User');
+    await expect(modal).toBeVisible();
+
+    // Should have Peer ID input
+    const peerIdInput = page.getByPlaceholder('Qm...');
+    await expect(peerIdInput).toBeVisible();
+  });
+
+  test('should search blocked users', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const searchInput = page.getByPlaceholder(/search/i);
+    await searchInput.fill('Spam');
+
+    // Should filter to show only matching user
+    const blockedUsers = page.locator('[data-testid="blocked-user-item"]');
+    expect(await blockedUsers.count()).toBeGreaterThanOrEqual(1);
+  });
+
+  test('should show confirmation when unblocking', async ({ page }) => {
+    await page.waitForLoadState('networkidle');
+
+    const unblockButton = page.locator('button').filter({ hasText: 'Unblock' }).first();
+    await unblockButton.click();
+
+    // Confirmation modal should appear
+    const confirmModal = page.locator('text=Unblock User?');
+    await expect(confirmModal).toBeVisible();
   });
 });

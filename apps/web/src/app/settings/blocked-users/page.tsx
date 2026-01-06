@@ -1,0 +1,405 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Header, Footer } from '@/components';
+import { Container, VStack, HStack, Card, Button, Avatar, Input } from '@mobazha/ui';
+
+// Types
+interface BlockedUser {
+  id: string;
+  peerID: string;
+  name: string;
+  avatar?: string;
+  reason?: string;
+  blockedAt: string;
+  blockedBy: 'manual' | 'auto';
+  stats?: {
+    disputes: number;
+    reports: number;
+  };
+}
+
+// Mock data
+const mockBlockedUsers: BlockedUser[] = [
+  {
+    id: 'user1',
+    peerID: 'QmBlocked1',
+    name: 'Spam User',
+    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcabd36?w=100&h=100&fit=crop',
+    reason: 'Sending spam messages repeatedly',
+    blockedAt: '2024-01-10T10:00:00Z',
+    blockedBy: 'manual',
+    stats: {
+      disputes: 3,
+      reports: 12,
+    },
+  },
+  {
+    id: 'user2',
+    peerID: 'QmBlocked2',
+    name: 'Scam Attempt',
+    reason: 'Attempted phishing scam',
+    blockedAt: '2024-01-08T15:30:00Z',
+    blockedBy: 'manual',
+    stats: {
+      disputes: 5,
+      reports: 25,
+    },
+  },
+  {
+    id: 'user3',
+    peerID: 'QmBlocked3',
+    name: 'Auto-blocked User',
+    blockedAt: '2024-01-05T09:00:00Z',
+    blockedBy: 'auto',
+    reason: 'Multiple failed transaction disputes',
+    stats: {
+      disputes: 8,
+      reports: 4,
+    },
+  },
+];
+
+export default function BlockedUsersPage() {
+  const router = useRouter();
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newBlockPeerID, setNewBlockPeerID] = useState('');
+  const [newBlockReason, setNewBlockReason] = useState('');
+  const [confirmUnblock, setConfirmUnblock] = useState<BlockedUser | null>(null);
+
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      setBlockedUsers(mockBlockedUsers);
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  const filteredUsers = blockedUsers.filter(user => {
+    if (!searchQuery) return true;
+    return (
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.peerID.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const handleUnblock = useCallback(async (userId: string) => {
+    setProcessingId(userId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    setBlockedUsers(prev => prev.filter(u => u.id !== userId));
+    setProcessingId(null);
+    setConfirmUnblock(null);
+  }, []);
+
+  const handleAddBlock = useCallback(async () => {
+    if (!newBlockPeerID) return;
+
+    setProcessingId('new');
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const newUser: BlockedUser = {
+      id: `user-${Date.now()}`,
+      peerID: newBlockPeerID,
+      name: `User ${newBlockPeerID.slice(0, 8)}`,
+      reason: newBlockReason || undefined,
+      blockedAt: new Date().toISOString(),
+      blockedBy: 'manual',
+    };
+
+    setBlockedUsers(prev => [newUser, ...prev]);
+    setProcessingId(null);
+    setShowAddModal(false);
+    setNewBlockPeerID('');
+    setNewBlockReason('');
+  }, [newBlockPeerID, newBlockReason]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <Header />
+        <Container className="py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+            <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
+          </div>
+        </Container>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <Header />
+
+      <main className="py-8">
+        <Container>
+          {/* Back Button & Title */}
+          <HStack justify="between" align="center" className="mb-6">
+            <HStack gap="md" align="center">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Blocked Users</h1>
+                <p className="text-slate-500 text-sm">
+                  Manage users blocked from your store ({blockedUsers.length} blocked)
+                </p>
+              </div>
+            </HStack>
+            <Link href="/settings" className="text-emerald-600 hover:text-emerald-700 text-sm">
+              ← Back to Settings
+            </Link>
+          </HStack>
+
+          {/* Search & Add */}
+          <Card padding="md" className="mb-6">
+            <HStack justify="between" gap="md" className="flex-wrap">
+              <Input
+                placeholder="Search by name or Peer ID..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="flex-1 min-w-[200px] max-w-md"
+              />
+              <Button onClick={() => setShowAddModal(true)}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Block User
+              </Button>
+            </HStack>
+          </Card>
+
+          {/* Info Banner */}
+          <Card
+            padding="md"
+            className="mb-6 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+          >
+            <HStack gap="sm" align="start">
+              <svg
+                className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                  What happens when you block a user?
+                </p>
+                <ul className="text-sm text-amber-700 dark:text-amber-300 mt-1 list-disc list-inside">
+                  <li>They cannot view your store or products</li>
+                  <li>They cannot send you messages</li>
+                  <li>They cannot place orders with your store</li>
+                  <li>Existing orders will not be affected</li>
+                </ul>
+              </div>
+            </HStack>
+          </Card>
+
+          {/* Blocked Users List */}
+          <VStack gap="md">
+            {filteredUsers.length === 0 ? (
+              <Card padding="lg" className="text-center">
+                <svg
+                  className="w-12 h-12 mx-auto text-slate-300 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                  />
+                </svg>
+                <p className="text-slate-500">
+                  {searchQuery ? 'No blocked users match your search.' : 'No blocked users.'}
+                </p>
+              </Card>
+            ) : (
+              filteredUsers.map(user => (
+                <Card key={user.id} padding="lg" hoverable data-testid="blocked-user-item">
+                  <HStack justify="between" align="start" className="flex-wrap gap-4">
+                    {/* User Info */}
+                    <HStack gap="md" align="start">
+                      <Avatar src={user.avatar} name={user.name} size="lg" />
+                      <VStack gap="xs">
+                        <HStack gap="sm" align="center">
+                          <h3 className="font-semibold text-slate-900 dark:text-white">
+                            {user.name}
+                          </h3>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              user.blockedBy === 'auto'
+                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            }`}
+                          >
+                            {user.blockedBy === 'auto' ? 'Auto-blocked' : 'Blocked'}
+                          </span>
+                        </HStack>
+                        <p className="text-sm text-slate-500 font-mono">{user.peerID}</p>
+                        <p className="text-sm text-slate-500">
+                          Blocked on {formatDate(user.blockedAt)}
+                        </p>
+                      </VStack>
+                    </HStack>
+
+                    {/* Actions */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmUnblock(user)}
+                      disabled={processingId === user.id}
+                    >
+                      {processingId === user.id ? 'Processing...' : 'Unblock'}
+                    </Button>
+                  </HStack>
+
+                  {/* Reason */}
+                  {user.reason && (
+                    <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <p className="text-sm text-slate-500 mb-1">Reason:</p>
+                      <p className="text-slate-700 dark:text-slate-300">{user.reason}</p>
+                    </div>
+                  )}
+
+                  {/* Stats */}
+                  {user.stats && (
+                    <div className="mt-4 flex gap-6">
+                      <div>
+                        <p className="text-xs text-slate-500">Disputes</p>
+                        <p className="font-medium text-red-600">{user.stats.disputes}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Reports</p>
+                        <p className="font-medium text-orange-600">{user.stats.reports}</p>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              ))
+            )}
+          </VStack>
+        </Container>
+      </main>
+
+      {/* Add Block Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card padding="lg" className="w-full max-w-md">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Block a User</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Peer ID *
+                </label>
+                <Input
+                  value={newBlockPeerID}
+                  onChange={e => setNewBlockPeerID(e.target.value)}
+                  placeholder="Qm..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Reason (optional)
+                </label>
+                <textarea
+                  value={newBlockReason}
+                  onChange={e => setNewBlockReason(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Why are you blocking this user?"
+                />
+              </div>
+            </div>
+
+            <HStack gap="sm" justify="end" className="mt-6">
+              <Button variant="outline" onClick={() => setShowAddModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddBlock}
+                disabled={!newBlockPeerID || processingId === 'new'}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {processingId === 'new' ? 'Blocking...' : 'Block User'}
+              </Button>
+            </HStack>
+          </Card>
+        </div>
+      )}
+
+      {/* Confirm Unblock Modal */}
+      {confirmUnblock && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card padding="lg" className="w-full max-w-sm">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Unblock User?</h2>
+
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              Are you sure you want to unblock <strong>{confirmUnblock.name}</strong>? They will be
+              able to view your store and contact you again.
+            </p>
+
+            <HStack gap="sm" justify="end">
+              <Button variant="outline" onClick={() => setConfirmUnblock(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleUnblock(confirmUnblock.id)}
+                disabled={processingId === confirmUnblock.id}
+              >
+                {processingId === confirmUnblock.id ? 'Processing...' : 'Unblock'}
+              </Button>
+            </HStack>
+          </Card>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+}

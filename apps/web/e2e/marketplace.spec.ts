@@ -114,21 +114,73 @@ test.describe('Marketplace Admin', () => {
     await expect(content.first()).toBeVisible();
   });
 
-  test.skip('should manage seller applications', async ({ page }) => {
-    // Skip: Admin pages not yet implemented
+  test('should display seller applications page', async ({ page }) => {
     await page.goto('/marketplace/mp1/admin/applications');
     await page.waitForLoadState('networkidle');
+
+    const heading = page.locator('h1');
+    await expect(heading).toContainText('Seller Applications');
 
     const content = page.locator('main');
     await expect(content).toBeVisible();
   });
 
-  test.skip('should manage product approvals', async ({ page }) => {
-    // Skip: Admin pages not yet implemented
+  test('should show pending applications filter', async ({ page }) => {
+    await page.goto('/marketplace/mp1/admin/applications');
+    await page.waitForLoadState('networkidle');
+
+    // Should have filter buttons
+    const pendingFilter = page.locator('button').filter({ hasText: 'Pending' });
+    const approvedFilter = page.locator('button').filter({ hasText: 'Approved' });
+
+    await expect(pendingFilter).toBeVisible();
+    await expect(approvedFilter).toBeVisible();
+  });
+
+  test('should show approve/review buttons for applications', async ({ page }) => {
+    await page.goto('/marketplace/mp1/admin/applications');
+    await page.waitForLoadState('networkidle');
+
+    // Should have action buttons
+    const approveButton = page.locator('button').filter({ hasText: 'Approve' });
+    const reviewButton = page.locator('button').filter({ hasText: 'Review' });
+
+    expect(await approveButton.count()).toBeGreaterThan(0);
+    expect(await reviewButton.count()).toBeGreaterThan(0);
+  });
+
+  test('should display product approvals page', async ({ page }) => {
     await page.goto('/marketplace/mp1/admin/products');
     await page.waitForLoadState('networkidle');
 
+    const heading = page.locator('h1');
+    await expect(heading).toContainText('Product Approvals');
+
     const content = page.locator('main');
     await expect(content).toBeVisible();
+  });
+
+  test('should show product review filters', async ({ page }) => {
+    await page.goto('/marketplace/mp1/admin/products');
+    await page.waitForLoadState('networkidle');
+
+    // Should have filter buttons for product status
+    const pendingFilter = page.locator('button').filter({ hasText: 'Pending' });
+    const flaggedFilter = page.locator('button').filter({ hasText: 'Flagged' });
+
+    await expect(pendingFilter).toBeVisible();
+    await expect(flaggedFilter).toBeVisible();
+  });
+
+  test('should show product cards with review actions', async ({ page }) => {
+    await page.goto('/marketplace/mp1/admin/products');
+    await page.waitForLoadState('networkidle');
+
+    // Should have products displayed
+    const approveButton = page.locator('button').filter({ hasText: 'Approve' });
+    const reviewButton = page.locator('button').filter({ hasText: 'Review' });
+
+    expect(await approveButton.count()).toBeGreaterThan(0);
+    expect(await reviewButton.count()).toBeGreaterThan(0);
   });
 });
