@@ -1,0 +1,80 @@
+/**
+ * 通用 API 响应类型
+ */
+export interface ApiResponse<T = unknown> {
+  success?: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * 分页响应
+ */
+export interface PaginatedResponse<T> {
+  results: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+/**
+ * 分页请求参数
+ */
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  limit?: number;
+  offsetId?: string;
+}
+
+/**
+ * 图片类型
+ */
+export interface Image {
+  tiny: string;
+  small: string;
+  medium: string;
+  large: string;
+  original: string;
+  filename?: string;
+}
+
+/**
+ * 价格类型
+ */
+export interface Price {
+  amount: number;
+  currencyCode: string;
+}
+
+/**
+ * 地址类型
+ */
+export interface Address {
+  name: string;
+  company?: string;
+  addressLineOne: string;
+  addressLineTwo?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  addressNotes?: string;
+}
+
+/**
+ * 加密货币类型
+ */
+export type CryptoType = 'BTC' | 'ETH' | 'LTC' | 'BCH' | 'ZEC' | 'BSC' | 'USDT';
+
+/**
+ * 法币类型
+ */
+export type FiatType = 'USD' | 'CNY' | 'EUR' | 'GBP' | 'JPY';
+
+/**
+ * 货币类型
+ */
+export type CurrencyType = CryptoType | FiatType;
