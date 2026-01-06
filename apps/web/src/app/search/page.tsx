@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
@@ -102,7 +102,25 @@ const categoryOptions = [
 
 type TabType = 'listings' | 'users';
 
-export default function SearchPage() {
+// Loading fallback for Suspense
+function SearchLoading() {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <Header />
+      <main className="py-8">
+        <Container size="xl">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
+          </div>
+        </Container>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// Main search content component
+function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
@@ -517,5 +535,14 @@ export default function SearchPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Default export with Suspense wrapper for useSearchParams
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<SearchLoading />}>
+      <SearchPageContent />
+    </Suspense>
   );
 }
