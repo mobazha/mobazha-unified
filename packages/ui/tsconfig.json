@@ -5,6 +5,7 @@
     "rootDir": "./",
     "jsx": "react-jsx",
     "baseUrl": ".",
+    "incremental": false,
     "paths": {
       "@/*": ["./*"]
     }

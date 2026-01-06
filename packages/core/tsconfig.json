@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./",
     "baseUrl": ".",
+    "incremental": false,
     "paths": {
       "@/*": ["./*"]
     }
