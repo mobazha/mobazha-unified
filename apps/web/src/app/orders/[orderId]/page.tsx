@@ -50,7 +50,8 @@ interface Order {
     | 'completed'
     | 'disputed'
     | 'refunded'
-    | 'cancelled';
+    | 'cancelled'
+    | 'split_resolved';
   items: OrderItem[];
   total: string;
   currency: string;
@@ -73,6 +74,7 @@ interface Order {
     response?: string;
     status: 'open' | 'in_progress' | 'resolved';
     initiator: 'buyer' | 'seller';
+    resolution?: 'buyer' | 'seller' | 'split';
   };
 }
 
@@ -326,7 +328,7 @@ export default function OrderDetailPage() {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // 根据决定确定订单状态和描述
-      let newStatus: string;
+      let newStatus: Order['status'];
       let description: string;
 
       switch (decision) {
