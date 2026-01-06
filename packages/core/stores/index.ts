@@ -1,9 +1,17 @@
-// Stores exports
-// 随着迁移进行逐步添加
+/**
+ * 状态管理导出
+ */
 
-// export * from './userStore';
+// 用户状态
+export * from './userStore';
+
+// 购物车状态
+export * from './cartStore';
+
+// 钱包状态
+export * from './walletStore';
+
+// TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';
-// export * from './cartStore';
 // export * from './chatStore';
-// export * from './walletStore';
