@@ -6,6 +6,23 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card } from '@mobazha/ui';
+import {
+  Switch,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  ScrollArea,
+  useToast,
+} from '@/components/ui';
 import { useTheme, THEME_INFO } from '@mobazha/core';
 
 // Mock data
@@ -72,21 +89,13 @@ const SettingItem = ({
       {description && <p className="text-sm text-slate-500 mt-0.5">{description}</p>}
     </div>
     {toggle ? (
-      <button
-        onClick={e => {
-          e.stopPropagation();
-          onToggle?.(!toggleValue);
+      <Switch
+        checked={toggleValue}
+        onCheckedChange={value => {
+          onToggle?.(value);
         }}
-        className={`relative w-12 h-6 rounded-full transition-colors ${
-          toggleValue ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-            toggleValue ? 'translate-x-6' : 'translate-x-0'
-          }`}
-        />
-      </button>
+        onClick={e => e.stopPropagation()}
+      />
     ) : value ? (
       <span className="text-slate-500">{value}</span>
     ) : (
@@ -114,6 +123,7 @@ const SettingGroup = ({ title, children }: SettingGroupProps) => (
 export default function SettingsPage() {
   const router = useRouter();
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
+  const { toast } = useToast();
 
   // State
   const [country, setCountry] = useState('US');
@@ -130,6 +140,10 @@ export default function SettingsPage() {
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [coins, setCoins] = useState(acceptedCoins);
 
+  // AlertDialog states
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
   const handleCoinToggle = useCallback((symbol: string) => {
     setCoins(prev =>
       prev.map(coin => (coin.symbol === symbol ? { ...coin, enabled: !coin.enabled } : coin))
@@ -138,20 +152,23 @@ export default function SettingsPage() {
 
   const handleBackup = useCallback(() => {
     // In real app, this would trigger backup flow
-    alert('Backup wallet feature coming soon!');
-  }, []);
+    toast({
+      title: 'Coming Soon',
+      description: 'Backup wallet feature coming soon!',
+    });
+  }, [toast]);
 
-  const handleRestore = useCallback(() => {
+  const handleRestoreConfirm = useCallback(() => {
     // In real app, this would trigger restore flow
-    if (confirm('Are you sure you want to restore? Make sure you have a backup first.')) {
-      alert('Restore profile feature coming soon!');
-    }
-  }, []);
+    toast({
+      title: 'Coming Soon',
+      description: 'Restore profile feature coming soon!',
+    });
+    setShowRestoreDialog(false);
+  }, [toast]);
 
-  const handleLogout = useCallback(() => {
-    if (confirm('Are you sure you want to log out?')) {
-      router.push('/');
-    }
+  const handleLogoutConfirm = useCallback(() => {
+    router.push('/');
   }, [router]);
 
   const enabledCoinsCount = coins.filter(c => c.enabled).length;
@@ -292,7 +309,7 @@ export default function SettingsPage() {
             <SettingItem
               title="Restore Profile"
               description="Import profile from backup"
-              onClick={handleRestore}
+              onClick={() => setShowRestoreDialog(true)}
             />
             <SettingItem
               title="Resync Transactions"
@@ -311,255 +328,208 @@ export default function SettingsPage() {
             <SettingItem title="Version" value="1.0.0 (Build 123)" onClick={() => {}} />
             <SettingItem
               title="Check for Updates"
-              onClick={() => alert('You are on the latest version!')}
+              onClick={() =>
+                toast({
+                  title: 'Up to Date',
+                  description: 'You are on the latest version!',
+                })
+              }
             />
-            <SettingItem title="Log Out" danger onClick={handleLogout} />
+            <SettingItem title="Log Out" danger onClick={() => setShowLogoutDialog(true)} />
           </SettingGroup>
         </Container>
       </main>
 
       {/* Country Modal */}
-      {showCountryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Select Country
-              </h2>
+      <Dialog open={showCountryModal} onOpenChange={setShowCountryModal}>
+        <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Select Country</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            {countries.map(c => (
               <button
-                onClick={() => setShowCountryModal(false)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                key={c.code}
+                onClick={() => {
+                  setCountry(c.code);
+                  setShowCountryModal(false);
+                }}
+                className={`w-full p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center ${
+                  country === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
+                }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <span className="text-slate-900 dark:text-white">{c.name}</span>
+                {country === c.code && (
+                  <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
               </button>
-            </div>
-            <div className="overflow-y-auto flex-1">
-              {countries.map(c => (
-                <button
-                  key={c.code}
-                  onClick={() => {
-                    setCountry(c.code);
-                    setShowCountryModal(false);
-                  }}
-                  className={`w-full p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center ${
-                    country === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
-                  }`}
-                >
-                  <span className="text-slate-900 dark:text-white">{c.name}</span>
-                  {country === c.code && (
-                    <svg
-                      className="w-5 h-5 text-emerald-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          </Card>
-        </div>
-      )}
+            ))}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Currency Modal */}
-      {showCurrencyModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Select Currency
-              </h2>
+      <Dialog open={showCurrencyModal} onOpenChange={setShowCurrencyModal}>
+        <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Select Currency</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            {currencies.map(c => (
               <button
-                onClick={() => setShowCurrencyModal(false)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                key={c.code}
+                onClick={() => {
+                  setCurrency(c.code);
+                  setShowCurrencyModal(false);
+                }}
+                className={`w-full p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center ${
+                  currency === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
+                }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <span className="text-slate-900 dark:text-white">
+                  {c.name} ({c.symbol})
+                </span>
+                {currency === c.code && (
+                  <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
               </button>
-            </div>
-            <div className="overflow-y-auto flex-1">
-              {currencies.map(c => (
+            ))}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Theme Modal */}
+      <Dialog open={showThemeModal} onOpenChange={setShowThemeModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose Theme</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {themes.map(t => (
+              <button
+                key={t.name}
+                onClick={() => {
+                  setTheme(t.name as typeof theme);
+                }}
+                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all ${
+                  theme === t.name
+                    ? 'bg-primary/10 border-2 border-primary'
+                    : 'bg-background-alt hover:bg-surface-hover border-2 border-transparent'
+                }`}
+              >
+                <span className="text-3xl">{t.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-text-primary">{t.displayName}</p>
+                  <p className="text-xs text-text-muted truncate">{t.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="border-t border-border pt-4">
+            <h3 className="text-sm font-medium text-text-secondary mb-3">Display Mode</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'light', label: 'Light', icon: '☀️' },
+                { value: 'dark', label: 'Dark', icon: '🌙' },
+                { value: 'system', label: 'System', icon: '💻' },
+              ].map(option => (
                 <button
-                  key={c.code}
-                  onClick={() => {
-                    setCurrency(c.code);
-                    setShowCurrencyModal(false);
-                  }}
-                  className={`w-full p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center ${
-                    currency === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
+                  key={option.value}
+                  onClick={() => setMode(option.value as typeof mode)}
+                  className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                    mode === option.value
+                      ? 'bg-primary text-text-inverse'
+                      : 'bg-background-alt hover:bg-surface-hover text-text-primary'
                   }`}
                 >
-                  <span className="text-slate-900 dark:text-white">
-                    {c.name} ({c.symbol})
-                  </span>
-                  {currency === c.code && (
-                    <svg
-                      className="w-5 h-5 text-emerald-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
+                  <span>{option.icon}</span>
+                  <span className="text-sm">{option.label}</span>
                 </button>
               ))}
             </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Theme Modal */}
-      {showThemeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-lg">
-            <div className="p-4 border-b border-border flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-text-primary">Choose Theme</h2>
-              <button
-                onClick={() => setShowThemeModal(false)}
-                className="p-2 hover:bg-surface-hover rounded-lg"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {themes.map(t => (
-                  <button
-                    key={t.name}
-                    onClick={() => {
-                      setTheme(t.name as typeof theme);
-                    }}
-                    className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all ${
-                      theme === t.name
-                        ? 'bg-primary/10 border-2 border-primary'
-                        : 'bg-background-alt hover:bg-surface-hover border-2 border-transparent'
-                    }`}
-                  >
-                    <span className="text-3xl">{t.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-text-primary">{t.displayName}</p>
-                      <p className="text-xs text-text-muted truncate">{t.description}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <div className="border-t border-border pt-4">
-                <h3 className="text-sm font-medium text-text-secondary mb-3">Display Mode</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'light', label: 'Light', icon: '☀️' },
-                    { value: 'dark', label: 'Dark', icon: '🌙' },
-                    { value: 'system', label: 'System', icon: '💻' },
-                  ].map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => setMode(option.value as typeof mode)}
-                      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
-                        mode === option.value
-                          ? 'bg-primary text-text-inverse'
-                          : 'bg-background-alt hover:bg-surface-hover text-text-primary'
-                      }`}
-                    >
-                      <span>{option.icon}</span>
-                      <span className="text-sm">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Button fullWidth className="mt-6" onClick={() => setShowThemeModal(false)}>
-                Done
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+          </div>
+          <Button fullWidth className="mt-4" onClick={() => setShowThemeModal(false)}>
+            Done
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Coins Modal */}
-      {showCoinsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Accepted Cryptocurrencies
-              </h2>
-              <button
-                onClick={() => setShowCoinsModal(false)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+      <Dialog open={showCoinsModal} onOpenChange={setShowCoinsModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Accepted Cryptocurrencies</DialogTitle>
+          </DialogHeader>
+          <VStack gap="sm">
+            {coins.map(coin => (
+              <HStack
+                key={coin.symbol}
+                justify="between"
+                align="center"
+                className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4">
-              <VStack gap="sm">
-                {coins.map(coin => (
-                  <HStack
-                    key={coin.symbol}
-                    justify="between"
-                    align="center"
-                    className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white">{coin.symbol}</p>
-                      <p className="text-sm text-slate-500">{coin.name}</p>
-                    </div>
-                    <button
-                      onClick={() => handleCoinToggle(coin.symbol)}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${
-                        coin.enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                          coin.enabled ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
-                  </HStack>
-                ))}
-              </VStack>
-              <Button fullWidth className="mt-4" onClick={() => setShowCoinsModal(false)}>
-                Done
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">{coin.symbol}</p>
+                  <p className="text-sm text-slate-500">{coin.name}</p>
+                </div>
+                <Switch
+                  checked={coin.enabled}
+                  onCheckedChange={() => handleCoinToggle(coin.symbol)}
+                />
+              </HStack>
+            ))}
+          </VStack>
+          <Button fullWidth className="mt-4" onClick={() => setShowCoinsModal(false)}>
+            Done
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore Profile AlertDialog */}
+      <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore Profile</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to restore? Make sure you have a backup first. This action may
+              overwrite your current profile data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestoreConfirm}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Logout AlertDialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log Out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out? You will need to sign in again to access your
+              account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogoutConfirm}>Log Out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>

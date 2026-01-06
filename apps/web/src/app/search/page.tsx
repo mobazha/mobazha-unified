@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
 import { Button, Avatar, Card, Skeleton, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import type { ProductContractType } from '@mobazha/ui';
 
 // Types
@@ -370,17 +371,18 @@ function SearchPageContent() {
                       </svg>
                       Filters
                     </button>
-                    <select
-                      value={sortBy}
-                      onChange={e => setSortBy(e.target.value)}
-                      className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                      {sortOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sortOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </HStack>
                 )}
               </div>
@@ -393,17 +395,18 @@ function SearchPageContent() {
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                         Category
                       </label>
-                      <select
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      >
-                        {categoryOptions.map(opt => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={category} onValueChange={setCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -427,24 +430,34 @@ function SearchPageContent() {
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                         Rating
                       </label>
-                      <select className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="">Any Rating</option>
-                        <option value="4">4+ Stars</option>
-                        <option value="3">3+ Stars</option>
-                        <option value="2">2+ Stars</option>
-                      </select>
+                      <Select defaultValue="">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any Rating" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any Rating</SelectItem>
+                          <SelectItem value="4">4+ Stars</SelectItem>
+                          <SelectItem value="3">3+ Stars</SelectItem>
+                          <SelectItem value="2">2+ Stars</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                         Type
                       </label>
-                      <select className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="">All Types</option>
-                        <option value="physical">Physical Goods</option>
-                        <option value="digital">Digital Goods</option>
-                        <option value="service">Services</option>
-                        <option value="rwa">RWA Tokens</option>
-                      </select>
+                      <Select defaultValue="">
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Types</SelectItem>
+                          <SelectItem value="physical">Physical Goods</SelectItem>
+                          <SelectItem value="digital">Digital Goods</SelectItem>
+                          <SelectItem value="service">Services</SelectItem>
+                          <SelectItem value="rwa">RWA Tokens</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </Card>

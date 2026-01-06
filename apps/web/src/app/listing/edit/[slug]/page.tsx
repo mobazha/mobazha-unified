@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
 import { Button, Card, Skeleton } from '@mobazha/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
 type ProductType = 'physical_good' | 'digital_good' | 'service' | 'rwa_token';
@@ -482,17 +483,21 @@ export default function EditListingPage() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           Currency
                         </label>
-                        <select
+                        <Select
                           value={formData.currency}
-                          onChange={e => handleChange('currency', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          onValueChange={value => handleChange('currency', value)}
                         >
-                          {currencies.map(c => (
-                            <option key={c.value} value={c.value}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {currencies.map(c => (
+                              <SelectItem key={c.value} value={c.value}>
+                                {c.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </VStack>
@@ -534,19 +539,23 @@ export default function EditListingPage() {
                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Condition
                           </label>
-                          <select
+                          <Select
                             value={formData.condition}
-                            onChange={e =>
-                              handleChange('condition', e.target.value as ProductCondition)
+                            onValueChange={value =>
+                              handleChange('condition', value as ProductCondition)
                             }
-                            className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                           >
-                            {conditions.map(c => (
-                              <option key={c.value} value={c.value}>
-                                {c.label}
-                              </option>
-                            ))}
-                          </select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {conditions.map(c => (
+                                <SelectItem key={c.value} value={c.value}>
+                                  {c.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -601,17 +610,21 @@ export default function EditListingPage() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           Blockchain
                         </label>
-                        <select
+                        <Select
                           value={formData.blockchain}
-                          onChange={e => handleChange('blockchain', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          onValueChange={value => handleChange('blockchain', value)}
                         >
-                          {blockchains.map(b => (
-                            <option key={b.value} value={b.value}>
-                              {b.label}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select blockchain" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {blockchains.map(b => (
+                              <SelectItem key={b.value} value={b.value}>
+                                {b.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </VStack>
                   </Card>
@@ -671,34 +684,40 @@ export default function EditListingPage() {
                     <p className="text-red-500 text-sm mb-2">{errors.category}</p>
                   )}
                   <VStack gap="sm">
-                    <select
+                    <Select
                       value={formData.category}
-                      onChange={e => {
-                        handleChange('category', e.target.value);
+                      onValueChange={value => {
+                        handleChange('category', value);
                         handleChange('subcategory', '');
                       }}
-                      className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
-                      <option value="">Select category</option>
-                      {categories.map(c => (
-                        <option key={c.value} value={c.value}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedCategory && (
-                      <select
-                        value={formData.subcategory}
-                        onChange={e => handleChange('subcategory', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      >
-                        <option value="">Select subcategory</option>
-                        {selectedCategory.subcategories.map(sub => (
-                          <option key={sub} value={sub}>
-                            {sub}
-                          </option>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(c => (
+                          <SelectItem key={c.value} value={c.value}>
+                            {c.label}
+                          </SelectItem>
                         ))}
-                      </select>
+                      </SelectContent>
+                    </Select>
+                    {selectedCategory && (
+                      <Select
+                        value={formData.subcategory}
+                        onValueChange={value => handleChange('subcategory', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select subcategory" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectedCategory.subcategories.map(sub => (
+                            <SelectItem key={sub} value={sub}>
+                              {sub}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
                   </VStack>
                 </Card>

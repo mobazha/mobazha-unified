@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
 interface SellerProfile {
@@ -172,16 +173,20 @@ export default function MarketplaceSellPage() {
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                         Business Type
                       </label>
-                      <select
+                      <Select
                         value={profile.businessType}
-                        onChange={e =>
-                          setProfile(prev => ({ ...prev, businessType: e.target.value }))
+                        onValueChange={value =>
+                          setProfile(prev => ({ ...prev, businessType: value }))
                         }
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       >
-                        <option value="individual">Individual</option>
-                        <option value="business">Business</option>
-                      </select>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individual">Individual</SelectItem>
+                          <SelectItem value="business">Business</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

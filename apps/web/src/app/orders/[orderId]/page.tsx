@@ -5,6 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack, Card, Button, Avatar } from '@mobazha/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui';
 
 // Types
 interface OrderItem {
@@ -188,6 +198,10 @@ export default function OrderDetailPage() {
   const [showShipModal, setShowShipModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [trackingInfo, setTrackingInfo] = useState({ carrier: '', trackingNumber: '' });
+  const [showRefundDialog, setShowRefundDialog] = useState(false);
+  const [showResolveDialog, setShowResolveDialog] = useState<'buyer' | 'seller' | 'split' | null>(
+    null
+  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -295,8 +309,8 @@ export default function OrderDetailPage() {
     }
   }, [trackingInfo]);
 
-  const handleRefund = useCallback(async () => {
-    if (!confirm('Are you sure you want to refund this order?')) return;
+  const handleRefundConfirm = useCallback(async () => {
+    setShowRefundDialog(false);
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -321,8 +335,10 @@ export default function OrderDetailPage() {
     }
   }, []);
 
-  const handleResolveDispute = useCallback(async (decision: 'buyer' | 'seller' | 'split') => {
-    if (!confirm(`Are you sure you want to resolve this dispute in favor of ${decision}?`)) return;
+  const handleResolveDisputeConfirm = useCallback(async () => {
+    if (!showResolveDialog) return;
+    const decision = showResolveDialog;
+    setShowResolveDialog(null);
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -371,7 +387,7 @@ export default function OrderDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [showResolveDialog]);
 
   if (!order) {
     return (
@@ -483,7 +499,11 @@ export default function OrderDetailPage() {
                 )}
 
                 {canRefund && (
-                  <Button variant="outline" onClick={handleRefund} disabled={isLoading}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRefundDialog(true)}
+                    disabled={isLoading}
+                  >
                     Refund Order
                   </Button>
                 )}
@@ -505,20 +525,20 @@ export default function OrderDetailPage() {
                   </div>
                   {canResolveDispute && (
                     <HStack gap="sm">
-                      <Button size="sm" onClick={() => handleResolveDispute('buyer')}>
+                      <Button size="sm" onClick={() => setShowResolveDialog('buyer')}>
                         Favor Buyer
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleResolveDispute('seller')}
+                        onClick={() => setShowResolveDialog('seller')}
                       >
                         Favor Seller
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleResolveDispute('split')}
+                        onClick={() => setShowResolveDialog('split')}
                       >
                         Split
                       </Button>
@@ -787,6 +807,47 @@ export default function OrderDetailPage() {
           </Card>
         </div>
       )}
+
+      {/* Refund Confirmation AlertDialog */}
+      <AlertDialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Refund</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to refund this order? The funds will be returned to the buyer.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRefundConfirm}>Refund</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Resolve Dispute AlertDialog */}
+      <AlertDialog
+        open={!!showResolveDialog}
+        onOpenChange={open => !open && setShowResolveDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resolve Dispute</AlertDialogTitle>
+            <AlertDialogDescription>
+              {showResolveDialog === 'buyer' &&
+                'Are you sure you want to resolve this dispute in favor of the buyer? Full refund will be issued.'}
+              {showResolveDialog === 'seller' &&
+                'Are you sure you want to resolve this dispute in favor of the seller? Full payment will be released.'}
+              {showResolveDialog === 'split' &&
+                'Are you sure you want to split the funds between buyer and seller?'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResolveDisputeConfirm}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
