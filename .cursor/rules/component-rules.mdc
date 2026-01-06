@@ -1,0 +1,211 @@
+---
+description: 组件开发规则 - 创建或修改 UI 组件时应用
+globs:
+  - packages/ui/**/*.tsx
+  - apps/web/components/**/*.tsx
+alwaysApply: false
+---
+
+# 组件开发规则
+
+## 组件结构
+
+### 目录结构
+
+```
+packages/ui/components/
+├── ProductCard/
+│   ├── index.tsx           # 导出
+│   ├── ProductCard.tsx     # 主组件
+│   ├── ProductCard.test.tsx # 测试
+│   └── types.ts            # 类型 (可选)
+```
+
+### 组件模板
+
+```tsx
+'use client';
+
+import { memo } from 'react';
+import { cn } from '@/lib/utils';
+
+export interface ProductCardProps {
+  /** 商品数据 */
+  product: Product;
+  /** 点击回调 */
+  onClick?: (product: Product) => void;
+  /** 自定义样式 */
+  className?: string;
+}
+
+/**
+ * 商品卡片组件
+ * 
+ * @example
+ * <ProductCard product={product} onClick={handleClick} />
+ */
+export const ProductCard = memo(function ProductCard({
+  product,
+  onClick,
+  className,
+}: ProductCardProps) {
+  return (
+    <article
+      className={cn('rounded-lg border p-4', className)}
+      onClick={() => onClick?.(product)}
+      data-testid="product-card"
+    >
+      {/* 组件内容 */}
+    </article>
+  );
+});
+```
+
+## 响应式设计
+
+### 使用 Tailwind 响应式类
+
+```tsx
+// ✅ 好的做法
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+
+// ❌ 避免硬编码
+<div style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+```
+
+### 使用 useBreakpoint Hook
+
+```tsx
+import { useBreakpoint } from '@mobazha/ui/hooks';
+
+function ResponsiveComponent() {
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  
+  if (isMobile) {
+    return <MobileLayout />;
+  }
+  
+  return <DesktopLayout />;
+}
+```
+
+## 性能优化
+
+### 使用 memo
+
+```tsx
+// 对于接收对象 props 的组件
+export const ProductCard = memo(function ProductCard(props) {
+  // ...
+});
+```
+
+### 使用 useCallback
+
+```tsx
+// 传递给子组件的回调函数
+const handleClick = useCallback((id: string) => {
+  // ...
+}, [dependency]);
+```
+
+### 避免内联对象/函数
+
+```tsx
+// ❌ 每次渲染都创建新对象
+<Component style={{ color: 'red' }} />
+
+// ✅ 使用 className 或 useMemo
+<Component className="text-red-500" />
+```
+
+## 可访问性 (a11y)
+
+### 必须添加的属性
+
+```tsx
+// 可点击元素
+<button aria-label="Add to cart">
+<a href="#" aria-label="View product">
+
+// 图片
+<img alt="Product thumbnail" />
+
+// 表单
+<input aria-label="Search" />
+<label htmlFor="email">Email</label>
+```
+
+### 测试 ID
+
+```tsx
+// 用于 E2E 测试
+<div data-testid="product-card">
+<button data-testid="add-to-cart-button">
+```
+
+## 样式规范
+
+### 使用 cn 工具合并类名
+
+```tsx
+import { cn } from '@/lib/utils';
+
+<div className={cn(
+  'base-styles',
+  isActive && 'active-styles',
+  className
+)}>
+```
+
+### 设计 Token
+
+使用 Tailwind 的设计 Token，不要硬编码颜色/尺寸：
+
+```tsx
+// ✅ 使用 Token
+<div className="text-primary bg-background">
+
+// ❌ 硬编码
+<div style={{ color: '#00BCD4' }}>
+```
+
+## 测试要求
+
+### 必须测试
+
+- 渲染正确
+- Props 传递
+- 事件处理
+- 响应式行为 (关键组件)
+
+### 测试示例
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ProductCard } from './ProductCard';
+
+describe('ProductCard', () => {
+  const mockProduct = {
+    id: '1',
+    title: 'Test Product',
+    price: 99.99,
+  };
+
+  it('renders product info', () => {
+    render(<ProductCard product={mockProduct} />);
+    expect(screen.getByText('Test Product')).toBeInTheDocument();
+  });
+
+  it('calls onClick when clicked', () => {
+    const onClick = vi.fn();
+    render(<ProductCard product={mockProduct} onClick={onClick} />);
+    fireEvent.click(screen.getByTestId('product-card'));
+    expect(onClick).toHaveBeenCalledWith(mockProduct);
+  });
+});
+```
+
+---
+
+**注意**: 此规则会随项目进展动态调整。

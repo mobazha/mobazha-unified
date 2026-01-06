@@ -1,0 +1,42 @@
+{
+  "name": "mobazha-unified",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Mobazha unified React Web platform",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint -- --fix",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:unit": "turbo test:unit",
+    "test:e2e": "turbo test:e2e",
+    "validate:quick": "./tools/scripts/validate-quick.sh",
+    "validate": "./tools/scripts/validate.sh",
+    "review": "./tools/scripts/review-staged.sh",
+    "commit": "./tools/scripts/commit-with-review.sh",
+    "report": "cat ./reports/latest.md",
+    "migration:status": "cat ./docs/migrations/status.md",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
