@@ -2,6 +2,9 @@
  * Hooks 导出
  */
 
+// 配置相关
+export * from './useConfig';
+
 // 商品相关
 export * from './useProducts';
 
