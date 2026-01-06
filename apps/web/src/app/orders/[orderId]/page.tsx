@@ -324,17 +324,41 @@ export default function OrderDetailPage() {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      const newStatus = decision === 'buyer' ? 'refunded' : 'completed';
+
+      // 根据决定确定订单状态和描述
+      let newStatus: string;
+      let description: string;
+
+      switch (decision) {
+        case 'buyer':
+          newStatus = 'refunded';
+          description = 'Dispute resolved: Full refund to buyer';
+          break;
+        case 'seller':
+          newStatus = 'completed';
+          description = 'Dispute resolved: Full payment to seller';
+          break;
+        case 'split':
+          newStatus = 'split_resolved';
+          description = 'Dispute resolved: Funds split between buyer and seller';
+          break;
+        default:
+          newStatus = 'completed';
+          description = `Dispute resolved in favor of ${decision}`;
+      }
+
       setOrder(prev => ({
         ...prev,
         status: newStatus,
-        dispute: prev.dispute ? { ...prev.dispute, status: 'resolved' } : undefined,
+        dispute: prev.dispute
+          ? { ...prev.dispute, status: 'resolved', resolution: decision }
+          : undefined,
         timeline: [
           ...prev.timeline,
           {
             status: newStatus,
             timestamp: new Date().toISOString(),
-            description: `Dispute resolved in favor of ${decision}`,
+            description,
             actor: 'moderator',
           },
         ],
