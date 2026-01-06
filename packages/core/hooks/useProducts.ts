@@ -3,14 +3,14 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Listing, ListingRating } from '../types';
+import type { ProductListItem, Product, ProductRating } from '../types';
 import { productsApi } from '../services/api';
 
 /**
  * 获取热门商品列表
  */
 export function useTrendingListings() {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +19,7 @@ export function useTrendingListings() {
     setError(null);
 
     try {
-      const result = await productsApi.getTrendingListings();
+      const result = await productsApi.fetchTrendingListings();
       setListings(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取商品失败');
@@ -39,7 +39,7 @@ export function useTrendingListings() {
  * 获取精选商品列表
  */
 export function useFeaturedListings() {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +48,7 @@ export function useFeaturedListings() {
     setError(null);
 
     try {
-      const result = await productsApi.getFeaturedListings();
+      const result = await productsApi.fetchFeaturedListings();
       setListings(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取商品失败');
@@ -68,7 +68,7 @@ export function useFeaturedListings() {
  * 获取店铺商品列表
  */
 export function useStoreListings(peerID: string | null, pageSize = 12) {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,7 +79,7 @@ export function useStoreListings(peerID: string | null, pageSize = 12) {
     setError(null);
 
     try {
-      const result = await productsApi.getStoreListings(peerID, pageSize);
+      const result = await productsApi.fetchStoreListings(peerID, pageSize);
       setListings(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取商品失败');
@@ -99,7 +99,7 @@ export function useStoreListings(peerID: string | null, pageSize = 12) {
  * 获取商品详情
  */
 export function useListing(slug: string | null, peerID?: string) {
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,7 +130,7 @@ export function useListing(slug: string | null, peerID?: string) {
  * 获取商品评价
  */
 export function useListingRatings(slug: string | null, peerID?: string) {
-  const [ratings, setRatings] = useState<ListingRating[]>([]);
+  const [ratings, setRatings] = useState<ProductRating[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -141,7 +141,7 @@ export function useListingRatings(slug: string | null, peerID?: string) {
     setError(null);
 
     try {
-      const result = await productsApi.getListingRatings(slug, peerID);
+      const result = await productsApi.getRatingIndex(peerID, slug);
       setRatings(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取评价失败');
@@ -162,7 +162,7 @@ export function useListingRatings(slug: string | null, peerID?: string) {
  */
 export function useProductSearch(initialQuery = '') {
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState<Listing[]>([]);
+  const [results, setResults] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,8 +177,9 @@ export function useProductSearch(initialQuery = '') {
     setQuery(searchQuery);
 
     try {
-      const result = await productsApi.searchListings(searchQuery);
-      setResults(result);
+      // TODO: 实现实际的搜索 API 调用
+      // 暂时返回空数组
+      setResults([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : '搜索失败');
     } finally {

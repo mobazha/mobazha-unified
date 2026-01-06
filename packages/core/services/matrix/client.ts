@@ -3,17 +3,10 @@
  * 核心聊天功能封装
  */
 
-import type {
-  MatrixConfig,
-  MatrixUser,
-  MatrixRoom,
-  MatrixMessage,
-  InvitePolicy,
-  MessageType,
-} from './types';
+import type { MatrixConfig, MatrixRoom, MatrixMessage, InvitePolicy, MessageType } from './types';
 import { MATRIX_EVENTS, MESSAGE_STATUS } from './types';
 import { matrixEvents } from './events';
-import { getStorage, saveCredentials, getCredentials, clearCredentials } from './storage';
+import { saveCredentials, getCredentials, clearCredentials } from './storage';
 
 // 默认配置
 const DEFAULT_CONFIG: Partial<MatrixConfig> = {
@@ -28,7 +21,7 @@ class MatrixClientService {
   private config: MatrixConfig | null = null;
   private isInitialized = false;
   private isConnected = false;
-  private invitePolicy: InvitePolicy = 'auto_mobazha';
+  private _invitePolicy: InvitePolicy = 'auto_mobazha';
   private processedMessageIds = new Set<string>();
 
   /**
@@ -218,7 +211,7 @@ class MatrixClientService {
       const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
 
       const response = await matrixClient.sendMessage(roomId, {
-        msgtype: 'm.text',
+        msgtype: sdk.MsgType.Text,
         body: content,
       });
 
@@ -260,7 +253,7 @@ class MatrixClientService {
         is_direct: true,
         invite: [userId],
         name: displayName,
-        preset: 'trusted_private_chat',
+        preset: sdk.Preset.TrustedPrivateChat,
       });
 
       return response.room_id;
@@ -310,7 +303,14 @@ class MatrixClientService {
    * 设置邀请策略
    */
   setInvitePolicy(policy: InvitePolicy): void {
-    this.invitePolicy = policy;
+    this._invitePolicy = policy;
+  }
+
+  /**
+   * 获取邀请策略
+   */
+  getInvitePolicy(): InvitePolicy {
+    return this._invitePolicy;
   }
 
   /**
@@ -354,7 +354,7 @@ class MatrixClientService {
       if (!room || event.getType() !== 'm.room.message') return;
 
       const eventId = event.getId();
-      if (this.processedMessageIds.has(eventId)) return;
+      if (!eventId || this.processedMessageIds.has(eventId)) return;
       this.processedMessageIds.add(eventId);
 
       const message = this.formatMessage(event, room.roomId);
@@ -377,9 +377,9 @@ class MatrixClientService {
   /**
    * 查找已存在的直接聊天房间
    */
-  private findDirectRoom(userId: string): string | null {
+  private findDirectRoom(_userId: string): string | null {
     if (!this.client) return null;
-    // 实现查找逻辑
+    // TODO: 实现查找逻辑
     return null;
   }
 

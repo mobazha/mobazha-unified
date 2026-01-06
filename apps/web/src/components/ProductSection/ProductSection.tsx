@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Container, Grid, HStack } from '@mobazha/ui';
+import { Container, Grid } from '@mobazha/ui';
 import { Button, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
 
 interface Product {

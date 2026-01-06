@@ -53,7 +53,8 @@ Card.displayName = 'Card';
 /**
  * CardHeader 组件
  */
-export interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
+export interface CardHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
+  /** Card 标题 */
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;

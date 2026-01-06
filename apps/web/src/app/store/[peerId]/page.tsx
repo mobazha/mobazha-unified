@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+// import Link from 'next/link'; // TODO: Use for store navigation
 import { useParams } from 'next/navigation';
 import { Header, Footer, ProductSection } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
@@ -103,7 +103,8 @@ const mockProducts = [
 type TabType = 'products' | 'about' | 'reviews';
 
 export default function StorePage() {
-  const params = useParams();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _params = useParams(); // Will be used for API calls
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading] = useState(false);
