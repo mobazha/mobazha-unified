@@ -3,9 +3,9 @@
 ## 总体进度
 
 - 总功能数: 待完善
-- 已完成: 15+ (核心层 + 部分页面)
-- 进行中: Matrix 服务完善
-- 未开始: 部分 UI 组件、部分页面
+- 已完成: 20+ (核心层 + 页面 + Mock/API 切换)
+- 进行中: 真实 API 对接
+- 未开始: 商品编辑、响应式优化
 
 ## Phase 1: 核心层迁移 (基本完成)
 
@@ -59,13 +59,16 @@
 | 搜索页     | screens/Search.js      | apps/web/app/search           | ✅   | 完整功能  |
 | 设置页     | screens/Settings.js    | apps/web/app/settings         | ✅   | 完整功能  |
 | 用户资料页 | screens/Profile.js     | apps/web/app/profile          | ✅   | 完整功能  |
+| 商品创建   | screens/createListing  | apps/web/app/listing/new      | ✅   | 完整功能  |
+| 购物车     | screens/ShoppingCart   | apps/web/app/cart             | ✅   | 完整功能  |
+| 结算页     | screens/Checkout       | apps/web/app/checkout         | ✅   | 完整功能  |
 
 ## 下一步计划
 
 1. **真实 API 对接** - 替换 Mock 数据，连接后端服务
-2. **商品创建/编辑** - 实现 /listing/new 和 /listing/edit 页面
-3. **购物车结算** - 实现购物车和结算流程
-4. **Matrix 聊天集成** - 对接真实 Matrix 服务
+2. **商品编辑** - 实现 /listing/edit/[slug] 页面
+3. **Matrix 聊天集成** - 对接真实 Matrix 服务
+4. **响应式优化** - 移动端适配完善
 
 ---
 
