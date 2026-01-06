@@ -8,3 +8,4 @@ export { DevTools } from './DevTools';
 export { MobileNav } from './MobileNav';
 export { PWAInstall } from './PWAInstall';
 export { ServiceWorkerProvider } from './ServiceWorkerProvider';
+export { LanguageSwitcher } from './LanguageSwitcher';
