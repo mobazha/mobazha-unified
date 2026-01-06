@@ -1,0 +1,158 @@
+/**
+ * 钱包 API 服务
+ */
+
+import type {
+  WalletBalance,
+  Transaction,
+  FeeEstimate,
+  SendTransactionRequest,
+  SendTransactionResponse,
+  CryptoType,
+} from '../../types';
+import { get, post, safeRequest } from './client';
+import { getGatewayUrl, getAuthHeaders } from './config';
+
+/**
+ * 获取钱包余额
+ */
+export async function getBalance(
+  coin: CryptoType,
+  username?: string,
+  password?: string
+): Promise<WalletBalance | null> {
+  const url = `${getGatewayUrl()}/wallet/balance/${coin}`;
+  try {
+    return await get<WalletBalance>(url, getAuthHeaders(username, password));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 获取所有币种余额
+ */
+export async function getAllBalances(
+  username?: string,
+  password?: string
+): Promise<Record<string, WalletBalance>> {
+  const url = `${getGatewayUrl()}/wallet/balance`;
+  return safeRequest<Record<string, WalletBalance>>(
+    url,
+    { headers: getAuthHeaders(username, password) },
+    {}
+  );
+}
+
+/**
+ * 获取交易历史
+ */
+export async function getTransactions(
+  coin: CryptoType,
+  limit = 20,
+  username?: string,
+  password?: string
+): Promise<Transaction[]> {
+  const url = `${getGatewayUrl()}/wallet/transactions/${coin}?limit=${limit}`;
+  return safeRequest<Transaction[]>(url, { headers: getAuthHeaders(username, password) }, []);
+}
+
+/**
+ * 获取钱包地址
+ */
+export async function getAddress(
+  coin: CryptoType,
+  username?: string,
+  password?: string
+): Promise<string | null> {
+  const url = `${getGatewayUrl()}/wallet/address/${coin}`;
+  try {
+    const response = await get<{ address: string }>(url, getAuthHeaders(username, password));
+    return response.address;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 获取交易费用估算
+ */
+export async function estimateFee(
+  coin: CryptoType,
+  amount: number,
+  username?: string,
+  password?: string
+): Promise<FeeEstimate | null> {
+  const url = `${getGatewayUrl()}/wallet/estimatefee/${coin}?amount=${amount}`;
+  try {
+    return await get<FeeEstimate>(url, getAuthHeaders(username, password));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 发送交易
+ */
+export async function sendTransaction(
+  request: SendTransactionRequest,
+  username?: string,
+  password?: string
+): Promise<SendTransactionResponse> {
+  const url = `${getGatewayUrl()}/wallet/spend`;
+  const body = {
+    coinType: request.currency,
+    address: request.address,
+    amount: request.amount,
+    feeLevel: request.feeLevel,
+    memo: request.memo,
+    spendAll: request.spendAll ?? false,
+  };
+  return post<SendTransactionResponse>(url, body, getAuthHeaders(username, password));
+}
+
+/**
+ * 获取汇率
+ */
+export async function getExchangeRates(): Promise<Record<string, Record<string, number>>> {
+  const url = `${getGatewayUrl()}/ob/exchangerates`;
+  return safeRequest<Record<string, Record<string, number>>>(url, {}, {});
+}
+
+/**
+ * 检查钱包是否已创建
+ */
+export async function hasWallet(username?: string, password?: string): Promise<boolean> {
+  const url = `${getGatewayUrl()}/wallet/status`;
+  try {
+    const response = await get<{ status: string }>(url, getAuthHeaders(username, password));
+    return response.status === 'ready';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 获取助记词
+ */
+export async function getMnemonic(username?: string, password?: string): Promise<string | null> {
+  const url = `${getGatewayUrl()}/wallet/mnemonic`;
+  try {
+    const response = await get<{ mnemonic: string }>(url, getAuthHeaders(username, password));
+    return response.mnemonic;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 从助记词恢复钱包
+ */
+export async function restoreWallet(
+  mnemonic: string,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const url = `${getGatewayUrl()}/wallet/restore`;
+  return post(url, { mnemonic }, getAuthHeaders(username, password));
+}
