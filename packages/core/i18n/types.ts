@@ -3,18 +3,25 @@
  */
 
 // 支持的语言
-export type Locale = 'en' | 'zh';
+export type Locale = 'en' | 'zh' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'ru' | 'pt';
 
 // 默认语言
 export const DEFAULT_LOCALE: Locale = 'en';
 
 // 支持的语言列表
-export const SUPPORTED_LOCALES: Locale[] = ['en', 'zh'];
+export const SUPPORTED_LOCALES: Locale[] = ['en', 'zh', 'ja', 'ko', 'es', 'fr', 'de', 'ru', 'pt'];
 
 // 语言信息
 export const LOCALE_INFO: Record<Locale, { name: string; nativeName: string; flag: string }> = {
   en: { name: 'English', nativeName: 'English', flag: '🇺🇸' },
   zh: { name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
+  ja: { name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
+  ko: { name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
+  es: { name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+  fr: { name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  de: { name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+  ru: { name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
+  pt: { name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷' },
 };
 
 // 翻译键类型 - 使用点号分隔的路径
