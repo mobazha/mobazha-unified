@@ -12,6 +12,11 @@ export * from './Skeleton';
 // 业务组件
 export * from './ProductCard';
 
+// 性能优化组件
+export * from './OptimizedImage';
+export * from './LazyLoad';
+export * from './VirtualList';
+
 // TODO: 后续迁移
 // export * from './OrderCard';
 // export * from './ChatBubble';
