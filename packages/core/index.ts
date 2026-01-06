@@ -1,5 +1,15 @@
+// Config
+export * from './config';
+
 // Services
 export * from './services';
+
+// Data Service (unified API/Mock switch)
+export { default as dataService } from './services/dataService';
+export * from './services/dataService';
+
+// Mock Services (for direct access if needed)
+export { default as mockServices } from './services/mock';
 
 // Stores
 export * from './stores';
