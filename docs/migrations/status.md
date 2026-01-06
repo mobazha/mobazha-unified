@@ -2,97 +2,50 @@
 
 ## 总体进度
 
-- **总页面数**: 113 (来自 mobazha-mobile/screens/)
-- **Core 层进度**: 10%
-- **页面迁移**: 0%
+- 总功能数: 待完善
+- 已完成: 5 (核心层)
+- 进行中: 1 (Matrix 服务)
+- 未开始: UI 组件、页面
 
-### 最近提交
+## Phase 1: 核心层迁移 (进行中)
 
-1. `chore: 初始化 Monorepo 项目结构`
-2. `feat(web): 添加 Next.js 14 应用骨架`
-3. `feat(core): 添加核心类型定义`
-4. `feat(core): 添加 API 服务层基础`
+| 模块 | 功能         | RN 源文件                   | Web 目标                                 | 状态 | 说明                      |
+| ---- | ------------ | --------------------------- | ---------------------------------------- | ---- | ------------------------- |
+| Core | 类型定义     | N/A                         | `packages/core/types`                    | ✅   | Product/Order/User/Wallet |
+| Core | API 配置     | `api/index.js`              | `packages/core/services/api/config.ts`   | ✅   | 认证/端点配置             |
+| Core | API 客户端   | `api/*.js`                  | `packages/core/services/api/client.ts`   | ✅   | 通用请求封装              |
+| Core | 商品 API     | `api/products.js`           | `packages/core/services/api/products.ts` | ✅   | 列表/详情/CRUD            |
+| Core | 订单 API     | `api/orders.js`             | `packages/core/services/api/orders.ts`   | ✅   | 购买/销售/操作            |
+| Core | 用户 API     | `api/profile.js`            | `packages/core/services/api/profile.ts`  | ✅   | 资料/设置                 |
+| Core | 钱包 API     | `api/wallet.js`             | `packages/core/services/api/wallet.ts`   | ✅   | 余额/交易                 |
+| Core | 用户 Store   | Redux reducers              | `packages/core/stores/userStore.ts`      | ✅   | Zustand 状态              |
+| Core | 购物车 Store | Redux reducers              | `packages/core/stores/cartStore.ts`      | ✅   | Zustand 状态              |
+| Core | 钱包 Store   | Redux reducers              | `packages/core/stores/walletStore.ts`    | ✅   | Zustand 状态              |
+| Core | 商品 Hooks   | N/A                         | `packages/core/hooks/useProducts.ts`     | ✅   | 列表/详情/搜索            |
+| Core | 订单 Hooks   | N/A                         | `packages/core/hooks/useOrders.ts`       | ✅   | 列表/详情/操作            |
+| Core | 用户 Hooks   | N/A                         | `packages/core/hooks/useProfile.ts`      | ✅   | 资料/在线状态             |
+| Core | Matrix 服务  | `services/matrixService.js` | `packages/core/services/matrix/`         | 🔄   | 聊天/加密/社区            |
 
-## Core 层迁移状态
+## Phase 2: UI 组件库 (待开始)
 
-### Services
+| 组件        | RN 源                | Web 目标               | 状态 | 说明     |
+| ----------- | -------------------- | ---------------------- | ---- | -------- |
+| Button      | components/atoms     | packages/ui/components | ⏳   | 基础按钮 |
+| Avatar      | components/atoms     | packages/ui/components | ⏳   | 用户头像 |
+| ProductCard | components/templates | packages/ui/components | ⏳   | 商品卡片 |
+| ...         | ...                  | ...                    | ⏳   | ...      |
 
-| 源文件                            | 目标文件                      | 状态 | 测试 |
-| --------------------------------- | ----------------------------- | ---- | ---- |
-| services/matrixService.js         | core/services/matrix.ts       | ⏳   | ⏳   |
-| services/matrixCryptoService.js   | core/services/matrixCrypto.ts | ⏳   | ⏳   |
-| services/rwaMarketplaceService.js | core/services/rwa.ts          | ⏳   | ⏳   |
-| services/tokenLookupService.js    | core/services/token.ts        | ⏳   | ⏳   |
-| services/notificationService.js   | core/services/notification.ts | ⏳   | ⏳   |
+## Phase 3: 页面迁移 (待开始)
 
-### Stores (Redux -> Zustand)
-
-| 源文件                   | 目标文件                    | 状态 | 测试 |
-| ------------------------ | --------------------------- | ---- | ---- |
-| reducers/profile.js      | core/stores/userStore.ts    | ⏳   | ⏳   |
-| reducers/listings.js     | core/stores/productStore.ts | ⏳   | ⏳   |
-| reducers/order.js        | core/stores/orderStore.ts   | ⏳   | ⏳   |
-| reducers/chat.js         | core/stores/chatStore.ts    | ⏳   | ⏳   |
-| reducers/wallet.js       | core/stores/walletStore.ts  | ⏳   | ⏳   |
-| reducers/shoppingCart.js | core/stores/cartStore.ts    | ⏳   | ⏳   |
-
-### API
-
-| 源文件          | 目标文件                      | 状态 | 测试 |
-| --------------- | ----------------------------- | ---- | ---- |
-| api/products.js | core/services/api/products.ts | ⏳   | ⏳   |
-| api/orders.js   | core/services/api/orders.ts   | ⏳   | ⏳   |
-| api/profile.js  | core/services/api/profile.ts  | ⏳   | ⏳   |
-| ...             | ...                           | ...  | ...  |
-
-## 页面迁移状态
-
-### 优先级 1: 核心浏览
-
-| 源文件                    | 目标文件                   | 状态 | 测试 |
-| ------------------------- | -------------------------- | ---- | ---- |
-| screens/listing.js        | app/product/[id]/page.tsx  | ⏳   | ⏳   |
-| screens/store.js          | app/store/[id]/page.tsx    | ⏳   | ⏳   |
-| screens/searchResult.js   | app/search/page.tsx        | ⏳   | ⏳   |
-| screens/categories.js     | app/categories/page.tsx    | ⏳   | ⏳   |
-| screens/categoryResult.js | app/category/[id]/page.tsx | ⏳   | ⏳   |
-
-### 优先级 2: 交易流程
-
-| 源文件                  | 目标文件                 | 状态 | 测试 |
-| ----------------------- | ------------------------ | ---- | ---- |
-| screens/shoppingCart.js | app/cart/page.tsx        | ⏳   | ⏳   |
-| screens/checkout.js     | app/checkout/page.tsx    | ⏳   | ⏳   |
-| screens/order.js        | app/orders/page.tsx      | ⏳   | ⏳   |
-| screens/orderDetails.js | app/orders/[id]/page.tsx | ⏳   | ⏳   |
-| screens/wallet.js       | app/wallet/page.tsx      | ⏳   | ⏳   |
-
-### 优先级 3: 用户系统
-
-| 源文件                     | 目标文件                      | 状态 | 测试 |
-| -------------------------- | ----------------------------- | ---- | ---- |
-| screens/Me.js              | app/profile/page.tsx          | ⏳   | ⏳   |
-| screens/settings.js        | app/settings/page.tsx         | ⏳   | ⏳   |
-| screens/profileSettings.js | app/settings/profile/page.tsx | ⏳   | ⏳   |
-
-### 优先级 4: 聊天和高级功能
-
-| 源文件                      | 目标文件                          | 状态 | 测试 |
-| --------------------------- | --------------------------------- | ---- | ---- |
-| screens/MatrixChats.js      | app/chat/page.tsx                 | ⏳   | ⏳   |
-| screens/MatrixChatDetail.js | app/chat/[id]/page.tsx            | ⏳   | ⏳   |
-| screens/BroadwayMarket.js   | app/rwa/page.tsx                  | ⏳   | ⏳   |
-| screens/StoreCommunity.js   | app/store/[id]/community/page.tsx | ⏳   | ⏳   |
-
-## 图例
-
-| 符号 | 含义          |
-| ---- | ------------- |
-| ✅   | 完成          |
-| 🔄   | 进行中        |
-| ⏳   | 未开始        |
-| ❌   | 已取消/不需要 |
+| 页面     | RN 源                  | Web 目标                    | 状态 |
+| -------- | ---------------------- | --------------------------- | ---- |
+| 首页     | screens/Home.js        | apps/web/app/page.tsx       | ⏳   |
+| 商品详情 | screens/Listing.js     | apps/web/app/listing/[slug] | ⏳   |
+| 店铺页   | screens/StoreDetail.js | apps/web/app/store/[peerId] | ⏳   |
+| ...      | ...                    | ...                         | ⏳   |
 
 ---
 
-最后更新: <!-- 自动更新时间 -->
+图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始 | N/A 不适用
+
+最后更新: 2026-01-06
