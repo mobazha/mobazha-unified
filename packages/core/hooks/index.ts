@@ -14,8 +14,10 @@ export * from './useOrders';
 // 用户资料相关
 export * from './useProfile';
 
+// 聊天相关
+export * from './useMatrix';
+
 // TODO: 后续迁移
 // export * from './useAuth';
 // export * from './useCart';
-// export * from './useChat';
 // export * from './useWallet';
