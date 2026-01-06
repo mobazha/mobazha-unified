@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import Image, { ImageProps } from 'next/image';
+import React, { useState, useCallback, useEffect, ImgHTMLAttributes } from 'react';
 import { cn } from '../../lib/utils';
 
-export interface OptimizedImageProps extends Omit<ImageProps, 'onError' | 'onLoad'> {
+export interface OptimizedImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  'onError' | 'onLoad'
+> {
   /** 回退图片 URL */
   fallbackSrc?: string;
   /** 显示加载骨架 */
@@ -17,6 +19,8 @@ export interface OptimizedImageProps extends Omit<ImageProps, 'onError' | 'onLoa
   onLoadError?: () => void;
   /** 图片纵横比 (用于占位) */
   aspectRatio?: 'square' | '4/3' | '16/9' | '3/2' | 'auto';
+  /** 对象适应方式 */
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 }
 
 // 默认占位图 (base64 SVG)
@@ -32,6 +36,15 @@ const ASPECT_RATIO_MAP = {
   auto: '',
 };
 
+// 对象适应映射
+const OBJECT_FIT_MAP = {
+  cover: 'object-cover',
+  contain: 'object-contain',
+  fill: 'object-fill',
+  none: 'object-none',
+  'scale-down': 'object-scale-down',
+};
+
 /**
  * 优化的图片组件
  *
@@ -40,15 +53,12 @@ const ASPECT_RATIO_MAP = {
  * - 加载骨架动画
  * - 错误回退图片
  * - 响应式尺寸
- * - 模糊占位符
  *
  * @example
  * ```tsx
  * <OptimizedImage
  *   src="/product.jpg"
  *   alt="Product"
- *   width={400}
- *   height={400}
  *   showSkeleton
  *   aspectRatio="square"
  * />
@@ -63,8 +73,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   onLoadComplete,
   onLoadError,
   aspectRatio = 'auto',
+  objectFit = 'cover',
   className,
-  fill,
   ...props
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -86,13 +96,18 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [currentSrc, fallbackSrc, onLoadError]);
 
   // 重置状态当 src 变化
-  React.useEffect(() => {
-    setCurrentSrc(src);
-    setHasError(false);
-    setIsLoading(true);
+  useEffect(() => {
+    // 使用 setTimeout 避免同步 setState 引起级联渲染
+    const timer = setTimeout(() => {
+      setCurrentSrc(src);
+      setHasError(false);
+      setIsLoading(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [src]);
 
   const aspectRatioClass = ASPECT_RATIO_MAP[aspectRatio];
+  const objectFitClass = OBJECT_FIT_MAP[objectFit];
 
   return (
     <div
@@ -108,18 +123,19 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       )}
 
       {/* 图片 */}
-      <Image
+      <img
         src={hasError ? fallbackSrc : currentSrc}
         alt={alt}
-        fill={fill}
         className={cn(
-          'transition-opacity duration-300',
+          'w-full h-full transition-opacity duration-300',
+          objectFitClass,
           isLoading ? 'opacity-0' : 'opacity-100',
           className
         )}
         onLoad={handleLoad}
         onError={handleError}
         loading="lazy"
+        decoding="async"
         {...props}
       />
     </div>
