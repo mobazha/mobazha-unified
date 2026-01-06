@@ -35,7 +35,8 @@ describe('Input', () => {
 
   it('错误状态应有红色边框', () => {
     render(<Input error="Error" />);
-    expect(screen.getByRole('textbox')).toHaveClass('border-red-500');
+    // 使用设计系统的 CSS 变量类名
+    expect(screen.getByRole('textbox')).toHaveClass('border-error');
   });
 
   it('禁用状态应不可编辑', () => {

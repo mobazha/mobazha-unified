@@ -35,13 +35,14 @@ describe('Button', () => {
 
   it('应应用正确的变体样式', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-emerald-600');
+    // 使用设计系统的 CSS 变量类名
+    expect(screen.getByRole('button')).toHaveClass('bg-primary');
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-slate-700');
+    expect(screen.getByRole('button')).toHaveClass('bg-secondary');
 
     rerender(<Button variant="outline">Outline</Button>);
-    expect(screen.getByRole('button')).toHaveClass('border-emerald-600');
+    expect(screen.getByRole('button')).toHaveClass('border-primary');
   });
 
   it('应应用正确的尺寸样式', () => {

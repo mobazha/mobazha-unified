@@ -20,8 +20,11 @@ describe('Card', () => {
   it('应应用默认样式', () => {
     render(<Card data-testid="card">Content</Card>);
     const card = screen.getByTestId('card');
-    expect(card).toHaveClass('bg-white');
+    // 使用设计系统的 CSS 变量类名
+    expect(card).toHaveClass('bg-surface');
     expect(card).toHaveClass('rounded-xl');
+    expect(card).toHaveClass('border');
+    expect(card).toHaveClass('border-border');
   });
 
   it('应应用 padding 变体', () => {
