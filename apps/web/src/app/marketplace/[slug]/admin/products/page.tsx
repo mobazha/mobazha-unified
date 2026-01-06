@@ -131,79 +131,70 @@ export default function MarketplaceProductsPage() {
     return matchesFilter && matchesSearch;
   });
 
-  const handleApprove = useCallback(
-    async (productId: string) => {
-      setProcessingId(productId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleApprove = useCallback(async (productId: string, note: string) => {
+    setProcessingId(productId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setProducts(prev =>
-        prev.map(p =>
-          p.id === productId
-            ? {
-                ...p,
-                status: 'approved' as const,
-                reviewedAt: new Date().toISOString(),
-                reviewNote,
-              }
-            : p
-        )
-      );
-      setProcessingId(null);
-      setSelectedProduct(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === productId
+          ? {
+              ...p,
+              status: 'approved' as const,
+              reviewedAt: new Date().toISOString(),
+              reviewNote: note,
+            }
+          : p
+      )
+    );
+    setProcessingId(null);
+    setSelectedProduct(null);
+    setReviewNote('');
+  }, []);
 
-  const handleReject = useCallback(
-    async (productId: string) => {
-      setProcessingId(productId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleReject = useCallback(async (productId: string, note: string) => {
+    setProcessingId(productId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setProducts(prev =>
-        prev.map(p =>
-          p.id === productId
-            ? {
-                ...p,
-                status: 'rejected' as const,
-                reviewedAt: new Date().toISOString(),
-                reviewNote,
-              }
-            : p
-        )
-      );
-      setProcessingId(null);
-      setSelectedProduct(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === productId
+          ? {
+              ...p,
+              status: 'rejected' as const,
+              reviewedAt: new Date().toISOString(),
+              reviewNote: note,
+            }
+          : p
+      )
+    );
+    setProcessingId(null);
+    setSelectedProduct(null);
+    setReviewNote('');
+  }, []);
 
-  const handleFlag = useCallback(
-    async (productId: string) => {
-      setProcessingId(productId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleFlag = useCallback(async (productId: string, note: string) => {
+    setProcessingId(productId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setProducts(prev =>
-        prev.map(p =>
-          p.id === productId
-            ? {
-                ...p,
-                status: 'flagged' as const,
-                reviewNote,
-              }
-            : p
-        )
-      );
-      setProcessingId(null);
-      setSelectedProduct(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === productId
+          ? {
+              ...p,
+              status: 'flagged' as const,
+              reviewNote: note,
+            }
+          : p
+      )
+    );
+    setProcessingId(null);
+    setSelectedProduct(null);
+    setReviewNote('');
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -385,7 +376,7 @@ export default function MarketplaceProductsPage() {
                         <Button
                           size="sm"
                           className="flex-1"
-                          onClick={() => handleApprove(product.id)}
+                          onClick={() => handleApprove(product.id, '')}
                           disabled={processingId === product.id}
                         >
                           Approve
@@ -456,7 +447,7 @@ export default function MarketplaceProductsPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => handleFlag(selectedProduct.id)}
+                onClick={() => handleFlag(selectedProduct.id, reviewNote)}
                 disabled={processingId === selectedProduct.id}
                 className="border-orange-500 text-orange-500 hover:bg-orange-50"
               >
@@ -464,14 +455,14 @@ export default function MarketplaceProductsPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => handleReject(selectedProduct.id)}
+                onClick={() => handleReject(selectedProduct.id, reviewNote)}
                 disabled={processingId === selectedProduct.id || !reviewNote}
                 className="border-red-500 text-red-500 hover:bg-red-50"
               >
                 Reject
               </Button>
               <Button
-                onClick={() => handleApprove(selectedProduct.id)}
+                onClick={() => handleApprove(selectedProduct.id, reviewNote)}
                 disabled={processingId === selectedProduct.id}
               >
                 {processingId === selectedProduct.id ? 'Processing...' : 'Approve'}

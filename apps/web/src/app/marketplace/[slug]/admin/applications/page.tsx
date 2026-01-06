@@ -92,55 +92,49 @@ export default function MarketplaceApplicationsPage() {
     return app.status === filter;
   });
 
-  const handleApprove = useCallback(
-    async (appId: string) => {
-      setProcessingId(appId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleApprove = useCallback(async (appId: string, note: string) => {
+    setProcessingId(appId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setApplications(prev =>
-        prev.map(app =>
-          app.id === appId
-            ? {
-                ...app,
-                status: 'approved' as const,
-                reviewedAt: new Date().toISOString(),
-                reviewNote,
-              }
-            : app
-        )
-      );
-      setProcessingId(null);
-      setSelectedApp(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setApplications(prev =>
+      prev.map(app =>
+        app.id === appId
+          ? {
+              ...app,
+              status: 'approved' as const,
+              reviewedAt: new Date().toISOString(),
+              reviewNote: note,
+            }
+          : app
+      )
+    );
+    setProcessingId(null);
+    setSelectedApp(null);
+    setReviewNote('');
+  }, []);
 
-  const handleReject = useCallback(
-    async (appId: string) => {
-      setProcessingId(appId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleReject = useCallback(async (appId: string, note: string) => {
+    setProcessingId(appId);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setApplications(prev =>
-        prev.map(app =>
-          app.id === appId
-            ? {
-                ...app,
-                status: 'rejected' as const,
-                reviewedAt: new Date().toISOString(),
-                reviewNote,
-              }
-            : app
-        )
-      );
-      setProcessingId(null);
-      setSelectedApp(null);
-      setReviewNote('');
-    },
-    [reviewNote]
-  );
+    setApplications(prev =>
+      prev.map(app =>
+        app.id === appId
+          ? {
+              ...app,
+              status: 'rejected' as const,
+              reviewedAt: new Date().toISOString(),
+              reviewNote: note,
+            }
+          : app
+      )
+    );
+    setProcessingId(null);
+    setSelectedApp(null);
+    setReviewNote('');
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -280,7 +274,7 @@ export default function MarketplaceApplicationsPage() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleApprove(app.id)}
+                          onClick={() => handleApprove(app.id, '')}
                           disabled={processingId === app.id}
                         >
                           {processingId === app.id ? 'Processing...' : 'Approve'}
@@ -371,14 +365,14 @@ export default function MarketplaceApplicationsPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => handleReject(selectedApp.id)}
+                onClick={() => handleReject(selectedApp.id, reviewNote)}
                 disabled={processingId === selectedApp.id}
                 className="border-red-500 text-red-500 hover:bg-red-50"
               >
                 Reject
               </Button>
               <Button
-                onClick={() => handleApprove(selectedApp.id)}
+                onClick={() => handleApprove(selectedApp.id, reviewNote)}
                 disabled={processingId === selectedApp.id}
               >
                 {processingId === selectedApp.id ? 'Processing...' : 'Approve'}
