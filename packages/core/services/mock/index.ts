@@ -17,7 +17,7 @@ import {
   generateMockProducts,
   generateMockMessages,
 } from './data';
-import type { Product, ProductCategory } from '../../types/product';
+import type { Product, ProductCategory, ProductListItem } from '../../types/product';
 import type { Order } from '../../types/order';
 import type { UserProfile, User } from '../../types/user';
 import type { Wallet, Transaction } from '../../types/wallet';
@@ -25,39 +25,42 @@ import type { Wallet, Transaction } from '../../types/wallet';
 // Simulate network delay
 const delay = (ms: number = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Convert Product to ProductListItem
+const toListItem = (p: Product): ProductListItem => ({
+  slug: p.slug,
+  hash: p.hash || `Qm${p.slug}`,
+  title: p.title,
+  thumbnail: p.images?.[0] || p.thumbnail || '',
+  price: typeof p.price === 'number' ? p.price : parseFloat(p.price as string) || 0,
+  freeShipping: p.freeShipping,
+  acceptedCurrencies: p.acceptedCurrencies || ['BTC', 'ETH'],
+  contractType: p.contractType || 'PHYSICAL_GOOD',
+  vendorPeerID: p.vendorPeerID || p.vendor?.peerID || '',
+  averageRating: p.rating || 0,
+  ratingCount: p.reviewCount || 0,
+});
+
 // ============ Product Services ============
 
 export const mockProductService = {
-  async getProducts(params?: {
-    page?: number;
-    limit?: number;
-    category?: string;
-    search?: string;
-  }): Promise<{ products: Product[]; total: number; hasMore: boolean }> {
+  async getTrendingProducts(): Promise<ProductListItem[]> {
     await delay();
-    let products = [...mockProducts, ...generateMockProducts(20)];
+    return mockProducts.slice(0, 10).map(toListItem);
+  },
 
-    if (params?.category) {
-      products = products.filter(p => p.category.toLowerCase() === params.category?.toLowerCase());
-    }
+  async getFeaturedProducts(): Promise<ProductListItem[]> {
+    await delay();
+    return mockProducts.slice(0, 8).map(toListItem);
+  },
 
-    if (params?.search) {
-      const query = params.search.toLowerCase();
-      products = products.filter(
-        p => p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query)
-      );
-    }
+  async getStoreListings(_peerID: string): Promise<ProductListItem[]> {
+    await delay();
+    return mockProducts.slice(0, 6).map(toListItem);
+  },
 
-    const page = params?.page || 1;
-    const limit = params?.limit || 20;
-    const start = (page - 1) * limit;
-    const paginatedProducts = products.slice(start, start + limit);
-
-    return {
-      products: paginatedProducts,
-      total: products.length,
-      hasMore: start + limit < products.length,
-    };
+  async getMyListings(): Promise<ProductListItem[]> {
+    await delay();
+    return mockProducts.slice(0, 4).map(toListItem);
   },
 
   async getProduct(slug: string): Promise<Product | null> {
@@ -66,42 +69,46 @@ export const mockProductService = {
     return allProducts.find(p => p.slug === slug) || null;
   },
 
+  async createListing(_productDetails: Partial<Product>): Promise<{ slug: string }> {
+    await delay(500);
+    return { slug: `new-product-${Date.now()}` };
+  },
+
+  async updateListing(_productDetails: Partial<Product>): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async deleteListing(_slug: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
   async getCategories(): Promise<ProductCategory[]> {
     await delay(200);
     return mockCategories;
   },
 
-  async getFeaturedProducts(): Promise<Product[]> {
+  async getProductRatings(_slug: string) {
     await delay();
-    return mockProducts.slice(0, 6);
+    return [
+      { rating: 5, comment: 'Great product!', date: '2024-01-15', buyerName: 'User1' },
+      { rating: 4, comment: 'Good quality', date: '2024-01-10', buyerName: 'User2' },
+    ];
   },
 };
 
 // ============ Order Services ============
 
 export const mockOrderService = {
-  async getOrders(params?: {
-    status?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ orders: Order[]; total: number; hasMore: boolean }> {
+  async getPurchases(): Promise<Order[]> {
     await delay();
-    let orders = [...mockOrders];
+    return mockOrders.filter(o => o.type === 'purchase' || !o.type);
+  },
 
-    if (params?.status && params.status !== 'all') {
-      orders = orders.filter(o => o.status === params.status);
-    }
-
-    const page = params?.page || 1;
-    const limit = params?.limit || 10;
-    const start = (page - 1) * limit;
-    const paginatedOrders = orders.slice(start, start + limit);
-
-    return {
-      orders: paginatedOrders,
-      total: orders.length,
-      hasMore: start + limit < orders.length,
-    };
+  async getSales(): Promise<Order[]> {
+    await delay();
+    return mockOrders.filter(o => o.type === 'sale');
   },
 
   async getOrder(orderId: string): Promise<Order | null> {
@@ -109,33 +116,47 @@ export const mockOrderService = {
     return mockOrders.find(o => o.id === orderId || o.orderNumber === orderId) || null;
   },
 
-  async createOrder(/* orderData: unknown */): Promise<Order> {
+  async confirmOrder(_orderId: string): Promise<{ success: boolean }> {
     await delay(500);
-    const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
-      orderNumber: `ORD-2024-${Math.floor(Math.random() * 1000)}`,
-      status: 'pending',
-      items: [],
-      total: 0,
-      currency: 'USD',
-      cryptoAmount: 0,
-      cryptoCurrency: 'BTC',
-      vendor: { peerID: 'QmVendor123', name: 'Store' },
-      shippingAddress: {
-        name: '',
-        street: '',
-        city: '',
-        state: '',
-        country: '',
-        postalCode: '',
-      },
-      timeline: [
-        { status: 'pending', timestamp: new Date().toISOString(), description: 'Order placed' },
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    return { success: true };
+  },
+
+  async fulfillOrder(_orderId: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async completeOrder(_orderId: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async cancelOrder(_orderId: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async refundOrder(_orderId: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async fundOrder(_orderId: string): Promise<{ success: boolean; txid: string }> {
+    await delay(500);
+    return { success: true, txid: `tx-${Date.now()}` };
+  },
+
+  async openDispute(_orderId: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async getPaymentInstructions(_orderId: string, _coin: string) {
+    await delay();
+    return {
+      address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+      amount: 0.001,
     };
-    return newOrder;
   },
 };
 
@@ -147,17 +168,49 @@ export const mockProfileService = {
     return mockCurrentUser;
   },
 
-  async updateProfile(data: Partial<UserProfile>): Promise<UserProfile> {
+  async updateProfile(_data: Partial<UserProfile>): Promise<{ success: boolean }> {
     await delay(500);
-    return { ...mockCurrentUser, ...data };
+    return { success: true };
   },
 
-  async getUser(peerID: string): Promise<User | null> {
+  async getUser(peerID: string): Promise<UserProfile | null> {
     await delay();
     if (peerID === mockCurrentUser.peerID) {
-      return mockCurrentUser as User;
+      return mockCurrentUser;
     }
-    return mockUsers.find(u => u.peerID === peerID) || null;
+    return (mockUsers.find(u => u.peerID === peerID) as UserProfile) || null;
+  },
+
+  async getSettings() {
+    await delay();
+    return {
+      country: 'US',
+      currency: 'USD',
+      language: 'en',
+      notifications: true,
+      shippingAddresses: [],
+      blockedNodes: [],
+    };
+  },
+
+  async updateSettings(_settings: unknown): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async getPeerID(): Promise<string> {
+    await delay();
+    return mockCurrentUser.peerID;
+  },
+
+  async setAcceptedCoins(_coins: string[]): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
+  },
+
+  async reportUser(_peerID: string, _reason: string): Promise<{ success: boolean }> {
+    await delay(500);
+    return { success: true };
   },
 
   async searchUsers(query: string): Promise<User[]> {
@@ -173,53 +226,71 @@ export const mockProfileService = {
 // ============ Wallet Services ============
 
 export const mockWalletService = {
-  async getWallets(): Promise<Wallet[]> {
+  async getAllBalances(): Promise<Record<string, Wallet>> {
     await delay();
-    return mockWallets;
+    const balances: Record<string, Wallet> = {};
+    for (const wallet of mockWallets) {
+      balances[wallet.type] = wallet;
+    }
+    return balances;
   },
 
-  async getWallet(type: string): Promise<Wallet | null> {
+  async getBalance(coin: string): Promise<Wallet | null> {
     await delay();
-    return mockWallets.find(w => w.type === type) || null;
+    return mockWallets.find(w => w.type === coin) || null;
   },
 
-  async getTransactions(params?: {
-    currency?: string;
-    type?: 'send' | 'receive';
-    page?: number;
-    limit?: number;
-  }): Promise<{ transactions: Transaction[]; total: number; hasMore: boolean }> {
+  async getTransactions(coin: string): Promise<Transaction[]> {
     await delay();
-    let transactions = [...mockTransactions];
+    return mockTransactions.filter(t => t.currency === coin);
+  },
 
-    if (params?.currency) {
-      transactions = transactions.filter(t => t.currency === params.currency);
-    }
+  async getAddress(coin: string): Promise<string> {
+    await delay();
+    const addresses: Record<string, string> = {
+      BTC: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+      ETH: '0x742d35Cc6634C0532925a3b844Bc9e7595f',
+      USDT: 'TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9',
+    };
+    return addresses[coin] || `address-${coin}`;
+  },
 
-    if (params?.type) {
-      transactions = transactions.filter(t => t.type === params.type);
-    }
-
-    const page = params?.page || 1;
-    const limit = params?.limit || 20;
-    const start = (page - 1) * limit;
-    const paginatedTransactions = transactions.slice(start, start + limit);
-
+  async estimateFee(_coin: string, _amount: number) {
+    await delay();
     return {
-      transactions: paginatedTransactions,
-      total: transactions.length,
-      hasMore: start + limit < transactions.length,
+      priority: { fee: 0.0001, satPerByte: 20, estimatedTime: '10 min' },
+      normal: { fee: 0.00005, satPerByte: 10, estimatedTime: '30 min' },
+      economic: { fee: 0.00002, satPerByte: 5, estimatedTime: '60 min' },
     };
   },
 
-  async getTotalBalance(): Promise<{ usd: number; btc: number }> {
-    await delay(200);
-    const totalUSD = mockWallets.reduce((sum, w) => sum + w.balanceUSD, 0);
-    const btcWallet = mockWallets.find(w => w.type === 'BTC');
+  async sendTransaction(_params: unknown): Promise<{ success: boolean; txid: string }> {
+    await delay(1000);
+    return { success: true, txid: `tx-${Date.now()}` };
+  },
+
+  async getExchangeRates(): Promise<Record<string, Record<string, number>>> {
+    await delay();
     return {
-      usd: totalUSD,
-      btc: btcWallet?.balance || 0,
+      BTC: { USD: 45000, EUR: 41000, CNY: 290000 },
+      ETH: { USD: 2500, EUR: 2300, CNY: 16000 },
+      USDT: { USD: 1, EUR: 0.92, CNY: 7.2 },
     };
+  },
+
+  async hasWallet(): Promise<boolean> {
+    await delay();
+    return true;
+  },
+
+  async getMnemonic(): Promise<string> {
+    await delay();
+    return 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+  },
+
+  async restoreWallet(_mnemonic: string): Promise<{ success: boolean }> {
+    await delay(1000);
+    return { success: true };
   },
 };
 
