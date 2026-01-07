@@ -2,7 +2,7 @@
  * 通知 Hook
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { notificationsApi, type Notification } from '../services/api/notifications';
 
 interface NotificationsState {
@@ -26,8 +26,6 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     isLoading: false,
     error: null,
   });
-
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * 获取通知列表
@@ -55,34 +53,31 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       setState(prev => ({ ...prev, unreadCount }));
       return unreadCount;
     } catch {
-      return state.unreadCount;
+      return 0;
     }
-  }, [state.unreadCount]);
+  }, []);
 
   /**
    * 标记单个通知为已读
    */
-  const markAsRead = useCallback(
-    async (notificationId: string) => {
-      try {
-        const result = await notificationsApi.markNotificationAsRead(notificationId);
-        if (result.success) {
-          setState(prev => ({
-            ...prev,
-            notifications: prev.notifications.map(n =>
-              n.id === notificationId ? { ...n, read: true } : n
-            ),
-            unreadCount: Math.max(0, prev.unreadCount - 1),
-          }));
-        }
-        return result;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to mark as read';
-        return { success: false, error: errorMessage };
+  const markAsRead = useCallback(async (notificationId: string) => {
+    try {
+      const result = await notificationsApi.markNotificationAsRead(notificationId);
+      if (result.success) {
+        setState(prev => ({
+          ...prev,
+          notifications: prev.notifications.map(n =>
+            n.id === notificationId ? { ...n, read: true } : n
+          ),
+          unreadCount: Math.max(0, prev.unreadCount - 1),
+        }));
       }
-    },
-    []
-  );
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to mark as read';
+      return { success: false, error: errorMessage };
+    }
+  }, []);
 
   /**
    * 标记所有通知为已读
@@ -123,26 +118,57 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
   // 初始加载
   useEffect(() => {
-    if (autoRefresh) {
-      // 使用 void 避免 lint 警告
-      void fetchNotifications();
-    }
-  }, [autoRefresh, fetchNotifications]);
+    if (!autoRefresh) return;
+
+    let isMounted = true;
+
+    const loadNotifications = async () => {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      try {
+        const notifications = await notificationsApi.getNotifications();
+        if (isMounted) {
+          const unreadCount = notifications.filter(n => !n.read).length;
+          setState({ notifications, unreadCount, isLoading: false, error: null });
+        }
+      } catch (error) {
+        if (isMounted) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch notifications';
+          setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
+        }
+      }
+    };
+
+    void loadNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [autoRefresh]);
 
   // 自动刷新
   useEffect(() => {
-    if (autoRefresh && refreshInterval > 0) {
-      refreshTimerRef.current = setInterval(() => {
-        void fetchUnreadCount();
-      }, refreshInterval);
+    if (!autoRefresh || refreshInterval <= 0) return;
 
-      return () => {
-        if (refreshTimerRef.current) {
-          clearInterval(refreshTimerRef.current);
+    let isMounted = true;
+
+    const timer = setInterval(async () => {
+      if (!isMounted) return;
+      try {
+        const unreadCount = await notificationsApi.getUnreadNotificationCount();
+        if (isMounted) {
+          setState(prev => ({ ...prev, unreadCount }));
         }
-      };
-    }
-  }, [autoRefresh, refreshInterval, fetchUnreadCount]);
+      } catch {
+        // 静默失败，下次重试
+      }
+    }, refreshInterval);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [autoRefresh, refreshInterval]);
 
   return {
     ...state,
@@ -156,4 +182,3 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 }
 
 export default useNotifications;
-

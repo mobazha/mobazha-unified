@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode, useMemo } from 'react';
 import { Lock, Eye, EyeOff, Key, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -27,30 +27,55 @@ export function EncryptedContent({
   onRequestAccess,
   className,
 }: EncryptedContentProps) {
-  const [status, setStatus] = useState<EncryptionStatus>('encrypted');
-  const [isDecrypting, setIsDecrypting] = useState(false);
+  // 跟踪解密动画是否完成
+  const [decryptionComplete, setDecryptionComplete] = useState(false);
+  // 用于在 props 变化时重置状态的 key
+  const [animationKey, setAnimationKey] = useState(0);
 
+  // 从 props 派生基础状态（无需 effect）
+  const baseStatus: EncryptionStatus = useMemo(() => {
+    if (!encrypted) return 'none';
+    if (!hasAccess) return 'encrypted';
+    return 'decrypting'; // 有权限时默认进入解密状态
+  }, [encrypted, hasAccess]);
+
+  // 计算最终状态
+  const status: EncryptionStatus =
+    baseStatus === 'decrypting' && decryptionComplete ? 'decrypted' : baseStatus;
+
+  const isDecrypting = baseStatus === 'decrypting' && !decryptionComplete;
+
+  // 当需要重新开始解密动画时，更新 key 来触发重置
+  const needsDecryption = encrypted && hasAccess;
   useEffect(() => {
-    if (!encrypted) {
-      setStatus('none');
+    if (needsDecryption) {
+      // 更新 key 触发下一个 effect 重新运行
+      setAnimationKey(k => k + 1);
+    }
+  }, [needsDecryption]);
+
+  // 处理解密动画计时器（只在 animationKey 变化时触发）
+  useEffect(() => {
+    if (!needsDecryption) {
       return;
     }
 
-    if (hasAccess) {
-      // 模拟解密过程
-      setIsDecrypting(true);
-      setStatus('decrypting');
+    // 重置并启动动画
+    let isMounted = true;
+    setDecryptionComplete(false);
 
-      const timer = setTimeout(() => {
-        setStatus('decrypted');
-        setIsDecrypting(false);
-      }, 500);
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        setDecryptionComplete(true);
+      }
+    }, 500);
 
-      return () => clearTimeout(timer);
-    } else {
-      setStatus('encrypted');
-    }
-  }, [encrypted, hasAccess]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animationKey]);
 
   // 未加密，直接显示内容
   if (!encrypted) {
@@ -133,8 +158,6 @@ export function EncryptedImage({
   className,
   onRequestAccess,
 }: EncryptedImageProps) {
-  const [showReal, setShowReal] = useState(!encrypted || hasAccess);
-
   if (!encrypted) {
     return <img src={src} alt={alt} className={className} />;
   }
@@ -252,4 +275,3 @@ export function EncryptedPrice({
     </span>
   );
 }
-

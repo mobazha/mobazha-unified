@@ -51,14 +51,17 @@ export interface UseSolanaWalletReturn {
 export function useSolanaWallet(options: UseSolanaWalletOptions = {}): UseSolanaWalletReturn {
   const { onConnect, onDisconnect, onAccountChange, onError, ...config } = options;
 
+  // 获取 service 实例（在 ref 外部，避免渲染期间访问 ref）
+  const [service] = useState(() => getSolanaWalletService(config));
+  const serviceRef = useRef(service);
+
   const [walletInfo, setWalletInfo] = useState<SolanaWalletInfo | null>(null);
   const [connectionState, setConnectionState] = useState<SolanaConnectionState>(
     SolanaConnectionState.DISCONNECTED
   );
   const [error, setError] = useState<Error | null>(null);
   const [hasWallet, setHasWallet] = useState(false);
-
-  const serviceRef = useRef(getSolanaWalletService(config));
+  const [network, setNetworkState] = useState<SolanaNetwork>(() => service.getNetwork());
 
   // 检查钱包是否可用
   useEffect(() => {
@@ -147,12 +150,16 @@ export function useSolanaWallet(options: UseSolanaWalletOptions = {}): UseSolana
   }, [walletInfo]);
 
   // 设置网络
-  const setNetwork = useCallback((network: SolanaNetwork): void => {
-    serviceRef.current.setNetwork(network);
-    if (walletInfo) {
-      setWalletInfo({ ...walletInfo, network });
-    }
-  }, [walletInfo]);
+  const setNetwork = useCallback(
+    (newNetwork: SolanaNetwork): void => {
+      serviceRef.current.setNetwork(newNetwork);
+      setNetworkState(newNetwork);
+      if (walletInfo) {
+        setWalletInfo({ ...walletInfo, network: newNetwork });
+      }
+    },
+    [walletInfo]
+  );
 
   // 发送交易
   const sendTransaction = useCallback(
@@ -195,7 +202,7 @@ export function useSolanaWallet(options: UseSolanaWalletOptions = {}): UseSolana
 
     // 辅助
     hasWallet,
-    network: serviceRef.current.getNetwork(),
+    network,
   };
 }
 
@@ -209,10 +216,7 @@ export const SOLANA_TOKENS = {
 };
 
 // Solana 网络配置
-export const SOLANA_NETWORKS: Record<
-  SolanaNetwork,
-  { name: string; explorer: string }
-> = {
+export const SOLANA_NETWORKS: Record<SolanaNetwork, { name: string; explorer: string }> = {
   'mainnet-beta': {
     name: 'Mainnet',
     explorer: 'https://explorer.solana.com',
@@ -226,4 +230,3 @@ export const SOLANA_NETWORKS: Record<
     explorer: 'https://explorer.solana.com?cluster=devnet',
   },
 };
-
