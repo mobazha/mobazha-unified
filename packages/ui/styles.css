@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+/* Tailwind CSS v4 Theme Configuration for @mobazha/ui */
+@theme {
+  /* Mobazha 品牌色 */
+  --color-primary-50: #e0f7fa;
+  --color-primary-100: #b2ebf2;
+  --color-primary-200: #80deea;
+  --color-primary-300: #4dd0e1;
+  --color-primary-400: #26c6da;
+  --color-primary-500: #00bcd4;
+  --color-primary-600: #00acc1;
+  --color-primary-700: #0097a7;
+  --color-primary-800: #00838f;
+  --color-primary-900: #006064;
+  --color-primary: #00bcd4;
+
+  --color-secondary-50: #fbe9e7;
+  --color-secondary-100: #ffccbc;
+  --color-secondary-200: #ffab91;
+  --color-secondary-300: #ff8a65;
+  --color-secondary-400: #ff7043;
+  --color-secondary-500: #ff5722;
+  --color-secondary-600: #f4511e;
+  --color-secondary-700: #e64a19;
+  --color-secondary-800: #d84315;
+  --color-secondary-900: #bf360c;
+  --color-secondary: #ff5722;
+
+  /* 语义色 */
+  --color-success: #4caf50;
+  --color-warning: #ffc107;
+  --color-error: #f44336;
+  --color-info: #2196f3;
+
+  /* 字体 */
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* 断点 */
+  --breakpoint-mobile: 0px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-large: 1440px;
+}
+
+/* Content sources for component scanning */
+@source './components/**/*.{js,ts,jsx,tsx}';
+@source './layouts/**/*.{js,ts,jsx,tsx}';

@@ -1,11 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@mobazha/ui', '@mobazha/core'],
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: false,
-  },
 
   // 图片优化配置
   images: {
@@ -30,12 +25,6 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // 图片缓存时间 (秒)
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 天
-  },
-
-  // 实验性功能
-  experimental: {
-    // 优化包导入
-    optimizePackageImports: ['@mobazha/ui', '@mobazha/core', 'lodash-es'],
   },
 
   // 生产环境优化
