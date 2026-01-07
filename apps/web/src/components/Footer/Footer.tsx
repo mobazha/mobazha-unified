@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Container, Grid, HStack, VStack } from '@mobazha/ui';
+import { Container, Grid, HStack, VStack } from '@/components/layouts';
 import { useI18n } from '@mobazha/core';
 
 const socialLinks = [
@@ -68,19 +68,19 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="hidden md:block bg-background-alt border-t border-border pt-16 pb-8">
+    <footer className="hidden md:block bg-muted border-t border-border pt-16 pb-8">
       <Container size="xl">
         {/* Main Footer Content */}
         <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-                <span className="text-text-inverse font-bold text-lg">M</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">M</span>
               </div>
-              <span className="font-bold text-xl text-text-primary">Mobazha</span>
+              <span className="font-bold text-xl text-foreground">Mobazha</span>
             </Link>
-            <p className="text-sm text-text-secondary mb-4">{t('footer.tagline')}</p>
+            <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
             <HStack gap="sm">
               {socialLinks.map(social => (
                 <a
@@ -88,7 +88,7 @@ export const Footer: React.FC = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg hover:bg-surface-hover transition-colors text-text-secondary hover:text-primary"
+                  className="p-2 rounded-lg hover:bg-background transition-colors text-muted-foreground hover:text-primary"
                   aria-label={social.label}
                 >
                   {social.icon}
@@ -99,12 +99,12 @@ export const Footer: React.FC = () => {
 
           {/* Links */}
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-text-primary mb-2">{t('footer.marketplace')}</h4>
+            <h4 className="font-semibold text-foreground mb-2">{t('footer.marketplace')}</h4>
             {footerLinks.marketplace.map(link => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-text-secondary hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -112,12 +112,12 @@ export const Footer: React.FC = () => {
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-text-primary mb-2">{t('footer.resources')}</h4>
+            <h4 className="font-semibold text-foreground mb-2">{t('footer.resources')}</h4>
             {footerLinks.resources.map(link => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-text-secondary hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -125,12 +125,12 @@ export const Footer: React.FC = () => {
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-text-primary mb-2">{t('footer.company')}</h4>
+            <h4 className="font-semibold text-foreground mb-2">{t('footer.company')}</h4>
             {footerLinks.company.map(link => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-text-secondary hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -140,7 +140,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Mobazha. {t('footer.allRightsReserved')}
           </p>
           <HStack gap="md">
@@ -148,7 +148,7 @@ export const Footer: React.FC = () => {
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-text-muted hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>

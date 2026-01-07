@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Avatar } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
@@ -195,26 +197,26 @@ export default function ModeratorCasesPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
               <p className="text-sm text-slate-500">Total Cases</p>
             </Card>
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-3xl font-bold text-red-500">{stats.open}</p>
               <p className="text-sm text-slate-500">Open</p>
             </Card>
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-3xl font-bold text-yellow-500">{stats.pending}</p>
               <p className="text-sm text-slate-500">Pending</p>
             </Card>
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-3xl font-bold text-emerald-500">{stats.resolved}</p>
               <p className="text-sm text-slate-500">Resolved</p>
             </Card>
           </div>
 
           {/* Filters */}
-          <Card padding="md" className="mb-6">
+          <Card className="mb-6">
             <HStack justify="between" className="flex-wrap gap-4">
               <HStack gap="sm" className="flex-wrap">
                 {(['all', 'open', 'pending', 'resolved'] as const).map(status => (
@@ -230,7 +232,13 @@ export default function ModeratorCasesPage() {
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                     {status !== 'all' && (
                       <span className="ml-2 text-xs opacity-75">
-                        ({status === 'open' ? stats.open : status === 'pending' ? stats.pending : stats.resolved})
+                        (
+                        {status === 'open'
+                          ? stats.open
+                          : status === 'pending'
+                            ? stats.pending
+                            : stats.resolved}
+                        )
                       </span>
                     )}
                   </button>
@@ -239,7 +247,7 @@ export default function ModeratorCasesPage() {
 
               <HStack gap="sm" align="center">
                 <span className="text-sm text-slate-500">Sort:</span>
-                <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -257,30 +265,44 @@ export default function ModeratorCasesPage() {
           {isLoading ? (
             <VStack gap="md">
               {[1, 2, 3].map(i => (
-                <Card key={i} padding="lg" className="animate-pulse">
+                <Card key={i} className="animate-pulse">
                   <div className="h-24 bg-slate-200 dark:bg-slate-700 rounded" />
                 </Card>
               ))}
             </VStack>
           ) : filteredCases.length === 0 ? (
-            <Card padding="lg" className="text-center py-16">
+            <Card className="text-center py-16">
               <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  className="w-8 h-8 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 No cases found
               </h3>
               <p className="text-slate-500">
-                {filter !== 'all' ? 'Try changing the filter to see more cases.' : 'You have no moderation cases at this time.'}
+                {filter !== 'all'
+                  ? 'Try changing the filter to see more cases.'
+                  : 'You have no moderation cases at this time.'}
               </p>
             </Card>
           ) : (
             <VStack gap="md">
               {filteredCases.map(caseItem => (
                 <Link key={caseItem.caseId} href={`/moderator/cases/${caseItem.orderId}`}>
-                  <Card padding="lg" hoverable className={`transition-all hover:shadow-lg ${!caseItem.read ? 'border-l-4 border-l-emerald-500' : ''}`}>
+                  <Card
+                    className={`transition-all hover:shadow-lg ${!caseItem.read ? 'border-l-4 border-l-emerald-500' : ''}`}
+                  >
                     <HStack gap="lg" align="start" className="flex-wrap md:flex-nowrap">
                       {/* Thumbnail */}
                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0">
@@ -299,7 +321,9 @@ export default function ModeratorCasesPage() {
                               <h3 className="font-semibold text-slate-900 dark:text-white truncate">
                                 Case #{caseItem.caseId}
                               </h3>
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium text-white ${stateColors[caseItem.state]}`}>
+                              <span
+                                className={`px-2 py-0.5 rounded text-xs font-medium text-white ${stateColors[caseItem.state]}`}
+                              >
                                 {stateLabels[caseItem.state]}
                               </span>
                               {caseItem.unreadMessages > 0 && (
@@ -324,14 +348,20 @@ export default function ModeratorCasesPage() {
 
                         {/* Claim */}
                         <p className="text-sm text-slate-500 line-clamp-2 mb-3">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">Claim:</span>{' '}
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            Claim:
+                          </span>{' '}
                           {caseItem.claim}
                         </p>
 
                         {/* Parties */}
                         <HStack gap="lg" className="text-sm">
                           <HStack gap="sm" align="center">
-                            <Avatar src={caseItem.buyer.avatar} name={caseItem.buyer.name} size="sm" />
+                            <Avatar
+                              src={caseItem.buyer.avatar}
+                              name={caseItem.buyer.name}
+                              size="sm"
+                            />
                             <div>
                               <span className="text-slate-500">Buyer:</span>{' '}
                               <span className="font-medium text-slate-900 dark:text-white">
@@ -343,7 +373,11 @@ export default function ModeratorCasesPage() {
                             </div>
                           </HStack>
                           <HStack gap="sm" align="center">
-                            <Avatar src={caseItem.seller.avatar} name={caseItem.seller.name} size="sm" />
+                            <Avatar
+                              src={caseItem.seller.avatar}
+                              name={caseItem.seller.name}
+                              size="sm"
+                            />
                             <div>
                               <span className="text-slate-500">Seller:</span>{' '}
                               <span className="font-medium text-slate-900 dark:text-white">
@@ -359,8 +393,18 @@ export default function ModeratorCasesPage() {
 
                       {/* Action Arrow */}
                       <div className="flex-shrink-0 hidden md:block">
-                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-6 h-6 text-slate-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </HStack>
@@ -376,4 +420,3 @@ export default function ModeratorCasesPage() {
     </div>
   );
 }
-

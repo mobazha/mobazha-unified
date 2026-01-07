@@ -4,8 +4,9 @@ import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Switch,
   AlertDialog,
@@ -479,7 +480,7 @@ export default function SettingsPage() {
               ))}
             </div>
           </div>
-          <Button fullWidth className="mt-4" onClick={() => setShowThemeModal(false)}>
+          <Button className="w-full mt-4" onClick={() => setShowThemeModal(false)}>
             {t('settingsExtended.done')}
           </Button>
         </DialogContent>
@@ -510,7 +511,7 @@ export default function SettingsPage() {
               </HStack>
             ))}
           </VStack>
-          <Button fullWidth className="mt-4" onClick={() => setShowCoinsModal(false)}>
+          <Button className="w-full mt-4" onClick={() => setShowCoinsModal(false)}>
             {t('settingsExtended.done')}
           </Button>
         </DialogContent>

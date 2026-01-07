@@ -4,8 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Avatar, Card, Skeleton } from '@mobazha/ui';
+import { Container, HStack, VStack, Grid } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 
 // Mock product data
 const mockProduct = {
@@ -76,7 +79,8 @@ const mockProduct = {
 };
 
 export default function ProductPage() {
-  const _params = useParams(); // Will be used when fetching real data
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Will be used when fetching real data
+  const _params = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoading] = useState(false);
@@ -232,7 +236,7 @@ export default function ProductPage() {
               </div>
 
               {/* Quantity & Add to Cart */}
-              <Card padding="md" className="space-y-4">
+              <Card className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Quantity
@@ -256,10 +260,10 @@ export default function ProductPage() {
                 <span className="text-sm text-slate-500">{product.stock} in stock</span>
 
                 <VStack gap="sm">
-                  <Button size="lg" fullWidth>
+                  <Button size="lg" className="w-full">
                     Add to Cart
                   </Button>
-                  <Button variant="outline" size="lg" fullWidth>
+                  <Button variant="outline" size="lg" className="w-full">
                     Buy Now
                   </Button>
                 </VStack>
@@ -274,7 +278,7 @@ export default function ProductPage() {
               </Card>
 
               {/* Vendor Info */}
-              <Card padding="md" hoverable>
+              <Card>
                 <Link href={`/store/${product.vendor.peerID}`}>
                   <HStack gap="md" align="center">
                     <Avatar
@@ -308,7 +312,7 @@ export default function ProductPage() {
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Description */}
             <div className="lg:col-span-2">
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                   Description
                 </h2>
@@ -340,7 +344,7 @@ export default function ProductPage() {
 
             {/* Reviews Summary */}
             <div>
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Reviews</h2>
 
                 {/* Rating Summary */}
@@ -394,7 +398,7 @@ export default function ProductPage() {
                   ))}
                 </VStack>
 
-                <Button variant="ghost" fullWidth className="mt-4">
+                <Button variant="ghost" className="w-full mt-4">
                   View All Reviews
                 </Button>
               </Card>

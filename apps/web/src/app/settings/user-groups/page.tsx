@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,13 +121,13 @@ export default function UserGroupsPage() {
     setGroups(prev => [...prev, group]);
     setShowCreateModal(false);
     setNewGroup({ name: '', description: '', color: GROUP_COLORS[0], discountPercentage: 0 });
-    alert('User group created!');
+    window.alert('User group created!');
   };
 
   const handleDeleteGroupConfirm = () => {
     if (deleteGroupId) {
       setGroups(prev => prev.filter(g => g.id !== deleteGroupId));
-      alert('Group deleted!');
+      window.alert('Group deleted!');
       setDeleteGroupId(null);
     }
   };
@@ -167,7 +169,7 @@ export default function UserGroupsPage() {
           {/* Groups List */}
           <VStack gap="md">
             {groups.map(group => (
-              <Card key={group.id} padding="lg">
+              <Card key={group.id}>
                 <HStack justify="between" align="start">
                   <HStack gap="lg" align="start">
                     <div
@@ -226,7 +228,7 @@ export default function UserGroupsPage() {
 
           {/* Empty State */}
           {groups.length === 0 && (
-            <Card padding="lg" className="text-center py-12">
+            <Card className="text-center py-12">
               <VStack gap="md" align="center">
                 <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   <svg
@@ -261,7 +263,7 @@ export default function UserGroupsPage() {
       {/* Create/Edit Modal */}
       {(showCreateModal || editingGroup) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
               {editingGroup ? 'Edit User Group' : 'Create User Group'}
             </h2>
@@ -371,7 +373,7 @@ export default function UserGroupsPage() {
                           prev.map(g => (g.id === editingGroup.id ? editingGroup : g))
                         );
                         setEditingGroup(null);
-                        alert('Group updated!');
+                        window.alert('Group updated!');
                       }
                     : handleCreateGroup
                 }

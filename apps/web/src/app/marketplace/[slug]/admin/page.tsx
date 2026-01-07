@@ -4,8 +4,10 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 
 // Types
 interface Application {
@@ -129,14 +131,14 @@ export default function MarketplaceAdminPage() {
         app.id === appId ? { ...app, status: approved ? 'approved' : 'rejected' } : app
       )
     );
-    alert(approved ? 'Application approved!' : 'Application rejected');
+    window.alert(approved ? 'Application approved!' : 'Application rejected');
   };
 
   const handleReviewProduct = (productId: string, approved: boolean) => {
     setPendingProducts(prev =>
       prev.map(p => (p.id === productId ? { ...p, status: approved ? 'approved' : 'rejected' } : p))
     );
-    alert(approved ? 'Product approved!' : 'Product rejected');
+    window.alert(approved ? 'Product approved!' : 'Product rejected');
   };
 
   const pendingApplicationsCount = applications.filter(a => a.status === 'pending').length;
@@ -176,7 +178,7 @@ export default function MarketplaceAdminPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <Card padding="none">
+              <Card>
                 <nav className="p-2">
                   {[
                     {
@@ -219,7 +221,7 @@ export default function MarketplaceAdminPage() {
             <div className="lg:col-span-3">
               {/* Applications Tab */}
               {activeTab === 'applications' && (
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                     Seller Applications
                   </h2>
@@ -280,7 +282,7 @@ export default function MarketplaceAdminPage() {
 
               {/* Products Tab */}
               {activeTab === 'products' && (
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                     Product Approvals
                   </h2>
@@ -339,7 +341,7 @@ export default function MarketplaceAdminPage() {
 
               {/* Members Tab */}
               {activeTab === 'members' && (
-                <Card padding="lg">
+                <Card>
                   <HStack justify="between" align="center" className="mb-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Members</h2>
                     <Input placeholder="Search members..." className="w-64" />
@@ -415,7 +417,7 @@ export default function MarketplaceAdminPage() {
               {/* Settings Tab */}
               {activeTab === 'settings' && (
                 <VStack gap="lg">
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                       General Settings
                     </h2>
@@ -443,7 +445,7 @@ export default function MarketplaceAdminPage() {
                     </VStack>
                   </Card>
 
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                       Approval Settings
                     </h2>
@@ -484,7 +486,7 @@ export default function MarketplaceAdminPage() {
                     </VStack>
                   </Card>
 
-                  <Card padding="lg" className="border-red-200 dark:border-red-800">
+                  <Card className="border-red-200 dark:border-red-800">
                     <h2 className="text-xl font-bold text-red-600 mb-4">Danger Zone</h2>
                     <p className="text-slate-600 dark:text-slate-400 mb-4">
                       Permanently delete this marketplace. This action cannot be undone.

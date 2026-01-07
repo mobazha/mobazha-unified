@@ -77,9 +77,15 @@ export function initLocale(): Locale {
  * 获取翻译值
  * @param key 翻译键，支持点号分隔的路径，如 "common.loading"
  * @param params 插值参数
+ * @param locale 可选的语言，不传则使用当前语言
  */
-export function getTranslation(key: TranslationKey, params?: TranslationParams): string {
-  const resource = translations[currentLocale];
+export function getTranslation(
+  key: TranslationKey,
+  params?: TranslationParams,
+  locale?: Locale
+): string {
+  const effectiveLocale = locale ?? currentLocale;
+  const resource = translations[effectiveLocale];
   const fallback = translations[DEFAULT_LOCALE];
 
   // 解析点号分隔的路径

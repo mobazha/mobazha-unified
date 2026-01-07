@@ -4,8 +4,10 @@ import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Card, Avatar } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n } from '@mobazha/core';
 
 // Types
@@ -193,8 +195,8 @@ export default function CartPage() {
         <Header />
         <main className="py-16">
           <Container size="md">
-            <Card padding="xl" className="text-center">
-              <div className="py-12">
+            <Card className="text-center">
+              <CardContent className="py-12">
                 <svg
                   className="w-24 h-24 mx-auto text-slate-300 mb-6"
                   fill="none"
@@ -215,7 +217,7 @@ export default function CartPage() {
                 <Link href="/">
                   <Button size="lg">{t('cart.startShopping')}</Button>
                 </Link>
-              </div>
+              </CardContent>
             </Card>
           </Container>
         </main>
@@ -390,69 +392,73 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <div className="space-y-6">
-              <Card padding="lg" className="sticky top-4">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  {t('cart.orderSummary')}
-                </h2>
+              <Card className="sticky top-4">
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                    {t('cart.orderSummary')}
+                  </h2>
 
-                <VStack gap="md">
-                  <HStack justify="between">
-                    <span className="text-slate-600 dark:text-slate-400">
-                      {t('cart.subtotal')} ({t('cart.itemCount', { count: totals.itemCount })})
-                    </span>
-                    <span className="font-medium text-slate-900 dark:text-white">
-                      ${totals.subtotal.toFixed(2)}
-                    </span>
-                  </HStack>
-
-                  <HStack justify="between">
-                    <span className="text-slate-600 dark:text-slate-400">{t('cart.shipping')}</span>
-                    <span className="font-medium text-emerald-600">
-                      {totals.shipping === 0 ? t('cart.free') : `$${totals.shipping.toFixed(2)}`}
-                    </span>
-                  </HStack>
-
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                  <VStack gap="md">
                     <HStack justify="between">
-                      <span className="text-lg font-semibold text-slate-900 dark:text-white">
-                        {t('cart.total')}
+                      <span className="text-slate-600 dark:text-slate-400">
+                        {t('cart.subtotal')} ({t('cart.itemCount', { count: totals.itemCount })})
                       </span>
-                      <span className="text-xl font-bold text-emerald-600">
-                        ${totals.total.toFixed(2)}
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        ${totals.subtotal.toFixed(2)}
                       </span>
                     </HStack>
-                  </div>
 
-                  <Button
-                    fullWidth
-                    size="lg"
-                    onClick={handleCheckout}
-                    disabled={selectedItems.size === 0}
-                  >
-                    {t('cart.proceedToCheckout')} ({selectedItems.size})
-                  </Button>
-
-                  <Link href="/" className="block">
-                    <Button variant="ghost" fullWidth>
-                      {t('cart.continueShopping')}
-                    </Button>
-                  </Link>
-                </VStack>
-
-                {/* Payment Methods */}
-                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                  <p className="text-sm text-slate-500 mb-3">{t('cart.acceptedPayments')}</p>
-                  <HStack gap="sm">
-                    {['BTC', 'ETH', 'USDT'].map(coin => (
-                      <span
-                        key={coin}
-                        className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-sm font-medium"
-                      >
-                        {coin}
+                    <HStack justify="between">
+                      <span className="text-slate-600 dark:text-slate-400">
+                        {t('cart.shipping')}
                       </span>
-                    ))}
-                  </HStack>
-                </div>
+                      <span className="font-medium text-emerald-600">
+                        {totals.shipping === 0 ? t('cart.free') : `$${totals.shipping.toFixed(2)}`}
+                      </span>
+                    </HStack>
+
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                      <HStack justify="between">
+                        <span className="text-lg font-semibold text-slate-900 dark:text-white">
+                          {t('cart.total')}
+                        </span>
+                        <span className="text-xl font-bold text-emerald-600">
+                          ${totals.total.toFixed(2)}
+                        </span>
+                      </HStack>
+                    </div>
+
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={handleCheckout}
+                      disabled={selectedItems.size === 0}
+                    >
+                      {t('cart.proceedToCheckout')} ({selectedItems.size})
+                    </Button>
+
+                    <Link href="/" className="block">
+                      <Button variant="ghost" className="w-full">
+                        {t('cart.continueShopping')}
+                      </Button>
+                    </Link>
+                  </VStack>
+
+                  {/* Payment Methods */}
+                  <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                    <p className="text-sm text-slate-500 mb-3">{t('cart.acceptedPayments')}</p>
+                    <HStack gap="sm">
+                      {['BTC', 'ETH', 'USDT'].map(coin => (
+                        <span
+                          key={coin}
+                          className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-sm font-medium"
+                        >
+                          {coin}
+                        </span>
+                      ))}
+                    </HStack>
+                  </div>
+                </CardContent>
               </Card>
             </div>
           </div>

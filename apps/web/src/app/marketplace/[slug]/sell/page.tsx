@@ -4,8 +4,10 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
@@ -63,10 +65,12 @@ export default function MarketplaceSellPage() {
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      alert('Your seller application has been submitted! You will be notified once approved.');
+      window.alert(
+        'Your seller application has been submitted! You will be notified once approved.'
+      );
       router.push(`/marketplace/${slug}`);
     } catch (error) {
-      alert('Failed to submit application: ' + (error as Error).message);
+      window.alert('Failed to submit application: ' + (error as Error).message);
     } finally {
       setIsApplying(false);
     }
@@ -113,7 +117,7 @@ export default function MarketplaceSellPage() {
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* Seller Profile */}
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                   Seller Profile
                 </h2>
@@ -208,7 +212,7 @@ export default function MarketplaceSellPage() {
               </Card>
 
               {/* Application Message */}
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                   Application Message
                 </h2>
@@ -226,7 +230,7 @@ export default function MarketplaceSellPage() {
               </Card>
 
               {/* Select Products to List */}
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                   Products to List
                 </h2>
@@ -284,7 +288,7 @@ export default function MarketplaceSellPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Summary Card */}
-              <Card padding="lg" className="sticky top-4">
+              <Card className="sticky top-4">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
                   Application Summary
                 </h3>
@@ -306,7 +310,11 @@ export default function MarketplaceSellPage() {
                   </HStack>
                 </VStack>
 
-                <Button fullWidth onClick={handleApply} disabled={isApplying || !profile.bio}>
+                <Button
+                  className="w-full"
+                  onClick={handleApply}
+                  disabled={isApplying || !profile.bio}
+                >
                   {isApplying ? 'Submitting...' : 'Submit Application'}
                 </Button>
 
@@ -316,7 +324,7 @@ export default function MarketplaceSellPage() {
               </Card>
 
               {/* Info Card */}
-              <Card padding="lg">
+              <Card>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
                   What Happens Next?
                 </h3>

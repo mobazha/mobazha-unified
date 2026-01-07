@@ -4,7 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Button, Avatar } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
 // Types
 interface AccessRequest {
@@ -220,19 +223,19 @@ export default function AccessRequestsPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-2xl font-bold text-yellow-600">
                 {requests.filter(r => r.status === 'pending').length}
               </p>
               <p className="text-sm text-slate-500">Pending</p>
             </Card>
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-2xl font-bold text-emerald-600">
                 {requests.filter(r => r.status === 'approved').length}
               </p>
               <p className="text-sm text-slate-500">Approved</p>
             </Card>
-            <Card padding="md" className="text-center">
+            <Card className="text-center">
               <p className="text-2xl font-bold text-red-600">
                 {requests.filter(r => r.status === 'rejected').length}
               </p>
@@ -241,7 +244,7 @@ export default function AccessRequestsPage() {
           </div>
 
           {/* Filters */}
-          <Card padding="md" className="mb-6">
+          <Card className="mb-6">
             <div className="flex gap-2">
               {(['pending', 'approved', 'rejected', 'all'] as const).map(status => (
                 <button
@@ -262,7 +265,7 @@ export default function AccessRequestsPage() {
           {/* Requests List */}
           <VStack gap="md">
             {filteredRequests.length === 0 ? (
-              <Card padding="lg" className="text-center">
+              <Card className="text-center">
                 <svg
                   className="w-12 h-12 mx-auto text-slate-300 mb-4"
                   fill="none"
@@ -282,7 +285,7 @@ export default function AccessRequestsPage() {
               </Card>
             ) : (
               filteredRequests.map(req => (
-                <Card key={req.id} padding="lg" hoverable data-testid="access-request-item">
+                <Card key={req.id} data-testid="access-request-item">
                   <HStack justify="between" align="start" className="flex-wrap gap-4">
                     {/* User Info */}
                     <HStack gap="md" align="start">
@@ -389,7 +392,7 @@ export default function AccessRequestsPage() {
       {/* Review Modal */}
       {selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
               Review Request
             </h2>

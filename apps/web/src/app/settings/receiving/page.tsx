@@ -6,9 +6,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Header, Footer } from '@/components';
-import { Container, Card } from '@mobazha/ui';
+import { Container } from '@/components/layouts';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input-compat';
 import {
   Select,
   SelectContent,
@@ -349,7 +350,9 @@ export default function ReceivingAddressesPage() {
                               <div className="font-mono text-sm text-gray-600 mt-1 break-all">
                                 {addr.address}
                               </div>
-                              {addr.label && <div className="text-sm text-gray-500 mt-1">{addr.label}</div>}
+                              {addr.label && (
+                                <div className="text-sm text-gray-500 mt-1">{addr.label}</div>
+                              )}
                             </>
                           )}
                         </div>
@@ -383,7 +386,8 @@ export default function ReceivingAddressesPage() {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>确认删除</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    确定要删除 {coinInfo?.name} 的收款地址吗？删除后，该币种的订单将无法接收支付。
+                                    确定要删除 {coinInfo?.name}{' '}
+                                    的收款地址吗？删除后，该币种的订单将无法接收支付。
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -425,4 +429,3 @@ export default function ReceivingAddressesPage() {
     </div>
   );
 }
-

@@ -4,7 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Button, Avatar, Input } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Input } from '@/components/ui/input-compat';
 
 // Types
 interface BlockedUser {
@@ -181,7 +185,7 @@ export default function BlockedUsersPage() {
           </HStack>
 
           {/* Search & Add */}
-          <Card padding="md" className="mb-6">
+          <Card className="mb-6">
             <HStack justify="between" gap="md" className="flex-wrap">
               <Input
                 placeholder="Search by name or Peer ID..."
@@ -204,10 +208,7 @@ export default function BlockedUsersPage() {
           </Card>
 
           {/* Info Banner */}
-          <Card
-            padding="md"
-            className="mb-6 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-          >
+          <Card className="mb-6 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
             <HStack gap="sm" align="start">
               <svg
                 className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
@@ -239,7 +240,7 @@ export default function BlockedUsersPage() {
           {/* Blocked Users List */}
           <VStack gap="md">
             {filteredUsers.length === 0 ? (
-              <Card padding="lg" className="text-center">
+              <Card className="text-center">
                 <svg
                   className="w-12 h-12 mx-auto text-slate-300 mb-4"
                   fill="none"
@@ -259,7 +260,7 @@ export default function BlockedUsersPage() {
               </Card>
             ) : (
               filteredUsers.map(user => (
-                <Card key={user.id} padding="lg" hoverable data-testid="blocked-user-item">
+                <Card key={user.id} data-testid="blocked-user-item">
                   <HStack justify="between" align="start" className="flex-wrap gap-4">
                     {/* User Info */}
                     <HStack gap="md" align="start">
@@ -328,7 +329,7 @@ export default function BlockedUsersPage() {
       {/* Add Block Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Block a User</h2>
 
             <div className="space-y-4">
@@ -376,7 +377,7 @@ export default function BlockedUsersPage() {
       {/* Confirm Unblock Modal */}
       {confirmUnblock && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-sm">
+          <Card className="w-full max-w-sm">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Unblock User?</h2>
 
             <p className="text-slate-600 dark:text-slate-400 mb-4">

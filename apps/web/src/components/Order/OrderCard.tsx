@@ -2,7 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, HStack, VStack, Avatar, Button } from '@mobazha/ui';
+import { HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
 export interface OrderItem {
   id: string;
@@ -152,7 +155,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
   };
 
   return (
-    <Card variant="elevated" className="overflow-hidden">
+    <Card className="overflow-hidden">
       {/* Header */}
       <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
         <HStack justify="between" align="center" className="flex-wrap gap-2">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input-compat';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -143,9 +143,7 @@ export default function ModeratorSettingsPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">仲裁人设置</h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              配置您的仲裁服务，帮助解决交易纠纷
-            </p>
+            <p className="text-gray-500 dark:text-gray-400">配置您的仲裁服务，帮助解决交易纠纷</p>
           </div>
         </div>
 
@@ -517,4 +515,3 @@ export default function ModeratorSettingsPage() {
     </div>
   );
 }
-

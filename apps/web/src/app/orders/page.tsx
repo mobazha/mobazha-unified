@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components';
-import { Container, VStack, HStack, Skeleton, Card } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 import { OrderCard, Order } from '@/components/Order';
 import { useI18n } from '@mobazha/core';
 
@@ -204,54 +206,64 @@ export default function OrdersPage() {
           {isLoading ? (
             <VStack gap="lg">
               {[...Array(3)].map((_, i) => (
-                <Card key={i} variant="elevated" className="p-6">
-                  <HStack gap="md" align="start" className="mb-4">
-                    <Skeleton variant="rectangular" width={64} height={64} className="rounded-lg" />
-                    <div className="flex-1">
-                      <Skeleton variant="text" width="60%" height={20} />
-                      <Skeleton variant="text" width="40%" height={16} className="mt-2" />
-                    </div>
-                    <Skeleton variant="rounded" width={100} height={28} />
-                  </HStack>
-                  <HStack justify="between" align="center">
-                    <Skeleton variant="text" width={120} height={24} />
-                    <HStack gap="sm">
-                      <Skeleton variant="rounded" width={80} height={36} />
-                      <Skeleton variant="rounded" width={100} height={36} />
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <HStack gap="md" align="start" className="mb-4">
+                      <Skeleton
+                        variant="rectangular"
+                        width={64}
+                        height={64}
+                        className="rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <Skeleton variant="text" width="60%" height={20} />
+                        <Skeleton variant="text" width="40%" height={16} className="mt-2" />
+                      </div>
+                      <Skeleton variant="rounded" width={100} height={28} />
                     </HStack>
-                  </HStack>
+                    <HStack justify="between" align="center">
+                      <Skeleton variant="text" width={120} height={24} />
+                      <HStack gap="sm">
+                        <Skeleton variant="rounded" width={80} height={36} />
+                        <Skeleton variant="rounded" width={100} height={36} />
+                      </HStack>
+                    </HStack>
+                  </CardContent>
                 </Card>
               ))}
             </VStack>
           ) : filteredOrders.length === 0 ? (
-            <Card variant="elevated" className="py-16 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <svg
-                  className="w-10 h-10 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                {t('order.noOrdersFound')}
-              </h3>
-              <p className="text-slate-500 max-w-sm mx-auto">
-                {statusFilter === 'all'
-                  ? t('order.noOrdersMessage', {
-                      type: orderType === 'purchases' ? t('order.purchases') : t('order.sales'),
-                    })
-                  : t('order.noStatusOrders', {
-                      status: statusTabs.find(s => s.value === statusFilter)?.label || statusFilter,
-                    })}
-              </p>
+            <Card className="text-center">
+              <CardContent className="py-16">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <svg
+                    className="w-10 h-10 text-slate-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                  {t('order.noOrdersFound')}
+                </h3>
+                <p className="text-slate-500 max-w-sm mx-auto">
+                  {statusFilter === 'all'
+                    ? t('order.noOrdersMessage', {
+                        type: orderType === 'purchases' ? t('order.purchases') : t('order.sales'),
+                      })
+                    : t('order.noStatusOrders', {
+                        status:
+                          statusTabs.find(s => s.value === statusFilter)?.label || statusFilter,
+                      })}
+                </p>
+              </CardContent>
             </Card>
           ) : (
             <VStack gap="lg">

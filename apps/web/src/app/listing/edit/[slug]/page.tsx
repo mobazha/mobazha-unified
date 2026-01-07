@@ -4,8 +4,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Card, Skeleton } from '@mobazha/ui';
+import { Container, HStack, VStack, Grid } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 // Types
@@ -249,13 +251,13 @@ export default function EditListingPage() {
 
       try {
         // Mock API call
-        console.log('Updating listing:', formData);
+        console.info('Updating listing:', formData);
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        alert('Listing updated successfully!');
+        window.alert('Listing updated successfully!');
         router.push(`/product/${slug}`);
       } catch {
-        alert('Failed to update listing. Please try again.');
+        window.alert('Failed to update listing. Please try again.');
       } finally {
         setIsSubmitting(false);
       }
@@ -271,10 +273,10 @@ export default function EditListingPage() {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      alert('Listing deleted successfully!');
+      window.alert('Listing deleted successfully!');
       router.push('/profile');
     } catch {
-      alert('Failed to delete listing. Please try again.');
+      window.alert('Failed to delete listing. Please try again.');
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -296,17 +298,17 @@ export default function EditListingPage() {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <Card padding="lg">
+                <Card>
                   <Skeleton variant="rounded" height={300} />
                 </Card>
-                <Card padding="lg">
+                <Card>
                   <Skeleton variant="text" height={24} width={150} className="mb-4" />
                   <Skeleton variant="rounded" height={40} className="mb-4" />
                   <Skeleton variant="rounded" height={120} />
                 </Card>
               </div>
               <div>
-                <Card padding="lg">
+                <Card>
                   <Skeleton variant="rounded" height={200} />
                 </Card>
               </div>
@@ -369,7 +371,7 @@ export default function EditListingPage() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Images */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Images *
                   </h2>
@@ -419,7 +421,7 @@ export default function EditListingPage() {
                 </Card>
 
                 {/* Basic Info */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Basic Information
                   </h2>
@@ -504,7 +506,7 @@ export default function EditListingPage() {
                 </Card>
 
                 {/* Product Type */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Product Type
                   </h2>
@@ -529,7 +531,7 @@ export default function EditListingPage() {
 
                 {/* Physical Good Details */}
                 {formData.productType === 'physical_good' && (
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                       Physical Good Details
                     </h2>
@@ -589,7 +591,7 @@ export default function EditListingPage() {
 
                 {/* RWA Token Details */}
                 {formData.productType === 'rwa_token' && (
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                       RWA Token Details
                     </h2>
@@ -631,7 +633,7 @@ export default function EditListingPage() {
                 )}
 
                 {/* Tags */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Tags
                   </h2>
@@ -676,7 +678,7 @@ export default function EditListingPage() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Category */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Category *
                   </h2>
@@ -723,7 +725,7 @@ export default function EditListingPage() {
                 </Card>
 
                 {/* Preview */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Preview
                   </h2>
@@ -755,13 +757,13 @@ export default function EditListingPage() {
                 </Card>
 
                 {/* Actions */}
-                <Card padding="lg">
+                <Card>
                   <VStack gap="sm">
-                    <Button type="submit" fullWidth size="lg" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                       {isSubmitting ? 'Updating...' : 'Update Listing'}
                     </Button>
                     <Link href={`/product/${slug}`} className="w-full">
-                      <Button type="button" variant="outline" fullWidth>
+                      <Button type="button" variant="outline" className="w-full">
                         Cancel
                       </Button>
                     </Link>
@@ -802,15 +804,14 @@ export default function EditListingPage() {
               <HStack gap="sm">
                 <Button
                   variant="outline"
-                  fullWidth
+                  className="w-full"
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={isDeleting}
                 >
                   Cancel
                 </Button>
                 <Button
-                  fullWidth
-                  className="bg-red-600 hover:bg-red-700"
+                  className="w-full bg-red-600 hover:bg-red-700"
                   onClick={handleDelete}
                   disabled={isDeleting}
                 >

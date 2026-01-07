@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Container, VStack } from '@mobazha/ui';
-import { Button } from '@mobazha/ui';
+import { Container, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
 
 export default function OfflinePage() {
   const handleRetry = () => {
@@ -44,7 +44,7 @@ export default function OfflinePage() {
 
           {/* Actions */}
           <VStack gap="sm" className="w-full max-w-xs">
-            <Button onClick={handleRetry} fullWidth size="lg">
+            <Button onClick={handleRetry} className="w-full" size="lg">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -56,7 +56,7 @@ export default function OfflinePage() {
               Try Again
             </Button>
             <Link href="/" className="w-full">
-              <Button variant="outline" fullWidth>
+              <Button variant="outline" className="w-full">
                 Go to Home
               </Button>
             </Link>

@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 // Types
 interface PrivacySettings {
@@ -57,9 +58,9 @@ export default function PrivacySettingsPage() {
     setIsSaving(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Settings saved successfully!');
+      window.alert('Settings saved successfully!');
     } catch {
-      alert('Failed to save settings');
+      window.alert('Failed to save settings');
     } finally {
       setIsSaving(false);
     }
@@ -71,7 +72,7 @@ export default function PrivacySettingsPage() {
         req.id === requestId ? { ...req, status: approved ? 'approved' : 'rejected' } : req
       )
     );
-    alert(approved ? 'Access granted!' : 'Access denied');
+    window.alert(approved ? 'Access granted!' : 'Access denied');
   };
 
   const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
@@ -109,7 +110,7 @@ export default function PrivacySettingsPage() {
             {/* Main Settings */}
             <div className="lg:col-span-2 space-y-6">
               {/* Store Privacy */}
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                   Store Privacy
                 </h2>
@@ -197,7 +198,7 @@ export default function PrivacySettingsPage() {
 
               {/* Access Requests */}
               {settings.isPrivate && settings.requireApproval && (
-                <Card padding="lg">
+                <Card>
                   <HStack justify="between" align="center" className="mb-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                       Access Requests
@@ -268,7 +269,7 @@ export default function PrivacySettingsPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Quick Links */}
-              <Card padding="lg">
+              <Card>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
                   Access Management
                 </h3>
@@ -350,10 +351,7 @@ export default function PrivacySettingsPage() {
               </Card>
 
               {/* Info Box */}
-              <Card
-                padding="lg"
-                className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
-              >
+              <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
                 <h3 className="font-semibold text-emerald-800 dark:text-emerald-400 mb-2">
                   Exclusive Store Benefits
                 </h3>

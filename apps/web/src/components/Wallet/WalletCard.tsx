@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Card, HStack, VStack } from '@mobazha/ui';
+import { HStack, VStack } from '@/components/layouts';
+import { Card } from '@/components/ui/card';
 
 export interface WalletBalance {
   currency: string;
@@ -22,11 +23,7 @@ export interface WalletCardProps {
 
 export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onReceive, onClick }) => {
   return (
-    <Card
-      variant="elevated"
-      className="cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={onClick}
-    >
+    <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
       <div className="p-6">
         <HStack justify="between" align="start" className="mb-4">
           <HStack gap="md" align="center">

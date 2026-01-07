@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { cn } from '../../lib/utils';
-import { Card } from '../Card';
-import { Avatar } from '../Avatar';
-import { Skeleton } from '../Skeleton';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /** 商品合约类型 */
 export type ProductContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
@@ -42,31 +43,17 @@ export interface ProductCardProps {
   className?: string;
 }
 
-/**
- * ProductCard 商品卡片组件
- *
- * @example
- * ```tsx
- * <ProductCard
- *   title="Premium Headphones"
- *   imageUrl="/product.jpg"
- *   price={99.99}
- *   currency="$"
- *   vendorName="TechStore"
- *   rating={4.5}
- *   reviewCount={128}
- *   freeShipping
- * />
- * ```
- */
 // 商品类型标签配置
 const contractTypeConfig: Record<ProductContractType, { label: string; color: string }> = {
-  PHYSICAL_GOOD: { label: '', color: '' }, // 实物商品不显示标签
-  DIGITAL_GOOD: { label: 'Digital', color: 'bg-info' },
+  PHYSICAL_GOOD: { label: '', color: '' },
+  DIGITAL_GOOD: { label: 'Digital', color: 'bg-blue-500' },
   SERVICE: { label: 'Service', color: 'bg-primary' },
-  RWA_TOKEN: { label: 'RWA', color: 'bg-secondary' },
+  RWA_TOKEN: { label: 'RWA', color: 'bg-orange-500' },
 };
 
+/**
+ * ProductCard 商品卡片组件
+ */
 export const ProductCard: React.FC<ProductCardProps> = ({
   title,
   imageUrl,
@@ -89,7 +76,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     ? Math.round((1 - Number(price) / Number(originalPrice)) * 100)
     : 0;
 
-  // 确定显示的商品类型标签
   const typeConfig = contractType
     ? contractTypeConfig[contractType]
     : isDigital
@@ -98,22 +84,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card
-      padding="none"
-      hoverable
+      className={cn(
+        'overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5',
+        className
+      )}
       onClick={onClick}
-      className={cn('overflow-hidden group', className)}
     >
       {/* 商品图片 */}
-      <div className="relative aspect-square overflow-hidden bg-background-alt">
+      <div className="relative aspect-square overflow-hidden bg-muted">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-text-muted">
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -127,7 +115,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* 折扣标签 */}
         {hasDiscount && (
-          <span className="absolute top-2 left-2 bg-error text-text-inverse text-xs font-bold px-2 py-1 rounded">
+          <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded">
             -{discountPercent}%
           </span>
         )}
@@ -136,7 +124,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {typeConfig?.label && (
           <span
             className={cn(
-              'absolute top-2 right-2 text-text-inverse text-xs font-medium px-2 py-1 rounded',
+              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded',
               typeConfig.color
             )}
           >
@@ -146,11 +134,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* 商品信息 */}
-      <div className={cn('space-y-2', compact ? 'p-2' : 'p-3')}>
+      <CardContent className={cn('space-y-2', compact ? 'p-2' : 'p-3')}>
         {/* 标题 */}
         <h3
           className={cn(
-            'font-medium text-text-primary line-clamp-2',
+            'font-medium text-foreground line-clamp-2',
             compact ? 'text-sm min-h-[2rem]' : 'min-h-[2.5rem]'
           )}
         >
@@ -164,18 +152,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {typeof price === 'number' ? price.toFixed(2) : price}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-text-muted line-through">
+            <span className="text-sm text-muted-foreground line-through">
               {currency}
               {typeof originalPrice === 'number' ? originalPrice.toFixed(2) : originalPrice}
             </span>
           )}
         </div>
 
-        {/* 评分 - 简化显示 */}
+        {/* 评分 */}
         {rating !== undefined && (
           <div className="flex items-center gap-1 text-sm">
-            <span className="text-warning">★</span>
-            <span className="text-text-secondary">
+            <span className="text-yellow-500">★</span>
+            <span className="text-muted-foreground">
               {rating.toFixed(1)}
               {reviewCount !== undefined && ` (${reviewCount})`}
             </span>
@@ -186,7 +174,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {(vendorName || freeShipping) && (
           <div
             className={cn(
-              'flex items-center justify-between pt-2 border-t border-border-light',
+              'flex items-center justify-between pt-2 border-t border-border',
               compact && 'pt-1'
             )}
           >
@@ -194,7 +182,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <div className="flex items-center gap-2 min-w-0">
                 {!compact && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
                 <span
-                  className={cn('text-text-secondary truncate', compact ? 'text-xs' : 'text-sm')}
+                  className={cn('text-muted-foreground truncate', compact ? 'text-xs' : 'text-sm')}
                 >
                   {vendorName}
                 </span>
@@ -205,7 +193,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
 };
@@ -217,17 +205,17 @@ ProductCard.displayName = 'ProductCard';
  */
 export const ProductCardSkeleton: React.FC<{ className?: string }> = ({ className }) => {
   return (
-    <Card padding="none" className={cn('overflow-hidden', className)}>
-      <Skeleton variant="rectangular" className="aspect-square" />
-      <div className="p-3 space-y-2">
-        <Skeleton variant="text" height={20} />
-        <Skeleton variant="text" width="60%" height={20} />
-        <Skeleton variant="text" width="40%" />
+    <Card className={cn('overflow-hidden', className)}>
+      <Skeleton className="aspect-square w-full" />
+      <CardContent className="p-3 space-y-2">
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-3/5" />
+        <Skeleton className="h-4 w-2/5" />
         <div className="flex items-center gap-2 pt-2">
-          <Skeleton variant="circular" width={24} height={24} />
-          <Skeleton variant="text" width={80} />
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-4 w-20" />
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

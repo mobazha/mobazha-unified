@@ -4,8 +4,9 @@ import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Card } from '@mobazha/ui';
+import { Container, HStack, VStack, Grid } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -235,7 +236,7 @@ export default function CreateListingPage() {
         setIsSubmitting(false);
       }
     },
-    [formData, validateForm, router, toast]
+    [validateForm, router, toast]
   );
 
   const selectedCategory = categories.find(c => c.value === formData.category);
@@ -274,7 +275,7 @@ export default function CreateListingPage() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Images */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Images *
                   </h2>
@@ -324,7 +325,7 @@ export default function CreateListingPage() {
                 </Card>
 
                 {/* Basic Info */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Basic Information
                   </h2>
@@ -409,7 +410,7 @@ export default function CreateListingPage() {
                 </Card>
 
                 {/* Product Type */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Product Type
                   </h2>
@@ -438,7 +439,7 @@ export default function CreateListingPage() {
 
                 {/* Type-specific fields */}
                 {formData.productType === 'physical_good' && (
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                       Physical Good Details
                     </h2>
@@ -497,7 +498,7 @@ export default function CreateListingPage() {
                 )}
 
                 {formData.productType === 'rwa_token' && (
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                       RWA Token Details
                     </h2>
@@ -539,7 +540,7 @@ export default function CreateListingPage() {
                 )}
 
                 {/* Tags */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Tags
                   </h2>
@@ -584,7 +585,7 @@ export default function CreateListingPage() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Category */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Category *
                   </h2>
@@ -631,7 +632,7 @@ export default function CreateListingPage() {
                 </Card>
 
                 {/* Preview */}
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Preview
                   </h2>
@@ -663,12 +664,17 @@ export default function CreateListingPage() {
                 </Card>
 
                 {/* Actions */}
-                <Card padding="lg">
+                <Card>
                   <VStack gap="sm">
-                    <Button type="submit" fullWidth size="lg" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                       {isSubmitting ? 'Creating...' : 'Create Listing'}
                     </Button>
-                    <Button type="button" variant="outline" fullWidth onClick={() => router.back()}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => router.back()}
+                    >
                       Cancel
                     </Button>
                   </VStack>

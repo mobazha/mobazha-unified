@@ -5,7 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Button, Input } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 
 // Types
 interface ProductForReview {
@@ -274,7 +277,7 @@ export default function MarketplaceProductsPage() {
           </HStack>
 
           {/* Search & Filters */}
-          <Card padding="md" className="mb-6">
+          <Card className="mb-6">
             <VStack gap="md">
               <Input
                 placeholder="Search products or sellers..."
@@ -312,13 +315,13 @@ export default function MarketplaceProductsPage() {
 
           {/* Products Grid */}
           {filteredProducts.length === 0 ? (
-            <Card padding="lg" className="text-center">
+            <Card className="text-center">
               <p className="text-slate-500">No {filter !== 'all' ? filter : ''} products found.</p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map(product => (
-                <Card key={product.id} padding="none" hoverable className="overflow-hidden">
+                <Card key={product.id} className="overflow-hidden">
                   {/* Product Image */}
                   <div className="relative aspect-square">
                     <Image
@@ -400,7 +403,7 @@ export default function MarketplaceProductsPage() {
       {/* Review Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
               Review Product
             </h2>

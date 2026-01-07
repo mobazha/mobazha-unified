@@ -3,7 +3,11 @@
 import React, { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Button, Avatar, Input } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Input } from '@/components/ui/input-compat';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,8 +78,10 @@ const mockCase: DisputeCase = {
     name: 'Retro Finds',
     avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=retro',
   },
-  claim: 'Item not as described. The camera arrived with significant scratches on the body and lens that were not shown or mentioned in the listing photos. The seller claimed it was in "excellent condition" but it appears heavily used.',
-  sellerResponse: 'The camera was packed carefully and was in excellent condition when shipped. The scratches may have occurred during transit. I have photos of the camera before shipping.',
+  claim:
+    'Item not as described. The camera arrived with significant scratches on the body and lens that were not shown or mentioned in the listing photos. The seller claimed it was in "excellent condition" but it appears heavily used.',
+  sellerResponse:
+    'The camera was packed carefully and was in excellent condition when shipped. The scratches may have occurred during transit. I have photos of the camera before shipping.',
   evidence: [
     {
       id: 'ev1',
@@ -87,7 +93,8 @@ const mockCase: DisputeCase = {
     {
       id: 'ev2',
       type: 'text',
-      content: 'Attached photo shows the scratches on arrival. The box was not damaged, so this damage existed before shipping.',
+      content:
+        'Attached photo shows the scratches on arrival. The box was not damaged, so this damage existed before shipping.',
       submittedBy: 'buyer',
       timestamp: new Date(Date.now() - 82700000).toISOString(),
     },
@@ -101,7 +108,8 @@ const mockCase: DisputeCase = {
     {
       id: 'ev4',
       type: 'text',
-      content: 'Photo of camera before shipping - no scratches visible. I always take photos before packaging.',
+      content:
+        'Photo of camera before shipping - no scratches visible. I always take photos before packaging.',
       submittedBy: 'seller',
       timestamp: new Date(Date.now() - 71900000).toISOString(),
     },
@@ -170,7 +178,7 @@ export default function CaseDetailPage() {
 
   const handleSendMessage = useCallback(async () => {
     if (!newMessage.trim()) return;
-    
+
     setCaseData(prev => ({
       ...prev,
       messages: [
@@ -190,31 +198,31 @@ export default function CaseDetailPage() {
 
   const handleResolveDispute = useCallback(async () => {
     if (!resolution.trim()) {
-      toast({ 
-        title: 'Resolution required', 
+      toast({
+        title: 'Resolution required',
         description: 'Please provide a resolution explanation.',
         variant: 'destructive',
       });
       return;
     }
-    
+
     setShowConfirmDialog(false);
     setIsLoading(true);
-    
+
     try {
       // TODO: Call API to resolve dispute
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       setCaseData(prev => ({
         ...prev,
         state: 'DECIDED',
       }));
-      
+
       toast({
         title: 'Dispute Resolved',
         description: `Funds distributed: ${buyerPercentage}% to buyer, ${vendorPercentage}% to seller.`,
       });
-      
+
       // Redirect after short delay
       setTimeout(() => router.push('/moderator/cases'), 2000);
     } catch (error) {
@@ -250,28 +258,39 @@ export default function CaseDetailPage() {
             className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Cases
           </button>
 
           {/* Case Header */}
-          <Card padding="lg" className="mb-6">
+          <Card className="mb-6">
             <HStack justify="between" align="start" className="flex-wrap gap-4 mb-6">
               <div>
                 <HStack gap="md" align="center" className="mb-2">
                   <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                     Case #{caseData.caseId}
                   </h1>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
-                    caseData.state === 'OPEN' ? 'bg-red-500' :
-                    caseData.state === 'PENDING' ? 'bg-yellow-500' :
-                    'bg-emerald-500'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
+                      caseData.state === 'OPEN'
+                        ? 'bg-red-500'
+                        : caseData.state === 'PENDING'
+                          ? 'bg-yellow-500'
+                          : 'bg-emerald-500'
+                    }`}
+                  >
                     {caseData.state}
                   </span>
                 </HStack>
-                <p className="text-slate-500">Order: {caseData.orderId} • Opened {formatDate(caseData.timestamp)}</p>
+                <p className="text-slate-500">
+                  Order: {caseData.orderId} • Opened {formatDate(caseData.timestamp)}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -282,14 +301,20 @@ export default function CaseDetailPage() {
             </HStack>
 
             {/* Product Info */}
-            <HStack gap="lg" align="start" className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            <HStack
+              gap="lg"
+              align="start"
+              className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg"
+            >
               <img
                 src={caseData.thumbnail}
                 alt={caseData.title}
                 className="w-24 h-24 rounded-lg object-cover"
               />
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">{caseData.title}</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                  {caseData.title}
+                </h3>
                 <HStack gap="md" className="text-sm text-slate-500">
                   <span>Opened by: {caseData.buyerOpened ? 'Buyer' : 'Seller'}</span>
                 </HStack>
@@ -301,13 +326,15 @@ export default function CaseDetailPage() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Buyer Claim */}
-              <Card padding="lg">
+              <Card>
                 <HStack gap="md" align="start" className="mb-4">
                   <Avatar src={caseData.buyer.avatar} name={caseData.buyer.name} size="md" />
                   <div>
                     <h3 className="font-semibold text-slate-900 dark:text-white">
                       {caseData.buyer.name}
-                      <span className="ml-2 text-sm font-normal text-red-500">(Buyer - Opened Dispute)</span>
+                      <span className="ml-2 text-sm font-normal text-red-500">
+                        (Buyer - Opened Dispute)
+                      </span>
                     </h3>
                     <p className="text-sm text-slate-500">{caseData.buyer.peerID}</p>
                   </div>
@@ -319,7 +346,7 @@ export default function CaseDetailPage() {
               </Card>
 
               {/* Seller Response */}
-              <Card padding="lg">
+              <Card>
                 <HStack gap="md" align="start" className="mb-4">
                   <Avatar src={caseData.seller.avatar} name={caseData.seller.name} size="md" />
                   <div>
@@ -339,7 +366,7 @@ export default function CaseDetailPage() {
               </Card>
 
               {/* Evidence */}
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                   Evidence Submitted
                 </h2>
@@ -354,15 +381,21 @@ export default function CaseDetailPage() {
                       }`}
                     >
                       <HStack justify="between" className="mb-2">
-                        <span className={`text-sm font-medium ${
-                          ev.submittedBy === 'buyer' ? 'text-red-600' : 'text-blue-600'
-                        }`}>
+                        <span
+                          className={`text-sm font-medium ${
+                            ev.submittedBy === 'buyer' ? 'text-red-600' : 'text-blue-600'
+                          }`}
+                        >
                           From {ev.submittedBy === 'buyer' ? 'Buyer' : 'Seller'}
                         </span>
                         <span className="text-xs text-slate-500">{formatDate(ev.timestamp)}</span>
                       </HStack>
                       {ev.type === 'image' ? (
-                        <img src={ev.content} alt="Evidence" className="w-full max-w-sm rounded-lg" />
+                        <img
+                          src={ev.content}
+                          alt="Evidence"
+                          className="w-full max-w-sm rounded-lg"
+                        />
                       ) : (
                         <p className="text-slate-700 dark:text-slate-300">{ev.content}</p>
                       )}
@@ -372,7 +405,7 @@ export default function CaseDetailPage() {
               </Card>
 
               {/* Messages */}
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                   Discussion
                 </h2>
@@ -384,15 +417,20 @@ export default function CaseDetailPage() {
                         msg.sender === 'moderator'
                           ? 'bg-emerald-50 dark:bg-emerald-900/20'
                           : msg.sender === 'buyer'
-                          ? 'bg-red-50 dark:bg-red-900/10'
-                          : 'bg-blue-50 dark:bg-blue-900/10'
+                            ? 'bg-red-50 dark:bg-red-900/10'
+                            : 'bg-blue-50 dark:bg-blue-900/10'
                       }`}
                     >
                       <HStack justify="between" className="mb-1">
-                        <span className={`text-sm font-medium ${
-                          msg.sender === 'moderator' ? 'text-emerald-600' :
-                          msg.sender === 'buyer' ? 'text-red-600' : 'text-blue-600'
-                        }`}>
+                        <span
+                          className={`text-sm font-medium ${
+                            msg.sender === 'moderator'
+                              ? 'text-emerald-600'
+                              : msg.sender === 'buyer'
+                                ? 'text-red-600'
+                                : 'text-blue-600'
+                          }`}
+                        >
                           {msg.senderName}
                           {msg.sender === 'moderator' && ' (Moderator)'}
                         </span>
@@ -402,15 +440,15 @@ export default function CaseDetailPage() {
                     </div>
                   ))}
                 </VStack>
-                
+
                 {!isResolved && (
                   <HStack gap="sm">
                     <Input
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={e => setNewMessage(e.target.value)}
                       placeholder="Send a message to both parties..."
                       className="flex-1"
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
                     />
                     <Button onClick={handleSendMessage}>Send</Button>
                   </HStack>
@@ -420,7 +458,7 @@ export default function CaseDetailPage() {
 
             {/* Sidebar - Resolution Panel */}
             <div className="space-y-6">
-              <Card padding="lg" className="sticky top-4">
+              <Card className="sticky top-4">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                   {isResolved ? 'Case Resolution' : 'Make Decision'}
                 </h2>
@@ -428,11 +466,23 @@ export default function CaseDetailPage() {
                 {isResolved ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-8 h-8 text-emerald-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-400">This case has been resolved.</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      This case has been resolved.
+                    </p>
                   </div>
                 ) : (
                   <VStack gap="lg">
@@ -450,7 +500,8 @@ export default function CaseDetailPage() {
                               setVendorPercentage(decision.vendor);
                             }}
                             className={`w-full p-2 text-sm rounded-lg border transition-colors text-left ${
-                              buyerPercentage === decision.buyer && vendorPercentage === decision.vendor
+                              buyerPercentage === decision.buyer &&
+                              vendorPercentage === decision.vendor
                                 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
                                 : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300'
                             }`}
@@ -474,7 +525,9 @@ export default function CaseDetailPage() {
                             min={0}
                             max={100}
                             value={buyerPercentage}
-                            onChange={(e) => handlePercentageChange('buyer', parseInt(e.target.value) || 0)}
+                            onChange={e =>
+                              handlePercentageChange('buyer', parseInt(e.target.value) || 0)
+                            }
                           />
                         </div>
                         <div>
@@ -484,11 +537,13 @@ export default function CaseDetailPage() {
                             min={0}
                             max={100}
                             value={vendorPercentage}
-                            onChange={(e) => handlePercentageChange('vendor', parseInt(e.target.value) || 0)}
+                            onChange={e =>
+                              handlePercentageChange('vendor', parseInt(e.target.value) || 0)
+                            }
                           />
                         </div>
                       </div>
-                      
+
                       {/* Visual Bar */}
                       <div className="mt-3 h-4 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex">
                         <div
@@ -501,8 +556,14 @@ export default function CaseDetailPage() {
                         />
                       </div>
                       <HStack justify="between" className="mt-1 text-xs text-slate-500">
-                        <span>Buyer: {((caseData.total * buyerPercentage) / 100).toFixed(2)} {caseData.coin}</span>
-                        <span>Seller: {((caseData.total * vendorPercentage) / 100).toFixed(2)} {caseData.coin}</span>
+                        <span>
+                          Buyer: {((caseData.total * buyerPercentage) / 100).toFixed(2)}{' '}
+                          {caseData.coin}
+                        </span>
+                        <span>
+                          Seller: {((caseData.total * vendorPercentage) / 100).toFixed(2)}{' '}
+                          {caseData.coin}
+                        </span>
                       </HStack>
                     </div>
 
@@ -513,7 +574,7 @@ export default function CaseDetailPage() {
                       </label>
                       <textarea
                         value={resolution}
-                        onChange={(e) => setResolution(e.target.value)}
+                        onChange={e => setResolution(e.target.value)}
                         rows={4}
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                         placeholder="Explain your decision..."
@@ -522,7 +583,7 @@ export default function CaseDetailPage() {
 
                     {/* Submit */}
                     <Button
-                      fullWidth
+                      className="w-full"
                       onClick={() => setShowConfirmDialog(true)}
                       disabled={isLoading}
                     >
@@ -544,16 +605,22 @@ export default function CaseDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Resolution</AlertDialogTitle>
             <AlertDialogDescription>
-              <p className="mb-4">You are about to resolve this dispute with the following distribution:</p>
+              <p className="mb-4">
+                You are about to resolve this dispute with the following distribution:
+              </p>
               <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg mb-4">
                 <p className="text-slate-900 dark:text-white">
-                  <strong>Buyer:</strong> {buyerPercentage}% ({((caseData.total * buyerPercentage) / 100).toFixed(2)} {caseData.coin})
+                  <strong>Buyer:</strong> {buyerPercentage}% (
+                  {((caseData.total * buyerPercentage) / 100).toFixed(2)} {caseData.coin})
                 </p>
                 <p className="text-slate-900 dark:text-white">
-                  <strong>Seller:</strong> {vendorPercentage}% ({((caseData.total * vendorPercentage) / 100).toFixed(2)} {caseData.coin})
+                  <strong>Seller:</strong> {vendorPercentage}% (
+                  {((caseData.total * vendorPercentage) / 100).toFixed(2)} {caseData.coin})
                 </p>
               </div>
-              <p className="text-sm text-slate-500">This action cannot be undone. The funds will be released according to this decision.</p>
+              <p className="text-sm text-slate-500">
+                This action cannot be undone. The funds will be released according to this decision.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -565,4 +632,3 @@ export default function CaseDetailPage() {
     </div>
   );
 }
-

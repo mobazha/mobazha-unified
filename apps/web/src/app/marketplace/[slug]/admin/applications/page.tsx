@@ -4,7 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Button, Avatar } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
 // Types
 interface SellerApplication {
@@ -208,7 +211,7 @@ export default function MarketplaceApplicationsPage() {
           </HStack>
 
           {/* Filters */}
-          <Card padding="md" className="mb-6">
+          <Card className="mb-6">
             <HStack gap="sm">
               {(['pending', 'approved', 'rejected', 'all'] as const).map(status => (
                 <button
@@ -234,14 +237,14 @@ export default function MarketplaceApplicationsPage() {
           {/* Applications List */}
           <VStack gap="md">
             {filteredApplications.length === 0 ? (
-              <Card padding="lg" className="text-center">
+              <Card className="text-center">
                 <p className="text-slate-500">
                   No {filter !== 'all' ? filter : ''} applications found.
                 </p>
               </Card>
             ) : (
               filteredApplications.map(app => (
-                <Card key={app.id} padding="lg" hoverable>
+                <Card key={app.id}>
                   <HStack justify="between" align="start" className="flex-wrap gap-4">
                     {/* Applicant Info */}
                     <HStack gap="md" align="start">
@@ -338,7 +341,7 @@ export default function MarketplaceApplicationsPage() {
       {/* Review Modal */}
       {selectedApp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
               Review Application
             </h2>

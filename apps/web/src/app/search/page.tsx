@@ -4,11 +4,14 @@ import React, { useState, useCallback, useEffect, useMemo, Suspense } from 'reac
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Avatar, Card, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
+import { Container, HStack, VStack, Grid } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
+import type { ProductContractType } from '@/components/ProductCard';
 import { useI18n } from '@mobazha/core';
-import type { ProductContractType } from '@mobazha/ui';
 
 // Types
 interface Product {
@@ -87,12 +90,12 @@ type TabType = 'listings' | 'users';
 // Loading fallback for Suspense
 function SearchLoading() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="py-8">
         <Container size="xl">
           <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
           </div>
         </Container>
       </main>
@@ -200,34 +203,36 @@ function SearchPageContent() {
   // User Card Component
   const UserCard = ({ user }: { user: User }) => (
     <Link href={`/store/${user.peerID}`}>
-      <Card hoverable padding="md" className="h-full">
-        <HStack gap="md" align="start">
-          <Avatar name={user.name} src={user.avatar} size="lg" />
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900 dark:text-white">{user.name}</h3>
-            {user.location && <p className="text-sm text-slate-500">{user.location}</p>}
-            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mt-2">
-              {user.shortDescription}
-            </p>
-            <HStack gap="md" className="mt-3 text-sm">
-              <span className="text-slate-500">
-                {user.listingCount} {t('search.listings')}
-              </span>
-              <HStack gap="xs" align="center">
-                <span className="text-amber-500">★</span>
-                <span className="text-slate-600 dark:text-slate-400">
-                  {user.rating} ({user.reviewCount})
+      <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+        <CardContent className="p-4">
+          <HStack gap="md" align="start">
+            <Avatar src={user.avatar} name={user.name} size="lg" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground">{user.name}</h3>
+              {user.location && <p className="text-sm text-muted-foreground">{user.location}</p>}
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                {user.shortDescription}
+              </p>
+              <HStack gap="md" className="mt-3 text-sm">
+                <span className="text-muted-foreground">
+                  {user.listingCount} {t('search.listings')}
                 </span>
+                <HStack gap="xs" align="center">
+                  <span className="text-yellow-500">★</span>
+                  <span className="text-muted-foreground">
+                    {user.rating} ({user.reviewCount})
+                  </span>
+                </HStack>
               </HStack>
-            </HStack>
-          </div>
-        </HStack>
+            </div>
+          </HStack>
+        </CardContent>
       </Card>
     </Link>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -240,10 +245,10 @@ function SearchPageContent() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('searchExtended.searchPlaceholder')}
-                className="w-full h-14 pl-14 pr-32 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg"
+                className="w-full h-14 pl-14 pr-32 rounded-2xl border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-lg"
               />
               <svg
-                className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400"
+                className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -264,67 +269,71 @@ function SearchPageContent() {
           {/* No query - show recent searches */}
           {!queryParam && (
             <div className="max-w-2xl mx-auto">
-              <Card padding="lg">
-                <HStack justify="between" align="center" className="mb-4">
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    {t('searchExtended.recentSearches')}
-                  </h2>
-                  {recentSearches.length > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearRecentSearches}>
-                      {t('searchExtended.clearAll')}
-                    </Button>
-                  )}
-                </HStack>
+              <Card>
+                <CardContent className="p-6">
+                  <HStack justify="between" align="center" className="mb-4">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      {t('searchExtended.recentSearches')}
+                    </h2>
+                    {recentSearches.length > 0 && (
+                      <Button variant="ghost" size="sm" onClick={clearRecentSearches}>
+                        {t('searchExtended.clearAll')}
+                      </Button>
+                    )}
+                  </HStack>
 
-                {recentSearches.length > 0 ? (
-                  <VStack gap="sm">
-                    {recentSearches.map((keyword, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleRecentSearch(keyword)}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-                      >
-                        <svg
-                          className="w-5 h-5 text-slate-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                  {recentSearches.length > 0 ? (
+                    <VStack gap="sm">
+                      {recentSearches.map((keyword, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleRecentSearch(keyword)}
+                          className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-slate-700 dark:text-slate-300">{keyword}</span>
-                      </button>
-                    ))}
-                  </VStack>
-                ) : (
-                  <p className="text-center text-slate-500 py-8">{t('empty.noRecentSearches')}</p>
-                )}
+                          <svg
+                            className="w-5 h-5 text-muted-foreground"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-foreground">{keyword}</span>
+                        </button>
+                      ))}
+                    </VStack>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      {t('empty.noRecentSearches')}
+                    </p>
+                  )}
 
-                {/* Popular Categories */}
-                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                  <h3 className="text-sm font-medium text-slate-500 mb-4">
-                    {t('searchExtended.popularCategories')}
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {categoryOptions.slice(1).map(cat => (
-                      <button
-                        key={cat.value}
-                        onClick={() => {
-                          setCategory(cat.value);
-                          router.push(`/search?q=${cat.label}&category=${cat.value}`);
-                        }}
-                        className="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 transition-colors text-sm"
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
+                  {/* Popular Categories */}
+                  <div className="mt-8 pt-6 border-t border-border">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-4">
+                      {t('searchExtended.popularCategories')}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categoryOptions.slice(1).map(cat => (
+                        <button
+                          key={cat.value}
+                          onClick={() => {
+                            setCategory(cat.value);
+                            router.push(`/search?q=${cat.label}&category=${cat.value}`);
+                          }}
+                          className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors text-sm"
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
           )}
@@ -334,13 +343,13 @@ function SearchPageContent() {
             <>
               {/* Tabs & Filters */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit">
+                <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
                   <button
                     onClick={() => setActiveTab('listings')}
                     className={`px-6 py-2 rounded-lg font-medium transition-all ${
                       activeTab === 'listings'
-                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {t('searchExtended.products')} ({products.length})
@@ -349,8 +358,8 @@ function SearchPageContent() {
                     onClick={() => setActiveTab('users')}
                     className={`px-6 py-2 rounded-lg font-medium transition-all ${
                       activeTab === 'users'
-                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {t('searchExtended.stores')} ({users.length})
@@ -363,8 +372,8 @@ function SearchPageContent() {
                       onClick={() => setShowFilters(!showFilters)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                         showFilters
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-300'
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/50 text-foreground'
                       }`}
                     >
                       <svg
@@ -400,77 +409,79 @@ function SearchPageContent() {
 
               {/* Filter Panel */}
               {showFilters && activeTab === 'listings' && (
-                <Card padding="md" className="mb-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        {t('filter.category')}
-                      </label>
-                      <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('marketplace.allCategories')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categoryOptions.map(opt => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                <Card className="mb-6">
+                  <CardContent className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          {t('filter.category')}
+                        </label>
+                        <Select value={category} onValueChange={setCategory}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('marketplace.allCategories')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categoryOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          {t('filter.priceRange')}
+                        </label>
+                        <HStack gap="sm">
+                          <input
+                            type="number"
+                            placeholder={t('filter.min')}
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <span className="text-muted-foreground">-</span>
+                          <input
+                            type="number"
+                            placeholder={t('filter.max')}
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </HStack>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          {t('filter.rating')}
+                        </label>
+                        <Select defaultValue="all">
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('filter.anyRating')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t('filter.anyRating')}</SelectItem>
+                            <SelectItem value="4">{t('filter.stars', { count: 4 })}</SelectItem>
+                            <SelectItem value="3">{t('filter.stars', { count: 3 })}</SelectItem>
+                            <SelectItem value="2">{t('filter.stars', { count: 2 })}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          {t('filter.type')}
+                        </label>
+                        <Select defaultValue="all">
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('filter.allTypes')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t('filter.allTypes')}</SelectItem>
+                            <SelectItem value="physical">{t('filter.physicalGoods')}</SelectItem>
+                            <SelectItem value="digital">{t('filter.digitalGoods')}</SelectItem>
+                            <SelectItem value="service">{t('filter.services')}</SelectItem>
+                            <SelectItem value="rwa">{t('filter.rwaTokens')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        {t('filter.priceRange')}
-                      </label>
-                      <HStack gap="sm">
-                        <input
-                          type="number"
-                          placeholder={t('filter.min')}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                        <span className="text-slate-400">-</span>
-                        <input
-                          type="number"
-                          placeholder={t('filter.max')}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                      </HStack>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        {t('filter.rating')}
-                      </label>
-                      <Select defaultValue="all">
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('filter.anyRating')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('filter.anyRating')}</SelectItem>
-                          <SelectItem value="4">{t('filter.stars', { count: 4 })}</SelectItem>
-                          <SelectItem value="3">{t('filter.stars', { count: 3 })}</SelectItem>
-                          <SelectItem value="2">{t('filter.stars', { count: 2 })}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        {t('filter.type')}
-                      </label>
-                      <Select defaultValue="all">
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('filter.allTypes')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('filter.allTypes')}</SelectItem>
-                          <SelectItem value="physical">{t('filter.physicalGoods')}</SelectItem>
-                          <SelectItem value="digital">{t('filter.digitalGoods')}</SelectItem>
-                          <SelectItem value="service">{t('filter.services')}</SelectItem>
-                          <SelectItem value="rwa">{t('filter.rwaTokens')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  </CardContent>
                 </Card>
               )}
 
@@ -487,10 +498,10 @@ function SearchPageContent() {
                     {products.map(product => renderProductCard(product))}
                   </Grid>
                 ) : (
-                  <Card padding="xl" className="text-center">
-                    <div className="py-12">
+                  <Card className="text-center">
+                    <CardContent className="py-12">
                       <svg
-                        className="w-16 h-16 mx-auto text-slate-300 mb-4"
+                        className="w-16 h-16 mx-auto text-muted-foreground mb-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -502,11 +513,11 @@ function SearchPageContent() {
                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                         />
                       </svg>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
                         {t('empty.noProductsFound')}
                       </h3>
-                      <p className="text-slate-500">{t('empty.tryAdjustingFilters')}</p>
-                    </div>
+                      <p className="text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
+                    </CardContent>
                   </Card>
                 )
               ) : users.length > 0 ? (
@@ -516,10 +527,10 @@ function SearchPageContent() {
                   ))}
                 </Grid>
               ) : (
-                <Card padding="xl" className="text-center">
-                  <div className="py-12">
+                <Card className="text-center">
+                  <CardContent className="py-12">
                     <svg
-                      className="w-16 h-16 mx-auto text-slate-300 mb-4"
+                      className="w-16 h-16 mx-auto text-muted-foreground mb-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -531,11 +542,11 @@ function SearchPageContent() {
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                       />
                     </svg>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
                       {t('empty.noStoresFound')}
                     </h3>
-                    <p className="text-slate-500">{t('empty.tryAdjustingSearch')}</p>
-                  </div>
+                    <p className="text-muted-foreground">{t('empty.tryAdjustingSearch')}</p>
+                  </CardContent>
                 </Card>
               )}
 

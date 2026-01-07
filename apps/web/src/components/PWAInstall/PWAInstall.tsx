@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Card } from '@mobazha/ui';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -18,7 +19,7 @@ export const PWAInstall: React.FC = () => {
     if (typeof window === 'undefined') return false;
     return (
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+      (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true
     );
   }, []);
 

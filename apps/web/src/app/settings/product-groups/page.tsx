@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 import {
   Select,
   SelectContent,
@@ -106,13 +108,13 @@ export default function ProductGroupsPage() {
     setGroups(prev => [...prev, group]);
     setShowCreateModal(false);
     setNewGroup({ name: '', description: '', color: GROUP_COLORS[0], visibility: 'public' });
-    alert('Product group created!');
+    window.alert('Product group created!');
   };
 
   const handleDeleteGroupConfirm = () => {
     if (deleteGroupId) {
       setGroups(prev => prev.filter(g => g.id !== deleteGroupId));
-      alert('Group deleted!');
+      window.alert('Group deleted!');
       setDeleteGroupId(null);
     }
   };
@@ -173,7 +175,7 @@ export default function ProductGroupsPage() {
           {/* Groups List */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {groups.map(group => (
-              <Card key={group.id} padding="lg">
+              <Card key={group.id}>
                 <HStack justify="between" align="start" className="mb-4">
                   <HStack gap="md" align="center">
                     <div
@@ -233,7 +235,7 @@ export default function ProductGroupsPage() {
 
           {/* Empty State */}
           {groups.length === 0 && (
-            <Card padding="lg" className="text-center py-12">
+            <Card className="text-center py-12">
               <VStack gap="md" align="center">
                 <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   <svg
@@ -266,7 +268,7 @@ export default function ProductGroupsPage() {
       {/* Create/Edit Modal */}
       {(showCreateModal || editingGroup) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
               {editingGroup ? 'Edit Product Group' : 'Create Product Group'}
             </h2>
@@ -378,7 +380,7 @@ export default function ProductGroupsPage() {
                           prev.map(g => (g.id === editingGroup.id ? editingGroup : g))
                         );
                         setEditingGroup(null);
-                        alert('Group updated!');
+                        window.alert('Group updated!');
                       }
                     : handleCreateGroup
                 }

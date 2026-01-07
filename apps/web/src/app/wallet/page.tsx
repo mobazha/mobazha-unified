@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { Header } from '@/components';
-import { Container, Grid, HStack, Card, Button } from '@mobazha/ui';
+import { Container, Grid, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { WalletCard, TransactionList, WalletBalance, Transaction } from '@/components/Wallet';
 import { useI18n } from '@mobazha/core';
 
@@ -156,7 +158,7 @@ export default function WalletPage() {
       <main className="py-8">
         <Container>
           {/* Portfolio Summary */}
-          <Card variant="elevated" className="mb-8 overflow-hidden">
+          <Card className="mb-8 overflow-hidden">
             <div className="relative p-8 bg-gradient-to-br from-emerald-600 to-emerald-800">
               <div className="absolute inset-0 bg-black/10" />
               <div className="relative">
@@ -237,7 +239,7 @@ export default function WalletPage() {
           </Grid>
 
           {/* Transaction History */}
-          <Card variant="elevated" className="overflow-hidden">
+          <Card className="overflow-hidden">
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <HStack justify="between" align="center" className="flex-wrap gap-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">

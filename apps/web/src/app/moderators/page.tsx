@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
 
@@ -150,7 +152,7 @@ export default function ModeratorsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
-              <Card padding="lg" className="sticky top-4">
+              <Card className="sticky top-4">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
                   {t('filter.filters')}
                 </h3>
@@ -243,7 +245,7 @@ export default function ModeratorsPage() {
                   {/* Reset */}
                   <Button
                     variant="ghost"
-                    fullWidth
+                    className="w-full"
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedLanguage('all');
@@ -269,7 +271,7 @@ export default function ModeratorsPage() {
               <VStack gap="md">
                 {filteredModerators.map(moderator => (
                   <Link key={moderator.id} href={`/moderators/${moderator.id}`}>
-                    <Card padding="lg" hoverable className="transition-all hover:shadow-lg">
+                    <Card className="transition-all hover:shadow-lg">
                       <HStack gap="lg" align="start">
                         {/* Avatar */}
                         <img
@@ -354,7 +356,7 @@ export default function ModeratorsPage() {
                 ))}
 
                 {filteredModerators.length === 0 && (
-                  <Card padding="lg">
+                  <Card>
                     <VStack gap="md" align="center" className="py-8">
                       <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                         <svg
