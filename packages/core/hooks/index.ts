@@ -29,6 +29,12 @@ export * from './useMonitoring';
 // 钱包相关
 export * from './useWallet';
 
+// 托管合约相关
+export * from './useEscrow';
+
+// 支付相关
+export * from './usePayment';
+
 // 社交相关 (Follow/Unfollow)
 export * from './useSocial';
 
