@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
 import { Button, Card, Avatar } from '@mobazha/ui';
+import { useI18n } from '@mobazha/core';
 
 // Types
 interface CartItem {
@@ -94,6 +95,7 @@ const mockCartItems: CartItem[] = [
 
 export default function CartPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [cartItems, setCartItems] = useState<CartItem[]>(mockCartItems);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(
     new Set(mockCartItems.map(item => item.id))
@@ -180,7 +182,6 @@ export default function CartPage() {
 
   const handleCheckout = useCallback(() => {
     if (selectedItems.size === 0) {
-      alert('Please select items to checkout');
       return;
     }
     router.push('/checkout');
@@ -208,13 +209,11 @@ export default function CartPage() {
                   />
                 </svg>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
-                  Your cart is empty
+                  {t('cart.empty')}
                 </h2>
-                <p className="text-slate-500 mb-6">
-                  Looks like you haven&apos;t added anything to your cart yet.
-                </p>
+                <p className="text-slate-500 mb-6">{t('cart.emptyMessage')}</p>
                 <Link href="/">
-                  <Button size="lg">Start Shopping</Button>
+                  <Button size="lg">{t('cart.startShopping')}</Button>
                 </Link>
               </div>
             </Card>
@@ -234,14 +233,18 @@ export default function CartPage() {
           {/* Page Header */}
           <HStack justify="between" align="center" className="mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Shopping Cart</h1>
-              <p className="text-slate-500">{cartItems.length} items in your cart</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {t('cart.title')}
+              </h1>
+              <p className="text-slate-500">{t('cart.itemsInCart', { count: cartItems.length })}</p>
             </div>
             <button
               onClick={handleSelectAll}
               className="text-emerald-600 hover:text-emerald-700 font-medium"
             >
-              {selectedItems.size === cartItems.length ? 'Deselect All' : 'Select All'}
+              {selectedItems.size === cartItems.length
+                ? t('cart.deselectAll')
+                : t('cart.selectAll')}
             </button>
           </HStack>
 
@@ -366,7 +369,7 @@ export default function CartPage() {
                                 onClick={() => handleRemoveItem(item.id)}
                                 className="text-red-500 hover:text-red-600 text-sm"
                               >
-                                Remove
+                                {t('cart.remove')}
                               </button>
                             </HStack>
                           </div>
@@ -389,13 +392,13 @@ export default function CartPage() {
             <div className="space-y-6">
               <Card padding="lg" className="sticky top-4">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Order Summary
+                  {t('cart.orderSummary')}
                 </h2>
 
                 <VStack gap="md">
                   <HStack justify="between">
                     <span className="text-slate-600 dark:text-slate-400">
-                      Subtotal ({totals.itemCount} items)
+                      {t('cart.subtotal')} ({t('cart.itemCount', { count: totals.itemCount })})
                     </span>
                     <span className="font-medium text-slate-900 dark:text-white">
                       ${totals.subtotal.toFixed(2)}
@@ -403,16 +406,16 @@ export default function CartPage() {
                   </HStack>
 
                   <HStack justify="between">
-                    <span className="text-slate-600 dark:text-slate-400">Shipping</span>
+                    <span className="text-slate-600 dark:text-slate-400">{t('cart.shipping')}</span>
                     <span className="font-medium text-emerald-600">
-                      {totals.shipping === 0 ? 'Free' : `$${totals.shipping.toFixed(2)}`}
+                      {totals.shipping === 0 ? t('cart.free') : `$${totals.shipping.toFixed(2)}`}
                     </span>
                   </HStack>
 
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
                     <HStack justify="between">
                       <span className="text-lg font-semibold text-slate-900 dark:text-white">
-                        Total
+                        {t('cart.total')}
                       </span>
                       <span className="text-xl font-bold text-emerald-600">
                         ${totals.total.toFixed(2)}
@@ -426,19 +429,19 @@ export default function CartPage() {
                     onClick={handleCheckout}
                     disabled={selectedItems.size === 0}
                   >
-                    Proceed to Checkout ({selectedItems.size})
+                    {t('cart.proceedToCheckout')} ({selectedItems.size})
                   </Button>
 
                   <Link href="/" className="block">
                     <Button variant="ghost" fullWidth>
-                      Continue Shopping
+                      {t('cart.continueShopping')}
                     </Button>
                   </Link>
                 </VStack>
 
                 {/* Payment Methods */}
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                  <p className="text-sm text-slate-500 mb-3">Accepted Payment Methods</p>
+                  <p className="text-sm text-slate-500 mb-3">{t('cart.acceptedPayments')}</p>
                   <HStack gap="sm">
                     {['BTC', 'ETH', 'USDT'].map(coin => (
                       <span

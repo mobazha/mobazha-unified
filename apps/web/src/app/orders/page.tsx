@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components';
 import { Container, VStack, HStack, Skeleton, Card } from '@mobazha/ui';
 import { OrderCard, Order } from '@/components/Order';
+import { useI18n } from '@mobazha/core';
 
 type OrderStatus =
   | 'all'
@@ -118,20 +119,21 @@ const mockOrders: Order[] = [
   },
 ];
 
-const statusTabs: { value: OrderStatus; label: string }[] = [
-  { value: 'all', label: 'All Orders' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'shipped', label: 'Shipped' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'disputed', label: 'Disputed' },
-];
-
 export default function OrdersPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [orderType, setOrderType] = useState<OrderType>('purchases');
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
   const [isLoading] = useState(false);
+
+  const statusTabs: { value: OrderStatus; label: string }[] = [
+    { value: 'all', label: t('order.allOrders') },
+    { value: 'pending', label: t('order.pending') },
+    { value: 'processing', label: t('order.processing') },
+    { value: 'shipped', label: t('order.shipped') },
+    { value: 'completed', label: t('order.completed') },
+    { value: 'disputed', label: t('order.disputed') },
+  ];
 
   const filteredOrders = mockOrders.filter(
     order => statusFilter === 'all' || order.status === statusFilter
@@ -154,8 +156,10 @@ export default function OrdersPage() {
         <Container>
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Orders</h1>
-            <p className="text-slate-500">Manage your purchases and sales</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              {t('nav.orders')}
+            </h1>
+            <p className="text-slate-500">{t('order.manageOrders')}</p>
           </div>
 
           {/* Order Type Toggle */}
@@ -171,7 +175,7 @@ export default function OrdersPage() {
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  {type === 'purchases' ? 'My Purchases' : 'My Sales'}
+                  {type === 'purchases' ? t('order.myPurchases') : t('order.mySales')}
                 </button>
               ))}
             </div>
@@ -237,12 +241,16 @@ export default function OrdersPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                No orders found
+                {t('order.noOrdersFound')}
               </h3>
               <p className="text-slate-500 max-w-sm mx-auto">
                 {statusFilter === 'all'
-                  ? `You don't have any ${orderType} yet. Start exploring the marketplace!`
-                  : `No ${statusFilter} orders at the moment.`}
+                  ? t('order.noOrdersMessage', {
+                      type: orderType === 'purchases' ? t('order.purchases') : t('order.sales'),
+                    })
+                  : t('order.noStatusOrders', {
+                      status: statusTabs.find(s => s.value === statusFilter)?.label || statusFilter,
+                    })}
               </p>
             </Card>
           ) : (

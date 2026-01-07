@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
 import { Button, Avatar, Card } from '@mobazha/ui';
+import { useI18n } from '@mobazha/core';
 
 // Types
 interface ContactInfo {
@@ -118,6 +119,7 @@ const mockListings = [
 type TabType = 'store' | 'about' | 'reviews';
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const [profile] = useState<Profile>(mockProfile);
   const [activeTab, setActiveTab] = useState<TabType>('store');
   const [isEditing, setIsEditing] = useState(false);
@@ -251,7 +253,7 @@ export default function ProfilePage() {
                               d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                             />
                           </svg>
-                          <span className="hidden md:inline">Settings</span>
+                          <span className="hidden md:inline">{t('nav.settings')}</span>
                         </Button>
                       </Link>
                       <Button onClick={() => setIsEditing(true)} className="whitespace-nowrap">
@@ -268,7 +270,7 @@ export default function ProfilePage() {
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                           />
                         </svg>
-                        <span className="hidden md:inline">Edit Profile</span>
+                        <span className="hidden md:inline">{t('profile.editProfile')}</span>
                       </Button>
                     </HStack>
                   </HStack>
@@ -285,19 +287,19 @@ export default function ProfilePage() {
                       <div className="text-2xl font-bold text-slate-900 dark:text-white">
                         {profile.stats.listingCount}
                       </div>
-                      <div className="text-sm text-slate-500">Listings</div>
+                      <div className="text-sm text-slate-500">{t('profile.listings')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-slate-900 dark:text-white">
                         {profile.stats.followerCount}
                       </div>
-                      <div className="text-sm text-slate-500">Followers</div>
+                      <div className="text-sm text-slate-500">{t('profile.followers')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-slate-900 dark:text-white">
                         {profile.stats.followingCount}
                       </div>
-                      <div className="text-sm text-slate-500">Following</div>
+                      <div className="text-sm text-slate-500">{t('profile.following')}</div>
                     </div>
                     <div className="text-center">
                       <HStack gap="xs" align="center" justify="center">
@@ -307,7 +309,7 @@ export default function ProfilePage() {
                         </span>
                       </HStack>
                       <div className="text-sm text-slate-500">
-                        {profile.stats.ratingCount} reviews
+                        {profile.stats.ratingCount} {t('profile.reviews')}
                       </div>
                     </div>
                   </HStack>
@@ -328,7 +330,11 @@ export default function ProfilePage() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                {tab === 'store' ? 'My Store' : tab}
+                {tab === 'store'
+                  ? t('profile.myStore')
+                  : tab === 'about'
+                    ? t('profile.about')
+                    : t('profile.reviews')}
               </button>
             ))}
           </div>
@@ -381,7 +387,7 @@ export default function ProfilePage() {
                       </svg>
                     </div>
                     <span className="font-medium text-slate-600 dark:text-slate-400">
-                      Add New Listing
+                      {t('profile.addNewListing')}
                     </span>
                   </Card>
                 </Link>
@@ -392,7 +398,9 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                   <Card padding="lg">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">About</h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                      {t('profile.about')}
+                    </h2>
                     <div className="prose prose-slate dark:prose-invert max-w-none">
                       {profile.about?.split('\n').map((paragraph, i) => (
                         <p key={i} className="text-slate-600 dark:text-slate-400 mb-4">
@@ -405,7 +413,7 @@ export default function ProfilePage() {
                 <div>
                   <Card padding="lg">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                      Contact Information
+                      {t('profile.contactInformation')}
                     </h2>
                     <VStack gap="md">
                       {profile.contactInfo?.email && (
@@ -426,7 +434,7 @@ export default function ProfilePage() {
                             </svg>
                           </div>
                           <div>
-                            <p className="text-sm text-slate-500">Email</p>
+                            <p className="text-sm text-slate-500">{t('profile.email')}</p>
                             <a
                               href={`mailto:${profile.contactInfo.email}`}
                               className="text-emerald-600 hover:underline"
@@ -454,7 +462,7 @@ export default function ProfilePage() {
                             </svg>
                           </div>
                           <div>
-                            <p className="text-sm text-slate-500">Phone</p>
+                            <p className="text-sm text-slate-500">{t('profile.phone')}</p>
                             <a
                               href={`tel:${profile.contactInfo.phoneNumber}`}
                               className="text-emerald-600 hover:underline"
@@ -482,7 +490,7 @@ export default function ProfilePage() {
                             </svg>
                           </div>
                           <div>
-                            <p className="text-sm text-slate-500">Website</p>
+                            <p className="text-sm text-slate-500">{t('profile.website')}</p>
                             <a
                               href={profile.contactInfo.website}
                               target="_blank"
@@ -503,13 +511,17 @@ export default function ProfilePage() {
             {activeTab === 'reviews' && (
               <Card padding="lg">
                 <HStack justify="between" align="center" className="mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Reviews</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                    {t('profile.reviews')}
+                  </h2>
                   <HStack gap="sm" align="center">
                     <span className="text-amber-500 text-2xl">★</span>
                     <span className="text-2xl font-bold text-slate-900 dark:text-white">
                       {profile.stats.averageRating}
                     </span>
-                    <span className="text-slate-500">({profile.stats.ratingCount} reviews)</span>
+                    <span className="text-slate-500">
+                      ({profile.stats.ratingCount} {t('profile.reviews')})
+                    </span>
                   </HStack>
                 </HStack>
 
@@ -574,7 +586,9 @@ export default function ProfilePage() {
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <HStack justify="between" align="center" className="mb-6">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Edit Profile</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  {t('profile.editProfile')}
+                </h2>
                 <button
                   onClick={handleCancel}
                   className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
@@ -593,44 +607,46 @@ export default function ProfilePage() {
               <VStack gap="md">
                 {/* Profile Information */}
                 <div>
-                  <h3 className="text-sm font-medium text-slate-500 mb-3">Profile Information</h3>
+                  <h3 className="text-sm font-medium text-slate-500 mb-3">
+                    {t('profile.profileInformation')}
+                  </h3>
                   <VStack gap="sm">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Name *
+                        {t('profile.name')} *
                       </label>
                       <input
                         type="text"
                         value={editForm.name}
                         onChange={e => handleEditChange('name', e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        placeholder="Your name"
+                        placeholder={t('profile.name')}
                         maxLength={40}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Bio
+                        {t('profile.bio')}
                       </label>
                       <input
                         type="text"
                         value={editForm.shortDescription}
                         onChange={e => handleEditChange('shortDescription', e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        placeholder="A short description about yourself"
+                        placeholder={t('profile.bio')}
                         maxLength={140}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Location
+                        {t('profile.location')}
                       </label>
                       <input
                         type="text"
                         value={editForm.location}
                         onChange={e => handleEditChange('location', e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        placeholder="City, Country"
+                        placeholder={t('profile.location')}
                       />
                     </div>
                   </VStack>
@@ -638,11 +654,13 @@ export default function ProfilePage() {
 
                 {/* Contact Information */}
                 <div>
-                  <h3 className="text-sm font-medium text-slate-500 mb-3">Contact Information</h3>
+                  <h3 className="text-sm font-medium text-slate-500 mb-3">
+                    {t('profile.contactInformation')}
+                  </h3>
                   <VStack gap="sm">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Email
+                        {t('profile.email')}
                       </label>
                       <input
                         type="email"
@@ -654,7 +672,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Phone Number
+                        {t('profile.phone')}
                       </label>
                       <input
                         type="tel"
@@ -666,7 +684,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Website
+                        {t('profile.website')}
                       </label>
                       <input
                         type="url"
@@ -681,13 +699,13 @@ export default function ProfilePage() {
 
                 {/* About */}
                 <div>
-                  <h3 className="text-sm font-medium text-slate-500 mb-3">About</h3>
+                  <h3 className="text-sm font-medium text-slate-500 mb-3">{t('profile.about')}</h3>
                   <textarea
                     value={editForm.about}
                     onChange={e => handleEditChange('about', e.target.value)}
                     rows={6}
                     className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                    placeholder="Tell others about yourself and your store..."
+                    placeholder={t('profile.about')}
                   />
                 </div>
               </VStack>
@@ -698,9 +716,9 @@ export default function ProfilePage() {
                 className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700"
               >
                 <Button variant="outline" onClick={handleCancel}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
-                <Button onClick={handleSave}>Save Changes</Button>
+                <Button onClick={handleSave}>{t('profile.saveChanges')}</Button>
               </HStack>
             </div>
           </Card>

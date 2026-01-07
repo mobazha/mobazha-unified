@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Header } from '@/components';
 import { ChatList, ChatMessages, Message } from '@/components/Chat';
+import { useI18n } from '@mobazha/core';
 
 // Mock data
 const mockRooms = [
@@ -98,6 +99,7 @@ const mockMessages: Message[] = [
 ];
 
 export default function ChatPage() {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [messages, setMessages] = useState(mockMessages);
@@ -170,12 +172,9 @@ export default function ChatPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                Welcome to Messages
+                {t('chat.welcomeToMessages')}
               </h3>
-              <p className="text-center max-w-sm">
-                Select a conversation to start chatting, or create a new one to connect with vendors
-                and buyers.
-              </p>
+              <p className="text-center max-w-sm">{t('chat.selectConversation')}</p>
             </div>
           )}
         </div>
