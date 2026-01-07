@@ -13,16 +13,6 @@ const DEFAULT_CONFIG: Partial<MatrixConfig> = {
   homeserverUrl: 'https://matrix.org',
 };
 
-// Matrix SDK 类型辅助
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MatrixClientType = any;
-
-/**
- * 获取类型化的 Matrix 客户端
- */
-async function getTypedClient(client: unknown): Promise<MatrixClientType> {
-  return client;
-}
 
 /**
  * Matrix 客户端服务类
