@@ -5,7 +5,8 @@
 
 import { useCallback, useMemo } from 'react';
 import { useRoleStore, type UserRole, type ModeratorSettings } from '../stores/roleStore';
-import { modeApi } from '../services/api/mode';
+import * as moderatorsApi from '../services/api/moderators';
+import * as profileApi from '../services/api/profile';
 
 export interface UseRoleReturn {
   // 状态
@@ -86,8 +87,8 @@ export function useRole(): UseRoleReturn {
   // 启用销售功能
   const enableSelling = useCallback(async (): Promise<boolean> => {
     try {
-      // TODO: 调用 API 设置商家状态
-      await modeApi.setModeratorStatus(false); // 这里是示例，实际应该调用设置商家的 API
+      // 更新用户资料，启用商家功能
+      await profileApi.setProfile({ vendor: true });
       enableSeller();
       return true;
     } catch {
@@ -98,7 +99,8 @@ export function useRole(): UseRoleReturn {
   // 禁用销售功能
   const disableSelling = useCallback(async (): Promise<boolean> => {
     try {
-      // TODO: 调用 API 取消商家状态
+      // 更新用户资料，禁用商家功能
+      await profileApi.setProfile({ vendor: false });
       disableSeller();
       return true;
     } catch {
@@ -109,7 +111,15 @@ export function useRole(): UseRoleReturn {
   // 启用仲裁功能
   const enableModeration = useCallback(async (): Promise<boolean> => {
     try {
-      await modeApi.setModeratorStatus(true);
+      // 注册为仲裁人
+      await moderatorsApi.registerAsModerator({
+        shortDescription: '',
+        description: '',
+        languages: ['en'],
+        fee: { percentage: 1, feeType: 'percentage' },
+        termsAndConditions: '',
+        acceptedCurrencies: ['BTC', 'ETH'],
+      });
       enableModerator();
       return true;
     } catch {
@@ -120,7 +130,8 @@ export function useRole(): UseRoleReturn {
   // 禁用仲裁功能
   const disableModeration = useCallback(async (): Promise<boolean> => {
     try {
-      await modeApi.setModeratorStatus(false);
+      // 停用仲裁人身份
+      await moderatorsApi.deactivateModerator();
       disableModerator();
       return true;
     } catch {
