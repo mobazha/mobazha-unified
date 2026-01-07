@@ -194,6 +194,7 @@ export const ja: TranslationResource = {
   wallet: {
     title: 'ウォレット',
     balance: '残高',
+    totalBalance: '総残高',
     send: '送金',
     receive: '受取',
     transactions: '取引履歴',
@@ -210,9 +211,14 @@ export const ja: TranslationResource = {
     totalPortfolioValue: 'ポートフォリオ総額',
     exchange: '交換',
     yourWallets: 'ウォレット',
+    yourAssets: '資産一覧',
     transactionHistory: '取引履歴',
     clear: 'クリア',
     all: 'すべて',
+    today: '今日',
+    back: '戻る',
+    yourAddress: 'あなたのアドレス',
+    copy: 'コピー',
   },
 
   profile: {
