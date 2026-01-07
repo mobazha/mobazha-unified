@@ -6,6 +6,7 @@ import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { useI18n } from '@mobazha/core';
 
 // Types
 interface Moderator {
@@ -92,9 +93,10 @@ const mockModerators: Moderator[] = [
 ];
 
 export default function ModeratorsPage() {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('');
-  const [maxFee, setMaxFee] = useState<number | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [maxFee, setMaxFee] = useState<string>('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'fee' | 'disputes'>('rating');
 
@@ -104,10 +106,10 @@ export default function ModeratorsPage() {
       if (searchQuery && !mod.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
-      if (selectedLanguage && !mod.languages.includes(selectedLanguage)) {
+      if (selectedLanguage !== 'all' && !mod.languages.includes(selectedLanguage)) {
         return false;
       }
-      if (maxFee !== null && mod.fee > maxFee) {
+      if (maxFee !== 'all' && mod.fee > Number(maxFee)) {
         return false;
       }
       if (verifiedOnly && !mod.verified) {
@@ -139,42 +141,44 @@ export default function ModeratorsPage() {
         <Container size="xl">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Moderators</h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              Choose a trusted moderator to protect your transactions with escrow
-            </p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              {t('moderator.title')}
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400">{t('moderator.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
               <Card padding="lg" className="sticky top-4">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Filters</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
+                  {t('filter.filters')}
+                </h3>
 
                 <VStack gap="lg">
                   {/* Search */}
                   <div>
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
-                      Search
+                      {t('common.search')}
                     </label>
                     <Input
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Search moderators..."
+                      placeholder={t('moderator.searchPlaceholder')}
                     />
                   </div>
 
                   {/* Language Filter */}
                   <div>
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
-                      Language
+                      {t('moderator.language')}
                     </label>
                     <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                       <SelectTrigger>
-                        <SelectValue placeholder="All Languages" />
+                        <SelectValue placeholder={t('moderator.allLanguages')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Languages</SelectItem>
+                        <SelectItem value="all">{t('moderator.allLanguages')}</SelectItem>
                         {allLanguages.map(lang => (
                           <SelectItem key={lang} value={lang}>
                             {lang}
@@ -187,17 +191,14 @@ export default function ModeratorsPage() {
                   {/* Max Fee Filter */}
                   <div>
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
-                      Max Fee (%)
+                      {t('moderator.maxFee')}
                     </label>
-                    <Select
-                      value={maxFee?.toString() ?? ''}
-                      onValueChange={value => setMaxFee(value ? Number(value) : null)}
-                    >
+                    <Select value={maxFee} onValueChange={setMaxFee}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Any Fee" />
+                        <SelectValue placeholder={t('moderator.anyFee')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any Fee</SelectItem>
+                        <SelectItem value="all">{t('moderator.anyFee')}</SelectItem>
                         <SelectItem value="0.5">Up to 0.5%</SelectItem>
                         <SelectItem value="1">Up to 1%</SelectItem>
                         <SelectItem value="1.5">Up to 1.5%</SelectItem>
@@ -215,14 +216,14 @@ export default function ModeratorsPage() {
                       className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
                     />
                     <span className="text-sm text-slate-700 dark:text-slate-300">
-                      Verified only
+                      {t('moderator.verifiedOnly')}
                     </span>
                   </label>
 
                   {/* Sort */}
                   <div>
                     <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
-                      Sort by
+                      {t('moderator.sortBy')}
                     </label>
                     <Select
                       value={sortBy}
@@ -232,9 +233,9 @@ export default function ModeratorsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="rating">Highest Rating</SelectItem>
-                        <SelectItem value="fee">Lowest Fee</SelectItem>
-                        <SelectItem value="disputes">Most Disputes Handled</SelectItem>
+                        <SelectItem value="rating">{t('moderator.highestRating')}</SelectItem>
+                        <SelectItem value="fee">{t('moderator.lowestFee')}</SelectItem>
+                        <SelectItem value="disputes">{t('moderator.mostDisputes')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -245,13 +246,13 @@ export default function ModeratorsPage() {
                     fullWidth
                     onClick={() => {
                       setSearchQuery('');
-                      setSelectedLanguage('');
-                      setMaxFee(null);
+                      setSelectedLanguage('all');
+                      setMaxFee('all');
                       setVerifiedOnly(false);
                       setSortBy('rating');
                     }}
                   >
-                    Reset Filters
+                    {t('moderator.resetFilters')}
                   </Button>
                 </VStack>
               </Card>
@@ -261,8 +262,7 @@ export default function ModeratorsPage() {
             <div className="lg:col-span-3">
               <div className="mb-4">
                 <p className="text-sm text-slate-500">
-                  {filteredModerators.length} moderator
-                  {filteredModerators.length !== 1 ? 's' : ''} found
+                  {t('moderator.moderatorsFound', { count: filteredModerators.length })}
                 </p>
               </div>
 
@@ -318,13 +318,15 @@ export default function ModeratorsPage() {
                             <span className="text-slate-300 dark:text-slate-600">|</span>
 
                             <span className="text-sm text-slate-600 dark:text-slate-400">
-                              {moderator.disputesHandled} disputes handled
+                              {t('moderator.disputesHandled', {
+                                count: moderator.disputesHandled,
+                              })}
                             </span>
 
                             <span className="text-slate-300 dark:text-slate-600">|</span>
 
                             <span className="text-sm text-emerald-600">
-                              {moderator.successRate}% success
+                              {t('moderator.success', { rate: moderator.successRate })}
                             </span>
                           </HStack>
 
@@ -344,7 +346,7 @@ export default function ModeratorsPage() {
                         {/* Fee */}
                         <div className="text-right flex-shrink-0">
                           <p className="text-2xl font-bold text-emerald-600">{moderator.fee}%</p>
-                          <p className="text-sm text-slate-500">fee</p>
+                          <p className="text-sm text-slate-500">{t('moderator.fee')}</p>
                         </div>
                       </HStack>
                     </Card>
@@ -370,18 +372,18 @@ export default function ModeratorsPage() {
                         </svg>
                       </div>
                       <p className="text-slate-600 dark:text-slate-400">
-                        No moderators found matching your criteria
+                        {t('moderator.noModeratorsFound')}
                       </p>
                       <Button
                         variant="ghost"
                         onClick={() => {
                           setSearchQuery('');
-                          setSelectedLanguage('');
-                          setMaxFee(null);
+                          setSelectedLanguage('all');
+                          setMaxFee('all');
                           setVerifiedOnly(false);
                         }}
                       >
-                        Clear Filters
+                        {t('marketplace.clearFilters')}
                       </Button>
                     </VStack>
                   </Card>

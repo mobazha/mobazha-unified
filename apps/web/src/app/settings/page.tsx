@@ -23,7 +23,7 @@ import {
   ScrollArea,
   useToast,
 } from '@/components/ui';
-import { useTheme, THEME_INFO } from '@mobazha/core';
+import { useTheme, THEME_INFO, useI18n } from '@mobazha/core';
 
 // Mock data
 const countries = [
@@ -124,6 +124,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   // State
   const [country, setCountry] = useState('US');
@@ -153,19 +154,19 @@ export default function SettingsPage() {
   const handleBackup = useCallback(() => {
     // In real app, this would trigger backup flow
     toast({
-      title: 'Coming Soon',
-      description: 'Backup wallet feature coming soon!',
+      title: t('settingsExtended.comingSoon'),
+      description: t('settingsExtended.backupComingSoon'),
     });
-  }, [toast]);
+  }, [toast, t]);
 
   const handleRestoreConfirm = useCallback(() => {
     // In real app, this would trigger restore flow
     toast({
-      title: 'Coming Soon',
-      description: 'Restore profile feature coming soon!',
+      title: t('settingsExtended.comingSoon'),
+      description: t('settingsExtended.restoreComingSoon'),
     });
     setShowRestoreDialog(false);
-  }, [toast]);
+  }, [toast, t]);
 
   const handleLogoutConfirm = useCallback(() => {
     router.push('/');
@@ -194,45 +195,47 @@ export default function SettingsPage() {
                 />
               </svg>
             </Link>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {t('settings.title')}
+            </h1>
           </HStack>
 
           {/* Profile Settings */}
-          <SettingGroup title="Profile">
+          <SettingGroup title={t('settingsExtended.profile')}>
             <SettingItem
-              title="Country"
+              title={t('settingsExtended.country')}
               value={countries.find(c => c.code === country)?.name}
               onClick={() => setShowCountryModal(true)}
             />
             <SettingItem
-              title="Currency"
+              title={t('settings.currency')}
               value={currencies.find(c => c.code === currency)?.name}
               onClick={() => setShowCurrencyModal(true)}
             />
             <SettingItem
-              title="Shipping Addresses"
-              description="Manage your delivery addresses"
+              title={t('settingsExtended.shippingAddresses')}
+              description={t('settingsExtended.manageAddresses')}
               onClick={() => router.push('/settings/addresses')}
             />
             <SettingItem
-              title="Blocked Users"
-              description="Manage blocked accounts"
+              title={t('settingsExtended.blockedUsers')}
+              description={t('settingsExtended.manageBlocked')}
               onClick={() => router.push('/settings/blocked')}
             />
           </SettingGroup>
 
           {/* Notifications */}
-          <SettingGroup title="Notifications">
+          <SettingGroup title={t('settings.notifications')}>
             <SettingItem
-              title="Push Notifications"
-              description="Receive push notifications for orders and messages"
+              title={t('settingsExtended.pushNotifications')}
+              description={t('settingsExtended.pushDescription')}
               toggle
               toggleValue={pushNotifications}
               onToggle={setPushNotifications}
             />
             <SettingItem
-              title="Email Notifications"
-              description="Receive email updates"
+              title={t('settingsExtended.emailNotifications')}
+              description={t('settingsExtended.emailDescription')}
               toggle
               toggleValue={emailNotifications}
               onToggle={setEmailNotifications}
@@ -240,47 +243,53 @@ export default function SettingsPage() {
           </SettingGroup>
 
           {/* Store Settings */}
-          <SettingGroup title="Store">
+          <SettingGroup title={t('settingsExtended.store')}>
             <SettingItem
-              title="Private Store"
-              description="Only approved users can view your listings"
+              title={t('settingsExtended.privateStore')}
+              description={t('settingsExtended.privateStoreDesc')}
               toggle
               toggleValue={isPrivateStore}
               onToggle={setIsPrivateStore}
             />
             <SettingItem
-              title="Store Policies"
-              description="Return policy, terms & conditions"
+              title={t('settingsExtended.storePolicies')}
+              description={t('settingsExtended.storePoliciesDesc')}
               onClick={() => router.push('/settings/policies')}
             />
             <SettingItem
-              title="Moderators"
-              description="Manage dispute moderators"
+              title={t('settingsExtended.moderators')}
+              description={t('settingsExtended.moderatorsDesc')}
               onClick={() => router.push('/settings/moderators')}
             />
             <SettingItem
-              title="Accepted Cryptocurrencies"
-              value={`${enabledCoinsCount} selected`}
+              title={t('settingsExtended.acceptedCryptocurrencies')}
+              value={t('settingsExtended.selected', { count: enabledCoinsCount })}
               onClick={() => setShowCoinsModal(true)}
             />
             <SettingItem
-              title="Shipping Options"
-              description="Configure shipping methods and prices"
+              title={t('settingsExtended.shippingOptions')}
+              description={t('settingsExtended.shippingOptionsDesc')}
               onClick={() => router.push('/settings/shipping')}
             />
           </SettingGroup>
 
           {/* Appearance */}
-          <SettingGroup title="Appearance">
+          <SettingGroup title={t('settings.appearance')}>
             <SettingItem
-              title="Theme"
+              title={t('settings.theme')}
               description={THEME_INFO[theme]?.displayName || 'Classic'}
               value={THEME_INFO[theme]?.icon || '🌊'}
               onClick={() => setShowThemeModal(true)}
             />
             <SettingItem
-              title="Dark Mode"
-              description={mode === 'system' ? 'Following system' : isDark ? 'Enabled' : 'Disabled'}
+              title={t('settings.darkMode')}
+              description={
+                mode === 'system'
+                  ? t('settingsExtended.followingSystem')
+                  : isDark
+                    ? t('settingsExtended.enabled')
+                    : t('settingsExtended.disabled')
+              }
               toggle
               toggleValue={isDark}
               onToggle={value => setMode(value ? 'dark' : 'light')}
@@ -288,54 +297,62 @@ export default function SettingsPage() {
           </SettingGroup>
 
           {/* Advanced */}
-          <SettingGroup title="Advanced">
+          <SettingGroup title={t('settingsExtended.advanced')}>
             <SettingItem
-              title="Analytics"
-              description="Help improve the app by sharing anonymous usage data"
+              title={t('settingsExtended.analytics')}
+              description={t('settingsExtended.analyticsDesc')}
               toggle
               toggleValue={analytics}
               onToggle={setAnalytics}
             />
             <SettingItem
-              title="Backup Wallet"
-              description="Save your wallet seed phrase"
+              title={t('settingsExtended.backupWallet')}
+              description={t('settingsExtended.backupWalletDesc')}
               onClick={handleBackup}
             />
             <SettingItem
-              title="Backup Profile"
-              description="Export your profile data"
+              title={t('settingsExtended.backupProfile')}
+              description={t('settingsExtended.backupProfileDesc')}
               onClick={() => router.push('/settings/backup')}
             />
             <SettingItem
-              title="Restore Profile"
-              description="Import profile from backup"
+              title={t('settingsExtended.restoreProfile')}
+              description={t('settingsExtended.restoreProfileDesc')}
               onClick={() => setShowRestoreDialog(true)}
             />
             <SettingItem
-              title="Resync Transactions"
-              description="Resynchronize blockchain transactions"
+              title={t('settingsExtended.resyncTransactions')}
+              description={t('settingsExtended.resyncDesc')}
               onClick={() => router.push('/settings/resync')}
             />
             <SettingItem
-              title="Server Logs"
-              description="View application logs"
+              title={t('settingsExtended.serverLogs')}
+              description={t('settingsExtended.serverLogsDesc')}
               onClick={() => router.push('/settings/logs')}
             />
           </SettingGroup>
 
           {/* Version & Logout */}
-          <SettingGroup title="About">
-            <SettingItem title="Version" value="1.0.0 (Build 123)" onClick={() => {}} />
+          <SettingGroup title={t('settings.about')}>
             <SettingItem
-              title="Check for Updates"
+              title={t('settings.version')}
+              value="1.0.0 (Build 123)"
+              onClick={() => {}}
+            />
+            <SettingItem
+              title={t('settingsExtended.checkForUpdates')}
               onClick={() =>
                 toast({
-                  title: 'Up to Date',
-                  description: 'You are on the latest version!',
+                  title: t('settingsExtended.upToDate'),
+                  description: t('settingsExtended.latestVersion'),
                 })
               }
             />
-            <SettingItem title="Log Out" danger onClick={() => setShowLogoutDialog(true)} />
+            <SettingItem
+              title={t('settings.logout')}
+              danger
+              onClick={() => setShowLogoutDialog(true)}
+            />
           </SettingGroup>
         </Container>
       </main>
@@ -344,7 +361,7 @@ export default function SettingsPage() {
       <Dialog open={showCountryModal} onOpenChange={setShowCountryModal}>
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Select Country</DialogTitle>
+            <DialogTitle>{t('settingsExtended.selectCountry')}</DialogTitle>
           </DialogHeader>
           <ScrollArea className="flex-1 -mx-6 px-6">
             {countries.map(c => (
@@ -378,7 +395,7 @@ export default function SettingsPage() {
       <Dialog open={showCurrencyModal} onOpenChange={setShowCurrencyModal}>
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Select Currency</DialogTitle>
+            <DialogTitle>{t('settingsExtended.selectCurrency')}</DialogTitle>
           </DialogHeader>
           <ScrollArea className="flex-1 -mx-6 px-6">
             {currencies.map(c => (
@@ -414,7 +431,7 @@ export default function SettingsPage() {
       <Dialog open={showThemeModal} onOpenChange={setShowThemeModal}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Choose Theme</DialogTitle>
+            <DialogTitle>{t('settings.chooseTheme')}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 mb-6">
             {themes.map(t => (
@@ -438,12 +455,14 @@ export default function SettingsPage() {
             ))}
           </div>
           <div className="border-t border-border pt-4">
-            <h3 className="text-sm font-medium text-text-secondary mb-3">Display Mode</h3>
+            <h3 className="text-sm font-medium text-text-secondary mb-3">
+              {t('settings.displayMode')}
+            </h3>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { value: 'light', label: 'Light', icon: '☀️' },
-                { value: 'dark', label: 'Dark', icon: '🌙' },
-                { value: 'system', label: 'System', icon: '💻' },
+                { value: 'light', label: t('settingsExtended.light'), icon: '☀️' },
+                { value: 'dark', label: t('settingsExtended.dark'), icon: '🌙' },
+                { value: 'system', label: t('settings.system'), icon: '💻' },
               ].map(option => (
                 <button
                   key={option.value}
@@ -461,7 +480,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <Button fullWidth className="mt-4" onClick={() => setShowThemeModal(false)}>
-            Done
+            {t('settingsExtended.done')}
           </Button>
         </DialogContent>
       </Dialog>
@@ -470,7 +489,7 @@ export default function SettingsPage() {
       <Dialog open={showCoinsModal} onOpenChange={setShowCoinsModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Accepted Cryptocurrencies</DialogTitle>
+            <DialogTitle>{t('settingsExtended.acceptedCryptocurrencies')}</DialogTitle>
           </DialogHeader>
           <VStack gap="sm">
             {coins.map(coin => (
@@ -492,7 +511,7 @@ export default function SettingsPage() {
             ))}
           </VStack>
           <Button fullWidth className="mt-4" onClick={() => setShowCoinsModal(false)}>
-            Done
+            {t('settingsExtended.done')}
           </Button>
         </DialogContent>
       </Dialog>
@@ -501,15 +520,16 @@ export default function SettingsPage() {
       <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Restore Profile</AlertDialogTitle>
+            <AlertDialogTitle>{t('settingsExtended.restoreConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to restore? Make sure you have a backup first. This action may
-              overwrite your current profile data.
+              {t('settingsExtended.restoreConfirmDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestoreConfirm}>Continue</AlertDialogAction>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestoreConfirm}>
+              {t('settingsExtended.continue')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -518,15 +538,16 @@ export default function SettingsPage() {
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Log Out</AlertDialogTitle>
+            <AlertDialogTitle>{t('settingsExtended.logoutConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to log out? You will need to sign in again to access your
-              account.
+              {t('settingsExtended.logoutConfirmDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogoutConfirm}>Log Out</AlertDialogAction>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogoutConfirm}>
+              {t('settings.logout')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

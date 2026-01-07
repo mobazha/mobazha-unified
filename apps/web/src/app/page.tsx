@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
+import { useI18n } from '@mobazha/core';
 
 // Mock data for demo
 const trendingProducts = [
@@ -144,6 +145,15 @@ const featuredProducts = [
 ];
 
 export default function HomePage() {
+  const { t } = useI18n();
+
+  const categories = [
+    { name: t('homeExtended.electronics'), icon: '💻', color: 'from-blue-500 to-cyan-500' },
+    { name: t('homeExtended.digitalGoods'), icon: '📱', color: 'from-purple-500 to-pink-500' },
+    { name: t('homeExtended.services'), icon: '🛠️', color: 'from-orange-500 to-red-500' },
+    { name: t('homeExtended.cryptoOtc'), icon: '₿', color: 'from-amber-500 to-yellow-500' },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Header />
@@ -152,16 +162,16 @@ export default function HomePage() {
         <Hero />
 
         <ProductSection
-          title="Trending Now"
-          subtitle="Most popular products this week"
+          title={t('homeExtended.trendingNow')}
+          subtitle={t('homeExtended.trendingSubtitle')}
           products={trendingProducts}
           viewAllHref="/market?sort=trending"
         />
 
         <div className="bg-white dark:bg-slate-800">
           <ProductSection
-            title="Featured & Services"
-            subtitle="Handpicked products and services"
+            title={t('homeExtended.featuredServices')}
+            subtitle={t('homeExtended.featuredSubtitle')}
             products={featuredProducts}
             viewAllHref="/market?category=featured"
           />
@@ -171,15 +181,10 @@ export default function HomePage() {
         <section className="py-12 lg:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-8">
-              Browse Categories
+              {t('homeExtended.browseCategories')}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { name: 'Electronics', icon: '💻', color: 'from-blue-500 to-cyan-500' },
-                { name: 'Digital Goods', icon: '📱', color: 'from-purple-500 to-pink-500' },
-                { name: 'Services', icon: '🛠️', color: 'from-orange-500 to-red-500' },
-                { name: 'Crypto OTC', icon: '₿', color: 'from-amber-500 to-yellow-500' },
-              ].map(category => (
+              {categories.map(category => (
                 <a
                   key={category.name}
                   href={`/market?category=${category.name.toLowerCase()}`}

@@ -3,31 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Container, Grid, HStack, VStack } from '@mobazha/ui';
-
-const footerLinks = {
-  marketplace: [
-    { label: 'Browse Products', href: '/marketplace' },
-    { label: 'Categories', href: '/categories' },
-    { label: 'Featured Stores', href: '/stores' },
-    { label: 'Start Selling', href: '/sell' },
-  ],
-  resources: [
-    { label: 'Getting Started', href: '/docs/getting-started' },
-    { label: 'Documentation', href: '/docs' },
-    { label: 'API', href: '/docs/api' },
-    { label: 'FAQ', href: '/faq' },
-  ],
-  company: [
-    { label: 'About', href: '/about' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Careers', href: '/careers' },
-    { label: 'Contact', href: '/contact' },
-  ],
-  legal: [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-  ],
-};
+import { useI18n } from '@mobazha/core';
 
 const socialLinks = [
   {
@@ -64,6 +40,33 @@ const socialLinks = [
 ];
 
 export const Footer: React.FC = () => {
+  const { t } = useI18n();
+
+  const footerLinks = {
+    marketplace: [
+      { label: t('footer.browseProducts'), href: '/marketplace' },
+      { label: t('footer.categories'), href: '/search' },
+      { label: t('footer.findModerators'), href: '/moderators' },
+      { label: t('footer.startSelling'), href: '/listing/new' },
+    ],
+    resources: [
+      { label: t('footer.gettingStarted'), href: '/docs/getting-started' },
+      { label: t('footer.documentation'), href: '/docs' },
+      { label: t('footer.api'), href: '/docs/api' },
+      { label: t('footer.faq'), href: '/faq' },
+    ],
+    company: [
+      { label: t('footer.about'), href: '/about' },
+      { label: t('footer.blog'), href: '/blog' },
+      { label: t('footer.careers'), href: '/careers' },
+      { label: t('footer.contact'), href: '/contact' },
+    ],
+    legal: [
+      { label: t('settings.privacyPolicy'), href: '/privacy' },
+      { label: t('settings.termsOfService'), href: '/terms' },
+    ],
+  };
+
   return (
     <footer className="hidden md:block bg-background-alt border-t border-border pt-16 pb-8">
       <Container size="xl">
@@ -77,9 +80,7 @@ export const Footer: React.FC = () => {
               </div>
               <span className="font-bold text-xl text-text-primary">Mobazha</span>
             </Link>
-            <p className="text-sm text-text-secondary mb-4">
-              The decentralized marketplace for the future of commerce.
-            </p>
+            <p className="text-sm text-text-secondary mb-4">{t('footer.tagline')}</p>
             <HStack gap="sm">
               {socialLinks.map(social => (
                 <a
@@ -98,10 +99,10 @@ export const Footer: React.FC = () => {
 
           {/* Links */}
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-text-primary mb-2">Marketplace</h4>
+            <h4 className="font-semibold text-text-primary mb-2">{t('footer.marketplace')}</h4>
             {footerLinks.marketplace.map(link => (
               <Link
-                key={link.href}
+                key={link.label}
                 href={link.href}
                 className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
@@ -111,10 +112,10 @@ export const Footer: React.FC = () => {
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-text-primary mb-2">Resources</h4>
+            <h4 className="font-semibold text-text-primary mb-2">{t('footer.resources')}</h4>
             {footerLinks.resources.map(link => (
               <Link
-                key={link.href}
+                key={link.label}
                 href={link.href}
                 className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
@@ -124,10 +125,10 @@ export const Footer: React.FC = () => {
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-text-primary mb-2">Company</h4>
+            <h4 className="font-semibold text-text-primary mb-2">{t('footer.company')}</h4>
             {footerLinks.company.map(link => (
               <Link
-                key={link.href}
+                key={link.label}
                 href={link.href}
                 className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
@@ -140,12 +141,12 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-text-muted">
-            © {new Date().getFullYear()} Mobazha. All rights reserved.
+            © {new Date().getFullYear()} Mobazha. {t('footer.allRightsReserved')}
           </p>
           <HStack gap="md">
             {footerLinks.legal.map(link => (
               <Link
-                key={link.href}
+                key={link.label}
                 href={link.href}
                 className="text-sm text-text-muted hover:text-primary transition-colors"
               >
