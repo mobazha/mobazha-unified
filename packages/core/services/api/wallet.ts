@@ -156,3 +156,132 @@ export async function restoreWallet(
   const url = `${getGatewayUrl()}/wallet/restore`;
   return post(url, { mnemonic }, getAuthHeaders(username, password));
 }
+
+// ========== 收款地址管理 ==========
+
+/**
+ * 收款地址信息
+ */
+export interface ReceivingAddress {
+  coin: CryptoType;
+  address: string;
+  label?: string;
+  isExternal: boolean;
+  createdAt?: string;
+}
+
+/**
+ * 获取所有收款地址
+ */
+export async function getReceivingAddresses(
+  username?: string,
+  password?: string
+): Promise<ReceivingAddress[]> {
+  const url = `${getGatewayUrl()}/ob/receiveaddresses`;
+  return safeRequest<ReceivingAddress[]>(url, { headers: getAuthHeaders(username, password) }, []);
+}
+
+/**
+ * 设置收款地址（外部钱包）
+ */
+export async function setReceivingAddress(
+  coin: CryptoType,
+  address: string,
+  label?: string,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const url = `${getGatewayUrl()}/ob/receiveaddress`;
+  return post<{ success: boolean; error?: string }>(
+    url,
+    { coin, address, label },
+    getAuthHeaders(username, password)
+  );
+}
+
+/**
+ * 删除外部收款地址
+ */
+export async function removeReceivingAddress(
+  coin: CryptoType,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const url = `${getGatewayUrl()}/ob/receiveaddress/${coin}`;
+  // 使用 DELETE 方法
+  return safeRequest<{ success: boolean; error?: string }>(
+    url,
+    { method: 'DELETE', headers: getAuthHeaders(username, password) },
+    { success: false }
+  );
+}
+
+/**
+ * 获取特定币种的收款地址
+ */
+export async function getReceivingAddress(
+  coin: CryptoType,
+  username?: string,
+  password?: string
+): Promise<ReceivingAddress | null> {
+  const url = `${getGatewayUrl()}/ob/receiveaddress/${coin}`;
+  try {
+    return await get<ReceivingAddress>(url, getAuthHeaders(username, password));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 验证地址格式
+ */
+export async function validateAddress(
+  coin: CryptoType,
+  address: string,
+  username?: string,
+  password?: string
+): Promise<{ valid: boolean; error?: string }> {
+  const url = `${getGatewayUrl()}/wallet/validate/${coin}`;
+  try {
+    const response = await post<{ valid: boolean; error?: string }>(
+      url,
+      { address },
+      getAuthHeaders(username, password)
+    );
+    return response;
+  } catch {
+    return { valid: false, error: '验证失败' };
+  }
+}
+
+// ========== 导出 API 对象 ==========
+
+/**
+ * 钱包 API 导出对象
+ */
+export const walletApi = {
+  // 余额
+  getBalance,
+  getAllBalances,
+
+  // 地址
+  getAddress,
+  getReceivingAddresses,
+  getReceivingAddress,
+  setReceivingAddress,
+  removeReceivingAddress,
+  validateAddress,
+
+  // 交易
+  getTransactions,
+  sendTransaction,
+  estimateFee,
+
+  // 汇率
+  getExchangeRates,
+
+  // 钱包管理
+  hasWallet,
+  getMnemonic,
+  restoreWallet,
+};
