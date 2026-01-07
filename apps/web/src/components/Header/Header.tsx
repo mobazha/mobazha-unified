@@ -56,29 +56,45 @@ export const Header: React.FC = () => {
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="hidden md:flex items-center">
             <Link href="/marketplace">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-primary/10 hover:text-primary transition-colors"
+              >
                 {t('footer.marketplace')}
               </Button>
             </Link>
             <Link href="/chat">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-primary/10 hover:text-primary transition-colors"
+              >
                 {t('nav.messages')}
               </Button>
             </Link>
             <Link href="/wallet">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-primary/10 hover:text-primary transition-colors"
+              >
                 {t('nav.wallet')}
               </Button>
             </Link>
             <Link href="/cart">
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-primary/10 hover:text-primary transition-colors"
+              >
                 <ShoppingCart className="h-5 w-5" />
               </Button>
             </Link>
             <div className="w-px h-6 bg-border mx-2" />
             <LanguageSwitcher compact />
             <ThemeSwitcher compact />
-            <Link href="/profile">
+            <Link href="/profile" className="hover:opacity-80 transition-opacity">
               <Avatar name="Guest" size="sm" />
             </Link>
           </HStack>

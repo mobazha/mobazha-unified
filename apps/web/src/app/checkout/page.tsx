@@ -241,13 +241,13 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Header />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Container size="xl">
           {/* Page Header */}
-          <HStack gap="md" align="center" className="mb-8">
+          <HStack gap="sm" align="center" className="mb-4 sm:mb-8">
             <Link
               href="/cart"
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors touch-feedback"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -258,16 +258,18 @@ export default function CheckoutPage() {
                 />
               </svg>
             </Link>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Checkout</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              Checkout
+            </h1>
           </HStack>
 
           {/* Progress Steps */}
-          <div className="mb-8 overflow-x-hidden">
-            <div className="flex justify-center items-center gap-2 sm:gap-4 px-2">
+          <div className="mb-4 sm:mb-8 overflow-x-hidden">
+            <div className="flex justify-center items-center gap-1.5 sm:gap-4 px-2">
               {['shipping', 'payment', 'confirm'].map((s, i) => (
                 <div key={s} className="flex items-center gap-1 sm:gap-2">
                   <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium flex-shrink-0 ${
+                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-medium flex-shrink-0 ${
                       step === s
                         ? 'bg-emerald-500 text-white'
                         : i < ['shipping', 'payment', 'confirm'].indexOf(step)
@@ -278,40 +280,40 @@ export default function CheckoutPage() {
                     {i + 1}
                   </div>
                   <span
-                    className={`text-xs sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}
+                    className={`text-[10px] sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}
                   >
                     {s}
                   </span>
                   {i < 2 && (
-                    <div className="w-6 sm:w-12 h-0.5 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+                    <div className="w-4 sm:w-12 h-0.5 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
                   )}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Wallet Connection */}
               <Card>
-                <CardContent className="p-6">
-                  <HStack justify="between" align="center" className="mb-4">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                <CardContent className="p-4 sm:p-6">
+                  <HStack justify="between" align="center" className="mb-3 sm:mb-4">
+                    <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                       Connect Wallet
                     </h2>
                     {isConnected && (
-                      <Button variant="ghost" size="sm" onClick={disconnect}>
+                      <Button variant="ghost" size="sm" onClick={disconnect} className="text-xs">
                         Disconnect
                       </Button>
                     )}
                   </HStack>
 
                   {!isConnected ? (
-                    <VStack gap="md" align="center" className="py-6">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
+                    <VStack gap="sm" align="center" className="py-4 sm:py-6">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
                         <svg
-                          className="w-8 h-8 text-white"
+                          className="w-6 h-6 sm:w-8 sm:h-8 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -324,34 +326,39 @@ export default function CheckoutPage() {
                           />
                         </svg>
                       </div>
-                      <p className="text-slate-600 dark:text-slate-400 text-center max-w-sm">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-sm">
                         Connect your external wallet (MetaMask, Trust Wallet, etc.) to pay with
                         cryptocurrency
                       </p>
-                      <Button onClick={handleConnect} disabled={isConnecting} size="lg">
+                      <Button
+                        onClick={handleConnect}
+                        disabled={isConnecting}
+                        size="default"
+                        className="touch-feedback"
+                      >
                         {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                       </Button>
                     </VStack>
                   ) : (
-                    <VStack gap="md">
+                    <VStack gap="sm">
                       {/* Connected Wallet Info */}
-                      <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                      <div className="p-3 sm:p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
                         <HStack justify="between" align="center">
-                          <HStack gap="md" align="center">
-                            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
+                          <HStack gap="sm" align="center">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">
                               {walletInfo?.provider?.[0] || 'W'}
                             </div>
                             <div>
-                              <p className="font-medium text-slate-900 dark:text-white">
+                              <p className="font-medium text-slate-900 dark:text-white text-sm">
                                 {walletInfo?.provider || 'Wallet'}
                               </p>
-                              <p className="text-sm text-slate-500 font-mono">
+                              <p className="text-xs text-slate-500 font-mono">
                                 {walletInfo?.address && shortenAddress(walletInfo.address)}
                               </p>
                             </div>
                           </HStack>
                           <div className="text-right">
-                            <p className="font-bold text-slate-900 dark:text-white">
+                            <p className="font-bold text-slate-900 dark:text-white text-sm">
                               {parseFloat(walletInfo?.balance || '0').toFixed(4)} {nativeSymbol}
                             </p>
                           </div>
@@ -360,23 +367,25 @@ export default function CheckoutPage() {
 
                       {/* Chain Selection */}
                       <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                           Select Network
                         </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                           {availableChains.map(chain => (
                             <button
                               key={chain.id}
                               onClick={() => handleSwitchChain(chain.id)}
-                              className={`p-3 rounded-lg border-2 text-left transition-all ${
+                              className={`p-2 sm:p-3 rounded-md sm:rounded-lg border-2 text-left transition-all touch-feedback ${
                                 selectedChain === chain.id
                                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                               }`}
                             >
-                              <HStack gap="sm" align="center">
-                                <span className="text-xl">{getChainIcon(chain.id)}</span>
-                                <span className="font-medium text-slate-900 dark:text-white text-sm">
+                              <HStack gap="xs" align="center">
+                                <span className="text-base sm:text-xl">
+                                  {getChainIcon(chain.id)}
+                                </span>
+                                <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm truncate">
                                   {chain.shortName}
                                 </span>
                               </HStack>
@@ -391,26 +400,27 @@ export default function CheckoutPage() {
 
               {/* Shipping Address */}
               <Card>
-                <CardContent className="p-6">
-                  <HStack justify="between" align="center" className="mb-4">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                <CardContent className="p-4 sm:p-6">
+                  <HStack justify="between" align="center" className="mb-3 sm:mb-4">
+                    <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                       Shipping Address
                     </h2>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowAddressForm(!showAddressForm)}
+                      className="text-xs"
                     >
                       + Add New
                     </Button>
                   </HStack>
 
-                  <VStack gap="md">
+                  <VStack gap="sm">
                     {mockAddresses.map(address => (
                       <button
                         key={address.id}
                         onClick={() => setSelectedAddress(address.id)}
-                        className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                        className={`w-full p-3 sm:p-4 rounded-md sm:rounded-lg border-2 text-left transition-all touch-feedback ${
                           selectedAddress === address.id
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                             : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
@@ -418,29 +428,29 @@ export default function CheckoutPage() {
                       >
                         <HStack justify="between" align="start">
                           <div>
-                            <HStack gap="sm" align="center" className="mb-1">
-                              <span className="font-medium text-slate-900 dark:text-white">
+                            <HStack gap="xs" align="center" className="mb-0.5">
+                              <span className="font-medium text-slate-900 dark:text-white text-sm">
                                 {address.name}
                               </span>
                               {address.isDefault && (
-                                <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded">
+                                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">
                                   Default
                                 </span>
                               )}
                             </HStack>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
                               {address.street}
                             </p>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
                               {address.city}, {address.state} {address.postalCode}
                             </p>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
                               {address.country}
                             </p>
-                            <p className="text-slate-500 text-sm mt-1">{address.phone}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">{address.phone}</p>
                           </div>
                           <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                               selectedAddress === address.id
                                 ? 'border-emerald-500 bg-emerald-500'
                                 : 'border-slate-300 dark:border-slate-600'
@@ -469,41 +479,41 @@ export default function CheckoutPage() {
 
               {/* Moderator Selection */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                <CardContent className="p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1.5">
                     Select Moderator
                   </h2>
-                  <p className="text-sm text-slate-500 mb-4">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4">
                     A moderator helps resolve disputes between buyers and sellers. Choose one to
                     enable escrow protection.
                   </p>
 
-                  <VStack gap="md">
+                  <VStack gap="sm">
                     {mockModerators.map(moderator => (
                       <button
                         key={moderator.id}
                         onClick={() => setSelectedModerator(moderator.id)}
-                        className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                        className={`w-full p-3 sm:p-4 rounded-md sm:rounded-lg border-2 text-left transition-all touch-feedback ${
                           selectedModerator === moderator.id
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                             : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                         }`}
                       >
                         <HStack justify="between" align="center">
-                          <HStack gap="md" align="center">
+                          <HStack gap="sm" align="center">
                             <img
                               src={moderator.avatar}
                               alt={moderator.name}
-                              className="w-12 h-12 rounded-full bg-slate-200"
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-200"
                             />
                             <div>
-                              <HStack gap="sm" align="center">
-                                <span className="font-medium text-slate-900 dark:text-white">
+                              <HStack gap="xs" align="center">
+                                <span className="font-medium text-slate-900 dark:text-white text-sm">
                                   {moderator.name}
                                 </span>
                                 {moderator.verified && (
                                   <svg
-                                    className="w-4 h-4 text-blue-500"
+                                    className="w-3.5 h-3.5 text-blue-500"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                   >
@@ -515,18 +525,18 @@ export default function CheckoutPage() {
                                   </svg>
                                 )}
                               </HStack>
-                              <HStack gap="md" className="mt-1">
-                                <span className="text-sm text-slate-500">
+                              <HStack gap="sm" className="mt-0.5">
+                                <span className="text-xs text-slate-500">
                                   Fee: {moderator.fee}%
                                 </span>
-                                <span className="text-sm text-slate-500">
+                                <span className="text-xs text-slate-500">
                                   ⭐ {moderator.rating}
                                 </span>
                               </HStack>
                             </div>
                           </HStack>
                           <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                               selectedModerator === moderator.id
                                 ? 'border-emerald-500 bg-emerald-500'
                                 : 'border-slate-300 dark:border-slate-600'
@@ -552,7 +562,7 @@ export default function CheckoutPage() {
 
                     <Link
                       href="/moderators"
-                      className="text-sm text-emerald-600 hover:text-emerald-700 text-center"
+                      className="text-xs sm:text-sm text-emerald-600 hover:text-emerald-700 text-center"
                     >
                       Browse all moderators →
                     </Link>
@@ -562,15 +572,15 @@ export default function CheckoutPage() {
 
               {/* Order Note */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                <CardContent className="p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3">
                     Order Note (Optional)
                   </h2>
                   <textarea
                     value={orderNote}
                     onChange={e => setOrderNote(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                    className="w-full px-3 py-2 rounded-md sm:rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
                     placeholder="Add a note for the seller..."
                   />
                 </CardContent>
@@ -578,64 +588,72 @@ export default function CheckoutPage() {
             </div>
 
             {/* Order Summary */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <Card className="sticky top-4">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                <CardContent className="p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3 sm:mb-4">
                     Order Summary
                   </h2>
 
                   {/* Items */}
-                  <VStack gap="md" className="mb-6">
+                  <VStack gap="sm" className="mb-4 sm:mb-6">
                     {mockItems.map(item => (
                       <HStack key={item.id} gap="sm" align="start">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-md sm:rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
                           <img src={item.image} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white line-clamp-2">
+                          <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white line-clamp-2">
                             {item.title}
                           </p>
-                          <p className="text-sm text-slate-500">Qty: {item.quantity}</p>
+                          <p className="text-xs text-slate-500">Qty: {item.quantity}</p>
                         </div>
-                        <p className="font-medium text-slate-900 dark:text-white">
+                        <p className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
                           ${(item.price * item.quantity).toFixed(2)}
                         </p>
                       </HStack>
                     ))}
                   </VStack>
 
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3">
                     <HStack justify="between">
-                      <span className="text-slate-600 dark:text-slate-400">Subtotal</span>
-                      <span className="font-medium text-slate-900 dark:text-white">
+                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        Subtotal
+                      </span>
+                      <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
                         ${subtotal.toFixed(2)}
                       </span>
                     </HStack>
 
                     <HStack justify="between">
-                      <span className="text-slate-600 dark:text-slate-400">Shipping</span>
-                      <span className="font-medium text-emerald-600">Free</span>
+                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        Shipping
+                      </span>
+                      <span className="font-medium text-emerald-600 text-xs sm:text-sm">Free</span>
                     </HStack>
 
                     {selectedModerator && (
                       <HStack justify="between">
-                        <span className="text-slate-600 dark:text-slate-400">Moderator Fee</span>
-                        <span className="font-medium text-slate-900 dark:text-white">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                          Moderator Fee
+                        </span>
+                        <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
                           ${moderatorFee.toFixed(2)}
                         </span>
                       </HStack>
                     )}
 
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-2 sm:pt-3">
                       <HStack justify="between">
-                        <span className="text-lg font-semibold text-slate-900 dark:text-white">
+                        <span className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                           Total
                         </span>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+                          <p className="text-lg sm:text-xl font-bold text-emerald-600">
+                            ${total.toFixed(2)}
+                          </p>
                           {isConnected && (
-                            <p className="text-sm text-slate-500">
+                            <p className="text-xs text-slate-500">
                               ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
                             </p>
                           )}
@@ -646,12 +664,16 @@ export default function CheckoutPage() {
 
                   {/* Payment Info */}
                   {isConnected && (
-                    <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-slate-100 dark:bg-slate-800 rounded-md sm:rounded-lg">
                       <HStack justify="between" align="center">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Pay with</span>
-                        <HStack gap="sm" align="center">
-                          <span className="text-lg">{getChainIcon(selectedChain)}</span>
-                          <span className="font-medium text-slate-900 dark:text-white">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                          Pay with
+                        </span>
+                        <HStack gap="xs" align="center">
+                          <span className="text-base sm:text-lg">
+                            {getChainIcon(selectedChain)}
+                          </span>
+                          <span className="font-medium text-slate-900 dark:text-white text-sm">
                             {currentChainInfo?.name}
                           </span>
                         </HStack>
@@ -660,8 +682,8 @@ export default function CheckoutPage() {
                   )}
 
                   <Button
-                    className="w-full mt-6"
-                    size="lg"
+                    className="w-full mt-4 sm:mt-6 touch-feedback"
+                    size="default"
                     onClick={handlePlaceOrder}
                     disabled={
                       isProcessing || !isConnected || !selectedAddress || !selectedModerator
@@ -669,7 +691,7 @@ export default function CheckoutPage() {
                   >
                     {isProcessing ? (
                       <HStack gap="sm" align="center" justify="center">
-                        <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                           <circle
                             className="opacity-25"
                             cx="12"
@@ -695,16 +717,21 @@ export default function CheckoutPage() {
 
                   {/* Warnings */}
                   {!selectedModerator && (
-                    <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                      <p className="text-sm text-amber-700 dark:text-amber-400">
+                    <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
+                      <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
                         Please select a moderator for escrow protection
                       </p>
                     </div>
                   )}
 
                   {/* Security Note */}
-                  <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500">
+                    <svg
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

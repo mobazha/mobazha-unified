@@ -1,0 +1,305 @@
+---
+description: 移动端用户体验规则 - 确保移动端体验接近原 mobazha-mobile
+globs:
+  - apps/web/src/**/*.tsx
+  - packages/ui/**/*.tsx
+alwaysApply: false
+---
+
+# 移动端用户体验规则
+
+本规则旨在确保 mobazha-unified 的移动端体验尽量接近原 mobazha-mobile，让用户能够平滑切换。
+
+## 一、设计规范对齐
+
+### 1.1 字体大小映射
+
+基于原 mobazha-mobile 的字体规范，使用以下 Tailwind 类：
+
+| 元素类型 | 原 RN 值 | Tailwind 类 | 使用场景 |
+|---------|---------|-------------|---------|
+| 大标题 | 28px | `text-[28px]` 或 `text-2xl` | Me 页面头部、重要标题 |
+| 页面标题 | 17-18px | `text-lg` | 标准页面标题 |
+| 卡片标题 | 15-16px | `text-base` / `text-[15px]` | 列表项标题、卡片标题 |
+| 正文内容 | 14-15px | `text-sm` | 主要内容、描述文字 |
+| 辅助文字 | 12-13px | `text-xs` | 次要信息、时间戳 |
+| 小标签 | 10px | `text-[10px]` | 徽章、状态标签 |
+
+```tsx
+// ✅ 正确 - 移动端使用紧凑字体
+<h1 className="text-lg font-semibold">页面标题</h1>
+<p className="text-sm">正文内容</p>
+<span className="text-xs text-muted-foreground">辅助信息</span>
+
+// ❌ 错误 - 字体过大
+<h1 className="text-2xl">页面标题</h1>
+<p className="text-base">正文内容</p>
+```
+
+### 1.2 间距映射（基于 4px 网格）
+
+原 mobazha-mobile 使用 4px 网格系统：
+
+| 原 RN 值 | Tailwind 类 | 使用场景 |
+|---------|-------------|---------|
+| 4px (xs) | `gap-1` / `p-1` | 极小间距、图标内边距 |
+| 8px (sm) | `gap-2` / `p-2` / `py-2` | 小间距、图标与文字间距 |
+| 12px (md) | `gap-3` / `p-3` / `py-3` | **标准间距、卡片内边距** |
+| 16px (lg) | `gap-4` / `p-4` / `px-4` | 页面边距、区块间距 |
+| 20px | `gap-5` / `p-5` | 大间距 |
+| 24px (xl) | `gap-6` / `p-6` | 区块分隔 |
+
+```tsx
+// ✅ 正确 - 移动端紧凑间距
+<Card className="p-3">  {/* 12px 内边距 */}
+<div className="space-y-3">  {/* 12px 间距 */}
+<div className="py-2.5">  {/* 10px 垂直内边距 */}
+
+// ❌ 错误 - 间距过大
+<Card className="p-4 space-y-4">  {/* 16px 太松散 */}
+<div className="py-4">  {/* 列表项过高 */}
+```
+
+### 1.3 组件尺寸规范
+
+| 组件 | 原版尺寸 | Tailwind 类 | 说明 |
+|-----|---------|------------|------|
+| 列表头像 | 44x44px | `w-11 h-11` | 聊天列表、用户列表 |
+| 个人头像（大） | 60x60px | `w-[60px] h-[60px]` | 个人主页、详情页 |
+| 图标按钮 | 32x32px | `w-8 h-8` | 工具栏按钮 |
+| 触摸目标最小 | 44x44pt | `min-h-11 min-w-11` | 所有可点击元素 |
+| 列表项高度 | 48-56px | `h-12` / `h-14` | 设置项、聊天列表项 |
+| 圆角（小） | 8px | `rounded-lg` | 按钮、小卡片 |
+| 圆角（中） | 12px | `rounded-xl` | 卡片、弹窗 |
+| 圆角（大） | 16px | `rounded-2xl` | 大卡片、模态框 |
+
+### 1.4 ProductCard 尺寸
+
+原版 ProductCard 计算方式：
+
+```javascript
+// 标准模式
+width: SCREEN_WIDTH * 0.47   // 约 47% 屏幕宽
+height: SCREEN_WIDTH * 0.65  // 约 65% 屏幕宽
+
+// 紧凑模式
+width: (SCREEN_WIDTH - 32) * 0.31  // 约 31%
+height: SCREEN_WIDTH * 0.38        // 约 38%
+```
+
+在 Web 端使用响应式网格：
+
+```tsx
+// 移动端 2 列网格
+<div className="grid grid-cols-2 gap-3">
+  <ProductCard compact />
+</div>
+```
+
+---
+
+## 二、交互体验规范
+
+### 2.1 动画时长和曲线
+
+原版动画规范：
+
+```css
+/* CSS 变量定义 */
+:root {
+  --animation-duration-fast: 200ms;
+  --animation-duration-normal: 250ms;
+  --animation-duration-slow: 300ms;
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+```
+
+| 交互类型 | 动画时长 | Tailwind 类 |
+|---------|---------|-------------|
+| 开关切换 | 250ms | `duration-250` |
+| 面板滑入/滑出 | 200ms | `duration-200` |
+| 列表项点击反馈 | 150ms | `duration-150` |
+| 页面切换 | 300ms | `duration-300` |
+| 颜色/透明度变化 | 200ms | `duration-200` |
+
+### 2.2 触摸反馈
+
+原版使用 `TouchableWithoutFeedback`，Web 端需要模拟类似效果：
+
+```tsx
+// 点击反馈 - 轻微缩小 + 透明度变化
+<button className="active:scale-[0.98] active:opacity-80 transition-all duration-150">
+  点击按钮
+</button>
+
+// 使用工具类
+<button className="touch-feedback">
+  点击按钮
+</button>
+
+// 列表项点击
+<div className="active:bg-muted/50 transition-colors duration-150">
+  列表项
+</div>
+```
+
+### 2.3 长按事件
+
+原版支持 `onLongPress`（500ms 延迟），Web 端实现：
+
+```tsx
+import { useLongPress } from '@/hooks/useLongPress';
+
+function Component() {
+  const longPressProps = useLongPress(() => {
+    // 长按回调
+  }, { delay: 500 });
+
+  return <div {...longPressProps}>长按我</div>;
+}
+```
+
+### 2.4 滑动手势
+
+原版使用 `PanResponder`，Web 端使用 touch events：
+
+```tsx
+// 水平滑动示例
+const handleTouchStart = (e) => {
+  setStartX(e.touches[0].clientX);
+};
+
+const handleTouchMove = (e) => {
+  const diff = startX - e.touches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    // 触发滑动动作
+  }
+};
+```
+
+### 2.5 加载状态
+
+保持与原版一致的加载体验：
+
+```tsx
+// 骨架屏
+<Skeleton className="h-11 w-11 rounded-full" />  {/* 头像骨架 */}
+<Skeleton className="h-4 w-3/4" />               {/* 文字骨架 */}
+
+// 加载指示器
+<Spinner className="w-5 h-5 animate-spin text-primary" />
+
+// 按钮加载状态
+<Button disabled className="opacity-70">
+  <Spinner className="w-4 h-4 mr-2" />
+  加载中...
+</Button>
+```
+
+---
+
+## 三、移动端检查清单
+
+在开发或审查移动端页面时，检查以下项目：
+
+### 字体和排版
+- [ ] 页面标题使用 `text-lg` (18px)，非 `text-xl` 或更大
+- [ ] 正文内容使用 `text-sm` (14px)，非 `text-base` (16px)
+- [ ] 辅助文字使用 `text-xs` (12px)
+- [ ] 标签/徽章使用 `text-[10px]` 或 `text-xs`
+
+### 间距和布局
+- [ ] 卡片内边距使用 `p-3` (12px)，非 `p-4` 或更大
+- [ ] 列表项垂直 padding 使用 `py-2.5` / `py-3`，非 `py-4`
+- [ ] 元素间距使用 `gap-2` / `gap-3`，非 `gap-4` 或更大
+- [ ] 区块间距使用 `space-y-3` / `space-y-4`
+
+### 组件尺寸
+- [ ] 列表头像使用 44px (`w-11 h-11`)
+- [ ] 详情页头像使用 60px (`w-[60px] h-[60px]`)
+- [ ] 所有触摸目标最小 44px (`min-h-11`)
+- [ ] 列表项高度合理（48-56px）
+
+### 交互反馈
+- [ ] 可点击元素有 `active:` 状态反馈
+- [ ] 使用 `touch-feedback` 工具类
+- [ ] 动画使用合适的 duration（150-300ms）
+- [ ] 页面切换有过渡动画
+
+### 信息密度
+- [ ] 一屏能显示足够的内容（类似原版）
+- [ ] 避免过大的空白区域
+- [ ] 产品网格使用 2 列布局
+
+---
+
+## 四、常见问题修复
+
+### 问题 1: 列表项过高
+
+```tsx
+// ❌ 问题
+<div className="py-4 px-4">  {/* 32px 垂直内边距，太高 */}
+
+// ✅ 修复
+<div className="py-2.5 px-4">  {/* 20px，更紧凑 */}
+```
+
+### 问题 2: 卡片内边距过大
+
+```tsx
+// ❌ 问题
+<Card className="p-4 space-y-4">
+
+// ✅ 修复
+<Card className="p-3 space-y-3">
+```
+
+### 问题 3: 字体过大
+
+```tsx
+// ❌ 问题
+<h2 className="text-xl font-semibold">标题</h2>
+<p className="text-base">内容</p>
+
+// ✅ 修复
+<h2 className="text-base font-semibold">标题</h2>
+<p className="text-sm">内容</p>
+```
+
+### 问题 4: 缺少触摸反馈
+
+```tsx
+// ❌ 问题
+<button onClick={handleClick}>点击</button>
+
+// ✅ 修复
+<button 
+  onClick={handleClick}
+  className="active:scale-[0.98] active:opacity-80 transition-all duration-150"
+>
+  点击
+</button>
+```
+
+---
+
+## 五、响应式适配
+
+移动端优先，桌面端增强：
+
+```tsx
+// 字体：移动端小，桌面端正常
+<h1 className="text-lg md:text-xl">标题</h1>
+<p className="text-sm md:text-base">内容</p>
+
+// 间距：移动端紧凑，桌面端宽松
+<Card className="p-3 md:p-4">
+
+// 网格：移动端 2 列，桌面端 4+ 列
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+```
+
+---
+
+**重要提醒**: 始终以用户体验为优先，确保移动端信息密度适中，操作流畅自然。

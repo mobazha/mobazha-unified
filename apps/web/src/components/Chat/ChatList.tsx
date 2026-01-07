@@ -44,14 +44,22 @@ export const ChatList: React.FC<ChatListProps> = ({
   return (
     <div className="h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Messages</h2>
+      <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-700">
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
+          Messages
+        </h2>
         <Input
           placeholder="Search conversations..."
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange?.(e.target.value)}
+          className="h-9 sm:h-10 text-sm"
           leftIcon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 sm:w-5 sm:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -88,29 +96,34 @@ export const ChatList: React.FC<ChatListProps> = ({
                 key={room.id}
                 href={`/chat/${room.id}`}
                 onClick={() => onRoomSelect?.(room.id)}
-                className={`flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
+                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors ${
                   activeRoomId === room.id ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                 }`}
               >
                 {/* Avatar with online status */}
                 <div className="relative flex-shrink-0">
-                  <Avatar src={room.avatar} name={room.name} size="md" />
+                  <Avatar
+                    src={room.avatar}
+                    name={room.name}
+                    size="sm"
+                    className="w-10 h-10 sm:w-11 sm:h-11"
+                  />
                   {/* Online status indicator - bottom right */}
                   {room.isOnline && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <HStack justify="between" align="center">
                     <HStack gap="xs" align="center" className="min-w-0 flex-1">
-                      <span className="font-medium text-slate-900 dark:text-white truncate">
+                      <span className="font-medium text-sm sm:text-base text-slate-900 dark:text-white truncate">
                         {room.name}
                       </span>
                       {/* Encrypted indicator - next to name */}
                       {room.isEncrypted && (
                         <svg
-                          className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"
+                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 flex-shrink-0"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                           aria-label="End-to-end encrypted"
@@ -124,17 +137,17 @@ export const ChatList: React.FC<ChatListProps> = ({
                       )}
                     </HStack>
                     {room.lastMessageTime && (
-                      <span className="text-xs text-slate-400 flex-shrink-0 ml-2">
+                      <span className="text-[10px] sm:text-xs text-slate-400 flex-shrink-0 ml-2">
                         {room.lastMessageTime}
                       </span>
                     )}
                   </HStack>
                   <HStack justify="between" align="center" className="mt-0.5">
-                    <p className="text-sm text-slate-500 truncate">
+                    <p className="text-xs sm:text-sm text-slate-500 truncate">
                       {room.lastMessage || 'No messages'}
                     </p>
                     {room.unreadCount && room.unreadCount > 0 && (
-                      <span className="flex-shrink-0 w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      <span className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 text-white text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center">
                         {room.unreadCount > 9 ? '9+' : room.unreadCount}
                       </span>
                     )}
@@ -147,9 +160,14 @@ export const ChatList: React.FC<ChatListProps> = ({
       </div>
 
       {/* New Chat Button */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700">
-        <button className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-700">
+        <button className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg transition-colors text-sm sm:text-base">
+          <svg
+            className="w-4 h-4 sm:w-5 sm:h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           New Chat

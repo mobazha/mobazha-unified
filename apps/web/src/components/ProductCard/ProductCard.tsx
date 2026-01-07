@@ -85,7 +85,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <Card
       className={cn(
-        'overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5',
+        'overflow-hidden group cursor-pointer transition-all duration-200',
+        'hover:shadow-lg hover:-translate-y-0.5',
+        'active:scale-[0.98] active:opacity-90',
         className
       )}
       onClick={onClick}
@@ -134,25 +136,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* 商品信息 */}
-      <CardContent className={cn('space-y-2', compact ? 'p-2' : 'p-3')}>
+      <CardContent className={cn('space-y-1.5 sm:space-y-2', compact ? 'p-2' : 'p-2 sm:p-3')}>
         {/* 标题 */}
         <h3
           className={cn(
-            'font-medium text-foreground line-clamp-2',
-            compact ? 'text-sm min-h-[2rem]' : 'min-h-[2.5rem]'
+            'font-medium text-foreground line-clamp-2 text-sm sm:text-base',
+            compact ? 'min-h-[2rem]' : 'min-h-[2rem] sm:min-h-[2.5rem]'
           )}
         >
           {title}
         </h3>
 
         {/* 价格 */}
-        <div className="flex items-baseline gap-2">
-          <span className={cn('font-bold text-primary', compact ? 'text-base' : 'text-lg')}>
+        <div className="flex items-baseline gap-1 sm:gap-2">
+          <span
+            className={cn(
+              'font-bold text-primary',
+              compact ? 'text-sm sm:text-base' : 'text-base sm:text-lg'
+            )}
+          >
             {currency}
             {typeof price === 'number' ? price.toFixed(2) : price}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="text-xs sm:text-sm text-muted-foreground line-through">
               {currency}
               {typeof originalPrice === 'number' ? originalPrice.toFixed(2) : originalPrice}
             </span>
@@ -161,7 +168,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* 评分 */}
         {rating !== undefined && (
-          <div className="flex items-center gap-1 text-sm">
+          <div className="flex items-center gap-1 text-xs sm:text-sm">
             <span className="text-yellow-500">★</span>
             <span className="text-muted-foreground">
               {rating.toFixed(1)}
@@ -174,22 +181,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {(vendorName || freeShipping) && (
           <div
             className={cn(
-              'flex items-center justify-between pt-2 border-t border-border',
+              'flex items-center justify-between pt-1.5 sm:pt-2 border-t border-border',
               compact && 'pt-1'
             )}
           >
             {vendorName && (
-              <div className="flex items-center gap-2 min-w-0">
-                {!compact && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="hidden sm:inline-block">
+                  {!compact && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
+                </span>
                 <span
-                  className={cn('text-muted-foreground truncate', compact ? 'text-xs' : 'text-sm')}
+                  className={cn(
+                    'text-muted-foreground truncate text-xs sm:text-sm',
+                    compact && 'text-xs'
+                  )}
                 >
                   {vendorName}
                 </span>
               </div>
             )}
             {freeShipping && (
-              <span className="text-xs text-primary font-medium flex-shrink-0">Free Shipping</span>
+              <span className="text-[10px] sm:text-xs text-primary font-medium flex-shrink-0">
+                Free Shipping
+              </span>
             )}
           </div>
         )}

@@ -16,9 +16,9 @@ export interface GridProps extends HTMLAttributes<HTMLDivElement> {
 
 const gapStyles = {
   none: 'gap-0',
-  sm: 'gap-3',
-  md: 'gap-4 sm:gap-6',
-  lg: 'gap-6 sm:gap-8',
+  sm: 'gap-2 sm:gap-3',
+  md: 'gap-3 sm:gap-4 lg:gap-6',
+  lg: 'gap-4 sm:gap-6 lg:gap-8',
 };
 
 const colsMobileStyles = {

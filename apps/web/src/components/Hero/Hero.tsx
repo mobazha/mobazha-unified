@@ -10,7 +10,7 @@ export const Hero: React.FC = () => {
   const { t } = useI18n();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-20 lg:py-32">
+    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-10 sm:py-16 lg:py-32">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div
@@ -28,13 +28,13 @@ export const Hero: React.FC = () => {
       <Container size="xl" className="relative z-10">
         <div className="text-center max-w-3xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-emerald-300 text-sm mb-6">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-emerald-300 text-xs sm:text-sm mb-4 sm:mb-6">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
             {t('hero.badge')}
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
             {t('hero.titleLine1')}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg lg:text-xl text-slate-300 mb-6 sm:mb-10 max-w-2xl mx-auto">
             {t('hero.subtitle')}
           </p>
 
@@ -66,18 +66,18 @@ export const Hero: React.FC = () => {
           </HStack>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 mt-16 pt-8 border-t border-white/10">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-16 pt-6 sm:pt-8 border-t border-white/10">
             <div>
-              <div className="text-3xl font-bold text-white">10K+</div>
-              <div className="text-sm text-slate-400">{t('hero.activeStores')}</div>
+              <div className="text-xl sm:text-3xl font-bold text-white">10K+</div>
+              <div className="text-xs sm:text-sm text-slate-400">{t('hero.activeStores')}</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-white">50K+</div>
-              <div className="text-sm text-slate-400">{t('hero.productsListed')}</div>
+              <div className="text-xl sm:text-3xl font-bold text-white">50K+</div>
+              <div className="text-xs sm:text-sm text-slate-400">{t('hero.productsListed')}</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-white">0%</div>
-              <div className="text-sm text-slate-400">{t('hero.platformFee')}</div>
+              <div className="text-xl sm:text-3xl font-bold text-white">0%</div>
+              <div className="text-xs sm:text-sm text-slate-400">{t('hero.platformFee')}</div>
             </div>
           </div>
         </div>

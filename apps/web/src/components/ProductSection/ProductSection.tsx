@@ -28,6 +28,8 @@ export interface ProductSectionProps {
   isLoading?: boolean;
   showViewAll?: boolean;
   viewAllHref?: string;
+  containerSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  titleClassName?: string;
 }
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
@@ -37,17 +39,28 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   isLoading = false,
   showViewAll = true,
   viewAllHref = '/market',
+  containerSize = 'xl',
+  titleClassName,
 }) => {
   return (
-    <section className="py-12 lg:py-16">
-      <Container size="xl">
+    <section className="py-6 sm:py-10 lg:py-16">
+      <Container size={containerSize}>
         {/* Section Header */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-4 sm:mb-8">
           <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">
+            <h2
+              className={
+                titleClassName ||
+                'text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white'
+              }
+            >
               {title}
             </h2>
-            {subtitle && <p className="mt-2 text-slate-500 dark:text-slate-400">{subtitle}</p>}
+            {subtitle && (
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500 dark:text-slate-400">
+                {subtitle}
+              </p>
+            )}
           </div>
           {showViewAll && (
             <Link href={viewAllHref}>

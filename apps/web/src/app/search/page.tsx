@@ -203,17 +203,19 @@ function SearchPageContent() {
   // User Card Component
   const UserCard = ({ user }: { user: User }) => (
     <Link href={`/store/${user.peerID}`}>
-      <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-        <CardContent className="p-4">
-          <HStack gap="md" align="start">
-            <Avatar src={user.avatar} name={user.name} size="lg" />
+      <Card className="h-full hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]">
+        <CardContent className="p-3 sm:p-4">
+          <HStack gap="sm" align="start" className="sm:gap-4">
+            <Avatar src={user.avatar} name={user.name} size="md" className="sm:w-12 sm:h-12" />
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground">{user.name}</h3>
-              {user.location && <p className="text-sm text-muted-foreground">{user.location}</p>}
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+              <h3 className="font-semibold text-foreground text-sm sm:text-base">{user.name}</h3>
+              {user.location && (
+                <p className="text-xs sm:text-sm text-muted-foreground">{user.location}</p>
+              )}
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-1 sm:mt-2">
                 {user.shortDescription}
               </p>
-              <HStack gap="md" className="mt-3 text-sm">
+              <HStack gap="sm" className="mt-2 sm:mt-3 text-xs sm:text-sm sm:gap-4">
                 <span className="text-muted-foreground">
                   {user.listingCount} {t('search.listings')}
                 </span>
@@ -235,20 +237,20 @@ function SearchPageContent() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Container size="xl">
           {/* Search Header */}
-          <form onSubmit={handleSearch} className="mb-8">
+          <form onSubmit={handleSearch} className="mb-4 sm:mb-8">
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('searchExtended.searchPlaceholder')}
-                className="w-full h-14 pl-14 pr-32 rounded-2xl border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-lg"
+                className="w-full h-11 sm:h-14 pl-10 sm:pl-14 pr-20 sm:pr-32 rounded-xl sm:rounded-2xl border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm sm:text-lg"
               />
               <svg
-                className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground"
+                className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -260,7 +262,11 @@ function SearchPageContent() {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-              <Button type="submit" size="lg" className="absolute right-2 top-1/2 -translate-y-1/2">
+              <Button
+                type="submit"
+                size="sm"
+                className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 sm:h-10 sm:px-6"
+              >
                 {t('common.search')}
               </Button>
             </div>
@@ -270,28 +276,33 @@ function SearchPageContent() {
           {!queryParam && (
             <div className="max-w-2xl mx-auto">
               <Card>
-                <CardContent className="p-6">
-                  <HStack justify="between" align="center" className="mb-4">
-                    <h2 className="text-lg font-semibold text-foreground">
+                <CardContent className="p-4 sm:p-6">
+                  <HStack justify="between" align="center" className="mb-3 sm:mb-4">
+                    <h2 className="text-base sm:text-lg font-semibold text-foreground">
                       {t('searchExtended.recentSearches')}
                     </h2>
                     {recentSearches.length > 0 && (
-                      <Button variant="ghost" size="sm" onClick={clearRecentSearches}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearRecentSearches}
+                        className="text-xs sm:text-sm"
+                      >
                         {t('searchExtended.clearAll')}
                       </Button>
                     )}
                   </HStack>
 
                   {recentSearches.length > 0 ? (
-                    <VStack gap="sm">
+                    <VStack gap="xs" className="sm:gap-2">
                       {recentSearches.map((keyword, index) => (
                         <button
                           key={index}
                           onClick={() => handleRecentSearch(keyword)}
-                          className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                          className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left"
                         >
                           <svg
-                            className="w-5 h-5 text-muted-foreground"
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -303,19 +314,19 @@ function SearchPageContent() {
                               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-foreground">{keyword}</span>
+                          <span className="text-foreground text-sm sm:text-base">{keyword}</span>
                         </button>
                       ))}
                     </VStack>
                   ) : (
-                    <p className="text-center text-muted-foreground py-8">
+                    <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm">
                       {t('empty.noRecentSearches')}
                     </p>
                   )}
 
                   {/* Popular Categories */}
-                  <div className="mt-8 pt-6 border-t border-border">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-4">
+                  <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border">
+                    <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">
                       {t('searchExtended.popularCategories')}
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -326,7 +337,7 @@ function SearchPageContent() {
                             setCategory(cat.value);
                             router.push(`/search?q=${cat.label}&category=${cat.value}`);
                           }}
-                          className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors text-sm"
+                          className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary active:scale-95 transition-all text-xs sm:text-sm"
                         >
                           {cat.label}
                         </button>
@@ -342,11 +353,11 @@ function SearchPageContent() {
           {queryParam && (
             <>
               {/* Tabs & Filters */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="flex gap-1 p-1 bg-muted rounded-lg sm:rounded-xl w-fit">
                   <button
                     onClick={() => setActiveTab('listings')}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium transition-all text-sm sm:text-base ${
                       activeTab === 'listings'
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -356,7 +367,7 @@ function SearchPageContent() {
                   </button>
                   <button
                     onClick={() => setActiveTab('users')}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium transition-all text-sm sm:text-base ${
                       activeTab === 'users'
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'

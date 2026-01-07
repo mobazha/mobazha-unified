@@ -27,7 +27,7 @@ alwaysApply: false
 | React 最佳实践 | 20% | Hooks、性能、组件设计 |
 | TypeScript | 15% | 类型安全、泛型使用、避免 any |
 | 迁移一致性 | 15% | 与原 RN 功能对齐 |
-| 响应式设计 | 10% | 断点、布局适配 |
+| 响应式设计和间距 | 10% | 断点、布局适配、内边距、元素间距 |
 | 错误处理 | 10% | try-catch、用户反馈 |
 | 测试覆盖 | 5% | 单元测试完整性 |
 
@@ -71,6 +71,32 @@ width: 375 // 应该用百分比或响应式值
 // 没有针对不同断点的布局
 ```
 
+#### UI 间距
+```tsx
+// ❌ 内边距不足 - 内容紧贴卡片边界
+<div className="rounded-lg border p-1">  // 应至少 p-4
+  <span>内容</span>
+</div>
+
+// ❌ 元素之间缺少间距
+<div className="flex items-center">
+  <Icon /><span>Text</span>  // 缺少 gap-2
+</div>
+
+// ❌ 内容直接贴边
+<Card>
+  <div>内容直接贴边</div>  // 卡片内应有 p-4
+</Card>
+
+// ✅ 正确做法
+<div className="rounded-lg border p-4">
+  <div className="flex items-center gap-2">
+    <Icon />
+    <span>Text</span>
+  </div>
+</div>
+```
+
 ### 4. 迁移一致性检查
 
 - [ ] 功能与原 RN 实现一致
@@ -78,7 +104,15 @@ width: 375 // 应该用百分比或响应式值
 - [ ] 状态管理逻辑相同
 - [ ] 错误处理方式相同
 
-### 5. 输出 Review 报告
+### 5. UI 间距检查
+
+- [ ] 卡片组件有足够内边距 (至少 `p-4`)
+- [ ] 图标和文字之间有适当间距 (`gap-2`)
+- [ ] 按钮距离边界有安全距离
+- [ ] 列表项有适当的上下/左右间距
+- [ ] 内容不紧贴卡片边界
+
+### 6. 输出 Review 报告
 
 ```markdown
 ## Code Review 报告

@@ -178,20 +178,20 @@ export default function HomePage() {
         </div>
 
         {/* Categories Section */}
-        <section className="py-12 lg:py-16">
+        <section className="py-6 sm:py-10 lg:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-8">
+            <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-8">
               {t('homeExtended.browseCategories')}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {categories.map(category => (
                 <a
                   key={category.name}
                   href={`/market?category=${category.name.toLowerCase()}`}
-                  className={`relative overflow-hidden rounded-xl p-6 bg-gradient-to-br ${category.color} text-white hover:scale-105 transition-transform`}
+                  className={`relative overflow-hidden rounded-lg sm:rounded-xl p-4 sm:p-6 bg-gradient-to-br ${category.color} text-white touch-feedback hover:scale-105 transition-transform`}
                 >
-                  <span className="text-4xl mb-2 block">{category.icon}</span>
-                  <span className="font-semibold">{category.name}</span>
+                  <span className="text-2xl sm:text-4xl mb-1 sm:mb-2 block">{category.icon}</span>
+                  <span className="font-semibold text-sm sm:text-base">{category.name}</span>
                 </a>
               ))}
             </div>
