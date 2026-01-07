@@ -65,6 +65,15 @@ export interface MatrixUser {
   isExternal?: boolean;
 }
 
+// 房间类型
+export type RoomType =
+  | 'direct' // 一对一聊天
+  | 'group' // 群组聊天
+  | 'order' // 订单讨论
+  | 'store' // 店铺社区
+  | 'moderator' // 仲裁讨论
+  | 'community'; // 社区集市
+
 // Matrix 房间信息
 export interface MatrixRoom {
   roomId: string;
@@ -77,6 +86,32 @@ export interface MatrixRoom {
   unreadCount: number;
   members: MatrixUser[];
   timestamp?: number;
+  // 扩展字段
+  roomType?: RoomType;
+  orderId?: string; // 订单讨论关联的订单 ID
+  storeId?: string; // 店铺社区关联的店铺 ID
+  moderatorId?: string; // 仲裁讨论关联的仲裁人 ID
+  metadata?: RoomMetadata;
+}
+
+// 房间元数据
+export interface RoomMetadata {
+  // 订单相关
+  orderId?: string;
+  orderState?: string;
+  buyerId?: string;
+  vendorId?: string;
+  // 店铺相关
+  storeId?: string;
+  storeName?: string;
+  storeOwner?: string;
+  // 仲裁相关
+  disputeId?: string;
+  moderatorId?: string;
+  // 通用
+  createdAt?: number;
+  updatedAt?: number;
+  customData?: Record<string, unknown>;
 }
 
 // Matrix 消息

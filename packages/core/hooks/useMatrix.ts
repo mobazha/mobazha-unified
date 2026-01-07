@@ -12,6 +12,7 @@ import type {
   MatrixMessage,
   MatrixConfig,
   InvitePolicy,
+  RoomType,
 } from '../services/matrix/types';
 
 export interface UseMatrixReturn {
@@ -43,9 +44,36 @@ export interface UseMatrixReturn {
   joinRoom: (roomIdOrAlias: string) => Promise<boolean>;
   leaveRoom: (roomId: string) => Promise<boolean>;
 
+  // 特殊房间类型
+  createOrderRoom: (
+    orderId: string,
+    participants: string[],
+    orderInfo?: { title?: string; vendorId?: string; buyerId?: string }
+  ) => Promise<string | null>;
+  getOrderRoom: (orderId: string) => Promise<MatrixRoom | null>;
+  createStoreRoom: (
+    storeId: string,
+    storeInfo: { name: string; description?: string; ownerId: string }
+  ) => Promise<string | null>;
+  getStoreRoom: (storeId: string) => Promise<MatrixRoom | null>;
+  createGroupRoom: (
+    name: string,
+    members: string[],
+    options?: { topic?: string; isEncrypted?: boolean }
+  ) => Promise<string | null>;
+  getRoomsByType: (type: RoomType) => MatrixRoom[];
+
+  // 房间管理
+  inviteToRoom: (roomId: string, userId: string) => Promise<boolean>;
+  kickFromRoom: (roomId: string, userId: string, reason?: string) => Promise<boolean>;
+  setRoomName: (roomId: string, name: string) => Promise<boolean>;
+  setRoomTopic: (roomId: string, topic: string) => Promise<boolean>;
+  markRoomAsRead: (roomId: string) => Promise<boolean>;
+
   // 消息操作
   sendMessage: (content: string) => Promise<MatrixMessage | null>;
   loadMoreMessages: () => Promise<void>;
+  sendTyping: (isTyping: boolean) => Promise<void>;
 
   // 设置
   setInvitePolicy: (policy: InvitePolicy) => void;
@@ -215,6 +243,163 @@ export function useMatrix(): UseMatrixReturn {
     messagesRef.current = allMessages;
   }, [currentRoomId]);
 
+  // 发送正在输入状态
+  const sendTyping = useCallback(
+    async (isTyping: boolean): Promise<void> => {
+      if (!currentRoomId) return;
+      await matrixClient.sendTyping(currentRoomId, isTyping);
+    },
+    [currentRoomId]
+  );
+
+  // 刷新房间列表（内部使用）
+  const refreshRoomsInternal = useCallback(async () => {
+    const roomList = await matrixClient.getRooms();
+    setRooms(roomList);
+  }, []);
+
+  // ============ 特殊房间类型 ============
+
+  // 创建订单讨论房间
+  const createOrderRoom = useCallback(
+    async (
+      orderId: string,
+      participants: string[],
+      orderInfo?: { title?: string; vendorId?: string; buyerId?: string }
+    ): Promise<string | null> => {
+      setIsLoading(true);
+      try {
+        const roomId = await matrixClient.createOrderRoom(orderId, participants, orderInfo);
+        if (roomId) {
+          await refreshRoomsInternal();
+        }
+        return roomId;
+      } catch (err) {
+        setError((err as Error).message);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [refreshRoomsInternal]
+  );
+
+  // 获取订单讨论房间
+  const getOrderRoom = useCallback(async (orderId: string): Promise<MatrixRoom | null> => {
+    return await matrixClient.getOrderRoom(orderId);
+  }, []);
+
+  // 创建店铺社区房间
+  const createStoreRoom = useCallback(
+    async (
+      storeId: string,
+      storeInfo: { name: string; description?: string; ownerId: string }
+    ): Promise<string | null> => {
+      setIsLoading(true);
+      try {
+        const roomId = await matrixClient.createStoreRoom(storeId, storeInfo);
+        if (roomId) {
+          await refreshRoomsInternal();
+        }
+        return roomId;
+      } catch (err) {
+        setError((err as Error).message);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [refreshRoomsInternal]
+  );
+
+  // 获取店铺社区房间
+  const getStoreRoom = useCallback(async (storeId: string): Promise<MatrixRoom | null> => {
+    return await matrixClient.getStoreRoom(storeId);
+  }, []);
+
+  // 创建群组聊天
+  const createGroupRoom = useCallback(
+    async (
+      name: string,
+      members: string[],
+      options?: { topic?: string; isEncrypted?: boolean }
+    ): Promise<string | null> => {
+      setIsLoading(true);
+      try {
+        const roomId = await matrixClient.createGroupRoom(name, members, options);
+        if (roomId) {
+          await refreshRoomsInternal();
+        }
+        return roomId;
+      } catch (err) {
+        setError((err as Error).message);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [refreshRoomsInternal]
+  );
+
+  // 按类型获取房间
+  const getRoomsByType = useCallback(
+    (type: RoomType): MatrixRoom[] => {
+      if (type === 'direct') {
+        return rooms.filter(r => r.isDirect);
+      }
+      return rooms.filter(r => r.roomType === type);
+    },
+    [rooms]
+  );
+
+  // ============ 房间管理 ============
+
+  // 邀请用户到房间
+  const inviteToRoom = useCallback(async (roomId: string, targetUserId: string): Promise<boolean> => {
+    return await matrixClient.inviteToRoom(roomId, targetUserId);
+  }, []);
+
+  // 踢出用户
+  const kickFromRoom = useCallback(
+    async (roomId: string, targetUserId: string, reason?: string): Promise<boolean> => {
+      return await matrixClient.kickFromRoom(roomId, targetUserId, reason);
+    },
+    []
+  );
+
+  // 设置房间名称
+  const setRoomName = useCallback(
+    async (roomId: string, name: string): Promise<boolean> => {
+      const success = await matrixClient.setRoomName(roomId, name);
+      if (success) {
+        await refreshRoomsInternal();
+      }
+      return success;
+    },
+    [refreshRoomsInternal]
+  );
+
+  // 设置房间主题
+  const setRoomTopic = useCallback(
+    async (roomId: string, topic: string): Promise<boolean> => {
+      const success = await matrixClient.setRoomTopic(roomId, topic);
+      if (success) {
+        await refreshRoomsInternal();
+      }
+      return success;
+    },
+    [refreshRoomsInternal]
+  );
+
+  // 标记房间已读
+  const markRoomAsRead = useCallback(async (roomId: string): Promise<boolean> => {
+    const success = await matrixClient.markRoomAsRead(roomId);
+    if (success) {
+      setRooms(prev => prev.map(r => (r.roomId === roomId ? { ...r, unreadCount: 0 } : r)));
+    }
+    return success;
+  }, []);
+
   // 设置邀请策略
   const setInvitePolicy = useCallback((policy: InvitePolicy) => {
     matrixClient.setInvitePolicy(policy);
@@ -225,17 +410,11 @@ export function useMatrix(): UseMatrixReturn {
     return matrixClient.getInvitePolicy();
   }, []);
 
-  // 刷新房间列表
-  const refreshRooms = useCallback(async () => {
-    const roomList = await matrixClient.getRooms();
-    setRooms(roomList);
-  }, []);
-
   // 事件监听
   useEffect(() => {
     const unsubConnected = matrixEvents.on(MATRIX_EVENTS.CONNECTED, () => {
       setIsConnected(true);
-      refreshRooms();
+      void refreshRoomsInternal();
     });
 
     const unsubDisconnected = matrixEvents.on(MATRIX_EVENTS.DISCONNECTED, () => {
@@ -278,11 +457,11 @@ export function useMatrix(): UseMatrixReturn {
     });
 
     const unsubRoomJoined = matrixEvents.on(MATRIX_EVENTS.ROOM_JOINED, () => {
-      refreshRooms();
+      void refreshRoomsInternal();
     });
 
     const unsubRoomLeft = matrixEvents.on(MATRIX_EVENTS.ROOM_LEFT, () => {
-      refreshRooms();
+      void refreshRoomsInternal();
     });
 
     return () => {
@@ -293,7 +472,7 @@ export function useMatrix(): UseMatrixReturn {
       unsubRoomJoined();
       unsubRoomLeft();
     };
-  }, [currentRoomId, refreshRooms]);
+  }, [currentRoomId, refreshRoomsInternal]);
 
   return {
     // 状态
@@ -324,9 +503,25 @@ export function useMatrix(): UseMatrixReturn {
     joinRoom,
     leaveRoom,
 
+    // 特殊房间类型
+    createOrderRoom,
+    getOrderRoom,
+    createStoreRoom,
+    getStoreRoom,
+    createGroupRoom,
+    getRoomsByType,
+
+    // 房间管理
+    inviteToRoom,
+    kickFromRoom,
+    setRoomName,
+    setRoomTopic,
+    markRoomAsRead,
+
     // 消息操作
     sendMessage,
     loadMoreMessages,
+    sendTyping,
 
     // 设置
     setInvitePolicy,

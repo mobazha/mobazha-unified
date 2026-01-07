@@ -11,10 +11,11 @@ alwaysApply: false
 
 ## UI 组件库
 
-项目使用两套 UI 组件库：
+项目使用 UI 组件库：
 
-1. **`@mobazha/ui`** - 自定义业务组件 (ProductCard, Avatar, Grid 等)
-2. **`@/components/ui`** - shadcn/ui 组件 (Dialog, Select, Toast 等)
+1. **`@/components/ui`** - shadcn/ui 组件 (Dialog, Select, Toast 等)
+
+原来的@mobazha/ui尽量用成熟的组件库进行替换，比如shadcn/ui 等
 
 ### 组件选择指南
 

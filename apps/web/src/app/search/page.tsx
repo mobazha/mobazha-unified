@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Avatar, Card, Skeleton, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
+import { Button, Avatar, Card, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import type { ProductContractType } from '@mobazha/ui';
 
@@ -40,7 +40,6 @@ interface User {
 
 // Mock search results
 const generateMockProducts = (query: string, count: number = 12): Product[] => {
-  const categories = ['Electronics', 'Fashion', 'Home', 'Art', 'Services'];
   const contractTypes: Product['contractType'][] = [
     'PHYSICAL_GOOD',
     'DIGITAL_GOOD',
