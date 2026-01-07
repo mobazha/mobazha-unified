@@ -1,17 +1,7 @@
 /**
- * 国际化模块
- * 提供多语言支持
+ * i18n 模块导出
  */
 
+export * from './i18n';
 export * from './types';
-export { translations, en, zh } from './locales';
-export {
-  i18n,
-  getTranslation,
-  setLocale,
-  getLocale,
-  formatNumber,
-  formatCurrency,
-  formatDate,
-  formatRelativeTime,
-} from './i18n';
+export { translations } from './locales';
