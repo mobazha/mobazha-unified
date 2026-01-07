@@ -11,3 +11,4 @@ export { ServiceWorkerProvider } from './ServiceWorkerProvider';
 export { LanguageSwitcher } from './LanguageSwitcher';
 export { ThemeProvider } from './ThemeProvider';
 export { ThemeSwitcher } from './ThemeSwitcher';
+export { ErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
