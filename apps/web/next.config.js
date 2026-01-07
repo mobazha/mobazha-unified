@@ -14,6 +14,10 @@ const nextConfig = {
         hostname: '*.mobazha.com',
       },
       {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
       },

@@ -525,3 +525,281 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ===== 多端用户体验工具类 ===== */
+
+/* 
+ * 移动端紧凑模式 CSS 变量
+ * 基于原 mobazha-mobile 设计规范（4px 网格系统）
+ */
+:root {
+  /* 动画时长（原版规范） */
+  --animation-duration-fast: 150ms;
+  --animation-duration-normal: 200ms;
+  --animation-duration-slow: 300ms;
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 移动端紧凑间距变量 */
+@media (max-width: 767px) {
+  :root {
+    --spacing-card: 12px; /* 原版 md: 12px */
+    --spacing-list-item: 10px; /* 原版 py: 8-12px */
+    --spacing-section: 16px; /* 区块间距 */
+    --font-size-body: 14px; /* 原版正文 14-15px */
+    --font-size-title: 18px; /* 原版标题 17-18px */
+    --font-size-small: 12px; /* 原版辅助 12-13px */
+  }
+}
+
+/* 桌面端标准间距变量 */
+@media (min-width: 768px) {
+  :root {
+    --spacing-card: 16px;
+    --spacing-list-item: 12px;
+    --spacing-section: 24px;
+    --font-size-body: 16px;
+    --font-size-title: 20px;
+    --font-size-small: 14px;
+  }
+}
+
+/* ===== 触摸反馈工具类 ===== */
+
+/* 
+ * 触摸反馈 - 模拟原版 TouchableWithoutFeedback 效果
+ * 轻微缩小 + 透明度变化
+ */
+@utility touch-feedback {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--animation-duration-fast) var(--animation-easing),
+    opacity var(--animation-duration-fast) var(--animation-easing);
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+}
+
+/* 列表项触摸反馈 - 背景色变化 */
+@utility touch-feedback-bg {
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--animation-duration-fast) var(--animation-easing);
+  &:active {
+    background-color: var(--theme-surfaceHover);
+  }
+}
+
+/* ===== 悬停效果工具类（桌面端） ===== */
+
+/* 卡片悬停提升效果 */
+@utility hover-lift {
+  transition:
+    transform var(--animation-duration-normal) var(--animation-easing),
+    box-shadow var(--animation-duration-normal) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* 轻微悬停提升 */
+@utility hover-lift-sm {
+  transition:
+    transform var(--animation-duration-fast) var(--animation-easing),
+    box-shadow var(--animation-duration-fast) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* 图片悬停缩放（用于容器内） */
+@utility hover-scale {
+  transition: transform var(--animation-duration-slow) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* 悬停背景高亮 */
+@utility hover-highlight {
+  transition: background-color var(--animation-duration-fast) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      background-color: var(--theme-surfaceHover);
+    }
+  }
+}
+
+/* ===== 移动端紧凑模式组件类 ===== */
+
+/* 紧凑卡片内边距 */
+@utility compact-card {
+  padding: var(--spacing-card);
+}
+
+/* 紧凑列表项 */
+@utility compact-list-item {
+  padding-top: var(--spacing-list-item);
+  padding-bottom: var(--spacing-list-item);
+}
+
+/* 紧凑正文字体 */
+@utility compact-text {
+  font-size: var(--font-size-body);
+}
+
+/* 紧凑标题字体 */
+@utility compact-heading {
+  font-size: var(--font-size-title);
+}
+
+/* 紧凑辅助文字 */
+@utility compact-small {
+  font-size: var(--font-size-small);
+}
+
+/* ===== 动画工具类 ===== */
+
+/* 淡入动画 */
+@utility animate-fade-in {
+  animation: fadeIn var(--animation-duration-normal) var(--animation-easing);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 从下滑入动画 */
+@utility animate-slide-up {
+  animation: slideUp var(--animation-duration-normal) var(--animation-easing);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 从右滑入动画 */
+@utility animate-slide-in-right {
+  animation: slideInRight var(--animation-duration-normal) var(--animation-easing);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 缩放弹入动画 */
+@utility animate-scale-in {
+  animation: scaleIn var(--animation-duration-fast) var(--animation-easing);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== 触摸目标最小尺寸 ===== */
+
+/* 确保触摸目标符合 44x44pt 最小要求 */
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 内联触摸目标（只确保高度） */
+@utility touch-target-inline {
+  min-height: 44px;
+}
+
+/* ===== 响应式间距快捷类 ===== */
+
+/* 移动端紧凑，桌面端正常的间距 */
+@utility gap-responsive {
+  gap: 12px;
+  @media (min-width: 768px) {
+    gap: 16px;
+  }
+}
+
+@utility p-responsive {
+  padding: 12px;
+  @media (min-width: 768px) {
+    padding: 16px;
+  }
+}
+
+@utility py-responsive {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  @media (min-width: 768px) {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+@utility px-responsive {
+  padding-left: 12px;
+  padding-right: 12px;
+  @media (min-width: 768px) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ===== 响应式字体快捷类 ===== */
+
+/* 移动端小，桌面端正常 */
+@utility text-responsive {
+  font-size: 14px;
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+@utility text-responsive-sm {
+  font-size: 12px;
+  @media (min-width: 768px) {
+    font-size: 14px;
+  }
+}
+
+@utility text-responsive-lg {
+  font-size: 18px;
+  @media (min-width: 768px) {
+    font-size: 20px;
+  }
+}

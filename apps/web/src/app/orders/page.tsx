@@ -154,24 +154,24 @@ export default function OrdersPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Header />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Container>
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <div className="mb-4 sm:mb-8">
+            <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1 sm:mb-2">
               {t('nav.orders')}
             </h1>
-            <p className="text-slate-500">{t('order.manageOrders')}</p>
+            <p className="text-sm sm:text-base text-slate-500">{t('order.manageOrders')}</p>
           </div>
 
           {/* Order Type Toggle */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
               {(['purchases', 'sales'] as OrderType[]).map(type => (
                 <button
                   key={type}
                   onClick={() => setOrderType(type)}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                     orderType === type
                       ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -184,13 +184,13 @@ export default function OrdersPage() {
           </div>
 
           {/* Status Tabs */}
-          <div className="mb-6 overflow-x-auto">
-            <HStack gap="sm" className="min-w-max pb-2">
+          <div className="mb-4 sm:mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <HStack gap="xs" className="min-w-max pb-2 sm:gap-2">
               {statusTabs.map(tab => (
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                     statusFilter === tab.value
                       ? 'bg-emerald-600 text-white'
                       : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
@@ -266,7 +266,7 @@ export default function OrdersPage() {
               </CardContent>
             </Card>
           ) : (
-            <VStack gap="lg">
+            <VStack gap="md" className="sm:gap-4">
               {filteredOrders.map(order => (
                 <OrderCard
                   key={order.id}

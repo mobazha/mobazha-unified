@@ -142,7 +142,7 @@ export default function StorePage() {
         {/* Store Header */}
         <div className="relative">
           {/* Cover Image */}
-          <div className="h-48 sm:h-64 bg-gradient-to-br from-emerald-500 to-teal-600 relative overflow-hidden">
+          <div className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-emerald-500 to-teal-600 relative overflow-hidden">
             {store.headerImage && (
               <img
                 src={store.headerImage}
@@ -155,7 +155,7 @@ export default function StorePage() {
 
           {/* Store Info */}
           <Container size="xl" className="relative">
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 -mt-16 sm:-mt-20">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 -mt-12 sm:-mt-20">
               {/* Avatar */}
               <div className="flex-shrink-0">
                 <Avatar
@@ -163,21 +163,25 @@ export default function StorePage() {
                   name={store.name}
                   size="xl"
                   verified={store.verified}
-                  className="ring-4 ring-white dark:ring-slate-900 w-32 h-32"
+                  className="ring-4 ring-white dark:ring-slate-900 w-24 h-24 sm:w-32 sm:h-32"
                 />
               </div>
 
               {/* Info */}
-              <div className="flex-1 pt-2 sm:pt-8">
-                <HStack justify="between" align="start" wrap className="gap-4">
+              <div className="flex-1 pt-1 sm:pt-8">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <HStack gap="sm" align="center">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
                         {store.name}
                       </h1>
                       {store.verified && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
+                          <svg
+                            className="w-2.5 h-2.5 sm:w-3 sm:h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path
                               fillRule="evenodd"
                               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -188,49 +192,55 @@ export default function StorePage() {
                         </span>
                       )}
                     </HStack>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-0.5">
                       {store.shortDescription}
                     </p>
-                    <HStack gap="md" className="mt-2 text-sm text-slate-500">
+                    <HStack gap="sm" className="mt-1.5 text-xs sm:text-sm text-slate-500">
                       <span>📍 {store.location}</span>
                       <span>📅 Since {store.memberSince}</span>
                     </HStack>
                   </div>
 
                   {/* Actions */}
-                  <HStack gap="sm">
+                  <HStack gap="xs" className="flex-shrink-0">
                     <Button
                       variant={isFollowing ? 'outline' : 'default'}
                       onClick={() => setIsFollowing(!isFollowing)}
+                      size="sm"
+                      className="touch-feedback"
                     >
                       {isFollowing ? 'Following' : 'Follow'}
                     </Button>
-                    <Button variant="outline">Message</Button>
+                    <Button variant="outline" size="sm" className="touch-feedback">
+                      Message
+                    </Button>
                   </HStack>
-                </HStack>
+                </div>
 
                 {/* Stats */}
                 <HStack
-                  gap="lg"
-                  className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700"
+                  gap="md"
+                  className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-slate-200 dark:border-slate-700"
                 >
                   <div className="text-center">
-                    <div className="text-xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                       {store.listingCount}
                     </div>
-                    <div className="text-sm text-slate-500">Products</div>
+                    <div className="text-xs sm:text-sm text-slate-500">Products</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                       {store.followerCount}
                     </div>
-                    <div className="text-sm text-slate-500">Followers</div>
+                    <div className="text-xs sm:text-sm text-slate-500">Followers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                       ⭐ {store.rating}
                     </div>
-                    <div className="text-sm text-slate-500">{store.reviewCount} reviews</div>
+                    <div className="text-xs sm:text-sm text-slate-500">
+                      {store.reviewCount} reviews
+                    </div>
                   </div>
                 </HStack>
               </div>
@@ -239,14 +249,14 @@ export default function StorePage() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-16 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 mt-6">
+        <div className="sticky top-16 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 mt-4 sm:mt-6">
           <Container size="xl">
             <HStack gap="none">
               {(['products', 'about', 'reviews'] as TabType[]).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-4 text-sm font-medium capitalize transition-colors border-b-2 ${
+                  className={`px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium capitalize transition-colors border-b-2 touch-feedback ${
                     activeTab === tab
                       ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                       : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -260,27 +270,32 @@ export default function StorePage() {
         </div>
 
         {/* Tab Content */}
-        <div className="py-8">
+        <div className="py-4 sm:py-8">
           {activeTab === 'products' && (
             <ProductSection
               title="All Products"
               subtitle={`${products.length} items available`}
               products={products.map(p => ({ ...p, vendorName: store.name }))}
               showViewAll={false}
+              containerSize="lg"
+              titleClassName="text-lg sm:text-xl"
             />
           )}
 
           {activeTab === 'about' && (
             <Container size="xl">
-              <Grid cols={3} colsMobile={1} gap="lg">
+              <Grid cols={3} colsMobile={1} gap="md">
                 <div className="lg:col-span-2">
-                  <Card>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                  <Card className="p-4 sm:p-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
                       About This Store
                     </h2>
-                    <div className="prose prose-slate dark:prose-invert max-w-none">
+                    <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
                       {store.about.split('\n').map((paragraph, i) => (
-                        <p key={i} className="text-slate-600 dark:text-slate-400 mb-4">
+                        <p
+                          key={i}
+                          className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-3"
+                        >
                           {paragraph}
                         </p>
                       ))}
@@ -289,25 +304,27 @@ export default function StorePage() {
                 </div>
 
                 <div>
-                  <Card>
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
+                  <Card className="p-4 sm:p-6">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-3 text-base">
                       Store Details
                     </h3>
-                    <VStack gap="md" align="stretch">
+                    <VStack gap="sm" align="stretch">
                       <div>
-                        <span className="text-sm text-slate-500">Accepted Currencies</span>
-                        <p className="font-medium text-slate-900 dark:text-white">
+                        <span className="text-xs sm:text-sm text-slate-500">
+                          Accepted Currencies
+                        </span>
+                        <p className="font-medium text-slate-900 dark:text-white text-sm">
                           {store.acceptedCurrencies.join(', ')}
                         </p>
                       </div>
                       {store.socialLinks.website && (
                         <div>
-                          <span className="text-sm text-slate-500">Website</span>
+                          <span className="text-xs sm:text-sm text-slate-500">Website</span>
                           <a
                             href={store.socialLinks.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block font-medium text-emerald-600 hover:underline"
+                            className="block font-medium text-emerald-600 hover:underline text-sm"
                           >
                             {store.socialLinks.website}
                           </a>
@@ -315,8 +332,8 @@ export default function StorePage() {
                       )}
                       {store.socialLinks.twitter && (
                         <div>
-                          <span className="text-sm text-slate-500">Twitter</span>
-                          <p className="font-medium text-slate-900 dark:text-white">
+                          <span className="text-xs sm:text-sm text-slate-500">Twitter</span>
+                          <p className="font-medium text-slate-900 dark:text-white text-sm">
                             {store.socialLinks.twitter}
                           </p>
                         </div>
@@ -330,11 +347,13 @@ export default function StorePage() {
 
           {activeTab === 'reviews' && (
             <Container size="xl">
-              <Card>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+              <Card className="p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3">
                   Customer Reviews
                 </h2>
-                <div className="text-center py-8 text-slate-500">Reviews coming soon...</div>
+                <div className="text-center py-6 text-slate-500 text-sm">
+                  Reviews coming soon...
+                </div>
               </Card>
             </Container>
           )}

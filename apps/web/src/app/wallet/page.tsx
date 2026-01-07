@@ -155,21 +155,26 @@ export default function WalletPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Header />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Container>
           {/* Portfolio Summary */}
-          <Card className="mb-8 overflow-hidden">
-            <div className="relative p-8 bg-gradient-to-br from-emerald-600 to-emerald-800">
+          <Card className="mb-4 sm:mb-8 overflow-hidden">
+            <div className="relative p-4 sm:p-8 bg-gradient-to-br from-emerald-600 to-emerald-800">
               <div className="absolute inset-0 bg-black/10" />
               <div className="relative">
-                <p className="text-emerald-100 mb-2">{t('wallet.totalPortfolioValue')}</p>
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                <p className="text-emerald-100 mb-1 sm:mb-2 text-sm">
+                  {t('wallet.totalPortfolioValue')}
+                </p>
+                <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">
                   ${totalBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </h1>
-                <HStack gap="md" className="flex-wrap">
-                  <Button className="bg-white text-emerald-700 hover:bg-emerald-50">
+                <HStack gap="xs" className="flex-wrap">
+                  <Button
+                    size="sm"
+                    className="bg-white text-emerald-700 hover:bg-emerald-50 touch-feedback"
+                  >
                     <svg
-                      className="w-4 h-4 mr-2"
+                      className="w-4 h-4 mr-1.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -183,9 +188,13 @@ export default function WalletPage() {
                     </svg>
                     {t('wallet.send')}
                   </Button>
-                  <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-white text-white hover:bg-white/10 touch-feedback"
+                  >
                     <svg
-                      className="w-4 h-4 mr-2"
+                      className="w-4 h-4 mr-1.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -199,9 +208,13 @@ export default function WalletPage() {
                     </svg>
                     {t('wallet.receive')}
                   </Button>
-                  <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-white text-white hover:bg-white/10 touch-feedback"
+                  >
                     <svg
-                      className="w-4 h-4 mr-2"
+                      className="w-4 h-4 mr-1.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -221,10 +234,10 @@ export default function WalletPage() {
           </Card>
 
           {/* Wallet Cards */}
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
             {t('wallet.yourWallets')}
           </h2>
-          <Grid cols={4} colsMobile={1} colsTablet={2} gap="lg" className="mb-8">
+          <Grid cols={4} colsMobile={2} colsTablet={2} gap="sm" className="mb-4 sm:mb-8">
             {mockBalances.map(balance => (
               <WalletCard
                 key={balance.symbol}
@@ -240,12 +253,12 @@ export default function WalletPage() {
 
           {/* Transaction History */}
           <Card className="overflow-hidden">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-              <HStack justify="between" align="center" className="flex-wrap gap-4">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            <div className="p-3 sm:p-6 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">
                   {t('wallet.transactionHistory')}
                   {selectedCurrency && (
-                    <span className="ml-2 text-sm font-normal text-slate-500">
+                    <span className="ml-2 text-xs sm:text-sm font-normal text-slate-500">
                       ({selectedCurrency})
                       <button
                         onClick={() => setSelectedCurrency(null)}
@@ -257,12 +270,12 @@ export default function WalletPage() {
                   )}
                 </h2>
 
-                <HStack gap="sm">
+                <HStack gap="xs">
                   {(['all', 'sent', 'received'] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
                         activeTab === tab
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
@@ -276,10 +289,10 @@ export default function WalletPage() {
                     </button>
                   ))}
                 </HStack>
-              </HStack>
+              </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
               <TransactionList
                 transactions={filteredTransactions}
                 onTransactionClick={_tx => {

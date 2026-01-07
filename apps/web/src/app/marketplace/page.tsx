@@ -151,29 +151,30 @@ export default function MarketplacesPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Header />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Container size="xl">
           {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+          <div className="text-center mb-6 sm:mb-12">
+            <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2 sm:mb-4">
               {t('marketplace.title')}
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
               {t('marketplace.subtitle')}
             </p>
           </div>
 
           {/* Search and Filters */}
-          <Card className="mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
+          <Card className="mb-4 sm:mb-8 p-3 sm:p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+              <div className="sm:col-span-2 md:col-span-2">
                 <Input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder={t('marketplace.searchPlaceholder')}
+                  className="h-9 sm:h-10 text-sm"
                   leftIcon={
                     <svg
-                      className="w-5 h-5 text-slate-400"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -190,7 +191,7 @@ export default function MarketplacesPage() {
               </div>
               <div>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10 text-sm">
                     <SelectValue placeholder={t('marketplace.allCategories')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -205,7 +206,7 @@ export default function MarketplacesPage() {
               </div>
               <div>
                 <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -220,69 +221,69 @@ export default function MarketplacesPage() {
 
           {/* Featured Marketplaces */}
           {featuredMarketplaces.length > 0 && !searchQuery && selectedCategory === 'all' && (
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+            <section className="mb-6 sm:mb-12">
+              <h2 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-6">
                 {t('marketplace.featuredMarketplaces')}
               </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {featuredMarketplaces.map(marketplace => (
                   <Link key={marketplace.id} href={`/marketplace/${marketplace.slug}`}>
-                    <Card className="overflow-hidden transition-all hover:shadow-xl">
+                    <Card className="overflow-hidden transition-all hover:shadow-xl active:scale-[0.99]">
                       {/* Banner */}
-                      <div className="h-32 overflow-hidden relative">
+                      <div className="h-24 sm:h-32 overflow-hidden relative">
                         <img
                           src={marketplace.banner}
                           alt=""
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        <span className="absolute top-2 right-2 px-2 py-1 bg-emerald-500 text-white text-xs font-medium rounded">
+                        <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-emerald-500 text-white text-[10px] sm:text-xs font-medium rounded">
                           {t('marketplace.featured')}
                         </span>
                       </div>
 
                       {/* Content */}
-                      <div className="p-4 relative">
+                      <div className="p-3 sm:p-4 relative">
                         {/* Logo */}
-                        <div className="absolute -top-8 left-4">
+                        <div className="absolute -top-6 sm:-top-8 left-3 sm:left-4">
                           <img
                             src={marketplace.logo}
                             alt={marketplace.name}
-                            className="w-16 h-16 rounded-xl bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-900 shadow-lg"
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 border-3 sm:border-4 border-white dark:border-slate-900 shadow-lg"
                           />
                         </div>
 
-                        <div className="pt-6">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                        <div className="pt-4 sm:pt-6">
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1 sm:mb-2">
                             {marketplace.name}
                           </h3>
-                          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-4">
+                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3 sm:mb-4">
                             {marketplace.shortDescription}
                           </p>
 
                           {/* Stats */}
-                          <HStack gap="lg">
+                          <HStack gap="md" className="sm:gap-6">
                             <VStack gap="none" align="center">
-                              <span className="font-bold text-slate-900 dark:text-white">
+                              <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {marketplace.memberCount.toLocaleString()}
                               </span>
-                              <span className="text-xs text-slate-500">
+                              <span className="text-[10px] sm:text-xs text-slate-500">
                                 {t('marketplace.members')}
                               </span>
                             </VStack>
                             <VStack gap="none" align="center">
-                              <span className="font-bold text-slate-900 dark:text-white">
+                              <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {marketplace.sellerCount}
                               </span>
-                              <span className="text-xs text-slate-500">
+                              <span className="text-[10px] sm:text-xs text-slate-500">
                                 {t('marketplace.sellers')}
                               </span>
                             </VStack>
                             <VStack gap="none" align="center">
-                              <span className="font-bold text-slate-900 dark:text-white">
+                              <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {marketplace.productCount}
                               </span>
-                              <span className="text-xs text-slate-500">
+                              <span className="text-[10px] sm:text-xs text-slate-500">
                                 {t('marketplace.products')}
                               </span>
                             </VStack>
@@ -298,55 +299,57 @@ export default function MarketplacesPage() {
 
           {/* All Marketplaces */}
           <section>
-            <HStack justify="between" align="center" className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <HStack justify="between" align="center" className="mb-3 sm:mb-6">
+              <h2 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
                 {searchQuery || selectedCategory !== 'all'
                   ? t('marketplace.searchResults')
                   : t('marketplace.allMarketplaces')}
               </h2>
               <Link href="/marketplace/create">
-                <Button>{t('marketplace.createMarketplace')}</Button>
+                <Button size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
+                  {t('marketplace.createMarketplace')}
+                </Button>
               </Link>
             </HStack>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
               {filteredMarketplaces.map(marketplace => (
                 <Link key={marketplace.id} href={`/marketplace/${marketplace.slug}`}>
-                  <Card className="transition-all hover:shadow-lg h-full">
-                    <HStack gap="lg" align="start">
+                  <Card className="transition-all hover:shadow-lg active:scale-[0.99] h-full p-3 sm:p-4">
+                    <HStack gap="sm" align="start" className="sm:gap-4">
                       <img
                         src={marketplace.logo}
                         alt={marketplace.name}
-                        className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 flex-shrink-0"
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <HStack gap="sm" align="center" className="mb-1">
-                          <h3 className="font-bold text-slate-900 dark:text-white">
+                        <HStack gap="xs" align="center" className="mb-0.5 sm:mb-1 sm:gap-2">
+                          <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                             {marketplace.name}
                           </h3>
                           {marketplace.featured && (
-                            <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded">
+                            <span className="px-1.5 sm:px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-xs font-medium rounded">
                               {t('marketplace.featured')}
                             </span>
                           )}
                         </HStack>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-2 sm:mb-3">
                           {marketplace.shortDescription}
                         </p>
-                        <HStack gap="md" className="text-sm text-slate-500">
+                        <HStack gap="sm" className="text-xs sm:text-sm text-slate-500 sm:gap-4">
                           <span>
                             {marketplace.memberCount.toLocaleString()} {t('marketplace.members')}
                           </span>
-                          <span>•</span>
-                          <span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="hidden sm:inline">
                             {marketplace.productCount} {t('marketplace.products')}
                           </span>
                         </HStack>
-                        <HStack gap="sm" className="mt-2">
+                        <HStack gap="xs" className="mt-1.5 sm:mt-2 sm:gap-2">
                           {marketplace.categories.slice(0, 3).map(cat => (
                             <span
                               key={cat}
-                              className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded"
+                              className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded"
                             >
                               {cat}
                             </span>
