@@ -7,6 +7,18 @@ export {
   setGroupContext,
 } from './config';
 
+// API 模式管理
+export {
+  setApiMode,
+  getApiMode,
+  setApiModeConfig,
+  getApiModeConfig,
+  shouldUseMock,
+  shouldFallbackToMock,
+  withMockFallback,
+  type ApiMode,
+} from './mode';
+
 // API 客户端
 export { ApiError, request, get, post, put, del, safeRequest } from './client';
 
@@ -30,3 +42,15 @@ export * as marketplaceApi from './marketplace';
 
 // 权限控制 API
 export * as accessApi from './access';
+
+// 社交 API (Follow/Unfollow)
+export * as socialApi from './social';
+
+// 购物车 API
+export * as cartApi from './cart';
+
+// 通知 API
+export * as notificationsApi from './notifications';
+
+// 争议/仲裁 API
+export * as disputesApi from './disputes';

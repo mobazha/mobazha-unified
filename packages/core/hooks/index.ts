@@ -29,6 +29,14 @@ export * from './useMonitoring';
 // 钱包相关
 export * from './useWallet';
 
-// TODO: 后续迁移
-// export * from './useAuth';
-// export * from './useCart';
+// 社交相关 (Follow/Unfollow)
+export * from './useSocial';
+
+// 购物车相关
+export * from './useCart';
+
+// 通知相关
+export * from './useNotifications';
+
+// 争议/仲裁相关
+export * from './useDisputes';
