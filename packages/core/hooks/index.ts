@@ -46,3 +46,6 @@ export * from './useNotifications';
 
 // 争议/仲裁相关
 export * from './useDisputes';
+
+// 角色管理相关
+export * from './useRole';
