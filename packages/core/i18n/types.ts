@@ -153,6 +153,14 @@ export interface TranslationResource {
     remove: string;
     quantity: string;
     itemCount: string;
+    itemsInCart: string;
+    selectAll: string;
+    deselectAll: string;
+    orderSummary: string;
+    proceedToCheckout: string;
+    free: string;
+    acceptedPayments: string;
+    startShopping: string;
   };
 
   // 结账
@@ -193,6 +201,14 @@ export interface TranslationResource {
     disputed: string;
     purchases: string;
     sales: string;
+    myPurchases: string;
+    mySales: string;
+    allOrders: string;
+    processing: string;
+    manageOrders: string;
+    noOrdersFound: string;
+    noOrdersMessage: string;
+    noStatusOrders: string;
   };
 
   // 聊天
@@ -208,6 +224,9 @@ export interface TranslationResource {
     lastSeen: string;
     typing: string;
     encrypted: string;
+    welcomeToMessages: string;
+    selectConversation: string;
+    searchConversations: string;
   };
 
   // 钱包
@@ -227,6 +246,12 @@ export interface TranslationResource {
     sent: string;
     received: string;
     pending: string;
+    totalPortfolioValue: string;
+    exchange: string;
+    yourWallets: string;
+    transactionHistory: string;
+    clear: string;
+    all: string;
   };
 
   // 用户资料
@@ -249,6 +274,16 @@ export interface TranslationResource {
     message: string;
     block: string;
     report: string;
+    myStore: string;
+    addNewListing: string;
+    contactInformation: string;
+    email: string;
+    phone: string;
+    website: string;
+    profileInformation: string;
+    name: string;
+    bio: string;
+    saveChanges: string;
   };
 
   // 设置
@@ -317,6 +352,192 @@ export interface TranslationResource {
     weeksAgo: string;
     monthsAgo: string;
     yearsAgo: string;
+  };
+
+  // Hero 区域
+  hero: {
+    badge: string;
+    titleLine1: string;
+    titleLine2: string;
+    subtitle: string;
+    exploreMarket: string;
+    startSelling: string;
+    activeStores: string;
+    productsListed: string;
+    platformFee: string;
+  };
+
+  // 页脚
+  footer: {
+    tagline: string;
+    marketplace: string;
+    browseProducts: string;
+    categories: string;
+    findModerators: string;
+    startSelling: string;
+    resources: string;
+    gettingStarted: string;
+    documentation: string;
+    api: string;
+    faq: string;
+    company: string;
+    about: string;
+    blog: string;
+    careers: string;
+    contact: string;
+    allRightsReserved: string;
+  };
+
+  // 市场/分类
+  marketplace: {
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    featured: string;
+    featuredMarketplaces: string;
+    allMarketplaces: string;
+    searchResults: string;
+    createMarketplace: string;
+    members: string;
+    sellers: string;
+    products: string;
+    noMarketplacesFound: string;
+    clearFilters: string;
+    sortByMembers: string;
+    sortByProducts: string;
+    sortByName: string;
+    allCategories: string;
+  };
+
+  // 调解员
+  moderator: {
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    language: string;
+    allLanguages: string;
+    maxFee: string;
+    anyFee: string;
+    verifiedOnly: string;
+    sortBy: string;
+    highestRating: string;
+    lowestFee: string;
+    mostDisputes: string;
+    resetFilters: string;
+    moderatorsFound: string;
+    disputesHandled: string;
+    success: string;
+    fee: string;
+    noModeratorsFound: string;
+  };
+
+  // 筛选器
+  filter: {
+    filters: string;
+    category: string;
+    priceRange: string;
+    min: string;
+    max: string;
+    rating: string;
+    anyRating: string;
+    stars: string;
+    type: string;
+    allTypes: string;
+    physicalGoods: string;
+    digitalGoods: string;
+    services: string;
+    rwaTokens: string;
+  };
+
+  // 空状态
+  empty: {
+    noProductsFound: string;
+    noStoresFound: string;
+    tryAdjustingSearch: string;
+    tryAdjustingFilters: string;
+    noRecentSearches: string;
+    loadMoreResults: string;
+  };
+
+  // 首页扩展
+  homeExtended: {
+    trendingNow: string;
+    trendingSubtitle: string;
+    featuredServices: string;
+    featuredSubtitle: string;
+    browseCategories: string;
+    electronics: string;
+    digitalGoods: string;
+    services: string;
+    cryptoOtc: string;
+  };
+
+  // 搜索扩展
+  searchExtended: {
+    searchPlaceholder: string;
+    recentSearches: string;
+    clearAll: string;
+    popularCategories: string;
+    products: string;
+    stores: string;
+  };
+
+  // 设置扩展
+  settingsExtended: {
+    profile: string;
+    country: string;
+    shippingAddresses: string;
+    manageAddresses: string;
+    blockedUsers: string;
+    manageBlocked: string;
+    pushNotifications: string;
+    pushDescription: string;
+    emailNotifications: string;
+    emailDescription: string;
+    store: string;
+    privateStore: string;
+    privateStoreDesc: string;
+    storePolicies: string;
+    storePoliciesDesc: string;
+    moderators: string;
+    moderatorsDesc: string;
+    acceptedCrypto: string;
+    selected: string;
+    shippingOptions: string;
+    shippingOptionsDesc: string;
+    advanced: string;
+    analytics: string;
+    analyticsDesc: string;
+    backupWallet: string;
+    backupWalletDesc: string;
+    backupProfile: string;
+    backupProfileDesc: string;
+    restoreProfile: string;
+    restoreProfileDesc: string;
+    resyncTransactions: string;
+    resyncDesc: string;
+    serverLogs: string;
+    serverLogsDesc: string;
+    checkForUpdates: string;
+    upToDate: string;
+    latestVersion: string;
+    selectCountry: string;
+    selectCurrency: string;
+    acceptedCryptocurrencies: string;
+    done: string;
+    light: string;
+    dark: string;
+    restoreConfirmTitle: string;
+    restoreConfirmDesc: string;
+    continue: string;
+    logoutConfirmTitle: string;
+    logoutConfirmDesc: string;
+    comingSoon: string;
+    backupComingSoon: string;
+    restoreComingSoon: string;
+    followingSystem: string;
+    enabled: string;
+    disabled: string;
   };
 }
 

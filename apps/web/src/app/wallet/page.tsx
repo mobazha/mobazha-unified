@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Header } from '@/components';
 import { Container, Grid, HStack, Card, Button } from '@mobazha/ui';
 import { WalletCard, TransactionList, WalletBalance, Transaction } from '@/components/Wallet';
+import { useI18n } from '@mobazha/core';
 
 // Mock wallet data
 const mockBalances: WalletBalance[] = [
@@ -132,6 +133,7 @@ const mockTransactions: Transaction[] = [
 ];
 
 export default function WalletPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'all' | 'sent' | 'received'>('all');
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
 
@@ -158,7 +160,7 @@ export default function WalletPage() {
             <div className="relative p-8 bg-gradient-to-br from-emerald-600 to-emerald-800">
               <div className="absolute inset-0 bg-black/10" />
               <div className="relative">
-                <p className="text-emerald-100 mb-2">Total Portfolio Value</p>
+                <p className="text-emerald-100 mb-2">{t('wallet.totalPortfolioValue')}</p>
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                   ${totalBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </h1>
@@ -177,7 +179,7 @@ export default function WalletPage() {
                         d="M7 11l5-5m0 0l5 5m-5-5v12"
                       />
                     </svg>
-                    Send
+                    {t('wallet.send')}
                   </Button>
                   <Button variant="outline" className="border-white text-white hover:bg-white/10">
                     <svg
@@ -193,7 +195,7 @@ export default function WalletPage() {
                         d="M17 13l-5 5m0 0l-5-5m5 5V6"
                       />
                     </svg>
-                    Receive
+                    {t('wallet.receive')}
                   </Button>
                   <Button variant="outline" className="border-white text-white hover:bg-white/10">
                     <svg
@@ -209,7 +211,7 @@ export default function WalletPage() {
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
                     </svg>
-                    Exchange
+                    {t('wallet.exchange')}
                   </Button>
                 </HStack>
               </div>
@@ -217,7 +219,9 @@ export default function WalletPage() {
           </Card>
 
           {/* Wallet Cards */}
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Your Wallets</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+            {t('wallet.yourWallets')}
+          </h2>
           <Grid cols={4} colsMobile={1} colsTablet={2} gap="lg" className="mb-8">
             {mockBalances.map(balance => (
               <WalletCard
@@ -237,7 +241,7 @@ export default function WalletPage() {
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <HStack justify="between" align="center" className="flex-wrap gap-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Transaction History
+                  {t('wallet.transactionHistory')}
                   {selectedCurrency && (
                     <span className="ml-2 text-sm font-normal text-slate-500">
                       ({selectedCurrency})
@@ -245,7 +249,7 @@ export default function WalletPage() {
                         onClick={() => setSelectedCurrency(null)}
                         className="ml-2 text-emerald-600 hover:text-emerald-700"
                       >
-                        Clear
+                        {t('wallet.clear')}
                       </button>
                     </span>
                   )}
@@ -262,7 +266,11 @@ export default function WalletPage() {
                           : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                       }`}
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {tab === 'all'
+                        ? t('wallet.all')
+                        : tab === 'sent'
+                          ? t('wallet.sent')
+                          : t('wallet.received')}
                     </button>
                   ))}
                 </HStack>
