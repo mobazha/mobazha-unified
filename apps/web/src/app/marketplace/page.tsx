@@ -6,6 +6,7 @@ import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@mobazha/ui';
 import { Button, Card, Input } from '@mobazha/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { useI18n } from '@mobazha/core';
 
 // Types
 interface Marketplace {
@@ -113,8 +114,9 @@ const allCategories = [
 ];
 
 export default function MarketplacesPage() {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'members' | 'products'>('members');
 
   // Filter and sort marketplaces
@@ -123,7 +125,7 @@ export default function MarketplacesPage() {
       if (searchQuery && !mp.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
-      if (selectedCategory && !mp.categories.includes(selectedCategory)) {
+      if (selectedCategory !== 'all' && !mp.categories.includes(selectedCategory)) {
         return false;
       }
       return true;
@@ -152,11 +154,10 @@ export default function MarketplacesPage() {
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-              Community Marketplaces
+              {t('marketplace.title')}
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Discover and join community-driven marketplaces. Buy from trusted sellers or become a
-              seller yourself.
+              {t('marketplace.subtitle')}
             </p>
           </div>
 
@@ -167,7 +168,7 @@ export default function MarketplacesPage() {
                 <Input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search marketplaces..."
+                  placeholder={t('marketplace.searchPlaceholder')}
                   leftIcon={
                     <svg
                       className="w-5 h-5 text-slate-400"
@@ -188,10 +189,10 @@ export default function MarketplacesPage() {
               <div>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Categories" />
+                    <SelectValue placeholder={t('marketplace.allCategories')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">{t('marketplace.allCategories')}</SelectItem>
                     {allCategories.map(cat => (
                       <SelectItem key={cat} value={cat}>
                         {cat}
@@ -206,9 +207,9 @@ export default function MarketplacesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="members">Most Members</SelectItem>
-                    <SelectItem value="products">Most Products</SelectItem>
-                    <SelectItem value="name">Alphabetical</SelectItem>
+                    <SelectItem value="members">{t('marketplace.sortByMembers')}</SelectItem>
+                    <SelectItem value="products">{t('marketplace.sortByProducts')}</SelectItem>
+                    <SelectItem value="name">{t('marketplace.sortByName')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -216,10 +217,10 @@ export default function MarketplacesPage() {
           </Card>
 
           {/* Featured Marketplaces */}
-          {featuredMarketplaces.length > 0 && !searchQuery && !selectedCategory && (
+          {featuredMarketplaces.length > 0 && !searchQuery && selectedCategory === 'all' && (
             <section className="mb-12">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-                Featured Marketplaces
+                {t('marketplace.featuredMarketplaces')}
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {featuredMarketplaces.map(marketplace => (
@@ -238,7 +239,7 @@ export default function MarketplacesPage() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         <span className="absolute top-2 right-2 px-2 py-1 bg-emerald-500 text-white text-xs font-medium rounded">
-                          Featured
+                          {t('marketplace.featured')}
                         </span>
                       </div>
 
@@ -267,19 +268,25 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-slate-900 dark:text-white">
                                 {marketplace.memberCount.toLocaleString()}
                               </span>
-                              <span className="text-xs text-slate-500">Members</span>
+                              <span className="text-xs text-slate-500">
+                                {t('marketplace.members')}
+                              </span>
                             </VStack>
                             <VStack gap="none" align="center">
                               <span className="font-bold text-slate-900 dark:text-white">
                                 {marketplace.sellerCount}
                               </span>
-                              <span className="text-xs text-slate-500">Sellers</span>
+                              <span className="text-xs text-slate-500">
+                                {t('marketplace.sellers')}
+                              </span>
                             </VStack>
                             <VStack gap="none" align="center">
                               <span className="font-bold text-slate-900 dark:text-white">
                                 {marketplace.productCount}
                               </span>
-                              <span className="text-xs text-slate-500">Products</span>
+                              <span className="text-xs text-slate-500">
+                                {t('marketplace.products')}
+                              </span>
                             </VStack>
                           </HStack>
                         </div>
@@ -295,10 +302,12 @@ export default function MarketplacesPage() {
           <section>
             <HStack justify="between" align="center" className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {searchQuery || selectedCategory ? 'Search Results' : 'All Marketplaces'}
+                {searchQuery || selectedCategory !== 'all'
+                  ? t('marketplace.searchResults')
+                  : t('marketplace.allMarketplaces')}
               </h2>
               <Link href="/marketplace/create">
-                <Button>Create Marketplace</Button>
+                <Button>{t('marketplace.createMarketplace')}</Button>
               </Link>
             </HStack>
 
@@ -319,7 +328,7 @@ export default function MarketplacesPage() {
                           </h3>
                           {marketplace.featured && (
                             <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded">
-                              Featured
+                              {t('marketplace.featured')}
                             </span>
                           )}
                         </HStack>
@@ -327,9 +336,13 @@ export default function MarketplacesPage() {
                           {marketplace.shortDescription}
                         </p>
                         <HStack gap="md" className="text-sm text-slate-500">
-                          <span>{marketplace.memberCount.toLocaleString()} members</span>
+                          <span>
+                            {marketplace.memberCount.toLocaleString()} {t('marketplace.members')}
+                          </span>
                           <span>•</span>
-                          <span>{marketplace.productCount} products</span>
+                          <span>
+                            {marketplace.productCount} {t('marketplace.products')}
+                          </span>
                         </HStack>
                         <HStack gap="sm" className="mt-2">
                           {marketplace.categories.slice(0, 3).map(cat => (
@@ -367,19 +380,17 @@ export default function MarketplacesPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    No marketplaces found
+                    {t('marketplace.noMarketplacesFound')}
                   </h3>
-                  <p className="text-slate-500">
-                    Try adjusting your search or filters to find what you&apos;re looking for.
-                  </p>
+                  <p className="text-slate-500">{t('empty.tryAdjustingFilters')}</p>
                   <Button
                     variant="ghost"
                     onClick={() => {
                       setSearchQuery('');
-                      setSelectedCategory('');
+                      setSelectedCategory('all');
                     }}
                   >
-                    Clear Filters
+                    {t('marketplace.clearFilters')}
                   </Button>
                 </VStack>
               </Card>

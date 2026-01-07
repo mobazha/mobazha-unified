@@ -4,8 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Container, HStack } from '@mobazha/ui';
 import { Button } from '@mobazha/ui';
+import { useI18n } from '@mobazha/core';
 
 export const Hero: React.FC = () => {
+  const { t } = useI18n();
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-20 lg:py-32">
       {/* Background Pattern */}
@@ -27,38 +30,37 @@ export const Hero: React.FC = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-emerald-300 text-sm mb-6">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Decentralized & Peer-to-Peer
+            {t('hero.badge')}
           </div>
 
           {/* Title */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Trade Freely.
+            {t('hero.titleLine1')}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-              Trade Securely.
+              {t('hero.titleLine2')}
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-            A truly decentralized marketplace for digital goods, services, and crypto OTC trading.
-            No intermediaries. No censorship. Just you and your customers.
+            {t('hero.subtitle')}
           </p>
 
           {/* CTA Buttons */}
           <HStack gap="md" justify="center" wrap>
-            <Link href="/market">
+            <Link href="/marketplace">
               <Button size="lg" className="shadow-lg shadow-emerald-500/25">
-                Explore Market
+                {t('hero.exploreMarket')}
               </Button>
             </Link>
-            <Link href="/sell">
+            <Link href="/listing/new">
               <Button
                 variant="outline"
                 size="lg"
                 className="border-white/30 text-white hover:bg-white/10"
               >
-                Start Selling
+                {t('hero.startSelling')}
               </Button>
             </Link>
           </HStack>
@@ -67,15 +69,15 @@ export const Hero: React.FC = () => {
           <div className="grid grid-cols-3 gap-8 mt-16 pt-8 border-t border-white/10">
             <div>
               <div className="text-3xl font-bold text-white">10K+</div>
-              <div className="text-sm text-slate-400">Active Stores</div>
+              <div className="text-sm text-slate-400">{t('hero.activeStores')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-white">50K+</div>
-              <div className="text-sm text-slate-400">Products Listed</div>
+              <div className="text-sm text-slate-400">{t('hero.productsListed')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-white">0%</div>
-              <div className="text-sm text-slate-400">Platform Fee</div>
+              <div className="text-sm text-slate-400">{t('hero.platformFee')}</div>
             </div>
           </div>
         </div>

@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import { Container, HStack } from '@mobazha/ui';
 import { Button, Input, Avatar } from '@mobazha/ui';
 import { ThemeSwitcher } from '../ThemeSwitcher';
+import { useI18n } from '@mobazha/core';
 
 export const Header: React.FC = () => {
   const router = useRouter();
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -35,7 +37,7 @@ export const Header: React.FC = () => {
           {/* Search Bar - Desktop */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-8">
             <Input
-              placeholder="Search products, stores..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               fullWidth
@@ -56,17 +58,17 @@ export const Header: React.FC = () => {
           <HStack gap="sm" className="hidden md:flex">
             <Link href="/marketplace">
               <Button variant="ghost" size="sm">
-                Market
+                {t('footer.marketplace')}
               </Button>
             </Link>
             <Link href="/chat">
               <Button variant="ghost" size="sm">
-                Messages
+                {t('nav.messages')}
               </Button>
             </Link>
             <Link href="/wallet">
               <Button variant="ghost" size="sm">
-                Wallet
+                {t('nav.wallet')}
               </Button>
             </Link>
             <Link href="/cart">
@@ -95,7 +97,7 @@ export const Header: React.FC = () => {
             <button
               className="p-2 rounded-lg hover:bg-surface-hover transition-colors"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              aria-label="Search"
+              aria-label={t('common.search')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -136,7 +138,7 @@ export const Header: React.FC = () => {
           <div className="md:hidden py-3 border-t border-border animate-in slide-in-from-top-2 duration-200">
             <form onSubmit={handleSearch}>
               <Input
-                placeholder="Search products, stores..."
+                placeholder={t('search.placeholder')}
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setSearchQuery(e.target.value)

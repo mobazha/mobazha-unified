@@ -7,6 +7,7 @@ import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@mobazha/ui';
 import { Button, Avatar, Card, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { useI18n } from '@mobazha/core';
 import type { ProductContractType } from '@mobazha/ui';
 
 // Types
@@ -81,25 +82,6 @@ const generateMockUsers = (query: string, count: number = 8): User[] => {
 // Mock recent searches
 const mockRecentSearches = ['headphones', 'laptop', 'vintage watch', 'handmade jewelry', 'NFT art'];
 
-// Filter options
-const sortOptions = [
-  { value: 'relevance', label: 'Relevance' },
-  { value: 'price_low', label: 'Price: Low to High' },
-  { value: 'price_high', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'newest', label: 'Newest First' },
-];
-
-const categoryOptions = [
-  { value: 'all', label: 'All Categories' },
-  { value: 'electronics', label: 'Electronics' },
-  { value: 'fashion', label: 'Fashion' },
-  { value: 'home', label: 'Home & Garden' },
-  { value: 'art', label: 'Art & Collectibles' },
-  { value: 'services', label: 'Services' },
-  { value: 'rwa', label: 'RWA Tokens' },
-];
-
 type TabType = 'listings' | 'users';
 
 // Loading fallback for Suspense
@@ -124,6 +106,7 @@ function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
+  const { t } = useI18n();
 
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [activeTab, setActiveTab] = useState<TabType>('listings');
@@ -132,6 +115,31 @@ function SearchPageContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(mockRecentSearches);
+
+  // Filter options with translations
+  const sortOptions = useMemo(
+    () => [
+      { value: 'relevance', label: t('search.relevance') },
+      { value: 'price_low', label: t('search.priceLowHigh') },
+      { value: 'price_high', label: t('search.priceHighLow') },
+      { value: 'rating', label: t('search.bestRating') },
+      { value: 'newest', label: t('search.newest') },
+    ],
+    [t]
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { value: 'all', label: t('marketplace.allCategories') },
+      { value: 'electronics', label: t('homeExtended.electronics') },
+      { value: 'fashion', label: 'Fashion' },
+      { value: 'home', label: 'Home & Garden' },
+      { value: 'art', label: 'Art & Collectibles' },
+      { value: 'services', label: t('homeExtended.services') },
+      { value: 'rwa', label: t('filter.rwaTokens') },
+    ],
+    [t]
+  );
 
   // Generate results based on query
   const products = useMemo(
@@ -202,7 +210,9 @@ function SearchPageContent() {
               {user.shortDescription}
             </p>
             <HStack gap="md" className="mt-3 text-sm">
-              <span className="text-slate-500">{user.listingCount} listings</span>
+              <span className="text-slate-500">
+                {user.listingCount} {t('search.listings')}
+              </span>
               <HStack gap="xs" align="center">
                 <span className="text-amber-500">★</span>
                 <span className="text-slate-600 dark:text-slate-400">
@@ -229,7 +239,7 @@ function SearchPageContent() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search products, stores, or paste a listing URL..."
+                placeholder={t('searchExtended.searchPlaceholder')}
                 className="w-full h-14 pl-14 pr-32 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg"
               />
               <svg
@@ -246,7 +256,7 @@ function SearchPageContent() {
                 />
               </svg>
               <Button type="submit" size="lg" className="absolute right-2 top-1/2 -translate-y-1/2">
-                Search
+                {t('common.search')}
               </Button>
             </div>
           </form>
@@ -257,11 +267,11 @@ function SearchPageContent() {
               <Card padding="lg">
                 <HStack justify="between" align="center" className="mb-4">
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    Recent Searches
+                    {t('searchExtended.recentSearches')}
                   </h2>
                   {recentSearches.length > 0 && (
                     <Button variant="ghost" size="sm" onClick={clearRecentSearches}>
-                      Clear All
+                      {t('searchExtended.clearAll')}
                     </Button>
                   )}
                 </HStack>
@@ -292,12 +302,14 @@ function SearchPageContent() {
                     ))}
                   </VStack>
                 ) : (
-                  <p className="text-center text-slate-500 py-8">No recent searches</p>
+                  <p className="text-center text-slate-500 py-8">{t('empty.noRecentSearches')}</p>
                 )}
 
                 {/* Popular Categories */}
                 <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                  <h3 className="text-sm font-medium text-slate-500 mb-4">Popular Categories</h3>
+                  <h3 className="text-sm font-medium text-slate-500 mb-4">
+                    {t('searchExtended.popularCategories')}
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {categoryOptions.slice(1).map(cat => (
                       <button
@@ -331,7 +343,7 @@ function SearchPageContent() {
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    Products ({products.length})
+                    {t('searchExtended.products')} ({products.length})
                   </button>
                   <button
                     onClick={() => setActiveTab('users')}
@@ -341,7 +353,7 @@ function SearchPageContent() {
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    Stores ({users.length})
+                    {t('searchExtended.stores')} ({users.length})
                   </button>
                 </div>
 
@@ -368,7 +380,7 @@ function SearchPageContent() {
                           d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                         />
                       </svg>
-                      Filters
+                      {t('filter.filters')}
                     </button>
                     <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger className="w-[180px]">
@@ -392,11 +404,11 @@ function SearchPageContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Category
+                        {t('filter.category')}
                       </label>
                       <Select value={category} onValueChange={setCategory}>
                         <SelectTrigger>
-                          <SelectValue placeholder="All Categories" />
+                          <SelectValue placeholder={t('marketplace.allCategories')} />
                         </SelectTrigger>
                         <SelectContent>
                           {categoryOptions.map(opt => (
@@ -409,52 +421,52 @@ function SearchPageContent() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Price Range
+                        {t('filter.priceRange')}
                       </label>
                       <HStack gap="sm">
                         <input
                           type="number"
-                          placeholder="Min"
+                          placeholder={t('filter.min')}
                           className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                         <span className="text-slate-400">-</span>
                         <input
                           type="number"
-                          placeholder="Max"
+                          placeholder={t('filter.max')}
                           className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       </HStack>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Rating
+                        {t('filter.rating')}
                       </label>
-                      <Select defaultValue="">
+                      <Select defaultValue="all">
                         <SelectTrigger>
-                          <SelectValue placeholder="Any Rating" />
+                          <SelectValue placeholder={t('filter.anyRating')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Any Rating</SelectItem>
-                          <SelectItem value="4">4+ Stars</SelectItem>
-                          <SelectItem value="3">3+ Stars</SelectItem>
-                          <SelectItem value="2">2+ Stars</SelectItem>
+                          <SelectItem value="all">{t('filter.anyRating')}</SelectItem>
+                          <SelectItem value="4">{t('filter.stars', { count: 4 })}</SelectItem>
+                          <SelectItem value="3">{t('filter.stars', { count: 3 })}</SelectItem>
+                          <SelectItem value="2">{t('filter.stars', { count: 2 })}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Type
+                        {t('filter.type')}
                       </label>
-                      <Select defaultValue="">
+                      <Select defaultValue="all">
                         <SelectTrigger>
-                          <SelectValue placeholder="All Types" />
+                          <SelectValue placeholder={t('filter.allTypes')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Types</SelectItem>
-                          <SelectItem value="physical">Physical Goods</SelectItem>
-                          <SelectItem value="digital">Digital Goods</SelectItem>
-                          <SelectItem value="service">Services</SelectItem>
-                          <SelectItem value="rwa">RWA Tokens</SelectItem>
+                          <SelectItem value="all">{t('filter.allTypes')}</SelectItem>
+                          <SelectItem value="physical">{t('filter.physicalGoods')}</SelectItem>
+                          <SelectItem value="digital">{t('filter.digitalGoods')}</SelectItem>
+                          <SelectItem value="service">{t('filter.services')}</SelectItem>
+                          <SelectItem value="rwa">{t('filter.rwaTokens')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -491,11 +503,9 @@ function SearchPageContent() {
                         />
                       </svg>
                       <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                        No products found
+                        {t('empty.noProductsFound')}
                       </h3>
-                      <p className="text-slate-500">
-                        Try adjusting your search or filters to find what you&apos;re looking for.
-                      </p>
+                      <p className="text-slate-500">{t('empty.tryAdjustingFilters')}</p>
                     </div>
                   </Card>
                 )
@@ -522,11 +532,9 @@ function SearchPageContent() {
                       />
                     </svg>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                      No stores found
+                      {t('empty.noStoresFound')}
                     </h3>
-                    <p className="text-slate-500">
-                      Try adjusting your search to find stores that match.
-                    </p>
+                    <p className="text-slate-500">{t('empty.tryAdjustingSearch')}</p>
                   </div>
                 </Card>
               )}
@@ -536,7 +544,7 @@ function SearchPageContent() {
                 (activeTab === 'users' && users.length > 0)) && (
                 <div className="flex justify-center mt-8">
                   <Button variant="outline" size="lg">
-                    Load More Results
+                    {t('empty.loadMoreResults')}
                   </Button>
                 </div>
               )}
