@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
+import { MobileHeader } from '@/components/MobileHeader';
 import { useI18n } from '@mobazha/core';
 
 // Mock data for demo
@@ -156,6 +157,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      {/* 移动端显示简化搜索栏，桌面端显示完整 Header */}
+      <MobileHeader />
       <Header />
 
       <main>

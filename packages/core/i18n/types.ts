@@ -233,6 +233,7 @@ export interface TranslationResource {
   wallet: {
     title: string;
     balance: string;
+    totalBalance: string;
     send: string;
     receive: string;
     transactions: string;
@@ -249,9 +250,14 @@ export interface TranslationResource {
     totalPortfolioValue: string;
     exchange: string;
     yourWallets: string;
+    yourAssets: string;
     transactionHistory: string;
     clear: string;
     all: string;
+    today: string;
+    back: string;
+    yourAddress: string;
+    copy: string;
   };
 
   // 用户资料

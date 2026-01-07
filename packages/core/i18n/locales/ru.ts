@@ -194,6 +194,7 @@ export const ru: TranslationResource = {
   wallet: {
     title: 'Кошелёк',
     balance: 'Баланс',
+    totalBalance: 'Общий баланс',
     send: 'Отправить',
     receive: 'Получить',
     transactions: 'Транзакции',
@@ -210,9 +211,14 @@ export const ru: TranslationResource = {
     totalPortfolioValue: 'Общая стоимость портфеля',
     exchange: 'Обмен',
     yourWallets: 'Ваши кошельки',
+    yourAssets: 'Ваши активы',
     transactionHistory: 'История транзакций',
     clear: 'Очистить',
     all: 'Все',
+    today: 'Сегодня',
+    back: 'Назад',
+    yourAddress: 'Ваш адрес',
+    copy: 'Копировать',
   },
 
   profile: {

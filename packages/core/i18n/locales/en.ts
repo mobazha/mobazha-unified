@@ -194,6 +194,7 @@ export const en: TranslationResource = {
   wallet: {
     title: 'Wallet',
     balance: 'Balance',
+    totalBalance: 'Total Balance',
     send: 'Send',
     receive: 'Receive',
     transactions: 'Transactions',
@@ -210,9 +211,14 @@ export const en: TranslationResource = {
     totalPortfolioValue: 'Total Portfolio Value',
     exchange: 'Exchange',
     yourWallets: 'Your Wallets',
+    yourAssets: 'Your Assets',
     transactionHistory: 'Transaction History',
     clear: 'Clear',
     all: 'All',
+    today: 'Today',
+    back: 'Back',
+    yourAddress: 'Your Address',
+    copy: 'Copy',
   },
 
   profile: {

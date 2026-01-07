@@ -194,6 +194,7 @@ export const ko: TranslationResource = {
   wallet: {
     title: '지갑',
     balance: '잔액',
+    totalBalance: '총 잔액',
     send: '보내기',
     receive: '받기',
     transactions: '거래 내역',
@@ -210,9 +211,14 @@ export const ko: TranslationResource = {
     totalPortfolioValue: '총 포트폴리오 가치',
     exchange: '교환',
     yourWallets: '내 지갑',
+    yourAssets: '내 자산',
     transactionHistory: '거래 내역',
     clear: '지우기',
     all: '전체',
+    today: '오늘',
+    back: '뒤로',
+    yourAddress: '내 주소',
+    copy: '복사',
   },
 
   profile: {

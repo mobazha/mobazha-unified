@@ -1,24 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import Link from 'next/link';
+import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
-import { Container, Grid, HStack } from '@/components/layouts';
+import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { WalletCard, TransactionList, WalletBalance, Transaction } from '@/components/Wallet';
-import { useI18n } from '@mobazha/core';
-
 // Mock wallet data
-const mockBalances: WalletBalance[] = [
+const mockBalances = [
   {
     currency: 'Bitcoin',
     symbol: 'BTC',
     balance: '0.5432',
-    balanceUSD: '22,879.43',
+    balanceUSD: 22879.43,
     change24h: 2.34,
-    color: 'bg-orange-100 dark:bg-orange-900/30',
+    changeUSD: 523.45,
+    color: 'bg-orange-500',
     icon: (
-      <svg className="w-6 h-6 text-orange-600" viewBox="0 0 24 24" fill="currentColor">
+      <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
         <path d="M11.5 11.5v-2h1.25c.69 0 1.25.56 1.25 1.25v.5c0 .14-.11.25-.25.25H11.5zm0 1h1.75c.14 0 .25.11.25.25v.5c0 .69-.56 1.25-1.25 1.25H11.5v-2z" />
         <path
           fillRule="evenodd"
@@ -32,11 +32,12 @@ const mockBalances: WalletBalance[] = [
     currency: 'Ethereum',
     symbol: 'ETH',
     balance: '3.2145',
-    balanceUSD: '7,523.87',
+    balanceUSD: 7523.87,
     change24h: -1.23,
-    color: 'bg-blue-100 dark:bg-blue-900/30',
+    changeUSD: -93.54,
+    color: 'bg-blue-500',
     icon: (
-      <svg className="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+      <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 1.5l-7 11.5 7 4 7-4-7-11.5zm0 13.5l-7-4 7 11.5 7-11.5-7 4z" />
       </svg>
     ),
@@ -45,11 +46,12 @@ const mockBalances: WalletBalance[] = [
     currency: 'Litecoin',
     symbol: 'LTC',
     balance: '12.5',
-    balanceUSD: '862.50',
+    balanceUSD: 862.5,
     change24h: 0.87,
-    color: 'bg-gray-100 dark:bg-gray-800',
+    changeUSD: 7.45,
+    color: 'bg-gray-500',
     icon: (
-      <svg className="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
+      <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-4.18v-1.73l1.33-.54 1.21-5.03-2.59 1.02-.37-1.5 2.84-1.1 1.07-4.45H9.18V5h5.89l-1.06 4.46 2.24-.87.37 1.5-2.58 1-.95 3.97 2.45-.97.37 1.5-2.5.97v1.53z" />
       </svg>
     ),
@@ -58,248 +60,169 @@ const mockBalances: WalletBalance[] = [
     currency: 'Zcash',
     symbol: 'ZEC',
     balance: '5.0',
-    balanceUSD: '141.50',
+    balanceUSD: 141.5,
     change24h: 3.21,
-    color: 'bg-yellow-100 dark:bg-yellow-900/30',
-    icon: (
-      <svg className="w-6 h-6 text-yellow-600" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="12" cy="12" r="10" />
-        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-          Z
-        </text>
-      </svg>
-    ),
-  },
-];
-
-const mockTransactions: Transaction[] = [
-  {
-    id: 'tx1',
-    type: 'receive',
-    amount: '0.1234',
-    amountUSD: '5,234.12',
-    currency: 'Bitcoin',
-    symbol: 'BTC',
-    status: 'confirmed',
-    timestamp: '2024-01-21T14:30:00',
-    address: '3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5',
-    txHash: 'a1b2c3d4e5f6...',
-    confirmations: 6,
-  },
-  {
-    id: 'tx2',
-    type: 'purchase',
-    amount: '0.05',
-    amountUSD: '2,125.00',
-    currency: 'Bitcoin',
-    symbol: 'BTC',
-    status: 'confirmed',
-    timestamp: '2024-01-20T10:15:00',
-    description: 'Premium Headphones - TechGear Store',
-  },
-  {
-    id: 'tx3',
-    type: 'send',
-    amount: '0.5',
-    amountUSD: '1,175.00',
-    currency: 'Ethereum',
-    symbol: 'ETH',
-    status: 'pending',
-    timestamp: '2024-01-21T16:45:00',
-    address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38',
-    txHash: '0xabc123...',
-    confirmations: 2,
-  },
-  {
-    id: 'tx4',
-    type: 'sale',
-    amount: '0.025',
-    amountUSD: '1,062.50',
-    currency: 'Bitcoin',
-    symbol: 'BTC',
-    status: 'confirmed',
-    timestamp: '2024-01-19T08:30:00',
-    description: 'Leather Wallet - Order #LW-2024-0012',
-  },
-  {
-    id: 'tx5',
-    type: 'receive',
-    amount: '2.5',
-    amountUSD: '172.50',
-    currency: 'Litecoin',
-    symbol: 'LTC',
-    status: 'confirmed',
-    timestamp: '2024-01-18T12:00:00',
-    address: 'LcHK7a24cKhP9pHbVHVqPfSqJ4gQ8GJgBL',
+    changeUSD: 4.39,
+    color: 'bg-yellow-500',
+    icon: <span className="text-white font-bold text-xs sm:text-base">Z</span>,
   },
 ];
 
 export default function WalletPage() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<'all' | 'sent' | 'received'>('all');
-  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
 
-  const totalBalanceUSD = mockBalances.reduce(
-    (sum, b) => sum + parseFloat(b.balanceUSD.replace(/,/g, '')),
-    0
-  );
-
-  const filteredTransactions = mockTransactions.filter(tx => {
-    if (selectedCurrency && tx.currency !== selectedCurrency) return false;
-    if (activeTab === 'sent' && tx.type !== 'send' && tx.type !== 'purchase') return false;
-    if (activeTab === 'received' && tx.type !== 'receive' && tx.type !== 'sale') return false;
-    return true;
-  });
+  // Calculate totals
+  const totalBalanceUSD = mockBalances.reduce((sum, b) => sum + b.balanceUSD, 0);
+  const totalChangeUSD = mockBalances.reduce((sum, b) => sum + b.changeUSD, 0);
+  const totalChangePercent = (totalChangeUSD / (totalBalanceUSD - totalChangeUSD)) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-4 sm:py-8">
-        <Container>
-          {/* Portfolio Summary */}
-          <Card className="mb-4 sm:mb-8 overflow-hidden">
-            <div className="relative p-4 sm:p-8 bg-gradient-to-br from-emerald-600 to-emerald-800">
+        <Container size="sm">
+          {/* Portfolio Summary Card */}
+          <Card className="mb-6 overflow-hidden">
+            <div className="relative p-4 sm:p-8 bg-gradient-to-br from-emerald-600 to-emerald-800 text-center">
               <div className="absolute inset-0 bg-black/10" />
               <div className="relative">
-                <p className="text-emerald-100 mb-1 sm:mb-2 text-sm">
-                  {t('wallet.totalPortfolioValue')}
+                <p className="text-emerald-100 text-xs sm:text-sm mb-1">
+                  {t('wallet.totalBalance')}
                 </p>
-                <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">
+                <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">
                   ${totalBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </h1>
-                <HStack gap="xs" className="flex-wrap">
-                  <Button
-                    size="sm"
-                    className="bg-white text-emerald-700 hover:bg-emerald-50 touch-feedback"
+                <p
+                  className={`text-xs sm:text-sm ${totalChangeUSD >= 0 ? 'text-emerald-200' : 'text-red-200'}`}
+                >
+                  {totalChangeUSD >= 0 ? '▲' : '▼'} {totalChangeUSD >= 0 ? '+' : ''}$
+                  {Math.abs(totalChangeUSD).toFixed(2)} ({totalChangePercent >= 0 ? '+' : ''}
+                  {totalChangePercent.toFixed(2)}%) {t('wallet.today')}
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="p-3 sm:p-6 bg-card border-t border-border">
+              <div className="flex gap-2 sm:gap-3">
+                <Button className="flex-1" size="sm">
+                  <svg
+                    className="w-4 h-4 mr-1.5 sm:mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="w-4 h-4 mr-1.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 11l5-5m0 0l5 5m-5-5v12"
-                      />
-                    </svg>
-                    {t('wallet.send')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white text-white hover:bg-white/10 touch-feedback"
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 11l5-5m0 0l5 5m-5-5v12"
+                    />
+                  </svg>
+                  <span className="text-xs sm:text-sm">{t('wallet.send')}</span>
+                </Button>
+                <Button variant="outline" className="flex-1" size="sm">
+                  <svg
+                    className="w-4 h-4 mr-1.5 sm:mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="w-4 h-4 mr-1.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 13l-5 5m0 0l-5-5m5 5V6"
-                      />
-                    </svg>
-                    {t('wallet.receive')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white text-white hover:bg-white/10 touch-feedback"
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 13l-5 5m0 0l-5-5m5 5V6"
+                    />
+                  </svg>
+                  <span className="text-xs sm:text-sm">{t('wallet.receive')}</span>
+                </Button>
+                <Button variant="outline" className="flex-1" size="sm">
+                  <svg
+                    className="w-4 h-4 mr-1.5 sm:mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="w-4 h-4 mr-1.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    {t('wallet.exchange')}
-                  </Button>
-                </HStack>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span className="text-xs sm:text-sm">{t('wallet.exchange')}</span>
+                </Button>
               </div>
             </div>
           </Card>
 
-          {/* Wallet Cards */}
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
-            {t('wallet.yourWallets')}
-          </h2>
-          <Grid cols={4} colsMobile={2} colsTablet={2} gap="sm" className="mb-4 sm:mb-8">
-            {mockBalances.map(balance => (
-              <WalletCard
-                key={balance.symbol}
-                balance={balance}
-                onClick={() =>
-                  setSelectedCurrency(
-                    selectedCurrency === balance.currency ? null : balance.currency
-                  )
-                }
-              />
-            ))}
-          </Grid>
+          {/* Assets List */}
+          <div className="mb-3 sm:mb-4 flex items-center justify-between">
+            <h2 className="text-base sm:text-xl font-bold text-foreground">
+              {t('wallet.yourAssets')}
+            </h2>
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {mockBalances.length} coins
+            </span>
+          </div>
 
-          {/* Transaction History */}
-          <Card className="overflow-hidden">
-            <div className="p-3 sm:p-6 border-b border-slate-200 dark:border-slate-700">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">
-                  {t('wallet.transactionHistory')}
-                  {selectedCurrency && (
-                    <span className="ml-2 text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400">
-                      ({selectedCurrency})
-                      <button
-                        onClick={() => setSelectedCurrency(null)}
-                        className="ml-2 text-emerald-600 hover:text-emerald-700"
-                      >
-                        {t('wallet.clear')}
-                      </button>
+          <Card className="overflow-hidden divide-y divide-border">
+            {mockBalances.map(asset => (
+              <Link
+                key={asset.symbol}
+                href={`/wallet/${asset.symbol.toLowerCase()}`}
+                className="flex items-center gap-2.5 sm:gap-4 p-3 sm:p-4 hover:bg-surface-hover transition-colors"
+              >
+                {/* Icon */}
+                <div
+                  className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${asset.color}`}
+                >
+                  {asset.icon}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm sm:text-base text-foreground">
+                      {asset.currency}
                     </span>
-                  )}
-                </h2>
-
-                <HStack gap="xs">
-                  {(['all', 'sent', 'received'] as const).map(tab => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
-                        activeTab === tab
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    <span className="font-bold text-sm sm:text-base text-foreground">
+                      ${asset.balanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      {asset.balance} {asset.symbol}
+                    </span>
+                    <span
+                      className={`text-xs sm:text-sm font-medium ${
+                        asset.change24h >= 0 ? 'text-emerald-600' : 'text-red-600'
                       }`}
                     >
-                      {tab === 'all'
-                        ? t('wallet.all')
-                        : tab === 'sent'
-                          ? t('wallet.sent')
-                          : t('wallet.received')}
-                    </button>
-                  ))}
-                </HStack>
-              </div>
-            </div>
+                      {asset.change24h >= 0 ? '+' : ''}
+                      {asset.change24h.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
 
-            <div className="p-3 sm:p-6">
-              <TransactionList
-                transactions={filteredTransactions}
-                onTransactionClick={_tx => {
-                  /* TODO: Open transaction details */
-                }}
-              />
-            </div>
+                {/* Arrow */}
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Link>
+            ))}
           </Card>
         </Container>
       </main>

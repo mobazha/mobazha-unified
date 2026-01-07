@@ -193,6 +193,7 @@ export const zh: TranslationResource = {
   wallet: {
     title: '钱包',
     balance: '余额',
+    totalBalance: '总余额',
     send: '发送',
     receive: '接收',
     transactions: '交易记录',
@@ -209,9 +210,14 @@ export const zh: TranslationResource = {
     totalPortfolioValue: '资产总价值',
     exchange: '兑换',
     yourWallets: '您的钱包',
+    yourAssets: '您的资产',
     transactionHistory: '交易历史',
     clear: '清除',
     all: '全部',
+    today: '今天',
+    back: '返回',
+    yourAddress: '您的地址',
+    copy: '复制',
   },
 
   profile: {

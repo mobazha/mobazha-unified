@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { HStack, VStack } from '@/components/layouts';
 import { Card } from '@/components/ui/card';
 
 export interface WalletBalance {
@@ -23,50 +22,62 @@ export interface WalletCardProps {
 
 export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onReceive, onClick }) => {
   return (
-    <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
-      <div className="p-6">
-        <HStack justify="between" align="start" className="mb-4">
-          <HStack gap="md" align="center">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${balance.color}`}
-            >
-              {balance.icon}
-            </div>
-            <VStack gap="none">
-              <span className="text-sm text-slate-500">{balance.currency}</span>
-              <span className="text-xl font-bold text-slate-900 dark:text-white">
-                {balance.balance} {balance.symbol}
+    <Card
+      className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
+      onClick={onClick}
+    >
+      <div className="p-3 sm:p-6">
+        {/* Header: Icon + Currency Info + Change Badge */}
+        <div className="flex items-start gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <div
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${balance.color}`}
+          >
+            {balance.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs sm:text-sm text-muted-foreground truncate">
+                {balance.currency}
               </span>
-            </VStack>
-          </HStack>
+              {balance.change24h !== undefined && (
+                <span
+                  className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap ${
+                    balance.change24h >= 0
+                      ? 'bg-emerald-500/20 text-emerald-600'
+                      : 'bg-red-500/20 text-red-600'
+                  }`}
+                >
+                  {balance.change24h >= 0 ? '+' : ''}
+                  {balance.change24h.toFixed(2)}%
+                </span>
+              )}
+            </div>
+            <p className="text-base sm:text-xl font-bold text-foreground truncate">
+              {balance.balance} {balance.symbol}
+            </p>
+          </div>
+        </div>
 
-          {balance.change24h !== undefined && (
-            <span
-              className={`text-sm font-medium px-2 py-1 rounded ${
-                balance.change24h >= 0
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              }`}
-            >
-              {balance.change24h >= 0 ? '+' : ''}
-              {balance.change24h.toFixed(2)}%
-            </span>
-          )}
-        </HStack>
-
-        <p className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+        {/* USD Balance */}
+        <p className="text-lg sm:text-2xl font-bold text-foreground mb-3 sm:mb-6">
           ${balance.balanceUSD}
         </p>
 
-        <HStack gap="md">
+        {/* Action Buttons */}
+        <div className="flex gap-2 sm:gap-4">
           <button
             onClick={e => {
               e.stopPropagation();
               onSend?.();
             }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 sm:px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs sm:text-sm"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -74,16 +85,21 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
                 d="M7 11l5-5m0 0l5 5m-5-5v12"
               />
             </svg>
-            Send
+            <span>Send</span>
           </button>
           <button
             onClick={e => {
               e.stopPropagation();
               onReceive?.();
             }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 sm:px-4 bg-muted hover:bg-surface-hover text-foreground rounded-lg transition-colors text-xs sm:text-sm"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -91,9 +107,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
                 d="M17 13l-5 5m0 0l-5-5m5 5V6"
               />
             </svg>
-            Receive
+            <span>Receive</span>
           </button>
-        </HStack>
+        </div>
       </div>
     </Card>
   );
