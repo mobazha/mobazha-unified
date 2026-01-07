@@ -29,6 +29,9 @@ export * from './useMonitoring';
 // 钱包相关
 export * from './useWallet';
 
+// Solana 钱包相关
+export * from './useSolanaWallet';
+
 // 托管合约相关
 export * from './useEscrow';
 

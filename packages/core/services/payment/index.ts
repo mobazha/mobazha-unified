@@ -7,3 +7,4 @@ export * from './types';
 export * from './chains';
 export * from './wallet';
 export * from './escrow';
+export * from './solana';
