@@ -4,7 +4,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  getLocale,
   setLocale as setI18nLocale,
   getTranslation,
   onLocaleChange,
@@ -15,7 +14,7 @@ import {
   formatRelativeTime,
 } from '../i18n/i18n';
 import type { Locale, TranslationKey, TranslationParams, I18nContextType } from '../i18n/types';
-import { SUPPORTED_LOCALES, LOCALE_INFO } from '../i18n/types';
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, LOCALE_INFO } from '../i18n/types';
 
 export interface UseI18nReturn extends I18nContextType {
   supportedLocales: typeof SUPPORTED_LOCALES;
@@ -39,13 +38,19 @@ export interface UseI18nReturn extends I18nContextType {
  * ```
  */
 export function useI18n(): UseI18nReturn {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    // 在客户端初始化时检测语言
-    if (typeof window !== 'undefined') {
-      return initLocale();
+  // 首次渲染始终使用默认语言，避免 hydration mismatch
+  // 不能使用 getLocale() 因为模块级变量可能已被修改
+  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+
+  // 客户端 hydration 完成后初始化实际语言
+  // 这里需要同步 setState 以确保用户看到正确的语言
+  useEffect(() => {
+    const detectedLocale = initLocale();
+    if (detectedLocale !== DEFAULT_LOCALE) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 初始化语言需要在 effect 中同步设置
+      setLocaleState(detectedLocale);
     }
-    return getLocale();
-  });
+  }, []);
 
   // 监听语言变化
   useEffect(() => {
@@ -61,10 +66,13 @@ export function useI18n(): UseI18nReturn {
     // State will be updated by the onLocaleChange listener
   }, []);
 
-  // 翻译函数
-  const t = useCallback((key: TranslationKey, params?: TranslationParams): string => {
-    return getTranslation(key, params);
-  }, []);
+  // 翻译函数 - 使用 locale state 确保 hydration 一致性
+  const t = useCallback(
+    (key: TranslationKey, params?: TranslationParams): string => {
+      return getTranslation(key, params, locale);
+    },
+    [locale]
+  );
 
   // 数字格式化
   const formatNum = useCallback((num: number): string => {

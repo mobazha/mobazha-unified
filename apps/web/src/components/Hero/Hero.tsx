@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Container, HStack } from '@mobazha/ui';
-import { Button } from '@mobazha/ui';
+import { Container, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@mobazha/core';
 
 export const Hero: React.FC = () => {

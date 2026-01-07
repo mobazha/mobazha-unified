@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
-import { ProductCard } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
+import { ProductCard } from '@/components/ProductCard';
 
 // Types
 interface Marketplace {
@@ -184,12 +186,12 @@ export default function MarketplaceDetailPage() {
 
   const handleJoinMarketplace = () => {
     setIsMember(true);
-    alert('Successfully joined the marketplace!');
+    window.alert('Successfully joined the marketplace!');
   };
 
   const handleLeaveMarketplace = () => {
     setIsMember(false);
-    alert('You have left the marketplace');
+    window.alert('You have left the marketplace');
   };
 
   return (
@@ -206,7 +208,7 @@ export default function MarketplaceDetailPage() {
         <Container size="xl">
           {/* Marketplace Header */}
           <div className="relative -mt-20 mb-8">
-            <Card padding="lg">
+            <Card>
               <HStack gap="lg" align="start" className="flex-wrap">
                 {/* Logo */}
                 <img
@@ -341,7 +343,7 @@ export default function MarketplaceDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockSellers.map(seller => (
                 <Link key={seller.id} href={`/store/${seller.id}`}>
-                  <Card padding="lg" hoverable className="h-full">
+                  <Card className="h-full">
                     <HStack gap="md" align="center">
                       <img
                         src={seller.avatar}
@@ -369,7 +371,7 @@ export default function MarketplaceDetailPage() {
           {activeTab === 'about' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <Card padding="lg">
+                <Card>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                     About This Marketplace
                   </h2>
@@ -379,7 +381,7 @@ export default function MarketplaceDetailPage() {
                 </Card>
 
                 {marketplace.rules && (
-                  <Card padding="lg" className="mt-6">
+                  <Card className="mt-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                       Marketplace Rules
                     </h2>
@@ -392,7 +394,7 @@ export default function MarketplaceDetailPage() {
 
               <div className="space-y-6">
                 {/* Owner */}
-                <Card padding="lg">
+                <Card>
                   <h3 className="text-sm font-medium text-slate-500 mb-4">Marketplace Owner</h3>
                   <HStack gap="md" align="center">
                     <img
@@ -410,7 +412,7 @@ export default function MarketplaceDetailPage() {
                 </Card>
 
                 {/* Categories */}
-                <Card padding="lg">
+                <Card>
                   <h3 className="text-sm font-medium text-slate-500 mb-4">Categories</h3>
                   <div className="flex flex-wrap gap-2">
                     {marketplace.categories.map(cat => (
@@ -428,7 +430,7 @@ export default function MarketplaceDetailPage() {
           )}
 
           {activeTab === 'chat' && (
-            <Card padding="lg">
+            <Card>
               <VStack gap="md" align="center" className="py-12">
                 <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   <svg

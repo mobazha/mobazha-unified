@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { VStack, HStack } from '@mobazha/ui';
-import { Avatar, Input, Skeleton } from '@mobazha/ui';
+import { VStack, HStack } from '@/components/layouts';
+import { Input } from '@/components/ui/input-compat';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 
 export interface ChatRoom {
   id: string;

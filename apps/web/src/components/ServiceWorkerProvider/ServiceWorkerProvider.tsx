@@ -2,7 +2,8 @@
 
 import React, { useMemo } from 'react';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
-import { Button, Card } from '@mobazha/ui';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isOnline, updateAvailable, update } = useServiceWorker();
@@ -62,7 +63,7 @@ export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
                 </div>
               </div>
               <div className="mt-4">
-                <Button onClick={update} size="sm" fullWidth>
+                <Button onClick={update} size="sm" className="w-full">
                   Refresh Now
                 </Button>
               </div>

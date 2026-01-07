@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { VStack, HStack, Skeleton } from '@mobazha/ui';
+import { VStack, HStack } from '@/components/layouts';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 
 export interface Transaction {
   id: string;

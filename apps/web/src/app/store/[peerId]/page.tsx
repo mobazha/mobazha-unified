@@ -4,8 +4,11 @@ import React, { useState } from 'react';
 // import Link from 'next/link'; // TODO: Use for store navigation
 import { useParams } from 'next/navigation';
 import { Header, Footer, ProductSection } from '@/components';
-import { Container, HStack, VStack, Grid } from '@mobazha/ui';
-import { Button, Avatar, Card, Skeleton } from '@mobazha/ui';
+import { Container, HStack, VStack, Grid } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 
 // Mock store data
 const mockStore = {
@@ -197,7 +200,7 @@ export default function StorePage() {
                   {/* Actions */}
                   <HStack gap="sm">
                     <Button
-                      variant={isFollowing ? 'outline' : 'primary'}
+                      variant={isFollowing ? 'outline' : 'default'}
                       onClick={() => setIsFollowing(!isFollowing)}
                     >
                       {isFollowing ? 'Following' : 'Follow'}
@@ -271,7 +274,7 @@ export default function StorePage() {
             <Container size="xl">
               <Grid cols={3} colsMobile={1} gap="lg">
                 <div className="lg:col-span-2">
-                  <Card padding="lg">
+                  <Card>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                       About This Store
                     </h2>
@@ -286,7 +289,7 @@ export default function StorePage() {
                 </div>
 
                 <div>
-                  <Card padding="lg">
+                  <Card>
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
                       Store Details
                     </h3>
@@ -327,7 +330,7 @@ export default function StorePage() {
 
           {activeTab === 'reviews' && (
             <Container size="xl">
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                   Customer Reviews
                 </h2>

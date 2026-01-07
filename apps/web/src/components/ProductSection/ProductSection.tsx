@@ -2,8 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Container, Grid } from '@mobazha/ui';
-import { Button, ProductCard, ProductCardSkeleton } from '@mobazha/ui';
+import { Container, Grid } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 
 interface Product {
   id: string;

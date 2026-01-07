@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card, Input } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
 
@@ -162,7 +164,7 @@ export default function MarketplacesPage() {
           </div>
 
           {/* Search and Filters */}
-          <Card padding="lg" className="mb-8">
+          <Card className="mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <Input
@@ -225,11 +227,7 @@ export default function MarketplacesPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {featuredMarketplaces.map(marketplace => (
                   <Link key={marketplace.id} href={`/marketplace/${marketplace.slug}`}>
-                    <Card
-                      padding="none"
-                      hoverable
-                      className="overflow-hidden transition-all hover:shadow-xl"
-                    >
+                    <Card className="overflow-hidden transition-all hover:shadow-xl">
                       {/* Banner */}
                       <div className="h-32 overflow-hidden relative">
                         <img
@@ -314,7 +312,7 @@ export default function MarketplacesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredMarketplaces.map(marketplace => (
                 <Link key={marketplace.id} href={`/marketplace/${marketplace.slug}`}>
-                  <Card padding="lg" hoverable className="transition-all hover:shadow-lg h-full">
+                  <Card className="transition-all hover:shadow-lg h-full">
                     <HStack gap="lg" align="start">
                       <img
                         src={marketplace.logo}
@@ -362,7 +360,7 @@ export default function MarketplacesPage() {
             </div>
 
             {filteredMarketplaces.length === 0 && (
-              <Card padding="lg" className="text-center py-12">
+              <Card className="text-center py-12">
                 <VStack gap="md" align="center">
                   <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                     <svg

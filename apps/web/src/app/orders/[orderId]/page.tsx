@@ -4,7 +4,10 @@ import React, { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
-import { Container, VStack, HStack, Card, Button, Avatar } from '@mobazha/ui';
+import { Container, VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -232,9 +235,9 @@ export default function OrderDetailPage() {
           },
         ],
       }));
-      alert('Order completed successfully! Funds have been released to the seller.');
+      window.alert('Order completed successfully! Funds have been released to the seller.');
     } catch (error) {
-      alert('Failed to confirm receipt: ' + (error as Error).message);
+      window.alert('Failed to confirm receipt: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -242,7 +245,7 @@ export default function OrderDetailPage() {
 
   const handleOpenDispute = useCallback(async () => {
     if (!disputeReason.trim()) {
-      alert('Please provide a reason for the dispute');
+      window.alert('Please provide a reason for the dispute');
       return;
     }
     setIsLoading(true);
@@ -269,9 +272,9 @@ export default function OrderDetailPage() {
       }));
       setShowDisputeModal(false);
       setDisputeReason('');
-      alert('Dispute has been opened. The moderator will review your case.');
+      window.alert('Dispute has been opened. The moderator will review your case.');
     } catch (error) {
-      alert('Failed to open dispute: ' + (error as Error).message);
+      window.alert('Failed to open dispute: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -279,7 +282,7 @@ export default function OrderDetailPage() {
 
   const handleShipOrder = useCallback(async () => {
     if (!trackingInfo.trackingNumber.trim()) {
-      alert('Please provide tracking information');
+      window.alert('Please provide tracking information');
       return;
     }
     setIsLoading(true);
@@ -301,9 +304,9 @@ export default function OrderDetailPage() {
       }));
       setShowShipModal(false);
       setTrackingInfo({ carrier: '', trackingNumber: '' });
-      alert('Order marked as shipped!');
+      window.alert('Order marked as shipped!');
     } catch (error) {
-      alert('Failed to update shipping: ' + (error as Error).message);
+      window.alert('Failed to update shipping: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -327,9 +330,9 @@ export default function OrderDetailPage() {
           },
         ],
       }));
-      alert('Refund processed successfully!');
+      window.alert('Refund processed successfully!');
     } catch (error) {
-      alert('Failed to process refund: ' + (error as Error).message);
+      window.alert('Failed to process refund: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -381,9 +384,9 @@ export default function OrderDetailPage() {
           },
         ],
       }));
-      alert('Dispute has been resolved!');
+      window.alert('Dispute has been resolved!');
     } catch (error) {
-      alert('Failed to resolve dispute: ' + (error as Error).message);
+      window.alert('Failed to resolve dispute: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -394,7 +397,7 @@ export default function OrderDetailPage() {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <Header />
         <Container className="py-8">
-          <Card padding="lg" className="py-16 text-center">
+          <Card className="py-16 text-center">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
               Order not found
             </h2>
@@ -443,7 +446,7 @@ export default function OrderDetailPage() {
           </button>
 
           {/* Order Header */}
-          <Card padding="lg" className="mb-6">
+          <Card className="mb-6">
             <HStack justify="between" align="start" className="flex-wrap gap-4 mb-6">
               <div>
                 <HStack gap="md" align="center" className="mb-2">
@@ -588,7 +591,7 @@ export default function OrderDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Order Items */}
             <div className="lg:col-span-2">
-              <Card padding="lg">
+              <Card>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                   Order Items
                 </h2>
@@ -647,7 +650,7 @@ export default function OrderDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Parties Info */}
-              <Card padding="lg">
+              <Card>
                 <h3 className="text-sm font-medium text-slate-500 mb-4">Seller</h3>
                 <HStack gap="md" align="center" className="mb-4">
                   <Avatar src={order.vendor.avatar} name={order.vendor.name} size="lg" />
@@ -686,7 +689,7 @@ export default function OrderDetailPage() {
               </Card>
 
               {/* Shipping Info */}
-              <Card padding="lg">
+              <Card>
                 <h3 className="text-sm font-medium text-slate-500 mb-4">Shipping Address</h3>
                 <p className="text-slate-900 dark:text-white whitespace-pre-line">
                   {order.shippingAddress}
@@ -700,7 +703,7 @@ export default function OrderDetailPage() {
               </Card>
 
               {/* Payment Info */}
-              <Card padding="lg">
+              <Card>
                 <h3 className="text-sm font-medium text-slate-500 mb-4">Payment Details</h3>
                 <VStack gap="md">
                   {order.paymentTx && (
@@ -724,7 +727,7 @@ export default function OrderDetailPage() {
 
               {/* Order Notes */}
               {order.notes && (
-                <Card padding="lg">
+                <Card>
                   <h3 className="text-sm font-medium text-slate-500 mb-4">Order Notes</h3>
                   <p className="text-slate-900 dark:text-white">{order.notes}</p>
                 </Card>
@@ -739,7 +742,7 @@ export default function OrderDetailPage() {
       {/* Dispute Modal */}
       {showDisputeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Open Dispute</h2>
             <p className="text-slate-600 dark:text-slate-400 mb-4">
               Please describe the issue with your order. The moderator will review your case.
@@ -766,7 +769,7 @@ export default function OrderDetailPage() {
       {/* Ship Order Modal */}
       {showShipModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card padding="lg" className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Ship Order</h2>
             <VStack gap="md">
               <div>

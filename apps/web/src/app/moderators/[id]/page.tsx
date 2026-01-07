@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@mobazha/ui';
-import { Button, Card } from '@mobazha/ui';
+import { Container, HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 // Types
 interface Review {
@@ -134,7 +135,7 @@ export default function ModeratorDetailPage() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Header Card */}
-              <Card padding="lg">
+              <Card>
                 <HStack gap="lg" align="start">
                   <img
                     src={moderator.avatar}
@@ -200,7 +201,7 @@ export default function ModeratorDetailPage() {
               </Card>
 
               {/* Tabs */}
-              <Card padding="none">
+              <Card>
                 <div className="border-b border-slate-200 dark:border-slate-700">
                   <HStack gap="none">
                     {(['about', 'reviews', 'terms'] as const).map(tab => (
@@ -308,20 +309,20 @@ export default function ModeratorDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Fee Card */}
-              <Card padding="lg">
+              <Card>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Moderator Fee</h3>
                 <div className="text-center py-4">
                   <p className="text-4xl font-bold text-emerald-600">{moderator.fee.percentage}%</p>
                   <p className="text-slate-500 mt-1">of transaction value</p>
                 </div>
-                <Button fullWidth size="lg" className="mt-4">
+                <Button className="w-full mt-4" size="lg">
                   Select as Moderator
                 </Button>
               </Card>
 
               {/* Contact Info */}
               {moderator.contactInfo && (
-                <Card padding="lg">
+                <Card>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
                     Contact Information
                   </h3>
@@ -404,7 +405,7 @@ export default function ModeratorDetailPage() {
               )}
 
               {/* Member Since */}
-              <Card padding="lg">
+              <Card>
                 <HStack justify="between" align="center">
                   <span className="text-slate-600 dark:text-slate-400">Member since</span>
                   <span className="font-medium text-slate-900 dark:text-white">

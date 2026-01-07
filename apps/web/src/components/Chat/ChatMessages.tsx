@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { VStack, HStack } from '@mobazha/ui';
-import { Avatar, Button, Skeleton } from '@mobazha/ui';
+import { VStack, HStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Skeleton } from '@/components/ui/skeleton-compat';
 
 export interface Message {
   id: string;

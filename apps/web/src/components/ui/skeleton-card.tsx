@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import * as React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -200,9 +201,6 @@ export function ListSkeleton({
   children: (index: number) => React.ReactNode;
 }) {
   return (
-    <div className="space-y-3">
-      {Array.from({ length: count }).map((_, i) => children(i))}
-    </div>
+    <div className="space-y-3">{Array.from({ length: count }).map((_, i) => children(i))}</div>
   );
 }
-

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input-compat';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -235,7 +235,11 @@ export default function KeyManagementPage() {
                     readOnly
                     className="font-mono text-sm"
                   />
-                  <Button variant="outline" size="icon" onClick={() => setShowMasterKey(!showMasterKey)}>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowMasterKey(!showMasterKey)}
+                  >
                     {showMasterKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                   <Button variant="outline" size="icon" onClick={handleCopyKey}>
@@ -458,4 +462,3 @@ export default function KeyManagementPage() {
     </div>
   );
 }
-
