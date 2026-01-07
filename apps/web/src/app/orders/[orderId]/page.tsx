@@ -401,7 +401,7 @@ export default function OrderDetailPage() {
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
               Order not found
             </h2>
-            <p className="text-slate-500 mb-4">
+            <p className="text-slate-500 dark:text-slate-400 mb-4">
               The order you&apos;re looking for doesn&apos;t exist.
             </p>
             <Button onClick={() => router.push('/orders')}>Back to Orders</Button>
@@ -458,7 +458,9 @@ export default function OrderDetailPage() {
                 {statusLabels[order.status]}
               </span>
             </div>
-            <p className="text-sm text-slate-500 mb-4">Placed on {formatDate(order.createdAt)}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Placed on {formatDate(order.createdAt)}
+            </p>
 
             {/* Actions - Mobile: Vertical Stack, Desktop: Horizontal */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
@@ -631,10 +633,12 @@ export default function OrderDetailPage() {
                           <p className="font-medium text-slate-900 dark:text-white text-sm sm:text-base">
                             {event.description}
                           </p>
-                          <p className="text-xs text-slate-500">{formatDate(event.timestamp)}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {formatDate(event.timestamp)}
+                          </p>
                         </div>
                         {event.actor && (
-                          <span className="text-[10px] sm:text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded capitalize flex-shrink-0">
+                          <span className="text-[10px] sm:text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded capitalize flex-shrink-0">
                             {event.actor}
                           </span>
                         )}
@@ -667,7 +671,7 @@ export default function OrderDetailPage() {
                         <h3 className="font-medium text-slate-900 dark:text-white text-sm sm:text-base truncate">
                           {item.title}
                         </h3>
-                        <p className="text-xs sm:text-sm text-slate-500">
+                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                           Quantity: {item.quantity}
                         </p>
                         <p className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
@@ -681,18 +685,24 @@ export default function OrderDetailPage() {
                 {/* Order Summary */}
                 <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-slate-200 dark:border-slate-700">
                   <HStack justify="between" className="mb-1.5 sm:mb-2">
-                    <span className="text-xs sm:text-sm text-slate-500">Subtotal</span>
+                    <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                      Subtotal
+                    </span>
                     <span className="text-xs sm:text-sm text-slate-900 dark:text-white">
                       {order.total} {order.currency}
                     </span>
                   </HStack>
                   <HStack justify="between" className="mb-1.5 sm:mb-2">
-                    <span className="text-xs sm:text-sm text-slate-500">Shipping</span>
+                    <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                      Shipping
+                    </span>
                     <span className="text-xs sm:text-sm text-slate-900 dark:text-white">Free</span>
                   </HStack>
                   {order.moderator && (
                     <HStack justify="between" className="mb-1.5 sm:mb-2">
-                      <span className="text-xs sm:text-sm text-slate-500">Moderator Fee</span>
+                      <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        Moderator Fee
+                      </span>
                       <span className="text-xs sm:text-sm text-slate-900 dark:text-white">
                         {order.moderator.fee}%
                       </span>
@@ -717,7 +727,9 @@ export default function OrderDetailPage() {
             <div className="space-y-4 sm:space-y-6">
               {/* Parties Info */}
               <Card className="p-3 sm:p-6">
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-3">Seller</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">
+                  Seller
+                </h3>
                 <HStack gap="sm" align="center" className="mb-3">
                   <Avatar
                     src={order.vendor.avatar}
@@ -732,13 +744,13 @@ export default function OrderDetailPage() {
                     >
                       {order.vendor.name}
                     </Link>
-                    <span className="text-xs text-slate-500">View Store</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">View Store</span>
                   </VStack>
                 </HStack>
 
                 {order.moderator && (
                   <>
-                    <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-3 mt-4">
+                    <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 mt-4">
                       Moderator
                     </h3>
                     <HStack gap="sm" align="center">
@@ -754,7 +766,9 @@ export default function OrderDetailPage() {
                         >
                           {order.moderator.name}
                         </Link>
-                        <span className="text-xs text-slate-500">{order.moderator.fee}% fee</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {order.moderator.fee}% fee
+                        </span>
                       </VStack>
                     </HStack>
                   </>
@@ -763,7 +777,7 @@ export default function OrderDetailPage() {
 
               {/* Shipping Info */}
               <Card className="p-3 sm:p-6">
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-2 sm:mb-3">
+                <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">
                   Shipping Address
                 </h3>
                 <p className="text-slate-900 dark:text-white whitespace-pre-line text-sm">
@@ -771,7 +785,9 @@ export default function OrderDetailPage() {
                 </p>
                 {order.trackingNumber && (
                   <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <h3 className="text-xs font-medium text-slate-500 mb-1">Tracking Number</h3>
+                    <h3 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                      Tracking Number
+                    </h3>
                     <p className="font-mono font-medium text-emerald-600 text-sm">
                       {order.trackingNumber}
                     </p>
@@ -781,13 +797,13 @@ export default function OrderDetailPage() {
 
               {/* Payment Info */}
               <Card className="p-3 sm:p-6">
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-2 sm:mb-3">
+                <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">
                   Payment Details
                 </h3>
                 <VStack gap="sm">
                   {order.paymentTx && (
                     <div>
-                      <span className="text-[10px] sm:text-xs text-slate-500">
+                      <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                         Payment Transaction
                       </span>
                       <p className="font-mono text-xs sm:text-sm text-slate-900 dark:text-white truncate">
@@ -797,7 +813,9 @@ export default function OrderDetailPage() {
                   )}
                   {order.escrowAddress && (
                     <div>
-                      <span className="text-[10px] sm:text-xs text-slate-500">Escrow Address</span>
+                      <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                        Escrow Address
+                      </span>
                       <p className="font-mono text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                         {order.escrowAddress}
                       </p>
@@ -809,7 +827,7 @@ export default function OrderDetailPage() {
               {/* Order Notes */}
               {order.notes && (
                 <Card className="p-3 sm:p-6">
-                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-2">
+                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
                     Order Notes
                   </h3>
                   <p className="text-slate-900 dark:text-white text-sm">{order.notes}</p>
@@ -829,7 +847,7 @@ export default function OrderDetailPage() {
             <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3">
               Open Dispute
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
               Please describe the issue with your order. The moderator will review your case.
             </p>
             <textarea
@@ -860,7 +878,7 @@ export default function OrderDetailPage() {
             </h2>
             <VStack gap="sm">
               <div>
-                <label className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1.5 block">
+                <label className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-1.5 block">
                   Carrier
                 </label>
                 <input
@@ -872,7 +890,7 @@ export default function OrderDetailPage() {
                 />
               </div>
               <div>
-                <label className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1.5 block">
+                <label className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-1.5 block">
                   Tracking Number *
                 </label>
                 <input

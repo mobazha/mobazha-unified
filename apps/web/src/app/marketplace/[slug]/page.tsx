@@ -234,19 +234,25 @@ export default function MarketplaceDetailPage() {
                           <span className="text-2xl font-bold text-slate-900 dark:text-white">
                             {marketplace.memberCount.toLocaleString()}
                           </span>
-                          <span className="text-sm text-slate-500">Members</span>
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Members
+                          </span>
                         </VStack>
                         <VStack gap="none">
                           <span className="text-2xl font-bold text-slate-900 dark:text-white">
                             {marketplace.sellerCount}
                           </span>
-                          <span className="text-sm text-slate-500">Sellers</span>
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Sellers
+                          </span>
                         </VStack>
                         <VStack gap="none">
                           <span className="text-2xl font-bold text-slate-900 dark:text-white">
                             {marketplace.productCount}
                           </span>
-                          <span className="text-sm text-slate-500">Products</span>
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Products
+                          </span>
                         </VStack>
                       </HStack>
                     </div>
@@ -354,7 +360,7 @@ export default function MarketplaceDetailPage() {
                         <h3 className="font-semibold text-slate-900 dark:text-white">
                           {seller.name}
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           {seller.productCount} products • ⭐ {seller.rating}
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
@@ -406,7 +412,7 @@ export default function MarketplaceDetailPage() {
                       <p className="font-semibold text-slate-900 dark:text-white">
                         {marketplace.owner.name}
                       </p>
-                      <p className="text-sm text-slate-500">Owner</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Owner</p>
                     </div>
                   </HStack>
                 </Card>

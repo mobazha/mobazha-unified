@@ -298,7 +298,7 @@ export default function ProfilePage() {
                         <div className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
                           {profile.stats.listingCount}
                         </div>
-                        <div className="text-xs sm:text-sm text-slate-500">
+                        <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                           {t('profile.listings')}
                         </div>
                       </div>
@@ -306,7 +306,7 @@ export default function ProfilePage() {
                         <div className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
                           {profile.stats.followerCount}
                         </div>
-                        <div className="text-xs sm:text-sm text-slate-500">
+                        <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                           {t('profile.followers')}
                         </div>
                       </div>
@@ -314,7 +314,7 @@ export default function ProfilePage() {
                         <div className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
                           {profile.stats.followingCount}
                         </div>
-                        <div className="text-xs sm:text-sm text-slate-500">
+                        <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                           {t('profile.following')}
                         </div>
                       </div>
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                             {profile.stats.averageRating}
                           </span>
                         </HStack>
-                        <div className="text-xs sm:text-sm text-slate-500">
+                        <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                           {profile.stats.ratingCount} {t('profile.reviews')}
                         </div>
                       </div>
@@ -440,7 +440,7 @@ export default function ProfilePage() {
                           <HStack gap="sm" align="center">
                             <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <svg
-                                className="w-5 h-5 text-slate-500"
+                                className="w-5 h-5 text-slate-500 dark:text-slate-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -454,7 +454,9 @@ export default function ProfilePage() {
                               </svg>
                             </div>
                             <div>
-                              <p className="text-sm text-slate-500">{t('profile.email')}</p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {t('profile.email')}
+                              </p>
                               <a
                                 href={`mailto:${profile.contactInfo.email}`}
                                 className="text-emerald-600 hover:underline"
@@ -468,7 +470,7 @@ export default function ProfilePage() {
                           <HStack gap="sm" align="center">
                             <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <svg
-                                className="w-5 h-5 text-slate-500"
+                                className="w-5 h-5 text-slate-500 dark:text-slate-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -482,7 +484,9 @@ export default function ProfilePage() {
                               </svg>
                             </div>
                             <div>
-                              <p className="text-sm text-slate-500">{t('profile.phone')}</p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {t('profile.phone')}
+                              </p>
                               <a
                                 href={`tel:${profile.contactInfo.phoneNumber}`}
                                 className="text-emerald-600 hover:underline"
@@ -496,7 +500,7 @@ export default function ProfilePage() {
                           <HStack gap="sm" align="center">
                             <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <svg
-                                className="w-5 h-5 text-slate-500"
+                                className="w-5 h-5 text-slate-500 dark:text-slate-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -510,7 +514,9 @@ export default function ProfilePage() {
                               </svg>
                             </div>
                             <div>
-                              <p className="text-sm text-slate-500">{t('profile.website')}</p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {t('profile.website')}
+                              </p>
                               <a
                                 href={profile.contactInfo.website}
                                 target="_blank"
@@ -541,7 +547,7 @@ export default function ProfilePage() {
                       <span className="text-2xl font-bold text-slate-900 dark:text-white">
                         {profile.stats.averageRating}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-slate-500 dark:text-slate-400">
                         ({profile.stats.ratingCount} {t('profile.reviews')})
                       </span>
                     </HStack>

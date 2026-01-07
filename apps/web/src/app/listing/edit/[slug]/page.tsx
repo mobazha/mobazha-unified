@@ -347,7 +347,7 @@ export default function EditListingPage() {
             </Link>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Listing</h1>
-              <p className="text-slate-500">Update your product or service</p>
+              <p className="text-slate-500 dark:text-slate-400">Update your product or service</p>
             </div>
             <Button
               variant="outline"

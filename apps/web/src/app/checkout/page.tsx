@@ -280,7 +280,7 @@ export default function CheckoutPage() {
                     {i + 1}
                   </div>
                   <span
-                    className={`text-[10px] sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}
+                    className={`text-[10px] sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500 dark:text-slate-400'}`}
                   >
                     {s}
                   </span>
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
                           />
                         </svg>
                       </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-sm">
+                      <p className="text-sm text-slate-600 dark:text-slate-300 text-center max-w-sm">
                         Connect your external wallet (MetaMask, Trust Wallet, etc.) to pay with
                         cryptocurrency
                       </p>
@@ -352,7 +352,7 @@ export default function CheckoutPage() {
                               <p className="font-medium text-slate-900 dark:text-white text-sm">
                                 {walletInfo?.provider || 'Wallet'}
                               </p>
-                              <p className="text-xs text-slate-500 font-mono">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                                 {walletInfo?.address && shortenAddress(walletInfo.address)}
                               </p>
                             </div>
@@ -438,16 +438,18 @@ export default function CheckoutPage() {
                                 </span>
                               )}
                             </HStack>
-                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+                            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
                               {address.street}
                             </p>
-                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+                            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
                               {address.city}, {address.state} {address.postalCode}
                             </p>
-                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+                            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
                               {address.country}
                             </p>
-                            <p className="text-slate-500 text-xs mt-0.5">{address.phone}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+                              {address.phone}
+                            </p>
                           </div>
                           <div
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -483,7 +485,7 @@ export default function CheckoutPage() {
                   <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1.5">
                     Select Moderator
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-3 sm:mb-4">
                     A moderator helps resolve disputes between buyers and sellers. Choose one to
                     enable escrow protection.
                   </p>
@@ -526,10 +528,10 @@ export default function CheckoutPage() {
                                 )}
                               </HStack>
                               <HStack gap="sm" className="mt-0.5">
-                                <span className="text-xs text-slate-500">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                   Fee: {moderator.fee}%
                                 </span>
-                                <span className="text-xs text-slate-500">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                   ⭐ {moderator.rating}
                                 </span>
                               </HStack>
@@ -606,7 +608,9 @@ export default function CheckoutPage() {
                           <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white line-clamp-2">
                             {item.title}
                           </p>
-                          <p className="text-xs text-slate-500">Qty: {item.quantity}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Qty: {item.quantity}
+                          </p>
                         </div>
                         <p className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
                           ${(item.price * item.quantity).toFixed(2)}
@@ -617,7 +621,7 @@ export default function CheckoutPage() {
 
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3">
                     <HStack justify="between">
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                         Subtotal
                       </span>
                       <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
@@ -626,7 +630,7 @@ export default function CheckoutPage() {
                     </HStack>
 
                     <HStack justify="between">
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                         Shipping
                       </span>
                       <span className="font-medium text-emerald-600 text-xs sm:text-sm">Free</span>
@@ -634,7 +638,7 @@ export default function CheckoutPage() {
 
                     {selectedModerator && (
                       <HStack justify="between">
-                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                           Moderator Fee
                         </span>
                         <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
@@ -653,7 +657,7 @@ export default function CheckoutPage() {
                             ${total.toFixed(2)}
                           </p>
                           {isConnected && (
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
                             </p>
                           )}
@@ -666,7 +670,7 @@ export default function CheckoutPage() {
                   {isConnected && (
                     <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-slate-100 dark:bg-slate-800 rounded-md sm:rounded-lg">
                       <HStack justify="between" align="center">
-                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                           Pay with
                         </span>
                         <HStack gap="xs" align="center">
@@ -725,7 +729,7 @@ export default function CheckoutPage() {
                   )}
 
                   {/* Security Note */}
-                  <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500">
+                  <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                     <svg
                       className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                       fill="none"

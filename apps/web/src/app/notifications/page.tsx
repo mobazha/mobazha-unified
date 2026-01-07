@@ -247,7 +247,7 @@ export default function NotificationsPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                 Notifications
               </h1>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
               </p>
             </div>
@@ -310,7 +310,7 @@ export default function NotificationsPage() {
               <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1.5">
                 {filter === 'unread' ? 'No unread notifications' : 'No notifications'}
               </h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {filter === 'unread'
                   ? "You're all caught up!"
                   : "You'll see new notifications here."}
@@ -355,10 +355,10 @@ export default function NotificationsPage() {
                           >
                             {notification.title}
                           </h3>
-                          <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 mt-0.5">
+                          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
                             {notification.message}
                           </p>
-                          <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">
+                          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                             {formatTimestamp(notification.timestamp)}
                           </p>
                         </div>

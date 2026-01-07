@@ -42,12 +42,10 @@ export const ChatList: React.FC<ChatListProps> = ({
   );
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700">
+    <div className="h-full flex flex-col bg-card border-r border-border">
       {/* Header */}
-      <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-700">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
-          Messages
-        </h2>
+      <div className="p-3 sm:p-4 border-b border-border">
+        <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">Messages</h2>
         <Input
           placeholder="Search conversations..."
           value={searchQuery}
@@ -86,7 +84,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             ))}
           </VStack>
         ) : filteredRooms.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-muted-foreground">
             {searchQuery ? 'No conversations found' : 'No conversations yet'}
           </div>
         ) : (
@@ -96,8 +94,8 @@ export const ChatList: React.FC<ChatListProps> = ({
                 key={room.id}
                 href={`/chat/${room.id}`}
                 onClick={() => onRoomSelect?.(room.id)}
-                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors ${
-                  activeRoomId === room.id ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
+                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 hover:bg-surface-hover active:bg-muted transition-colors ${
+                  activeRoomId === room.id ? 'bg-primary/10' : ''
                 }`}
               >
                 {/* Avatar with online status */}
@@ -110,14 +108,14 @@ export const ChatList: React.FC<ChatListProps> = ({
                   />
                   {/* Online status indicator - bottom right */}
                   {room.isOnline && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-emerald-500 border-2 border-card rounded-full" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <HStack justify="between" align="center">
                     <HStack gap="xs" align="center" className="min-w-0 flex-1">
-                      <span className="font-medium text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                      <span className="font-medium text-sm sm:text-base text-foreground truncate">
                         {room.name}
                       </span>
                       {/* Encrypted indicator - next to name */}
@@ -137,13 +135,13 @@ export const ChatList: React.FC<ChatListProps> = ({
                       )}
                     </HStack>
                     {room.lastMessageTime && (
-                      <span className="text-[10px] sm:text-xs text-slate-400 flex-shrink-0 ml-2">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0 ml-2">
                         {room.lastMessageTime}
                       </span>
                     )}
                   </HStack>
                   <HStack justify="between" align="center" className="mt-0.5">
-                    <p className="text-xs sm:text-sm text-slate-500 truncate">
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
                       {room.lastMessage || 'No messages'}
                     </p>
                     {room.unreadCount && room.unreadCount > 0 && (
@@ -160,7 +158,7 @@ export const ChatList: React.FC<ChatListProps> = ({
       </div>
 
       {/* New Chat Button */}
-      <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-700">
+      <div className="p-3 sm:p-4 border-t border-border">
         <button className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg transition-colors text-sm sm:text-base">
           <svg
             className="w-4 h-4 sm:w-5 sm:h-5"

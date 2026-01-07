@@ -16,30 +16,29 @@ export const Header: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
     }
   };
 
+  // 移动端隐藏顶部 Header，使用底部 MobileNav 导航
   return (
-    <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-lg border-b border-border">
+    <header className="hidden md:block sticky top-0 z-40 bg-background/90 backdrop-blur-lg border-b border-border">
       <Container size="xl">
-        <div className="flex items-center justify-between h-14 md:h-16">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
               <span className="text-primary-foreground font-bold text-lg">M</span>
             </div>
-            <span className="font-bold text-xl text-foreground hidden sm:block">Mobazha</span>
+            <span className="font-bold text-xl text-foreground">Mobazha</span>
           </Link>
 
           {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-8">
+          <form onSubmit={handleSearch} className="flex flex-1 max-w-xl mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -54,7 +53,7 @@ export const Header: React.FC = () => {
           </form>
 
           {/* Navigation - Desktop */}
-          <HStack gap="sm" className="hidden md:flex items-center">
+          <HStack gap="sm" className="flex items-center">
             <Link href="/marketplace">
               <Button
                 variant="ghost"
@@ -82,7 +81,7 @@ export const Header: React.FC = () => {
                 {t('nav.wallet')}
               </Button>
             </Link>
-            <Link href="/cart">
+            <Link href="/cart" className="relative">
               <Button
                 variant="ghost"
                 size="icon"
@@ -90,6 +89,9 @@ export const Header: React.FC = () => {
               >
                 <ShoppingCart className="h-5 w-5" />
               </Button>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                3
+              </span>
             </Link>
             <div className="w-px h-6 bg-border mx-2" />
             <LanguageSwitcher compact />
@@ -98,46 +100,7 @@ export const Header: React.FC = () => {
               <Avatar name="Guest" size="sm" />
             </Link>
           </HStack>
-
-          {/* Mobile Actions */}
-          <HStack gap="xs" className="md:hidden items-center">
-            <button
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              aria-label={t('common.search')}
-            >
-              <Search className="h-5 w-5" />
-            </button>
-            <LanguageSwitcher compact />
-            <ThemeSwitcher compact />
-            <Link href="/cart" className="relative p-2 rounded-lg hover:bg-muted transition-colors">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                3
-              </span>
-            </Link>
-          </HStack>
         </div>
-
-        {/* Mobile Search Bar */}
-        {isSearchOpen && (
-          <div className="md:hidden py-3 border-t border-border animate-in slide-in-from-top-2 duration-200">
-            <form onSubmit={handleSearch}>
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('search.placeholder')}
-                  value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setSearchQuery(e.target.value)
-                  }
-                  className="w-full pl-10"
-                  autoFocus
-                />
-              </div>
-            </form>
-          </div>
-        )}
       </Container>
     </header>
   );

@@ -123,7 +123,7 @@ export default function PrivacySettingsPage() {
                         <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                           Private Store
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           When enabled, only approved users can view your store and products.
                         </p>
                       </div>
@@ -149,7 +149,7 @@ export default function PrivacySettingsPage() {
                           <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                             Require Approval
                           </h3>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
                             Users must request access and be approved before viewing your store.
                           </p>
                         </div>
@@ -212,7 +212,9 @@ export default function PrivacySettingsPage() {
 
                   {requests.filter(r => r.status === 'pending').length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-slate-500">No pending access requests</p>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        No pending access requests
+                      </p>
                     </div>
                   ) : (
                     <VStack gap="md">
@@ -234,7 +236,7 @@ export default function PrivacySettingsPage() {
                                   <p className="font-semibold text-slate-900 dark:text-white">
                                     {request.name}
                                   </p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
                                     {new Date(request.createdAt).toLocaleDateString()}
                                   </p>
                                 </div>

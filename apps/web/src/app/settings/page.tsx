@@ -76,46 +76,64 @@ const SettingItem = ({
   toggleValue,
   onToggle,
   danger,
-}: SettingItemProps) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center justify-between p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
-      danger ? 'text-red-600' : ''
-    }`}
-  >
-    <div className="flex-1 text-left min-w-0">
-      <p
-        className={`font-medium text-sm sm:text-base ${danger ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}
-      >
-        {title}
-      </p>
-      {description && (
-        <p className="text-xs sm:text-sm text-slate-500 mt-0.5 line-clamp-2">{description}</p>
+}: SettingItemProps) => {
+  const content = (
+    <>
+      <div className="flex-1 text-left min-w-0">
+        <p
+          className={`font-medium text-sm sm:text-base ${danger ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}
+        >
+          {title}
+        </p>
+        {description && (
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+            {description}
+          </p>
+        )}
+      </div>
+      {toggle ? (
+        <Switch
+          checked={toggleValue}
+          onCheckedChange={value => {
+            onToggle?.(value);
+          }}
+          className="ml-3 flex-shrink-0"
+        />
+      ) : value ? (
+        <span className="text-slate-500 dark:text-slate-400 text-sm sm:text-base ml-3 flex-shrink-0">
+          {value}
+        </span>
+      ) : (
+        <svg
+          className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-3 flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
       )}
-    </div>
-    {toggle ? (
-      <Switch
-        checked={toggleValue}
-        onCheckedChange={value => {
-          onToggle?.(value);
-        }}
-        onClick={e => e.stopPropagation()}
-        className="ml-3 flex-shrink-0"
-      />
-    ) : value ? (
-      <span className="text-slate-500 text-sm sm:text-base ml-3 flex-shrink-0">{value}</span>
-    ) : (
-      <svg
-        className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-3 flex-shrink-0"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
-    )}
-  </button>
-);
+    </>
+  );
+
+  const baseClassName = `w-full flex items-center justify-between p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
+    danger ? 'text-red-600' : ''
+  }`;
+
+  // 当有 toggle 时使用 div 避免 button 嵌套问题
+  if (toggle) {
+    return <div className={baseClassName}>{content}</div>;
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`${baseClassName} active:bg-slate-100 dark:active:bg-slate-700/50`}
+    >
+      {content}
+    </button>
+  );
+};
 
 interface SettingGroupProps {
   title: string;
@@ -124,7 +142,7 @@ interface SettingGroupProps {
 
 const SettingGroup = ({ title, children }: SettingGroupProps) => (
   <div className="mb-4 sm:mb-6">
-    <h3 className="text-xs sm:text-sm font-medium text-slate-500 uppercase tracking-wider mb-1.5 sm:mb-2 px-1">
+    <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1">
       {title}
     </h3>
     <Card className="overflow-hidden">{children}</Card>
@@ -512,7 +530,7 @@ export default function SettingsPage() {
               >
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">{coin.symbol}</p>
-                  <p className="text-sm text-slate-500">{coin.name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{coin.name}</p>
                 </div>
                 <Switch
                   checked={coin.enabled}
