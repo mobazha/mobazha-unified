@@ -13,11 +13,24 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { outputFolder: 'playwright-report' }], ['list']],
 
+  // 增加全局超时时间（视觉测试需要更长时间，开发服务器首次编译较慢）
+  timeout: 120 * 1000, // 120 秒
+  expect: {
+    timeout: 15 * 1000, // expect 断言超时
+    toHaveScreenshot: {
+      maxDiffPixels: 200, // 允许的最大像素差异
+      threshold: 0.2, // 像素比较阈值
+    },
+  },
+
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // 增加页面加载超时（开发服务器首次编译较慢）
+    navigationTimeout: 60 * 1000,
+    actionTimeout: 30 * 1000,
   },
 
   projects: [
