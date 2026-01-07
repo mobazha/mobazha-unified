@@ -228,7 +228,7 @@ export default function MarketplaceAdminPage() {
 
                   {applications.filter(a => a.status === 'pending').length === 0 ? (
                     <div className="text-center py-12">
-                      <p className="text-slate-500">No pending applications</p>
+                      <p className="text-slate-500 dark:text-slate-400">No pending applications</p>
                     </div>
                   ) : (
                     <VStack gap="lg">
@@ -250,7 +250,7 @@ export default function MarketplaceAdminPage() {
                                   <h3 className="font-semibold text-slate-900 dark:text-white">
                                     {app.applicantName}
                                   </h3>
-                                  <p className="text-sm text-slate-500">
+                                  <p className="text-sm text-slate-500 dark:text-slate-400">
                                     {app.productCount} products •{' '}
                                     {new Date(app.createdAt).toLocaleDateString()}
                                   </p>
@@ -289,7 +289,7 @@ export default function MarketplaceAdminPage() {
 
                   {pendingProducts.filter(p => p.status === 'pending').length === 0 ? (
                     <div className="text-center py-12">
-                      <p className="text-slate-500">No pending products</p>
+                      <p className="text-slate-500 dark:text-slate-400">No pending products</p>
                     </div>
                   ) : (
                     <VStack gap="md">
@@ -311,7 +311,7 @@ export default function MarketplaceAdminPage() {
                                   <h3 className="font-semibold text-slate-900 dark:text-white">
                                     {product.title}
                                   </h3>
-                                  <p className="text-sm text-slate-500">
+                                  <p className="text-sm text-slate-500 dark:text-slate-400">
                                     by {product.sellerName} • ${product.price}
                                   </p>
                                 </div>
@@ -351,13 +351,19 @@ export default function MarketplaceAdminPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-slate-200 dark:border-slate-700">
-                          <th className="text-left py-3 px-4 font-medium text-slate-500">Member</th>
-                          <th className="text-left py-3 px-4 font-medium text-slate-500">Role</th>
-                          <th className="text-left py-3 px-4 font-medium text-slate-500">
+                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                            Member
+                          </th>
+                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                            Role
+                          </th>
+                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
                             Products
                           </th>
-                          <th className="text-left py-3 px-4 font-medium text-slate-500">Joined</th>
-                          <th className="text-right py-3 px-4 font-medium text-slate-500">
+                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                            Joined
+                          </th>
+                          <th className="text-right py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
                             Actions
                           </th>
                         </tr>

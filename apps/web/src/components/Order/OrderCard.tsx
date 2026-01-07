@@ -51,7 +51,7 @@ export interface OrderCardProps {
 const statusConfig = {
   pending: {
     label: 'Pending',
-    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    color: 'bg-yellow-500/20 text-yellow-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -65,7 +65,7 @@ const statusConfig = {
   },
   processing: {
     label: 'Processing',
-    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    color: 'bg-blue-500/20 text-blue-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -79,7 +79,7 @@ const statusConfig = {
   },
   shipped: {
     label: 'Shipped',
-    color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    color: 'bg-purple-500/20 text-purple-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -93,7 +93,7 @@ const statusConfig = {
   },
   delivered: {
     label: 'Delivered',
-    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    color: 'bg-emerald-500/20 text-emerald-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -107,7 +107,7 @@ const statusConfig = {
   },
   disputed: {
     label: 'Disputed',
-    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    color: 'bg-red-500/20 text-red-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -121,7 +121,7 @@ const statusConfig = {
   },
   completed: {
     label: 'Completed',
-    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    color: 'bg-emerald-500/20 text-emerald-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -130,7 +130,7 @@ const statusConfig = {
   },
   cancelled: {
     label: 'Cancelled',
-    color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+    color: 'bg-muted text-muted-foreground',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -158,17 +158,19 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
   return (
     <Card className="overflow-hidden active:scale-[0.995] transition-transform">
       {/* Header */}
-      <div className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+      <div className="p-3 sm:p-4 bg-muted/50 border-b border-border">
         <HStack justify="between" align="center" className="flex-wrap gap-2">
           <HStack gap="sm" align="center" className="sm:gap-4">
-            <span className="text-xs sm:text-sm text-slate-500">Order</span>
-            <span className="font-mono font-medium text-xs sm:text-sm text-slate-900 dark:text-white">
+            <span className="text-xs sm:text-sm text-muted-foreground">Order</span>
+            <span className="font-mono font-medium text-xs sm:text-sm text-foreground">
               #{order.orderId}
             </span>
           </HStack>
 
           <HStack gap="sm" align="center" className="sm:gap-4">
-            <span className="text-xs sm:text-sm text-slate-500">{formatDate(order.createdAt)}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {formatDate(order.createdAt)}
+            </span>
             <span
               className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${status.color}`}
             >
@@ -190,12 +192,12 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             className="w-8 h-8 sm:w-9 sm:h-9"
           />
           <VStack gap="none">
-            <span className="text-[10px] sm:text-xs text-slate-500">
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
               {type === 'purchase' ? 'Seller' : 'Buyer'}
             </span>
             <Link
               href={`/store/${order.vendor.id}`}
-              className="font-medium text-sm sm:text-base text-slate-900 dark:text-white hover:text-emerald-600"
+              className="font-medium text-sm sm:text-base text-foreground hover:text-emerald-600"
             >
               {order.vendor.name}
             </Link>
@@ -206,7 +208,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
         <VStack gap="sm" className="mb-3 sm:mb-4 sm:gap-4">
           {order.items.slice(0, 2).map(item => (
             <HStack key={item.id} gap="sm" align="center" className="sm:gap-4">
-              <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                 <Image
                   src={item.image}
                   alt={item.title}
@@ -216,17 +218,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
                 />
               </div>
               <VStack gap="none" className="flex-1 min-w-0">
-                <span className="font-medium text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                <span className="font-medium text-sm sm:text-base text-foreground truncate">
                   {item.title}
                 </span>
-                <span className="text-xs sm:text-sm text-slate-500">
+                <span className="text-xs sm:text-sm text-muted-foreground">
                   Qty: {item.quantity} × {item.price} {item.currency}
                 </span>
               </VStack>
             </HStack>
           ))}
           {order.items.length > 2 && (
-            <span className="text-xs sm:text-sm text-slate-500">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               +{order.items.length - 2} more item{order.items.length - 2 > 1 ? 's' : ''}
             </span>
           )}
@@ -234,22 +236,20 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
 
         {/* Tracking */}
         {order.trackingNumber && order.status === 'shipped' && (
-          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-            <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400">
-              Tracking Number
-            </span>
-            <p className="font-mono font-medium text-sm sm:text-base text-purple-900 dark:text-purple-200">
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-purple-500/10 rounded-lg">
+            <span className="text-[10px] sm:text-xs text-purple-600">Tracking Number</span>
+            <p className="font-mono font-medium text-sm sm:text-base text-foreground">
               {order.trackingNumber}
             </p>
           </div>
         )}
 
         {/* Total & Actions */}
-        <div className="pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="pt-3 sm:pt-4 border-t border-border">
           <HStack justify="between" align="center">
             <VStack gap="none">
-              <span className="text-xs sm:text-sm text-slate-500">Total</span>
-              <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
+              <span className="text-lg sm:text-xl font-bold text-foreground">
                 {order.total} {order.currency}
               </span>
             </VStack>

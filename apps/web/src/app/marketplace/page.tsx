@@ -267,7 +267,7 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {marketplace.memberCount.toLocaleString()}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-slate-500">
+                              <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                                 {t('marketplace.members')}
                               </span>
                             </VStack>
@@ -275,7 +275,7 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {marketplace.sellerCount}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-slate-500">
+                              <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                                 {t('marketplace.sellers')}
                               </span>
                             </VStack>
@@ -283,7 +283,7 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {marketplace.productCount}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-slate-500">
+                              <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                                 {t('marketplace.products')}
                               </span>
                             </VStack>
@@ -336,7 +336,10 @@ export default function MarketplacesPage() {
                         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-2 sm:mb-3">
                           {marketplace.shortDescription}
                         </p>
-                        <HStack gap="sm" className="text-xs sm:text-sm text-slate-500 sm:gap-4">
+                        <HStack
+                          gap="sm"
+                          className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 sm:gap-4"
+                        >
                           <span>
                             {marketplace.memberCount.toLocaleString()} {t('marketplace.members')}
                           </span>
@@ -349,7 +352,7 @@ export default function MarketplacesPage() {
                           {marketplace.categories.slice(0, 3).map(cat => (
                             <span
                               key={cat}
-                              className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded"
+                              className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded"
                             >
                               {cat}
                             </span>
@@ -383,7 +386,9 @@ export default function MarketplacesPage() {
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                     {t('marketplace.noMarketplacesFound')}
                   </h3>
-                  <p className="text-slate-500">{t('empty.tryAdjustingFilters')}</p>
+                  <p className="text-slate-500 dark:text-slate-400">
+                    {t('empty.tryAdjustingFilters')}
+                  </p>
                   <Button
                     variant="ghost"
                     onClick={() => {

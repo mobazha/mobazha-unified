@@ -316,7 +316,9 @@ export default function MarketplaceProductsPage() {
           {/* Products Grid */}
           {filteredProducts.length === 0 ? (
             <Card className="text-center">
-              <p className="text-slate-500">No {filter !== 'all' ? filter : ''} products found.</p>
+              <p className="text-slate-500 dark:text-slate-400">
+                No {filter !== 'all' ? filter : ''} products found.
+              </p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -353,7 +355,7 @@ export default function MarketplaceProductsPage() {
                     <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
                       <HStack justify="between" align="center">
                         <div className="text-sm">
-                          <p className="text-slate-500">Seller</p>
+                          <p className="text-slate-500 dark:text-slate-400">Seller</p>
                           <p className="font-medium text-slate-900 dark:text-white">
                             {product.seller.name}
                           </p>
@@ -388,7 +390,7 @@ export default function MarketplaceProductsPage() {
                     )}
 
                     {product.reviewNote && (
-                      <div className="mt-3 p-2 bg-slate-50 dark:bg-slate-800 rounded text-xs text-slate-500">
+                      <div className="mt-3 p-2 bg-slate-50 dark:bg-slate-800 rounded text-xs text-slate-500 dark:text-slate-400">
                         Note: {product.reviewNote}
                       </div>
                     )}

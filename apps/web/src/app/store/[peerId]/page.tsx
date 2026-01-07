@@ -195,7 +195,10 @@ export default function StorePage() {
                     <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-0.5">
                       {store.shortDescription}
                     </p>
-                    <HStack gap="sm" className="mt-1.5 text-xs sm:text-sm text-slate-500">
+                    <HStack
+                      gap="sm"
+                      className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400"
+                    >
                       <span>📍 {store.location}</span>
                       <span>📅 Since {store.memberSince}</span>
                     </HStack>
@@ -226,19 +229,23 @@ export default function StorePage() {
                     <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                       {store.listingCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-500">Products</div>
+                    <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                      Products
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                       {store.followerCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-500">Followers</div>
+                    <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                      Followers
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                       ⭐ {store.rating}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-500">
+                    <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                       {store.reviewCount} reviews
                     </div>
                   </div>
@@ -294,7 +301,7 @@ export default function StorePage() {
                       {store.about.split('\n').map((paragraph, i) => (
                         <p
                           key={i}
-                          className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-3"
+                          className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-3"
                         >
                           {paragraph}
                         </p>
@@ -310,7 +317,7 @@ export default function StorePage() {
                     </h3>
                     <VStack gap="sm" align="stretch">
                       <div>
-                        <span className="text-xs sm:text-sm text-slate-500">
+                        <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                           Accepted Currencies
                         </span>
                         <p className="font-medium text-slate-900 dark:text-white text-sm">
@@ -319,7 +326,9 @@ export default function StorePage() {
                       </div>
                       {store.socialLinks.website && (
                         <div>
-                          <span className="text-xs sm:text-sm text-slate-500">Website</span>
+                          <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                            Website
+                          </span>
                           <a
                             href={store.socialLinks.website}
                             target="_blank"
@@ -332,7 +341,9 @@ export default function StorePage() {
                       )}
                       {store.socialLinks.twitter && (
                         <div>
-                          <span className="text-xs sm:text-sm text-slate-500">Twitter</span>
+                          <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                            Twitter
+                          </span>
                           <p className="font-medium text-slate-900 dark:text-white text-sm">
                             {store.socialLinks.twitter}
                           </p>
@@ -351,7 +362,7 @@ export default function StorePage() {
                 <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3">
                   Customer Reviews
                 </h2>
-                <div className="text-center py-6 text-slate-500 text-sm">
+                <div className="text-center py-6 text-slate-500 dark:text-slate-400 text-sm">
                   Reviews coming soon...
                 </div>
               </Card>

@@ -258,7 +258,7 @@ export default function WalletPage() {
                 <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">
                   {t('wallet.transactionHistory')}
                   {selectedCurrency && (
-                    <span className="ml-2 text-xs sm:text-sm font-normal text-slate-500">
+                    <span className="ml-2 text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400">
                       ({selectedCurrency})
                       <button
                         onClick={() => setSelectedCurrency(null)}

@@ -151,30 +151,30 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-4 sm:py-8">
         <Container>
           {/* Page Header */}
           <div className="mb-4 sm:mb-8">
-            <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1 sm:mb-2">
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
               {t('nav.orders')}
             </h1>
-            <p className="text-sm sm:text-base text-slate-500">{t('order.manageOrders')}</p>
+            <p className="text-sm sm:text-base text-muted-foreground">{t('order.manageOrders')}</p>
           </div>
 
           {/* Order Type Toggle */}
           <div className="mb-4 sm:mb-6">
-            <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+            <div className="inline-flex rounded-lg bg-muted p-1">
               {(['purchases', 'sales'] as OrderType[]).map(type => (
                 <button
                   key={type}
                   onClick={() => setOrderType(type)}
                   className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                     orderType === type
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {type === 'purchases' ? t('order.myPurchases') : t('order.mySales')}
@@ -193,7 +193,7 @@ export default function OrdersPage() {
                   className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                     statusFilter === tab.value
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                      : 'bg-card text-muted-foreground hover:text-foreground hover:bg-surface-hover border border-border'
                   }`}
                 >
                   {tab.label}
@@ -235,7 +235,7 @@ export default function OrdersPage() {
           ) : filteredOrders.length === 0 ? (
             <Card className="text-center">
               <CardContent className="py-16">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
                   <svg
                     className="w-10 h-10 text-slate-400"
                     fill="none"
@@ -250,10 +250,10 @@ export default function OrdersPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                <h3 className="text-xl font-semibold text-foreground mb-2">
                   {t('order.noOrdersFound')}
                 </h3>
-                <p className="text-slate-500 max-w-sm mx-auto">
+                <p className="text-muted-foreground max-w-sm mx-auto">
                   {statusFilter === 'all'
                     ? t('order.noOrdersMessage', {
                         type: orderType === 'purchases' ? t('order.purchases') : t('order.sales'),

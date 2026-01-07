@@ -238,7 +238,7 @@ export default function MarketplaceApplicationsPage() {
           <VStack gap="md">
             {filteredApplications.length === 0 ? (
               <Card className="text-center">
-                <p className="text-slate-500">
+                <p className="text-slate-500 dark:text-slate-400">
                   No {filter !== 'all' ? filter : ''} applications found.
                 </p>
               </Card>
@@ -263,7 +263,7 @@ export default function MarketplaceApplicationsPage() {
                         <p className="text-sm text-slate-500 font-mono">
                           {app.applicantPeerID.slice(0, 12)}...
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           Applied {formatDate(app.createdAt)}
                         </p>
                       </VStack>
@@ -300,7 +300,9 @@ export default function MarketplaceApplicationsPage() {
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                       {app.sellerProfile.businessName && (
                         <div>
-                          <p className="text-xs text-slate-500">Business Name</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Business Name
+                          </p>
                           <p className="font-medium text-slate-900 dark:text-white">
                             {app.sellerProfile.businessName}
                           </p>
@@ -308,7 +310,7 @@ export default function MarketplaceApplicationsPage() {
                       )}
                       {app.sellerProfile.location && (
                         <div>
-                          <p className="text-xs text-slate-500">Location</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Location</p>
                           <p className="font-medium text-slate-900 dark:text-white">
                             {app.sellerProfile.location}
                           </p>
@@ -316,7 +318,7 @@ export default function MarketplaceApplicationsPage() {
                       )}
                       {app.sellerProfile.bio && (
                         <div className="md:col-span-3">
-                          <p className="text-xs text-slate-500">Bio</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Bio</p>
                           <p className="text-slate-700 dark:text-slate-300">
                             {app.sellerProfile.bio}
                           </p>

@@ -288,7 +288,7 @@ export default function CaseDetailPage() {
                     {caseData.state}
                   </span>
                 </HStack>
-                <p className="text-slate-500">
+                <p className="text-slate-500 dark:text-slate-400">
                   Order: {caseData.orderId} • Opened {formatDate(caseData.timestamp)}
                 </p>
               </div>
@@ -296,7 +296,7 @@ export default function CaseDetailPage() {
                 <p className="text-2xl font-bold text-slate-900 dark:text-white">
                   {caseData.total} {caseData.coin}
                 </p>
-                <p className="text-sm text-slate-500">Amount in escrow</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Amount in escrow</p>
               </div>
             </HStack>
 
@@ -315,7 +315,7 @@ export default function CaseDetailPage() {
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                   {caseData.title}
                 </h3>
-                <HStack gap="md" className="text-sm text-slate-500">
+                <HStack gap="md" className="text-sm text-slate-500 dark:text-slate-400">
                   <span>Opened by: {caseData.buyerOpened ? 'Buyer' : 'Seller'}</span>
                 </HStack>
               </div>
@@ -336,7 +336,9 @@ export default function CaseDetailPage() {
                         (Buyer - Opened Dispute)
                       </span>
                     </h3>
-                    <p className="text-sm text-slate-500">{caseData.buyer.peerID}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {caseData.buyer.peerID}
+                    </p>
                   </div>
                 </HStack>
                 <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
@@ -354,7 +356,9 @@ export default function CaseDetailPage() {
                       {caseData.seller.name}
                       <span className="ml-2 text-sm font-normal text-blue-500">(Seller)</span>
                     </h3>
-                    <p className="text-sm text-slate-500">{caseData.seller.peerID}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {caseData.seller.peerID}
+                    </p>
                   </div>
                 </HStack>
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
@@ -388,7 +392,9 @@ export default function CaseDetailPage() {
                         >
                           From {ev.submittedBy === 'buyer' ? 'Buyer' : 'Seller'}
                         </span>
-                        <span className="text-xs text-slate-500">{formatDate(ev.timestamp)}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {formatDate(ev.timestamp)}
+                        </span>
                       </HStack>
                       {ev.type === 'image' ? (
                         <img
@@ -434,7 +440,9 @@ export default function CaseDetailPage() {
                           {msg.senderName}
                           {msg.sender === 'moderator' && ' (Moderator)'}
                         </span>
-                        <span className="text-xs text-slate-500">{formatDate(msg.timestamp)}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {formatDate(msg.timestamp)}
+                        </span>
                       </HStack>
                       <p className="text-sm text-slate-700 dark:text-slate-300">{msg.content}</p>
                     </div>
@@ -519,7 +527,9 @@ export default function CaseDetailPage() {
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-xs text-slate-500">Buyer %</label>
+                          <label className="text-xs text-slate-500 dark:text-slate-400">
+                            Buyer %
+                          </label>
                           <Input
                             type="number"
                             min={0}
@@ -531,7 +541,9 @@ export default function CaseDetailPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-slate-500">Seller %</label>
+                          <label className="text-xs text-slate-500 dark:text-slate-400">
+                            Seller %
+                          </label>
                           <Input
                             type="number"
                             min={0}
@@ -555,7 +567,10 @@ export default function CaseDetailPage() {
                           style={{ width: `${vendorPercentage}%` }}
                         />
                       </div>
-                      <HStack justify="between" className="mt-1 text-xs text-slate-500">
+                      <HStack
+                        justify="between"
+                        className="mt-1 text-xs text-slate-500 dark:text-slate-400"
+                      >
                         <span>
                           Buyer: {((caseData.total * buyerPercentage) / 100).toFixed(2)}{' '}
                           {caseData.coin}
@@ -618,7 +633,7 @@ export default function CaseDetailPage() {
                   {((caseData.total * vendorPercentage) / 100).toFixed(2)} {caseData.coin})
                 </p>
               </div>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 This action cannot be undone. The funds will be released according to this decision.
               </p>
             </AlertDialogDescription>

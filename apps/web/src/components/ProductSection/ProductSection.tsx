@@ -122,7 +122,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
               No products found
             </h3>
-            <p className="text-slate-500 dark:text-slate-400">Check back later for new listings.</p>
+            <p className="text-slate-500 dark:text-slate-300">Check back later for new listings.</p>
           </div>
         )}
       </Container>

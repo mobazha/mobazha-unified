@@ -125,7 +125,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       {/* Main content area - account for mobile nav height */}
@@ -160,8 +160,8 @@ export default function ChatPage() {
               onBack={() => setSelectedRoom(null)}
             />
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-              <div className="w-24 h-24 mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+              <div className="w-24 h-24 mb-6 rounded-full bg-muted flex items-center justify-center">
                 <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -171,7 +171,7 @@ export default function ChatPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              <h3 className="text-xl font-semibold text-foreground mb-2">
                 {t('chat.welcomeToMessages')}
               </h3>
               <p className="text-center max-w-sm">{t('chat.selectConversation')}</p>

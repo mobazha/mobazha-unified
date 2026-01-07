@@ -227,19 +227,19 @@ export default function AccessRequestsPage() {
               <p className="text-2xl font-bold text-yellow-600">
                 {requests.filter(r => r.status === 'pending').length}
               </p>
-              <p className="text-sm text-slate-500">Pending</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Pending</p>
             </Card>
             <Card className="text-center">
               <p className="text-2xl font-bold text-emerald-600">
                 {requests.filter(r => r.status === 'approved').length}
               </p>
-              <p className="text-sm text-slate-500">Approved</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Approved</p>
             </Card>
             <Card className="text-center">
               <p className="text-2xl font-bold text-red-600">
                 {requests.filter(r => r.status === 'rejected').length}
               </p>
-              <p className="text-sm text-slate-500">Rejected</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Rejected</p>
             </Card>
           </div>
 
@@ -279,7 +279,7 @@ export default function AccessRequestsPage() {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-slate-500">
+                <p className="text-slate-500 dark:text-slate-400">
                   No {filter !== 'all' ? filter : ''} requests found.
                 </p>
               </Card>
@@ -304,7 +304,7 @@ export default function AccessRequestsPage() {
                         <p className="text-sm text-slate-500 font-mono">
                           {req.userPeerID.slice(0, 12)}...
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           Requested {formatDate(req.requestedAt)}
                         </p>
                       </VStack>
@@ -342,7 +342,7 @@ export default function AccessRequestsPage() {
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                       {req.userInfo.location && (
                         <div>
-                          <p className="text-xs text-slate-500">Location</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Location</p>
                           <p className="font-medium text-slate-900 dark:text-white text-sm">
                             {req.userInfo.location}
                           </p>
@@ -350,7 +350,7 @@ export default function AccessRequestsPage() {
                       )}
                       {req.userInfo.joinDate && (
                         <div>
-                          <p className="text-xs text-slate-500">Member Since</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Member Since</p>
                           <p className="font-medium text-slate-900 dark:text-white text-sm">
                             {new Date(req.userInfo.joinDate).toLocaleDateString()}
                           </p>
@@ -358,7 +358,7 @@ export default function AccessRequestsPage() {
                       )}
                       {req.userInfo.rating !== undefined && (
                         <div>
-                          <p className="text-xs text-slate-500">Rating</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Rating</p>
                           <p className="font-medium text-slate-900 dark:text-white text-sm">
                             ⭐ {req.userInfo.rating.toFixed(1)}
                           </p>
@@ -366,7 +366,7 @@ export default function AccessRequestsPage() {
                       )}
                       {req.userInfo.totalTransactions !== undefined && (
                         <div>
-                          <p className="text-xs text-slate-500">Transactions</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Transactions</p>
                           <p className="font-medium text-slate-900 dark:text-white text-sm">
                             {req.userInfo.totalTransactions}
                           </p>
@@ -408,7 +408,7 @@ export default function AccessRequestsPage() {
                   {selectedRequest.userName}
                 </p>
                 {selectedRequest.userInfo?.totalTransactions !== undefined && (
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     {selectedRequest.userInfo.totalTransactions} transactions
                   </p>
                 )}

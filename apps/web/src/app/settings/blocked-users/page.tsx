@@ -254,7 +254,7 @@ export default function BlockedUsersPage() {
                     d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
                   />
                 </svg>
-                <p className="text-slate-500">
+                <p className="text-slate-500 dark:text-slate-400">
                   {searchQuery ? 'No blocked users match your search.' : 'No blocked users.'}
                 </p>
               </Card>
@@ -281,7 +281,7 @@ export default function BlockedUsersPage() {
                           </span>
                         </HStack>
                         <p className="text-sm text-slate-500 font-mono">{user.peerID}</p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           Blocked on {formatDate(user.blockedAt)}
                         </p>
                       </VStack>
@@ -310,11 +310,11 @@ export default function BlockedUsersPage() {
                   {user.stats && (
                     <div className="mt-4 flex gap-6">
                       <div>
-                        <p className="text-xs text-slate-500">Disputes</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Disputes</p>
                         <p className="font-medium text-red-600">{user.stats.disputes}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500">Reports</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Reports</p>
                         <p className="font-medium text-orange-600">{user.stats.reports}</p>
                       </div>
                     </div>

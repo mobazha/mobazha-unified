@@ -232,10 +232,12 @@ export default function ProductPage() {
                     Free Shipping
                   </span>
                 ) : (
-                  <span className="text-slate-500">Shipping calculated at checkout</span>
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Shipping calculated at checkout
+                  </span>
                 )}
                 <span className="text-slate-400">•</span>
-                <span className="text-slate-500">
+                <span className="text-slate-500 dark:text-slate-400">
                   Est. delivery: {product.shipping.estimatedDays} days
                 </span>
               </div>
@@ -262,7 +264,9 @@ export default function ProductPage() {
                     </button>
                   </HStack>
                 </div>
-                <span className="text-xs sm:text-sm text-slate-500">{product.stock} in stock</span>
+                <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  {product.stock} in stock
+                </span>
 
                 <VStack gap="xs">
                   <Button size="default" className="w-full touch-feedback">
@@ -275,7 +279,9 @@ export default function ProductPage() {
 
                 {/* Accepted Currencies */}
                 <div className="pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <span className="text-xs sm:text-sm text-slate-500">Accepted: </span>
+                  <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    Accepted:{' '}
+                  </span>
                   <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
                     {product.acceptedCurrencies.join(', ')}
                   </span>
@@ -297,10 +303,12 @@ export default function ProductPage() {
                       <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
                         {product.vendor.name}
                       </h3>
-                      <p className="text-xs sm:text-sm text-slate-500">{product.vendor.location}</p>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        {product.vendor.location}
+                      </p>
                       <HStack gap="xs" align="center" className="mt-0.5">
                         <span className="text-amber-500 text-sm">★</span>
-                        <span className="text-xs sm:text-sm">
+                        <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                           {product.vendor.rating} ({product.vendor.reviewCount} reviews)
                         </span>
                       </HStack>
@@ -326,7 +334,7 @@ export default function ProductPage() {
                   {product.description.split('\n').map((paragraph, i) => (
                     <p
                       key={i}
-                      className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-3"
+                      className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-3"
                     >
                       {paragraph}
                     </p>
@@ -335,7 +343,9 @@ export default function ProductPage() {
 
                 {/* Tags */}
                 <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-slate-200 dark:border-slate-700">
-                  <span className="text-xs sm:text-sm text-slate-500">Tags: </span>
+                  <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    Tags:{' '}
+                  </span>
                   <div className="inline-flex flex-wrap gap-1.5 sm:gap-2 mt-2">
                     {product.tags.map(tag => (
                       <Link
@@ -375,7 +385,9 @@ export default function ProductPage() {
                       </svg>
                     ))}
                   </HStack>
-                  <p className="text-xs sm:text-sm text-slate-500">{product.reviewCount} reviews</p>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    {product.reviewCount} reviews
+                  </p>
                 </div>
 
                 {/* Recent Reviews */}
@@ -403,10 +415,12 @@ export default function ProductPage() {
                           ))}
                         </HStack>
                       </HStack>
-                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                         {review.comment}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">{review.date}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                        {review.date}
+                      </p>
                     </div>
                   ))}
                 </VStack>

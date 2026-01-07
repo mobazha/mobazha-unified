@@ -173,7 +173,7 @@ export default function ModeratorDetailPage() {
                         <p className="text-2xl font-bold text-slate-900 dark:text-white">
                           {moderator.stats.rating}
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           Rating ({moderator.stats.ratingCount})
                         </p>
                       </div>
@@ -181,19 +181,21 @@ export default function ModeratorDetailPage() {
                         <p className="text-2xl font-bold text-slate-900 dark:text-white">
                           {moderator.stats.disputesHandled}
                         </p>
-                        <p className="text-sm text-slate-500">Disputes</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Disputes</p>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-emerald-600">
                           {moderator.stats.successRate}%
                         </p>
-                        <p className="text-sm text-slate-500">Success Rate</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Success Rate</p>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-slate-900 dark:text-white">
                           ~{moderator.stats.averageResolutionTime}h
                         </p>
-                        <p className="text-sm text-slate-500">Avg. Resolution</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          Avg. Resolution
+                        </p>
                       </div>
                     </div>
                   </div>

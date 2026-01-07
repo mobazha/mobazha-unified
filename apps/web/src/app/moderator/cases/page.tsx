@@ -199,19 +199,19 @@ export default function ModeratorCasesPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card className="text-center">
               <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-              <p className="text-sm text-slate-500">Total Cases</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Total Cases</p>
             </Card>
             <Card className="text-center">
               <p className="text-3xl font-bold text-red-500">{stats.open}</p>
-              <p className="text-sm text-slate-500">Open</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Open</p>
             </Card>
             <Card className="text-center">
               <p className="text-3xl font-bold text-yellow-500">{stats.pending}</p>
-              <p className="text-sm text-slate-500">Pending</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Pending</p>
             </Card>
             <Card className="text-center">
               <p className="text-3xl font-bold text-emerald-500">{stats.resolved}</p>
-              <p className="text-sm text-slate-500">Resolved</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Resolved</p>
             </Card>
           </div>
 
@@ -246,7 +246,7 @@ export default function ModeratorCasesPage() {
               </HStack>
 
               <HStack gap="sm" align="center">
-                <span className="text-sm text-slate-500">Sort:</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">Sort:</span>
                 <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -290,7 +290,7 @@ export default function ModeratorCasesPage() {
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 No cases found
               </h3>
-              <p className="text-slate-500">
+              <p className="text-slate-500 dark:text-slate-400">
                 {filter !== 'all'
                   ? 'Try changing the filter to see more cases.'
                   : 'You have no moderation cases at this time.'}
@@ -340,7 +340,7 @@ export default function ModeratorCasesPage() {
                             <p className="font-bold text-slate-900 dark:text-white">
                               {caseItem.total} {caseItem.coin}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               {formatDate(caseItem.timestamp)}
                             </p>
                           </div>
@@ -363,7 +363,7 @@ export default function ModeratorCasesPage() {
                               size="sm"
                             />
                             <div>
-                              <span className="text-slate-500">Buyer:</span>{' '}
+                              <span className="text-slate-500 dark:text-slate-400">Buyer:</span>{' '}
                               <span className="font-medium text-slate-900 dark:text-white">
                                 {caseItem.buyer.name}
                               </span>
@@ -379,7 +379,7 @@ export default function ModeratorCasesPage() {
                               size="sm"
                             />
                             <div>
-                              <span className="text-slate-500">Seller:</span>{' '}
+                              <span className="text-slate-500 dark:text-slate-400">Seller:</span>{' '}
                               <span className="font-medium text-slate-900 dark:text-white">
                                 {caseItem.seller.name}
                               </span>

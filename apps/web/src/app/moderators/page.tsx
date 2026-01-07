@@ -263,7 +263,7 @@ export default function ModeratorsPage() {
             {/* Moderators List */}
             <div className="lg:col-span-3">
               <div className="mb-4">
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   {t('moderator.moderatorsFound', { count: filteredModerators.length })}
                 </p>
               </div>
@@ -348,7 +348,9 @@ export default function ModeratorsPage() {
                         {/* Fee */}
                         <div className="text-right flex-shrink-0">
                           <p className="text-2xl font-bold text-emerald-600">{moderator.fee}%</p>
-                          <p className="text-sm text-slate-500">{t('moderator.fee')}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {t('moderator.fee')}
+                          </p>
                         </div>
                       </HStack>
                     </Card>

@@ -255,7 +255,9 @@ export default function ProductGroupsPage() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                   No product groups yet
                 </h3>
-                <p className="text-slate-500">Create product groups to organize your inventory</p>
+                <p className="text-slate-500 dark:text-slate-400">
+                  Create product groups to organize your inventory
+                </p>
                 <Button onClick={() => setShowCreateModal(true)}>Create Group</Button>
               </VStack>
             </Card>

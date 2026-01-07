@@ -266,7 +266,9 @@ export default function CreateListingPage() {
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Create New Listing
               </h1>
-              <p className="text-slate-500">Add a new product or service to your store</p>
+              <p className="text-slate-500 dark:text-slate-400">
+                Add a new product or service to your store
+              </p>
             </div>
           </HStack>
 
