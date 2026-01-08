@@ -236,7 +236,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-4 sm:py-8">
@@ -244,10 +244,8 @@ export default function NotificationsPage() {
           {/* Page Header */}
           <HStack justify="between" align="center" className="mb-4 sm:mb-6">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                Notifications
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Notifications</h1>
+              <p className="text-sm text-muted-foreground">
                 {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
               </p>
             </div>
@@ -271,7 +269,7 @@ export default function NotificationsPage() {
                 className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
                   filter === 'all'
                     ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-muted-foreground hover:bg-surface-hover'
                 }`}
               >
                 All ({notifications.length})
@@ -281,7 +279,7 @@ export default function NotificationsPage() {
                 className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
                   filter === 'unread'
                     ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-muted-foreground hover:bg-surface-hover'
                 }`}
               >
                 Unread ({unreadCount})
@@ -292,7 +290,7 @@ export default function NotificationsPage() {
           {/* Notifications List */}
           {filteredNotifications.length === 0 ? (
             <Card className="text-center py-10 sm:py-16">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400"
                   fill="none"
@@ -307,10 +305,10 @@ export default function NotificationsPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1.5">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
                 {filter === 'unread' ? 'No unread notifications' : 'No notifications'}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {filter === 'unread'
                   ? "You're all caught up!"
                   : "You'll see new notifications here."}
@@ -351,14 +349,14 @@ export default function NotificationsPage() {
                       <HStack justify="between" align="start">
                         <div className="flex-1 min-w-0">
                           <h3
-                            className={`font-medium text-sm sm:text-base ${!notification.read ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}
+                            className={`font-medium text-sm sm:text-base ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}
                           >
                             {notification.title}
                           </h3>
-                          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-0.5">
                             {notification.message}
                           </p>
-                          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
                             {formatTimestamp(notification.timestamp)}
                           </p>
                         </div>

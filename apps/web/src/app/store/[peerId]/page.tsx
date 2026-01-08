@@ -117,7 +117,7 @@ export default function StorePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <Skeleton variant="rectangular" height={200} />
         <Container size="xl" className="py-8">
@@ -135,7 +135,7 @@ export default function StorePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main>
@@ -172,7 +172,7 @@ export default function StorePage() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <HStack gap="sm" align="center">
-                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                         {store.name}
                       </h1>
                       {store.verified && (
@@ -192,13 +192,10 @@ export default function StorePage() {
                         </span>
                       )}
                     </HStack>
-                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-sm sm:text-base text-muted-foreground mt-0.5">
                       {store.shortDescription}
                     </p>
-                    <HStack
-                      gap="sm"
-                      className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400"
-                    >
+                    <HStack gap="sm" className="mt-1.5 text-xs sm:text-sm text-muted-foreground">
                       <span>📍 {store.location}</span>
                       <span>📅 Since {store.memberSince}</span>
                     </HStack>
@@ -221,31 +218,24 @@ export default function StorePage() {
                 </div>
 
                 {/* Stats */}
-                <HStack
-                  gap="md"
-                  className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-slate-200 dark:border-slate-700"
-                >
+                <HStack gap="md" className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-border">
                   <div className="text-center">
-                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-lg sm:text-xl font-bold text-foreground">
                       {store.listingCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      Products
-                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Products</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-lg sm:text-xl font-bold text-foreground">
                       {store.followerCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      Followers
-                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Followers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-lg sm:text-xl font-bold text-foreground">
                       ⭐ {store.rating}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       {store.reviewCount} reviews
                     </div>
                   </div>
@@ -256,7 +246,7 @@ export default function StorePage() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-16 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 mt-4 sm:mt-6">
+        <div className="sticky top-16 z-40 bg-card border-b border-border mt-4 sm:mt-6">
           <Container size="xl">
             <HStack gap="none">
               {(['products', 'about', 'reviews'] as TabType[]).map(tab => (
@@ -266,7 +256,7 @@ export default function StorePage() {
                   className={`px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium capitalize transition-colors border-b-2 touch-feedback ${
                     activeTab === tab
                       ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      : 'border-transparent text-muted-foreground hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {tab}
@@ -294,15 +284,12 @@ export default function StorePage() {
               <Grid cols={3} colsMobile={1} gap="md">
                 <div className="lg:col-span-2">
                   <Card className="p-4 sm:p-6">
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
                       About This Store
                     </h2>
                     <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
                       {store.about.split('\n').map((paragraph, i) => (
-                        <p
-                          key={i}
-                          className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-3"
-                        >
+                        <p key={i} className="text-sm sm:text-base text-muted-foreground mb-3">
                           {paragraph}
                         </p>
                       ))}
@@ -312,23 +299,19 @@ export default function StorePage() {
 
                 <div>
                   <Card className="p-4 sm:p-6">
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-3 text-base">
-                      Store Details
-                    </h3>
+                    <h3 className="font-semibold text-foreground mb-3 text-base">Store Details</h3>
                     <VStack gap="sm" align="stretch">
                       <div>
-                        <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        <span className="text-xs sm:text-sm text-muted-foreground">
                           Accepted Currencies
                         </span>
-                        <p className="font-medium text-slate-900 dark:text-white text-sm">
+                        <p className="font-medium text-foreground text-sm">
                           {store.acceptedCurrencies.join(', ')}
                         </p>
                       </div>
                       {store.socialLinks.website && (
                         <div>
-                          <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                            Website
-                          </span>
+                          <span className="text-xs sm:text-sm text-muted-foreground">Website</span>
                           <a
                             href={store.socialLinks.website}
                             target="_blank"
@@ -341,10 +324,8 @@ export default function StorePage() {
                       )}
                       {store.socialLinks.twitter && (
                         <div>
-                          <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                            Twitter
-                          </span>
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          <span className="text-xs sm:text-sm text-muted-foreground">Twitter</span>
+                          <p className="font-medium text-foreground text-sm">
                             {store.socialLinks.twitter}
                           </p>
                         </div>
@@ -359,10 +340,10 @@ export default function StorePage() {
           {activeTab === 'reviews' && (
             <Container size="xl">
               <Card className="p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">
                   Customer Reviews
                 </h2>
-                <div className="text-center py-6 text-slate-500 dark:text-slate-400 text-sm">
+                <div className="text-center py-6 text-muted-foreground text-sm">
                   Reviews coming soon...
                 </div>
               </Card>

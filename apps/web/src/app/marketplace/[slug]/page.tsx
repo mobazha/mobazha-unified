@@ -195,7 +195,7 @@ export default function MarketplaceDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main>
@@ -214,45 +214,39 @@ export default function MarketplaceDetailPage() {
                 <img
                   src={marketplace.logo}
                   alt={marketplace.name}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-900 shadow-lg -mt-16"
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-card border-4 border-white dark:border-slate-900 shadow-lg -mt-16"
                 />
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <HStack justify="between" align="start" className="flex-wrap gap-4">
                     <div>
-                      <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                      <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                         {marketplace.name}
                       </h1>
-                      <p className="text-slate-600 dark:text-slate-400 mb-4 max-w-2xl">
+                      <p className="text-muted-foreground mb-4 max-w-2xl">
                         {marketplace.shortDescription}
                       </p>
 
                       {/* Stats */}
                       <HStack gap="lg" className="flex-wrap">
                         <VStack gap="none">
-                          <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <span className="text-2xl font-bold text-foreground">
                             {marketplace.memberCount.toLocaleString()}
                           </span>
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Members
-                          </span>
+                          <span className="text-sm text-muted-foreground">Members</span>
                         </VStack>
                         <VStack gap="none">
-                          <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <span className="text-2xl font-bold text-foreground">
                             {marketplace.sellerCount}
                           </span>
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Sellers
-                          </span>
+                          <span className="text-sm text-muted-foreground">Sellers</span>
                         </VStack>
                         <VStack gap="none">
-                          <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <span className="text-2xl font-bold text-foreground">
                             {marketplace.productCount}
                           </span>
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Products
-                          </span>
+                          <span className="text-sm text-muted-foreground">Products</span>
                         </VStack>
                       </HStack>
                     </div>
@@ -279,7 +273,7 @@ export default function MarketplaceDetailPage() {
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-slate-200 dark:border-slate-700 mb-6">
+          <div className="border-b border-border mb-6">
             <HStack gap="none">
               {(['products', 'sellers', 'about', 'chat'] as const).map(tab => (
                 <button
@@ -288,7 +282,7 @@ export default function MarketplaceDetailPage() {
                   className={`px-6 py-4 text-sm font-medium transition-colors capitalize ${
                     activeTab === tab
                       ? 'text-emerald-600 border-b-2 border-emerald-600'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      : 'text-muted-foreground hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {tab}
@@ -357,10 +351,8 @@ export default function MarketplaceDetailPage() {
                         className="w-16 h-16 rounded-full bg-slate-200"
                       />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900 dark:text-white">
-                          {seller.name}
-                        </h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <h3 className="font-semibold text-foreground">{seller.name}</h3>
+                        <p className="text-sm text-muted-foreground">
                           {seller.productCount} products • ⭐ {seller.rating}
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
@@ -378,9 +370,7 @@ export default function MarketplaceDetailPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <Card>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    About This Marketplace
-                  </h2>
+                  <h2 className="text-xl font-bold text-foreground mb-4">About This Marketplace</h2>
                   <div className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap">
                     {marketplace.description}
                   </div>
@@ -388,10 +378,8 @@ export default function MarketplaceDetailPage() {
 
                 {marketplace.rules && (
                   <Card className="mt-6">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                      Marketplace Rules
-                    </h2>
-                    <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
+                    <h2 className="text-xl font-bold text-foreground mb-4">Marketplace Rules</h2>
+                    <div className="whitespace-pre-wrap text-muted-foreground">
                       {marketplace.rules}
                     </div>
                   </Card>
@@ -409,10 +397,8 @@ export default function MarketplaceDetailPage() {
                       className="w-12 h-12 rounded-full bg-slate-200"
                     />
                     <div>
-                      <p className="font-semibold text-slate-900 dark:text-white">
-                        {marketplace.owner.name}
-                      </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Owner</p>
+                      <p className="font-semibold text-foreground">{marketplace.owner.name}</p>
+                      <p className="text-sm text-muted-foreground">Owner</p>
                     </div>
                   </HStack>
                 </Card>
@@ -424,7 +410,7 @@ export default function MarketplaceDetailPage() {
                     {marketplace.categories.map(cat => (
                       <span
                         key={cat}
-                        className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm"
+                        className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
                       >
                         {cat}
                       </span>
@@ -438,7 +424,7 @@ export default function MarketplaceDetailPage() {
           {activeTab === 'chat' && (
             <Card>
               <VStack gap="md" align="center" className="py-12">
-                <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                   <svg
                     className="w-8 h-8 text-slate-400"
                     fill="none"
@@ -453,9 +439,7 @@ export default function MarketplaceDetailPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Community Chat
-                </h3>
+                <h3 className="text-lg font-semibold text-foreground">Community Chat</h3>
                 <p className="text-slate-500 text-center max-w-md">
                   {isMember
                     ? 'Connect with other members and sellers in the marketplace chat room.'

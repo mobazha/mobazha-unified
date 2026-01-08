@@ -136,31 +136,27 @@ export default function ModeratorsPage() {
   const allLanguages = Array.from(new Set(mockModerators.flatMap(m => m.languages)));
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
         <Container size="xl">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              {t('moderator.title')}
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">{t('moderator.subtitle')}</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('moderator.title')}</h1>
+            <p className="text-muted-foreground">{t('moderator.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
               <Card className="sticky top-4">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-                  {t('filter.filters')}
-                </h3>
+                <h3 className="font-semibold text-foreground mb-4">{t('filter.filters')}</h3>
 
                 <VStack gap="lg">
                   {/* Search */}
                   <div>
-                    <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
+                    <label className="text-sm text-muted-foreground mb-2 block">
                       {t('common.search')}
                     </label>
                     <Input
@@ -172,7 +168,7 @@ export default function ModeratorsPage() {
 
                   {/* Language Filter */}
                   <div>
-                    <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
+                    <label className="text-sm text-muted-foreground mb-2 block">
                       {t('moderator.language')}
                     </label>
                     <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
@@ -192,7 +188,7 @@ export default function ModeratorsPage() {
 
                   {/* Max Fee Filter */}
                   <div>
-                    <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
+                    <label className="text-sm text-muted-foreground mb-2 block">
                       {t('moderator.maxFee')}
                     </label>
                     <Select value={maxFee} onValueChange={setMaxFee}>
@@ -217,14 +213,14 @@ export default function ModeratorsPage() {
                       onChange={e => setVerifiedOnly(e.target.checked)}
                       className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                    <span className="text-sm text-muted-foreground">
                       {t('moderator.verifiedOnly')}
                     </span>
                   </label>
 
                   {/* Sort */}
                   <div>
-                    <label className="text-sm text-slate-600 dark:text-slate-400 mb-2 block">
+                    <label className="text-sm text-muted-foreground mb-2 block">
                       {t('moderator.sortBy')}
                     </label>
                     <Select
@@ -263,7 +259,7 @@ export default function ModeratorsPage() {
             {/* Moderators List */}
             <div className="lg:col-span-3">
               <div className="mb-4">
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {t('moderator.moderatorsFound', { count: filteredModerators.length })}
                 </p>
               </div>
@@ -283,9 +279,7 @@ export default function ModeratorsPage() {
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <HStack gap="sm" align="center" className="mb-1">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">
-                              {moderator.name}
-                            </h3>
+                            <h3 className="font-semibold text-foreground">{moderator.name}</h3>
                             {moderator.verified && (
                               <svg
                                 className="w-5 h-5 text-blue-500 flex-shrink-0"
@@ -301,7 +295,7 @@ export default function ModeratorsPage() {
                             )}
                           </HStack>
 
-                          <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 line-clamp-2">
+                          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                             {moderator.shortDescription}
                           </p>
 
@@ -309,7 +303,7 @@ export default function ModeratorsPage() {
                           <HStack gap="lg" wrap>
                             <HStack gap="xs" align="center">
                               <span className="text-amber-500">⭐</span>
-                              <span className="font-medium text-slate-900 dark:text-white">
+                              <span className="font-medium text-foreground">
                                 {moderator.rating}
                               </span>
                               <span className="text-slate-500 text-sm">
@@ -319,7 +313,7 @@ export default function ModeratorsPage() {
 
                             <span className="text-slate-300 dark:text-slate-600">|</span>
 
-                            <span className="text-sm text-slate-600 dark:text-slate-400">
+                            <span className="text-sm text-muted-foreground">
                               {t('moderator.disputesHandled', {
                                 count: moderator.disputesHandled,
                               })}
@@ -337,7 +331,7 @@ export default function ModeratorsPage() {
                             {moderator.languages.map(lang => (
                               <span
                                 key={lang}
-                                className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded"
+                                className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded"
                               >
                                 {lang}
                               </span>
@@ -348,9 +342,7 @@ export default function ModeratorsPage() {
                         {/* Fee */}
                         <div className="text-right flex-shrink-0">
                           <p className="text-2xl font-bold text-emerald-600">{moderator.fee}%</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {t('moderator.fee')}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{t('moderator.fee')}</p>
                         </div>
                       </HStack>
                     </Card>
@@ -360,7 +352,7 @@ export default function ModeratorsPage() {
                 {filteredModerators.length === 0 && (
                   <Card>
                     <VStack gap="md" align="center" className="py-8">
-                      <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                         <svg
                           className="w-8 h-8 text-slate-400"
                           fill="none"
@@ -375,9 +367,7 @@ export default function ModeratorsPage() {
                           />
                         </svg>
                       </div>
-                      <p className="text-slate-600 dark:text-slate-400">
-                        {t('moderator.noModeratorsFound')}
-                      </p>
+                      <p className="text-muted-foreground">{t('moderator.noModeratorsFound')}</p>
                       <Button
                         variant="ghost"
                         onClick={() => {

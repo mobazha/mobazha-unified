@@ -173,7 +173,7 @@ export default function AccessRequestsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <Container className="py-8">
           <div className="animate-pulse space-y-4">
@@ -188,7 +188,7 @@ export default function AccessRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -198,7 +198,7 @@ export default function AccessRequestsPage() {
             <HStack gap="md" align="center">
               <button
                 onClick={() => router.back()}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-surface-hover rounded-lg"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -210,9 +210,7 @@ export default function AccessRequestsPage() {
                 </svg>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Access Requests
-                </h1>
+                <h1 className="text-2xl font-bold text-foreground">Access Requests</h1>
                 <p className="text-slate-500 text-sm">Manage who can access your private store</p>
               </div>
             </HStack>
@@ -227,19 +225,19 @@ export default function AccessRequestsPage() {
               <p className="text-2xl font-bold text-yellow-600">
                 {requests.filter(r => r.status === 'pending').length}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Pending</p>
+              <p className="text-sm text-muted-foreground">Pending</p>
             </Card>
             <Card className="text-center">
               <p className="text-2xl font-bold text-emerald-600">
                 {requests.filter(r => r.status === 'approved').length}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Approved</p>
+              <p className="text-sm text-muted-foreground">Approved</p>
             </Card>
             <Card className="text-center">
               <p className="text-2xl font-bold text-red-600">
                 {requests.filter(r => r.status === 'rejected').length}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Rejected</p>
+              <p className="text-sm text-muted-foreground">Rejected</p>
             </Card>
           </div>
 
@@ -253,7 +251,7 @@ export default function AccessRequestsPage() {
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors text-center ${
                     filter === status
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -279,7 +277,7 @@ export default function AccessRequestsPage() {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                   No {filter !== 'all' ? filter : ''} requests found.
                 </p>
               </Card>
@@ -292,9 +290,7 @@ export default function AccessRequestsPage() {
                       <Avatar src={req.userAvatar} name={req.userName} size="lg" />
                       <VStack gap="xs">
                         <HStack gap="sm" align="center">
-                          <h3 className="font-semibold text-slate-900 dark:text-white">
-                            {req.userName}
-                          </h3>
+                          <h3 className="font-semibold text-foreground">{req.userName}</h3>
                           <span
                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[req.status]}`}
                           >
@@ -304,7 +300,7 @@ export default function AccessRequestsPage() {
                         <p className="text-sm text-slate-500 font-mono">
                           {req.userPeerID.slice(0, 12)}...
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           Requested {formatDate(req.requestedAt)}
                         </p>
                       </VStack>
@@ -329,11 +325,9 @@ export default function AccessRequestsPage() {
 
                   {/* Message */}
                   {req.message && (
-                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Message:
-                      </p>
-                      <p className="text-slate-600 dark:text-slate-400">{req.message}</p>
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Message:</p>
+                      <p className="text-muted-foreground">{req.message}</p>
                     </div>
                   )}
 
@@ -342,32 +336,32 @@ export default function AccessRequestsPage() {
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                       {req.userInfo.location && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Location</p>
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          <p className="text-xs text-muted-foreground">Location</p>
+                          <p className="font-medium text-foreground text-sm">
                             {req.userInfo.location}
                           </p>
                         </div>
                       )}
                       {req.userInfo.joinDate && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Member Since</p>
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          <p className="text-xs text-muted-foreground">Member Since</p>
+                          <p className="font-medium text-foreground text-sm">
                             {new Date(req.userInfo.joinDate).toLocaleDateString()}
                           </p>
                         </div>
                       )}
                       {req.userInfo.rating !== undefined && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Rating</p>
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          <p className="text-xs text-muted-foreground">Rating</p>
+                          <p className="font-medium text-foreground text-sm">
                             ⭐ {req.userInfo.rating.toFixed(1)}
                           </p>
                         </div>
                       )}
                       {req.userInfo.totalTransactions !== undefined && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Transactions</p>
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          <p className="text-xs text-muted-foreground">Transactions</p>
+                          <p className="font-medium text-foreground text-sm">
                             {req.userInfo.totalTransactions}
                           </p>
                         </div>
@@ -377,9 +371,9 @@ export default function AccessRequestsPage() {
 
                   {/* Review Note */}
                   {req.reviewNote && (
-                    <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="mt-4 p-3 bg-muted rounded-lg">
                       <p className="text-xs text-slate-500 mb-1">Review Note:</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{req.reviewNote}</p>
+                      <p className="text-sm text-muted-foreground">{req.reviewNote}</p>
                     </div>
                   )}
                 </Card>
@@ -393,22 +387,14 @@ export default function AccessRequestsPage() {
       {selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-              Review Request
-            </h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Review Request</h2>
 
-            <HStack
-              gap="md"
-              align="center"
-              className="mb-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
-            >
+            <HStack gap="md" align="center" className="mb-4 p-3 bg-muted/50 rounded-lg">
               <Avatar src={selectedRequest.userAvatar} name={selectedRequest.userName} size="md" />
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">
-                  {selectedRequest.userName}
-                </p>
+                <p className="font-medium text-foreground">{selectedRequest.userName}</p>
                 {selectedRequest.userInfo?.totalTransactions !== undefined && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-muted-foreground">
                     {selectedRequest.userInfo.totalTransactions} transactions
                   </p>
                 )}
@@ -416,14 +402,14 @@ export default function AccessRequestsPage() {
             </HStack>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Note (optional)
               </label>
               <textarea
                 value={reviewNote}
                 onChange={e => setReviewNote(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="Add a note (will be visible to user)..."
               />
             </div>

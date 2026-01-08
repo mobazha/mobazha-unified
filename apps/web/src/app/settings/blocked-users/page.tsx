@@ -136,7 +136,7 @@ export default function BlockedUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <Container className="py-8">
           <div className="animate-pulse space-y-4">
@@ -151,7 +151,7 @@ export default function BlockedUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -161,7 +161,7 @@ export default function BlockedUsersPage() {
             <HStack gap="md" align="center">
               <button
                 onClick={() => router.back()}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-surface-hover rounded-lg"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -173,7 +173,7 @@ export default function BlockedUsersPage() {
                 </svg>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Blocked Users</h1>
+                <h1 className="text-2xl font-bold text-foreground">Blocked Users</h1>
                 <p className="text-slate-500 text-sm">
                   Manage users blocked from your store ({blockedUsers.length} blocked)
                 </p>
@@ -254,7 +254,7 @@ export default function BlockedUsersPage() {
                     d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
                   />
                 </svg>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                   {searchQuery ? 'No blocked users match your search.' : 'No blocked users.'}
                 </p>
               </Card>
@@ -267,9 +267,7 @@ export default function BlockedUsersPage() {
                       <Avatar src={user.avatar} name={user.name} size="lg" />
                       <VStack gap="xs">
                         <HStack gap="sm" align="center">
-                          <h3 className="font-semibold text-slate-900 dark:text-white">
-                            {user.name}
-                          </h3>
+                          <h3 className="font-semibold text-foreground">{user.name}</h3>
                           <span
                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                               user.blockedBy === 'auto'
@@ -281,7 +279,7 @@ export default function BlockedUsersPage() {
                           </span>
                         </HStack>
                         <p className="text-sm text-slate-500 font-mono">{user.peerID}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           Blocked on {formatDate(user.blockedAt)}
                         </p>
                       </VStack>
@@ -300,9 +298,9 @@ export default function BlockedUsersPage() {
 
                   {/* Reason */}
                   {user.reason && (
-                    <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                       <p className="text-sm text-slate-500 mb-1">Reason:</p>
-                      <p className="text-slate-700 dark:text-slate-300">{user.reason}</p>
+                      <p className="text-muted-foreground">{user.reason}</p>
                     </div>
                   )}
 
@@ -310,11 +308,11 @@ export default function BlockedUsersPage() {
                   {user.stats && (
                     <div className="mt-4 flex gap-6">
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Disputes</p>
+                        <p className="text-xs text-muted-foreground">Disputes</p>
                         <p className="font-medium text-red-600">{user.stats.disputes}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Reports</p>
+                        <p className="text-xs text-muted-foreground">Reports</p>
                         <p className="font-medium text-orange-600">{user.stats.reports}</p>
                       </div>
                     </div>
@@ -330,11 +328,11 @@ export default function BlockedUsersPage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Block a User</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Block a User</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Peer ID *
                 </label>
                 <Input
@@ -345,14 +343,14 @@ export default function BlockedUsersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Reason (optional)
                 </label>
                 <textarea
                   value={newBlockReason}
                   onChange={e => setNewBlockReason(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Why are you blocking this user?"
                 />
               </div>
@@ -378,9 +376,9 @@ export default function BlockedUsersPage() {
       {confirmUnblock && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-sm">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Unblock User?</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Unblock User?</h2>
 
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
+            <p className="text-muted-foreground mb-4">
               Are you sure you want to unblock <strong>{confirmUnblock.name}</strong>? They will be
               able to view your store and contact you again.
             </p>

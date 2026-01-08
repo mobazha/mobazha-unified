@@ -18,15 +18,15 @@ export function PageErrorBoundary({ children, pageName }: PageErrorBoundaryProps
   return (
     <ErrorBoundary
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-6">
+        <div className="min-h-screen flex items-center justify-center bg-background p-6">
           <div className="text-center max-w-md">
             <div className="mx-auto w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-6">
               <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-foreground mb-2">
               {pageName ? `${pageName} 加载失败` : '页面加载失败'}
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
+            <p className="text-muted-foreground mb-6">
               抱歉，页面遇到了问题。请尝试刷新页面或返回上一页。
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

@@ -288,7 +288,7 @@ export default function EditListingPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <main className="py-8">
           <Container size="lg">
@@ -325,7 +325,7 @@ export default function EditListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -334,7 +334,7 @@ export default function EditListingPage() {
           <HStack gap="md" align="center" className="mb-8">
             <Link
               href={`/product/${slug}`}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -346,8 +346,8 @@ export default function EditListingPage() {
               </svg>
             </Link>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Listing</h1>
-              <p className="text-slate-500 dark:text-slate-400">Update your product or service</p>
+              <h1 className="text-2xl font-bold text-foreground">Edit Listing</h1>
+              <p className="text-muted-foreground">Update your product or service</p>
             </div>
             <Button
               variant="outline"
@@ -372,9 +372,7 @@ export default function EditListingPage() {
               <div className="lg:col-span-2 space-y-6">
                 {/* Images */}
                 <Card>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Images *
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Images *</h2>
                   {errors.images && <p className="text-red-500 text-sm mb-2">{errors.images}</p>}
                   <div className="grid grid-cols-4 gap-4">
                     {formData.images.map((image, index) => (
@@ -400,7 +398,7 @@ export default function EditListingPage() {
                     <button
                       type="button"
                       onClick={handleImageUpload}
-                      className="aspect-square rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-emerald-500"
+                      className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-emerald-500"
                     >
                       <svg
                         className="w-8 h-8"
@@ -422,13 +420,11 @@ export default function EditListingPage() {
 
                 {/* Basic Info */}
                 <Card>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Basic Information
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Basic Information</h2>
                   <VStack gap="md">
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
                         Title *
                       </label>
                       <input
@@ -436,8 +432,8 @@ export default function EditListingPage() {
                         value={formData.title}
                         onChange={e => handleChange('title', e.target.value)}
                         className={`w-full px-4 py-2 rounded-lg border ${
-                          errors.title ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                        } bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                          errors.title ? 'border-red-500' : 'border-border'
+                        } bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                         placeholder="Enter product title"
                         maxLength={120}
                       />
@@ -446,14 +442,14 @@ export default function EditListingPage() {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
                         Description
                       </label>
                       <textarea
                         value={formData.description}
                         onChange={e => handleChange('description', e.target.value)}
                         rows={6}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                         placeholder="Describe your product in detail..."
                       />
                     </div>
@@ -461,7 +457,7 @@ export default function EditListingPage() {
                     {/* Price & Currency */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
                           Price *
                         </label>
                         <input
@@ -471,10 +467,8 @@ export default function EditListingPage() {
                           value={formData.price}
                           onChange={e => handleChange('price', e.target.value)}
                           className={`w-full px-4 py-2 rounded-lg border ${
-                            errors.price
-                              ? 'border-red-500'
-                              : 'border-slate-200 dark:border-slate-700'
-                          } bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                            errors.price ? 'border-red-500' : 'border-border'
+                          } bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                           placeholder="0.00"
                         />
                         {errors.price && (
@@ -482,7 +476,7 @@ export default function EditListingPage() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
                           Currency
                         </label>
                         <Select
@@ -507,9 +501,7 @@ export default function EditListingPage() {
 
                 {/* Product Type */}
                 <Card>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Product Type
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Product Type</h2>
                   <Grid cols={2} colsMobile={1} gap="md">
                     {productTypes.map(type => (
                       <button
@@ -519,10 +511,10 @@ export default function EditListingPage() {
                         className={`p-4 rounded-lg border-2 text-left transition-all ${
                           formData.productType === type.value
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                            : 'border-border hover:border-slate-300'
                         }`}
                       >
-                        <p className="font-medium text-slate-900 dark:text-white">{type.label}</p>
+                        <p className="font-medium text-foreground">{type.label}</p>
                         <p className="text-sm text-slate-500 mt-1">{type.description}</p>
                       </button>
                     ))}
@@ -532,13 +524,13 @@ export default function EditListingPage() {
                 {/* Physical Good Details */}
                 {formData.productType === 'physical_good' && (
                   <Card>
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       Physical Good Details
                     </h2>
                     <VStack gap="md">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          <label className="block text-sm font-medium text-muted-foreground mb-1">
                             Condition
                           </label>
                           <Select
@@ -560,7 +552,7 @@ export default function EditListingPage() {
                           </Select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          <label className="block text-sm font-medium text-muted-foreground mb-1">
                             Weight (grams)
                           </label>
                           <input
@@ -568,13 +560,13 @@ export default function EditListingPage() {
                             min="0"
                             value={formData.weight}
                             onChange={e => handleChange('weight', e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             placeholder="0"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
                           Stock Quantity
                         </label>
                         <input
@@ -582,7 +574,7 @@ export default function EditListingPage() {
                           min="1"
                           value={formData.stock}
                           onChange={e => handleChange('stock', parseInt(e.target.value) || 1)}
-                          className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       </div>
                     </VStack>
@@ -592,24 +584,24 @@ export default function EditListingPage() {
                 {/* RWA Token Details */}
                 {formData.productType === 'rwa_token' && (
                   <Card>
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       RWA Token Details
                     </h2>
                     <VStack gap="md">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
                           Token Contract Address
                         </label>
                         <input
                           type="text"
                           value={formData.tokenAddress}
                           onChange={e => handleChange('tokenAddress', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
+                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
                           placeholder="0x..."
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
                           Blockchain
                         </label>
                         <Select
@@ -634,9 +626,7 @@ export default function EditListingPage() {
 
                 {/* Tags */}
                 <Card>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Tags
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Tags</h2>
                   <div className="flex gap-2 mb-3">
                     <input
                       type="text"
@@ -648,7 +638,7 @@ export default function EditListingPage() {
                           handleAddTag();
                         }
                       }}
-                      className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="flex-1 px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="Add a tag..."
                     />
                     <Button type="button" onClick={handleAddTag}>
@@ -659,7 +649,7 @@ export default function EditListingPage() {
                     {formData.tags.map(tag => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
                       >
                         #{tag}
                         <button
@@ -679,9 +669,7 @@ export default function EditListingPage() {
               <div className="space-y-6">
                 {/* Category */}
                 <Card>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Category *
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Category *</h2>
                   {errors.category && (
                     <p className="text-red-500 text-sm mb-2">{errors.category}</p>
                   )}
@@ -726,11 +714,9 @@ export default function EditListingPage() {
 
                 {/* Preview */}
                 <Card>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Preview
-                  </h2>
-                  <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <div className="aspect-square bg-slate-100 dark:bg-slate-800">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Preview</h2>
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <div className="aspect-square bg-muted">
                       {formData.images[0] ? (
                         <img
                           src={formData.images[0]}
@@ -744,7 +730,7 @@ export default function EditListingPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-medium text-slate-900 dark:text-white line-clamp-2">
+                      <h3 className="font-medium text-foreground line-clamp-2">
                         {formData.title || 'Product Title'}
                       </h3>
                       <p className="text-lg font-bold text-emerald-600 mt-2">
@@ -795,7 +781,7 @@ export default function EditListingPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white text-center mb-2">
+              <h3 className="text-lg font-semibold text-foreground text-center mb-2">
                 Delete Listing?
               </h3>
               <p className="text-slate-500 text-center mb-6">

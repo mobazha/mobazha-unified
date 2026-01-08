@@ -394,14 +394,12 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <Container className="py-8">
           <Card className="py-16 text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-              Order not found
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 mb-4">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Order not found</h2>
+            <p className="text-muted-foreground mb-4">
               The order you&apos;re looking for doesn&apos;t exist.
             </p>
             <Button onClick={() => router.push('/orders')}>Back to Orders</Button>
@@ -424,7 +422,7 @@ export default function OrderDetailPage() {
   const canResolveDispute = order.userRole === 'moderator' && order.status === 'disputed';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-4 sm:py-8">
@@ -432,7 +430,7 @@ export default function OrderDetailPage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-4 text-sm touch-feedback"
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-4 text-sm touch-feedback"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -449,7 +447,7 @@ export default function OrderDetailPage() {
           <Card className="mb-4 sm:mb-6 p-3 sm:p-6">
             {/* Title and Status Row */}
             <div className="flex items-start justify-between gap-3 mb-2">
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground">
                 Order #{order.orderId}
               </h1>
               <span
@@ -458,7 +456,7 @@ export default function OrderDetailPage() {
                 {statusLabels[order.status]}
               </span>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Placed on {formatDate(order.createdAt)}
             </p>
 
@@ -613,7 +611,7 @@ export default function OrderDetailPage() {
 
             {/* Order Timeline */}
             <div>
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3">
                 Order Timeline
               </h2>
               <div className="relative">
@@ -630,15 +628,15 @@ export default function OrderDetailPage() {
                     <div className="flex-1 min-w-0 -mt-0.5">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-slate-900 dark:text-white text-sm sm:text-base">
+                          <p className="font-medium text-foreground text-sm sm:text-base">
                             {event.description}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <p className="text-xs text-muted-foreground">
                             {formatDate(event.timestamp)}
                           </p>
                         </div>
                         {event.actor && (
-                          <span className="text-[10px] sm:text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded capitalize flex-shrink-0">
+                          <span className="text-[10px] sm:text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-muted-foreground rounded capitalize flex-shrink-0">
                             {event.actor}
                           </span>
                         )}
@@ -654,7 +652,7 @@ export default function OrderDetailPage() {
             {/* Order Items */}
             <div className="lg:col-span-2">
               <Card className="p-3 sm:p-6">
-                <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3 sm:mb-4">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
                   Order Items
                 </h2>
                 <VStack gap="md">
@@ -668,13 +666,13 @@ export default function OrderDetailPage() {
                         />
                       </div>
                       <VStack gap="xs" className="flex-1 min-w-0">
-                        <h3 className="font-medium text-slate-900 dark:text-white text-sm sm:text-base truncate">
+                        <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
                           {item.title}
                         </h3>
-                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Quantity: {item.quantity}
                         </p>
-                        <p className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
+                        <p className="font-semibold text-foreground text-sm sm:text-base">
                           {item.price} {item.currency}
                         </p>
                       </VStack>
@@ -683,36 +681,29 @@ export default function OrderDetailPage() {
                 </VStack>
 
                 {/* Order Summary */}
-                <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-slate-200 dark:border-slate-700">
+                <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-border">
                   <HStack justify="between" className="mb-1.5 sm:mb-2">
-                    <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      Subtotal
-                    </span>
-                    <span className="text-xs sm:text-sm text-slate-900 dark:text-white">
+                    <span className="text-xs sm:text-sm text-muted-foreground">Subtotal</span>
+                    <span className="text-xs sm:text-sm text-foreground">
                       {order.total} {order.currency}
                     </span>
                   </HStack>
                   <HStack justify="between" className="mb-1.5 sm:mb-2">
-                    <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      Shipping
-                    </span>
-                    <span className="text-xs sm:text-sm text-slate-900 dark:text-white">Free</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">Shipping</span>
+                    <span className="text-xs sm:text-sm text-foreground">Free</span>
                   </HStack>
                   {order.moderator && (
                     <HStack justify="between" className="mb-1.5 sm:mb-2">
-                      <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         Moderator Fee
                       </span>
-                      <span className="text-xs sm:text-sm text-slate-900 dark:text-white">
+                      <span className="text-xs sm:text-sm text-foreground">
                         {order.moderator.fee}%
                       </span>
                     </HStack>
                   )}
-                  <HStack
-                    justify="between"
-                    className="pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700"
-                  >
-                    <span className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
+                  <HStack justify="between" className="pt-3 sm:pt-4 border-t border-border">
+                    <span className="font-semibold text-foreground text-sm sm:text-base">
                       Total
                     </span>
                     <span className="text-lg sm:text-xl font-bold text-emerald-600">
@@ -727,7 +718,7 @@ export default function OrderDetailPage() {
             <div className="space-y-4 sm:space-y-6">
               {/* Parties Info */}
               <Card className="p-3 sm:p-6">
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">
+                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3">
                   Seller
                 </h3>
                 <HStack gap="sm" align="center" className="mb-3">
@@ -740,17 +731,17 @@ export default function OrderDetailPage() {
                   <VStack gap="none">
                     <Link
                       href={`/store/${order.vendor.id}`}
-                      className="font-semibold text-slate-900 dark:text-white hover:text-emerald-600 text-sm"
+                      className="font-semibold text-foreground hover:text-emerald-600 text-sm"
                     >
                       {order.vendor.name}
                     </Link>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">View Store</span>
+                    <span className="text-xs text-muted-foreground">View Store</span>
                   </VStack>
                 </HStack>
 
                 {order.moderator && (
                   <>
-                    <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 mt-4">
+                    <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 mt-4">
                       Moderator
                     </h3>
                     <HStack gap="sm" align="center">
@@ -762,11 +753,11 @@ export default function OrderDetailPage() {
                       <VStack gap="none">
                         <Link
                           href={`/moderators/${order.moderator.id}`}
-                          className="font-semibold text-slate-900 dark:text-white hover:text-emerald-600 text-sm"
+                          className="font-semibold text-foreground hover:text-emerald-600 text-sm"
                         >
                           {order.moderator.name}
                         </Link>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-muted-foreground">
                           {order.moderator.fee}% fee
                         </span>
                       </VStack>
@@ -777,15 +768,15 @@ export default function OrderDetailPage() {
 
               {/* Shipping Info */}
               <Card className="p-3 sm:p-6">
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">
+                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 sm:mb-3">
                   Shipping Address
                 </h3>
-                <p className="text-slate-900 dark:text-white whitespace-pre-line text-sm">
+                <p className="text-foreground whitespace-pre-line text-sm">
                   {order.shippingAddress}
                 </p>
                 {order.trackingNumber && (
-                  <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <h3 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-border">
+                    <h3 className="text-xs font-medium text-muted-foreground mb-1">
                       Tracking Number
                     </h3>
                     <p className="font-mono font-medium text-emerald-600 text-sm">
@@ -797,26 +788,26 @@ export default function OrderDetailPage() {
 
               {/* Payment Info */}
               <Card className="p-3 sm:p-6">
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">
+                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 sm:mb-3">
                   Payment Details
                 </h3>
                 <VStack gap="sm">
                   {order.paymentTx && (
                     <div>
-                      <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">
                         Payment Transaction
                       </span>
-                      <p className="font-mono text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                      <p className="font-mono text-xs sm:text-sm text-foreground truncate">
                         {order.paymentTx}
                       </p>
                     </div>
                   )}
                   {order.escrowAddress && (
                     <div>
-                      <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">
                         Escrow Address
                       </span>
-                      <p className="font-mono text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                      <p className="font-mono text-xs sm:text-sm text-foreground truncate">
                         {order.escrowAddress}
                       </p>
                     </div>
@@ -827,10 +818,10 @@ export default function OrderDetailPage() {
               {/* Order Notes */}
               {order.notes && (
                 <Card className="p-3 sm:p-6">
-                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
+                  <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
                     Order Notes
                   </h3>
-                  <p className="text-slate-900 dark:text-white text-sm">{order.notes}</p>
+                  <p className="text-foreground text-sm">{order.notes}</p>
                 </Card>
               )}
             </div>
@@ -844,17 +835,15 @@ export default function OrderDetailPage() {
       {showDisputeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
           <Card className="w-full max-w-md p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3">
-              Open Dispute
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">Open Dispute</h2>
+            <p className="text-sm text-muted-foreground mb-3">
               Please describe the issue with your order. The moderator will review your case.
             </p>
             <textarea
               value={disputeReason}
               onChange={e => setDisputeReason(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none mb-3 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none mb-3 text-sm"
               placeholder="Describe your issue..."
             />
             <HStack justify="end" gap="sm">
@@ -873,24 +862,22 @@ export default function OrderDetailPage() {
       {showShipModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
           <Card className="w-full max-w-md p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3">
-              Ship Order
-            </h2>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">Ship Order</h2>
             <VStack gap="sm">
               <div>
-                <label className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-1.5 block">
+                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
                   Carrier
                 </label>
                 <input
                   type="text"
                   value={trackingInfo.carrier}
                   onChange={e => setTrackingInfo(prev => ({ ...prev, carrier: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                   placeholder="e.g., UPS, FedEx, DHL"
                 />
               </div>
               <div>
-                <label className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-1.5 block">
+                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
                   Tracking Number *
                 </label>
                 <input
@@ -899,7 +886,7 @@ export default function OrderDetailPage() {
                   onChange={e =>
                     setTrackingInfo(prev => ({ ...prev, trackingNumber: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                   placeholder="Enter tracking number"
                 />
               </div>

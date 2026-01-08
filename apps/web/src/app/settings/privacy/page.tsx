@@ -78,7 +78,7 @@ export default function PrivacySettingsPage() {
   const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -86,7 +86,7 @@ export default function PrivacySettingsPage() {
           {/* Back Link */}
           <Link
             href="/settings"
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -99,10 +99,8 @@ export default function PrivacySettingsPage() {
             Back to Settings
           </Link>
 
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Privacy & Access Control
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Privacy & Access Control</h1>
+          <p className="text-muted-foreground mb-8">
             Control who can access your store and products
           </p>
 
@@ -111,19 +109,15 @@ export default function PrivacySettingsPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Store Privacy */}
               <Card>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                  Store Privacy
-                </h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">Store Privacy</h2>
 
                 <VStack gap="lg">
                   {/* Private Store Toggle */}
-                  <div className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
+                  <div className="p-4 border border-border rounded-lg">
                     <HStack justify="between" align="start">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
-                          Private Store
-                        </h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <h3 className="font-semibold text-foreground mb-1">Private Store</h3>
+                        <p className="text-sm text-muted-foreground">
                           When enabled, only approved users can view your store and products.
                         </p>
                       </div>
@@ -143,13 +137,11 @@ export default function PrivacySettingsPage() {
 
                   {/* Require Approval */}
                   {settings.isPrivate && (
-                    <div className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    <div className="p-4 border border-border rounded-lg">
                       <HStack justify="between" align="start">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
-                            Require Approval
-                          </h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                          <h3 className="font-semibold text-foreground mb-1">Require Approval</h3>
+                          <p className="text-sm text-muted-foreground">
                             Users must request access and be approved before viewing your store.
                           </p>
                         </div>
@@ -174,7 +166,7 @@ export default function PrivacySettingsPage() {
                   {/* Welcome Message */}
                   {settings.isPrivate && (
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Welcome Message (shown to approved users)
                       </label>
                       <textarea
@@ -183,13 +175,13 @@ export default function PrivacySettingsPage() {
                           setSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))
                         }
                         rows={3}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                       />
                     </div>
                   )}
                 </VStack>
 
-                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <div className="mt-6 pt-6 border-t border-border">
                   <Button onClick={handleSave} disabled={isSaving}>
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </Button>
@@ -200,9 +192,7 @@ export default function PrivacySettingsPage() {
               {settings.isPrivate && settings.requireApproval && (
                 <Card>
                   <HStack justify="between" align="center" className="mb-6">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                      Access Requests
-                    </h2>
+                    <h2 className="text-xl font-bold text-foreground">Access Requests</h2>
                     {pendingRequestsCount > 0 && (
                       <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-sm font-medium">
                         {pendingRequestsCount} pending
@@ -212,19 +202,14 @@ export default function PrivacySettingsPage() {
 
                   {requests.filter(r => r.status === 'pending').length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-slate-500 dark:text-slate-400">
-                        No pending access requests
-                      </p>
+                      <p className="text-muted-foreground">No pending access requests</p>
                     </div>
                   ) : (
                     <VStack gap="md">
                       {requests
                         .filter(r => r.status === 'pending')
                         .map(request => (
-                          <div
-                            key={request.id}
-                            className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
-                          >
+                          <div key={request.id} className="p-4 border border-border rounded-lg">
                             <HStack justify="between" align="start" className="mb-3">
                               <HStack gap="md" align="center">
                                 <img
@@ -233,10 +218,8 @@ export default function PrivacySettingsPage() {
                                   className="w-10 h-10 rounded-full bg-slate-200"
                                 />
                                 <div>
-                                  <p className="font-semibold text-slate-900 dark:text-white">
-                                    {request.name}
-                                  </p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  <p className="font-semibold text-foreground">{request.name}</p>
+                                  <p className="text-xs text-muted-foreground">
                                     {new Date(request.createdAt).toLocaleDateString()}
                                   </p>
                                 </div>
@@ -257,9 +240,7 @@ export default function PrivacySettingsPage() {
                                 </Button>
                               </HStack>
                             </HStack>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm">
-                              {request.message}
-                            </p>
+                            <p className="text-muted-foreground text-sm">{request.message}</p>
                           </div>
                         ))}
                     </VStack>
@@ -272,13 +253,11 @@ export default function PrivacySettingsPage() {
             <div className="space-y-6">
               {/* Quick Links */}
               <Card>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-                  Access Management
-                </h3>
+                <h3 className="font-semibold text-foreground mb-4">Access Management</h3>
                 <VStack gap="sm">
                   <Link
                     href="/settings/user-groups"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <HStack gap="md" align="center">
                       <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -296,7 +275,7 @@ export default function PrivacySettingsPage() {
                           />
                         </svg>
                       </div>
-                      <span className="text-slate-700 dark:text-slate-300">User Groups</span>
+                      <span className="text-muted-foreground">User Groups</span>
                     </HStack>
                     <svg
                       className="w-5 h-5 text-slate-400"
@@ -315,7 +294,7 @@ export default function PrivacySettingsPage() {
 
                   <Link
                     href="/settings/product-groups"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <HStack gap="md" align="center">
                       <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
@@ -333,7 +312,7 @@ export default function PrivacySettingsPage() {
                           />
                         </svg>
                       </div>
-                      <span className="text-slate-700 dark:text-slate-300">Product Groups</span>
+                      <span className="text-muted-foreground">Product Groups</span>
                     </HStack>
                     <svg
                       className="w-5 h-5 text-slate-400"

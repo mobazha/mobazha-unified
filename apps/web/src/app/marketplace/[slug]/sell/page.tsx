@@ -83,7 +83,7 @@ export default function MarketplaceSellPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -91,7 +91,7 @@ export default function MarketplaceSellPage() {
           {/* Back Link */}
           <Link
             href={`/marketplace/${slug}`}
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -105,10 +105,8 @@ export default function MarketplaceSellPage() {
           </Link>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Become a Seller
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Become a Seller</h1>
+            <p className="text-muted-foreground">
               Complete your seller profile to start listing products in this marketplace
             </p>
           </div>
@@ -118,27 +116,25 @@ export default function MarketplaceSellPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Seller Profile */}
               <Card>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                  Seller Profile
-                </h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">Seller Profile</h2>
 
                 <VStack gap="lg">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Bio *
                     </label>
                     <textarea
                       value={profile.bio}
                       onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
                       rows={4}
-                      className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                       placeholder="Tell buyers about yourself and what you sell..."
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Location
                       </label>
                       <Input
@@ -148,7 +144,7 @@ export default function MarketplaceSellPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Contact Email
                       </label>
                       <Input
@@ -164,7 +160,7 @@ export default function MarketplaceSellPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Website (Optional)
                       </label>
                       <Input
@@ -174,7 +170,7 @@ export default function MarketplaceSellPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Business Type
                       </label>
                       <Select
@@ -196,7 +192,7 @@ export default function MarketplaceSellPage() {
 
                   {profile.businessType === 'business' && (
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Business Name
                       </label>
                       <Input
@@ -213,10 +209,8 @@ export default function MarketplaceSellPage() {
 
               {/* Application Message */}
               <Card>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                  Application Message
-                </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                <h2 className="text-xl font-bold text-foreground mb-4">Application Message</h2>
+                <p className="text-muted-foreground text-sm mb-4">
                   Write a message to the marketplace administrators explaining why you want to sell
                   in this marketplace.
                 </p>
@@ -224,17 +218,15 @@ export default function MarketplaceSellPage() {
                   value={applicationMessage}
                   onChange={e => setApplicationMessage(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                   placeholder="I would like to join this marketplace because..."
                 />
               </Card>
 
               {/* Select Products to List */}
               <Card>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                  Products to List
-                </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                <h2 className="text-xl font-bold text-foreground mb-4">Products to List</h2>
+                <p className="text-muted-foreground text-sm mb-4">
                   Select existing products to list in this marketplace (you can add more later).
                 </p>
 
@@ -247,7 +239,7 @@ export default function MarketplaceSellPage() {
                         className={`p-3 rounded-lg border-2 text-left transition-all ${
                           selectedProducts.includes(product.id)
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                            : 'border-border hover:border-slate-300'
                         }`}
                       >
                         <img
@@ -255,7 +247,7 @@ export default function MarketplaceSellPage() {
                           alt={product.title}
                           className="w-full aspect-square object-cover rounded-lg mb-2"
                         />
-                        <p className="text-sm font-medium text-slate-900 dark:text-white line-clamp-1">
+                        <p className="text-sm font-medium text-foreground line-clamp-1">
                           {product.title}
                         </p>
                         <p className="text-sm text-emerald-600">${product.price}</p>
@@ -289,19 +281,15 @@ export default function MarketplaceSellPage() {
             <div className="space-y-6">
               {/* Summary Card */}
               <Card className="sticky top-4">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-                  Application Summary
-                </h3>
+                <h3 className="font-semibold text-foreground mb-4">Application Summary</h3>
 
                 <VStack gap="md" className="mb-6">
                   <HStack justify="between">
-                    <span className="text-slate-600 dark:text-slate-400">Products Selected</span>
-                    <span className="font-medium text-slate-900 dark:text-white">
-                      {selectedProducts.length}
-                    </span>
+                    <span className="text-muted-foreground">Products Selected</span>
+                    <span className="font-medium text-foreground">{selectedProducts.length}</span>
                   </HStack>
                   <HStack justify="between">
-                    <span className="text-slate-600 dark:text-slate-400">Profile Complete</span>
+                    <span className="text-muted-foreground">Profile Complete</span>
                     <span
                       className={`font-medium ${profile.bio ? 'text-emerald-600' : 'text-amber-600'}`}
                     >
@@ -325,10 +313,8 @@ export default function MarketplaceSellPage() {
 
               {/* Info Card */}
               <Card>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-                  What Happens Next?
-                </h3>
-                <VStack gap="md" className="text-sm text-slate-600 dark:text-slate-400">
+                <h3 className="font-semibold text-foreground mb-4">What Happens Next?</h3>
+                <VStack gap="md" className="text-sm text-muted-foreground">
                   <HStack gap="sm" align="start">
                     <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       1

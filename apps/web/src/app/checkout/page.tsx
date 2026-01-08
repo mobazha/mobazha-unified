@@ -238,7 +238,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-4 sm:py-8">
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
           <HStack gap="sm" align="center" className="mb-4 sm:mb-8">
             <Link
               href="/cart"
-              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors touch-feedback"
+              className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors touch-feedback"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -258,9 +258,7 @@ export default function CheckoutPage() {
                 />
               </svg>
             </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              Checkout
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Checkout</h1>
           </HStack>
 
           {/* Progress Steps */}
@@ -280,7 +278,7 @@ export default function CheckoutPage() {
                     {i + 1}
                   </div>
                   <span
-                    className={`text-[10px] sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-slate-500 dark:text-slate-400'}`}
+                    className={`text-[10px] sm:text-sm capitalize whitespace-nowrap ${step === s ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}`}
                   >
                     {s}
                   </span>
@@ -299,7 +297,7 @@ export default function CheckoutPage() {
               <Card>
                 <CardContent className="p-4 sm:p-6">
                   <HStack justify="between" align="center" className="mb-3 sm:mb-4">
-                    <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-semibold text-foreground">
                       Connect Wallet
                     </h2>
                     {isConnected && (
@@ -326,7 +324,7 @@ export default function CheckoutPage() {
                           />
                         </svg>
                       </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 text-center max-w-sm">
+                      <p className="text-sm text-muted-foreground text-center max-w-sm">
                         Connect your external wallet (MetaMask, Trust Wallet, etc.) to pay with
                         cryptocurrency
                       </p>
@@ -349,16 +347,16 @@ export default function CheckoutPage() {
                               {walletInfo?.provider?.[0] || 'W'}
                             </div>
                             <div>
-                              <p className="font-medium text-slate-900 dark:text-white text-sm">
+                              <p className="font-medium text-foreground text-sm">
                                 {walletInfo?.provider || 'Wallet'}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                              <p className="text-xs text-muted-foreground font-mono">
                                 {walletInfo?.address && shortenAddress(walletInfo.address)}
                               </p>
                             </div>
                           </HStack>
                           <div className="text-right">
-                            <p className="font-bold text-slate-900 dark:text-white text-sm">
+                            <p className="font-bold text-foreground text-sm">
                               {parseFloat(walletInfo?.balance || '0').toFixed(4)} {nativeSymbol}
                             </p>
                           </div>
@@ -367,7 +365,7 @@ export default function CheckoutPage() {
 
                       {/* Chain Selection */}
                       <div>
-                        <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
                           Select Network
                         </p>
                         <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -378,14 +376,14 @@ export default function CheckoutPage() {
                               className={`p-2 sm:p-3 rounded-md sm:rounded-lg border-2 text-left transition-all touch-feedback ${
                                 selectedChain === chain.id
                                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                                  : 'border-border hover:border-slate-300'
                               }`}
                             >
                               <HStack gap="xs" align="center">
                                 <span className="text-base sm:text-xl">
                                   {getChainIcon(chain.id)}
                                 </span>
-                                <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm truncate">
+                                <span className="font-medium text-foreground text-xs sm:text-sm truncate">
                                   {chain.shortName}
                                 </span>
                               </HStack>
@@ -402,7 +400,7 @@ export default function CheckoutPage() {
               <Card>
                 <CardContent className="p-4 sm:p-6">
                   <HStack justify="between" align="center" className="mb-3 sm:mb-4">
-                    <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-semibold text-foreground">
                       Shipping Address
                     </h2>
                     <Button
@@ -423,13 +421,13 @@ export default function CheckoutPage() {
                         className={`w-full p-3 sm:p-4 rounded-md sm:rounded-lg border-2 text-left transition-all touch-feedback ${
                           selectedAddress === address.id
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                            : 'border-border hover:border-slate-300'
                         }`}
                       >
                         <HStack justify="between" align="start">
                           <div>
                             <HStack gap="xs" align="center" className="mb-0.5">
-                              <span className="font-medium text-slate-900 dark:text-white text-sm">
+                              <span className="font-medium text-foreground text-sm">
                                 {address.name}
                               </span>
                               {address.isDefault && (
@@ -438,24 +436,22 @@ export default function CheckoutPage() {
                                 </span>
                               )}
                             </HStack>
-                            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
+                            <p className="text-muted-foreground text-xs sm:text-sm">
                               {address.street}
                             </p>
-                            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
+                            <p className="text-muted-foreground text-xs sm:text-sm">
                               {address.city}, {address.state} {address.postalCode}
                             </p>
-                            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
+                            <p className="text-muted-foreground text-xs sm:text-sm">
                               {address.country}
                             </p>
-                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
-                              {address.phone}
-                            </p>
+                            <p className="text-muted-foreground text-xs mt-0.5">{address.phone}</p>
                           </div>
                           <div
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                               selectedAddress === address.id
                                 ? 'border-emerald-500 bg-emerald-500'
-                                : 'border-slate-300 dark:border-slate-600'
+                                : 'border-border'
                             }`}
                           >
                             {selectedAddress === address.id && (
@@ -482,10 +478,10 @@ export default function CheckoutPage() {
               {/* Moderator Selection */}
               <Card>
                 <CardContent className="p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1.5">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
                     Select Moderator
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-3 sm:mb-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                     A moderator helps resolve disputes between buyers and sellers. Choose one to
                     enable escrow protection.
                   </p>
@@ -498,7 +494,7 @@ export default function CheckoutPage() {
                         className={`w-full p-3 sm:p-4 rounded-md sm:rounded-lg border-2 text-left transition-all touch-feedback ${
                           selectedModerator === moderator.id
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                            : 'border-border hover:border-slate-300'
                         }`}
                       >
                         <HStack justify="between" align="center">
@@ -510,7 +506,7 @@ export default function CheckoutPage() {
                             />
                             <div>
                               <HStack gap="xs" align="center">
-                                <span className="font-medium text-slate-900 dark:text-white text-sm">
+                                <span className="font-medium text-foreground text-sm">
                                   {moderator.name}
                                 </span>
                                 {moderator.verified && (
@@ -528,10 +524,10 @@ export default function CheckoutPage() {
                                 )}
                               </HStack>
                               <HStack gap="sm" className="mt-0.5">
-                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                <span className="text-xs text-muted-foreground">
                                   Fee: {moderator.fee}%
                                 </span>
-                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                <span className="text-xs text-muted-foreground">
                                   ⭐ {moderator.rating}
                                 </span>
                               </HStack>
@@ -541,7 +537,7 @@ export default function CheckoutPage() {
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                               selectedModerator === moderator.id
                                 ? 'border-emerald-500 bg-emerald-500'
-                                : 'border-slate-300 dark:border-slate-600'
+                                : 'border-border'
                             }`}
                           >
                             {selectedModerator === moderator.id && (
@@ -575,14 +571,14 @@ export default function CheckoutPage() {
               {/* Order Note */}
               <Card>
                 <CardContent className="p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3">
                     Order Note (Optional)
                   </h2>
                   <textarea
                     value={orderNote}
                     onChange={e => setOrderNote(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 rounded-md sm:rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
+                    className="w-full px-3 py-2 rounded-md sm:rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
                     placeholder="Add a note for the seller..."
                   />
                 </CardContent>
@@ -593,7 +589,7 @@ export default function CheckoutPage() {
             <div className="space-y-4 sm:space-y-6">
               <Card className="sticky top-4">
                 <CardContent className="p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3 sm:mb-4">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
                     Order Summary
                   </h2>
 
@@ -601,55 +597,49 @@ export default function CheckoutPage() {
                   <VStack gap="sm" className="mb-4 sm:mb-6">
                     {mockItems.map(item => (
                       <HStack key={item.id} gap="sm" align="start">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-md sm:rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-md sm:rounded-lg overflow-hidden bg-muted flex-shrink-0">
                           <img src={item.image} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white line-clamp-2">
+                          <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2">
                             {item.title}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Qty: {item.quantity}
-                          </p>
+                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
-                        <p className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
+                        <p className="font-medium text-foreground text-xs sm:text-sm">
                           ${(item.price * item.quantity).toFixed(2)}
                         </p>
                       </HStack>
                     ))}
                   </VStack>
 
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+                  <div className="border-t border-border pt-3 sm:pt-4 space-y-2 sm:space-y-3">
                     <HStack justify="between">
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                        Subtotal
-                      </span>
-                      <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
+                      <span className="text-xs sm:text-sm text-muted-foreground">Subtotal</span>
+                      <span className="font-medium text-foreground text-xs sm:text-sm">
                         ${subtotal.toFixed(2)}
                       </span>
                     </HStack>
 
                     <HStack justify="between">
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                        Shipping
-                      </span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">Shipping</span>
                       <span className="font-medium text-emerald-600 text-xs sm:text-sm">Free</span>
                     </HStack>
 
                     {selectedModerator && (
                       <HStack justify="between">
-                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                        <span className="text-xs sm:text-sm text-muted-foreground">
                           Moderator Fee
                         </span>
-                        <span className="font-medium text-slate-900 dark:text-white text-xs sm:text-sm">
+                        <span className="font-medium text-foreground text-xs sm:text-sm">
                           ${moderatorFee.toFixed(2)}
                         </span>
                       </HStack>
                     )}
 
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-2 sm:pt-3">
+                    <div className="border-t border-border pt-2 sm:pt-3">
                       <HStack justify="between">
-                        <span className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                        <span className="text-base sm:text-lg font-semibold text-foreground">
                           Total
                         </span>
                         <div className="text-right">
@@ -657,7 +647,7 @@ export default function CheckoutPage() {
                             ${total.toFixed(2)}
                           </p>
                           {isConnected && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                               ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
                             </p>
                           )}
@@ -668,16 +658,14 @@ export default function CheckoutPage() {
 
                   {/* Payment Info */}
                   {isConnected && (
-                    <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-slate-100 dark:bg-slate-800 rounded-md sm:rounded-lg">
+                    <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-muted rounded-md sm:rounded-lg">
                       <HStack justify="between" align="center">
-                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                          Pay with
-                        </span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Pay with</span>
                         <HStack gap="xs" align="center">
                           <span className="text-base sm:text-lg">
                             {getChainIcon(selectedChain)}
                           </span>
-                          <span className="font-medium text-slate-900 dark:text-white text-sm">
+                          <span className="font-medium text-foreground text-sm">
                             {currentChainInfo?.name}
                           </span>
                         </HStack>
@@ -729,7 +717,7 @@ export default function CheckoutPage() {
                   )}
 
                   {/* Security Note */}
-                  <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
                     <svg
                       className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                       fill="none"

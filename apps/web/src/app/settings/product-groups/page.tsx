@@ -132,14 +132,14 @@ export default function ProductGroupsPage() {
       case 'group_only':
         return 'text-purple-600 bg-purple-100 dark:bg-purple-900/30';
       case 'hidden':
-        return 'text-slate-600 bg-slate-100 dark:bg-slate-800';
+        return 'text-slate-600 bg-muted';
       default:
         return 'text-slate-600 bg-slate-100';
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -147,7 +147,7 @@ export default function ProductGroupsPage() {
           {/* Back Link */}
           <Link
             href="/settings/privacy"
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -162,10 +162,8 @@ export default function ProductGroupsPage() {
 
           <HStack justify="between" align="center" className="mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                Product Groups
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400">
+              <h1 className="text-3xl font-bold text-foreground mb-2">Product Groups</h1>
+              <p className="text-muted-foreground">
                 Organize products and control visibility for different customer groups
               </p>
             </div>
@@ -185,7 +183,7 @@ export default function ProductGroupsPage() {
                       {group.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">{group.name}</h3>
+                      <h3 className="font-semibold text-foreground">{group.name}</h3>
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full ${getVisibilityColor(group.visibility)}`}
                       >
@@ -211,9 +209,7 @@ export default function ProductGroupsPage() {
                 <p className="text-sm text-slate-500 mb-3">{group.description}</p>
 
                 <HStack justify="between" className="text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    {group.productCount} products
-                  </span>
+                  <span className="text-muted-foreground">{group.productCount} products</span>
                   {group.accessUserGroups.length > 0 && (
                     <span className="text-purple-600">
                       {group.accessUserGroups.length} group access
@@ -221,7 +217,7 @@ export default function ProductGroupsPage() {
                   )}
                 </HStack>
 
-                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="mt-4 pt-4 border-t border-border">
                   <Link
                     href={`/settings/product-groups/${group.id}`}
                     className="text-sm text-emerald-600 hover:text-emerald-700"
@@ -237,7 +233,7 @@ export default function ProductGroupsPage() {
           {groups.length === 0 && (
             <Card className="text-center py-12">
               <VStack gap="md" align="center">
-                <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                   <svg
                     className="w-8 h-8 text-slate-400"
                     fill="none"
@@ -252,10 +248,8 @@ export default function ProductGroupsPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  No product groups yet
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400">
+                <h3 className="text-lg font-semibold text-foreground">No product groups yet</h3>
+                <p className="text-muted-foreground">
                   Create product groups to organize your inventory
                 </p>
                 <Button onClick={() => setShowCreateModal(true)}>Create Group</Button>
@@ -271,13 +265,13 @@ export default function ProductGroupsPage() {
       {(showCreateModal || editingGroup) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-6">
               {editingGroup ? 'Edit Product Group' : 'Create Product Group'}
             </h2>
 
             <VStack gap="lg">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Group Name *
                 </label>
                 <Input
@@ -292,7 +286,7 @@ export default function ProductGroupsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Description
                 </label>
                 <textarea
@@ -303,13 +297,13 @@ export default function ProductGroupsPage() {
                       : setNewGroup(prev => ({ ...prev, description: e.target.value }))
                   }
                   rows={2}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                   placeholder="Describe this group..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Color
                 </label>
                 <div className="flex gap-2">
@@ -333,7 +327,7 @@ export default function ProductGroupsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Visibility
                 </label>
                 <Select
