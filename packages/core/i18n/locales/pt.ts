@@ -44,6 +44,8 @@ export const pt: TranslationResource = {
     showLess: 'Mostrar menos',
     noData: 'Sem dados disponíveis',
     backToMarket: 'Voltar ao mercado',
+    loadMore: 'Carregar mais',
+    noMoreData: 'Não há mais dados',
   },
 
   nav: {
@@ -187,6 +189,54 @@ export const pt: TranslationResource = {
     noOrdersFound: 'Nenhum pedido encontrado',
     noOrdersMessage: 'Você ainda não tem {{type}}. Explore o marketplace!',
     noStatusOrders: 'Nenhum pedido {{status}} no momento.',
+    // Order detail page
+    backToOrders: 'Voltar aos pedidos',
+    placedOn: 'Feito em {{date}}',
+    orderNotFound: 'Pedido não encontrado',
+    orderNotFoundMessage: 'O pedido que você procura não existe.',
+    loadOrderFailed: 'Falha ao carregar pedido',
+    tryAgain: 'Tentar novamente',
+    message: 'Mensagem',
+    confirmReceipt: 'Confirmar recebimento',
+    confirmingReceipt: 'Processando...',
+    openDispute: 'Abrir disputa',
+    markAsShipped: 'Marcar como enviado',
+    refundOrder: 'Reembolsar',
+    shipOrder: 'Enviar pedido',
+    // Timeline
+    orderTimeline: 'Histórico do pedido',
+    orderPlaced: 'Pedido realizado',
+    paymentConfirmed: 'Pagamento confirmado',
+    vendorConfirmed: 'Vendedor confirmou',
+    packageShipped: 'Pacote enviado',
+    orderCompleted: 'Pedido concluído',
+    fundsReleased: 'Fundos liberados',
+    disputeOpened: 'Disputa aberta',
+    disputeResolved: 'Disputa resolvida',
+    // Order items
+    orderItems: 'Itens do pedido',
+    quantity: 'Quantidade',
+    subtotal: 'Subtotal',
+    shipping: 'Frete',
+    free: 'Grátis',
+    moderatorFee: 'Taxa do moderador',
+    // Parties
+    seller: 'Vendedor',
+    buyer: 'Comprador',
+    moderator: 'Moderador',
+    viewStore: 'Ver loja',
+    // Address and payment
+    shippingAddress: 'Endereço de entrega',
+    trackingNumber: 'Número de rastreio',
+    paymentDetails: 'Detalhes do pagamento',
+    paymentTransaction: 'Transação de pagamento',
+    escrowAddress: 'Endereço de custódia',
+    orderNotes: 'Notas do pedido',
+    // Dispute
+    disputeOpen: 'Disputa aberta',
+    initiatedBy: 'Iniciada por {{party}}',
+    disputeStatus: 'Status: {{status}}',
+    favorBuyer: 'A favor do comprador',
   },
 
   chat: {

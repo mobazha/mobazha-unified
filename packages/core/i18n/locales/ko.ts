@@ -44,6 +44,8 @@ export const ko: TranslationResource = {
     showLess: '간략히',
     noData: '데이터가 없습니다',
     backToMarket: '마켓으로 돌아가기',
+    loadMore: '더 불러오기',
+    noMoreData: '더 이상 데이터가 없습니다',
   },
 
   nav: {
@@ -187,6 +189,54 @@ export const ko: TranslationResource = {
     noOrdersFound: '주문을 찾을 수 없습니다',
     noOrdersMessage: '아직 {{type}}이(가) 없습니다. 마켓플레이스를 둘러보세요!',
     noStatusOrders: '현재 {{status}} 주문이 없습니다.',
+    // Order detail page
+    backToOrders: '주문 목록으로',
+    placedOn: '{{date}}에 주문됨',
+    orderNotFound: '주문을 찾을 수 없음',
+    orderNotFoundMessage: '찾으시는 주문이 존재하지 않습니다.',
+    loadOrderFailed: '주문 로드 실패',
+    tryAgain: '다시 시도',
+    message: '메시지',
+    confirmReceipt: '수령 확인',
+    confirmingReceipt: '처리 중...',
+    openDispute: '분쟁 열기',
+    markAsShipped: '발송 완료로 표시',
+    refundOrder: '환불',
+    shipOrder: '배송하기',
+    // Timeline
+    orderTimeline: '주문 타임라인',
+    orderPlaced: '주문 접수',
+    paymentConfirmed: '결제 확인',
+    vendorConfirmed: '판매자 확인',
+    packageShipped: '배송 시작',
+    orderCompleted: '주문 완료',
+    fundsReleased: '대금 지급 완료',
+    disputeOpened: '분쟁 시작',
+    disputeResolved: '분쟁 해결',
+    // Order items
+    orderItems: '주문 상품',
+    quantity: '수량',
+    subtotal: '소계',
+    shipping: '배송',
+    free: '무료',
+    moderatorFee: '중재자 수수료',
+    // Parties
+    seller: '판매자',
+    buyer: '구매자',
+    moderator: '중재자',
+    viewStore: '스토어 보기',
+    // Address and payment
+    shippingAddress: '배송 주소',
+    trackingNumber: '운송장 번호',
+    paymentDetails: '결제 정보',
+    paymentTransaction: '결제 트랜잭션',
+    escrowAddress: '에스크로 주소',
+    orderNotes: '주문 메모',
+    // Dispute
+    disputeOpen: '분쟁 진행 중',
+    initiatedBy: '{{party}}이(가) 시작',
+    disputeStatus: '상태: {{status}}',
+    favorBuyer: '구매자 지지',
   },
 
   chat: {

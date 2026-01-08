@@ -33,10 +33,15 @@ export type TranslationParams = Record<string, string | number>;
 // 翻译函数类型
 export type TranslateFunction = (key: TranslationKey, params?: TranslationParams) => string;
 
+// 翻译字符串部分基础类型（允许嵌套对象）
+interface TranslationSection {
+  [key: string]: string | Record<string, unknown>;
+}
+
 // 翻译资源结构
 export interface TranslationResource {
   // 通用
-  common: {
+  common: TranslationSection & {
     loading: string;
     error: string;
     success: string;
@@ -75,10 +80,12 @@ export interface TranslationResource {
     showLess: string;
     noData: string;
     backToMarket: string;
+    loadMore: string;
+    noMoreData: string;
   };
 
   // 导航
-  nav: {
+  nav: TranslationSection & {
     home: string;
     search: string;
     messages: string;
@@ -93,7 +100,7 @@ export interface TranslationResource {
   };
 
   // 首页
-  home: {
+  home: TranslationSection & {
     welcome: string;
     featured: string;
     trending: string;
@@ -103,7 +110,7 @@ export interface TranslationResource {
   };
 
   // 商品
-  product: {
+  product: TranslationSection & {
     title: string;
     description: string;
     price: string;
@@ -141,7 +148,7 @@ export interface TranslationResource {
   };
 
   // 搜索
-  search: {
+  search: TranslationSection & {
     placeholder: string;
     results: string;
     noResults: string;
@@ -157,7 +164,7 @@ export interface TranslationResource {
   };
 
   // 购物车
-  cart: {
+  cart: TranslationSection & {
     title: string;
     empty: string;
     emptyMessage: string;
@@ -180,7 +187,7 @@ export interface TranslationResource {
   };
 
   // 结账
-  checkout: {
+  checkout: TranslationSection & {
     title: string;
     shippingAddress: string;
     paymentMethod: string;
@@ -197,7 +204,7 @@ export interface TranslationResource {
   };
 
   // 订单
-  order: {
+  order: TranslationSection & {
     title: string;
     myOrders: string;
     orderNumber: string;
@@ -225,10 +232,58 @@ export interface TranslationResource {
     noOrdersFound: string;
     noOrdersMessage: string;
     noStatusOrders: string;
+    // Order detail page
+    backToOrders: string;
+    placedOn: string;
+    orderNotFound: string;
+    orderNotFoundMessage: string;
+    loadOrderFailed: string;
+    tryAgain: string;
+    message: string;
+    confirmReceipt: string;
+    confirmingReceipt: string;
+    openDispute: string;
+    markAsShipped: string;
+    refundOrder: string;
+    shipOrder: string;
+    // Timeline
+    orderTimeline: string;
+    orderPlaced: string;
+    paymentConfirmed: string;
+    vendorConfirmed: string;
+    packageShipped: string;
+    orderCompleted: string;
+    fundsReleased: string;
+    disputeOpened: string;
+    disputeResolved: string;
+    // Order items
+    orderItems: string;
+    quantity: string;
+    subtotal: string;
+    shipping: string;
+    free: string;
+    moderatorFee: string;
+    // Parties
+    seller: string;
+    buyer: string;
+    moderator: string;
+    viewStore: string;
+    // Address and payment
+    shippingAddress: string;
+    trackingNumber: string;
+    paymentDetails: string;
+    paymentTransaction: string;
+    escrowAddress: string;
+    orderNotes: string;
+    // Dispute
+    disputeOpen: string;
+    initiatedBy: string;
+    disputeStatus: string;
+    favorBuyer: string;
   };
 
   // 聊天
-  chat: {
+  chat: TranslationSection & {
     title: string;
     conversations: string;
     newMessage: string;
@@ -246,7 +301,7 @@ export interface TranslationResource {
   };
 
   // 钱包
-  wallet: {
+  wallet: TranslationSection & {
     title: string;
     balance: string;
     totalBalance: string;
@@ -277,7 +332,7 @@ export interface TranslationResource {
   };
 
   // 用户资料
-  profile: {
+  profile: TranslationSection & {
     title: string;
     myProfile: string;
     editProfile: string;
@@ -310,7 +365,7 @@ export interface TranslationResource {
   };
 
   // 设置
-  settings: {
+  settings: TranslationSection & {
     title: string;
     general: string;
     account: string;
@@ -340,7 +395,7 @@ export interface TranslationResource {
   };
 
   // 主题
-  theme: {
+  theme: TranslationSection & {
     classic: string;
     classicDesc: string;
     crypto: string;
@@ -356,7 +411,7 @@ export interface TranslationResource {
   };
 
   // 错误消息
-  errors: {
+  errors: TranslationSection & {
     generic: string;
     network: string;
     notFound: string;
@@ -370,7 +425,7 @@ export interface TranslationResource {
   };
 
   // 时间相关
-  time: {
+  time: TranslationSection & {
     justNow: string;
     minutesAgo: string;
     hoursAgo: string;
@@ -381,7 +436,7 @@ export interface TranslationResource {
   };
 
   // Hero 区域
-  hero: {
+  hero: TranslationSection & {
     badge: string;
     titleLine1: string;
     titleLine2: string;
@@ -394,7 +449,7 @@ export interface TranslationResource {
   };
 
   // 页脚
-  footer: {
+  footer: TranslationSection & {
     tagline: string;
     marketplace: string;
     browseProducts: string;
@@ -415,7 +470,7 @@ export interface TranslationResource {
   };
 
   // 市场/分类
-  marketplace: {
+  marketplace: TranslationSection & {
     title: string;
     subtitle: string;
     searchPlaceholder: string;
@@ -436,7 +491,7 @@ export interface TranslationResource {
   };
 
   // 调解员
-  moderator: {
+  moderator: TranslationSection & {
     title: string;
     subtitle: string;
     searchPlaceholder: string;
@@ -458,7 +513,7 @@ export interface TranslationResource {
   };
 
   // 筛选器
-  filter: {
+  filter: TranslationSection & {
     filters: string;
     category: string;
     priceRange: string;
@@ -476,7 +531,7 @@ export interface TranslationResource {
   };
 
   // 空状态
-  empty: {
+  empty: TranslationSection & {
     noProductsFound: string;
     noStoresFound: string;
     tryAdjustingSearch: string;

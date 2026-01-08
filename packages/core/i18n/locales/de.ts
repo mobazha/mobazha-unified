@@ -44,6 +44,8 @@ export const de: TranslationResource = {
     showLess: 'Weniger anzeigen',
     noData: 'Keine Daten verfügbar',
     backToMarket: 'Zurück zum Markt',
+    loadMore: 'Mehr laden',
+    noMoreData: 'Keine weiteren Daten',
   },
 
   nav: {
@@ -187,6 +189,54 @@ export const de: TranslationResource = {
     noOrdersFound: 'Keine Bestellungen gefunden',
     noOrdersMessage: 'Sie haben noch keine {{type}}. Entdecken Sie den Marktplatz!',
     noStatusOrders: 'Keine {{status}} Bestellungen vorhanden.',
+    // Order detail page
+    backToOrders: 'Zurück zu Bestellungen',
+    placedOn: 'Bestellt am {{date}}',
+    orderNotFound: 'Bestellung nicht gefunden',
+    orderNotFoundMessage: 'Die gesuchte Bestellung existiert nicht.',
+    loadOrderFailed: 'Fehler beim Laden der Bestellung',
+    tryAgain: 'Erneut versuchen',
+    message: 'Nachricht',
+    confirmReceipt: 'Empfang bestätigen',
+    confirmingReceipt: 'Verarbeitung...',
+    openDispute: 'Streitfall eröffnen',
+    markAsShipped: 'Als versendet markieren',
+    refundOrder: 'Rückerstattung',
+    shipOrder: 'Versenden',
+    // Timeline
+    orderTimeline: 'Bestellverlauf',
+    orderPlaced: 'Bestellung aufgegeben',
+    paymentConfirmed: 'Zahlung bestätigt',
+    vendorConfirmed: 'Verkäufer bestätigt',
+    packageShipped: 'Paket versendet',
+    orderCompleted: 'Bestellung abgeschlossen',
+    fundsReleased: 'Geld freigegeben',
+    disputeOpened: 'Streitfall eröffnet',
+    disputeResolved: 'Streitfall gelöst',
+    // Order items
+    orderItems: 'Bestellte Artikel',
+    quantity: 'Menge',
+    subtotal: 'Zwischensumme',
+    shipping: 'Versand',
+    free: 'Kostenlos',
+    moderatorFee: 'Moderatorgebühr',
+    // Parties
+    seller: 'Verkäufer',
+    buyer: 'Käufer',
+    moderator: 'Moderator',
+    viewStore: 'Shop ansehen',
+    // Address and payment
+    shippingAddress: 'Lieferadresse',
+    trackingNumber: 'Sendungsnummer',
+    paymentDetails: 'Zahlungsdetails',
+    paymentTransaction: 'Zahlungstransaktion',
+    escrowAddress: 'Treuhandadresse',
+    orderNotes: 'Bestellnotizen',
+    // Dispute
+    disputeOpen: 'Streitfall offen',
+    initiatedBy: 'Gestartet von {{party}}',
+    disputeStatus: 'Status: {{status}}',
+    favorBuyer: 'Zugunsten des Käufers',
   },
 
   chat: {

@@ -44,6 +44,8 @@ export const ja: TranslationResource = {
     showLess: '表示を減らす',
     noData: 'データがありません',
     backToMarket: 'マーケットに戻る',
+    loadMore: 'もっと読み込む',
+    noMoreData: 'これ以上データはありません',
   },
 
   nav: {
@@ -187,6 +189,54 @@ export const ja: TranslationResource = {
     noOrdersFound: '注文が見つかりません',
     noOrdersMessage: 'まだ{{type}}がありません。マーケットプレイスを探索してみましょう！',
     noStatusOrders: '現在{{status}}の注文はありません。',
+    // Order detail page
+    backToOrders: '注文一覧に戻る',
+    placedOn: '{{date}}に注文',
+    orderNotFound: '注文が見つかりません',
+    orderNotFoundMessage: 'お探しの注文は存在しません。',
+    loadOrderFailed: '注文の読み込みに失敗しました',
+    tryAgain: '再試行',
+    message: 'メッセージ',
+    confirmReceipt: '受取確認',
+    confirmingReceipt: '処理中...',
+    openDispute: '紛争を開始',
+    markAsShipped: '発送済みにする',
+    refundOrder: '返金',
+    shipOrder: '発送する',
+    // Timeline
+    orderTimeline: '注文タイムライン',
+    orderPlaced: '注文確定',
+    paymentConfirmed: '支払い確認',
+    vendorConfirmed: '販売者確認',
+    packageShipped: '発送完了',
+    orderCompleted: '注文完了',
+    fundsReleased: '資金解放',
+    disputeOpened: '紛争開始',
+    disputeResolved: '紛争解決',
+    // Order items
+    orderItems: '注文商品',
+    quantity: '数量',
+    subtotal: '小計',
+    shipping: '配送',
+    free: '無料',
+    moderatorFee: 'モデレーター手数料',
+    // Parties
+    seller: '販売者',
+    buyer: '購入者',
+    moderator: 'モデレーター',
+    viewStore: 'ストアを見る',
+    // Address and payment
+    shippingAddress: '配送先住所',
+    trackingNumber: '追跡番号',
+    paymentDetails: '支払い詳細',
+    paymentTransaction: '支払いトランザクション',
+    escrowAddress: 'エスクローアドレス',
+    orderNotes: '注文メモ',
+    // Dispute
+    disputeOpen: '紛争中',
+    initiatedBy: '{{party}}が開始',
+    disputeStatus: 'ステータス: {{status}}',
+    favorBuyer: '購入者有利',
   },
 
   chat: {

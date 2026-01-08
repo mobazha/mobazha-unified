@@ -44,6 +44,8 @@ export const ru: TranslationResource = {
     showLess: 'Показать меньше',
     noData: 'Данные недоступны',
     backToMarket: 'Вернуться на рынок',
+    loadMore: 'Загрузить ещё',
+    noMoreData: 'Больше данных нет',
   },
 
   nav: {
@@ -187,6 +189,54 @@ export const ru: TranslationResource = {
     noOrdersFound: 'Заказы не найдены',
     noOrdersMessage: 'У вас пока нет {{type}}. Изучите маркетплейс!',
     noStatusOrders: 'Нет заказов со статусом {{status}}.',
+    // Order detail page
+    backToOrders: 'К списку заказов',
+    placedOn: 'Оформлен {{date}}',
+    orderNotFound: 'Заказ не найден',
+    orderNotFoundMessage: 'Заказ, который вы ищете, не существует.',
+    loadOrderFailed: 'Не удалось загрузить заказ',
+    tryAgain: 'Попробовать снова',
+    message: 'Сообщение',
+    confirmReceipt: 'Подтвердить получение',
+    confirmingReceipt: 'Обработка...',
+    openDispute: 'Открыть спор',
+    markAsShipped: 'Отметить как отправленный',
+    refundOrder: 'Возврат',
+    shipOrder: 'Отправить',
+    // Timeline
+    orderTimeline: 'История заказа',
+    orderPlaced: 'Заказ оформлен',
+    paymentConfirmed: 'Оплата подтверждена',
+    vendorConfirmed: 'Продавец подтвердил',
+    packageShipped: 'Посылка отправлена',
+    orderCompleted: 'Заказ выполнен',
+    fundsReleased: 'Средства переведены',
+    disputeOpened: 'Спор открыт',
+    disputeResolved: 'Спор разрешён',
+    // Order items
+    orderItems: 'Товары в заказе',
+    quantity: 'Количество',
+    subtotal: 'Промежуточный итог',
+    shipping: 'Доставка',
+    free: 'Бесплатно',
+    moderatorFee: 'Комиссия модератора',
+    // Parties
+    seller: 'Продавец',
+    buyer: 'Покупатель',
+    moderator: 'Модератор',
+    viewStore: 'Перейти в магазин',
+    // Address and payment
+    shippingAddress: 'Адрес доставки',
+    trackingNumber: 'Номер отслеживания',
+    paymentDetails: 'Детали оплаты',
+    paymentTransaction: 'Транзакция оплаты',
+    escrowAddress: 'Адрес эскроу',
+    orderNotes: 'Примечания к заказу',
+    // Dispute
+    disputeOpen: 'Спор открыт',
+    initiatedBy: 'Инициатор: {{party}}',
+    disputeStatus: 'Статус: {{status}}',
+    favorBuyer: 'В пользу покупателя',
   },
 
   chat: {

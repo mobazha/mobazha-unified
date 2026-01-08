@@ -708,7 +708,10 @@ function convertMockProductToListItem(mockProduct: {
     title: mockProduct.title,
     price: {
       amount: mockProduct.price,
-      currencyCode: mockProduct.currency,
+      currency: {
+        code: mockProduct.currency,
+        divisibility: 2,
+      },
     },
     thumbnail: {
       tiny: mockProduct.images[0] || '',

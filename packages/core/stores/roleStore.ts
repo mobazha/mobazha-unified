@@ -5,9 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-// 角色类型
-export type UserRole = 'buyer' | 'seller' | 'moderator';
+import type { UserRole } from '../types';
 
 // 角色状态
 export interface RoleState {
@@ -110,7 +108,8 @@ export const useRoleStore = create<RoleStore>()(
             ...state.roleState,
             isSeller: false,
             // 如果当前是商家角色，切换回买家
-            activeRole: state.roleState.activeRole === 'seller' ? 'buyer' : state.roleState.activeRole,
+            activeRole:
+              state.roleState.activeRole === 'seller' ? 'buyer' : state.roleState.activeRole,
           },
         }));
       },
@@ -129,7 +128,8 @@ export const useRoleStore = create<RoleStore>()(
           roleState: {
             ...state.roleState,
             isModerator: false,
-            activeRole: state.roleState.activeRole === 'moderator' ? 'buyer' : state.roleState.activeRole,
+            activeRole:
+              state.roleState.activeRole === 'moderator' ? 'buyer' : state.roleState.activeRole,
           },
         }));
       },
@@ -171,4 +171,3 @@ export const useRoleStore = create<RoleStore>()(
 );
 
 export default useRoleStore;
-
