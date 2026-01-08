@@ -42,6 +42,7 @@ export const ja: TranslationResource = {
     seeMore: 'もっと見る',
     showMore: '表示を増やす',
     showLess: '表示を減らす',
+    noData: 'データがありません',
   },
 
   nav: {
@@ -252,6 +253,7 @@ export const ja: TranslationResource = {
     name: '名前',
     bio: '自己紹介',
     saveChanges: '変更を保存',
+    noProfileData: 'プロフィールデータを読み込めませんでした',
   },
 
   settings: {
@@ -278,6 +280,9 @@ export const ja: TranslationResource = {
     appearance: '外観',
     chooseTheme: 'テーマを選択',
     displayMode: '表示モード',
+    avatar: 'アバター',
+    loadAvatar: 'アバターを変更',
+    loadHeader: 'カバーを変更',
   },
 
   theme: {

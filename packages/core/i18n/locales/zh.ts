@@ -42,6 +42,7 @@ export const zh: TranslationResource = {
     seeMore: '查看更多',
     showMore: '展开更多',
     showLess: '收起',
+    noData: '暂无数据',
   },
 
   nav: {
@@ -251,6 +252,7 @@ export const zh: TranslationResource = {
     name: '姓名',
     bio: '个人简介',
     saveChanges: '保存更改',
+    noProfileData: '无法加载个人资料',
   },
 
   settings: {
@@ -277,6 +279,9 @@ export const zh: TranslationResource = {
     appearance: '外观',
     chooseTheme: '选择主题',
     displayMode: '显示模式',
+    avatar: '头像',
+    loadAvatar: '更换头像',
+    loadHeader: '更换封面',
   },
 
   theme: {

@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useUserStore, productDataService, imagesApi, getImageUrl } from '@mobazha/core';
+import type { ProductListItem, Image } from '@mobazha/core';
 
 // Types
 interface ContactInfo {
@@ -44,121 +46,234 @@ interface Profile {
   };
 }
 
-// Mock profile data
-const mockProfile: Profile = {
-  peerID: 'QmMyPeerID123456',
-  name: 'John Doe',
-  shortDescription:
-    'Passionate about decentralized commerce and crypto. Building the future of e-commerce.',
-  location: 'San Francisco, CA',
-  about: `Welcome to my store! I've been selling quality products on Mobazha since 2020.
-
-I specialize in electronics, collectibles, and handmade crafts. Every item is carefully selected and verified for authenticity.
-
-**Why buy from me?**
-- Fast shipping (usually within 24 hours)
-- Quality guarantee on all products
-- Responsive customer service
-- Secure crypto payments
-
-Feel free to reach out if you have any questions!`,
-  avatarHashes: {
-    medium: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
-  },
-  headerHashes: {
-    large: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
-  },
-  contactInfo: {
-    email: 'john@example.com',
-    phoneNumber: '+1 (555) 123-4567',
-    website: 'https://johndoe.com',
-  },
-  stats: {
-    listingCount: 45,
-    followerCount: 234,
-    followingCount: 56,
-    ratingCount: 128,
-    averageRating: 4.8,
-  },
+// 默认统计数据（当 API 未返回时使用）
+const defaultStats = {
+  listingCount: 0,
+  followerCount: 0,
+  followingCount: 0,
+  ratingCount: 0,
+  averageRating: 0,
 };
-
-// Mock listings
-const mockListings = [
-  {
-    id: '1',
-    slug: 'premium-headphones',
-    title: 'Premium Wireless Headphones',
-    price: 299.99,
-    currency: '$',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-  },
-  {
-    id: '2',
-    slug: 'smart-watch',
-    title: 'Smart Watch Pro',
-    price: 449.99,
-    currency: '$',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-  },
-  {
-    id: '3',
-    slug: 'vintage-camera',
-    title: 'Vintage Film Camera',
-    price: 189.99,
-    currency: '$',
-    image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=400&fit=crop',
-  },
-  {
-    id: '4',
-    slug: 'designer-sunglasses',
-    title: 'Designer Sunglasses',
-    price: 159.99,
-    currency: '$',
-    image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop',
-  },
-];
 
 type TabType = 'store' | 'about' | 'reviews';
 
 export default function ProfilePage() {
   const { t } = useI18n();
-  const [profile] = useState<Profile>(mockProfile);
+  const router = useRouter();
+  const {
+    profile: userProfile,
+    isAuthenticated,
+    isLoading,
+    fetchProfile,
+    updateProfile,
+  } = useUserStore();
   const [activeTab, setActiveTab] = useState<TabType>('store');
   const [isEditing, setIsEditing] = useState(false);
+  const [listings, setListings] = useState<ProductListItem[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(false);
 
-  // Edit form state
-  const [editForm, setEditForm] = useState({
-    name: profile.name,
-    shortDescription: profile.shortDescription || '',
-    location: profile.location || '',
-    about: profile.about || '',
-    email: profile.contactInfo?.email || '',
-    phoneNumber: profile.contactInfo?.phoneNumber || '',
-    website: profile.contactInfo?.website || '',
-  });
+  // 将 userProfile 转换为页面所需的 Profile 格式
+  const profile: Profile | null = useMemo(() => {
+    if (!userProfile) return null;
+    return {
+      peerID: userProfile.peerID,
+      name: userProfile.name || userProfile.peerID.slice(0, 8),
+      shortDescription: userProfile.shortDescription,
+      location: userProfile.location,
+      about: userProfile.about,
+      avatarHashes: userProfile.avatarHashes,
+      headerHashes: userProfile.headerHashes,
+      contactInfo: userProfile.contactInfo,
+      stats: userProfile.stats || defaultStats,
+    };
+  }, [userProfile]);
+
+  // 用于追踪 profile 变化的 key
+  const profileKey = userProfile?.peerID || '';
+
+  // Edit form state - 使用函数初始化，在 profileKey 变化时重新计算
+  const getInitialEditForm = useCallback(
+    () => ({
+      name: profile?.name || '',
+      shortDescription: profile?.shortDescription || '',
+      location: profile?.location || '',
+      about: profile?.about || '',
+      email: profile?.contactInfo?.email || '',
+      phoneNumber: profile?.contactInfo?.phoneNumber || '',
+      website: profile?.contactInfo?.website || '',
+    }),
+    [profile]
+  );
+
+  const [editForm, setEditForm] = useState(getInitialEditForm);
+  const [lastProfileKey, setLastProfileKey] = useState(profileKey);
+
+  // 当 profile 变化时更新 editForm（避免在 effect 中直接 setState）
+  if (profileKey !== lastProfileKey) {
+    setLastProfileKey(profileKey);
+    setEditForm(getInitialEditForm());
+  }
+
+  // 如果未登录，重定向到登录页
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // 页面加载时刷新 profile 数据
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated, fetchProfile]);
+
+  // 获取我的商品列表
+  useEffect(() => {
+    const fetchListings = async () => {
+      if (!isAuthenticated) return;
+      setListingsLoading(true);
+      try {
+        const data = await productDataService.getMyListings();
+        setListings(data);
+      } catch (err) {
+        console.error('Failed to fetch listings:', err);
+      } finally {
+        setListingsLoading(false);
+      }
+    };
+    fetchListings();
+  }, [isAuthenticated]);
 
   const handleEditChange = useCallback((field: string, value: string) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const handleSave = useCallback(() => {
-    // In real app, this would call the API
-    console.info('Saving profile:', editForm);
-    setIsEditing(false);
-  }, [editForm]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [headerUploading, setHeaderUploading] = useState(false);
+  const [pendingAvatarHashes, setPendingAvatarHashes] = useState<Image | null>(null);
+  const [pendingHeaderHashes, setPendingHeaderHashes] = useState<Image | null>(null);
+
+  // 头像上传处理
+  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarUploading(true);
+    try {
+      const imageHashes = await imagesApi.uploadAvatarImage(file);
+      if (imageHashes) {
+        setPendingAvatarHashes(imageHashes);
+      }
+    } catch (err) {
+      console.error('Failed to upload avatar:', err);
+    } finally {
+      setAvatarUploading(false);
+    }
+  }, []);
+
+  // 封面上传处理
+  const handleHeaderUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setHeaderUploading(true);
+    try {
+      const imageHashes = await imagesApi.uploadHeaderImage(file);
+      if (imageHashes) {
+        setPendingHeaderHashes(imageHashes);
+      }
+    } catch (err) {
+      console.error('Failed to upload header:', err);
+    } finally {
+      setHeaderUploading(false);
+    }
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const profileData: Record<string, unknown> = {
+        name: editForm.name,
+        shortDescription: editForm.shortDescription,
+        location: editForm.location,
+        about: editForm.about,
+        contactInfo: {
+          email: editForm.email,
+          phoneNumber: editForm.phoneNumber,
+          website: editForm.website,
+        },
+      };
+
+      // 如果有新上传的头像，包含在更新中
+      if (pendingAvatarHashes) {
+        profileData.avatarHashes = pendingAvatarHashes;
+      }
+
+      // 如果有新上传的封面图，包含在更新中
+      if (pendingHeaderHashes) {
+        profileData.headerHashes = pendingHeaderHashes;
+      }
+
+      const success = await updateProfile(profileData);
+      if (success) {
+        setIsEditing(false);
+        // 清除待上传的图片状态
+        setPendingAvatarHashes(null);
+        setPendingHeaderHashes(null);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }, [editForm, updateProfile, pendingAvatarHashes, pendingHeaderHashes]);
 
   const handleCancel = useCallback(() => {
-    setEditForm({
-      name: profile.name,
-      shortDescription: profile.shortDescription || '',
-      location: profile.location || '',
-      about: profile.about || '',
-      email: profile.contactInfo?.email || '',
-      phoneNumber: profile.contactInfo?.phoneNumber || '',
-      website: profile.contactInfo?.website || '',
-    });
+    if (profile) {
+      setEditForm({
+        name: profile.name,
+        shortDescription: profile.shortDescription || '',
+        location: profile.location || '',
+        about: profile.about || '',
+        email: profile.contactInfo?.email || '',
+        phoneNumber: profile.contactInfo?.phoneNumber || '',
+        website: profile.contactInfo?.website || '',
+      });
+    }
     setIsEditing(false);
   }, [profile]);
+
+  // 加载中状态
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4" />
+            <p className="text-muted-foreground">{t('common.loading')}</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // 如果没有 profile 数据
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">{t('profile.noProfileData')}</p>
+            <Button onClick={() => fetchProfile()}>{t('common.retry')}</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,7 +284,7 @@ export default function ProfilePage() {
         <div className="relative h-32 sm:h-48 md:h-64 bg-gradient-to-r from-emerald-500 to-teal-600">
           {profile.headerHashes?.large && (
             <img
-              src={profile.headerHashes.large}
+              src={getImageUrl(profile.headerHashes.large) || ''}
               alt="Profile banner"
               className="w-full h-full object-cover"
             />
@@ -188,7 +303,7 @@ export default function ProfilePage() {
                     <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-xl sm:rounded-2xl overflow-hidden border-3 sm:border-4 border-white dark:border-slate-800 shadow-lg bg-white">
                       {profile.avatarHashes?.medium ? (
                         <img
-                          src={profile.avatarHashes.medium}
+                          src={getImageUrl(profile.avatarHashes.medium) || ''}
                           alt={profile.name}
                           className="w-full h-full object-cover"
                         />
@@ -361,28 +476,59 @@ export default function ProfilePage() {
           <div className="pb-8 sm:pb-12">
             {activeTab === 'store' && (
               <Grid cols={4} colsMobile={2} colsTablet={3} gap="sm" className="sm:gap-4">
-                {mockListings.map(listing => (
-                  <Link key={listing.id} href={`/product/${listing.slug}`}>
-                    <Card className="overflow-hidden h-full hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer">
-                      <div className="aspect-square bg-muted">
-                        <img
-                          src={listing.image}
-                          alt={listing.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <CardContent className="p-2 sm:p-4">
-                        <h3 className="font-medium text-sm sm:text-base text-foreground line-clamp-2 mb-1 sm:mb-2">
-                          {listing.title}
-                        </h3>
-                        <p className="text-base sm:text-lg font-bold text-emerald-600">
-                          {listing.currency}
-                          {listing.price.toFixed(2)}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {listingsLoading
+                  ? // 加载状态骨架屏
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <Card key={i} className="overflow-hidden h-full">
+                        <div className="aspect-square bg-muted animate-pulse" />
+                        <CardContent className="p-2 sm:p-4">
+                          <div className="h-4 bg-muted animate-pulse rounded mb-2" />
+                          <div className="h-5 bg-muted animate-pulse rounded w-1/2" />
+                        </CardContent>
+                      </Card>
+                    ))
+                  : listings.map(listing => (
+                      <Link key={listing.slug} href={`/product/${listing.slug}`}>
+                        <Card className="overflow-hidden h-full hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer">
+                          <div className="aspect-square bg-muted">
+                            {listing.thumbnail?.medium ? (
+                              <img
+                                src={getImageUrl(listing.thumbnail.medium) || ''}
+                                alt={listing.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                <svg
+                                  className="w-12 h-12"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <CardContent className="p-2 sm:p-4">
+                            <h3 className="font-medium text-sm sm:text-base text-foreground line-clamp-2 mb-1 sm:mb-2">
+                              {listing.title}
+                            </h3>
+                            <p className="text-base sm:text-lg font-bold text-emerald-600">
+                              {listing.price?.currencyCode === 'USD'
+                                ? '$'
+                                : listing.price?.currencyCode}
+                              {Number(listing.price?.amount || 0).toFixed(2)}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
                 {/* Add New Listing Card */}
                 <Link href="/listing/new">
                   <Card className="h-full flex flex-col items-center justify-center min-h-[200px] sm:min-h-[280px] border-2 border-dashed border-border hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 active:scale-[0.98] transition-all cursor-pointer">
@@ -618,6 +764,110 @@ export default function ProfilePage() {
               </HStack>
 
               <VStack gap="md">
+                {/* Profile Images */}
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    {t('settings.avatar')}
+                  </h3>
+                  <div className="flex gap-4">
+                    {/* Avatar Upload */}
+                    <div className="flex flex-col items-center">
+                      <div className="relative w-20 h-20 rounded-full overflow-hidden bg-muted mb-2">
+                        {pendingAvatarHashes?.medium || profile?.avatarHashes?.medium ? (
+                          <img
+                            src={
+                              getImageUrl(
+                                pendingAvatarHashes?.medium || profile?.avatarHashes?.medium
+                              ) || ''
+                            }
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <svg
+                              className="w-8 h-8"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        {avatarUploading && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
+                          </div>
+                        )}
+                      </div>
+                      <label className="cursor-pointer text-sm text-emerald-600 hover:underline">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
+                          disabled={avatarUploading}
+                        />
+                        {t('settings.loadAvatar')}
+                      </label>
+                    </div>
+
+                    {/* Header Upload */}
+                    <div className="flex-1">
+                      <div className="relative h-24 rounded-lg overflow-hidden bg-muted mb-2">
+                        {pendingHeaderHashes?.large || profile?.headerHashes?.large ? (
+                          <img
+                            src={
+                              getImageUrl(
+                                pendingHeaderHashes?.large || profile?.headerHashes?.large
+                              ) || ''
+                            }
+                            alt="Header"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <svg
+                              className="w-8 h-8"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        {headerUploading && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
+                          </div>
+                        )}
+                      </div>
+                      <label className="cursor-pointer text-sm text-emerald-600 hover:underline">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleHeaderUpload}
+                          className="hidden"
+                          disabled={headerUploading}
+                        />
+                        {t('settings.loadHeader')}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Profile Information */}
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-3">
@@ -726,10 +976,19 @@ export default function ProfilePage() {
               </VStack>
 
               <HStack gap="sm" justify="end" className="mt-6 pt-6 border-t border-border">
-                <Button variant="outline" onClick={handleCancel}>
+                <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
                   {t('common.cancel')}
                 </Button>
-                <Button onClick={handleSave}>{t('profile.saveChanges')}</Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                      {t('common.loading')}
+                    </span>
+                  ) : (
+                    t('profile.saveChanges')
+                  )}
+                </Button>
               </HStack>
             </div>
           </Card>

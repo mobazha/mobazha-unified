@@ -42,6 +42,7 @@ export const ru: TranslationResource = {
     seeMore: 'Показать ещё',
     showMore: 'Показать больше',
     showLess: 'Показать меньше',
+    noData: 'Данные недоступны',
   },
 
   nav: {
@@ -252,6 +253,7 @@ export const ru: TranslationResource = {
     name: 'Имя',
     bio: 'О себе',
     saveChanges: 'Сохранить',
+    noProfileData: 'Не удалось загрузить данные профиля',
   },
 
   settings: {
@@ -278,6 +280,9 @@ export const ru: TranslationResource = {
     appearance: 'Внешний вид',
     chooseTheme: 'Выбрать тему',
     displayMode: 'Режим отображения',
+    avatar: 'Аватар',
+    loadAvatar: 'Изменить аватар',
+    loadHeader: 'Изменить обложку',
   },
 
   theme: {

@@ -60,3 +60,6 @@ export * as notificationsApi from './notifications';
 
 // 争议/仲裁 API
 export * as disputesApi from './disputes';
+
+// 图片上传 API
+export * as imagesApi from './images';
