@@ -74,6 +74,7 @@ export interface TranslationResource {
     showMore: string;
     showLess: string;
     noData: string;
+    backToMarket: string;
   };
 
   // 导航
@@ -114,17 +115,29 @@ export interface TranslationResource {
     condition: string;
     shipping: string;
     freeShipping: string;
+    shippingAtCheckout: string;
+    estDelivery: string;
     returns: string;
     seller: string;
     reviews: string;
     rating: string;
     addToCart: string;
+    addedToCart: string;
     buyNow: string;
     share: string;
     report: string;
     options: string;
     selectOption: string;
     variants: string;
+    notFound: string;
+    viewStore: string;
+    acceptedCurrencies: string;
+    termsAndConditions: string;
+    refundPolicy: string;
+    tags: string;
+    noReviews: string;
+    viewAllReviews: string;
+    anonymous: string;
   };
 
   // 搜索
