@@ -42,6 +42,7 @@ export const ko: TranslationResource = {
     seeMore: '더 보기',
     showMore: '더 표시',
     showLess: '간략히',
+    noData: '데이터가 없습니다',
   },
 
   nav: {
@@ -252,6 +253,7 @@ export const ko: TranslationResource = {
     name: '이름',
     bio: '자기소개',
     saveChanges: '변경사항 저장',
+    noProfileData: '프로필 데이터를 불러올 수 없습니다',
   },
 
   settings: {
@@ -278,6 +280,9 @@ export const ko: TranslationResource = {
     appearance: '외관',
     chooseTheme: '테마 선택',
     displayMode: '표시 모드',
+    avatar: '아바타',
+    loadAvatar: '아바타 변경',
+    loadHeader: '커버 변경',
   },
 
   theme: {

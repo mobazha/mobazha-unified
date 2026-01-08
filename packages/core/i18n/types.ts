@@ -73,6 +73,7 @@ export interface TranslationResource {
     seeMore: string;
     showMore: string;
     showLess: string;
+    noData: string;
   };
 
   // 导航
@@ -292,6 +293,7 @@ export interface TranslationResource {
     name: string;
     bio: string;
     saveChanges: string;
+    noProfileData: string;
   };
 
   // 设置
@@ -319,6 +321,9 @@ export interface TranslationResource {
     appearance: string;
     chooseTheme: string;
     displayMode: string;
+    avatar: string;
+    loadAvatar: string;
+    loadHeader: string;
   };
 
   // 主题

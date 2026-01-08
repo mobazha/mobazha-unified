@@ -42,6 +42,7 @@ export const de: TranslationResource = {
     seeMore: 'Mehr anzeigen',
     showMore: 'Mehr anzeigen',
     showLess: 'Weniger anzeigen',
+    noData: 'Keine Daten verfügbar',
   },
 
   nav: {
@@ -252,6 +253,7 @@ export const de: TranslationResource = {
     name: 'Name',
     bio: 'Bio',
     saveChanges: 'Speichern',
+    noProfileData: 'Profildaten konnten nicht geladen werden',
   },
 
   settings: {
@@ -278,6 +280,9 @@ export const de: TranslationResource = {
     appearance: 'Erscheinungsbild',
     chooseTheme: 'Design wählen',
     displayMode: 'Anzeigemodus',
+    avatar: 'Profilbild',
+    loadAvatar: 'Profilbild ändern',
+    loadHeader: 'Titelbild ändern',
   },
 
   theme: {

@@ -42,6 +42,7 @@ export const fr: TranslationResource = {
     seeMore: 'Voir plus',
     showMore: 'Afficher plus',
     showLess: 'Afficher moins',
+    noData: 'Aucune donnée disponible',
   },
 
   nav: {
@@ -252,6 +253,7 @@ export const fr: TranslationResource = {
     name: 'Nom',
     bio: 'Bio',
     saveChanges: 'Enregistrer',
+    noProfileData: 'Impossible de charger les données du profil',
   },
 
   settings: {
@@ -278,6 +280,9 @@ export const fr: TranslationResource = {
     appearance: 'Apparence',
     chooseTheme: 'Choisir un thème',
     displayMode: "Mode d'affichage",
+    avatar: 'Avatar',
+    loadAvatar: "Changer l'avatar",
+    loadHeader: 'Changer la couverture',
   },
 
   theme: {
