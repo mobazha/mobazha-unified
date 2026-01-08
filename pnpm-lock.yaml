@@ -173,6 +173,9 @@ importers:
 
   packages/core:
     dependencies:
+      bignumber.js:
+        specifier: ^9.3.1
+        version: 9.3.1
       ethers:
         specifier: ^6.14.1
         version: 6.16.0
@@ -3128,6 +3131,12 @@ packages:
         integrity: sha512-Sg0xJUNDU1sJNGdfGWhVHX0kkZ+HWcvmVymJbj6NSgZZmW/8S9Y2HQ5euytnIgakgxN6papOAWiwDo1ctFDcoQ==,
       }
     hasBin: true
+
+  bignumber.js@9.3.1:
+    resolution:
+      {
+        integrity: sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==,
+      }
 
   brace-expansion@1.1.12:
     resolution:
@@ -8125,6 +8134,8 @@ snapshots:
   base-x@5.0.1: {}
 
   baseline-browser-mapping@2.9.11: {}
+
+  bignumber.js@9.3.1: {}
 
   brace-expansion@1.1.12:
     dependencies:

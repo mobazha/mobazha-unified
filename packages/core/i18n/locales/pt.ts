@@ -497,6 +497,7 @@ export const pt: TranslationResource = {
     latestVersion: 'Você está usando a versão mais recente!',
     selectCountry: 'Selecionar País',
     selectCurrency: 'Selecionar Moeda',
+    currencyUpdated: 'Moeda atualizada para',
     acceptedCryptocurrencies: 'Criptomoedas Aceitas',
     done: 'Concluído',
     light: 'Claro',
@@ -513,6 +514,16 @@ export const pt: TranslationResource = {
     followingSystem: 'Seguindo sistema',
     enabled: 'Ativado',
     disabled: 'Desativado',
+  },
+
+  userMenu: {
+    myProfile: 'Meu Perfil',
+    myStore: 'Minha Loja',
+    createListing: 'Criar Produto',
+    sales: 'Vendas',
+    purchases: 'Compras',
+    settings: 'Configurações',
+    logout: 'Sair',
   },
 };
 

@@ -23,6 +23,8 @@ export interface ProductListItem {
   averageRating?: number;
   ratingCount?: number;
   vendorPeerID: string;
+  vendorName?: string;
+  vendorAvatarHashes?: Image;
   freeShipping?: string[];
   nsfw?: boolean;
   contractType?: ContractType;

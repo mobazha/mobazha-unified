@@ -13,6 +13,7 @@ interface Product {
   imageUrl?: string;
   price: number;
   currency?: string;
+  divisibility?: number;
   vendorName?: string;
   vendorAvatar?: string;
   rating?: number;
@@ -87,6 +88,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                     imageUrl={product.imageUrl}
                     price={product.price}
                     currency={product.currency}
+                    divisibility={product.divisibility}
                     vendorName={product.vendorName}
                     vendorAvatar={product.vendorAvatar}
                     rating={product.rating}

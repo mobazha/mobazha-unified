@@ -113,10 +113,15 @@ export async function sendTransaction(
 
 /**
  * 获取汇率
+ * 注意：此 API 需要认证，未认证时会返回 401
  */
 export async function getExchangeRates(): Promise<Record<string, Record<string, number>>> {
   const url = `${getGatewayUrl()}/ob/exchangerates`;
-  return safeRequest<Record<string, Record<string, number>>>(url, {}, {});
+  return safeRequest<Record<string, Record<string, number>>>(
+    url,
+    { headers: getAuthHeaders() },
+    {}
+  );
 }
 
 /**

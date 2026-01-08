@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
-import { useI18n, productDataService, isMockMode } from '@mobazha/core';
+import { useI18n, productDataService, isMockMode, getImageUrl } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 
 // ProductSection 需要的展示格式
@@ -14,8 +14,10 @@ interface DisplayProduct {
   imageUrl: string;
   price: number;
   currency?: string;
+  divisibility?: number;
   originalPrice?: number;
   vendorName: string;
+  vendorAvatar?: string;
   vendorPeerID?: string;
   rating: number;
   reviewCount: number;
@@ -25,6 +27,11 @@ interface DisplayProduct {
 
 // 转换 API 数据为 ProductSection 需要的格式
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
+  // 优先使用 API 返回的卖家名称，否则使用 peerID 前 8 位
+  const vendorName = item.vendorName || item.vendorPeerID?.substring(0, 8) || 'Unknown';
+  // 使用 API 返回的卖家头像
+  const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
+
   return {
     id: item.slug,
     slug: item.slug,
@@ -32,7 +39,9 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     imageUrl: item.thumbnail?.medium || item.thumbnail?.small || 'https://via.placeholder.com/400',
     price: item.price?.amount || 0,
     currency: item.price?.currencyCode || 'USD',
-    vendorName: item.vendorPeerID?.substring(0, 8) || 'Unknown',
+    divisibility: item.price?.divisibility,
+    vendorName,
+    vendorAvatar,
     vendorPeerID: item.vendorPeerID,
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,

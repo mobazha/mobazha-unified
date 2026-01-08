@@ -52,3 +52,6 @@ export * from './useDisputes';
 
 // 角色管理相关
 export * from './useRole';
+
+// 货币相关
+export * from './useCurrency';

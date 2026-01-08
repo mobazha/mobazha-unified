@@ -16,7 +16,7 @@ import * as walletApi from './api/wallet';
 
 import type { Product, ProductCategory, ProductListItem } from '../types/product';
 import type { Order } from '../types/order';
-import type { UserProfile, User } from '../types/user';
+import type { UserProfile } from '../types/user';
 import type { Wallet, Transaction, FeeLevel, SendTransactionRequest } from '../types/wallet';
 import type { CryptoType } from '../types/common';
 

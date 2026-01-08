@@ -7,15 +7,33 @@ import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
-import { Search, ShoppingCart, LogIn } from 'lucide-react';
+import {
+  Search,
+  ShoppingCart,
+  LogIn,
+  Store,
+  Plus,
+  Package,
+  ShoppingBag,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
-  const { isAuthenticated, profile, isLoading } = useUserStore();
+  const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -25,9 +43,14 @@ export const Header: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
   // 移动端隐藏顶部 Header，使用底部 MobileNav 导航
   return (
-    <header className="hidden md:block sticky top-0 z-40 bg-background/90 backdrop-blur-lg border-b border-border">
+    <header className="hidden md:block sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border">
       <Container size="xl">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -100,13 +123,79 @@ export const Header: React.FC = () => {
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : isAuthenticated && profile ? (
-              <Link href="/profile" className="hover:opacity-80 transition-opacity">
-                <Avatar
-                  src={getImageUrl(profile.avatarHashes?.small)}
-                  name={profile.name || 'User'}
-                  size="sm"
-                />
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full">
+                    <Avatar
+                      src={getImageUrl(profile.avatarHashes?.small)}
+                      name={profile.name || 'User'}
+                      size="sm"
+                    />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {/* 用户信息 */}
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{profile.name || 'User'}</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">
+                        {profile.peerID?.slice(0, 8)}...{profile.peerID?.slice(-4)}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  {/* 主要操作 */}
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/store/${profile.peerID}`)}
+                    className="cursor-pointer"
+                  >
+                    <Store className="mr-2 h-4 w-4" />
+                    {t('userMenu.myStore')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push('/listing/create')}
+                    className="cursor-pointer"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('userMenu.createListing')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+
+                  {/* 订单管理 */}
+                  <DropdownMenuItem
+                    onClick={() => router.push('/sales')}
+                    className="cursor-pointer"
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    {t('userMenu.sales')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push('/purchases')}
+                    className="cursor-pointer"
+                  >
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    {t('userMenu.purchases')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+
+                  {/* 系统操作 */}
+                  <DropdownMenuItem
+                    onClick={() => router.push('/settings')}
+                    className="cursor-pointer"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t('userMenu.settings')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('userMenu.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/login">
                 <Button variant="default" size="sm" className="gap-2">

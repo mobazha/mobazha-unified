@@ -497,6 +497,7 @@ export const fr: TranslationResource = {
     latestVersion: 'Vous utilisez la dernière version !',
     selectCountry: 'Sélectionner un Pays',
     selectCurrency: 'Sélectionner une Devise',
+    currencyUpdated: 'Devise mise à jour vers',
     acceptedCryptocurrencies: 'Cryptomonnaies Acceptées',
     done: 'Terminé',
     light: 'Clair',
@@ -513,6 +514,16 @@ export const fr: TranslationResource = {
     followingSystem: 'Selon le système',
     enabled: 'Activé',
     disabled: 'Désactivé',
+  },
+
+  userMenu: {
+    myProfile: 'Mon Profil',
+    myStore: 'Ma Boutique',
+    createListing: 'Créer un Produit',
+    sales: 'Ventes',
+    purchases: 'Achats',
+    settings: 'Paramètres',
+    logout: 'Déconnexion',
   },
 };
 

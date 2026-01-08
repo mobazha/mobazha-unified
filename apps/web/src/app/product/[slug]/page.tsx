@@ -9,7 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { productDataService, profileApi, cartApi, getImageUrl, useI18n } from '@mobazha/core';
+import {
+  productDataService,
+  profileApi,
+  cartApi,
+  getImageUrl,
+  useI18n,
+  useCurrency,
+} from '@mobazha/core';
 import type { Product, ProductRating, UserProfile } from '@mobazha/core';
 
 // 星星评分组件
@@ -36,18 +43,6 @@ function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md
   );
 }
 
-// 获取货币符号
-function getCurrencySymbol(code: string): string {
-  const symbols: Record<string, string> = {
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    CNY: '¥',
-    JPY: '¥',
-  };
-  return symbols[code] || code + ' ';
-}
-
 // 获取库存数量（从 SKU 计算）
 function getStockQuantity(product: Product): number {
   if (!product.item.skus || product.item.skus.length === 0) {
@@ -71,6 +66,7 @@ function getEstimatedDelivery(product: Product): string | null {
 
 export default function ProductPage() {
   const { t } = useI18n();
+  const { formatPrice, renderPairedPrice, localCurrency } = useCurrency();
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -150,12 +146,15 @@ export default function ProductPage() {
 
   // 计算价格信息
   const priceInfo = useMemo(() => {
-    if (!product) return { price: 0, currency: 'USD', symbol: '$' };
+    if (!product)
+      return { price: 0, currency: 'USD', formattedPrice: '$0.00', pairedPrice: '$0.00' };
     const price = Number(product.item.price) || 0;
     const currency = product.metadata?.pricingCurrency?.code || 'USD';
-    const symbol = getCurrencySymbol(currency);
-    return { price, currency, symbol };
-  }, [product]);
+    // 使用货币系统格式化价格
+    const formattedPrice = formatPrice(price, currency);
+    const pairedPrice = renderPairedPrice(price, currency);
+    return { price, currency, formattedPrice, pairedPrice };
+  }, [product, formatPrice, renderPairedPrice, localCurrency]);
 
   // 确保 ratings 是数组
   const safeRatings = useMemo(() => {
@@ -351,8 +350,7 @@ export default function ProductPage() {
               {/* Price */}
               <div className="flex items-baseline gap-2 sm:gap-3">
                 <span className="text-2xl sm:text-3xl font-bold text-emerald-600">
-                  {priceInfo.symbol}
-                  {priceInfo.price.toFixed(2)}
+                  {priceInfo.pairedPrice}
                 </span>
               </div>
 

@@ -497,6 +497,7 @@ export const ru: TranslationResource = {
     latestVersion: 'Вы используете последнюю версию!',
     selectCountry: 'Выбор страны',
     selectCurrency: 'Выбор валюты',
+    currencyUpdated: 'Валюта обновлена до',
     acceptedCryptocurrencies: 'Принимаемые криптовалюты',
     done: 'Готово',
     light: 'Светлая',
@@ -513,6 +514,16 @@ export const ru: TranslationResource = {
     followingSystem: 'Системная',
     enabled: 'Включено',
     disabled: 'Отключено',
+  },
+
+  userMenu: {
+    myProfile: 'Мой профиль',
+    myStore: 'Мой магазин',
+    createListing: 'Создать товар',
+    sales: 'Продажи',
+    purchases: 'Покупки',
+    settings: 'Настройки',
+    logout: 'Выйти',
   },
 };
 

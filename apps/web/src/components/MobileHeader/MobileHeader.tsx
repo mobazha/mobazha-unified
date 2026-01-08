@@ -24,7 +24,7 @@ export const MobileHeader: React.FC = () => {
   };
 
   return (
-    <header className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
+    <header className="md:hidden sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
       <Container size="xl">
         <div className="flex items-center gap-2 h-14 py-2">
           {/* Search Bar */}

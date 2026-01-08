@@ -18,7 +18,7 @@ interface WalletState {
   balances: Record<string, WalletBalance>;
   transactions: Record<string, Transaction[]>;
   addresses: Record<string, string>;
-  exchangeRates: Record<string, Record<string, number>>;
+  // 注意: 汇率统一使用 currencyStore，不在此处存储
   selectedCoin: CryptoType;
   isLoading: boolean;
   error: string | null;
@@ -28,7 +28,7 @@ interface WalletState {
   fetchBalance: (coin: CryptoType) => Promise<void>;
   fetchTransactions: (coin: CryptoType, limit?: number) => Promise<void>;
   fetchAddress: (coin: CryptoType) => Promise<string | null>;
-  fetchExchangeRates: () => Promise<void>;
+  // 汇率统一使用 currencyStore.refreshRates()
   estimateFee: (coin: CryptoType, amount: number) => Promise<FeeEstimate | null>;
   sendTransaction: (
     request: SendTransactionRequest
@@ -44,7 +44,6 @@ export const useWalletStore = create<WalletState>()(
       balances: {},
       transactions: {},
       addresses: {},
-      exchangeRates: {},
       selectedCoin: 'TETH',
       isLoading: false,
       error: null,
@@ -114,16 +113,6 @@ export const useWalletStore = create<WalletState>()(
           return address;
         } catch {
           return null;
-        }
-      },
-
-      // 获取汇率
-      fetchExchangeRates: async () => {
-        try {
-          const rates = await walletApi.getExchangeRates();
-          set({ exchangeRates: rates });
-        } catch (err) {
-          console.warn('获取汇率失败:', err);
         }
       },
 

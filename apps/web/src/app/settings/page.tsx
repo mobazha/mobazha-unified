@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Switch,
   AlertDialog,
@@ -24,9 +25,19 @@ import {
   ScrollArea,
   useToast,
 } from '@/components/ui';
-import { useTheme, THEME_INFO, useI18n, useUserStore } from '@mobazha/core';
+import {
+  useTheme,
+  THEME_INFO,
+  useI18n,
+  useUserStore,
+  useLocalCurrency,
+  FIAT_CURRENCIES,
+  CRYPTO_CURRENCIES,
+  getPopularCurrencies,
+} from '@mobazha/core';
+import type { CurrencyInfo } from '@mobazha/core';
 
-// Mock data
+// Countries data
 const countries = [
   { code: 'US', name: 'United States' },
   { code: 'GB', name: 'United Kingdom' },
@@ -36,16 +47,6 @@ const countries = [
   { code: 'FR', name: 'France' },
   { code: 'JP', name: 'Japan' },
   { code: 'CN', name: 'China' },
-];
-
-const currencies = [
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
 ];
 
 const acceptedCoins = [
@@ -155,10 +156,10 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const { t } = useI18n();
   const { logout } = useUserStore();
+  const { localCurrency, setLocalCurrency } = useLocalCurrency();
 
   // State
   const [country, setCountry] = useState('US');
-  const [currency, setCurrency] = useState('USD');
   const [isPrivateStore, setIsPrivateStore] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -170,6 +171,35 @@ export default function SettingsPage() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [coins, setCoins] = useState(acceptedCoins);
+  const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+
+  // 获取货币列表：热门货币 + 所有法币，支持搜索
+  const currencyOptions = useMemo(() => {
+    const popular = getPopularCurrencies();
+    const all = [...FIAT_CURRENCIES, ...CRYPTO_CURRENCIES];
+
+    // 搜索过滤
+    if (currencySearchQuery.trim()) {
+      const query = currencySearchQuery.toLowerCase();
+      return all.filter(
+        c =>
+          c.code.toLowerCase().includes(query) ||
+          c.name.toLowerCase().includes(query) ||
+          c.symbol.toLowerCase().includes(query)
+      );
+    }
+
+    // 默认显示热门货币在前
+    const popularCodes = new Set(popular.map(p => p.code));
+    const otherCurrencies = all.filter(c => !popularCodes.has(c.code));
+
+    return [...popular, ...otherCurrencies];
+  }, [currencySearchQuery]);
+
+  // 获取当前选择的货币信息
+  const selectedCurrencyInfo = useMemo(() => {
+    return currencyOptions.find(c => c.code === localCurrency) || currencyOptions[0];
+  }, [localCurrency, currencyOptions]);
 
   // AlertDialog states
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
@@ -238,7 +268,7 @@ export default function SettingsPage() {
             />
             <SettingItem
               title={t('settings.currency')}
-              value={currencies.find(c => c.code === currency)?.name}
+              value={`${selectedCurrencyInfo?.symbol || ''} ${selectedCurrencyInfo?.code || ''}`}
               onClick={() => setShowCurrencyModal(true)}
             />
             <SettingItem
@@ -421,27 +451,51 @@ export default function SettingsPage() {
       </Dialog>
 
       {/* Currency Modal */}
-      <Dialog open={showCurrencyModal} onOpenChange={setShowCurrencyModal}>
+      <Dialog
+        open={showCurrencyModal}
+        onOpenChange={open => {
+          setShowCurrencyModal(open);
+          if (!open) setCurrencySearchQuery('');
+        }}
+      >
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{t('settingsExtended.selectCurrency')}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
-            {currencies.map(c => (
+          {/* 搜索框 */}
+          <div className="mb-2">
+            <Input
+              placeholder={t('common.search') + '...'}
+              value={currencySearchQuery}
+              onChange={e => setCurrencySearchQuery(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <ScrollArea className="flex-1 -mx-6 px-6 max-h-[50vh]">
+            {currencyOptions.map((c: CurrencyInfo) => (
               <button
                 key={c.code}
                 onClick={() => {
-                  setCurrency(c.code);
+                  setLocalCurrency(c.code);
                   setShowCurrencyModal(false);
+                  setCurrencySearchQuery('');
+                  toast({
+                    title: t('settings.currency'),
+                    description: `${t('settingsExtended.currencyUpdated')}: ${c.name} (${c.symbol})`,
+                  });
                 }}
                 className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
-                  currency === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
+                  localCurrency === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                 }`}
               >
-                <span className="text-foreground">
-                  {c.name} ({c.symbol})
-                </span>
-                {currency === c.code && (
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-medium w-10">{c.symbol}</span>
+                  <div>
+                    <span className="text-foreground">{c.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">({c.code})</span>
+                  </div>
+                </div>
+                {localCurrency === c.code && (
                   <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -452,6 +506,9 @@ export default function SettingsPage() {
                 )}
               </button>
             ))}
+            {currencyOptions.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">{t('common.noResults')}</div>
+            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>

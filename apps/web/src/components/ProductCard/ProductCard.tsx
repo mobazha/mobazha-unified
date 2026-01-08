@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCurrencyFormat } from '@mobazha/core';
 
 /** 商品合约类型 */
 export type ProductContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
@@ -15,10 +16,14 @@ export interface ProductCardProps {
   title: string;
   /** 商品图片 URL */
   imageUrl?: string;
-  /** 价格 */
+  /** 价格 (默认为最小单位，即 API 返回的原始值) */
   price: number | string;
-  /** 货币符号 */
+  /** 货币代码 (如 USD, BTC, ETH) */
   currency?: string;
+  /** 价格精度/小数位数 (如 2 for USD cents, 8 for BTC satoshi)，如果提供则使用此值 */
+  divisibility?: number;
+  /** 价格是否为最小单位 (如 cents, satoshi, wei)，默认为 true，因为 API 返回的都是最小单位 */
+  priceInMinimalUnit?: boolean;
   /** 原价（用于显示折扣） */
   originalPrice?: number | string;
   /** 卖家名称 */
@@ -53,12 +58,15 @@ const contractTypeConfig: Record<ProductContractType, { label: string; color: st
 
 /**
  * ProductCard 商品卡片组件
+ * 使用货币系统自动转换价格到用户偏好的本地货币
  */
 export const ProductCard: React.FC<ProductCardProps> = ({
   title,
   imageUrl,
   price,
-  currency = '$',
+  currency = 'USD',
+  divisibility,
+  priceInMinimalUnit = true, // 默认 true，因为 API 返回的都是最小单位
   originalPrice,
   vendorName,
   vendorAvatar,
@@ -71,6 +79,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onClick,
   className,
 }) => {
+  // 使用货币格式化 hook
+  const { formatLocalPrice } = useCurrencyFormat();
+
   const hasDiscount = originalPrice && Number(originalPrice) > Number(price);
   const discountPercent = hasDiscount
     ? Math.round((1 - Number(price) / Number(originalPrice)) * 100)
@@ -81,6 +92,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     : isDigital
       ? contractTypeConfig.DIGITAL_GOOD
       : null;
+
+  // 使用货币系统格式化价格（自动转换到用户本地货币）
+  // 如果提供了 divisibility，使用它；否则让服务使用货币的默认精度
+  const formatOptions = { isMinimalUnit: priceInMinimalUnit, divisibility };
+  const formattedPrice = formatLocalPrice(price, currency, formatOptions);
+  const formattedOriginalPrice = originalPrice
+    ? formatLocalPrice(originalPrice, currency, formatOptions)
+    : '';
 
   return (
     <Card
@@ -136,72 +155,65 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* 商品信息 */}
-      <CardContent className={cn('space-y-1.5 sm:space-y-2', compact ? 'p-2' : 'p-2 sm:p-3')}>
+      <CardContent className={cn('space-y-1', compact ? 'p-2' : 'p-2.5 sm:p-3')}>
         {/* 标题 */}
-        <h3
-          className={cn(
-            'font-medium text-foreground line-clamp-2 text-sm sm:text-base',
-            compact ? 'min-h-[2rem]' : 'min-h-[2rem] sm:min-h-[2.5rem]'
-          )}
-        >
-          {title}
-        </h3>
+        <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-tight">{title}</h3>
 
-        {/* 价格 */}
-        <div className="flex items-baseline gap-1 sm:gap-2">
-          <span
-            className={cn(
-              'font-bold text-primary',
-              compact ? 'text-sm sm:text-base' : 'text-base sm:text-lg'
-            )}
-          >
-            {currency}
-            {typeof price === 'number' ? price.toFixed(2) : price}
-          </span>
-          {hasDiscount && (
-            <span className="text-xs sm:text-sm text-muted-foreground line-through">
-              {currency}
-              {typeof originalPrice === 'number' ? originalPrice.toFixed(2) : originalPrice}
+        {/* 价格和评分 - 同一行 */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-baseline gap-1 min-w-0">
+            <span
+              className={cn(
+                'font-bold text-primary truncate',
+                compact ? 'text-sm' : 'text-sm sm:text-base'
+              )}
+            >
+              {formattedPrice}
             </span>
+            {hasDiscount && (
+              <span className="text-[10px] text-muted-foreground line-through flex-shrink-0">
+                {formattedOriginalPrice}
+              </span>
+            )}
+          </div>
+          {rating !== undefined && rating !== null && (
+            <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
+              <span className="text-yellow-500">★</span>
+              <span className="text-muted-foreground">
+                {Number(rating).toFixed(1)}
+                {reviewCount !== undefined && reviewCount > 0 && ` (${reviewCount})`}
+              </span>
+            </div>
           )}
         </div>
-
-        {/* 评分 */}
-        {rating !== undefined && rating !== null && (
-          <div className="flex items-center gap-1 text-xs sm:text-sm">
-            <span className="text-yellow-500">★</span>
-            <span className="text-muted-foreground">
-              {Number(rating).toFixed(1)}
-              {reviewCount !== undefined && ` (${reviewCount})`}
-            </span>
-          </div>
-        )}
 
         {/* 卖家信息 & 配送标签 */}
         {(vendorName || freeShipping) && (
           <div
             className={cn(
-              'flex items-center justify-between pt-1.5 sm:pt-2 border-t border-border',
+              'flex items-center justify-between pt-1.5 border-t border-border',
               compact && 'pt-1'
             )}
           >
             {vendorName && (
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <span className="hidden sm:inline-block">
-                  {!compact && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
-                </span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                {!compact && (
+                  <Avatar
+                    src={vendorAvatar}
+                    name={vendorName}
+                    size="xs"
+                    className="flex-shrink-0"
+                  />
+                )}
                 <span
-                  className={cn(
-                    'text-muted-foreground truncate text-xs sm:text-sm',
-                    compact && 'text-xs'
-                  )}
+                  className={cn('text-muted-foreground truncate text-xs', compact && 'text-xs')}
                 >
                   {vendorName}
                 </span>
               </div>
             )}
             {freeShipping && (
-              <span className="text-[10px] sm:text-xs text-primary font-medium flex-shrink-0">
+              <span className="text-[10px] text-primary font-medium flex-shrink-0">
                 Free Shipping
               </span>
             )}
@@ -221,13 +233,16 @@ export const ProductCardSkeleton: React.FC<{ className?: string }> = ({ classNam
   return (
     <Card className={cn('overflow-hidden', className)}>
       <Skeleton className="aspect-square w-full" />
-      <CardContent className="p-3 space-y-2">
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-5 w-3/5" />
-        <Skeleton className="h-4 w-2/5" />
-        <div className="flex items-center gap-2 pt-2">
-          <Skeleton className="h-6 w-6 rounded-full" />
-          <Skeleton className="h-4 w-20" />
+      <CardContent className="p-2.5 sm:p-3 space-y-1.5">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-3 w-12" />
+        </div>
+        <div className="flex items-center gap-1.5 pt-1.5 border-t border-border">
+          <Skeleton className="h-5 w-5 rounded-full" />
+          <Skeleton className="h-3 w-16" />
         </div>
       </CardContent>
     </Card>

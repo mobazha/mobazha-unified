@@ -21,6 +21,7 @@ interface DisplayProduct {
   title: string;
   price: number;
   currency: string;
+  divisibility?: number;
   image: string;
   vendor: {
     peerID: string;
@@ -52,17 +53,22 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     getImageUrl(item.thumbnail?.large) ||
     '';
 
+  // 使用 API 返回的卖家名称和头像
+  const vendorName = item.vendorName || item.vendorPeerID?.substring(0, 8) || 'Unknown';
+  const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
+
   return {
     id: item.slug,
     slug: item.slug,
     title: item.title,
     price: Number(item.price?.amount) || 0,
     currency: item.price?.currencyCode || 'USD',
+    divisibility: item.price?.divisibility,
     image: thumbnailUrl,
     vendor: {
       peerID: item.vendorPeerID || '',
-      name: item.vendorPeerID?.substring(0, 8) || 'Unknown',
-      avatar: undefined,
+      name: vendorName,
+      avatar: vendorAvatar,
     },
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,
@@ -313,6 +319,7 @@ function SearchPageContent() {
         imageUrl={product.image}
         price={product.price}
         currency={product.currency}
+        divisibility={product.divisibility}
         vendorName={product.vendor.name}
         vendorAvatar={product.vendor.avatar}
         rating={product.rating}
