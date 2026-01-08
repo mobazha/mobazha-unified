@@ -154,7 +154,7 @@ export const Header: React.FC = () => {
                     {t('userMenu.myStore')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => router.push('/listing/create')}
+                    onClick={() => router.push('/listing/new')}
                     className="cursor-pointer"
                   >
                     <Plus className="mr-2 h-4 w-4" />
@@ -164,14 +164,14 @@ export const Header: React.FC = () => {
 
                   {/* 订单管理 */}
                   <DropdownMenuItem
-                    onClick={() => router.push('/sales')}
+                    onClick={() => router.push('/orders?tab=sales')}
                     className="cursor-pointer"
                   >
                     <Package className="mr-2 h-4 w-4" />
                     {t('userMenu.sales')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => router.push('/purchases')}
+                    onClick={() => router.push('/orders?tab=purchases')}
                     className="cursor-pointer"
                   >
                     <ShoppingBag className="mr-2 h-4 w-4" />

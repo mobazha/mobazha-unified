@@ -16,6 +16,7 @@ interface Product {
   divisibility?: number;
   vendorName?: string;
   vendorAvatar?: string;
+  vendorPeerID?: string;
   rating?: number;
   reviewCount?: number;
   freeShipping?: boolean;
@@ -39,7 +40,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   products,
   isLoading = false,
   showViewAll = true,
-  viewAllHref = '/market',
+  viewAllHref = '/marketplace',
   containerSize = 'xl',
   titleClassName,
 }) => {
@@ -81,23 +82,29 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
           {isLoading
             ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            : products.map((product, index) => (
-                <Link key={`${product.id}-${index}`} href={`/product/${product.slug}`}>
-                  <ProductCard
-                    title={product.title}
-                    imageUrl={product.imageUrl}
-                    price={product.price}
-                    currency={product.currency}
-                    divisibility={product.divisibility}
-                    vendorName={product.vendorName}
-                    vendorAvatar={product.vendorAvatar}
-                    rating={product.rating}
-                    reviewCount={product.reviewCount}
-                    freeShipping={product.freeShipping}
-                    isDigital={product.isDigital}
-                  />
-                </Link>
-              ))}
+            : products.map((product, index) => {
+                // 构建商品链接，如果有 vendorPeerID 则添加 peerID 参数
+                const productHref = product.vendorPeerID
+                  ? `/product/${product.slug}?peerID=${product.vendorPeerID}`
+                  : `/product/${product.slug}`;
+                return (
+                  <Link key={`${product.id}-${index}`} href={productHref}>
+                    <ProductCard
+                      title={product.title}
+                      imageUrl={product.imageUrl}
+                      price={product.price}
+                      currency={product.currency}
+                      divisibility={product.divisibility}
+                      vendorName={product.vendorName}
+                      vendorAvatar={product.vendorAvatar}
+                      rating={product.rating}
+                      reviewCount={product.reviewCount}
+                      freeShipping={product.freeShipping}
+                      isDigital={product.isDigital}
+                    />
+                  </Link>
+                );
+              })}
         </Grid>
 
         {/* Empty State */}

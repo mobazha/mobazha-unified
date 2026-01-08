@@ -181,7 +181,7 @@ export default function HomePage() {
           title={t('homeExtended.trendingNow')}
           subtitle={t('homeExtended.trendingSubtitle')}
           products={trendingProducts}
-          viewAllHref="/market?sort=trending"
+          viewAllHref="/marketplace?sort=trending"
         />
 
         <div className="bg-card">
@@ -189,7 +189,7 @@ export default function HomePage() {
             title={t('homeExtended.featuredServices')}
             subtitle={t('homeExtended.featuredSubtitle')}
             products={featuredProducts}
-            viewAllHref="/market?category=featured"
+            viewAllHref="/marketplace?category=featured"
           />
         </div>
 
@@ -203,7 +203,7 @@ export default function HomePage() {
               {categories.map(category => (
                 <a
                   key={category.name}
-                  href={`/market?category=${category.name.toLowerCase()}`}
+                  href={`/marketplace?category=${category.name.toLowerCase()}`}
                   className={`relative overflow-hidden rounded-lg sm:rounded-xl p-4 sm:p-6 bg-gradient-to-br ${category.color} text-white touch-feedback hover:scale-105 transition-transform`}
                 >
                   <span className="text-2xl sm:text-4xl mb-1 sm:mb-2 block">{category.icon}</span>

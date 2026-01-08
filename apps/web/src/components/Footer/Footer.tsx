@@ -50,20 +50,35 @@ export const Footer: React.FC = () => {
       { label: t('footer.startSelling'), href: '/listing/new' },
     ],
     resources: [
-      { label: t('footer.gettingStarted'), href: '/docs/getting-started' },
-      { label: t('footer.documentation'), href: '/docs' },
-      { label: t('footer.api'), href: '/docs/api' },
-      { label: t('footer.faq'), href: '/faq' },
+      {
+        label: t('footer.gettingStarted'),
+        href: 'https://github.com/mobazha/mobazha/wiki',
+        external: true,
+      },
+      {
+        label: t('footer.documentation'),
+        href: 'https://github.com/mobazha/mobazha/wiki',
+        external: true,
+      },
+      {
+        label: t('footer.api'),
+        href: 'https://github.com/mobazha/mobazha/wiki/API',
+        external: true,
+      },
+      {
+        label: t('footer.faq'),
+        href: 'https://github.com/mobazha/mobazha/wiki/FAQ',
+        external: true,
+      },
     ],
-    company: [
-      { label: t('footer.about'), href: '/about' },
-      { label: t('footer.blog'), href: '/blog' },
-      { label: t('footer.careers'), href: '/careers' },
-      { label: t('footer.contact'), href: '/contact' },
+    community: [
+      { label: 'Twitter', href: 'https://twitter.com/mobazha', external: true },
+      { label: 'Discord', href: 'https://discord.gg/mobazha', external: true },
+      { label: 'GitHub', href: 'https://github.com/mobazha', external: true },
     ],
     legal: [
-      { label: t('settings.privacyPolicy'), href: '/privacy' },
-      { label: t('settings.termsOfService'), href: '/terms' },
+      { label: t('settings.privacyPolicy'), href: '/settings/privacy' },
+      { label: t('settings.termsOfService'), href: '/settings' },
     ],
   };
 
@@ -114,26 +129,30 @@ export const Footer: React.FC = () => {
           <VStack gap="sm" align="start">
             <h4 className="font-semibold text-foreground mb-2">{t('footer.resources')}</h4>
             {footerLinks.resources.map(link => (
-              <Link
+              <a
                 key={link.label}
                 href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
           </VStack>
 
           <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-foreground mb-2">{t('footer.company')}</h4>
-            {footerLinks.company.map(link => (
-              <Link
+            <h4 className="font-semibold text-foreground mb-2">{t('footer.community')}</h4>
+            {footerLinks.community.map(link => (
+              <a
                 key={link.label}
                 href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
           </VStack>
         </Grid>
