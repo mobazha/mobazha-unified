@@ -170,7 +170,12 @@ export function getAuthHeaders(username?: string, password?: string): Record<str
     };
   }
 
-  return baseHeaders;
+  // 未登录时使用网关模式访问公开资源
+  // 参考 mobazha-desktop: headers.Gateway = true
+  return {
+    ...baseHeaders,
+    Gateway: 'true',
+  };
 }
 
 /**

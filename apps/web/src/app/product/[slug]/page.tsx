@@ -234,7 +234,7 @@ export default function ProductPage() {
               />
             </svg>
             <p className="text-muted-foreground mb-4">{error || t('product.notFound')}</p>
-            <Link href="/market">
+            <Link href="/marketplace">
               <Button>{t('common.backToMarket')}</Button>
             </Link>
           </div>
@@ -264,14 +264,14 @@ export default function ProductPage() {
               {t('nav.home')}
             </Link>
             <span>/</span>
-            <Link href="/market" className="hover:text-emerald-600">
+            <Link href="/marketplace" className="hover:text-emerald-600">
               {t('nav.market')}
             </Link>
             {category && (
               <>
                 <span>/</span>
                 <Link
-                  href={`/market?category=${category.toLowerCase()}`}
+                  href={`/marketplace?category=${category.toLowerCase()}`}
                   className="hover:text-emerald-600"
                 >
                   {category}
@@ -572,7 +572,7 @@ export default function ProductPage() {
                       {tags.map(tag => (
                         <Link
                           key={tag}
-                          href={`/market?tag=${tag}`}
+                          href={`/marketplace?tag=${tag}`}
                           className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm bg-muted text-muted-foreground rounded-full hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 transition-colors touch-feedback"
                         >
                           #{tag}
