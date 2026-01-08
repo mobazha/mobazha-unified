@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { OrderCard, Order } from '@/components/Order';
-import { useI18n } from '@mobazha/core';
+import { useI18n, usePurchases, useSales, getImageUrl } from '@mobazha/core';
+import type { OrderListItem } from '@mobazha/core';
 
 type OrderStatus =
   | 'all'
@@ -19,114 +20,166 @@ type OrderStatus =
   | 'disputed';
 type OrderType = 'purchases' | 'sales';
 
-// Mock orders data
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    orderId: 'MOB-2024-0001',
-    status: 'shipped',
+// 将核心包的 OrderState 映射到 UI 的 OrderStatus
+function mapOrderState(state: string): Order['status'] {
+  const stateMap: Record<string, Order['status']> = {
+    PENDING: 'pending',
+    AWAITING_PAYMENT: 'pending',
+    AWAITING_PICKUP: 'processing',
+    AWAITING_FULFILLMENT: 'processing',
+    PARTIALLY_FULFILLED: 'processing',
+    FULFILLED: 'shipped',
+    COMPLETED: 'completed',
+    CANCELED: 'cancelled',
+    DECLINED: 'cancelled',
+    REFUNDED: 'cancelled',
+    DISPUTED: 'disputed',
+    DECIDED: 'disputed',
+    DISPUTE_EXPIRED: 'disputed',
+    RESOLVED: 'completed',
+    PAYMENT_FINALIZED: 'completed',
+    PROCESSING_ERROR: 'pending',
+  };
+  return stateMap[state] || 'pending';
+}
+
+// 格式化价格金额（从最小单位转换为标准显示值）
+function formatPriceAmount(total: OrderListItem['total']): string {
+  if (!total) return '0.00';
+
+  // 处理两种可能的格式
+  // 格式1: { amount, currency: { code, divisibility } } - 后端实际格式
+  // 格式2: { amount, currencyCode } - 简化格式
+  const amount = total.amount || 0;
+  const divisibility =
+    (total as { currency?: { divisibility?: number } }).currency?.divisibility ?? 2;
+
+  // 将最小单位转换为标准单位
+  const normalAmount = amount / Math.pow(10, divisibility);
+  return normalAmount.toFixed(2);
+}
+
+// 获取价格的货币代码
+function getPriceCurrency(total: OrderListItem['total']): string {
+  if (!total) return 'USD';
+  // 优先使用 currency.code，回退到 currencyCode
+  return (
+    (total as { currency?: { code?: string } }).currency?.code ||
+    (total as { currencyCode?: string }).currencyCode ||
+    'USD'
+  );
+}
+
+// 获取图片完整 URL（将 IPFS 哈希转换为网关 URL）
+function getThumbnailUrl(thumbnail: OrderListItem['thumbnail']): string {
+  if (!thumbnail) return '';
+
+  // 如果是字符串格式（IPFS 哈希），使用 getImageUrl 转换
+  if (typeof thumbnail === 'string') {
+    return getImageUrl(thumbnail) || '';
+  }
+
+  // 如果是对象格式，按优先级获取哈希并转换为完整 URL
+  const hash =
+    thumbnail.medium ||
+    thumbnail.small ||
+    thumbnail.tiny ||
+    thumbnail.large ||
+    thumbnail.original ||
+    '';
+  return getImageUrl(hash) || '';
+}
+
+// 将 OrderListItem 转换为 OrderCard 期望的 Order 格式
+function transformOrderListItem(item: OrderListItem): Order {
+  const imageUrl = getThumbnailUrl(item.thumbnail);
+
+  // 防御性处理：确保字段存在（后端可能返回不同的字段名）
+  const orderId = item.orderID || ((item as Record<string, unknown>).orderId as string) || '';
+  const vendorId = item.vendorID || ((item as Record<string, unknown>).vendorId as string) || '';
+  const buyerId = item.buyerID || ((item as Record<string, unknown>).buyerId as string) || '';
+
+  // 获取格式化后的价格和货币
+  const formattedPrice = formatPriceAmount(item.total);
+  const currency = getPriceCurrency(item.total) || item.paymentCoin || 'USD';
+
+  return {
+    id: orderId,
+    orderId: orderId,
+    status: mapOrderState(item.state || 'PENDING'),
     items: [
       {
-        id: 'item1',
-        title: 'Premium Wireless Headphones',
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop',
-        quantity: 1,
-        price: '0.015',
-        currency: 'BTC',
+        id: orderId,
+        title: item.title || 'Unknown Item',
+        image: imageUrl,
+        quantity: item.quantity || 1,
+        price: formattedPrice,
+        currency: currency,
       },
     ],
-    total: '0.015',
-    currency: 'BTC',
-    createdAt: '2024-01-20T10:30:00',
+    total: formattedPrice,
+    currency: currency,
+    createdAt: item.timestamp || new Date().toISOString(),
     vendor: {
-      id: 'vendor1',
-      name: 'TechGear Store',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
+      id: vendorId,
+      name:
+        item.vendorHandle ||
+        item.buyerHandle ||
+        (vendorId
+          ? vendorId.slice(0, 12) + '...'
+          : buyerId
+            ? buyerId.slice(0, 12) + '...'
+            : 'Unknown'),
     },
-    trackingNumber: 'TG123456789',
-  },
-  {
-    id: '2',
-    orderId: 'MOB-2024-0002',
-    status: 'processing',
-    items: [
-      {
-        id: 'item2',
-        title: 'Handcrafted Leather Wallet',
-        image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=200&h=200&fit=crop',
-        quantity: 1,
-        price: '0.008',
-        currency: 'BTC',
-      },
-      {
-        id: 'item3',
-        title: 'Leather Belt',
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop',
-        quantity: 1,
-        price: '0.005',
-        currency: 'BTC',
-      },
-    ],
-    total: '0.013',
-    currency: 'BTC',
-    createdAt: '2024-01-19T14:20:00',
-    vendor: {
-      id: 'vendor2',
-      name: 'LeatherCraft',
-    },
-  },
-  {
-    id: '3',
-    orderId: 'MOB-2024-0003',
-    status: 'completed',
-    items: [
-      {
-        id: 'item4',
-        title: 'Smart Contract Audit Service',
-        image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=200&h=200&fit=crop',
-        quantity: 1,
-        price: '0.5',
-        currency: 'ETH',
-      },
-    ],
-    total: '0.5',
-    currency: 'ETH',
-    createdAt: '2024-01-15T09:00:00',
-    vendor: {
-      id: 'vendor3',
-      name: 'DevPro Services',
-    },
-  },
-  {
-    id: '4',
-    orderId: 'MOB-2024-0004',
-    status: 'pending',
-    items: [
-      {
-        id: 'item5',
-        title: 'Mechanical Keyboard RGB',
-        image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=200&h=200&fit=crop',
-        quantity: 1,
-        price: '0.012',
-        currency: 'BTC',
-      },
-    ],
-    total: '0.012',
-    currency: 'BTC',
-    createdAt: '2024-01-21T16:45:00',
-    vendor: {
-      id: 'vendor4',
-      name: 'GamerZone',
-    },
-  },
-];
+  };
+}
 
 export default function OrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
-  const [orderType, setOrderType] = useState<OrderType>('purchases');
+
+  // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
+  const orderType = useMemo<OrderType>(() => {
+    const tab = searchParams.get('tab');
+    return tab === 'sales' ? 'sales' : 'purchases';
+  }, [searchParams]);
+
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
-  const [isLoading] = useState(false);
+
+  // 使用核心包的 hooks 获取真实数据（支持分页）
+  const {
+    orders: purchaseOrders,
+    isLoading: purchasesLoading,
+    isLoadingMore: purchasesLoadingMore,
+    error: purchasesError,
+    hasMore: purchasesHasMore,
+    loadMore: loadMorePurchases,
+  } = usePurchases();
+
+  const {
+    orders: salesOrders,
+    isLoading: salesLoading,
+    isLoadingMore: salesLoadingMore,
+    error: salesError,
+    hasMore: salesHasMore,
+    loadMore: loadMoreSales,
+  } = useSales();
+
+  // 根据当前选中的 tab 获取对应数据
+  const rawOrders = orderType === 'purchases' ? purchaseOrders : salesOrders;
+  const isLoading = orderType === 'purchases' ? purchasesLoading : salesLoading;
+  const isLoadingMore = orderType === 'purchases' ? purchasesLoadingMore : salesLoadingMore;
+  const error = orderType === 'purchases' ? purchasesError : salesError;
+  const hasMore = orderType === 'purchases' ? purchasesHasMore : salesHasMore;
+  const loadMore = orderType === 'purchases' ? loadMorePurchases : loadMoreSales;
+
+  // 转换数据格式（确保 rawOrders 是数组）
+  const orders = useMemo(() => {
+    // 防御性处理：确保是数组
+    const ordersArray = Array.isArray(rawOrders) ? rawOrders : [];
+    return ordersArray.map(transformOrderListItem);
+  }, [rawOrders]);
 
   const statusTabs: { value: OrderStatus; label: string }[] = [
     { value: 'all', label: t('order.allOrders') },
@@ -137,7 +190,8 @@ export default function OrdersPage() {
     { value: 'disputed', label: t('order.disputed') },
   ];
 
-  const filteredOrders = mockOrders.filter(
+  // 根据状态过滤订单
+  const filteredOrders = orders.filter(
     order => statusFilter === 'all' || order.status === statusFilter
   );
 
@@ -170,7 +224,10 @@ export default function OrdersPage() {
               {(['purchases', 'sales'] as OrderType[]).map(type => (
                 <button
                   key={type}
-                  onClick={() => setOrderType(type)}
+                  onClick={() => {
+                    // 更新 URL 参数，orderType 将通过 useMemo 自动更新
+                    router.push(`/orders?tab=${type}`);
+                  }}
                   className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                     orderType === type
                       ? 'bg-card text-foreground shadow-sm'
@@ -232,6 +289,28 @@ export default function OrdersPage() {
                 </Card>
               ))}
             </VStack>
+          ) : error ? (
+            <Card className="text-center">
+              <CardContent className="py-16">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+                  <svg
+                    className="w-10 h-10 text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">{t('common.error')}</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto">{error}</p>
+              </CardContent>
+            </Card>
           ) : filteredOrders.length === 0 ? (
             <Card className="text-center">
               <CardContent className="py-16">
@@ -276,6 +355,52 @@ export default function OrdersPage() {
                   onContact={() => handleContact(order.vendor.id)}
                 />
               ))}
+
+              {/* 加载更多 */}
+              {hasMore && filteredOrders.length > 0 && (
+                <div className="flex justify-center py-4">
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-feedback"
+                  >
+                    {isLoadingMore ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t('common.loading')}
+                      </span>
+                    ) : (
+                      t('common.loadMore')
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* 没有更多数据提示 */}
+              {!hasMore && filteredOrders.length > 0 && (
+                <p className="text-center text-sm text-muted-foreground py-4">
+                  {t('common.noMoreData')}
+                </p>
+              )}
             </VStack>
           )}
         </Container>

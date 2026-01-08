@@ -17,7 +17,9 @@ export * from './roleStore';
 // 货币状态
 export * from './currencyStore';
 
+// 聊天状态
+export * from './chatStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';
-// export * from './chatStore';

@@ -19,7 +19,8 @@ export type OrderState =
   | 'DECIDED'
   | 'RESOLVED'
   | 'PAYMENT_FINALIZED'
-  | 'PROCESSING_ERROR';
+  | 'PROCESSING_ERROR'
+  | 'DISPUTE_EXPIRED';
 
 /**
  * 订单角色
@@ -28,9 +29,10 @@ export type OrderRole = 'buyer' | 'vendor';
 
 /**
  * 订单列表项
+ * 注意：字段名与后端 API 保持一致（使用大写 ID 后缀）
  */
 export interface OrderListItem {
-  orderId: string;
+  orderID: string;
   slug: string;
   title: string;
   thumbnail: Image;
@@ -39,9 +41,9 @@ export interface OrderListItem {
   timestamp: string;
   state: OrderState;
   read: boolean;
-  vendorId: string;
+  vendorID: string;
   vendorHandle?: string;
-  buyerId: string;
+  buyerID: string;
   buyerHandle?: string;
   paymentCoin: CryptoType;
   coinType: string;

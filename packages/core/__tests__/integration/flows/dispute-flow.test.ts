@@ -29,7 +29,7 @@ describe('Dispute Flow E2E Tests', () => {
       const moderatedOrder = purchases.find(p => p.moderated === true);
 
       if (moderatedOrder) {
-        disputeOrderId = moderatedOrder.orderId;
+        disputeOrderId = moderatedOrder.orderID;
         console.log(`📋 Found moderated order for dispute: ${disputeOrderId}`);
       } else {
         console.log('⚠️ No moderated orders found, dispute flow will be simulated');

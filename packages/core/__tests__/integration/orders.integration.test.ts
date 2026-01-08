@@ -32,7 +32,7 @@ describe('Orders API Integration Tests', () => {
 
       if (purchases.length > 0) {
         const firstOrder = purchases[0];
-        const detail = await ordersApi.getOrderDetails(firstOrder.orderId);
+        const detail = await ordersApi.getOrderDetails(firstOrder.orderID);
 
         expect(detail).toBeTruthy();
       }
@@ -55,7 +55,7 @@ describe('Orders API Integration Tests', () => {
 
       if (sales.length > 0) {
         const firstOrder = sales[0];
-        const detail = await ordersApi.getOrderDetails(firstOrder.orderId);
+        const detail = await ordersApi.getOrderDetails(firstOrder.orderID);
 
         expect(detail).toBeTruthy();
       }
@@ -110,7 +110,7 @@ describe('Orders API Integration Tests', () => {
         return;
       }
 
-      const orderId = buyerPurchases[0].orderId;
+      const orderId = buyerPurchases[0].orderID;
 
       // Buyer 查看订单
       const buyerView = await ordersApi.getOrderDetails(orderId);

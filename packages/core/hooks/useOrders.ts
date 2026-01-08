@@ -4,7 +4,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { OrderListItem, Order } from '../types';
-import { ordersApi, type PurchaseData, type OrderEstimate, type PurchaseResult } from '../services/api/orders';
+import {
+  ordersApi,
+  type PurchaseData,
+  type OrderEstimate,
+  type PurchaseResult,
+} from '../services/api/orders';
 
 /**
  * 订单列表过滤选项
@@ -16,20 +21,27 @@ export interface OrdersFilter {
   limit?: number;
 }
 
+/** 默认每页加载数量 */
+const DEFAULT_PAGE_SIZE = 20;
+
 /**
- * 获取购买订单列表
+ * 获取购买订单列表（支持分页）
  */
 export function usePurchases(filter?: OrdersFilter) {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = filter?.limit || DEFAULT_PAGE_SIZE;
 
+  // 初始加载
   const refetch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await ordersApi.getPurchases();
+      const result = await ordersApi.getPurchases(undefined, undefined, String(pageSize), '');
       // 客户端过滤（可选）
       let filteredOrders = result;
       if (filter?.states && filter.states.length > 0) {
@@ -38,38 +50,81 @@ export function usePurchases(filter?: OrdersFilter) {
       if (filter?.searchTerm) {
         const term = filter.searchTerm.toLowerCase();
         filteredOrders = filteredOrders.filter(
-          o => o.title.toLowerCase().includes(term) || o.orderId.toLowerCase().includes(term)
+          o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
         );
       }
       setOrders(filteredOrders);
+      setHasMore(result.length >= pageSize);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取订单失败');
     } finally {
       setIsLoading(false);
     }
-  }, [filter?.states, filter?.searchTerm]);
+  }, [filter?.states, filter?.searchTerm, pageSize]);
+
+  // 加载更多
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore || orders.length === 0) return;
+
+    setIsLoadingMore(true);
+    try {
+      const lastOrderId = orders[orders.length - 1]?.orderID || '';
+      const result = await ordersApi.getPurchases(
+        undefined,
+        undefined,
+        String(pageSize),
+        lastOrderId
+      );
+
+      if (result.length === 0) {
+        setHasMore(false);
+      } else {
+        // 客户端过滤
+        let filteredOrders = result;
+        if (filter?.states && filter.states.length > 0) {
+          filteredOrders = filteredOrders.filter(o => filter.states?.includes(o.state));
+        }
+        if (filter?.searchTerm) {
+          const term = filter.searchTerm.toLowerCase();
+          filteredOrders = filteredOrders.filter(
+            o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
+          );
+        }
+        setOrders(prev => [...prev, ...filteredOrders]);
+        setHasMore(result.length >= pageSize);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载更多订单失败');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, orders, pageSize, filter?.states, filter?.searchTerm]);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  return { orders, isLoading, error, refetch };
+  return { orders, isLoading, isLoadingMore, error, hasMore, refetch, loadMore };
 }
 
 /**
- * 获取销售订单列表
+ * 获取销售订单列表（支持分页）
  */
 export function useSales(filter?: OrdersFilter) {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = filter?.limit || DEFAULT_PAGE_SIZE;
 
+  // 初始加载
   const refetch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await ordersApi.getSales();
+      const result = await ordersApi.getSales(undefined, undefined, String(pageSize), '');
       // 客户端过滤
       let filteredOrders = result;
       if (filter?.states && filter.states.length > 0) {
@@ -78,22 +133,56 @@ export function useSales(filter?: OrdersFilter) {
       if (filter?.searchTerm) {
         const term = filter.searchTerm.toLowerCase();
         filteredOrders = filteredOrders.filter(
-          o => o.title.toLowerCase().includes(term) || o.orderId.toLowerCase().includes(term)
+          o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
         );
       }
       setOrders(filteredOrders);
+      setHasMore(result.length >= pageSize);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取订单失败');
     } finally {
       setIsLoading(false);
     }
-  }, [filter?.states, filter?.searchTerm]);
+  }, [filter?.states, filter?.searchTerm, pageSize]);
+
+  // 加载更多
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore || orders.length === 0) return;
+
+    setIsLoadingMore(true);
+    try {
+      const lastOrderId = orders[orders.length - 1]?.orderID || '';
+      const result = await ordersApi.getSales(undefined, undefined, String(pageSize), lastOrderId);
+
+      if (result.length === 0) {
+        setHasMore(false);
+      } else {
+        // 客户端过滤
+        let filteredOrders = result;
+        if (filter?.states && filter.states.length > 0) {
+          filteredOrders = filteredOrders.filter(o => filter.states?.includes(o.state));
+        }
+        if (filter?.searchTerm) {
+          const term = filter.searchTerm.toLowerCase();
+          filteredOrders = filteredOrders.filter(
+            o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
+          );
+        }
+        setOrders(prev => [...prev, ...filteredOrders]);
+        setHasMore(result.length >= pageSize);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载更多订单失败');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, orders, pageSize, filter?.states, filter?.searchTerm]);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  return { orders, isLoading, error, refetch };
+  return { orders, isLoading, isLoadingMore, error, hasMore, refetch, loadMore };
 }
 
 /**

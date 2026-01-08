@@ -5,6 +5,7 @@ export type {
   PaginationParams,
   Image,
   Price,
+  PriceCurrency,
   Address,
   CryptoType,
   FiatType,
