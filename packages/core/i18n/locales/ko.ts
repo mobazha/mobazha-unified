@@ -54,6 +54,8 @@ export const ko: TranslationResource = {
     wallet: '지갑',
     cart: '장바구니',
     notifications: '알림',
+    login: '로그인',
+    logout: '로그아웃',
   },
 
   home: {

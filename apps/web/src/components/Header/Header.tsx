@@ -9,12 +9,13 @@ import { Input } from '@/components/ui/input';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useI18n } from '@mobazha/core';
-import { Search, ShoppingCart } from 'lucide-react';
+import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
+import { Search, ShoppingCart, LogIn } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
+  const { isAuthenticated, profile, isLoading } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -96,9 +97,24 @@ export const Header: React.FC = () => {
             <div className="w-px h-6 bg-border mx-2" />
             <LanguageSwitcher compact />
             <ThemeSwitcher compact />
-            <Link href="/profile" className="hover:opacity-80 transition-opacity">
-              <Avatar name="Guest" size="sm" />
-            </Link>
+            {isLoading ? (
+              <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+            ) : isAuthenticated && profile ? (
+              <Link href="/profile" className="hover:opacity-80 transition-opacity">
+                <Avatar
+                  src={getImageUrl(profile.avatarHashes?.small)}
+                  name={profile.name || 'User'}
+                  size="sm"
+                />
+              </Link>
+            ) : (
+              <Link href="/login">
+                <Button variant="default" size="sm" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  {t('nav.login')}
+                </Button>
+              </Link>
+            )}
           </HStack>
         </div>
       </Container>

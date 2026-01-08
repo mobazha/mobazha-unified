@@ -80,8 +80,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
           {isLoading
             ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            : products.map(product => (
-                <Link key={product.id} href={`/product/${product.slug}`}>
+            : products.map((product, index) => (
+                <Link key={`${product.id}-${index}`} href={`/product/${product.slug}`}>
                   <ProductCard
                     title={product.title}
                     imageUrl={product.imageUrl}

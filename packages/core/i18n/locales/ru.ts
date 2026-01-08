@@ -54,6 +54,8 @@ export const ru: TranslationResource = {
     wallet: 'Кошелёк',
     cart: 'Корзина',
     notifications: 'Уведомления',
+    login: 'Войти',
+    logout: 'Выйти',
   },
 
   home: {

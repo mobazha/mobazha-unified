@@ -38,8 +38,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
-    "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --testPathPattern 'integration'",
+    "test:e2e": "vitest run --testPathPattern 'flows'",
+    "test:watch": "vitest",
+    "test:health": "vitest run --testPathPattern 'healthCheck'"
   },
   "dependencies": {
     "ethers": "^6.14.1",

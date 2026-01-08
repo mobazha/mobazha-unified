@@ -28,3 +28,6 @@ export * from './utils';
 
 // i18n (国际化)
 export * from './i18n';
+
+// Testing utilities (for E2E tests)
+export * from './testing';

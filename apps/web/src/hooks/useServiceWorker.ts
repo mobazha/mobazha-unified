@@ -1,10 +1,12 @@
 'use client';
 
+/// <reference lib="dom" />
+
 import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
 
 interface ServiceWorkerState {
   isRegistered: boolean;
-  registration: ServiceWorkerRegistration | null;
+  registration: globalThis.ServiceWorkerRegistration | null;
   updateAvailable: boolean;
 }
 
@@ -41,13 +43,27 @@ export function useServiceWorker() {
   );
 
   // Check if service worker is supported
-  const isSupported = typeof window !== 'undefined' && 'serviceWorker' in navigator;
+  // 开发环境下禁用 Service Worker，避免缓存问题
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isSupported =
+    typeof window !== 'undefined' && 'serviceWorker' in navigator && !isDevelopment;
 
-  // Register service worker
+  // Register service worker (仅生产环境)
   useEffect(() => {
-    if (!isSupported) return;
+    if (!isSupported) {
+      // 开发环境：尝试注销已存在的 Service Worker
+      if (isDevelopment && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => {
+            registration.unregister();
+            console.log('🔧 [DEV] Unregistered Service Worker for better DX');
+          });
+        });
+      }
+      return;
+    }
 
-    // Register SW
+    // Register SW (生产环境)
     const registerSW = async () => {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js', {

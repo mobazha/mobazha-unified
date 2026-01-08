@@ -86,6 +86,8 @@ export interface TranslationResource {
     wallet: string;
     cart: string;
     notifications: string;
+    login: string;
+    logout: string;
   };
 
   // 首页

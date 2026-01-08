@@ -24,12 +24,20 @@ const modeOptions: { value: ThemeMode; label: string; icon: string }[] = [
 export function ThemeSwitcher({ compact = false, className = '' }: ThemeSwitcherProps) {
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 标记客户端已挂载，避免 hydration mismatch
+  useEffect(() => {
+    // 使用 requestAnimationFrame 避免直接在 effect 中调用 setState
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
 
   // 点击外部关闭下拉框
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement | null;
+      if (dropdownRef.current && target && !dropdownRef.current.contains(target)) {
         setIsOpen(false);
       }
     }
@@ -40,6 +48,18 @@ export function ThemeSwitcher({ compact = false, className = '' }: ThemeSwitcher
 
   // 紧凑模式：只显示暗色模式切换按钮
   if (compact) {
+    // 在 SSR 阶段渲染占位符，避免 hydration mismatch
+    if (!mounted) {
+      return (
+        <button
+          className={`p-2 rounded-lg transition-colors hover:bg-surface-hover ${className}`}
+          aria-label="切换主题"
+        >
+          <span className="text-xl">🌓</span>
+        </button>
+      );
+    }
+
     return (
       <button
         onClick={() => setMode(isDark ? 'light' : 'dark')}
@@ -52,6 +72,26 @@ export function ThemeSwitcher({ compact = false, className = '' }: ThemeSwitcher
   }
 
   const currentThemeInfo = THEME_INFO[theme];
+
+  // 非 compact 模式：在 SSR 阶段渲染占位符
+  if (!mounted) {
+    return (
+      <div className={`relative ${className}`}>
+        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface hover:bg-surface-hover border border-border transition-colors">
+          <span className="text-xl">🎨</span>
+          <span className="text-sm font-medium text-text-primary hidden sm:block">主题</span>
+          <svg
+            className="w-4 h-4 text-text-secondary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>

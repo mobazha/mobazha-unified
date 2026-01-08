@@ -1,12 +1,48 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
-import { useI18n } from '@mobazha/core';
+import { useI18n, productDataService, isMockMode } from '@mobazha/core';
+import type { ProductListItem } from '@mobazha/core';
 
-// Mock data for demo
-const trendingProducts = [
+// ProductSection 需要的展示格式
+interface DisplayProduct {
+  id: string;
+  slug: string;
+  title: string;
+  imageUrl: string;
+  price: number;
+  currency?: string;
+  originalPrice?: number;
+  vendorName: string;
+  vendorPeerID?: string;
+  rating: number;
+  reviewCount: number;
+  freeShipping?: boolean;
+  isDigital?: boolean;
+}
+
+// 转换 API 数据为 ProductSection 需要的格式
+function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
+  return {
+    id: item.slug,
+    slug: item.slug,
+    title: item.title,
+    imageUrl: item.thumbnail?.medium || item.thumbnail?.small || 'https://via.placeholder.com/400',
+    price: item.price?.amount || 0,
+    currency: item.price?.currencyCode || 'USD',
+    vendorName: item.vendorPeerID?.substring(0, 8) || 'Unknown',
+    vendorPeerID: item.vendorPeerID,
+    rating: item.averageRating || 0,
+    reviewCount: item.ratingCount || 0,
+    freeShipping: item.freeShipping?.length ? true : false,
+    isDigital: item.contractType === 'SERVICE' || item.contractType === 'DIGITAL_GOOD',
+  };
+}
+
+// 占位数据（仅在 Mock 模式下使用）
+const placeholderProducts: DisplayProduct[] = [
   {
     id: '1',
     slug: 'premium-headphones',
@@ -52,101 +88,53 @@ const trendingProducts = [
     reviewCount: 512,
     freeShipping: true,
   },
-  {
-    id: '5',
-    slug: 'leather-wallet',
-    title: 'Handcrafted Leather Wallet - Genuine Italian Leather',
-    imageUrl: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&h=400&fit=crop',
-    price: 79.99,
-    vendorName: 'LeatherCraft',
-    rating: 4.9,
-    reviewCount: 341,
-  },
-  {
-    id: '6',
-    slug: 'mechanical-keyboard',
-    title: 'RGB Mechanical Gaming Keyboard - Cherry MX Blue',
-    imageUrl: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=400&h=400&fit=crop',
-    price: 129.99,
-    vendorName: 'GamerZone',
-    rating: 4.5,
-    reviewCount: 678,
-    freeShipping: true,
-  },
-  {
-    id: '7',
-    slug: 'plant-collection',
-    title: 'Succulent Plant Collection - Set of 6',
-    imageUrl: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=400&fit=crop',
-    price: 34.99,
-    vendorName: 'GreenThumb',
-    rating: 4.8,
-    reviewCount: 203,
-  },
-  {
-    id: '8',
-    slug: 'crypto-hardware-wallet',
-    title: 'Crypto Hardware Wallet - Secure Cold Storage',
-    imageUrl: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=400&h=400&fit=crop',
-    price: 89.99,
-    vendorName: 'CryptoSecure',
-    rating: 4.9,
-    reviewCount: 892,
-    isDigital: false,
-    freeShipping: true,
-  },
-];
-
-const featuredProducts = [
-  {
-    id: '9',
-    slug: 'btc-otc-trade',
-    title: 'BTC OTC Trading - Competitive Rates',
-    imageUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&h=400&fit=crop',
-    price: 0,
-    currency: 'BTC',
-    vendorName: 'CryptoDesk',
-    rating: 5.0,
-    reviewCount: 156,
-  },
-  {
-    id: '10',
-    slug: 'web-dev-service',
-    title: 'Professional Web Development Service',
-    imageUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=400&fit=crop',
-    price: 500,
-    vendorName: 'DevPro',
-    rating: 4.8,
-    reviewCount: 89,
-    isDigital: true,
-  },
-  {
-    id: '11',
-    slug: 'nft-art-bundle',
-    title: 'Exclusive Digital Art Collection',
-    imageUrl: 'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=400&h=400&fit=crop',
-    price: 0.5,
-    currency: 'ETH',
-    vendorName: 'DigitalArtist',
-    rating: 4.7,
-    reviewCount: 234,
-    isDigital: true,
-  },
-  {
-    id: '12',
-    slug: 'vpn-subscription',
-    title: 'Privacy VPN - 1 Year Subscription',
-    imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&h=400&fit=crop',
-    price: 39.99,
-    vendorName: 'SecureNet',
-    rating: 4.6,
-    reviewCount: 445,
-    isDigital: true,
-  },
 ];
 
 export default function HomePage() {
   const { t } = useI18n();
+  const [trendingProducts, setTrendingProducts] = useState<DisplayProduct[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<DisplayProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<'mock' | 'api'>('mock');
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      const mockMode = isMockMode();
+      setDataSource(mockMode ? 'mock' : 'api');
+
+      console.log(`📦 Fetching products (${mockMode ? 'Mock' : 'Real API'} mode)`);
+
+      try {
+        const [trending, featured] = await Promise.all([
+          productDataService.getTrendingProducts(),
+          productDataService.getFeaturedProducts(),
+        ]);
+
+        if (trending.length > 0) {
+          setTrendingProducts(trending.map(convertToDisplayProduct));
+        } else {
+          // 如果 API 返回空数据，使用占位数据
+          setTrendingProducts(placeholderProducts);
+        }
+
+        if (featured.length > 0) {
+          setFeaturedProducts(featured.map(convertToDisplayProduct));
+        } else {
+          setFeaturedProducts(placeholderProducts.slice(0, 4));
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        // 出错时使用占位数据
+        setTrendingProducts(placeholderProducts);
+        setFeaturedProducts(placeholderProducts.slice(0, 4));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const categories = [
     { name: t('homeExtended.electronics'), icon: '💻', color: 'from-blue-500 to-cyan-500' },
@@ -163,6 +151,22 @@ export default function HomePage() {
 
       <main>
         <Hero />
+
+        {/* 数据来源指示器（开发模式） */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                dataSource === 'api'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+              }`}
+            >
+              {dataSource === 'api' ? '🔗 Real API' : '🎭 Mock Data'}
+              {isLoading && ' (Loading...)'}
+            </div>
+          </div>
+        )}
 
         <ProductSection
           title={t('homeExtended.trendingNow')}

@@ -1,28 +1,42 @@
+/* global self, caches */
 /**
  * Mobazha Service Worker
  * Provides offline support and caching strategies
  */
 
-const CACHE_NAME = 'mobazha-v1';
+// 版本号：每次部署更新时递增此版本号
+const CACHE_VERSION = '2';
+const CACHE_NAME = `mobazha-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
 
 // Assets to cache on install
-const PRECACHE_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/offline',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-];
+const PRECACHE_ASSETS = ['/manifest.json', '/offline'];
 
 // Cache strategies
 const CACHE_STRATEGIES = {
-  // Network first, fallback to cache (for API calls)
-  networkFirst: ['api.', '/ob/', 'search.'],
-  // Cache first, fallback to network (for static assets)
+  // Network first, fallback to cache (for API calls and pages)
+  // 页面总是优先从网络获取，确保显示最新内容
+  networkFirst: [
+    'api.',
+    '/ob/',
+    'search.',
+    '/',
+    '/search',
+    '/profile',
+    '/settings',
+    '/wallet',
+    '/chat',
+    '/orders',
+    '/marketplace',
+    '/product',
+    '/store',
+    '/listing',
+    '/moderator',
+  ],
+  // Cache first, fallback to network (for static assets only)
   cacheFirst: ['.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.woff', '.woff2'],
-  // Stale while revalidate (for pages)
-  staleWhileRevalidate: ['/', '/search', '/profile', '/settings', '/wallet', '/chat', '/orders'],
+  // Stale while revalidate - 仅用于非关键资源
+  staleWhileRevalidate: [],
 };
 
 // Install event - precache assets
@@ -89,25 +103,27 @@ function getCacheStrategy(url) {
   const pathname = url.pathname;
   const href = url.href;
 
-  // Check network first patterns
-  if (CACHE_STRATEGIES.networkFirst.some(pattern => href.includes(pattern))) {
-    return 'networkFirst';
-  }
-
-  // Check cache first patterns
+  // 静态资源使用 cache first（优先缓存）
   if (CACHE_STRATEGIES.cacheFirst.some(pattern => pathname.endsWith(pattern))) {
     return 'cacheFirst';
   }
 
-  // Check stale while revalidate patterns
+  // HTML 页面和 API 使用 network first（优先网络）
+  // 这确保用户总是看到最新的页面内容
   if (
-    CACHE_STRATEGIES.staleWhileRevalidate.some(
-      pattern => pathname === pattern || pathname.startsWith(pattern + '/')
-    )
+    CACHE_STRATEGIES.networkFirst.some(pattern => {
+      // API 和外部服务：检查 href
+      if (pattern.includes('.') || pattern.startsWith('api')) {
+        return href.includes(pattern);
+      }
+      // 页面路径：检查 pathname
+      return pathname === pattern || pathname.startsWith(pattern + '/');
+    })
   ) {
-    return 'staleWhileRevalidate';
+    return 'networkFirst';
   }
 
+  // 默认使用 network first，确保页面总是最新的
   return 'networkFirst';
 }
 

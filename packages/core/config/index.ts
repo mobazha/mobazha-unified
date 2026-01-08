@@ -5,6 +5,12 @@
  * Set via environment variables or runtime configuration.
  */
 
+// 导出环境配置
+export * from './env';
+
+// 导出测试账号配置
+export * from './testAccounts';
+
 export interface AppConfig {
   /** Use mock data instead of real API */
   useMockData: boolean;

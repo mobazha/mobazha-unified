@@ -167,11 +167,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* 评分 */}
-        {rating !== undefined && (
+        {rating !== undefined && rating !== null && (
           <div className="flex items-center gap-1 text-xs sm:text-sm">
             <span className="text-yellow-500">★</span>
             <span className="text-muted-foreground">
-              {rating.toFixed(1)}
+              {Number(rating).toFixed(1)}
               {reviewCount !== undefined && ` (${reviewCount})`}
             </span>
           </div>

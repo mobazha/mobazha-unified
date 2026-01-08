@@ -200,70 +200,86 @@ export default function MarketplaceDetailPage() {
 
       <main>
         {/* Banner */}
-        <div className="relative h-64 md:h-80">
+        <div className="relative h-40 sm:h-56 md:h-72">
           <img src={marketplace.banner} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
 
         <Container size="xl">
           {/* Marketplace Header */}
-          <div className="relative -mt-20 mb-8">
-            <Card>
-              <HStack gap="lg" align="start" className="flex-wrap">
+          <div className="relative -mt-16 sm:-mt-20 mb-4 sm:mb-8">
+            <Card className="p-4 sm:p-6">
+              <HStack gap="md" align="start" className="flex-wrap sm:gap-lg">
                 {/* Logo */}
                 <img
                   src={marketplace.logo}
                   alt={marketplace.name}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-card border-4 border-white dark:border-slate-900 shadow-lg -mt-16"
+                  className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-xl bg-card border-4 border-white dark:border-slate-900 shadow-lg -mt-12 sm:-mt-16"
                 />
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <HStack justify="between" align="start" className="flex-wrap gap-4">
+                  <HStack justify="between" align="start" className="flex-wrap gap-3 sm:gap-4">
                     <div>
-                      <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
                         {marketplace.name}
                       </h1>
-                      <p className="text-muted-foreground mb-4 max-w-2xl">
+                      <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 max-w-2xl">
                         {marketplace.shortDescription}
                       </p>
 
                       {/* Stats */}
-                      <HStack gap="lg" className="flex-wrap">
+                      <HStack gap="md" className="flex-wrap sm:gap-lg">
                         <VStack gap="none">
-                          <span className="text-2xl font-bold text-foreground">
+                          <span className="text-xl sm:text-2xl font-bold text-foreground">
                             {marketplace.memberCount.toLocaleString()}
                           </span>
-                          <span className="text-sm text-muted-foreground">Members</span>
+                          <span className="text-xs sm:text-sm text-muted-foreground">Members</span>
                         </VStack>
                         <VStack gap="none">
-                          <span className="text-2xl font-bold text-foreground">
+                          <span className="text-xl sm:text-2xl font-bold text-foreground">
                             {marketplace.sellerCount}
                           </span>
-                          <span className="text-sm text-muted-foreground">Sellers</span>
+                          <span className="text-xs sm:text-sm text-muted-foreground">Sellers</span>
                         </VStack>
                         <VStack gap="none">
-                          <span className="text-2xl font-bold text-foreground">
+                          <span className="text-xl sm:text-2xl font-bold text-foreground">
                             {marketplace.productCount}
                           </span>
-                          <span className="text-sm text-muted-foreground">Products</span>
+                          <span className="text-xs sm:text-sm text-muted-foreground">Products</span>
                         </VStack>
                       </HStack>
                     </div>
 
                     {/* Actions */}
-                    <VStack gap="sm">
+                    <VStack gap="sm" className="w-full sm:w-auto mt-3 sm:mt-0">
                       {isMember ? (
                         <>
-                          <Link href={`/marketplace/${marketplace.slug}/sell`}>
-                            <Button>Start Selling</Button>
+                          <Link
+                            href={`/marketplace/${marketplace.slug}/sell`}
+                            className="w-full sm:w-auto"
+                          >
+                            <Button className="w-full sm:w-auto" size="sm">
+                              Start Selling
+                            </Button>
                           </Link>
-                          <Button variant="ghost" onClick={handleLeaveMarketplace}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleLeaveMarketplace}
+                            className="w-full sm:w-auto"
+                          >
                             Leave
                           </Button>
                         </>
                       ) : (
-                        <Button onClick={handleJoinMarketplace}>Join Marketplace</Button>
+                        <Button
+                          onClick={handleJoinMarketplace}
+                          size="sm"
+                          className="w-full sm:w-auto touch-feedback"
+                        >
+                          Join Marketplace
+                        </Button>
                       )}
                     </VStack>
                   </HStack>
@@ -273,13 +289,13 @@ export default function MarketplaceDetailPage() {
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-border mb-6">
-            <HStack gap="none">
+          <div className="border-b border-border mb-4 sm:mb-6 overflow-x-auto">
+            <HStack gap="none" className="min-w-max">
               {(['products', 'sellers', 'about', 'chat'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-4 text-sm font-medium transition-colors capitalize ${
+                  className={`px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium transition-colors capitalize touch-feedback ${
                     activeTab === tab
                       ? 'text-emerald-600 border-b-2 border-emerald-600'
                       : 'text-muted-foreground hover:text-slate-900 dark:hover:text-white'
@@ -295,14 +311,15 @@ export default function MarketplaceDetailPage() {
           {activeTab === 'products' && (
             <div>
               {/* Search */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <Input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search products in this marketplace..."
+                  className="h-10 sm:h-12 text-sm sm:text-base"
                   leftIcon={
                     <svg
-                      className="w-5 h-5 text-slate-400"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -319,7 +336,7 @@ export default function MarketplaceDetailPage() {
               </div>
 
               {/* Products Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 {mockProducts.map(product => (
                   <ProductCard
                     key={product.id}
@@ -333,29 +350,33 @@ export default function MarketplaceDetailPage() {
               </div>
 
               {/* Load More */}
-              <div className="text-center mt-8">
-                <Button variant="outline">Load More Products</Button>
+              <div className="text-center mt-6 sm:mt-8">
+                <Button variant="outline" size="sm" className="touch-feedback">
+                  Load More Products
+                </Button>
               </div>
             </div>
           )}
 
           {activeTab === 'sellers' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {mockSellers.map(seller => (
                 <Link key={seller.id} href={`/store/${seller.id}`}>
-                  <Card className="h-full">
-                    <HStack gap="md" align="center">
+                  <Card className="h-full p-3 sm:p-4 touch-feedback">
+                    <HStack gap="sm" align="center" className="sm:gap-md">
                       <img
                         src={seller.avatar}
                         alt={seller.name}
-                        className="w-16 h-16 rounded-full bg-slate-200"
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-200"
                       />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground">{seller.name}</h3>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
+                          {seller.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {seller.productCount} products • ⭐ {seller.rating}
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
                           Joined {new Date(seller.joinedAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -367,50 +388,60 @@ export default function MarketplaceDetailPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
-                <Card>
-                  <h2 className="text-xl font-bold text-foreground mb-4">About This Marketplace</h2>
-                  <div className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap">
+                <Card className="p-4 sm:p-6">
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
+                    About This Marketplace
+                  </h2>
+                  <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-sm sm:text-base">
                     {marketplace.description}
                   </div>
                 </Card>
 
                 {marketplace.rules && (
-                  <Card className="mt-6">
-                    <h2 className="text-xl font-bold text-foreground mb-4">Marketplace Rules</h2>
-                    <div className="whitespace-pre-wrap text-muted-foreground">
+                  <Card className="mt-4 sm:mt-6 p-4 sm:p-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
+                      Marketplace Rules
+                    </h2>
+                    <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base">
                       {marketplace.rules}
                     </div>
                   </Card>
                 )}
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Owner */}
-                <Card>
-                  <h3 className="text-sm font-medium text-slate-500 mb-4">Marketplace Owner</h3>
-                  <HStack gap="md" align="center">
+                <Card className="p-4 sm:p-6">
+                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
+                    Marketplace Owner
+                  </h3>
+                  <HStack gap="sm" align="center" className="sm:gap-md">
                     <img
                       src={marketplace.owner.avatar}
                       alt={marketplace.owner.name}
-                      className="w-12 h-12 rounded-full bg-slate-200"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-200"
                     />
                     <div>
-                      <p className="font-semibold text-foreground">{marketplace.owner.name}</p>
-                      <p className="text-sm text-muted-foreground">Owner</p>
+                      <p className="font-semibold text-foreground text-sm sm:text-base">
+                        {marketplace.owner.name}
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Owner</p>
                     </div>
                   </HStack>
                 </Card>
 
                 {/* Categories */}
-                <Card>
-                  <h3 className="text-sm font-medium text-slate-500 mb-4">Categories</h3>
-                  <div className="flex flex-wrap gap-2">
+                <Card className="p-4 sm:p-6">
+                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
+                    Categories
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {marketplace.categories.map(cat => (
                       <span
                         key={cat}
-                        className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
+                        className="px-2 py-0.5 sm:px-3 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
                       >
                         {cat}
                       </span>
@@ -422,11 +453,11 @@ export default function MarketplaceDetailPage() {
           )}
 
           {activeTab === 'chat' && (
-            <Card>
-              <VStack gap="md" align="center" className="py-12">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <Card className="p-4 sm:p-6">
+              <VStack gap="sm" align="center" className="py-8 sm:py-12 sm:gap-md">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-slate-400"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -439,18 +470,24 @@ export default function MarketplaceDetailPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">Community Chat</h3>
-                <p className="text-slate-500 text-center max-w-md">
+                <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                  Community Chat
+                </h3>
+                <p className="text-slate-500 text-center max-w-md text-sm sm:text-base px-4">
                   {isMember
                     ? 'Connect with other members and sellers in the marketplace chat room.'
                     : 'Join this marketplace to access the community chat.'}
                 </p>
                 {isMember ? (
                   <Link href={`/chat/${marketplace.chatRoomId}`}>
-                    <Button>Open Chat</Button>
+                    <Button size="sm" className="touch-feedback">
+                      Open Chat
+                    </Button>
                   </Link>
                 ) : (
-                  <Button onClick={handleJoinMarketplace}>Join to Chat</Button>
+                  <Button size="sm" onClick={handleJoinMarketplace} className="touch-feedback">
+                    Join to Chat
+                  </Button>
                 )}
               </VStack>
             </Card>

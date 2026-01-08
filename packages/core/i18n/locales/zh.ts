@@ -54,6 +54,8 @@ export const zh: TranslationResource = {
     wallet: '钱包',
     cart: '购物车',
     notifications: '通知',
+    login: '登录',
+    logout: '退出',
   },
 
   home: {

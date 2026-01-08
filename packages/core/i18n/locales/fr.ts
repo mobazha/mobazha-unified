@@ -54,6 +54,8 @@ export const fr: TranslationResource = {
     wallet: 'Portefeuille',
     cart: 'Panier',
     notifications: 'Notifications',
+    login: 'Connexion',
+    logout: 'Déconnexion',
   },
 
   home: {

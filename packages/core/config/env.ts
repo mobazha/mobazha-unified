@@ -1,0 +1,283 @@
+/**
+ * 环境配置
+ * 支持测试环境和生产环境切换
+ * 支持双模式认证：托管模式(hosted) 和 VPS模式(basic)
+ */
+
+/**
+ * 认证模式
+ * - hosted: 托管模式，使用 Mobazha 中心化 Casdoor 认证
+ * - basic: VPS 模式，使用简单的用户名/密码 Basic Auth
+ */
+export type AuthMode = 'hosted' | 'basic';
+
+/**
+ * 认证配置
+ */
+export interface AuthConfig {
+  /** 认证模式 */
+  mode: AuthMode;
+  /** Basic Auth 配置（仅 basic 模式使用） */
+  basic?: {
+    /** 可选预设用户名 */
+    username?: string;
+  };
+}
+
+export interface CasdoorConfig {
+  serverUrl: string;
+  clientId: string;
+  clientSecret?: string;
+  organizationName: string;
+  appName: string;
+  redirectPath: string;
+}
+
+export interface ApiEndpoints {
+  /** 基础 URL，用于 /api/* 接口 (如 /api/signin) */
+  baseUrl: string;
+  /** 节点 API URL，用于 /v1/ob/* 接口 (如 /v1/ob/profile) */
+  gateway: string;
+  /** 搜索 API URL */
+  search: string;
+  /** MBZ Gateway URL */
+  mbzGateway: string;
+  /** WebSocket URL */
+  websocket: string;
+}
+
+export interface EnvConfig {
+  isDevelopment: boolean;
+  isTestEnv: boolean;
+  /** 认证配置 */
+  auth: AuthConfig;
+  /** Casdoor 配置（仅 hosted 模式使用） */
+  casdoor: CasdoorConfig;
+  api: ApiEndpoints;
+}
+
+/**
+ * 测试环境配置
+ *
+ * API 路径说明（参考后端 gateway.go 和移动端 api/const.js）：
+ * - baseUrl: 基础 URL，用于 /api/* 接口 (如 /api/signin, /api/userinfo)
+ * - gateway: 节点 API URL，用于 /v1/ob/* 接口 (如 /v1/ob/profile, /v1/ob/listing)
+ * - search: 搜索 API URL，用于 /info/* 接口
+ */
+export const TEST_ENV: EnvConfig = {
+  isDevelopment: true,
+  isTestEnv: true,
+  auth: {
+    mode: 'hosted', // 测试环境默认使用托管模式
+  },
+  casdoor: {
+    serverUrl: 'https://test-login.mobazha.org',
+    clientId: '22649a5edc7cabcb4398',
+    organizationName: 'built-in',
+    appName: 'app-built-in',
+    redirectPath: '/',
+  },
+  api: {
+    baseUrl: 'https://miniapptest.mobazha.org', // 基础 URL，用于 /api/*
+    gateway: 'https://miniapptest.mobazha.org/v1', // 节点 API，用于 /v1/ob/*
+    search: 'https://miniapptest.mobazha.org/info',
+    mbzGateway: 'https://miniapptest.mobazha.org/info/v1',
+    websocket: 'wss://miniapptest.mobazha.org/ws',
+  },
+};
+
+/**
+ * 生产环境配置
+ */
+export const PROD_ENV: EnvConfig = {
+  isDevelopment: false,
+  isTestEnv: false,
+  auth: {
+    mode: 'hosted', // 生产环境默认使用托管模式
+  },
+  casdoor: {
+    serverUrl: 'https://login.mobazha.org',
+    clientId: '44b16199e0b7b1d64b25',
+    organizationName: 'mobazha',
+    appName: 'app_mobazha',
+    redirectPath: '/',
+  },
+  api: {
+    baseUrl: 'https://miniapp.mobazha.org', // 基础 URL，用于 /api/*
+    gateway: 'https://miniapp.mobazha.org/v1', // 节点 API，用于 /v1/ob/*
+    search: 'https://miniapp.mobazha.org/info',
+    mbzGateway: 'https://miniapp.mobazha.org/info/v1',
+    websocket: 'wss://miniapp.mobazha.org/ws',
+  },
+};
+
+/**
+ * 本地/VPS 开发环境配置
+ */
+export const LOCAL_ENV: EnvConfig = {
+  isDevelopment: true,
+  isTestEnv: true,
+  auth: {
+    mode: 'basic', // 本地/VPS 环境默认使用 Basic Auth
+    basic: {
+      username: 'admin', // 可选预设用户名
+    },
+  },
+  casdoor: {
+    ...TEST_ENV.casdoor,
+  },
+  api: {
+    baseUrl: 'http://localhost:4002', // 基础 URL，用于 /api/*
+    gateway: 'http://localhost:4002/v1', // 节点 API，用于 /v1/ob/*
+    search: 'https://info.mobazha.org', // 本地开发时使用公共 info 服务
+    mbzGateway: 'https://info.mobazha.org/v1',
+    websocket: 'ws://localhost:4002/ws',
+  },
+};
+
+// 当前环境配置
+let currentEnv: EnvConfig = TEST_ENV;
+
+/**
+ * 获取当前环境配置
+ */
+export function getEnvConfig(): EnvConfig {
+  return currentEnv;
+}
+
+/**
+ * 设置环境配置
+ */
+export function setEnvConfig(env: EnvConfig): void {
+  currentEnv = env;
+}
+
+/**
+ * 切换到测试环境
+ */
+export function switchToTestEnv(): void {
+  currentEnv = TEST_ENV;
+}
+
+/**
+ * 切换到生产环境
+ */
+export function switchToProdEnv(): void {
+  currentEnv = PROD_ENV;
+}
+
+/**
+ * 切换到本地开发环境
+ */
+export function switchToLocalEnv(): void {
+  currentEnv = LOCAL_ENV;
+}
+
+// 已弃用的别名（保持向后兼容，但不推荐使用）
+// 注意：这些名称以 'use' 开头会被 ESLint 误认为 React Hooks
+// 请优先使用 switchToTestEnv / switchToProdEnv / switchToLocalEnv
+/** @deprecated Use switchToTestEnv instead */
+export const useTestEnv = switchToTestEnv;
+/** @deprecated Use switchToProdEnv instead */
+export const useProdEnv = switchToProdEnv;
+/** @deprecated Use switchToLocalEnv instead */
+export const useLocalEnv = switchToLocalEnv;
+
+/**
+ * 获取当前认证模式
+ */
+export function getAuthMode(): AuthMode {
+  return currentEnv.auth.mode;
+}
+
+/**
+ * 设置认证模式
+ */
+export function setAuthMode(mode: AuthMode): void {
+  currentEnv = {
+    ...currentEnv,
+    auth: {
+      ...currentEnv.auth,
+      mode,
+    },
+  };
+}
+
+/**
+ * 判断是否为托管模式
+ */
+export function isHostedMode(): boolean {
+  return currentEnv.auth.mode === 'hosted';
+}
+
+/**
+ * 判断是否为 Basic Auth 模式
+ */
+export function isBasicAuthMode(): boolean {
+  return currentEnv.auth.mode === 'basic';
+}
+
+/**
+ * 从环境变量初始化配置
+ */
+export function initEnvFromProcess(): void {
+  const envMode = process.env.NEXT_PUBLIC_ENV_MODE;
+
+  switch (envMode) {
+    case 'production':
+      switchToProdEnv();
+      break;
+    case 'local':
+      switchToLocalEnv();
+      break;
+    case 'test':
+    default:
+      switchToTestEnv();
+      break;
+  }
+
+  // 允许通过环境变量覆盖 API URL
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    currentEnv = {
+      ...currentEnv,
+      api: {
+        ...currentEnv.api,
+        baseUrl: apiUrl,
+        gateway: `${apiUrl}/v1`,
+      },
+    };
+  }
+
+  // 允许通过环境变量覆盖认证模式
+  const authMode = process.env.NEXT_PUBLIC_AUTH_MODE;
+  if (authMode === 'hosted' || authMode === 'basic') {
+    currentEnv = {
+      ...currentEnv,
+      auth: {
+        ...currentEnv.auth,
+        mode: authMode,
+      },
+    };
+  }
+
+  // 允许通过环境变量设置 Basic Auth 用户名
+  const basicUsername = process.env.NEXT_PUBLIC_BASIC_AUTH_USERNAME;
+  if (basicUsername) {
+    currentEnv = {
+      ...currentEnv,
+      auth: {
+        ...currentEnv.auth,
+        basic: {
+          ...currentEnv.auth.basic,
+          username: basicUsername,
+        },
+      },
+    };
+  }
+}
+
+// 自动初始化
+if (typeof process !== 'undefined' && process.env) {
+  initEnvFromProcess();
+}
