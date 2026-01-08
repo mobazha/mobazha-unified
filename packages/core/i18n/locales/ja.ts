@@ -497,6 +497,7 @@ export const ja: TranslationResource = {
     latestVersion: '最新バージョンを使用中です！',
     selectCountry: '国を選択',
     selectCurrency: '通貨を選択',
+    currencyUpdated: '通貨が更新されました',
     acceptedCryptocurrencies: '受け入れる暗号通貨',
     done: '完了',
     light: 'ライト',
@@ -513,6 +514,16 @@ export const ja: TranslationResource = {
     followingSystem: 'システムに従う',
     enabled: '有効',
     disabled: '無効',
+  },
+
+  userMenu: {
+    myProfile: 'マイページ',
+    myStore: 'マイストア',
+    createListing: '商品を作成',
+    sales: '販売注文',
+    purchases: '購入注文',
+    settings: '設定',
+    logout: 'ログアウト',
   },
 };
 

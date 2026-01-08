@@ -47,6 +47,8 @@ export interface Image {
 export interface Price {
   amount: number;
   currencyCode: string;
+  /** 精度/小数位数 (用于将最小单位转换为标准单位) */
+  divisibility?: number;
 }
 
 /**

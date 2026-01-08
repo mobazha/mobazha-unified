@@ -15,3 +15,6 @@ export * from './monitoring';
 
 // 支付服务
 export * from './payment';
+
+// 货币服务
+export * from './currencyService';

@@ -20,6 +20,15 @@ interface SearchResultItem {
     vendor?: {
       data?: {
         peerID?: string;
+        name?: string;
+        handle?: string;
+        avatarHashes?: {
+          tiny?: string;
+          small?: string;
+          medium?: string;
+          large?: string;
+          original?: string;
+        };
       };
     };
   };
@@ -137,9 +146,16 @@ function parseSearchResults(response: SearchApiResponse): ProductListItem[] {
   const items = response?.results?.results ?? [];
   return items.map(item => {
     const thumbnail = transformImageUrls(item.data.thumbnail);
+    const vendor = item.relationships?.vendor?.data;
+    const vendorAvatarHashes = vendor?.avatarHashes
+      ? transformImageUrls(vendor.avatarHashes as Image)
+      : undefined;
+
     return {
       ...item.data,
-      vendorPeerID: item.relationships?.vendor?.data?.peerID ?? item.data.vendorPeerID,
+      vendorPeerID: vendor?.peerID ?? item.data.vendorPeerID,
+      vendorName: vendor?.name,
+      vendorAvatarHashes,
       // 转换缩略图 IPFS hash 为完整 URL，保持原始值作为后备
       thumbnail: thumbnail ?? item.data.thumbnail,
     };

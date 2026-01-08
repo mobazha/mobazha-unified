@@ -14,6 +14,9 @@ export * from './walletStore';
 // 角色状态
 export * from './roleStore';
 
+// 货币状态
+export * from './currencyStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';

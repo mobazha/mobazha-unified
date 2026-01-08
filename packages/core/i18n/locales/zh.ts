@@ -496,6 +496,7 @@ export const zh: TranslationResource = {
     latestVersion: '您正在使用最新版本！',
     selectCountry: '选择国家',
     selectCurrency: '选择货币',
+    currencyUpdated: '货币已更新为',
     acceptedCryptocurrencies: '接受的加密货币',
     done: '完成',
     light: '浅色',
@@ -511,6 +512,16 @@ export const zh: TranslationResource = {
     followingSystem: '跟随系统',
     enabled: '已启用',
     disabled: '已禁用',
+  },
+
+  userMenu: {
+    myProfile: '我的主页',
+    myStore: '我的店铺',
+    createListing: '创建商品',
+    sales: '销售订单',
+    purchases: '购买订单',
+    settings: '设置',
+    logout: '退出登录',
   },
 };
 

@@ -549,6 +549,7 @@ export interface TranslationResource {
     latestVersion: string;
     selectCountry: string;
     selectCurrency: string;
+    currencyUpdated: string;
     acceptedCryptocurrencies: string;
     done: string;
     light: string;
@@ -564,6 +565,17 @@ export interface TranslationResource {
     followingSystem: string;
     enabled: string;
     disabled: string;
+  };
+
+  // 用户菜单
+  userMenu: {
+    myProfile: string;
+    myStore: string;
+    createListing: string;
+    sales: string;
+    purchases: string;
+    settings: string;
+    logout: string;
   };
 }
 

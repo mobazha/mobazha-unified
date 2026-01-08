@@ -29,5 +29,8 @@ export * from './utils';
 // i18n (国际化)
 export * from './i18n';
 
+// Data (货币数据等)
+export * from './data';
+
 // Testing utilities (for E2E tests)
 export * from './testing';

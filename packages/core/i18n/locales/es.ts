@@ -497,6 +497,7 @@ export const es: TranslationResource = {
     latestVersion: '¡Estás usando la última versión!',
     selectCountry: 'Seleccionar País',
     selectCurrency: 'Seleccionar Moneda',
+    currencyUpdated: 'Moneda actualizada a',
     acceptedCryptocurrencies: 'Criptomonedas Aceptadas',
     done: 'Hecho',
     light: 'Claro',
@@ -513,6 +514,16 @@ export const es: TranslationResource = {
     followingSystem: 'Siguiendo sistema',
     enabled: 'Activado',
     disabled: 'Desactivado',
+  },
+
+  userMenu: {
+    myProfile: 'Mi Perfil',
+    myStore: 'Mi Tienda',
+    createListing: 'Crear Producto',
+    sales: 'Ventas',
+    purchases: 'Compras',
+    settings: 'Configuración',
+    logout: 'Cerrar Sesión',
   },
 };
 

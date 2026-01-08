@@ -86,3 +86,25 @@ export type {
   ExchangeRate,
   ExternalWallet,
 } from './wallet';
+
+// Currency types
+export type {
+  CurrencyKind,
+  CurrencyInfo,
+  ExchangeRates,
+  ExchangeRateDetail,
+  ExchangeRatesDetailed,
+  CurrencyPrice,
+  FormatPriceOptions,
+  ConvertCurrencyOptions,
+  CurrencyState,
+  CurrencyActions,
+  CurrencyStore,
+} from './currency';
+
+export {
+  POPULAR_FIAT_CURRENCIES,
+  SUPPORTED_CRYPTO_CURRENCIES,
+  DEFAULT_LOCAL_CURRENCY,
+  EXCHANGE_RATE_REFRESH_INTERVAL,
+} from './currency';

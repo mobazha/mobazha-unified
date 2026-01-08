@@ -497,6 +497,7 @@ export const ko: TranslationResource = {
     latestVersion: '최신 버전을 사용 중입니다!',
     selectCountry: '국가 선택',
     selectCurrency: '통화 선택',
+    currencyUpdated: '통화가 다음으로 업데이트됨',
     acceptedCryptocurrencies: '허용된 암호화폐',
     done: '완료',
     light: '라이트',
@@ -513,6 +514,16 @@ export const ko: TranslationResource = {
     followingSystem: '시스템 설정 따름',
     enabled: '활성화됨',
     disabled: '비활성화됨',
+  },
+
+  userMenu: {
+    myProfile: '내 프로필',
+    myStore: '내 스토어',
+    createListing: '상품 등록',
+    sales: '판매 주문',
+    purchases: '구매 주문',
+    settings: '설정',
+    logout: '로그아웃',
   },
 };
 

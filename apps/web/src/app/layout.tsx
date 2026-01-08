@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import {
   AuthProvider,
+  CurrencyProvider,
   DevTools,
   MobileNav,
   PWAInstall,
@@ -70,22 +71,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider>
           <ServiceWorkerProvider>
-            <AuthProvider>
-              {/* Main content with bottom padding for mobile nav */}
-              <div className="pb-20 md:pb-0">{children}</div>
+            <CurrencyProvider>
+              <AuthProvider>
+                {/* Main content with bottom padding for mobile nav */}
+                <div className="pb-20 md:pb-0">{children}</div>
 
-              {/* Mobile bottom navigation */}
-              <MobileNav />
+                {/* Mobile bottom navigation */}
+                <MobileNav />
 
-              {/* PWA install prompt */}
-              <PWAInstall />
+                {/* PWA install prompt */}
+                <PWAInstall />
 
-              {/* Dev tools (only in development) */}
-              <DevTools />
+                {/* Dev tools (only in development) */}
+                <DevTools />
 
-              {/* Toast notifications */}
-              <Toaster />
-            </AuthProvider>
+                {/* Toast notifications */}
+                <Toaster />
+              </AuthProvider>
+            </CurrencyProvider>
           </ServiceWorkerProvider>
         </ThemeProvider>
       </body>
