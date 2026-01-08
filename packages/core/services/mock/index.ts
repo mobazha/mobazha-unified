@@ -68,7 +68,10 @@ const toListItem = (p: MockProduct): ProductListItem => ({
   },
   price: {
     amount: p.price,
-    currencyCode: p.currency || 'USD',
+    currency: {
+      code: p.currency || 'USD',
+      divisibility: 2,
+    },
   },
   freeShipping: p.shipping?.freeShipping ? ['WORLDWIDE'] : undefined,
   contractType: p.contractType || 'PHYSICAL_GOOD',

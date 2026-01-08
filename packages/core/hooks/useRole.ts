@@ -4,7 +4,8 @@
  */
 
 import { useCallback, useMemo } from 'react';
-import { useRoleStore, type UserRole, type ModeratorSettings } from '../stores/roleStore';
+import type { UserRole } from '../types';
+import { useRoleStore, type ModeratorSettings } from '../stores/roleStore';
 import * as moderatorsApi from '../services/api/moderators';
 import * as profileApi from '../services/api/profile';
 
@@ -214,4 +215,3 @@ export function useRole(): UseRoleReturn {
 }
 
 export default useRole;
-

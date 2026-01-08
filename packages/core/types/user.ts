@@ -1,6 +1,11 @@
 import type { Image, Address, CryptoType } from './common';
 
 /**
+ * 用户角色
+ */
+export type UserRole = 'buyer' | 'seller' | 'moderator';
+
+/**
  * 用户/店铺资料
  */
 export interface UserProfile {

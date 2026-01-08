@@ -14,6 +14,7 @@ export type {
 
 // User types
 export type {
+  UserRole,
   UserProfile,
   ProfileStats,
   ContactInfo,

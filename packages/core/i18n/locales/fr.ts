@@ -44,6 +44,8 @@ export const fr: TranslationResource = {
     showLess: 'Afficher moins',
     noData: 'Aucune donnée disponible',
     backToMarket: 'Retour au marché',
+    loadMore: 'Charger plus',
+    noMoreData: 'Plus de données',
   },
 
   nav: {
@@ -187,6 +189,54 @@ export const fr: TranslationResource = {
     noOrdersFound: 'Aucune commande trouvée',
     noOrdersMessage: "Vous n'avez pas encore de {{type}}. Explorez le marketplace !",
     noStatusOrders: 'Aucune commande {{status}} pour le moment.',
+    // Order detail page
+    backToOrders: 'Retour aux commandes',
+    placedOn: 'Passée le {{date}}',
+    orderNotFound: 'Commande introuvable',
+    orderNotFoundMessage: "La commande que vous recherchez n'existe pas.",
+    loadOrderFailed: 'Échec du chargement de la commande',
+    tryAgain: 'Réessayer',
+    message: 'Message',
+    confirmReceipt: 'Confirmer la réception',
+    confirmingReceipt: 'Traitement...',
+    openDispute: 'Ouvrir un litige',
+    markAsShipped: 'Marquer comme expédié',
+    refundOrder: 'Rembourser',
+    shipOrder: 'Expédier',
+    // Timeline
+    orderTimeline: 'Historique de la commande',
+    orderPlaced: 'Commande passée',
+    paymentConfirmed: 'Paiement confirmé',
+    vendorConfirmed: 'Vendeur confirmé',
+    packageShipped: 'Colis expédié',
+    orderCompleted: 'Commande terminée',
+    fundsReleased: 'Fonds libérés',
+    disputeOpened: 'Litige ouvert',
+    disputeResolved: 'Litige résolu',
+    // Order items
+    orderItems: 'Articles commandés',
+    quantity: 'Quantité',
+    subtotal: 'Sous-total',
+    shipping: 'Livraison',
+    free: 'Gratuit',
+    moderatorFee: 'Frais de modérateur',
+    // Parties
+    seller: 'Vendeur',
+    buyer: 'Acheteur',
+    moderator: 'Modérateur',
+    viewStore: 'Voir la boutique',
+    // Address and payment
+    shippingAddress: 'Adresse de livraison',
+    trackingNumber: 'Numéro de suivi',
+    paymentDetails: 'Détails du paiement',
+    paymentTransaction: 'Transaction de paiement',
+    escrowAddress: 'Adresse de séquestre',
+    orderNotes: 'Notes de commande',
+    // Dispute
+    disputeOpen: 'Litige en cours',
+    initiatedBy: 'Initié par {{party}}',
+    disputeStatus: 'Statut: {{status}}',
+    favorBuyer: "En faveur de l'acheteur",
   },
 
   chat: {
