@@ -11,10 +11,11 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import type { ProductContractType } from '@/components/ProductCard';
-import { useI18n } from '@mobazha/core';
+import { useI18n, searchDataService, getImageUrl } from '@mobazha/core';
+import type { ProductListItem } from '@mobazha/core';
 
-// Types
-interface Product {
+// 显示用的商品类型
+interface DisplayProduct {
   id: string;
   slug: string;
   title: string;
@@ -31,7 +32,8 @@ interface Product {
   contractType: ProductContractType;
 }
 
-interface User {
+// 搜索返回的用户类型
+interface SearchUser {
   peerID: string;
   name: string;
   avatar?: string;
@@ -42,48 +44,40 @@ interface User {
   reviewCount: number;
 }
 
-// Mock search results
-const generateMockProducts = (query: string, count: number = 12): Product[] => {
-  const contractTypes: Product['contractType'][] = [
-    'PHYSICAL_GOOD',
-    'DIGITAL_GOOD',
-    'SERVICE',
-    'RWA_TOKEN',
-  ];
+// 转换 API 返回的商品为显示格式
+function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
+  const thumbnailUrl =
+    getImageUrl(item.thumbnail?.medium) ||
+    getImageUrl(item.thumbnail?.small) ||
+    getImageUrl(item.thumbnail?.large) ||
+    '';
 
-  return Array.from({ length: count }, (_, i) => ({
-    id: `product-${i}`,
-    slug: `product-${query.toLowerCase().replace(/\s/g, '-')}-${i}`,
-    title: `${query} - Premium Product ${i + 1}`,
-    price: Math.floor(Math.random() * 500) + 50,
-    currency: '$',
-    image: `https://images.unsplash.com/photo-${1505740420928 + i * 1000}-5e560c06d30e?w=400&h=400&fit=crop`,
+  return {
+    id: item.slug,
+    slug: item.slug,
+    title: item.title,
+    price: Number(item.price?.amount) || 0,
+    currency: item.price?.currencyCode || 'USD',
+    image: thumbnailUrl,
     vendor: {
-      peerID: `QmVendor${i}`,
-      name: `Store ${i + 1}`,
+      peerID: item.vendorPeerID || '',
+      name: item.vendorPeerID?.substring(0, 8) || 'Unknown',
       avatar: undefined,
     },
-    rating: Math.round((3.5 + Math.random() * 1.5) * 10) / 10,
-    reviewCount: Math.floor(Math.random() * 200) + 10,
-    contractType: contractTypes[i % contractTypes.length],
-  }));
-};
+    rating: item.averageRating || 0,
+    reviewCount: item.ratingCount || 0,
+    contractType: (item.contractType as ProductContractType) || 'PHYSICAL_GOOD',
+  };
+}
 
-const generateMockUsers = (query: string, count: number = 8): User[] => {
-  return Array.from({ length: count }, (_, i) => ({
-    peerID: `QmUser${i}`,
-    name: `${query} Store ${i + 1}`,
-    avatar: undefined,
-    shortDescription: `We specialize in ${query.toLowerCase()} products and services. Quality guaranteed!`,
-    location: ['New York', 'London', 'Tokyo', 'Berlin', 'Sydney'][i % 5],
-    listingCount: Math.floor(Math.random() * 50) + 5,
-    rating: Math.round((4 + Math.random()) * 10) / 10,
-    reviewCount: Math.floor(Math.random() * 500) + 20,
-  }));
-};
-
-// Mock recent searches
-const mockRecentSearches = ['headphones', 'laptop', 'vintage watch', 'handmade jewelry', 'NFT art'];
+// 默认最近搜索
+const defaultRecentSearches = [
+  'headphones',
+  'laptop',
+  'vintage watch',
+  'handmade jewelry',
+  'NFT art',
+];
 
 type TabType = 'listings' | 'users';
 
@@ -109,15 +103,30 @@ function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
+  const categoryParam = searchParams.get('category') || 'all';
   const { t } = useI18n();
 
+  // 搜索状态
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [activeTab, setActiveTab] = useState<TabType>('listings');
   const [sortBy, setSortBy] = useState('relevance');
-  const [category, setCategory] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
+  const [category, setCategory] = useState(categoryParam);
   const [showFilters, setShowFilters] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>(mockRecentSearches);
+  const [recentSearches, setRecentSearches] = useState<string[]>(defaultRecentSearches);
+
+  // 商品搜索状态
+  const [products, setProducts] = useState<DisplayProduct[]>([]);
+  const [productsTotal, setProductsTotal] = useState(0);
+  const [productsPage, setProductsPage] = useState(0);
+  const [productsHasMore, setProductsHasMore] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  // 用户搜索状态
+  const [users, setUsers] = useState<SearchUser[]>([]);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const [usersHasMore, setUsersHasMore] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
   // Filter options with translations
   const sortOptions = useMemo(
@@ -144,23 +153,120 @@ function SearchPageContent() {
     [t]
   );
 
-  // Generate results based on query
-  const products = useMemo(
-    () => (queryParam ? generateMockProducts(queryParam) : []),
-    [queryParam]
-  );
-  const users = useMemo(() => (queryParam ? generateMockUsers(queryParam) : []), [queryParam]);
+  // 搜索商品
+  const searchProducts = useCallback(
+    async (query: string, page: number = 0, append: boolean = false) => {
+      if (!query.trim()) {
+        setProducts([]);
+        setProductsTotal(0);
+        setProductsHasMore(false);
+        return;
+      }
 
-  // Update search query when URL changes
+      setIsLoadingProducts(true);
+
+      try {
+        const result = await searchDataService.searchProducts(query, page, 20, {
+          sortBy,
+          category: category !== 'all' ? category : undefined,
+        });
+
+        const displayProducts = result.products.map(convertToDisplayProduct);
+
+        if (append) {
+          setProducts(prev => [...prev, ...displayProducts]);
+        } else {
+          setProducts(displayProducts);
+        }
+
+        setProductsTotal(result.total);
+        setProductsPage(page);
+        setProductsHasMore(result.hasMore);
+      } catch (error) {
+        console.error('Failed to search products:', error);
+        if (!append) {
+          setProducts([]);
+          setProductsTotal(0);
+        }
+        setProductsHasMore(false);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    },
+    [sortBy, category]
+  );
+
+  // 搜索用户
+  const searchUsers = useCallback(
+    async (query: string, page: number = 0, append: boolean = false) => {
+      if (!query.trim()) {
+        setUsers([]);
+        setUsersTotal(0);
+        setUsersHasMore(false);
+        return;
+      }
+
+      setIsLoadingUsers(true);
+
+      try {
+        const result = await searchDataService.searchUsers(query, page, 20);
+
+        if (append) {
+          setUsers(prev => [...prev, ...result.users]);
+        } else {
+          setUsers(result.users);
+        }
+
+        setUsersTotal(result.total);
+        setUsersPage(page);
+        setUsersHasMore(result.hasMore);
+      } catch (error) {
+        console.error('Failed to search users:', error);
+        if (!append) {
+          setUsers([]);
+          setUsersTotal(0);
+        }
+        setUsersHasMore(false);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    },
+    []
+  );
+
+  // 当 URL 参数变化时执行搜索
   useEffect(() => {
     setSearchQuery(queryParam);
-  }, [queryParam]);
+    setCategory(categoryParam);
 
+    if (queryParam) {
+      // 重置分页
+      setProductsPage(0);
+      setUsersPage(0);
+
+      // 执行搜索
+      searchProducts(queryParam, 0, false);
+      searchUsers(queryParam, 0, false);
+    } else {
+      setProducts([]);
+      setUsers([]);
+      setProductsTotal(0);
+      setUsersTotal(0);
+    }
+  }, [queryParam, categoryParam, searchProducts, searchUsers]);
+
+  // 当排序或分类变化时重新搜索
+  useEffect(() => {
+    if (queryParam) {
+      searchProducts(queryParam, 0, false);
+    }
+  }, [sortBy, category, queryParam, searchProducts]);
+
+  // 处理搜索提交
   const handleSearch = useCallback(
     (e?: React.FormEvent) => {
       e?.preventDefault();
       if (searchQuery.trim()) {
-        setIsLoading(true);
         // Add to recent searches
         setRecentSearches(prev => {
           const filtered = prev.filter(s => s !== searchQuery);
@@ -168,11 +274,24 @@ function SearchPageContent() {
         });
         // Navigate with search query
         router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-        setTimeout(() => setIsLoading(false), 500);
       }
     },
     [searchQuery, router]
   );
+
+  // 加载更多商品
+  const loadMoreProducts = useCallback(() => {
+    if (queryParam && productsHasMore && !isLoadingProducts) {
+      searchProducts(queryParam, productsPage + 1, true);
+    }
+  }, [queryParam, productsHasMore, isLoadingProducts, productsPage, searchProducts]);
+
+  // 加载更多用户
+  const loadMoreUsers = useCallback(() => {
+    if (queryParam && usersHasMore && !isLoadingUsers) {
+      searchUsers(queryParam, usersPage + 1, true);
+    }
+  }, [queryParam, usersHasMore, isLoadingUsers, usersPage, searchUsers]);
 
   const handleRecentSearch = (keyword: string) => {
     setSearchQuery(keyword);
@@ -184,8 +303,11 @@ function SearchPageContent() {
   };
 
   // Render product item using imported ProductCard
-  const renderProductCard = (product: Product) => (
-    <Link key={product.id} href={`/product/${product.slug}`}>
+  const renderProductCard = (product: DisplayProduct) => (
+    <Link
+      key={product.id}
+      href={`/product/${product.slug}${product.vendor.peerID ? `?peerID=${product.vendor.peerID}` : ''}`}
+    >
       <ProductCard
         title={product.title}
         imageUrl={product.image}
@@ -201,7 +323,7 @@ function SearchPageContent() {
   );
 
   // User Card Component
-  const UserCard = ({ user }: { user: User }) => (
+  const UserCard = ({ user }: { user: SearchUser }) => (
     <Link href={`/store/${user.peerID}`}>
       <Card className="h-full hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]">
         <CardContent className="p-3 sm:p-4">
@@ -222,7 +344,7 @@ function SearchPageContent() {
                 <HStack gap="xs" align="center">
                   <span className="text-yellow-500">★</span>
                   <span className="text-muted-foreground">
-                    {user.rating} ({user.reviewCount})
+                    {user.rating.toFixed(1)} ({user.reviewCount})
                   </span>
                 </HStack>
               </HStack>
@@ -232,6 +354,8 @@ function SearchPageContent() {
       </Card>
     </Link>
   );
+
+  const isLoading = isLoadingProducts || isLoadingUsers;
 
   return (
     <div className="min-h-screen bg-background">
@@ -266,8 +390,15 @@ function SearchPageContent() {
                 type="submit"
                 size="sm"
                 className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 sm:h-10 sm:px-6"
+                disabled={isLoading}
               >
-                {t('common.search')}
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </span>
+                ) : (
+                  t('common.search')
+                )}
               </Button>
             </div>
           </form>
@@ -363,7 +494,7 @@ function SearchPageContent() {
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {t('searchExtended.products')} ({products.length})
+                    {t('searchExtended.products')} ({productsTotal})
                   </button>
                   <button
                     onClick={() => setActiveTab('users')}
@@ -373,7 +504,7 @@ function SearchPageContent() {
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {t('searchExtended.stores')} ({users.length})
+                    {t('searchExtended.stores')} ({usersTotal})
                   </button>
                 </div>
 
@@ -497,78 +628,135 @@ function SearchPageContent() {
               )}
 
               {/* Results */}
-              {isLoading ? (
-                <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <ProductCardSkeleton key={i} />
-                  ))}
-                </Grid>
-              ) : activeTab === 'listings' ? (
-                products.length > 0 ? (
-                  <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
-                    {products.map(product => renderProductCard(product))}
-                  </Grid>
-                ) : (
-                  <Card className="text-center">
-                    <CardContent className="py-12">
-                      <svg
-                        className="w-16 h-16 mx-auto text-muted-foreground mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        {t('empty.noProductsFound')}
-                      </h3>
-                      <p className="text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
-                    </CardContent>
-                  </Card>
-                )
-              ) : users.length > 0 ? (
-                <Grid cols={2} colsMobile={1} gap="md">
-                  {users.map(user => (
-                    <UserCard key={user.peerID} user={user} />
-                  ))}
-                </Grid>
+              {activeTab === 'listings' ? (
+                <>
+                  {isLoadingProducts && products.length === 0 ? (
+                    <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <ProductCardSkeleton key={i} />
+                      ))}
+                    </Grid>
+                  ) : products.length > 0 ? (
+                    <>
+                      <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
+                        {products.map(product => renderProductCard(product))}
+                      </Grid>
+                      {/* Load More Products */}
+                      {productsHasMore && (
+                        <div className="flex justify-center mt-8">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={loadMoreProducts}
+                            disabled={isLoadingProducts}
+                          >
+                            {isLoadingProducts ? (
+                              <span className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                {t('common.loading')}
+                              </span>
+                            ) : (
+                              t('empty.loadMoreResults')
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <Card className="text-center">
+                      <CardContent className="py-12">
+                        <svg
+                          className="w-16 h-16 mx-auto text-muted-foreground mb-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          {t('empty.noProductsFound')}
+                        </h3>
+                        <p className="text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               ) : (
-                <Card className="text-center">
-                  <CardContent className="py-12">
-                    <svg
-                      className="w-16 h-16 mx-auto text-muted-foreground mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {t('empty.noStoresFound')}
-                    </h3>
-                    <p className="text-muted-foreground">{t('empty.tryAdjustingSearch')}</p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Load More */}
-              {((activeTab === 'listings' && products.length > 0) ||
-                (activeTab === 'users' && users.length > 0)) && (
-                <div className="flex justify-center mt-8">
-                  <Button variant="outline" size="lg">
-                    {t('empty.loadMoreResults')}
-                  </Button>
-                </div>
+                <>
+                  {isLoadingUsers && users.length === 0 ? (
+                    <Grid cols={2} colsMobile={1} gap="md">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <Card key={i} className="animate-pulse">
+                          <CardContent className="p-4">
+                            <HStack gap="sm" align="start">
+                              <div className="w-12 h-12 rounded-full bg-muted" />
+                              <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-muted rounded w-1/3" />
+                                <div className="h-3 bg-muted rounded w-1/4" />
+                                <div className="h-3 bg-muted rounded w-2/3" />
+                              </div>
+                            </HStack>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </Grid>
+                  ) : users.length > 0 ? (
+                    <>
+                      <Grid cols={2} colsMobile={1} gap="md">
+                        {users.map(user => (
+                          <UserCard key={user.peerID} user={user} />
+                        ))}
+                      </Grid>
+                      {/* Load More Users */}
+                      {usersHasMore && (
+                        <div className="flex justify-center mt-8">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={loadMoreUsers}
+                            disabled={isLoadingUsers}
+                          >
+                            {isLoadingUsers ? (
+                              <span className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                {t('common.loading')}
+                              </span>
+                            ) : (
+                              t('empty.loadMoreResults')
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <Card className="text-center">
+                      <CardContent className="py-12">
+                        <svg
+                          className="w-16 h-16 mx-auto text-muted-foreground mb-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          {t('empty.noStoresFound')}
+                        </h3>
+                        <p className="text-muted-foreground">{t('empty.tryAdjustingSearch')}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </>
           )}

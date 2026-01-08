@@ -24,7 +24,7 @@ import {
   ScrollArea,
   useToast,
 } from '@/components/ui';
-import { useTheme, THEME_INFO, useI18n } from '@mobazha/core';
+import { useTheme, THEME_INFO, useI18n, useUserStore } from '@mobazha/core';
 
 // Mock data
 const countries = [
@@ -154,6 +154,7 @@ export default function SettingsPage() {
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
   const { toast } = useToast();
   const { t } = useI18n();
+  const { logout } = useUserStore();
 
   // State
   const [country, setCountry] = useState('US');
@@ -198,8 +199,9 @@ export default function SettingsPage() {
   }, [toast, t]);
 
   const handleLogoutConfirm = useCallback(() => {
+    logout(); // 清除认证状态
     router.push('/');
-  }, [router]);
+  }, [logout, router]);
 
   const enabledCoinsCount = coins.filter(c => c.enabled).length;
 
