@@ -2,9 +2,15 @@
 export {
   setApiConfig,
   getApiConfig,
+  getHostingUrl,
+  getGatewayUrl,
+  getSearchUrl,
+  getMbzGatewayUrl,
   setAuthCredentials,
   clearAuthCredentials,
   setGroupContext,
+  getHeadersWithContext,
+  getImageUrl,
 } from './config';
 
 // API 模式管理

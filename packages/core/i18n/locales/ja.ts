@@ -54,6 +54,8 @@ export const ja: TranslationResource = {
     wallet: 'ウォレット',
     cart: 'カート',
     notifications: '通知',
+    login: 'ログイン',
+    logout: 'ログアウト',
   },
 
   home: {

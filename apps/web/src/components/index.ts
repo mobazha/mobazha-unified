@@ -12,3 +12,4 @@ export { LanguageSwitcher } from './LanguageSwitcher';
 export { ThemeProvider } from './ThemeProvider';
 export { ThemeSwitcher } from './ThemeSwitcher';
 export { ErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
+export { AuthProvider } from './AuthProvider';

@@ -54,6 +54,8 @@ export const en: TranslationResource = {
     wallet: 'Wallet',
     cart: 'Cart',
     notifications: 'Notifications',
+    login: 'Login',
+    logout: 'Logout',
   },
 
   home: {

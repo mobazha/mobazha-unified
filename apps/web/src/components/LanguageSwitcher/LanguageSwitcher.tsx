@@ -21,7 +21,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   // 点击外部关闭下拉
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement | null;
+      if (dropdownRef.current && target && !dropdownRef.current.contains(target)) {
         setIsOpen(false);
       }
     };
@@ -39,7 +40,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-lg',
-          'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700',
+          'bg-muted hover:bg-slate-200 dark:hover:bg-slate-700',
           'text-slate-700 dark:text-slate-200 text-sm font-medium',
           'transition-colors duration-200',
           compact && 'px-2'
@@ -63,8 +64,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         <div
           className={cn(
             'absolute right-0 mt-2 w-40 py-1',
-            'bg-white dark:bg-slate-800 rounded-lg shadow-lg',
-            'border border-slate-200 dark:border-slate-700',
+            'bg-card rounded-lg shadow-lg',
+            'border border-border',
             'z-50 animate-in fade-in slide-in-from-top-2 duration-200'
           )}
         >
@@ -81,7 +82,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                 }}
                 className={cn(
                   'w-full flex items-center gap-3 px-4 py-2 text-left',
-                  'hover:bg-slate-100 dark:hover:bg-slate-700',
+                  'hover:bg-surface-hover',
                   'transition-colors duration-150',
                   isActive &&
                     'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'

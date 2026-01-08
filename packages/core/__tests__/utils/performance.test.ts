@@ -7,7 +7,6 @@ import {
   debounce,
   throttle,
   memoize,
-  preloadImage,
   batchProcess,
   withTimeout,
   retry,
