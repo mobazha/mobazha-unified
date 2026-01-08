@@ -28,7 +28,91 @@ interface SearchResultItem {
 interface SearchApiResponse {
   results?: {
     results?: SearchResultItem[];
+    total?: number;
+    morePages?: boolean;
   };
+  total?: number;
+  morePages?: boolean;
+}
+
+// 搜索商品的参数
+export interface SearchListingsParams {
+  query: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  category?: string;
+  type?: string;
+  rating?: number;
+  shipping?: string;
+  nsfw?: boolean;
+}
+
+// 搜索商品的响应
+export interface SearchListingsResponse {
+  products: ProductListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+// 用户/店铺搜索结果项
+interface ProfileSearchResultItem {
+  data: {
+    peerID: string;
+    name: string;
+    handle?: string;
+    avatarHashes?: {
+      tiny?: string;
+      small?: string;
+      medium?: string;
+      large?: string;
+      original?: string;
+    };
+    shortDescription?: string;
+    location?: string;
+    stats?: {
+      listingCount?: number;
+      followerCount?: number;
+      followingCount?: number;
+      ratingCount?: number;
+      averageRating?: number;
+    };
+  };
+}
+
+// 用户搜索 API 响应
+interface ProfileSearchApiResponse {
+  results?: {
+    results?: ProfileSearchResultItem[];
+    total?: number;
+    morePages?: boolean;
+  };
+  total?: number;
+  morePages?: boolean;
+}
+
+// 搜索用户的响应
+export interface SearchProfilesResponse {
+  users: SearchedUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+// 搜索返回的用户类型
+export interface SearchedUser {
+  peerID: string;
+  name: string;
+  handle?: string;
+  avatar?: string;
+  shortDescription?: string;
+  location?: string;
+  listingCount: number;
+  rating: number;
+  reviewCount: number;
 }
 
 /**
@@ -285,4 +369,148 @@ export async function reportListing(
 ): Promise<{ success: boolean }> {
   const url = `${getSearchUrl()}/api/reports`;
   return post(url, { peerID, slug, reason, report_type: 'listing' }, getHeadersWithContext());
+}
+
+/**
+ * 搜索商品
+ * 参考移动端: mobazha-mobile/api/search.js
+ */
+export async function searchListings(
+  params: SearchListingsParams
+): Promise<SearchListingsResponse> {
+  const {
+    query,
+    page = 0,
+    pageSize = 40,
+    sortBy = 'relevance',
+    category,
+    type,
+    rating,
+    shipping,
+    nsfw = false,
+  } = params;
+
+  // 构建查询参数
+  const searchQuery = query.trim() === '' ? '*' : query;
+  const queryParams = new URLSearchParams({
+    q: searchQuery,
+    p: String(page),
+    pageSize: String(pageSize),
+    sortBy,
+  });
+
+  // 添加可选过滤参数
+  if (category && category !== 'all') {
+    queryParams.append('category', category);
+  }
+  if (type && type !== 'all') {
+    queryParams.append('type', type);
+  }
+  if (rating && rating > 0) {
+    queryParams.append('rating', String(rating));
+  }
+  if (shipping && shipping !== 'any') {
+    queryParams.append('shipping', shipping);
+  }
+  if (nsfw) {
+    queryParams.append('nsfw', 'true');
+  }
+
+  const url = `${getSearchUrl()}/api/search?${queryParams.toString()}`;
+  console.log('🔍 Searching listings:', url);
+
+  try {
+    const response = await safeRequest<SearchApiResponse>(
+      url,
+      { headers: getHeadersWithContext() },
+      {}
+    );
+
+    const products = parseSearchResults(response);
+    const total = response?.results?.total ?? response?.total ?? products.length;
+    const hasMore = response?.results?.morePages ?? response?.morePages ?? false;
+
+    return {
+      products,
+      total,
+      page,
+      pageSize,
+      hasMore,
+    };
+  } catch (error) {
+    console.error('Failed to search listings:', error);
+    return {
+      products: [],
+      total: 0,
+      page,
+      pageSize,
+      hasMore: false,
+    };
+  }
+}
+
+/**
+ * 搜索用户/店铺
+ * 参考移动端: mobazha-mobile/api/search.js - searchProfile
+ */
+export async function searchProfiles(params: {
+  query: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<SearchProfilesResponse> {
+  const { query, page = 0, pageSize = 40 } = params;
+
+  // 构建查询参数
+  const searchQuery = query.trim() === '' ? '*' : query;
+  const queryParams = new URLSearchParams({
+    q: searchQuery,
+    p: String(page),
+    pageSize: String(pageSize),
+  });
+
+  const url = `${getSearchUrl()}/api/search/profile_m?${queryParams.toString()}`;
+  console.log('🔍 Searching profiles:', url);
+
+  try {
+    const response = await safeRequest<ProfileSearchApiResponse>(
+      url,
+      { headers: getHeadersWithContext() },
+      {}
+    );
+
+    const items = response?.results?.results ?? [];
+    const users: SearchedUser[] = items.map(item => ({
+      peerID: item.data.peerID,
+      name: item.data.name || item.data.handle || 'Unknown',
+      handle: item.data.handle,
+      avatar: item.data.avatarHashes?.medium
+        ? getImageUrl(item.data.avatarHashes.medium)
+        : undefined,
+      shortDescription: item.data.shortDescription,
+      location: item.data.location,
+      listingCount: item.data.stats?.listingCount ?? 0,
+      rating: item.data.stats?.averageRating ?? 0,
+      reviewCount: item.data.stats?.ratingCount ?? 0,
+    }));
+
+    const total = response?.results?.total ?? response?.total ?? users.length;
+    const hasMore = response?.results?.morePages ?? response?.morePages ?? false;
+
+    return {
+      users,
+      total,
+      page,
+      pageSize,
+      hasMore,
+    };
+  } catch (error) {
+    console.error('Failed to search profiles:', error);
+    return {
+      users: [],
+      total: 0,
+      page,
+      pageSize,
+      hasMore: false,
+    };
+  }
 }

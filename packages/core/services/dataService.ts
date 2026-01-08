@@ -667,43 +667,162 @@ export const chatDataService = {
 
 // ============ Search Data Service ============
 
+export interface SearchFilters {
+  sortBy?: string;
+  category?: string;
+  type?: string;
+  rating?: number;
+  shipping?: string;
+  nsfw?: boolean;
+}
+
+// 搜索返回的用户类型（与 productsApi.SearchedUser 对齐）
+export interface SearchUser {
+  peerID: string;
+  name: string;
+  handle?: string;
+  avatar?: string;
+  shortDescription?: string;
+  location?: string;
+  listingCount: number;
+  rating: number;
+  reviewCount: number;
+}
+
+// 将 mock product 转换为 ProductListItem
+function convertMockProductToListItem(mockProduct: {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  currency: string;
+  images: string[];
+  category: string;
+  vendor: { peerID: string; name: string; avatar?: string };
+  rating: number;
+  reviewCount: number;
+  contractType: string;
+}): ProductListItem {
+  return {
+    slug: mockProduct.slug,
+    title: mockProduct.title,
+    price: {
+      amount: mockProduct.price,
+      currencyCode: mockProduct.currency,
+    },
+    thumbnail: {
+      tiny: mockProduct.images[0] || '',
+      small: mockProduct.images[0] || '',
+      medium: mockProduct.images[0] || '',
+      large: mockProduct.images[0] || '',
+      original: mockProduct.images[0] || '',
+    },
+    vendorPeerID: mockProduct.vendor.peerID,
+    averageRating: mockProduct.rating,
+    ratingCount: mockProduct.reviewCount,
+    contractType: mockProduct.contractType as ProductListItem['contractType'],
+  };
+}
+
+// 将 mock user 转换为 SearchUser
+function convertMockUserToSearchUser(mockUser: {
+  peerID: string;
+  name: string;
+  handle?: string;
+  avatarHashes?: { medium?: string };
+  shortDescription?: string;
+  location?: string;
+  stats?: {
+    listingCount?: number;
+    averageRating?: number;
+    ratingCount?: number;
+  };
+}): SearchUser {
+  return {
+    peerID: mockUser.peerID,
+    name: mockUser.name,
+    handle: mockUser.handle,
+    avatar: mockUser.avatarHashes?.medium,
+    shortDescription: mockUser.shortDescription,
+    location: mockUser.location,
+    listingCount: mockUser.stats?.listingCount ?? 0,
+    rating: mockUser.stats?.averageRating ?? 0,
+    reviewCount: mockUser.stats?.ratingCount ?? 0,
+  };
+}
+
 export const searchDataService = {
   /**
    * 搜索商品和用户
    */
-  async search(query: string, type: 'all' | 'products' | 'users' = 'all') {
+  async search(
+    query: string,
+    type: 'all' | 'products' | 'users' = 'all',
+    filters: SearchFilters = {}
+  ): Promise<{
+    products: ProductListItem[];
+    users: SearchUser[];
+    total: number;
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+  }> {
     if (isMockMode()) {
-      return mockServices.search.search(query, type);
+      const result = await mockServices.search.search(query, type);
+      return {
+        products: result.products.map(convertMockProductToListItem),
+        users: result.users.map(convertMockUserToSearchUser),
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        hasMore: result.hasMore,
+      };
     }
 
-    // Real API - 搜索商品时使用热门商品列表（简化实现）
-    // 实际应用应使用搜索服务的 API
-    const products = type !== 'users' ? await productsApi.fetchTrendingListings() : [];
-    const filteredProducts = products.filter(p =>
-      p.title.toLowerCase().includes(query.toLowerCase())
-    );
-
-    // 用户搜索暂时返回空
-    const users: User[] = [];
+    // 使用真实搜索 API
+    const [productsResult, usersResult] = await Promise.all([
+      type !== 'users'
+        ? productsApi.searchListings({
+            query,
+            page: 0,
+            pageSize: 20,
+            ...filters,
+          })
+        : { products: [], total: 0, hasMore: false },
+      type !== 'products'
+        ? productsApi.searchProfiles({ query, page: 0, pageSize: 20 })
+        : { users: [], total: 0, hasMore: false },
+    ]);
 
     return {
-      products: filteredProducts,
-      users,
-      total: filteredProducts.length + users.length,
+      products: productsResult.products,
+      users: usersResult.users,
+      total: productsResult.total + usersResult.total,
       page: 1,
       pageSize: 20,
-      hasMore: false,
+      hasMore: productsResult.hasMore || usersResult.hasMore,
     };
   },
 
   /**
    * 搜索商品
    */
-  async searchProducts(query: string, page = 1, pageSize = 20) {
+  async searchProducts(
+    query: string,
+    page = 0,
+    pageSize = 20,
+    filters: SearchFilters = {}
+  ): Promise<{
+    products: ProductListItem[];
+    total: number;
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+  }> {
     if (isMockMode()) {
       const result = await mockServices.search.search(query, 'products');
       return {
-        products: result.products,
+        products: result.products.map(convertMockProductToListItem),
         total: result.total,
         page,
         pageSize,
@@ -711,17 +830,46 @@ export const searchDataService = {
       };
     }
 
-    // Real API call
-    const products = await productsApi.fetchTrendingListings();
-    const filtered = products.filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
-
-    return {
-      products: filtered.slice((page - 1) * pageSize, page * pageSize),
-      total: filtered.length,
+    // 使用真实搜索 API
+    return productsApi.searchListings({
+      query,
       page,
       pageSize,
-      hasMore: page * pageSize < filtered.length,
-    };
+      ...filters,
+    });
+  },
+
+  /**
+   * 搜索用户/店铺
+   */
+  async searchUsers(
+    query: string,
+    page = 0,
+    pageSize = 20
+  ): Promise<{
+    users: SearchUser[];
+    total: number;
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+  }> {
+    if (isMockMode()) {
+      const result = await mockServices.search.search(query, 'users');
+      return {
+        users: result.users.map(convertMockUserToSearchUser),
+        total: result.users.length,
+        page,
+        pageSize,
+        hasMore: false,
+      };
+    }
+
+    // 使用真实搜索 API
+    return productsApi.searchProfiles({
+      query,
+      page,
+      pageSize,
+    });
   },
 };
 
