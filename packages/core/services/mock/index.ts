@@ -17,7 +17,7 @@ import {
   generateMockProducts,
   generateMockMessages,
 } from './data';
-import type { ProductCategory, ProductListItem, Product } from '../../types/product';
+import type { ProductCategory, ProductListItem, Product, ProductRating } from '../../types/product';
 import type { UserProfile } from '../../types/user';
 import type { MockOrder, MockWallet, MockTransaction, MockUserProfile } from './data';
 
@@ -173,11 +173,33 @@ export const mockProductService = {
     return mockCategories;
   },
 
-  async getProductRatings(_slug: string) {
+  async getProductRatings(_slug: string): Promise<ProductRating[]> {
     await delay();
     return [
-      { rating: 5, comment: 'Great product!', date: '2024-01-15', buyerName: 'User1' },
-      { rating: 4, comment: 'Good quality', date: '2024-01-10', buyerName: 'User2' },
+      {
+        ratingID: 'rating-1',
+        timestamp: '2024-01-15T00:00:00Z',
+        overall: 5,
+        quality: 5,
+        description: 5,
+        deliverySpeed: 5,
+        customerService: 5,
+        review: 'Great product!',
+        anonymous: false,
+        buyerID: { peerID: 'QmBuyer1', handle: 'User1' },
+      },
+      {
+        ratingID: 'rating-2',
+        timestamp: '2024-01-10T00:00:00Z',
+        overall: 4,
+        quality: 4,
+        description: 4,
+        deliverySpeed: 4,
+        customerService: 4,
+        review: 'Good quality',
+        anonymous: false,
+        buyerID: { peerID: 'QmBuyer2', handle: 'User2' },
+      },
     ];
   },
 };
