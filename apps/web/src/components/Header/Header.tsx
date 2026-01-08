@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, isHosted, startCasdoorLogin } from '@mobazha/core';
 import {
   Search,
   ShoppingCart,
@@ -197,12 +197,22 @@ export const Header: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/login">
-                <Button variant="default" size="sm" className="gap-2">
-                  <LogIn className="h-4 w-4" />
-                  {t('nav.login')}
-                </Button>
-              </Link>
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  // hosted 模式直接跳转 Casdoor，无需中间页
+                  if (isHosted()) {
+                    startCasdoorLogin();
+                  } else {
+                    router.push('/login');
+                  }
+                }}
+              >
+                <LogIn className="h-4 w-4" />
+                {t('nav.login')}
+              </Button>
             )}
           </HStack>
         </div>
