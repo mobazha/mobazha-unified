@@ -381,7 +381,7 @@ export async function searchListings(
   const {
     query,
     page = 0,
-    pageSize = 40,
+    pageSize = 20,
     sortBy = 'relevance',
     category,
     type,
@@ -417,7 +417,6 @@ export async function searchListings(
   }
 
   const url = `${getSearchUrl()}/api/search?${queryParams.toString()}`;
-  console.log('🔍 Searching listings:', url);
 
   try {
     const response = await safeRequest<SearchApiResponse>(
@@ -458,7 +457,7 @@ export async function searchProfiles(params: {
   page?: number;
   pageSize?: number;
 }): Promise<SearchProfilesResponse> {
-  const { query, page = 0, pageSize = 40 } = params;
+  const { query, page = 0, pageSize = 20 } = params;
 
   // 构建查询参数
   const searchQuery = query.trim() === '' ? '*' : query;
@@ -469,7 +468,6 @@ export async function searchProfiles(params: {
   });
 
   const url = `${getSearchUrl()}/api/search/profile_m?${queryParams.toString()}`;
-  console.log('🔍 Searching profiles:', url);
 
   try {
     const response = await safeRequest<ProfileSearchApiResponse>(
