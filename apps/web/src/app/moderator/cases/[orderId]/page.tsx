@@ -247,7 +247,7 @@ export default function CaseDetailPage() {
   const isResolved = ['RESOLVED', 'DECIDED', 'EXPIRED'].includes(caseData.state);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -255,7 +255,7 @@ export default function CaseDetailPage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
+            className="flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -273,9 +273,7 @@ export default function CaseDetailPage() {
             <HStack justify="between" align="start" className="flex-wrap gap-4 mb-6">
               <div>
                 <HStack gap="md" align="center" className="mb-2">
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                    Case #{caseData.caseId}
-                  </h1>
+                  <h1 className="text-2xl font-bold text-foreground">Case #{caseData.caseId}</h1>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
                       caseData.state === 'OPEN'
@@ -288,34 +286,28 @@ export default function CaseDetailPage() {
                     {caseData.state}
                   </span>
                 </HStack>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                   Order: {caseData.orderId} • Opened {formatDate(caseData.timestamp)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {caseData.total} {caseData.coin}
                 </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Amount in escrow</p>
+                <p className="text-sm text-muted-foreground">Amount in escrow</p>
               </div>
             </HStack>
 
             {/* Product Info */}
-            <HStack
-              gap="lg"
-              align="start"
-              className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg"
-            >
+            <HStack gap="lg" align="start" className="p-4 bg-muted rounded-lg">
               <img
                 src={caseData.thumbnail}
                 alt={caseData.title}
                 className="w-24 h-24 rounded-lg object-cover"
               />
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
-                  {caseData.title}
-                </h3>
-                <HStack gap="md" className="text-sm text-slate-500 dark:text-slate-400">
+                <h3 className="font-semibold text-foreground mb-1">{caseData.title}</h3>
+                <HStack gap="md" className="text-sm text-muted-foreground">
                   <span>Opened by: {caseData.buyerOpened ? 'Buyer' : 'Seller'}</span>
                 </HStack>
               </div>
@@ -330,20 +322,18 @@ export default function CaseDetailPage() {
                 <HStack gap="md" align="start" className="mb-4">
                   <Avatar src={caseData.buyer.avatar} name={caseData.buyer.name} size="md" />
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                    <h3 className="font-semibold text-foreground">
                       {caseData.buyer.name}
                       <span className="ml-2 text-sm font-normal text-red-500">
                         (Buyer - Opened Dispute)
                       </span>
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {caseData.buyer.peerID}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{caseData.buyer.peerID}</p>
                   </div>
                 </HStack>
                 <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
                   <h4 className="font-medium text-red-700 dark:text-red-400 mb-2">Claim</h4>
-                  <p className="text-slate-700 dark:text-slate-300">{caseData.claim}</p>
+                  <p className="text-muted-foreground">{caseData.claim}</p>
                 </div>
               </Card>
 
@@ -352,18 +342,16 @@ export default function CaseDetailPage() {
                 <HStack gap="md" align="start" className="mb-4">
                   <Avatar src={caseData.seller.avatar} name={caseData.seller.name} size="md" />
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                    <h3 className="font-semibold text-foreground">
                       {caseData.seller.name}
                       <span className="ml-2 text-sm font-normal text-blue-500">(Seller)</span>
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {caseData.seller.peerID}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{caseData.seller.peerID}</p>
                   </div>
                 </HStack>
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
                   <h4 className="font-medium text-blue-700 dark:text-blue-400 mb-2">Response</h4>
-                  <p className="text-slate-700 dark:text-slate-300">
+                  <p className="text-muted-foreground">
                     {caseData.sellerResponse || 'No response yet'}
                   </p>
                 </div>
@@ -371,9 +359,7 @@ export default function CaseDetailPage() {
 
               {/* Evidence */}
               <Card>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Evidence Submitted
-                </h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">Evidence Submitted</h2>
                 <VStack gap="md">
                   {caseData.evidence.map(ev => (
                     <div
@@ -392,7 +378,7 @@ export default function CaseDetailPage() {
                         >
                           From {ev.submittedBy === 'buyer' ? 'Buyer' : 'Seller'}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-muted-foreground">
                           {formatDate(ev.timestamp)}
                         </span>
                       </HStack>
@@ -403,7 +389,7 @@ export default function CaseDetailPage() {
                           className="w-full max-w-sm rounded-lg"
                         />
                       ) : (
-                        <p className="text-slate-700 dark:text-slate-300">{ev.content}</p>
+                        <p className="text-muted-foreground">{ev.content}</p>
                       )}
                     </div>
                   ))}
@@ -412,9 +398,7 @@ export default function CaseDetailPage() {
 
               {/* Messages */}
               <Card>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Discussion
-                </h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">Discussion</h2>
                 <VStack gap="md" className="mb-4 max-h-64 overflow-y-auto">
                   {caseData.messages.map(msg => (
                     <div
@@ -440,11 +424,11 @@ export default function CaseDetailPage() {
                           {msg.senderName}
                           {msg.sender === 'moderator' && ' (Moderator)'}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-muted-foreground">
                           {formatDate(msg.timestamp)}
                         </span>
                       </HStack>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{msg.content}</p>
+                      <p className="text-sm text-muted-foreground">{msg.content}</p>
                     </div>
                   ))}
                 </VStack>
@@ -467,7 +451,7 @@ export default function CaseDetailPage() {
             {/* Sidebar - Resolution Panel */}
             <div className="space-y-6">
               <Card className="sticky top-4">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
                   {isResolved ? 'Case Resolution' : 'Make Decision'}
                 </h2>
 
@@ -488,15 +472,13 @@ export default function CaseDetailPage() {
                         />
                       </svg>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      This case has been resolved.
-                    </p>
+                    <p className="text-muted-foreground">This case has been resolved.</p>
                   </div>
                 ) : (
                   <VStack gap="lg">
                     {/* Quick Decisions */}
                     <div>
-                      <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
                         Quick Decisions
                       </label>
                       <VStack gap="sm">
@@ -511,7 +493,7 @@ export default function CaseDetailPage() {
                               buyerPercentage === decision.buyer &&
                               vendorPercentage === decision.vendor
                                 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                                : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300'
+                                : 'border-border hover:border-emerald-300'
                             }`}
                           >
                             {decision.label}
@@ -522,14 +504,12 @@ export default function CaseDetailPage() {
 
                     {/* Custom Split */}
                     <div>
-                      <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
                         Custom Split
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-xs text-slate-500 dark:text-slate-400">
-                            Buyer %
-                          </label>
+                          <label className="text-xs text-muted-foreground">Buyer %</label>
                           <Input
                             type="number"
                             min={0}
@@ -541,9 +521,7 @@ export default function CaseDetailPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-slate-500 dark:text-slate-400">
-                            Seller %
-                          </label>
+                          <label className="text-xs text-muted-foreground">Seller %</label>
                           <Input
                             type="number"
                             min={0}
@@ -567,10 +545,7 @@ export default function CaseDetailPage() {
                           style={{ width: `${vendorPercentage}%` }}
                         />
                       </div>
-                      <HStack
-                        justify="between"
-                        className="mt-1 text-xs text-slate-500 dark:text-slate-400"
-                      >
+                      <HStack justify="between" className="mt-1 text-xs text-muted-foreground">
                         <span>
                           Buyer: {((caseData.total * buyerPercentage) / 100).toFixed(2)}{' '}
                           {caseData.coin}
@@ -584,14 +559,14 @@ export default function CaseDetailPage() {
 
                     {/* Resolution Explanation */}
                     <div>
-                      <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
                         Resolution Explanation *
                       </label>
                       <textarea
                         value={resolution}
                         onChange={e => setResolution(e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                         placeholder="Explain your decision..."
                       />
                     </div>
@@ -623,17 +598,17 @@ export default function CaseDetailPage() {
               <p className="mb-4">
                 You are about to resolve this dispute with the following distribution:
               </p>
-              <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg mb-4">
-                <p className="text-slate-900 dark:text-white">
+              <div className="p-4 bg-muted rounded-lg mb-4">
+                <p className="text-foreground">
                   <strong>Buyer:</strong> {buyerPercentage}% (
                   {((caseData.total * buyerPercentage) / 100).toFixed(2)} {caseData.coin})
                 </p>
-                <p className="text-slate-900 dark:text-white">
+                <p className="text-foreground">
                   <strong>Seller:</strong> {vendorPercentage}% (
                   {((caseData.total * vendorPercentage) / 100).toFixed(2)} {caseData.coin})
                 </p>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 This action cannot be undone. The funds will be released according to this decision.
               </p>
             </AlertDialogDescription>

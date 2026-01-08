@@ -11,11 +11,11 @@ export default function OfflinePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <Container size="sm">
         <VStack gap="lg" align="center" className="text-center py-12">
           {/* Offline Icon */}
-          <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
             <svg
               className="w-12 h-12 text-slate-400"
               fill="none"
@@ -33,10 +33,8 @@ export default function OfflinePage() {
 
           {/* Title */}
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              You&apos;re Offline
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 max-w-md">
+            <h1 className="text-2xl font-bold text-foreground mb-2">You&apos;re Offline</h1>
+            <p className="text-muted-foreground max-w-md">
               It looks like you&apos;ve lost your internet connection. Some features may not be
               available until you&apos;re back online.
             </p>
@@ -63,12 +61,10 @@ export default function OfflinePage() {
           </VStack>
 
           {/* Offline Features */}
-          <div className="mt-8 p-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm w-full max-w-md">
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-              Available Offline:
-            </h3>
+          <div className="mt-8 p-6 bg-card rounded-xl shadow-sm w-full max-w-md">
+            <h3 className="font-semibold text-foreground mb-4">Available Offline:</h3>
             <ul className="space-y-3 text-left">
-              <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+              <li className="flex items-center gap-3 text-muted-foreground">
                 <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -78,7 +74,7 @@ export default function OfflinePage() {
                 </svg>
                 View cached products
               </li>
-              <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+              <li className="flex items-center gap-3 text-muted-foreground">
                 <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -88,7 +84,7 @@ export default function OfflinePage() {
                 </svg>
                 Browse your order history
               </li>
-              <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+              <li className="flex items-center gap-3 text-muted-foreground">
                 <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"

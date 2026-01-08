@@ -180,17 +180,15 @@ export default function ModeratorCasesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
         <Container size="xl">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Moderation Cases
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Moderation Cases</h1>
+            <p className="text-muted-foreground">
               Review and resolve disputes between buyers and sellers
             </p>
           </div>
@@ -198,20 +196,20 @@ export default function ModeratorCasesPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card className="text-center">
-              <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Total Cases</p>
+              <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">Total Cases</p>
             </Card>
             <Card className="text-center">
               <p className="text-3xl font-bold text-red-500">{stats.open}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Open</p>
+              <p className="text-sm text-muted-foreground">Open</p>
             </Card>
             <Card className="text-center">
               <p className="text-3xl font-bold text-yellow-500">{stats.pending}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Pending</p>
+              <p className="text-sm text-muted-foreground">Pending</p>
             </Card>
             <Card className="text-center">
               <p className="text-3xl font-bold text-emerald-500">{stats.resolved}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Resolved</p>
+              <p className="text-sm text-muted-foreground">Resolved</p>
             </Card>
           </div>
 
@@ -226,7 +224,7 @@ export default function ModeratorCasesPage() {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filter === status
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        : 'bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -246,7 +244,7 @@ export default function ModeratorCasesPage() {
               </HStack>
 
               <HStack gap="sm" align="center">
-                <span className="text-sm text-slate-500 dark:text-slate-400">Sort:</span>
+                <span className="text-sm text-muted-foreground">Sort:</span>
                 <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -272,7 +270,7 @@ export default function ModeratorCasesPage() {
             </VStack>
           ) : filteredCases.length === 0 ? (
             <Card className="text-center py-16">
-              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <svg
                   className="w-8 h-8 text-slate-400"
                   fill="none"
@@ -287,10 +285,8 @@ export default function ModeratorCasesPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                No cases found
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400">
+              <h3 className="text-lg font-semibold text-foreground mb-2">No cases found</h3>
+              <p className="text-muted-foreground">
                 {filter !== 'all'
                   ? 'Try changing the filter to see more cases.'
                   : 'You have no moderation cases at this time.'}
@@ -318,7 +314,7 @@ export default function ModeratorCasesPage() {
                         <HStack justify="between" align="start" className="mb-2">
                           <div>
                             <HStack gap="sm" align="center" className="mb-1">
-                              <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+                              <h3 className="font-semibold text-foreground truncate">
                                 Case #{caseItem.caseId}
                               </h3>
                               <span
@@ -332,15 +328,15 @@ export default function ModeratorCasesPage() {
                                 </span>
                               )}
                             </HStack>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">
+                            <p className="text-sm text-muted-foreground line-clamp-1">
                               {caseItem.title}
                             </p>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p className="font-bold text-slate-900 dark:text-white">
+                            <p className="font-bold text-foreground">
                               {caseItem.total} {caseItem.coin}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                               {formatDate(caseItem.timestamp)}
                             </p>
                           </div>
@@ -348,9 +344,7 @@ export default function ModeratorCasesPage() {
 
                         {/* Claim */}
                         <p className="text-sm text-slate-500 line-clamp-2 mb-3">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">
-                            Claim:
-                          </span>{' '}
+                          <span className="font-medium text-muted-foreground">Claim:</span>{' '}
                           {caseItem.claim}
                         </p>
 
@@ -363,8 +357,8 @@ export default function ModeratorCasesPage() {
                               size="sm"
                             />
                             <div>
-                              <span className="text-slate-500 dark:text-slate-400">Buyer:</span>{' '}
-                              <span className="font-medium text-slate-900 dark:text-white">
+                              <span className="text-muted-foreground">Buyer:</span>{' '}
+                              <span className="font-medium text-foreground">
                                 {caseItem.buyer.name}
                               </span>
                               {caseItem.buyerOpened && (
@@ -379,8 +373,8 @@ export default function ModeratorCasesPage() {
                               size="sm"
                             />
                             <div>
-                              <span className="text-slate-500 dark:text-slate-400">Seller:</span>{' '}
-                              <span className="font-medium text-slate-900 dark:text-white">
+                              <span className="text-muted-foreground">Seller:</span>{' '}
+                              <span className="font-medium text-foreground">
                                 {caseItem.seller.name}
                               </span>
                               {!caseItem.buyerOpened && (

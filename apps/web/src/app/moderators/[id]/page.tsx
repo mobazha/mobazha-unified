@@ -110,7 +110,7 @@ export default function ModeratorDetailPage() {
   const moderator = mockModerator;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -118,7 +118,7 @@ export default function ModeratorDetailPage() {
           {/* Back Link */}
           <Link
             href="/moderators"
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -145,9 +145,7 @@ export default function ModeratorDetailPage() {
 
                   <div className="flex-1">
                     <HStack gap="sm" align="center" className="mb-2">
-                      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {moderator.name}
-                      </h1>
+                      <h1 className="text-2xl font-bold text-foreground">{moderator.name}</h1>
                       {moderator.verified && (
                         <svg
                           className="w-6 h-6 text-blue-500"
@@ -163,39 +161,35 @@ export default function ModeratorDetailPage() {
                       )}
                     </HStack>
 
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">
-                      {moderator.shortDescription}
-                    </p>
+                    <p className="text-muted-foreground mb-4">{moderator.shortDescription}</p>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        <p className="text-2xl font-bold text-foreground">
                           {moderator.stats.rating}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           Rating ({moderator.stats.ratingCount})
                         </p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        <p className="text-2xl font-bold text-foreground">
                           {moderator.stats.disputesHandled}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Disputes</p>
+                        <p className="text-sm text-muted-foreground">Disputes</p>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-emerald-600">
                           {moderator.stats.successRate}%
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Success Rate</p>
+                        <p className="text-sm text-muted-foreground">Success Rate</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        <p className="text-2xl font-bold text-foreground">
                           ~{moderator.stats.averageResolutionTime}h
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                          Avg. Resolution
-                        </p>
+                        <p className="text-sm text-muted-foreground">Avg. Resolution</p>
                       </div>
                     </div>
                   </div>
@@ -204,7 +198,7 @@ export default function ModeratorDetailPage() {
 
               {/* Tabs */}
               <Card>
-                <div className="border-b border-slate-200 dark:border-slate-700">
+                <div className="border-b border-border">
                   <HStack gap="none">
                     {(['about', 'reviews', 'terms'] as const).map(tab => (
                       <button
@@ -213,7 +207,7 @@ export default function ModeratorDetailPage() {
                         className={`px-6 py-4 text-sm font-medium transition-colors capitalize ${
                           activeTab === tab
                             ? 'text-emerald-600 border-b-2 border-emerald-600'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            : 'text-muted-foreground hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         {tab === 'terms' ? 'Terms & Conditions' : tab}
@@ -225,19 +219,17 @@ export default function ModeratorDetailPage() {
                 <div className="p-6">
                   {activeTab === 'about' && (
                     <div className="prose prose-slate dark:prose-invert max-w-none">
-                      <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
+                      <div className="whitespace-pre-wrap text-muted-foreground">
                         {moderator.description}
                       </div>
 
                       <div className="mt-6">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
-                          Languages
-                        </h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-3">Languages</h3>
                         <HStack gap="sm">
                           {moderator.languages.map(lang => (
                             <span
                               key={lang}
-                              className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm"
+                              className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
                             >
                               {lang}
                             </span>
@@ -246,7 +238,7 @@ export default function ModeratorDetailPage() {
                       </div>
 
                       <div className="mt-6">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                        <h3 className="text-lg font-semibold text-foreground mb-3">
                           Accepted Currencies
                         </h3>
                         <HStack gap="sm">
@@ -268,16 +260,14 @@ export default function ModeratorDetailPage() {
                       {mockReviews.map(review => (
                         <div
                           key={review.id}
-                          className="border-b border-slate-200 dark:border-slate-700 pb-4 last:border-0 last:pb-0"
+                          className="border-b border-border pb-4 last:border-0 last:pb-0"
                         >
                           <HStack justify="between" align="center" className="mb-2">
                             <HStack gap="sm" align="center">
-                              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-medium text-slate-600 dark:text-slate-400">
+                              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-medium text-muted-foreground">
                                 {review.reviewer[0]}
                               </div>
-                              <span className="font-medium text-slate-900 dark:text-white">
-                                {review.reviewer}
-                              </span>
+                              <span className="font-medium text-foreground">{review.reviewer}</span>
                             </HStack>
                             <HStack gap="xs">
                               {[...Array(5)].map((_, i) => (
@@ -292,7 +282,7 @@ export default function ModeratorDetailPage() {
                               ))}
                             </HStack>
                           </HStack>
-                          <p className="text-slate-600 dark:text-slate-400">{review.comment}</p>
+                          <p className="text-muted-foreground">{review.comment}</p>
                           <p className="text-sm text-slate-500 mt-2">{review.date}</p>
                         </div>
                       ))}
@@ -300,7 +290,7 @@ export default function ModeratorDetailPage() {
                   )}
 
                   {activeTab === 'terms' && (
-                    <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
+                    <div className="whitespace-pre-wrap text-muted-foreground">
                       {moderator.termsAndConditions}
                     </div>
                   )}
@@ -312,7 +302,7 @@ export default function ModeratorDetailPage() {
             <div className="space-y-6">
               {/* Fee Card */}
               <Card>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Moderator Fee</h3>
+                <h3 className="font-semibold text-foreground mb-4">Moderator Fee</h3>
                 <div className="text-center py-4">
                   <p className="text-4xl font-bold text-emerald-600">{moderator.fee.percentage}%</p>
                   <p className="text-slate-500 mt-1">of transaction value</p>
@@ -325,9 +315,7 @@ export default function ModeratorDetailPage() {
               {/* Contact Info */}
               {moderator.contactInfo && (
                 <Card>
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-                    Contact Information
-                  </h3>
+                  <h3 className="font-semibold text-foreground mb-4">Contact Information</h3>
                   <VStack gap="md">
                     {moderator.contactInfo.email && (
                       <HStack gap="sm" align="center">
@@ -344,9 +332,7 @@ export default function ModeratorDetailPage() {
                             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                           />
                         </svg>
-                        <span className="text-slate-600 dark:text-slate-400">
-                          {moderator.contactInfo.email}
-                        </span>
+                        <span className="text-muted-foreground">{moderator.contactInfo.email}</span>
                       </HStack>
                     )}
                     {moderator.contactInfo.website && (
@@ -383,7 +369,7 @@ export default function ModeratorDetailPage() {
                         >
                           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                         </svg>
-                        <span className="text-slate-600 dark:text-slate-400">
+                        <span className="text-muted-foreground">
                           {moderator.contactInfo.social.twitter}
                         </span>
                       </HStack>
@@ -397,7 +383,7 @@ export default function ModeratorDetailPage() {
                         >
                           <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                         </svg>
-                        <span className="text-slate-600 dark:text-slate-400">
+                        <span className="text-muted-foreground">
                           {moderator.contactInfo.social.telegram}
                         </span>
                       </HStack>
@@ -409,8 +395,8 @@ export default function ModeratorDetailPage() {
               {/* Member Since */}
               <Card>
                 <HStack justify="between" align="center">
-                  <span className="text-slate-600 dark:text-slate-400">Member since</span>
-                  <span className="font-medium text-slate-900 dark:text-white">
+                  <span className="text-muted-foreground">Member since</span>
+                  <span className="font-medium text-foreground">
                     {new Date(moderator.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',

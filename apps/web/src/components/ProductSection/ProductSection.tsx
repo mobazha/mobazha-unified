@@ -50,16 +50,13 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           <div>
             <h2
               className={
-                titleClassName ||
-                'text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white'
+                titleClassName || 'text-lg sm:text-2xl lg:text-3xl font-bold text-foreground'
               }
             >
               {title}
             </h2>
             {subtitle && (
-              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500 dark:text-slate-400">
-                {subtitle}
-              </p>
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">{subtitle}</p>
             )}
           </div>
           {showViewAll && (
@@ -104,7 +101,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         {/* Empty State */}
         {!isLoading && products.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <svg
                 className="w-8 h-8 text-slate-400"
                 fill="none"
@@ -119,9 +116,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-              No products found
-            </h3>
+            <h3 className="text-lg font-medium text-foreground mb-2">No products found</h3>
             <p className="text-slate-500 dark:text-slate-300">Check back later for new listings.</p>
           </div>
         )}

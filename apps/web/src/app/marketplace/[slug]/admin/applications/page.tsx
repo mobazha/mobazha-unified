@@ -157,7 +157,7 @@ export default function MarketplaceApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <Container className="py-8">
           <div className="animate-pulse space-y-4">
@@ -172,7 +172,7 @@ export default function MarketplaceApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -182,7 +182,7 @@ export default function MarketplaceApplicationsPage() {
             <HStack gap="md" align="center">
               <button
                 onClick={() => router.back()}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-surface-hover rounded-lg"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -194,9 +194,7 @@ export default function MarketplaceApplicationsPage() {
                 </svg>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Seller Applications
-                </h1>
+                <h1 className="text-2xl font-bold text-foreground">Seller Applications</h1>
                 <p className="text-slate-500 text-sm">
                   Manage seller applications for your marketplace
                 </p>
@@ -220,7 +218,7 @@ export default function MarketplaceApplicationsPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === status
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -238,7 +236,7 @@ export default function MarketplaceApplicationsPage() {
           <VStack gap="md">
             {filteredApplications.length === 0 ? (
               <Card className="text-center">
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                   No {filter !== 'all' ? filter : ''} applications found.
                 </p>
               </Card>
@@ -251,9 +249,7 @@ export default function MarketplaceApplicationsPage() {
                       <Avatar src={app.applicantAvatar} name={app.applicantName} size="lg" />
                       <VStack gap="xs">
                         <HStack gap="sm" align="center">
-                          <h3 className="font-semibold text-slate-900 dark:text-white">
-                            {app.applicantName}
-                          </h3>
+                          <h3 className="font-semibold text-foreground">{app.applicantName}</h3>
                           <span
                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[app.status]}`}
                           >
@@ -263,7 +259,7 @@ export default function MarketplaceApplicationsPage() {
                         <p className="text-sm text-slate-500 font-mono">
                           {app.applicantPeerID.slice(0, 12)}...
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           Applied {formatDate(app.createdAt)}
                         </p>
                       </VStack>
@@ -288,11 +284,9 @@ export default function MarketplaceApplicationsPage() {
 
                   {/* Application Details */}
                   {app.message && (
-                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Message:
-                      </p>
-                      <p className="text-slate-600 dark:text-slate-400">{app.message}</p>
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Message:</p>
+                      <p className="text-muted-foreground">{app.message}</p>
                     </div>
                   )}
 
@@ -300,37 +294,33 @@ export default function MarketplaceApplicationsPage() {
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                       {app.sellerProfile.businessName && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Business Name
-                          </p>
-                          <p className="font-medium text-slate-900 dark:text-white">
+                          <p className="text-xs text-muted-foreground">Business Name</p>
+                          <p className="font-medium text-foreground">
                             {app.sellerProfile.businessName}
                           </p>
                         </div>
                       )}
                       {app.sellerProfile.location && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Location</p>
-                          <p className="font-medium text-slate-900 dark:text-white">
+                          <p className="text-xs text-muted-foreground">Location</p>
+                          <p className="font-medium text-foreground">
                             {app.sellerProfile.location}
                           </p>
                         </div>
                       )}
                       {app.sellerProfile.bio && (
                         <div className="md:col-span-3">
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Bio</p>
-                          <p className="text-slate-700 dark:text-slate-300">
-                            {app.sellerProfile.bio}
-                          </p>
+                          <p className="text-xs text-muted-foreground">Bio</p>
+                          <p className="text-muted-foreground">{app.sellerProfile.bio}</p>
                         </div>
                       )}
                     </div>
                   )}
 
                   {app.reviewNote && (
-                    <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="mt-4 p-3 bg-muted rounded-lg">
                       <p className="text-xs text-slate-500 mb-1">Review Note:</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{app.reviewNote}</p>
+                      <p className="text-sm text-muted-foreground">{app.reviewNote}</p>
                     </div>
                   )}
                 </Card>
@@ -344,22 +334,20 @@ export default function MarketplaceApplicationsPage() {
       {selectedApp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-              Review Application
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
+            <h2 className="text-xl font-bold text-foreground mb-4">Review Application</h2>
+            <p className="text-muted-foreground mb-4">
               Reviewing application from <strong>{selectedApp.applicantName}</strong>
             </p>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Review Note (optional)
               </label>
               <textarea
                 value={reviewNote}
                 onChange={e => setReviewNote(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="Add a note for your decision..."
               />
             </div>

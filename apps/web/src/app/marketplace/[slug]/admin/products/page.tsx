@@ -225,7 +225,7 @@ export default function MarketplaceProductsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-background">
         <Header />
         <Container className="py-8">
           <div className="animate-pulse space-y-4">
@@ -240,7 +240,7 @@ export default function MarketplaceProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -250,7 +250,7 @@ export default function MarketplaceProductsPage() {
             <HStack gap="md" align="center">
               <button
                 onClick={() => router.back()}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-surface-hover rounded-lg"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -262,9 +262,7 @@ export default function MarketplaceProductsPage() {
                 </svg>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Product Approvals
-                </h1>
+                <h1 className="text-2xl font-bold text-foreground">Product Approvals</h1>
                 <p className="text-slate-500 text-sm">Review and approve product listings</p>
               </div>
             </HStack>
@@ -293,7 +291,7 @@ export default function MarketplaceProductsPage() {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filter === status
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        : 'bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -316,7 +314,7 @@ export default function MarketplaceProductsPage() {
           {/* Products Grid */}
           {filteredProducts.length === 0 ? (
             <Card className="text-center">
-              <p className="text-slate-500 dark:text-slate-400">
+              <p className="text-muted-foreground">
                 No {filter !== 'all' ? filter : ''} products found.
               </p>
             </Card>
@@ -341,9 +339,7 @@ export default function MarketplaceProductsPage() {
 
                   {/* Product Info */}
                   <div className="p-4">
-                    <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-1">
-                      {product.title}
-                    </h3>
+                    <h3 className="font-semibold text-foreground line-clamp-1">{product.title}</h3>
                     <p className="text-lg font-bold text-emerald-600 mt-1">
                       {formatPrice(product.price, product.currency)}
                     </p>
@@ -355,10 +351,8 @@ export default function MarketplaceProductsPage() {
                     <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
                       <HStack justify="between" align="center">
                         <div className="text-sm">
-                          <p className="text-slate-500 dark:text-slate-400">Seller</p>
-                          <p className="font-medium text-slate-900 dark:text-white">
-                            {product.seller.name}
-                          </p>
+                          <p className="text-muted-foreground">Seller</p>
+                          <p className="font-medium text-foreground">{product.seller.name}</p>
                         </div>
                         <span className="text-xs text-slate-400">{product.category}</span>
                       </HStack>
@@ -390,7 +384,7 @@ export default function MarketplaceProductsPage() {
                     )}
 
                     {product.reviewNote && (
-                      <div className="mt-3 p-2 bg-slate-50 dark:bg-slate-800 rounded text-xs text-slate-500 dark:text-slate-400">
+                      <div className="mt-3 p-2 bg-muted rounded text-xs text-muted-foreground">
                         Note: {product.reviewNote}
                       </div>
                     )}
@@ -406,12 +400,10 @@ export default function MarketplaceProductsPage() {
       {selectedProduct && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-              Review Product
-            </h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Review Product</h2>
 
             {/* Product Preview */}
-            <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+            <div className="mb-4 p-4 bg-muted/50 rounded-lg">
               <HStack gap="md" align="start">
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <Image
@@ -422,9 +414,7 @@ export default function MarketplaceProductsPage() {
                   />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                    {selectedProduct.title}
-                  </h3>
+                  <h3 className="font-semibold text-foreground">{selectedProduct.title}</h3>
                   <p className="text-emerald-600 font-bold">
                     {formatPrice(selectedProduct.price, selectedProduct.currency)}
                   </p>
@@ -434,14 +424,14 @@ export default function MarketplaceProductsPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Review Note (required for rejection)
               </label>
               <textarea
                 value={reviewNote}
                 onChange={e => setReviewNote(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="Reason for your decision..."
               />
             </div>

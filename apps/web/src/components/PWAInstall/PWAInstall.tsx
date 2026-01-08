@@ -100,14 +100,14 @@ export const PWAInstall: React.FC = () => {
   if (showIOSPrompt) {
     return (
       <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
-        <Card className="shadow-xl border border-slate-200 dark:border-slate-700">
+        <Card className="shadow-xl border border-border">
           <div className="p-4">
             <div className="flex items-start gap-3">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-xl">M</span>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-slate-900 dark:text-white">Install Mobazha</h3>
+                <h3 className="font-semibold text-foreground">Install Mobazha</h3>
                 <p className="text-sm text-slate-500 mt-1">
                   Add to your home screen for the best experience
                 </p>
@@ -127,8 +127,8 @@ export const PWAInstall: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">
                 Tap{' '}
                 <svg
                   className="w-5 h-5 inline text-blue-500"
@@ -151,14 +151,14 @@ export const PWAInstall: React.FC = () => {
 
   return (
     <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
-      <Card className="shadow-xl border border-slate-200 dark:border-slate-700">
+      <Card className="shadow-xl border border-border">
         <div className="p-4">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold text-xl">M</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-slate-900 dark:text-white">Install Mobazha</h3>
+              <h3 className="font-semibold text-foreground">Install Mobazha</h3>
               <p className="text-sm text-slate-500 mt-1">Get faster access and offline support</p>
             </div>
             <button

@@ -145,7 +145,7 @@ export default function MarketplaceAdminPage() {
   const pendingProductsCount = pendingProducts.filter(p => p.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-8">
@@ -153,7 +153,7 @@ export default function MarketplaceAdminPage() {
           {/* Back Link */}
           <Link
             href={`/marketplace/${slug}`}
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -167,10 +167,8 @@ export default function MarketplaceAdminPage() {
           </Link>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Marketplace Admin
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Marketplace Admin</h1>
+            <p className="text-muted-foreground">
               Manage sellers, products, and marketplace settings
             </p>
           </div>
@@ -196,7 +194,7 @@ export default function MarketplaceAdminPage() {
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-colors ${
                         activeTab === item.id
                           ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          : 'text-muted-foreground hover:bg-surface-hover'
                       }`}
                     >
                       <span>{item.label}</span>
@@ -205,7 +203,7 @@ export default function MarketplaceAdminPage() {
                           className={`px-2 py-0.5 text-xs rounded-full ${
                             activeTab === item.id
                               ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                              : 'bg-slate-200 dark:bg-slate-700 text-muted-foreground'
                           }`}
                         >
                           {item.count}
@@ -222,23 +220,18 @@ export default function MarketplaceAdminPage() {
               {/* Applications Tab */}
               {activeTab === 'applications' && (
                 <Card>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                    Seller Applications
-                  </h2>
+                  <h2 className="text-xl font-bold text-foreground mb-6">Seller Applications</h2>
 
                   {applications.filter(a => a.status === 'pending').length === 0 ? (
                     <div className="text-center py-12">
-                      <p className="text-slate-500 dark:text-slate-400">No pending applications</p>
+                      <p className="text-muted-foreground">No pending applications</p>
                     </div>
                   ) : (
                     <VStack gap="lg">
                       {applications
                         .filter(a => a.status === 'pending')
                         .map(app => (
-                          <div
-                            key={app.id}
-                            className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
-                          >
+                          <div key={app.id} className="p-4 border border-border rounded-lg">
                             <HStack justify="between" align="start" className="mb-4">
                               <HStack gap="md" align="center">
                                 <img
@@ -247,10 +240,10 @@ export default function MarketplaceAdminPage() {
                                   className="w-12 h-12 rounded-full bg-slate-200"
                                 />
                                 <div>
-                                  <h3 className="font-semibold text-slate-900 dark:text-white">
+                                  <h3 className="font-semibold text-foreground">
                                     {app.applicantName}
                                   </h3>
-                                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                                  <p className="text-sm text-muted-foreground">
                                     {app.productCount} products •{' '}
                                     {new Date(app.createdAt).toLocaleDateString()}
                                   </p>
@@ -272,7 +265,7 @@ export default function MarketplaceAdminPage() {
                                 </Button>
                               </HStack>
                             </HStack>
-                            <p className="text-slate-600 dark:text-slate-400">{app.message}</p>
+                            <p className="text-muted-foreground">{app.message}</p>
                           </div>
                         ))}
                     </VStack>
@@ -283,23 +276,18 @@ export default function MarketplaceAdminPage() {
               {/* Products Tab */}
               {activeTab === 'products' && (
                 <Card>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                    Product Approvals
-                  </h2>
+                  <h2 className="text-xl font-bold text-foreground mb-6">Product Approvals</h2>
 
                   {pendingProducts.filter(p => p.status === 'pending').length === 0 ? (
                     <div className="text-center py-12">
-                      <p className="text-slate-500 dark:text-slate-400">No pending products</p>
+                      <p className="text-muted-foreground">No pending products</p>
                     </div>
                   ) : (
                     <VStack gap="md">
                       {pendingProducts
                         .filter(p => p.status === 'pending')
                         .map(product => (
-                          <div
-                            key={product.id}
-                            className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
-                          >
+                          <div key={product.id} className="p-4 border border-border rounded-lg">
                             <HStack justify="between" align="center">
                               <HStack gap="md" align="center">
                                 <img
@@ -308,10 +296,8 @@ export default function MarketplaceAdminPage() {
                                   className="w-16 h-16 rounded-lg object-cover bg-slate-200"
                                 />
                                 <div>
-                                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                                    {product.title}
-                                  </h3>
-                                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                                  <h3 className="font-semibold text-foreground">{product.title}</h3>
+                                  <p className="text-sm text-muted-foreground">
                                     by {product.sellerName} • ${product.price}
                                   </p>
                                 </div>
@@ -343,27 +329,27 @@ export default function MarketplaceAdminPage() {
               {activeTab === 'members' && (
                 <Card>
                   <HStack justify="between" align="center" className="mb-6">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Members</h2>
+                    <h2 className="text-xl font-bold text-foreground">Members</h2>
                     <Input placeholder="Search members..." className="w-64" />
                   </HStack>
 
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-700">
-                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                        <tr className="border-b border-border">
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">
                             Member
                           </th>
-                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">
                             Role
                           </th>
-                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">
                             Products
                           </th>
-                          <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">
                             Joined
                           </th>
-                          <th className="text-right py-3 px-4 font-medium text-slate-500 dark:text-slate-400">
+                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">
                             Actions
                           </th>
                         </tr>
@@ -381,9 +367,7 @@ export default function MarketplaceAdminPage() {
                                   alt={member.name}
                                   className="w-10 h-10 rounded-full bg-slate-200"
                                 />
-                                <span className="font-medium text-slate-900 dark:text-white">
-                                  {member.name}
-                                </span>
+                                <span className="font-medium text-foreground">{member.name}</span>
                               </HStack>
                             </td>
                             <td className="py-3 px-4">
@@ -395,16 +379,16 @@ export default function MarketplaceAdminPage() {
                                       ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                                       : member.role === 'seller'
                                         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                        : 'bg-muted text-muted-foreground'
                                 }`}
                               >
                                 {member.role}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                            <td className="py-3 px-4 text-muted-foreground">
                               {member.productCount ?? '-'}
                             </td>
-                            <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                            <td className="py-3 px-4 text-muted-foreground">
                               {new Date(member.joinedAt).toLocaleDateString()}
                             </td>
                             <td className="py-3 px-4 text-right">
@@ -424,25 +408,23 @@ export default function MarketplaceAdminPage() {
               {activeTab === 'settings' && (
                 <VStack gap="lg">
                   <Card>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                      General Settings
-                    </h2>
+                    <h2 className="text-xl font-bold text-foreground mb-6">General Settings</h2>
 
                     <VStack gap="lg">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                           Marketplace Name
                         </label>
                         <Input defaultValue="Tech Gadgets Hub" />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                           Description
                         </label>
                         <textarea
                           rows={4}
-                          className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                           defaultValue="Your one-stop shop for the latest tech gadgets..."
                         />
                       </div>
@@ -452,15 +434,11 @@ export default function MarketplaceAdminPage() {
                   </Card>
 
                   <Card>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                      Approval Settings
-                    </h2>
+                    <h2 className="text-xl font-bold text-foreground mb-6">Approval Settings</h2>
 
                     <VStack gap="md">
                       <label className="flex items-center justify-between">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Require seller approval
-                        </span>
+                        <span className="text-muted-foreground">Require seller approval</span>
                         <input
                           type="checkbox"
                           defaultChecked
@@ -469,9 +447,7 @@ export default function MarketplaceAdminPage() {
                       </label>
 
                       <label className="flex items-center justify-between">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Require product approval
-                        </span>
+                        <span className="text-muted-foreground">Require product approval</span>
                         <input
                           type="checkbox"
                           defaultChecked
@@ -480,9 +456,7 @@ export default function MarketplaceAdminPage() {
                       </label>
 
                       <label className="flex items-center justify-between">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Allow public join
-                        </span>
+                        <span className="text-muted-foreground">Allow public join</span>
                         <input
                           type="checkbox"
                           defaultChecked
@@ -494,7 +468,7 @@ export default function MarketplaceAdminPage() {
 
                   <Card className="border-red-200 dark:border-red-800">
                     <h2 className="text-xl font-bold text-red-600 mb-4">Danger Zone</h2>
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">
+                    <p className="text-muted-foreground mb-4">
                       Permanently delete this marketplace. This action cannot be undone.
                     </p>
                     <Button

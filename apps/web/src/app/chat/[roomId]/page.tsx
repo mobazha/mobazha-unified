@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header } from '@/components';
@@ -213,13 +212,11 @@ export default function ChatRoomPage() {
 
   if (!currentRoom) {
     return (
-      <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
+      <div className="h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-              Room not found
-            </h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Room not found</h2>
             <p className="text-slate-500 mb-4">
               The chat room you&apos;re looking for doesn&apos;t exist.
             </p>
@@ -236,7 +233,7 @@ export default function ChatRoomPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="h-screen flex flex-col bg-background">
       <Header />
 
       <div className="flex-1 flex overflow-hidden">

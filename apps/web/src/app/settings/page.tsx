@@ -81,12 +81,12 @@ const SettingItem = ({
     <>
       <div className="flex-1 text-left min-w-0">
         <p
-          className={`font-medium text-sm sm:text-base ${danger ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}
+          className={`font-medium text-sm sm:text-base ${danger ? 'text-red-600' : 'text-foreground'}`}
         >
           {title}
         </p>
         {description && (
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">
             {description}
           </p>
         )}
@@ -100,7 +100,7 @@ const SettingItem = ({
           className="ml-3 flex-shrink-0"
         />
       ) : value ? (
-        <span className="text-slate-500 dark:text-slate-400 text-sm sm:text-base ml-3 flex-shrink-0">
+        <span className="text-muted-foreground text-sm sm:text-base ml-3 flex-shrink-0">
           {value}
         </span>
       ) : (
@@ -116,7 +116,7 @@ const SettingItem = ({
     </>
   );
 
-  const baseClassName = `w-full flex items-center justify-between p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
+  const baseClassName = `w-full flex items-center justify-between p-3 sm:p-4 hover:bg-surface-hover/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
     danger ? 'text-red-600' : ''
   }`;
 
@@ -142,7 +142,7 @@ interface SettingGroupProps {
 
 const SettingGroup = ({ title, children }: SettingGroupProps) => (
   <div className="mb-4 sm:mb-6">
-    <h3 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1">
+    <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1.5 sm:mb-2 px-1">
       {title}
     </h3>
     <Card className="overflow-hidden">{children}</Card>
@@ -204,7 +204,7 @@ export default function SettingsPage() {
   const enabledCoinsCount = coins.filter(c => c.enabled).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="py-4 sm:py-8">
@@ -213,7 +213,7 @@ export default function SettingsPage() {
           <HStack gap="sm" align="center" className="mb-4 sm:mb-8 sm:gap-4">
             <Link
               href="/profile"
-              className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-surface-hover active:bg-slate-200 dark:active:bg-slate-700 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -224,9 +224,7 @@ export default function SettingsPage() {
                 />
               </svg>
             </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              {t('settings.title')}
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('settings.title')}</h1>
           </HStack>
 
           {/* Profile Settings */}
@@ -400,11 +398,11 @@ export default function SettingsPage() {
                   setCountry(c.code);
                   setShowCountryModal(false);
                 }}
-                className={`w-full p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center ${
+                className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
                   country === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                 }`}
               >
-                <span className="text-slate-900 dark:text-white">{c.name}</span>
+                <span className="text-foreground">{c.name}</span>
                 {country === c.code && (
                   <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                     <path
@@ -434,11 +432,11 @@ export default function SettingsPage() {
                   setCurrency(c.code);
                   setShowCurrencyModal(false);
                 }}
-                className={`w-full p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center ${
+                className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
                   currency === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                 }`}
               >
-                <span className="text-slate-900 dark:text-white">
+                <span className="text-foreground">
                   {c.name} ({c.symbol})
                 </span>
                 {currency === c.code && (
@@ -526,11 +524,11 @@ export default function SettingsPage() {
                 key={coin.symbol}
                 justify="between"
                 align="center"
-                className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
+                className="p-3 rounded-lg bg-muted"
               >
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">{coin.symbol}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{coin.name}</p>
+                  <p className="font-medium text-foreground">{coin.symbol}</p>
+                  <p className="text-sm text-muted-foreground">{coin.name}</p>
                 </div>
                 <Switch
                   checked={coin.enabled}
