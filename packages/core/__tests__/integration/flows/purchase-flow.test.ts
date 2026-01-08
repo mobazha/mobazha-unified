@@ -147,7 +147,7 @@ describe('Purchase Flow E2E Tests', () => {
       expect(Array.isArray(sales)).toBe(true);
 
       if (orderId) {
-        const newOrder = sales.find(s => s.orderId === orderId);
+        const newOrder = sales.find(s => s.orderID === orderId);
         if (newOrder) {
           console.log(`✅ Found order ${orderId} in sales`);
         }

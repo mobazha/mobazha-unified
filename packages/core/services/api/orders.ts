@@ -82,16 +82,18 @@ function createMockImage(url: string) {
 
 const mockOrders: OrderListItem[] = [
   {
-    orderId: 'QmOrderMock001',
+    orderID: 'QmOrderMock001',
     slug: 'premium-headphones',
     timestamp: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
     title: 'Premium Wireless Headphones',
-    thumbnail: createMockImage('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop'),
-    total: { amount: 29999, currencyCode: 'USD' },
+    thumbnail: createMockImage(
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop'
+    ),
+    total: { amount: 29999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
-    vendorId: 'QmVendor123',
+    vendorID: 'QmVendor123',
     vendorHandle: 'TechGear Store',
-    buyerId: 'QmBuyer001',
+    buyerID: 'QmBuyer001',
     state: 'AWAITING_FULFILLMENT',
     read: true,
     paymentCoin: 'ETH',
@@ -100,16 +102,18 @@ const mockOrders: OrderListItem[] = [
     unreadChatMessages: 0,
   },
   {
-    orderId: 'QmOrderMock002',
+    orderID: 'QmOrderMock002',
     slug: 'smart-watch-pro',
     timestamp: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
     title: 'Smart Watch Pro',
-    thumbnail: createMockImage('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop'),
-    total: { amount: 44999, currencyCode: 'USD' },
+    thumbnail: createMockImage(
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop'
+    ),
+    total: { amount: 44999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
-    vendorId: 'QmVendor456',
+    vendorID: 'QmVendor456',
     vendorHandle: 'WearTech',
-    buyerId: 'QmBuyer001',
+    buyerID: 'QmBuyer001',
     state: 'FULFILLED',
     read: false,
     paymentCoin: 'BTC',
@@ -118,16 +122,18 @@ const mockOrders: OrderListItem[] = [
     unreadChatMessages: 2,
   },
   {
-    orderId: 'QmOrderMock003',
+    orderID: 'QmOrderMock003',
     slug: 'vintage-camera',
     timestamp: new Date(Date.now() - 86400000 * 10).toISOString(), // 10 days ago
     title: 'Vintage Film Camera',
-    thumbnail: createMockImage('https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop'),
-    total: { amount: 18999, currencyCode: 'USD' },
+    thumbnail: createMockImage(
+      'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop'
+    ),
+    total: { amount: 18999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
-    vendorId: 'QmVendor789',
+    vendorID: 'QmVendor789',
     vendorHandle: 'Retro Finds',
-    buyerId: 'QmBuyer001',
+    buyerID: 'QmBuyer001',
     state: 'COMPLETED',
     read: true,
     paymentCoin: 'ETH',
@@ -140,6 +146,22 @@ const mockOrders: OrderListItem[] = [
 // ========== 订单查询 API ==========
 
 /**
+ * API 响应格式 - 购买订单
+ * 后端返回 { purchases: OrderListItem[] }
+ */
+interface PurchasesResponse {
+  purchases?: OrderListItem[];
+}
+
+/**
+ * API 响应格式 - 销售订单
+ * 后端返回 { sales: OrderListItem[] }
+ */
+interface SalesResponse {
+  sales?: OrderListItem[];
+}
+
+/**
  * 获取购买订单列表
  */
 export async function getPurchases(
@@ -150,7 +172,13 @@ export async function getPurchases(
 ): Promise<OrderListItem[]> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/ob/purchases?limit=${limit}&offsetId=${offsetId}`;
-    return safeRequest<OrderListItem[]>(url, { headers: getAuthHeaders(username, password) }, []);
+    const response = await safeRequest<PurchasesResponse>(
+      url,
+      { headers: getAuthHeaders(username, password) },
+      { purchases: [] }
+    );
+    // 从包装对象中提取数组
+    return response.purchases || [];
   };
 
   const mockFn = async () => {
@@ -172,7 +200,13 @@ export async function getSales(
 ): Promise<OrderListItem[]> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/ob/sales?limit=${limit}&offsetId=${offsetId}`;
-    return safeRequest<OrderListItem[]>(url, { headers: getAuthHeaders(username, password) }, []);
+    const response = await safeRequest<SalesResponse>(
+      url,
+      { headers: getAuthHeaders(username, password) },
+      { sales: [] }
+    );
+    // 从包装对象中提取数组
+    return response.sales || [];
   };
 
   const mockFn = async () => {
@@ -180,7 +214,7 @@ export async function getSales(
     // Mock sales - 可以返回不同的数据或修改状态
     return mockOrders.map(order => ({
       ...order,
-      buyerId: 'QmBuyer' + Math.random().toString(36).slice(2, 8),
+      buyerID: 'QmBuyer' + Math.random().toString(36).slice(2, 8),
       buyerHandle: 'Buyer_' + Math.random().toString(36).slice(2, 6),
     }));
   };
@@ -207,7 +241,7 @@ export async function getOrderDetails(
 
   const mockFn = async () => {
     await mockDelay();
-    const orderItem = mockOrders.find(o => o.orderId === orderId);
+    const orderItem = mockOrders.find(o => o.orderID === orderId);
     if (!orderItem) return null;
 
     // 构建完整的订单详情（符合 Order 接口）
@@ -217,7 +251,7 @@ export async function getOrderDetails(
           {
             slug: orderItem.slug,
             vendorID: {
-              peerID: orderItem.vendorId,
+              peerID: orderItem.vendorID,
               handle: orderItem.vendorHandle,
             },
             metadata: {
@@ -245,7 +279,7 @@ export async function getOrderDetails(
           refundAddress: '0x' + Math.random().toString(16).slice(2, 42),
           refundFee: 0,
           buyerID: {
-            peerID: orderItem.buyerId,
+            peerID: orderItem.buyerID,
           },
           timestamp: orderItem.timestamp,
           items: [
@@ -379,13 +413,17 @@ export async function confirmOrder(
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/confirm`;
-    return post<{ success: boolean; error?: string }>(url, payload, getAuthHeaders(username, password));
+    return post<{ success: boolean; error?: string }>(
+      url,
+      payload,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
     await mockDelay();
     // Mock: 更新订单状态
-    const order = mockOrders.find(o => o.orderId === payload.orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderId);
     if (order) {
       order.state = payload.reject ? 'DECLINED' : 'AWAITING_FULFILLMENT';
     }
@@ -410,12 +448,16 @@ export async function fulfillOrder(
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/fulfill`;
-    return post<{ success: boolean; error?: string }>(url, fulfillObj, getAuthHeaders(username, password));
+    return post<{ success: boolean; error?: string }>(
+      url,
+      fulfillObj,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === fulfillObj.orderId);
+    const order = mockOrders.find(o => o.orderID === fulfillObj.orderId);
     if (order) {
       order.state = 'FULFILLED';
     }
@@ -447,12 +489,16 @@ export async function completeOrder(
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/complete`;
-    return post<{ success: boolean; error?: string }>(url, payload, getAuthHeaders(username, password));
+    return post<{ success: boolean; error?: string }>(
+      url,
+      payload,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === payload.orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderId);
     if (order) {
       order.state = 'COMPLETED';
     }
@@ -482,7 +528,7 @@ export async function cancelOrder(
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === orderId);
+    const order = mockOrders.find(o => o.orderID === orderId);
     if (order) {
       order.state = 'CANCELED';
     }
@@ -512,7 +558,7 @@ export async function refundOrder(
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === orderId);
+    const order = mockOrders.find(o => o.orderID === orderId);
     if (order) {
       order.state = 'REFUNDED';
     }
@@ -557,7 +603,7 @@ export async function fundOrder(
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === payload.orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderId);
     if (order) {
       order.state = 'AWAITING_FULFILLMENT';
     }
@@ -608,7 +654,10 @@ export async function getPaymentRemaining(
 ): Promise<{ remaining?: number; paid?: number; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/${orderId}/payment/remaining`;
-    return get<{ remaining?: number; paid?: number; error?: string }>(url, getAuthHeaders(username, password));
+    return get<{ remaining?: number; paid?: number; error?: string }>(
+      url,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
@@ -644,7 +693,7 @@ export async function openDispute(
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === orderId);
+    const order = mockOrders.find(o => o.orderID === orderId);
     if (order) {
       order.state = 'DISPUTED';
     }
@@ -673,7 +722,7 @@ export async function acceptDispute(
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === orderId);
+    const order = mockOrders.find(o => o.orderID === orderId);
     if (order) {
       order.state = 'RESOLVED';
     }
@@ -721,12 +770,16 @@ export async function markOrderAsRead(
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/ob/markorderasread`;
-    return post<{ success: boolean; error?: string }>(url, { orderID: orderId }, getAuthHeaders(username, password));
+    return post<{ success: boolean; error?: string }>(
+      url,
+      { orderID: orderId },
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderId === orderId);
+    const order = mockOrders.find(o => o.orderID === orderId);
     if (order) {
       order.read = true;
     }

@@ -63,3 +63,6 @@ export * as disputesApi from './disputes';
 
 // 图片上传 API
 export * as imagesApi from './images';
+
+// Matrix 聊天 API
+export * as matrixApi from './matrix';

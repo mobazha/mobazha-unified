@@ -16,6 +16,7 @@ export * from './useProfile';
 
 // 聊天相关
 export * from './useMatrix';
+export * from './useMatrixChat';
 
 // E2E 加密相关
 export * from './useCrypto';

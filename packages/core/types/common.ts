@@ -42,13 +42,20 @@ export interface Image {
 }
 
 /**
- * 价格类型
+ * 价格中的货币信息（后端 API 格式）
+ */
+export interface PriceCurrency {
+  code: string;
+  divisibility: number;
+}
+
+/**
+ * 价格类型（后端 API 格式）
+ * amount 是最小单位（如美分、聪），需要除以 10^divisibility 得到标准显示值
  */
 export interface Price {
   amount: number;
-  currencyCode: string;
-  /** 精度/小数位数 (用于将最小单位转换为标准单位) */
-  divisibility?: number;
+  currency: PriceCurrency;
 }
 
 /**
