@@ -21,6 +21,7 @@ import {
   useUserStore,
   useChatStore,
   getImageUrl,
+  useVerifiedModerators,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
 import { Pencil, Camera, Package } from 'lucide-react';
@@ -42,6 +43,7 @@ export default function StorePage() {
   const params = useParams();
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
+  const { hasVerifiedMod } = useVerifiedModerators();
   const peerId = params.peerId as string;
   const {
     isAuthenticated,
@@ -609,9 +611,18 @@ export default function StorePage() {
                         vendorAvatar={
                           isOwnStore ? undefined : getImageUrl(store?.avatarHashes?.small)
                         }
+                        vendorPeerID={peerId}
                         rating={product.averageRating}
                         reviewCount={product.ratingCount}
                         freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                        hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                        isOwnListing={isOwnStore}
+                        onReport={() => {
+                          /* TODO: 打开举报对话框 */
+                        }}
+                        onBlock={() => {
+                          /* TODO: 实现屏蔽卖家功能 */
+                        }}
                       />
                     </Link>
                   ))}

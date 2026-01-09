@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
+import { Shield, Flag, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -30,6 +31,8 @@ export interface ProductCardProps {
   vendorName?: string;
   /** 卖家头像 */
   vendorAvatar?: string;
+  /** 卖家 Peer ID (用于 block 功能) */
+  vendorPeerID?: string;
   /** 评分 (0-5) */
   rating?: number;
   /** 评价数量 */
@@ -40,10 +43,18 @@ export interface ProductCardProps {
   isDigital?: boolean;
   /** 商品合约类型 */
   contractType?: ProductContractType;
+  /** 是否有认证的仲裁员 */
+  hasVerifiedModerator?: boolean;
+  /** 是否为自己的商品 (自己的商品不显示 report/block) */
+  isOwnListing?: boolean;
   /** 是否显示紧凑模式 */
   compact?: boolean;
   /** 点击回调 */
   onClick?: () => void;
+  /** 举报回调 */
+  onReport?: () => void;
+  /** 屏蔽回调 */
+  onBlock?: () => void;
   /** 自定义类名 */
   className?: string;
 }
@@ -70,17 +81,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   originalPrice,
   vendorName,
   vendorAvatar,
+  vendorPeerID,
   rating,
   reviewCount,
   freeShipping = false,
   isDigital = false,
   contractType,
+  hasVerifiedModerator = false,
+  isOwnListing = false,
   compact = false,
   onClick,
+  onReport,
+  onBlock,
   className,
 }) => {
   // 使用货币格式化 hook
   const { formatLocalPrice } = useCurrencyFormat();
+  // hover 状态
+  const [isHovered, setIsHovered] = useState(false);
 
   const hasDiscount = originalPrice && Number(originalPrice) > Number(price);
   const discountPercent = hasDiscount
@@ -101,6 +119,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     ? formatLocalPrice(originalPrice, currency, formatOptions)
     : '';
 
+  // 处理 Report 按钮点击
+  const handleReportClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onReport?.();
+  };
+
+  // 处理 Block 按钮点击
+  const handleBlockClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onBlock?.();
+  };
+
+  // 是否显示操作按钮 (不是自己的商品，且提供了回调函数)
+  const showActionButtons = !isOwnListing && (onReport || onBlock);
+
   return (
     <Card
       className={cn(
@@ -110,6 +143,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className
       )}
       onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* 商品图片 */}
       <div className="relative aspect-square overflow-hidden bg-muted">
@@ -134,9 +169,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* 折扣标签 */}
+        {/* Verified Moderator 盾牌 - 左上角 */}
+        {hasVerifiedModerator && (
+          <div className="absolute top-2 left-2 z-10" title="This listing has a verified moderator">
+            <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
+              <Shield className="w-4 h-4 text-white" fill="currentColor" />
+            </div>
+          </div>
+        )}
+
+        {/* 折扣标签 - 有盾牌时调整位置 */}
         {hasDiscount && (
-          <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded">
+          <span
+            className={cn(
+              'absolute bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded z-10',
+              hasVerifiedModerator ? 'top-2 left-11' : 'top-2 left-2'
+            )}
+          >
             -{discountPercent}%
           </span>
         )}
@@ -145,12 +194,46 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {typeConfig?.label && (
           <span
             className={cn(
-              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded',
+              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded z-10',
               typeConfig.color
             )}
           >
             {typeConfig.label}
           </span>
+        )}
+
+        {/* Hover 操作按钮 - Report 和 Block */}
+        {showActionButtons && isHovered && (
+          <div className="absolute bottom-2 left-2 z-20 flex gap-1.5 animate-in fade-in duration-150">
+            {onReport && (
+              <button
+                onClick={handleReportClick}
+                className={cn(
+                  'w-8 h-8 rounded-md flex items-center justify-center',
+                  'bg-white/90 hover:bg-white shadow-md',
+                  'transition-all duration-150 hover:scale-105',
+                  'text-muted-foreground hover:text-destructive'
+                )}
+                title="Report this listing"
+              >
+                <Flag className="w-4 h-4" />
+              </button>
+            )}
+            {onBlock && vendorPeerID && (
+              <button
+                onClick={handleBlockClick}
+                className={cn(
+                  'w-8 h-8 rounded-md flex items-center justify-center',
+                  'bg-white/90 hover:bg-white shadow-md',
+                  'transition-all duration-150 hover:scale-105',
+                  'text-muted-foreground hover:text-destructive'
+                )}
+                title="Block this seller"
+              >
+                <EyeOff className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 

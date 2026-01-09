@@ -6,6 +6,7 @@ import { Container, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { useProductModal } from '@/hooks';
+import { useUserStore, useVerifiedModerators } from '@mobazha/core';
 
 interface Product {
   id: string;
@@ -22,6 +23,8 @@ interface Product {
   reviewCount?: number;
   freeShipping?: boolean;
   isDigital?: boolean;
+  /** 仲裁员 peerID 列表 */
+  moderators?: string[];
 }
 
 export interface ProductSectionProps {
@@ -46,6 +49,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   titleClassName,
 }) => {
   const { openProduct, isMobile } = useProductModal();
+  const profile = useUserStore(state => state.profile);
+  const { hasVerifiedMod } = useVerifiedModerators();
 
   // 处理商品点击
   const handleProductClick = useCallback(
@@ -59,6 +64,16 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
     },
     [isMobile, openProduct]
   );
+
+  // 处理举报
+  const handleReport = useCallback((_product: Product) => {
+    // TODO: 打开举报对话框
+  }, []);
+
+  // 处理屏蔽
+  const handleBlock = useCallback((_product: Product) => {
+    // TODO: 实现屏蔽卖家功能
+  }, []);
 
   return (
     <section className="py-6 sm:py-10 lg:py-16">
@@ -103,6 +118,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 const productHref = product.vendorPeerID
                   ? `/product/${product.slug}?peerID=${product.vendorPeerID}`
                   : `/product/${product.slug}`;
+                // 检查是否为自己的商品
+                const isOwnListing = profile?.peerID === product.vendorPeerID;
                 return (
                   <Link
                     key={`${product.id}-${index}`}
@@ -118,10 +135,15 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       divisibility={product.divisibility}
                       vendorName={product.vendorName}
                       vendorAvatar={product.vendorAvatar}
+                      vendorPeerID={product.vendorPeerID}
                       rating={product.rating}
                       reviewCount={product.reviewCount}
                       freeShipping={product.freeShipping}
                       isDigital={product.isDigital}
+                      hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                      isOwnListing={isOwnListing}
+                      onReport={() => handleReport(product)}
+                      onBlock={() => handleBlock(product)}
                     />
                   </Link>
                 );

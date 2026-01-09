@@ -24,6 +24,8 @@ interface DisplayProduct {
   reviewCount: number;
   freeShipping?: boolean;
   isDigital?: boolean;
+  /** 仲裁员 peerID 列表 */
+  moderators?: string[];
 }
 
 // 转换 API 数据为 ProductSection 需要的格式
@@ -48,6 +50,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     reviewCount: item.ratingCount || 0,
     freeShipping: item.freeShipping?.length ? true : false,
     isDigital: item.contractType === 'SERVICE' || item.contractType === 'DIGITAL_GOOD',
+    // 传递 moderators 列表，由 ProductSection 使用 hasVerifiedMod 检查
+    moderators: item.moderators,
   };
 }
 

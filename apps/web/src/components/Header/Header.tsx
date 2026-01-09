@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import {
   DropdownMenu,
@@ -73,9 +74,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
-              <span className="text-primary-foreground font-bold text-lg">M</span>
-            </div>
+            <MobazhaLogo size={36} className="text-primary" />
             <span className="font-bold text-xl text-foreground">Mobazha</span>
           </Link>
 

@@ -18,3 +18,6 @@ export * from './payment';
 
 // 货币服务
 export * from './currencyService';
+
+// 认证仲裁员服务
+export * from './verifiedModerators';

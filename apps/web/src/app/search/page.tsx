@@ -11,7 +11,7 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import type { ProductContractType } from '@/components/ProductCard';
-import { useI18n, searchDataService, getImageUrl } from '@mobazha/core';
+import { useI18n, searchDataService, getImageUrl, useVerifiedModerators } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { useProductModal } from '@/hooks';
 
@@ -32,6 +32,8 @@ interface DisplayProduct {
   rating: number;
   reviewCount: number;
   contractType: ProductContractType;
+  /** 仲裁员 peerID 列表 */
+  moderators?: string[];
 }
 
 // 搜索返回的用户类型
@@ -74,6 +76,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,
     contractType: (item.contractType as ProductContractType) || 'PHYSICAL_GOOD',
+    // 传递 moderators 列表
+    moderators: item.moderators,
   };
 }
 
@@ -113,6 +117,7 @@ function SearchPageContent() {
   const categoryParam = searchParams.get('category') || 'all';
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
+  const { hasVerifiedMod } = useVerifiedModerators();
 
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState(queryParam);
@@ -310,6 +315,16 @@ function SearchPageContent() {
     setRecentSearches([]);
   };
 
+  // 处理举报
+  const handleReport = useCallback((_product: DisplayProduct) => {
+    // TODO: 打开举报对话框
+  }, []);
+
+  // 处理屏蔽
+  const handleBlock = useCallback((_product: DisplayProduct) => {
+    // TODO: 实现屏蔽卖家功能
+  }, []);
+
   // Render product item using imported ProductCard
   const renderProductCard = (product: DisplayProduct) => (
     <Link
@@ -331,9 +346,13 @@ function SearchPageContent() {
         divisibility={product.divisibility}
         vendorName={product.vendor.name}
         vendorAvatar={product.vendor.avatar}
+        vendorPeerID={product.vendor.peerID}
         rating={product.rating}
         reviewCount={product.reviewCount}
         contractType={product.contractType}
+        hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+        onReport={() => handleReport(product)}
+        onBlock={() => handleBlock(product)}
       />
     </Link>
   );
