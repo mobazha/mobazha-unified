@@ -48,6 +48,7 @@ export const ja: TranslationResource = {
     backToMarket: 'マーケットに戻る',
     loadMore: 'もっと読み込む',
     noMoreData: 'これ以上データはありません',
+    comingSoon: '近日公開',
   },
 
   nav: {
@@ -331,6 +332,10 @@ export const ja: TranslationResource = {
     back: '戻る',
     yourAddress: 'あなたのアドレス',
     copy: 'コピー',
+    connect: 'ウォレットを接続',
+    connecting: '接続中...',
+    disconnect: '切断',
+    connected: '接続済み',
   },
 
   profile: {

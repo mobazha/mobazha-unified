@@ -48,6 +48,7 @@ export const pt: TranslationResource = {
     backToMarket: 'Voltar ao mercado',
     loadMore: 'Carregar mais',
     noMoreData: 'Não há mais dados',
+    comingSoon: 'Em breve',
   },
 
   nav: {
@@ -331,6 +332,10 @@ export const pt: TranslationResource = {
     back: 'Voltar',
     yourAddress: 'Seu endereço',
     copy: 'Copiar',
+    connect: 'Conectar carteira',
+    connecting: 'Conectando...',
+    disconnect: 'Desconectar',
+    connected: 'Conectado',
   },
 
   profile: {

@@ -48,6 +48,7 @@ export const ko: TranslationResource = {
     backToMarket: '마켓으로 돌아가기',
     loadMore: '더 불러오기',
     noMoreData: '더 이상 데이터가 없습니다',
+    comingSoon: '곧 출시 예정',
   },
 
   nav: {
@@ -331,6 +332,10 @@ export const ko: TranslationResource = {
     back: '뒤로',
     yourAddress: '내 주소',
     copy: '복사',
+    connect: '지갑 연결',
+    connecting: '연결 중...',
+    disconnect: '연결 해제',
+    connected: '연결됨',
   },
 
   profile: {
