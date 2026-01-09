@@ -55,7 +55,7 @@ export default function ModeratorPage() {
             className="flex items-center gap-2 text-foreground touch-feedback"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">{t('payment.selectModerator', 'Select Moderator')}</span>
+            <span className="font-medium">{t('payment.selectModerator')}</span>
           </button>
         </div>
       </header>
