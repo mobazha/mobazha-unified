@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
@@ -19,6 +19,7 @@ import {
   imagesApi,
   useI18n,
   useUserStore,
+  useChatStore,
   getImageUrl,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
@@ -37,7 +38,6 @@ type TabType = 'products' | 'about' | 'reviews';
 
 export default function StorePage() {
   const params = useParams();
-  const router = useRouter();
   const { t } = useI18n();
   const peerId = params.peerId as string;
   const {
@@ -46,6 +46,7 @@ export default function StorePage() {
     updateProfile,
     fetchProfile: refreshCurrentUserProfile,
   } = useUserStore();
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 判断是否是自己的店铺
   const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
@@ -276,7 +277,9 @@ export default function StorePage() {
 
   // 发消息
   const handleMessage = () => {
-    router.push(`/chat?peerId=${peerId}`);
+    // Open chat drawer
+    // TODO: 后续可以添加逻辑来自动选择或创建与该用户的聊天房间
+    openChatDrawer();
   };
 
   // 获取店铺的统计数据 - 使用实际的 products.length 来保持一致性

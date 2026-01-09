@@ -47,6 +47,8 @@ export interface TranslationResource {
     success: string;
     cancel: string;
     confirm: string;
+    accept: string;
+    decline: string;
     save: string;
     delete: string;
     edit: string;
@@ -298,6 +300,24 @@ export interface TranslationResource {
     welcomeToMessages: string;
     selectConversation: string;
     searchConversations: string;
+  };
+
+  // Matrix 房间事件
+  matrix: TranslationSection & {
+    events: {
+      join: string;
+      left: string;
+      invited: string;
+      kicked: string;
+      banned: string;
+      unbanned: string;
+      nameChanged: string;
+      avatarChanged: string;
+      roomNameChanged: string;
+      roomTopicChanged: string;
+      encryptionEnabled: string;
+      roomCreated: string;
+    };
   };
 
   // 钱包

@@ -24,6 +24,7 @@ import { matrixEvents } from './events';
 import { getConfig } from '../../config';
 
 // Node API 端点 (去中心化存储在用户节点上)
+// 注意: 路径不含 /v1 前缀，因为 nodeBaseUrl (getGatewayUrl) 已包含 /v1
 const NODE_KEY_BACKUP_API = '/matrix/key-backup';
 const NODE_SECRETS_BUNDLE_API = '/matrix/secrets-bundle';
 
@@ -146,7 +147,10 @@ class MatrixCryptoService {
       authHeaders?: Record<string, string>;
     }
   ): Promise<boolean> {
+    console.log('[MatrixCrypto] initialize called, isInitialized:', this.isInitialized);
+
     if (this.isInitialized) {
+      console.log('[MatrixCrypto] Already initialized, skipping');
       return true;
     }
 
@@ -164,6 +168,9 @@ class MatrixCryptoService {
       this.nodeBaseUrl = config?.nodeBaseUrl || getConfig().apiBaseUrl || '';
       this.authHeaders = config?.authHeaders || {};
 
+      console.log('[MatrixCrypto] Configured with nodeBaseUrl:', this.nodeBaseUrl);
+      console.log('[MatrixCrypto] Auth headers keys:', Object.keys(this.authHeaders));
+
       // 设置加密事件监听
       this.setupCryptoListeners();
 
@@ -171,9 +178,11 @@ class MatrixCryptoService {
       await this.initCrypto();
 
       this.isInitialized = true;
+      console.log('[MatrixCrypto] Initialization complete');
 
       return true;
-    } catch {
+    } catch (error) {
+      console.error('[MatrixCrypto] Initialization failed:', error);
       return false;
     }
   }
@@ -437,37 +446,87 @@ class MatrixCryptoService {
   }
 
   /**
-   * 获取密钥备份信息 (从 Mobazha 节点)
+   * 列出所有可用的密钥备份
    */
-  async getKeyBackupInfo(): Promise<NodeBackupInfo | null> {
+  async listKeyBackups(): Promise<NodeBackupInfo[]> {
     try {
-      const url = `${this.nodeBaseUrl}${NODE_KEY_BACKUP_API}/info`;
+      const url = `${this.nodeBaseUrl}${NODE_KEY_BACKUP_API}/list`;
+      console.log('[MatrixCrypto] Listing key backups at:', url);
+
       const response = await fetch(url, {
         headers: this.authHeaders,
       });
 
+      console.log('[MatrixCrypto] List backups response:', response.status, response.statusText);
+
       if (response.status === 404) {
+        console.log('[MatrixCrypto] No backups found (404)');
+        return [];
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn('[MatrixCrypto] Failed to list backups:', response.status, errorText);
+        return [];
+      }
+
+      const data = await response.json();
+      // API 可能返回 { backups: [...] } 或直接返回数组
+      const backups = Array.isArray(data) ? data : data.backups || [];
+      console.log('[MatrixCrypto] Found', backups.length, 'backup(s)');
+      return backups;
+    } catch (error) {
+      console.error('[MatrixCrypto] Failed to list backups:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 获取特定设备的密钥备份信息 (从 Mobazha 节点)
+   */
+  async getKeyBackupInfo(deviceId?: string): Promise<NodeBackupInfo | null> {
+    try {
+      // 如果没有指定 deviceId，先列出所有备份
+      if (!deviceId) {
+        const backups = await this.listKeyBackups();
+        return backups.length > 0 ? backups[0] : null;
+      }
+
+      const url = `${this.nodeBaseUrl}${NODE_KEY_BACKUP_API}/info?deviceId=${encodeURIComponent(deviceId)}`;
+      console.log('[MatrixCrypto] Checking key backup at:', url);
+
+      const response = await fetch(url, {
+        headers: this.authHeaders,
+      });
+
+      console.log('[MatrixCrypto] Key backup info response:', response.status, response.statusText);
+
+      if (response.status === 404) {
+        console.log('[MatrixCrypto] No key backup found for device:', deviceId);
         return null;
       }
 
       if (!response.ok) {
-        console.warn('[MatrixCrypto] Failed to get backup info:', response.statusText);
+        const errorText = await response.text();
+        console.warn('[MatrixCrypto] Failed to get backup info:', response.status, errorText);
         return null;
       }
 
-      return await response.json();
+      const info = await response.json();
+      console.log('[MatrixCrypto] Key backup info:', info);
+      return info;
     } catch (error) {
-      console.warn('[MatrixCrypto] Failed to get backup info:', error);
+      console.error('[MatrixCrypto] Failed to get backup info:', error);
       return null;
     }
   }
 
   /**
-   * 检查是否有密钥备份
+   * 检查是否有密钥备份（检查所有设备的备份）
    */
   async hasKeyBackup(): Promise<boolean> {
-    const info = await this.getKeyBackupInfo();
-    return info !== null;
+    const backups = await this.listKeyBackups();
+    return backups.length > 0;
   }
 
   /**
@@ -486,7 +545,7 @@ class MatrixCryptoService {
       }
 
       // 导出房间密钥
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       let roomKeys: unknown[] = [];
       const cryptoAny = crypto as any;
       if (typeof cryptoAny.exportRoomKeys === 'function') {
@@ -531,71 +590,139 @@ class MatrixCryptoService {
   }
 
   /**
+   * 从特定设备的备份中获取密钥
+   */
+  private async fetchKeysFromDevice(deviceId: string): Promise<unknown[]> {
+    const url = `${this.nodeBaseUrl}${NODE_KEY_BACKUP_API}?deviceId=${encodeURIComponent(deviceId)}`;
+    console.log('[MatrixCrypto] Fetching keys from device:', deviceId);
+
+    const response = await fetch(url, {
+      headers: this.authHeaders,
+    });
+
+    if (response.status === 404) {
+      console.log('[MatrixCrypto] No backup found for device:', deviceId);
+      return [];
+    }
+
+    if (!response.ok) {
+      console.warn('[MatrixCrypto] Failed to fetch backup for device:', deviceId, response.status);
+      return [];
+    }
+
+    const backup = await response.json();
+    if (!backup || !backup.keys) {
+      console.warn('[MatrixCrypto] Backup has no keys for device:', deviceId);
+      return [];
+    }
+
+    try {
+      const keys = typeof backup.keys === 'string' ? JSON.parse(backup.keys) : backup.keys;
+      console.log('[MatrixCrypto] Got', keys.length, 'keys from device:', deviceId);
+      return Array.isArray(keys) ? keys : [];
+    } catch (parseError) {
+      console.error('[MatrixCrypto] Failed to parse keys from device:', deviceId, parseError);
+      return [];
+    }
+  }
+
+  /**
    * 从 Mobazha 节点恢复房间密钥
-   * 节点使用私钥解密密钥数据
+   * 尝试从所有可用的设备备份中恢复密钥
    */
   async restoreRoomKeys(deviceId?: string): Promise<KeyBackupResult> {
+    console.log('[MatrixCrypto] restoreRoomKeys called, deviceId:', deviceId);
+
     if (!this.client) {
+      console.warn('[MatrixCrypto] restoreRoomKeys: client not initialized');
       return { success: false, reason: 'not_initialized' };
     }
 
     try {
-      // 从节点获取并解密备份
-      let url = `${this.nodeBaseUrl}${NODE_KEY_BACKUP_API}`;
+      let allKeys: unknown[] = [];
+
       if (deviceId) {
-        url += `?deviceId=${encodeURIComponent(deviceId)}`;
-      }
+        // 从指定设备恢复
+        allKeys = await this.fetchKeysFromDevice(deviceId);
+      } else {
+        // 列出所有备份并从每个备份中恢复
+        const backups = await this.listKeyBackups();
+        console.log('[MatrixCrypto] Found', backups.length, 'backup(s) to restore from');
 
-      const response = await fetch(url, {
-        headers: this.authHeaders,
-      });
-
-      if (response.status === 404) {
-        console.log('[MatrixCrypto] No backup found');
-        return { success: false, reason: 'no_backup' };
-      }
-
-      if (!response.ok) {
-        console.error('[MatrixCrypto] Failed to fetch backup:', response.statusText);
-        return { success: false, reason: 'fetch_failed' };
-      }
-
-      const backup = await response.json();
-      if (!backup || !backup.keys) {
-        return { success: false, reason: 'no_backup' };
-      }
-
-      // 解析密钥
-      let roomKeys: unknown[];
-      try {
-        roomKeys = JSON.parse(backup.keys);
-      } catch {
-        console.error('[MatrixCrypto] Failed to parse room keys');
-        return { success: false, reason: 'parse_error' };
-      }
-
-      // 导入密钥到 Matrix 客户端
-      if (roomKeys.length > 0) {
-        const crypto = this.client.getCrypto?.();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cryptoAny = crypto as any;
-        if (!cryptoAny || typeof cryptoAny.importRoomKeys !== 'function') {
-          console.warn('[MatrixCrypto] importRoomKeys not available');
-          return { success: false, reason: 'not_supported' };
+        if (backups.length === 0) {
+          console.log('[MatrixCrypto] No backups available');
+          return { success: false, reason: 'no_backup' };
         }
 
-        await cryptoAny.importRoomKeys(roomKeys);
-        console.log(`[MatrixCrypto] Restored ${roomKeys.length} room keys`);
+        // 从每个设备的备份中收集密钥
+        for (const backup of backups) {
+          // 处理 API 可能返回的不同字段名
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const backupAny = backup as any;
+          const backupDeviceId = backup.deviceId || backupAny.device_id;
+          if (backupDeviceId) {
+            const keys = await this.fetchKeysFromDevice(backupDeviceId);
+            allKeys = allKeys.concat(keys);
+          }
+        }
       }
 
-      this.emitCryptoEvent(CRYPTO_EVENTS.KEY_BACKUP_RESTORED, { keyCount: roomKeys.length });
+      if (allKeys.length === 0) {
+        console.log('[MatrixCrypto] No keys found in any backup');
+        return { success: false, reason: 'no_backup' };
+      }
 
-      return { success: true, keyCount: roomKeys.length };
+      // 去重 (基于 room_id + session_id)
+      const uniqueKeys = this.deduplicateKeys(allKeys);
+      console.log(
+        '[MatrixCrypto] Total unique keys:',
+        uniqueKeys.length,
+        '(from',
+        allKeys.length,
+        'total)'
+      );
+
+      // 导入密钥到 Matrix 客户端
+      const crypto = this.client.getCrypto?.();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cryptoAny = crypto as any;
+      if (!cryptoAny || typeof cryptoAny.importRoomKeys !== 'function') {
+        console.warn('[MatrixCrypto] importRoomKeys not available on crypto API');
+        return { success: false, reason: 'not_supported' };
+      }
+
+      console.log('[MatrixCrypto] Importing', uniqueKeys.length, 'room keys...');
+      await cryptoAny.importRoomKeys(uniqueKeys);
+      console.log('[MatrixCrypto] Successfully imported', uniqueKeys.length, 'room keys');
+
+      this.emitCryptoEvent(CRYPTO_EVENTS.KEY_BACKUP_RESTORED, { keyCount: uniqueKeys.length });
+
+      return { success: true, keyCount: uniqueKeys.length };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'unknown';
-      console.error('[MatrixCrypto] Restore failed:', errorMsg);
+      console.error('[MatrixCrypto] Restore failed:', errorMsg, error);
       return { success: false, reason: 'restore_failed', error: errorMsg };
     }
+  }
+
+  /**
+   * 去重密钥 (基于 room_id + session_id)
+   */
+  private deduplicateKeys(keys: unknown[]): unknown[] {
+    const seen = new Set<string>();
+    const result: unknown[] = [];
+
+    for (const key of keys) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const k = key as any;
+      const id = `${k.room_id || ''}:${k.session_id || ''}`;
+      if (!seen.has(id)) {
+        seen.add(id);
+        result.push(key);
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -633,29 +760,6 @@ class MatrixCryptoService {
     } catch (error) {
       console.error('[MatrixCrypto] Delete failed:', error);
       return false;
-    }
-  }
-
-  /**
-   * 列出所有设备的备份
-   */
-  async listKeyBackups(): Promise<NodeBackupInfo[]> {
-    try {
-      const url = `${this.nodeBaseUrl}${NODE_KEY_BACKUP_API}/list`;
-      const response = await fetch(url, {
-        headers: this.authHeaders,
-      });
-
-      if (!response.ok) {
-        console.warn('[MatrixCrypto] Failed to list backups:', response.statusText);
-        return [];
-      }
-
-      const data = await response.json();
-      return data.backups || [];
-    } catch (error) {
-      console.warn('[MatrixCrypto] Failed to list backups:', error);
-      return [];
     }
   }
 

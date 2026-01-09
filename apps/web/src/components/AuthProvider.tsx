@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUserStore } from '@mobazha/core';
+import { useUserStore, useMatrixInit } from '@mobazha/core';
 import {
   hasOAuthCallback,
   getOAuthParams,
@@ -19,6 +19,7 @@ interface AuthProviderProps {
 /**
  * 认证状态提供者
  * 自动恢复会话并处理 OAuth 回调
+ * 同时初始化 Matrix 聊天连接
  */
 export function AuthProvider({
   children,
@@ -29,6 +30,12 @@ export function AuthProvider({
   const { isAuthenticated, restoreSession, loginWithOAuth, isLoading } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+
+  // 初始化 Matrix（在用户登录后自动连接）
+  useMatrixInit({
+    enabled: true,
+    autoConnect: true,
+  });
 
   // 处理 OAuth 回调（在任何页面都可能发生）
   useEffect(() => {

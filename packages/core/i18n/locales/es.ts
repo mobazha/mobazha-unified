@@ -11,6 +11,8 @@ export const es: TranslationResource = {
     success: 'Éxito',
     cancel: 'Cancelar',
     confirm: 'Confirmar',
+    accept: 'Aceptar',
+    decline: 'Rechazar',
     save: 'Guardar',
     delete: 'Eliminar',
     edit: 'Editar',
@@ -255,6 +257,24 @@ export const es: TranslationResource = {
     selectConversation:
       'Selecciona una conversación para comenzar a chatear, o crea una nueva para conectar con vendedores y compradores.',
     searchConversations: 'Buscar conversaciones...',
+  },
+
+  // Matrix 房间事件
+  matrix: {
+    events: {
+      join: '{{name}} se unió al chat',
+      left: '{{name}} abandonó el chat',
+      invited: '{{by}} invitó a {{name}}',
+      kicked: '{{by}} eliminó a {{name}} del chat',
+      banned: '{{by}} bloqueó a {{name}}',
+      unbanned: '{{by}} desbloqueó a {{name}}',
+      nameChanged: '{{name}} cambió su nombre a {{newName}}',
+      avatarChanged: '{{name}} cambió su avatar',
+      roomNameChanged: '{{name}} cambió el nombre de la sala a {{roomName}}',
+      roomTopicChanged: '{{name}} estableció el tema como {{topic}}',
+      encryptionEnabled: 'Cifrado de extremo a extremo habilitado',
+      roomCreated: '{{name}} creó este chat',
+    },
   },
 
   wallet: {

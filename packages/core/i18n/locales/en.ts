@@ -11,6 +11,8 @@ export const en: TranslationResource = {
     success: 'Success',
     cancel: 'Cancel',
     confirm: 'Confirm',
+    accept: 'Accept',
+    decline: 'Decline',
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
@@ -493,11 +495,56 @@ export const en: TranslationResource = {
     offline: 'Offline',
     lastSeen: 'Last seen {{time}}',
     typing: 'typing...',
-    encrypted: 'Messages are end-to-end encrypted',
+    encrypted: 'End-to-end encrypted',
+    decentralized: 'Decentralized',
     welcomeToMessages: 'Welcome to Messages',
     selectConversation:
       'Select a conversation to start chatting, or create a new one to connect with vendors and buyers.',
     searchConversations: 'Search conversations...',
+    // Login states
+    loginRequired: 'Login Required',
+    loginToChat: 'Please login to access your messages and start chatting with others.',
+    connecting: 'Connecting to chat...',
+    // Empty states
+    noConversations: 'No Conversations Yet',
+    startFirstConversation:
+      'Start your first conversation by clicking the button below or visiting a store.',
+    startNewConversation: 'Start a New Conversation',
+    startConversation: 'Start a conversation',
+    // Time
+    today: 'Today',
+    yesterday: 'Yesterday',
+    // Sections
+    directMessages: 'Direct Messages',
+    communities: 'Communities',
+    orderChats: 'Order Discussions',
+    invitations: 'Invitations',
+    invitedYou: 'Invited you to chat',
+    inviteConfirm: 'Invitation',
+    invitedBy: 'Invited by {{name}}',
+    // Room states
+    roomNotFound: 'Room not found',
+    roomNotFoundDesc:
+      "The chat room you're looking for doesn't exist or you don't have access to it.",
+    backToMessages: 'Back to Messages',
+  },
+
+  // Matrix room events
+  matrix: {
+    events: {
+      join: '{{name}} joined the chat',
+      left: '{{name}} left the chat',
+      invited: '{{by}} invited {{name}}',
+      kicked: '{{by}} removed {{name}} from the chat',
+      banned: '{{by}} banned {{name}}',
+      unbanned: '{{by}} unbanned {{name}}',
+      nameChanged: '{{name}} changed their name to {{newName}}',
+      avatarChanged: '{{name}} changed their avatar',
+      roomNameChanged: '{{name}} changed the room name to {{roomName}}',
+      roomTopicChanged: '{{name}} set the topic to {{topic}}',
+      encryptionEnabled: 'End-to-end encryption enabled',
+      roomCreated: '{{name}} created this chat',
+    },
   },
 
   wallet: {

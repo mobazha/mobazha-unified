@@ -3,13 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useChatStore, selectTotalUnreadCount } from '@mobazha/core';
 
 interface NavItem {
   label: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
   icon: React.ReactNode;
   activeIcon?: React.ReactNode;
   badge?: number;
+  isChat?: boolean; // 标记是否是聊天项，用于动态获取未读数
 }
 
 const navItems: NavItem[] = [
@@ -82,7 +85,7 @@ const navItems: NavItem[] = [
   },
   {
     label: 'Chat',
-    href: '/chat',
+    isChat: true, // 使用 drawer 而非路由
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -102,7 +105,6 @@ const navItems: NavItem[] = [
         />
       </svg>
     ),
-    badge: 2,
   },
   {
     label: 'Me',
@@ -131,8 +133,12 @@ const navItems: NavItem[] = [
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
+  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const drawerOpen = useChatStore(state => state.drawerOpen);
+  const totalUnread = useChatStore(selectTotalUnreadCount);
 
-  const isActive = (href: string) => {
+  const isActive = (href?: string) => {
+    if (!href) return false;
     if (href === '/') {
       return pathname === '/';
     }
@@ -147,12 +153,44 @@ export const MobileNav: React.FC = () => {
       {/* Safe area padding for iOS */}
       <div className="relative pb-safe">
         <div className="flex items-center justify-around h-16 px-2">
-          {navItems.map(item => {
-            const active = isActive(item.href);
+          {navItems.map((item, index) => {
+            const active = item.isChat ? drawerOpen : isActive(item.href);
+            const badge = item.isChat ? totalUnread : item.badge;
+
+            // Chat 项使用按钮
+            if (item.isChat) {
+              return (
+                <button
+                  key={`chat-${index}`}
+                  onClick={openChatDrawer}
+                  className={`relative flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+                    active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {/* Icon with badge */}
+                  <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
+                    {active ? item.activeIcon || item.icon : item.icon}
+                    {badge && badge > 0 && (
+                      <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {badge > 9 ? '9+' : badge}
+                      </span>
+                    )}
+                  </span>
+                  <span className={`text-[10px] mt-1 font-medium ${active ? 'font-semibold' : ''}`}>
+                    {item.label}
+                  </span>
+                  {active && (
+                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              );
+            }
+
+            // 其他项使用 Link
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href!}
                 className={`relative flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                   active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}
@@ -161,9 +199,9 @@ export const MobileNav: React.FC = () => {
                 <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
                   {active ? item.activeIcon || item.icon : item.icon}
                   {/* Badge - small red circle with number */}
-                  {item.badge && item.badge > 0 && (
+                  {badge && badge > 0 && (
                     <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {item.badge > 9 ? '9+' : item.badge}
+                      {badge > 9 ? '9+' : badge}
                     </span>
                   )}
                 </span>

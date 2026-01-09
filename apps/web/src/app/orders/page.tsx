@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { OrderCard, Order } from '@/components/Order';
-import { useI18n, usePurchases, useSales, getImageUrl } from '@mobazha/core';
+import { useI18n, usePurchases, useSales, getImageUrl, useChatStore } from '@mobazha/core';
 import type { OrderListItem } from '@mobazha/core';
 
 type OrderStatus =
@@ -138,6 +138,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
@@ -199,9 +200,10 @@ export default function OrdersPage() {
     router.push(`/orders/${orderId}`);
   };
 
-  const handleContact = (vendorId: string) => {
-    // Navigate to chat with vendor
-    router.push(`/chat/${vendorId}`);
+  const handleContact = (_vendorId: string) => {
+    // Open chat drawer
+    // TODO: 后续可以添加逻辑来自动选择或创建与该用户的聊天房间
+    openChatDrawer();
   };
 
   return (
