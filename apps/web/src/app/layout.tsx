@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -13,6 +13,7 @@ import {
   ThemeProvider,
 } from '@/components';
 import { Toaster } from '@/components/ui';
+import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -74,23 +75,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ServiceWorkerProvider>
             <CurrencyProvider>
               <AuthProvider>
-                {/* Main content with bottom padding for mobile nav */}
-                <div className="pb-20 md:pb-0">{children}</div>
+                <Suspense fallback={null}>
+                  <ProductModalProvider>
+                    <PaymentSelectorProvider>
+                      {/* Main content with bottom padding for mobile nav */}
+                      <div className="pb-20 md:pb-0">{children}</div>
 
-                {/* Mobile bottom navigation */}
-                <MobileNav />
+                      {/* Mobile bottom navigation */}
+                      <MobileNav />
 
-                {/* Chat floating button and drawer */}
-                <ChatSystem />
+                      {/* Chat floating button and drawer */}
+                      <ChatSystem />
 
-                {/* PWA install prompt */}
-                <PWAInstall />
+                      {/* PWA install prompt */}
+                      <PWAInstall />
 
-                {/* Dev tools (only in development) */}
-                <DevTools />
+                      {/* Dev tools (only in development) */}
+                      <DevTools />
 
-                {/* Toast notifications */}
-                <Toaster />
+                      {/* Toast notifications */}
+                      <Toaster />
+                    </PaymentSelectorProvider>
+                  </ProductModalProvider>
+                </Suspense>
               </AuthProvider>
             </CurrencyProvider>
           </ServiceWorkerProvider>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useCallback, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton-compat';
@@ -533,6 +534,7 @@ export const OrderDetailModal = memo(function OrderDetailModal({
   className,
 }: OrderDetailModalProps) {
   const { t } = useI18n();
+  const router = useRouter();
 
   // 获取当前用户信息
   const currentUser = useUserStore(state => state.profile);
@@ -557,6 +559,16 @@ export const OrderDetailModal = memo(function OrderDetailModal({
     refetch();
     onOrderUpdate?.();
   }, [refetch, onOrderUpdate]);
+
+  // 处理支付 - 跳转到支付页面
+  const handlePay = useCallback(
+    (payOrderId: string) => {
+      // 关闭 Modal 并跳转到支付页面
+      onClose();
+      router.push(`/payment?orderID=${payOrderId}`);
+    },
+    [router, onClose]
+  );
 
   // 处理关闭 - ESC 键
   useEffect(() => {
@@ -603,6 +615,7 @@ export const OrderDetailModal = memo(function OrderDetailModal({
               refetch={refetch}
               onOrderUpdate={() => handleOrderUpdate()}
               onClose={onClose}
+              onPay={handlePay}
             />
           )}
 

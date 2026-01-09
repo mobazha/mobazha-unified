@@ -135,6 +135,9 @@ const navItems: NavItem[] = [
 const HIDE_NAV_PATTERNS = [
   /^\/orders\/[^/]+$/, // 订单详情页 /orders/:orderId
   /^\/chat\/[^/]+$/, // 聊天详情页 /chat/:chatId (如果有)
+  /^\/checkout/, // 结账页面（有自己的底部支付栏）
+  /^\/payment/, // 支付页面（有自己的底部支付栏）
+  /^\/product\/[^/]+$/, // 商品详情页（有自己的底部操作栏）
 ];
 
 export const MobileNav: React.FC = () => {

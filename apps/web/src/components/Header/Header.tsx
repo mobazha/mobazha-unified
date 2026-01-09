@@ -25,6 +25,7 @@ import {
   getImageUrl,
   isHosted,
   startCasdoorLogin,
+  useWallet,
 } from '@mobazha/core';
 import {
   Search,
@@ -36,6 +37,7 @@ import {
   ShoppingBag,
   Settings,
   LogOut,
+  Wallet,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -45,6 +47,12 @@ export const Header: React.FC = () => {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isConnected, isConnecting, walletInfo, connect, disconnect } = useWallet();
+
+  // 缩短地址显示
+  const shortenAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,6 +140,62 @@ export const Header: React.FC = () => {
               </span>
             </Link>
             <div className="w-px h-6 bg-border mx-2" />
+            {/* 钱包连接按钮 */}
+            {isConnected ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 font-mono text-xs">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    {walletInfo?.address && shortenAddress(walletInfo.address)}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {walletInfo?.provider || 'Wallet'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground font-mono">
+                        {walletInfo?.address && shortenAddress(walletInfo.address)}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="justify-between">
+                    <span className="text-muted-foreground">{t('wallet.balance')}</span>
+                    <span className="font-medium">
+                      {parseFloat(walletInfo?.balance || '0').toFixed(4)} ETH
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => router.push('/wallet')}
+                    className="cursor-pointer"
+                  >
+                    <Wallet className="mr-2 h-4 w-4" />
+                    {t('nav.wallet')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={disconnect}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('wallet.disconnect')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={connect}
+                disabled={isConnecting}
+              >
+                <Wallet className="h-4 w-4" />
+                {isConnecting ? t('wallet.connecting') : t('wallet.connect')}
+              </Button>
+            )}
             <LanguageSwitcher compact />
             <ThemeSwitcher compact />
             {isLoading ? (

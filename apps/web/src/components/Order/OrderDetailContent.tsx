@@ -120,6 +120,8 @@ export interface OrderDetailContentProps {
   onOrderUpdate?: (order: DisplayOrder) => void;
   /** 关闭回调（用于 Modal） */
   onClose?: () => void;
+  /** 支付回调（打开支付选择器） */
+  onPay?: (orderId: string) => void;
   className?: string;
 }
 
@@ -201,6 +203,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   refetch,
   onOrderUpdate,
   onClose: _onClose,
+  onPay,
   className,
 }: OrderDetailContentProps) {
   // 本地状态用于 UI 操作
@@ -413,7 +416,12 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     (action: OrderAction) => {
       switch (action) {
         case 'Pay':
-          window.alert('Payment flow coming soon');
+          // 如果提供了 onPay 回调，则调用它打开支付选择器
+          if (onPay) {
+            onPay(order.id);
+          } else {
+            window.alert('Payment flow coming soon');
+          }
           break;
         case 'Cancel':
           window.alert('Cancel order flow coming soon');
@@ -447,7 +455,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           break;
       }
     },
-    [handleConfirmReceipt]
+    [handleConfirmReceipt, onPay, order.id]
   );
 
   // ============ Permission Checks ============

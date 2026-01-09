@@ -19,3 +19,26 @@ export { ThemeSwitcher } from './ThemeSwitcher';
 export { ErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
 export { AuthProvider } from './AuthProvider';
 export { CurrencyProvider } from './CurrencyProvider';
+
+// Payment Components
+export {
+  PaymentCryptoSelector,
+  ModeratorSelector,
+  ModeratorCard,
+  CryptoTokenCard,
+  PaymentProtectionCard,
+  PaymentMethodSummary,
+  CheckoutBottomBar,
+  PaymentDrawer,
+} from './Payment';
+export type {
+  TokenConfig,
+  ChainConfig,
+  FiatMethodConfig,
+  Moderator,
+  SelectedPaymentMethod,
+  SelectedModerator,
+  PaymentCryptoSelectorProps,
+  ModeratorSelectorProps,
+  PaymentProtectionCardProps,
+} from './Payment';
