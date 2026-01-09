@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Container, Grid, HStack, VStack } from '@/components/layouts';
+import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { useI18n } from '@mobazha/core';
 
 const socialLinks = [
@@ -89,12 +90,11 @@ export const Footer: React.FC = () => {
         <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">M</span>
-              </div>
+            <Link href="/" className="flex items-center gap-2 mb-3">
+              <MobazhaLogo size={36} className="text-primary" />
               <span className="font-bold text-xl text-foreground">Mobazha</span>
             </Link>
+            <p className="text-sm text-muted-foreground mb-1 italic">Shop and grow with cryptos</p>
             <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
             <HStack gap="sm">
               {socialLinks.map(social => (

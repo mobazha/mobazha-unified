@@ -17,6 +17,8 @@ import type { Image } from '../../types';
 interface SearchResultItem {
   data: ProductListItem;
   relationships?: {
+    /** 商品的仲裁员列表 */
+    moderators?: string[] | null;
     vendor?: {
       data?: {
         peerID?: string;
@@ -151,6 +153,9 @@ function parseSearchResults(response: SearchApiResponse): ProductListItem[] {
       ? transformImageUrls(vendor.avatarHashes as Image)
       : undefined;
 
+    // 从 relationships 中获取 moderators
+    const moderators = item.relationships?.moderators ?? undefined;
+
     return {
       ...item.data,
       vendorPeerID: vendor?.peerID ?? item.data.vendorPeerID,
@@ -158,6 +163,8 @@ function parseSearchResults(response: SearchApiResponse): ProductListItem[] {
       vendorAvatarHashes,
       // 转换缩略图 IPFS hash 为完整 URL，保持原始值作为后备
       thumbnail: thumbnail ?? item.data.thumbnail,
+      // 添加 moderators 字段
+      moderators: moderators || undefined,
     };
   });
 }

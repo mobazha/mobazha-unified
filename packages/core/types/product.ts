@@ -28,6 +28,8 @@ export interface ProductListItem {
   freeShipping?: string[];
   nsfw?: boolean;
   contractType?: ContractType;
+  /** 仲裁员 peerID 列表 */
+  moderators?: string[];
 }
 
 /**
