@@ -24,6 +24,7 @@ import {
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
 import { Pencil, Camera, Package } from 'lucide-react';
+import { useProductModal } from '@/hooks';
 
 // 默认统计数据
 const defaultStats = {
@@ -39,6 +40,7 @@ type TabType = 'products' | 'about' | 'reviews';
 export default function StorePage() {
   const params = useParams();
   const { t } = useI18n();
+  const { openProduct, isMobile } = useProductModal();
   const peerId = params.peerId as string;
   const {
     isAuthenticated,
@@ -542,7 +544,17 @@ export default function StorePage() {
               ) : products.length > 0 ? (
                 <Grid cols={4} colsMobile={2} gap="md">
                   {products.map((product, index) => (
-                    <Link key={`${product.slug}-${index}`} href={`/product/${product.slug}`}>
+                    <Link
+                      key={`${product.slug}-${index}`}
+                      href={`/product/${product.slug}?peerID=${peerId}`}
+                      onClick={e => {
+                        // 桌面端使用弹框
+                        if (!isMobile) {
+                          e.preventDefault();
+                          openProduct(product.slug, peerId);
+                        }
+                      }}
+                    >
                       <ProductCard
                         title={product.title}
                         imageUrl={getImageUrl(product.thumbnail?.medium)}

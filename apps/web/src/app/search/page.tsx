@@ -13,6 +13,7 @@ import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import type { ProductContractType } from '@/components/ProductCard';
 import { useI18n, searchDataService, getImageUrl } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
+import { useProductModal } from '@/hooks';
 
 // 显示用的商品类型
 interface DisplayProduct {
@@ -111,6 +112,7 @@ function SearchPageContent() {
   const queryParam = searchParams.get('q') || '';
   const categoryParam = searchParams.get('category') || 'all';
   const { t } = useI18n();
+  const { openProduct, isMobile } = useProductModal();
 
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState(queryParam);
@@ -313,6 +315,13 @@ function SearchPageContent() {
     <Link
       key={product.id}
       href={`/product/${product.slug}${product.vendor.peerID ? `?peerID=${product.vendor.peerID}` : ''}`}
+      onClick={e => {
+        // 桌面端使用弹框
+        if (!isMobile) {
+          e.preventDefault();
+          openProduct(product.slug, product.vendor.peerID);
+        }
+      }}
     >
       <ProductCard
         title={product.title}

@@ -84,6 +84,7 @@ export interface TranslationResource {
     backToMarket: string;
     loadMore: string;
     noMoreData: string;
+    comingSoon: string;
   };
 
   // 导航
@@ -375,6 +376,10 @@ export interface TranslationResource {
     back: string;
     yourAddress: string;
     copy: string;
+    connect: string;
+    connecting: string;
+    disconnect: string;
+    connected: string;
   };
 
   // 用户资料
@@ -556,6 +561,24 @@ export interface TranslationResource {
     success: string;
     fee: string;
     noModeratorsFound: string;
+  };
+
+  // 支付选择
+  payment: TranslationSection & {
+    selectPaymentMethod: string;
+    selectPaymentMethodDesc: string;
+    paymentMethod: string;
+    otherMethods: string;
+    showMore: string;
+    showLess: string;
+    noTokensAvailable: string;
+    paymentProtection: string;
+    protectFor: string;
+    selectModerator: string;
+    selectModeratorDesc: string;
+    changeModerator: string;
+    enableProtection: string;
+    disableProtection: string;
   };
 
   // 筛选器

@@ -312,7 +312,98 @@ export async function getOrderDetails(
 // ========== 订单创建 API ==========
 
 /**
- * 创建购买订单
+ * 创建订单请求数据（用于两阶段购买流程）
+ */
+export interface CreateOrderData {
+  vendorId: string;
+  items: Array<{
+    listingHash: string;
+    quantity: number;
+    options?: Array<{
+      name: string;
+      value: string;
+    }>;
+    shipping?: {
+      name: string;
+      service: string;
+    };
+    memo?: string;
+    coupons?: string[];
+  }>;
+  address?: {
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    addressNotes?: string;
+  };
+  memo?: string;
+}
+
+/**
+ * 创建订单结果
+ */
+export interface CreateOrderResult {
+  orderID: string;
+  paymentAddress: string;
+  amount: {
+    amount: string;
+    currency: {
+      code: string;
+      divisibility: number;
+    };
+  };
+}
+
+/**
+ * 支付指令响应
+ */
+export interface PaymentInstructionsResult {
+  paymentAddress: string;
+  amount: string;
+  buyerAddress?: string;
+  vendorAddress?: string;
+  moderatorAddress?: string;
+  chainId?: number;
+}
+
+/**
+ * 创建订单（不含支付）
+ * 用于两阶段购买流程：先创建订单，后选择支付方式并支付
+ */
+export async function createOrder(
+  data: CreateOrderData,
+  username?: string,
+  password?: string
+): Promise<CreateOrderResult> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/order/purchase`;
+    return post<CreateOrderResult>(url, data, getAuthHeaders(username, password));
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    const newOrderId = 'Qm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    return {
+      orderID: newOrderId,
+      paymentAddress: '0x' + Math.random().toString(16).slice(2, 42),
+      amount: {
+        amount: '99.99',
+        currency: {
+          code: 'USD',
+          divisibility: 2,
+        },
+      },
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/order/purchase');
+}
+
+/**
+ * 创建购买订单（传统方法，包含支付币种）
  */
 export async function purchaseListing(
   data: PurchaseData,
@@ -801,6 +892,7 @@ export const ordersApi = {
   getOrderDetails,
 
   // 创建
+  createOrder,
   purchaseListing,
   estimateOrderTotal,
   getCheckoutBreakdown,

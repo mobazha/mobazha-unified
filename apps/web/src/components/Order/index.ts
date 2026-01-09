@@ -7,6 +7,13 @@ export type { OrderFooterProps } from './OrderFooter';
 export { OrderSummary } from './OrderSummary';
 export type { OrderSummaryProps } from './OrderSummary';
 
+export { OrderSummaryCard } from './OrderSummaryCard';
+export type {
+  OrderSummaryCardProps,
+  OrderSummaryItem,
+  OrderSummaryAddress,
+} from './OrderSummaryCard';
+
 export { OrderProgressBar } from './OrderProgressBar';
 export type { OrderProgressBarProps } from './OrderProgressBar';
 

@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import Link from 'next/link';
 import { Container, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
+import { useProductModal } from '@/hooks';
 
 interface Product {
   id: string;
@@ -44,6 +45,21 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   containerSize = 'xl',
   titleClassName,
 }) => {
+  const { openProduct, isMobile } = useProductModal();
+
+  // 处理商品点击
+  const handleProductClick = useCallback(
+    (e: React.MouseEvent, product: Product) => {
+      // 阻止 Link 的默认导航（桌面端）
+      if (!isMobile) {
+        e.preventDefault();
+        openProduct(product.slug, product.vendorPeerID);
+      }
+      // 移动端让 Link 正常工作
+    },
+    [isMobile, openProduct]
+  );
+
   return (
     <section className="py-6 sm:py-10 lg:py-16">
       <Container size={containerSize}>
@@ -88,7 +104,11 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   ? `/product/${product.slug}?peerID=${product.vendorPeerID}`
                   : `/product/${product.slug}`;
                 return (
-                  <Link key={`${product.id}-${index}`} href={productHref}>
+                  <Link
+                    key={`${product.id}-${index}`}
+                    href={productHref}
+                    onClick={e => handleProductClick(e, product)}
+                  >
                     <ProductCard
                       title={product.title}
                       imageUrl={product.imageUrl}
