@@ -95,8 +95,30 @@ const nextConfig = {
     ];
   },
 
-  // 注意：API 代理由服务器 nginx 处理（直接代理 /api, /v1, /info 路径）
-  // 不需要 Next.js rewrites
+  // API 代理配置（用于本地开发）
+  // 生产环境由 nginx 处理代理
+  async rewrites() {
+    // API 后端地址
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+
+    return [
+      // /v1/* 代理到后端 Gateway API
+      {
+        source: '/v1/:path*',
+        destination: `${apiBase}/v1/:path*`,
+      },
+      // /info/* 代理到后端 Search/Info API
+      {
+        source: '/info/:path*',
+        destination: `${apiBase}/info/:path*`,
+      },
+      // /api/* 代理到后端 Hosting API
+      {
+        source: '/api/:path*',
+        destination: `${apiBase}/api/:path*`,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

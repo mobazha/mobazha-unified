@@ -103,6 +103,7 @@ export function ProductDetail({
   const [vendor, setVendor] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<ProductRating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [ratingsLoading, setRatingsLoading] = useState(true); // 评论独立加载状态
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -117,8 +118,9 @@ export function ProductDetail({
 
   // 用于跟踪已加载的数据，防止重复请求
   const loadedDataRef = useRef<string | null>(null);
+  const loadedRatingsRef = useRef<string | null>(null);
 
-  // 获取商品数据
+  // 获取商品数据（不包含评论，评论单独加载）
   useEffect(() => {
     // 生成唯一的请求标识
     const requestKey = `${slug}-${peerID || ''}`;
@@ -159,7 +161,7 @@ export function ProductDetail({
         setProduct(productData);
         onProductLoadedRef.current?.(productData);
 
-        // 获取卖家信息
+        // 获取卖家信息（不阻塞商品显示）
         const vendorPeerID = productData.vendorID?.peerID;
         if (vendorPeerID) {
           try {
@@ -172,18 +174,6 @@ export function ProductDetail({
             }
           } catch (err) {
             console.error('Failed to fetch vendor:', err);
-          }
-
-          // 获取商品评价（使用去重函数）
-          try {
-            const ratingsData = await getRatingsWithDedup(slug, vendorPeerID, () =>
-              productDataService.getProductRatings(slug, vendorPeerID)
-            );
-            if (!isCancelled && Array.isArray(ratingsData)) {
-              setRatings(ratingsData as ProductRating[]);
-            }
-          } catch (err) {
-            console.error('Failed to fetch ratings:', err);
           }
         }
       } catch (err) {
@@ -206,6 +196,53 @@ export function ProductDetail({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- t 函数变化不应该触发重新获取数据
   }, [slug, peerID]);
+
+  // 独立获取评论数据（不阻塞商品页面渲染）
+  useEffect(() => {
+    // 需要 product 数据才能获取评论
+    if (!product) return;
+
+    const vendorPeerID = product.vendorID?.peerID;
+    if (!vendorPeerID) return;
+
+    // 生成唯一的请求标识
+    const ratingsKey = `ratings-${slug}-${vendorPeerID}`;
+
+    // 如果已经加载过相同的评论数据，直接返回
+    if (loadedRatingsRef.current === ratingsKey) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchRatings = async () => {
+      setRatingsLoading(true);
+
+      try {
+        const ratingsData = await getRatingsWithDedup(slug, vendorPeerID, () =>
+          productDataService.getProductRatings(slug, vendorPeerID)
+        );
+
+        if (!isCancelled && Array.isArray(ratingsData)) {
+          // 标记评论数据已加载
+          loadedRatingsRef.current = ratingsKey;
+          setRatings(ratingsData as ProductRating[]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch ratings:', err);
+      } finally {
+        if (!isCancelled) {
+          setRatingsLoading(false);
+        }
+      }
+    };
+
+    fetchRatings();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [product, slug]);
 
   // 计算图片 URL 数组
   const imageUrls = useMemo(() => {
@@ -707,69 +744,100 @@ export function ProductDetail({
                   {t('product.reviews')}
                 </h2>
 
-                {/* Rating Summary */}
-                <div className="text-center mb-4 sm:mb-6">
-                  <div className="text-3xl sm:text-4xl font-bold text-foreground">
-                    {averageRating.toFixed(1)}
-                  </div>
-                  <HStack gap="xs" justify="center" className="my-1.5 sm:my-2">
-                    <StarRating rating={averageRating} />
-                  </HStack>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {safeRatings.length} {t('product.reviews')}
-                  </p>
-                </div>
-
-                {/* Recent Reviews */}
-                {safeRatings.length > 0 ? (
-                  <VStack gap="sm">
-                    {safeRatings.slice(0, 3).map(review => (
-                      <div
-                        key={review.ratingID}
-                        className="pb-3 sm:pb-4 border-b border-border last:border-0"
-                      >
-                        <HStack gap="xs" align="center" className="mb-1.5">
-                          <Avatar
-                            name={
-                              review.buyerID?.handle ||
-                              review.buyerID?.peerID?.slice(0, 8) ||
-                              'Anonymous'
-                            }
-                            size="sm"
-                            className="w-6 h-6 sm:w-8 sm:h-8"
-                          />
-                          <span className="font-medium text-foreground text-sm">
-                            {review.anonymous
-                              ? t('product.anonymous')
-                              : review.buyerID?.handle ||
-                                review.buyerID?.peerID?.slice(0, 8) ||
-                                'User'}
-                          </span>
-                          <HStack gap="xs" className="ml-auto">
-                            <StarRating rating={review.overall} size="sm" />
-                          </HStack>
-                        </HStack>
-                        {review.review && (
-                          <p className="text-xs sm:text-sm text-muted-foreground">
-                            {review.review}
-                          </p>
-                        )}
-                        <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
-                          {new Date(review.timestamp).toLocaleDateString()}
-                        </p>
+                {/* 评论加载状态 */}
+                {ratingsLoading ? (
+                  <div className="space-y-4">
+                    {/* Rating Summary 骨架 */}
+                    <div className="text-center mb-4 sm:mb-6">
+                      <Skeleton className="h-10 w-16 mx-auto mb-2" />
+                      <Skeleton className="h-5 w-24 mx-auto mb-2" />
+                      <Skeleton className="h-4 w-20 mx-auto" />
+                    </div>
+                    {/* Reviews 骨架 */}
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="pb-3 sm:pb-4 border-b border-border last:border-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Skeleton className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
+                          <Skeleton className="h-4 w-20" />
+                          <div className="ml-auto">
+                            <Skeleton className="h-4 w-16" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-3 w-full mb-1" />
+                        <Skeleton className="h-3 w-2/3" />
                       </div>
                     ))}
-                  </VStack>
+                  </div>
                 ) : (
-                  <p className="text-center text-sm text-muted-foreground py-4">
-                    {t('product.noReviews')}
-                  </p>
-                )}
+                  <>
+                    {/* Rating Summary */}
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="text-3xl sm:text-4xl font-bold text-foreground">
+                        {averageRating.toFixed(1)}
+                      </div>
+                      <HStack gap="xs" justify="center" className="my-1.5 sm:my-2">
+                        <StarRating rating={averageRating} />
+                      </HStack>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        {safeRatings.length} {t('product.reviews')}
+                      </p>
+                    </div>
 
-                {safeRatings.length > 3 && (
-                  <Button variant="ghost" className="w-full mt-3 sm:mt-4 text-sm touch-feedback">
-                    {t('product.viewAllReviews')}
-                  </Button>
+                    {/* Recent Reviews */}
+                    {safeRatings.length > 0 ? (
+                      <VStack gap="sm">
+                        {safeRatings.slice(0, 3).map(review => (
+                          <div
+                            key={review.ratingID}
+                            className="pb-3 sm:pb-4 border-b border-border last:border-0"
+                          >
+                            <HStack gap="xs" align="center" className="mb-1.5">
+                              <Avatar
+                                name={
+                                  review.buyerID?.handle ||
+                                  review.buyerID?.peerID?.slice(0, 8) ||
+                                  'Anonymous'
+                                }
+                                size="sm"
+                                className="w-6 h-6 sm:w-8 sm:h-8"
+                              />
+                              <span className="font-medium text-foreground text-sm">
+                                {review.anonymous
+                                  ? t('product.anonymous')
+                                  : review.buyerID?.handle ||
+                                    review.buyerID?.peerID?.slice(0, 8) ||
+                                    'User'}
+                              </span>
+                              <HStack gap="xs" className="ml-auto">
+                                <StarRating rating={review.overall} size="sm" />
+                              </HStack>
+                            </HStack>
+                            {review.review && (
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                {review.review}
+                              </p>
+                            )}
+                            <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
+                              {new Date(review.timestamp).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))}
+                      </VStack>
+                    ) : (
+                      <p className="text-center text-sm text-muted-foreground py-4">
+                        {t('product.noReviews')}
+                      </p>
+                    )}
+
+                    {safeRatings.length > 3 && (
+                      <Button
+                        variant="ghost"
+                        className="w-full mt-3 sm:mt-4 text-sm touch-feedback"
+                      >
+                        {t('product.viewAllReviews')}
+                      </Button>
+                    )}
+                  </>
                 )}
               </Card>
             </div>

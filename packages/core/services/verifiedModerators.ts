@@ -3,6 +3,8 @@
  * 认证仲裁员服务 - 获取和管理已认证的仲裁员列表
  */
 
+import { getSearchUrl } from './api/config';
+
 // Verified moderator 类型
 export interface VerifiedModeratorType {
   name: string;
@@ -40,9 +42,13 @@ let cachedVerifiedModerators: Set<string> | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Verified Moderators API URL - 通过代理访问
-// 实际请求会被代理到: ${apiBase}/info/api/moderator/verified
-const VERIFIED_MODERATORS_URL = '/proxy/info/api/moderator/verified';
+/**
+ * 获取 Verified Moderators API URL
+ * 使用配置的 searchUrl 来构造完整路径
+ */
+function getVerifiedModeratorsUrl(): string {
+  return `${getSearchUrl()}/api/moderator/verified`;
+}
 
 /**
  * 获取已认证的仲裁员列表
@@ -53,8 +59,9 @@ export async function fetchVerifiedModerators(): Promise<Set<string>> {
     return cachedVerifiedModerators;
   }
 
+  const url = getVerifiedModeratorsUrl();
   try {
-    const response = await fetch(VERIFIED_MODERATORS_URL, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -83,7 +90,7 @@ export async function fetchVerifiedModerators(): Promise<Set<string>> {
 
     return moderatorPeerIDs;
   } catch (error) {
-    console.error('Failed to fetch verified moderators:', error);
+    console.error(`Failed to fetch verified moderators from ${url}:`, error);
     // 如果有缓存，返回缓存（即使过期）
     if (cachedVerifiedModerators) {
       return cachedVerifiedModerators;

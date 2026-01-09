@@ -45,12 +45,15 @@ export const productDataService = {
 
   /**
    * 获取店铺商品列表
+   * 使用网关 API 直接获取，比搜索服务更可靠
    */
-  async getStoreListings(peerID: string, pageSize = 9): Promise<ProductListItem[]> {
+  async getStoreListings(peerID: string, _pageSize = 9): Promise<ProductListItem[]> {
     if (isMockMode()) {
       return mockServices.products.getStoreListings(peerID);
     }
-    return await productsApi.fetchStoreListings(peerID, pageSize);
+    // 使用网关 API 直接获取店铺商品列表，比搜索服务 (fetchStoreListings) 更可靠
+    // 搜索服务可能没有索引到某些店铺的数据
+    return await productsApi.getStoreListingIndex(peerID);
   },
 
   /**

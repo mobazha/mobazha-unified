@@ -66,8 +66,9 @@ export function useFeaturedListings() {
 
 /**
  * 获取店铺商品列表
+ * 使用网关 API 直接获取，比搜索服务更可靠
  */
-export function useStoreListings(peerID: string | null, pageSize = 12) {
+export function useStoreListings(peerID: string | null, _pageSize = 12) {
   const [listings, setListings] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,14 +80,15 @@ export function useStoreListings(peerID: string | null, pageSize = 12) {
     setError(null);
 
     try {
-      const result = await productsApi.fetchStoreListings(peerID, pageSize);
+      // 使用网关 API 直接获取店铺商品列表，比搜索服务更可靠
+      const result = await productsApi.getStoreListingIndex(peerID);
       setListings(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取商品失败');
     } finally {
       setIsLoading(false);
     }
-  }, [peerID, pageSize]);
+  }, [peerID]);
 
   useEffect(() => {
     refetch();
