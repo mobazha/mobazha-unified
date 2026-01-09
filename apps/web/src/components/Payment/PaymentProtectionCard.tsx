@@ -60,20 +60,13 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
                     <Info className="w-4 h-4 text-muted-foreground cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
-                    <p>
-                      {t(
-                        'payment.paymentProtectionInfo',
-                        'Payment protection allows a moderator to resolve disputes between buyer and seller. The moderator can release funds to either party in case of disagreement.'
-                      )}
-                    </p>
+                    <p>{t('payment.paymentProtectionInfo')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
             <span className="text-sm text-muted-foreground">
-              {t('payment.protectFor', 'Protect my payment for up to {{days}} days', {
-                days: protectionDays,
-              })}
+              {t('payment.protectFor', { days: protectionDays })}
             </span>
           </div>
         </div>

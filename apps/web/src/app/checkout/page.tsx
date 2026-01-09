@@ -336,10 +336,7 @@ export default function CheckoutPage() {
                       onChange={e => setOrderNote(e.target.value)}
                       rows={3}
                       className="w-full px-3 py-2 rounded-md sm:rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
-                      placeholder={t(
-                        'checkout.orderNotePlaceholder',
-                        'Add a note for the seller...'
-                      )}
+                      placeholder={t('checkout.orderNotePlaceholder')}
                     />
                   </CardContent>
                 </Card>
@@ -549,12 +546,7 @@ export default function CheckoutPage() {
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <span>
-                        {t(
-                          'checkout.paymentNextStep',
-                          'You will select payment method in the next step'
-                        )}
-                      </span>
+                      <span>{t('checkout.paymentNextStep')}</span>
                     </div>
                   </CardContent>
                 </Card>
