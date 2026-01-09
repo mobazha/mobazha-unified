@@ -491,20 +491,14 @@ export default function PaymentPage() {
                     {!selectedTokenId && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
-                          {t(
-                            'payment.selectPaymentMethodWarning',
-                            'Please select a payment method'
-                          )}
+                          {t('payment.selectPaymentMethodWarning')}
                         </p>
                       </div>
                     )}
                     {paymentProtectionEnabled && !paymentModerator && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
-                          {t(
-                            'payment.selectModeratorWarning',
-                            'Please select a moderator for escrow protection'
-                          )}
+                          {t('payment.selectModeratorWarning')}
                         </p>
                       </div>
                     )}
@@ -524,12 +518,7 @@ export default function PaymentPage() {
                           d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                         />
                       </svg>
-                      <span>
-                        {t(
-                          'payment.securityNote',
-                          'Secure payment with multi-sig escrow protection'
-                        )}
-                      </span>
+                      <span>{t('payment.securityNote')}</span>
                     </div>
                   </CardContent>
                 </Card>
