@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { OrderCard, Order } from '@/components/Order';
+import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
+import { Order, OrderDetailModal, OrderTable, OrderListCompact } from '@/components/Order';
 import { useI18n, usePurchases, useSales, getImageUrl, useChatStore } from '@mobazha/core';
 import type { OrderListItem } from '@mobazha/core';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 type OrderStatus =
   | 'all'
@@ -95,9 +97,10 @@ function transformOrderListItem(item: OrderListItem): Order {
   const imageUrl = getThumbnailUrl(item.thumbnail);
 
   // 防御性处理：确保字段存在（后端可能返回不同的字段名）
-  const orderId = item.orderID || ((item as Record<string, unknown>).orderId as string) || '';
-  const vendorId = item.vendorID || ((item as Record<string, unknown>).vendorId as string) || '';
-  const buyerId = item.buyerID || ((item as Record<string, unknown>).buyerId as string) || '';
+  const itemAny = item as unknown as Record<string, unknown>;
+  const orderId = item.orderID || (itemAny.orderId as string) || '';
+  const vendorId = item.vendorID || (itemAny.vendorId as string) || '';
+  const buyerId = item.buyerID || (itemAny.buyerId as string) || '';
 
   // 获取格式化后的价格和货币
   const formattedPrice = formatPriceAmount(item.total);
@@ -139,6 +142,7 @@ export default function OrdersPage() {
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const openChatDrawer = useChatStore(state => state.openDrawer);
+  const isDesktop = useIsDesktop();
 
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
@@ -147,6 +151,10 @@ export default function OrdersPage() {
   }, [searchParams]);
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
+  const [showStatusSheet, setShowStatusSheet] = useState(false);
+
+  // 桌面端 Modal 状态
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // 使用核心包的 hooks 获取真实数据（支持分页）
   const {
@@ -191,14 +199,27 @@ export default function OrdersPage() {
     { value: 'disputed', label: t('order.disputed') },
   ];
 
-  // 根据状态过滤订单
-  const filteredOrders = orders.filter(
-    order => statusFilter === 'all' || order.status === statusFilter
+  // 根据状态过滤订单，并按时间降序排序（最新的在前面）
+  const filteredOrders = orders
+    .filter(order => statusFilter === 'all' || order.status === statusFilter)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // 处理查看订单详情 - 桌面端打开 Modal，移动端跳转页面
+  const handleViewDetails = useCallback(
+    (orderId: string) => {
+      if (isDesktop) {
+        setSelectedOrderId(orderId);
+      } else {
+        router.push(`/orders/${orderId}`);
+      }
+    },
+    [isDesktop, router]
   );
 
-  const handleViewDetails = (orderId: string) => {
-    router.push(`/orders/${orderId}`);
-  };
+  // 关闭 Modal
+  const handleCloseModal = useCallback(() => {
+    setSelectedOrderId(null);
+  }, []);
 
   const handleContact = (_vendorId: string) => {
     // Open chat drawer
@@ -230,7 +251,7 @@ export default function OrdersPage() {
                     // 更新 URL 参数，orderType 将通过 useMemo 自动更新
                     router.push(`/orders?tab=${type}`);
                   }}
-                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-sm font-medium transition-colors ${
                     orderType === type
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -242,23 +263,51 @@ export default function OrdersPage() {
             </div>
           </div>
 
-          {/* Status Tabs */}
-          <div className="mb-4 sm:mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <HStack gap="xs" className="min-w-max pb-2 sm:gap-2">
-              {statusTabs.map(tab => (
-                <button
-                  key={tab.value}
-                  onClick={() => setStatusFilter(tab.value)}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
-                    statusFilter === tab.value
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-card text-muted-foreground hover:text-foreground hover:bg-surface-hover border border-border'
-                  }`}
+          {/* Status Filter */}
+          <div className="mb-4 sm:mb-6">
+            {/* 移动端：下拉选择器 */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setShowStatusSheet(true)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card text-foreground active:bg-muted/30"
+              >
+                <span className="text-sm font-medium">
+                  {statusTabs.find(t => t.value === statusFilter)?.label} ({filteredOrders.length})
+                </span>
+                <svg
+                  className="w-5 h-5 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  {tab.label}
-                </button>
-              ))}
-            </HStack>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* 桌面端：横向标签组 */}
+            <div className="hidden lg:block overflow-x-auto">
+              <HStack gap="xs" className="min-w-max pb-2 sm:gap-2">
+                {statusTabs.map(tab => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setStatusFilter(tab.value)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                      statusFilter === tab.value
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-card text-muted-foreground hover:text-foreground hover:bg-surface-hover border border-border'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </HStack>
+            </div>
           </div>
 
           {/* Orders List */}
@@ -347,16 +396,25 @@ export default function OrdersPage() {
               </CardContent>
             </Card>
           ) : (
-            <VStack gap="md" className="sm:gap-4">
-              {filteredOrders.map(order => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
+            <>
+              {/* 桌面端：表格视图 */}
+              {isDesktop ? (
+                <OrderTable
+                  orders={filteredOrders}
                   type={orderType === 'purchases' ? 'purchase' : 'sale'}
-                  onViewDetails={() => handleViewDetails(order.id)}
-                  onContact={() => handleContact(order.vendor.id)}
+                  onViewDetails={handleViewDetails}
+                  onContact={handleContact}
                 />
-              ))}
+              ) : (
+                /* 移动端：紧凑列表视图 */
+                <Card className="overflow-hidden">
+                  <OrderListCompact
+                    orders={filteredOrders}
+                    type={orderType === 'purchases' ? 'purchase' : 'sale'}
+                    onViewDetails={handleViewDetails}
+                  />
+                </Card>
+              )}
 
               {/* 加载更多 */}
               {hasMore && filteredOrders.length > 0 && (
@@ -403,10 +461,53 @@ export default function OrdersPage() {
                   {t('common.noMoreData')}
                 </p>
               )}
-            </VStack>
+            </>
           )}
         </Container>
       </main>
+
+      {/* 移动端状态选择底部弹窗 */}
+      <BottomSheet open={showStatusSheet} onClose={() => setShowStatusSheet(false)}>
+        {statusTabs.map(tab => {
+          const count =
+            tab.value === 'all' ? orders.length : orders.filter(o => o.status === tab.value).length;
+
+          // 状态描述映射
+          const descMap: Record<string, string> = {
+            all: orderType === 'purchases' ? '所有购买订单' : '所有出售',
+            pending: '等待买家付款',
+            processing: '等待发货中',
+            shipped: '物品已发货、文件已发送、在途中，等',
+            completed: '货物已发送，资金已释放，反馈已留下',
+            disputed: '订单在有仲裁人参与的争议中',
+          };
+
+          return (
+            <BottomSheetItem
+              key={tab.value}
+              title={tab.label}
+              description={descMap[tab.value]}
+              trailing={count}
+              selected={statusFilter === tab.value}
+              onClick={() => {
+                setStatusFilter(tab.value);
+                setShowStatusSheet(false);
+              }}
+            />
+          );
+        })}
+      </BottomSheet>
+
+      {/* 桌面端订单详情 Modal */}
+      <OrderDetailModal
+        orderId={selectedOrderId}
+        open={!!selectedOrderId}
+        onClose={handleCloseModal}
+        onOrderUpdate={() => {
+          // 订单更新后可能需要刷新列表
+          // 可以在这里添加刷新逻辑
+        }}
+      />
     </div>
   );
 }

@@ -7,6 +7,26 @@ export type { OrderFooterProps } from './OrderFooter';
 export { OrderSummary } from './OrderSummary';
 export type { OrderSummaryProps } from './OrderSummary';
 
+export { OrderProgressBar } from './OrderProgressBar';
+export type { OrderProgressBarProps } from './OrderProgressBar';
+
+export {
+  OrderStageCard,
+  PaymentCard,
+  OrderRatingCard,
+  FulfillmentCard,
+  AcceptedCard,
+  OrderCompleteCard,
+} from './OrderStageCard';
+export type {
+  OrderStageCardProps,
+  PaymentCardProps,
+  OrderRatingCardProps,
+  FulfillmentCardProps,
+  AcceptedCardProps,
+  OrderCompleteCardProps,
+} from './OrderStageCard';
+
 export { OrderFulfillment } from './OrderFulfillment';
 export type { OrderFulfillmentProps, FulfillmentInfo } from './OrderFulfillment';
 
@@ -33,6 +53,25 @@ export type { PaymentInstructionsProps } from './PaymentInstructions';
 
 export { RwaTokenFulfill } from './RwaTokenFulfill';
 export type { RwaTokenFulfillProps, TokenInfo } from './RwaTokenFulfill';
+
+export { OrderDetailContent } from './OrderDetailContent';
+export type {
+  OrderDetailContentProps,
+  DisplayOrder,
+  OrderItem as DetailOrderItem,
+  OrderVendor,
+  Moderator,
+  TimelineEvent,
+} from './OrderDetailContent';
+
+export { OrderDetailModal } from './OrderDetailModal';
+export type { OrderDetailModalProps } from './OrderDetailModal';
+
+export { OrderTable } from './OrderTable';
+export type { OrderTableProps } from './OrderTable';
+
+export { OrderListCompact } from './OrderListCompact';
+export type { OrderListCompactProps } from './OrderListCompact';
 
 // Utils
 export * from './utils';

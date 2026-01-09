@@ -16,6 +16,25 @@ import {
   type OrderState,
 } from '@mobazha/core';
 
+// 状态中文标签
+const statusLabelsZh: Record<string, string> = {
+  PENDING: '待处理',
+  AWAITING_PAYMENT: '待付款',
+  AWAITING_PICKUP: '待取货',
+  AWAITING_FULFILLMENT: '待发货',
+  PARTIALLY_FULFILLED: '部分发货',
+  FULFILLED: '已发货',
+  COMPLETED: '已完成',
+  CANCELED: '已取消',
+  DECLINED: '已拒绝',
+  REFUNDED: '已退款',
+  DISPUTED: '争议中',
+  DECIDED: '已裁决',
+  RESOLVED: '已解决',
+  PAYMENT_FINALIZED: '已结算',
+  PROCESSING_ERROR: '处理错误',
+};
+
 export interface OrderFooterProps {
   orderState: OrderState;
   userRole: UserRole;
@@ -137,29 +156,47 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       outline: 'outline',
     };
 
+    // 主要操作按钮使用绿色，参照原有移动端设计
+    if (isPrimary) {
+      return (
+        <Button
+          key={action}
+          size="sm"
+          onClick={() => onAction(action)}
+          className="whitespace-nowrap px-6 bg-emerald-500 hover:bg-emerald-600 text-white"
+        >
+          {getActionLabel(action)}
+        </Button>
+      );
+    }
+
     return (
       <Button
         key={action}
-        variant={isPrimary ? 'default' : variantMap[config.variant] || 'outline'}
+        variant={variantMap[config.variant] || 'outline'}
         size="sm"
         onClick={() => onAction(action)}
-        className={`whitespace-nowrap ${isPrimary ? 'px-6' : 'px-4'}`}
+        className="whitespace-nowrap px-4"
       >
         {getActionLabel(action)}
       </Button>
     );
   };
 
+  // 获取状态显示标签
+  const statusLabel = statusLabelsZh[orderState] || orderState;
+
   return (
     <div
-      className={`sticky bottom-0 bg-card border-t border-border px-4 py-3 shadow-lg ${className}`}
+      className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-3 shadow-lg z-50 ${className}`}
     >
       <HStack justify="between" align="center" className="max-w-screen-xl mx-auto">
-        {/* 左侧：价格/状态信息 */}
-        <div className="flex-shrink-0">
-          {renderPriceInfo() || renderDisputeCountdown() || (
-            <span className="text-sm text-muted-foreground">{/* 可以显示其他状态信息 */}</span>
-          )}
+        {/* 左侧：状态标签 + 价格信息 */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* 状态标签 - 移动端显示 */}
+          <span className="text-sm font-medium text-foreground lg:hidden">{statusLabel}</span>
+          {/* 价格/倒计时信息 */}
+          {renderPriceInfo() || renderDisputeCountdown()}
         </div>
 
         {/* 右侧：操作按钮 */}
