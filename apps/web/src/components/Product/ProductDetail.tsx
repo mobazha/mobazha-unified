@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HStack, VStack, Grid } from '@/components/layouts';
@@ -17,6 +17,11 @@ import {
   useCurrency,
 } from '@mobazha/core';
 import type { Product, ProductRating, UserProfile } from '@mobazha/core';
+import {
+  getProductWithDedup,
+  getProfileWithDedup,
+  getRatingsWithDedup,
+} from '@/utils/requestDedup';
 
 // 星星评分组件
 function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {
@@ -76,6 +81,8 @@ export interface ProductDetailProps {
   onMessage?: () => void;
   /** 跳转到购物车回调 */
   onCart?: () => void;
+  /** 商品数据加载完成回调 */
+  onProductLoaded?: (product: Product | null) => void;
 }
 
 export function ProductDetail({
@@ -85,6 +92,7 @@ export function ProductDetail({
   onClose,
   onMessage,
   onCart,
+  onProductLoaded,
 }: ProductDetailProps) {
   const { t } = useI18n();
   const router = useRouter();
@@ -103,8 +111,26 @@ export function ProductDetail({
   const [_isWishlist, _setIsWishlist] = useState(false);
   void _isWishlist; // Reserved for future wishlist feature
 
+  // 存储回调函数的 ref，避免在依赖数组中引用
+  const onProductLoadedRef = useRef(onProductLoaded);
+  onProductLoadedRef.current = onProductLoaded;
+
+  // 用于跟踪已加载的数据，防止重复请求
+  const loadedDataRef = useRef<string | null>(null);
+
   // 获取商品数据
   useEffect(() => {
+    // 生成唯一的请求标识
+    const requestKey = `${slug}-${peerID || ''}`;
+
+    // 如果已经加载过相同的数据，直接返回
+    if (loadedDataRef.current === requestKey) {
+      return;
+    }
+
+    // 用于取消过期请求的标志
+    let isCancelled = false;
+
     const fetchProductData = async () => {
       if (!slug) return;
 
@@ -112,32 +138,49 @@ export function ProductDetail({
       setError(null);
 
       try {
-        // 获取商品详情
-        const productData = await productDataService.getProduct(slug, peerID);
+        // 获取商品详情（使用去重函数）
+        const productData = await getProductWithDedup(slug, peerID, () =>
+          productDataService.getProduct(slug, peerID)
+        );
+
+        // 检查请求是否已被取消
+        if (isCancelled) return;
 
         if (!productData) {
           setError(t('product.notFound'));
           setIsLoading(false);
+          onProductLoadedRef.current?.(null);
           return;
         }
 
+        // 标记数据已加载
+        loadedDataRef.current = requestKey;
+
         setProduct(productData);
+        onProductLoadedRef.current?.(productData);
 
         // 获取卖家信息
         const vendorPeerID = productData.vendorID?.peerID;
         if (vendorPeerID) {
           try {
-            const vendorData = await profileApi.getProfile(vendorPeerID);
-            setVendor(vendorData);
+            // 使用去重函数
+            const vendorData = await getProfileWithDedup(vendorPeerID, () =>
+              profileApi.getProfile(vendorPeerID)
+            );
+            if (!isCancelled && vendorData) {
+              setVendor(vendorData);
+            }
           } catch (err) {
             console.error('Failed to fetch vendor:', err);
           }
 
-          // 获取商品评价
+          // 获取商品评价（使用去重函数）
           try {
-            const ratingsData = await productDataService.getProductRatings(slug, vendorPeerID);
-            if (Array.isArray(ratingsData)) {
-              setRatings(ratingsData);
+            const ratingsData = await getRatingsWithDedup(slug, vendorPeerID, () =>
+              productDataService.getProductRatings(slug, vendorPeerID)
+            );
+            if (!isCancelled && Array.isArray(ratingsData)) {
+              setRatings(ratingsData as ProductRating[]);
             }
           } catch (err) {
             console.error('Failed to fetch ratings:', err);
@@ -145,14 +188,24 @@ export function ProductDetail({
         }
       } catch (err) {
         console.error('Failed to fetch product:', err);
-        setError(t('common.error'));
+        if (!isCancelled) {
+          setError(t('common.error'));
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchProductData();
-  }, [slug, peerID, t]);
+
+    // 清理函数：取消过期请求，但不重置已加载数据的标记
+    return () => {
+      isCancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t 函数变化不应该触发重新获取数据
+  }, [slug, peerID]);
 
   // 计算图片 URL 数组
   const imageUrls = useMemo(() => {
