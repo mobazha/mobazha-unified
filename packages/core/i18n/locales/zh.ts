@@ -186,6 +186,8 @@ export const zh: TranslationResource = {
     myPurchases: '我的购买',
     mySales: '我的销售',
     allOrders: '全部订单',
+    from: '来自',
+    to: '给',
     processing: '处理中',
     manageOrders: '管理您的购买和销售订单',
     noOrdersFound: '未找到订单',

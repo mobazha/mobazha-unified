@@ -1,32 +1,34 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Header, Footer } from '@/components';
-import { Container, VStack, HStack } from '@/components/layouts';
+import React, { memo, useCallback, useMemo, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import {
-  useOrder,
-  getImageUrl,
-  useUserStore,
-  useI18n,
-  isOrderFulfilled,
-  type OrderAction,
-  type UserRole as CoreUserRole,
-} from '@mobazha/core';
+import { cn } from '@/lib/utils';
+import { useOrder, getImageUrl, useUserStore, useI18n } from '@mobazha/core';
 import type { Order as CoreOrder, OrderState } from '@mobazha/core';
 import {
   OrderDetailContent,
-  OrderFooter,
   type DisplayOrder,
   type OrderItem,
   type Moderator,
   type TimelineEvent,
-} from '@/components/Order';
+} from './OrderDetailContent';
+import { X } from 'lucide-react';
+
+// ============ Types ============
+
+export interface OrderDetailModalProps {
+  /** 订单 ID */
+  orderId: string | null;
+  /** 是否打开 */
+  open: boolean;
+  /** 关闭回调 */
+  onClose: () => void;
+  /** 订单更新后回调 */
+  onOrderUpdate?: () => void;
+  className?: string;
+}
 
 // ============ Utility Functions ============
 
@@ -456,13 +458,81 @@ function transformCoreOrder(
   return result;
 }
 
+// ============ Loading Skeleton ============
+
+function OrderDetailSkeleton() {
+  return (
+    <div className="p-4 sm:p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Skeleton variant="text" width={60} height={20} />
+        <Skeleton variant="text" width="40%" height={20} />
+      </div>
+      <div className="my-6 px-4">
+        <Skeleton variant="rounded" width="100%" height={60} />
+      </div>
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="p-3 border border-border rounded-lg">
+            <div className="flex items-center gap-3">
+              <Skeleton variant="circular" width={32} height={32} />
+              <div className="flex-1">
+                <Skeleton variant="text" width="60%" height={16} />
+                <Skeleton variant="text" width="40%" height={12} className="mt-1" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border pt-4 mt-4">
+        <Skeleton variant="text" width={100} height={20} className="mb-4" />
+        <div className="flex gap-4">
+          <Skeleton variant="rectangular" width={80} height={80} className="rounded-lg" />
+          <div className="flex-1">
+            <Skeleton variant="text" width="70%" height={18} />
+            <Skeleton variant="text" width="40%" height={14} className="mt-2" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ Error State ============
+
+function OrderDetailError({ error, onRetry }: { error: string; onRetry: () => void }) {
+  const { t } = useI18n();
+
+  return (
+    <div className="p-8 text-center">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-foreground mb-2">{t('order.loadOrderFailed')}</h3>
+      <p className="text-sm text-muted-foreground mb-4">{error}</p>
+      <Button onClick={onRetry} size="sm">
+        {t('order.tryAgain')}
+      </Button>
+    </div>
+  );
+}
+
 // ============ Main Component ============
 
-export default function OrderDetailPage() {
-  const params = useParams();
-  const router = useRouter();
+export const OrderDetailModal = memo(function OrderDetailModal({
+  orderId,
+  open,
+  onClose,
+  onOrderUpdate,
+  className,
+}: OrderDetailModalProps) {
   const { t } = useI18n();
-  const orderId = params.orderId as string;
 
   // 获取当前用户信息
   const currentUser = useUserStore(state => state.profile);
@@ -474,7 +544,7 @@ export default function OrderDetailPage() {
     isLoading: orderLoading,
     error: orderError,
     refetch,
-  } = useOrder(orderId);
+  } = useOrder(orderId || '');
 
   // 转换订单数据
   const displayOrder = useMemo(() => {
@@ -482,261 +552,72 @@ export default function OrderDetailPage() {
     return transformCoreOrder(coreOrder, currentUserPeerID);
   }, [coreOrder, currentUserPeerID]);
 
-  // 统一处理订单操作（用于 OrderFooter）
-  const handleOrderAction = useCallback((action: OrderAction) => {
-    switch (action) {
-      case 'Pay':
-        window.alert('Payment flow coming soon');
-        break;
-      case 'Cancel':
-        window.alert('Cancel order flow coming soon');
-        break;
-      case 'Dispute':
-        // 将在 OrderDetailContent 中处理
-        break;
-      case 'Complete':
-        // 将在 OrderDetailContent 中处理
-        break;
-      case 'WriteReview':
-        window.alert('Review feature coming soon');
-        break;
-      case 'Accept':
-        window.alert('Accept order flow coming soon');
-        break;
-      case 'Decline':
-        window.alert('Decline order flow coming soon');
-        break;
-      case 'Fulfill':
-        // 将在 OrderDetailContent 中处理
-        break;
-      case 'Refund':
-        // 将在 OrderDetailContent 中处理
-        break;
-      case 'Claim':
-        window.alert('Claim payment flow coming soon');
-        break;
-      case 'AcceptPayout':
-        window.alert('Accept payout flow coming soon');
-        break;
-    }
-  }, []);
+  // 处理订单更新
+  const handleOrderUpdate = useCallback(() => {
+    refetch();
+    onOrderUpdate?.();
+  }, [refetch, onOrderUpdate]);
 
-  // 加载状态
-  if (orderLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="py-4 sm:py-8">
-          <Container size="xl">
-            <Skeleton variant="text" width={100} height={20} className="mb-4" />
-            <Card className="mb-4 sm:mb-6 p-3 sm:p-6">
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <Skeleton variant="text" width="40%" height={32} />
-                <Skeleton variant="rounded" width={80} height={28} />
-              </div>
-              <Skeleton variant="text" width="30%" height={16} className="mb-4" />
-              <div className="my-6 px-8">
-                <Skeleton variant="rounded" width="100%" height={60} />
-              </div>
-              <Skeleton variant="text" width="20%" height={24} className="mb-3" />
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex gap-3 mb-4">
-                  <Skeleton variant="circular" width={16} height={16} />
-                  <div className="flex-1">
-                    <Skeleton variant="text" width="60%" height={18} />
-                    <Skeleton variant="text" width="30%" height={14} className="mt-1" />
-                  </div>
-                </div>
-              ))}
-            </Card>
-          </Container>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // 错误状态
-  if (orderError) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <Container className="py-8">
-          <Card className="py-16 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
-              <svg
-                className="w-10 h-10 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              {t('order.loadOrderFailed')}
-            </h2>
-            <p className="text-muted-foreground mb-4">{orderError}</p>
-            <Button onClick={() => refetch()}>{t('order.tryAgain')}</Button>
-          </Card>
-        </Container>
-        <Footer />
-      </div>
-    );
-  }
-
-  // 订单不存在
-  if (!displayOrder) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <Container className="py-8">
-          <Card className="py-16 text-center">
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              {t('order.orderNotFound')}
-            </h2>
-            <p className="text-muted-foreground mb-4">{t('order.orderNotFoundMessage')}</p>
-            <Button onClick={() => router.push('/orders')}>{t('order.backToOrders')}</Button>
-          </Card>
-        </Container>
-        <Footer />
-      </div>
-    );
-  }
+  // 处理关闭 - ESC 键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+      <DialogContent
+        className={cn('max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col', className)}
+      >
+        {/* Header */}
+        <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-base sm:text-lg font-semibold">
+              {t('order.orderDetails')}
+            </DialogTitle>
+            <Button variant="ghost" size="icon" onClick={onClose} className="w-8 h-8">
+              <X className="w-4 h-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+        </DialogHeader>
 
-      <main className="py-4 sm:py-8">
-        <Container size="xl">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-4 text-sm touch-feedback"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            {t('order.backToOrders')}
-          </button>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {orderLoading && <OrderDetailSkeleton />}
 
-          {/* Order Detail Content */}
-          <Card className="mb-4 sm:mb-6 p-3 sm:p-6">
+          {orderError && <OrderDetailError error={orderError} onRetry={refetch} />}
+
+          {!orderLoading && !orderError && displayOrder && (
             <OrderDetailContent
               displayOrder={displayOrder}
               coreOrder={coreOrder}
               currentUserPeerID={currentUserPeerID}
-              inModal={false}
+              inModal={true}
               showFooter={false}
               refetch={refetch}
+              onOrderUpdate={() => handleOrderUpdate()}
+              onClose={onClose}
             />
-          </Card>
+          )}
 
-          {/* Desktop: Sidebar with Seller Info - Hidden on mobile */}
-          <div className="hidden lg:block mt-6">
-            <div className="grid grid-cols-3 gap-6">
-              {/* Seller Info */}
-              <Card className="p-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Seller</h3>
-                <HStack gap="sm" align="center">
-                  <Avatar
-                    src={displayOrder.vendor.avatar}
-                    name={displayOrder.vendor.name}
-                    size="md"
-                    className="w-12 h-12"
-                  />
-                  <VStack gap="none">
-                    <Link
-                      href={`/store/${displayOrder.vendor.id}`}
-                      className="font-semibold text-foreground hover:text-emerald-600 text-sm"
-                    >
-                      {displayOrder.vendor.name}
-                    </Link>
-                    <span className="text-xs text-muted-foreground">View Store</span>
-                  </VStack>
-                </HStack>
-              </Card>
-
-              {/* Buyer Info */}
-              {displayOrder.buyer && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Buyer</h3>
-                  <HStack gap="sm" align="center">
-                    <Avatar
-                      src={displayOrder.buyer.avatar}
-                      name={displayOrder.buyer.name}
-                      size="md"
-                      className="w-12 h-12"
-                    />
-                    <VStack gap="none">
-                      <span className="font-semibold text-foreground text-sm">
-                        {displayOrder.buyer.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground">Buyer</span>
-                    </VStack>
-                  </HStack>
-                </Card>
-              )}
-
-              {/* Moderator Info */}
-              {displayOrder.moderator && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Moderator</h3>
-                  <HStack gap="sm" align="center">
-                    <Avatar
-                      src={displayOrder.moderator.avatar}
-                      name={displayOrder.moderator.name}
-                      size="md"
-                      className="w-12 h-12"
-                    />
-                    <VStack gap="none">
-                      <Link
-                        href={`/moderators/${displayOrder.moderator.id}`}
-                        className="font-semibold text-foreground hover:text-emerald-600 text-sm"
-                      >
-                        {displayOrder.moderator.name}
-                      </Link>
-                      <span className="text-xs text-muted-foreground">
-                        {displayOrder.moderator.fee}% fee
-                      </span>
-                    </VStack>
-                  </HStack>
-                </Card>
-              )}
+          {!orderLoading && !orderError && !displayOrder && (
+            <div className="p-8 text-center">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {t('order.orderNotFound')}
+              </h3>
+              <p className="text-sm text-muted-foreground">{t('order.orderNotFoundMessage')}</p>
             </div>
-          </div>
-
-          {/* Spacer for fixed bottom bar (OrderFooter) */}
-          <div className="h-16" />
-        </Container>
-      </main>
-
-      {/* Order Action Footer */}
-      <OrderFooter
-        orderState={coreOrder?.state || 'PENDING'}
-        userRole={displayOrder.userRole as CoreUserRole}
-        timestamp={displayOrder.createdAt}
-        isModerated={!!displayOrder.moderator}
-        isFulfilled={coreOrder ? isOrderFulfilled(coreOrder) : false}
-        paymentMethod={coreOrder?.contract?.buyerOrder?.payment?.method}
-        totalAmount={displayOrder.total}
-        currency={displayOrder.currency}
-        paymentCoin={coreOrder?.contract?.buyerOrder?.payment?.coin}
-        onAction={handleOrderAction}
-      />
-
-      <Footer />
-    </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+});
+
+export default OrderDetailModal;

@@ -131,6 +131,12 @@ const navItems: NavItem[] = [
   },
 ];
 
+// 需要隐藏底部导航栏的页面路径模式
+const HIDE_NAV_PATTERNS = [
+  /^\/orders\/[^/]+$/, // 订单详情页 /orders/:orderId
+  /^\/chat\/[^/]+$/, // 聊天详情页 /chat/:chatId (如果有)
+];
+
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
   const openChatDrawer = useChatStore(state => state.openDrawer);
@@ -144,6 +150,14 @@ export const MobileNav: React.FC = () => {
     }
     return pathname.startsWith(href);
   };
+
+  // 检查当前页面是否需要隐藏底部导航栏（有自己的底部操作栏）
+  const shouldHideNav = HIDE_NAV_PATTERNS.some(pattern => pattern.test(pathname));
+
+  // 如果需要隐藏，不渲染导航栏
+  if (shouldHideNav) {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden" data-testid="mobile-nav">

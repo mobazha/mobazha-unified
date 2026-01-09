@@ -186,6 +186,8 @@ export const en: TranslationResource = {
     myPurchases: 'My Purchases',
     mySales: 'My Sales',
     allOrders: 'All Orders',
+    from: 'From',
+    to: 'To',
     processing: 'Processing',
     manageOrders: 'Manage your purchases and sales',
     noOrdersFound: 'No orders found',
