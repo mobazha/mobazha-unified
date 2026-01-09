@@ -257,6 +257,32 @@ export const pt: TranslationResource = {
     selectConversation:
       'Selecione uma conversa para começar a conversar, ou crie uma nova para se conectar com vendedores e compradores.',
     searchConversations: 'Pesquisar conversas...',
+    // Seções
+    directMessages: 'Mensagens diretas',
+    communities: 'Comunidades',
+    orderChats: 'Discussões de pedidos',
+    invitations: 'Convites',
+    invitedYou: 'Convidou você para conversar',
+    inviteConfirm: 'Convite',
+    invitedBy: 'Convidado por {{name}}',
+    // Configurações da sala
+    roomSettings: 'Configurações da sala',
+    roomId: 'ID da sala',
+    members: 'Membros',
+    directMessage: 'Mensagem direta',
+    groupChat: 'Chat em grupo',
+    viewStore: 'Ver loja',
+    sendMessage: 'Enviar mensagem',
+    // Informações do usuário
+    unknownUser: 'Usuário desconhecido',
+    externalUser: 'Usuário Matrix externo',
+    peerId: 'Peer ID',
+    matrixId: 'Matrix ID',
+    // Tempo
+    today: 'Hoje',
+    yesterday: 'Ontem',
+    connecting: 'Conectando ao chat...',
+    startConversation: 'Iniciar conversa',
   },
 
   // Matrix 房间事件

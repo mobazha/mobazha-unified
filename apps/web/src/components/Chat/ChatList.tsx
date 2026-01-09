@@ -11,6 +11,7 @@ export interface ChatRoom {
   id: string;
   name: string;
   avatar?: string;
+  rawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount?: number;
@@ -90,12 +91,14 @@ const SectionHeader: React.FC<{ title: string; count: number; icon: React.ReactN
   count,
   icon,
 }) => (
-  <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-y border-border/30">
-    <span className="text-muted-foreground">{icon}</span>
-    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+  <div className="flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-muted/40 to-muted/20 border-y border-border/20 backdrop-blur-sm">
+    <span className="text-muted-foreground/70">{icon}</span>
+    <span className="text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider">
       {title}
     </span>
-    <span className="text-xs text-muted-foreground/60">({count})</span>
+    <span className="text-[10px] text-muted-foreground/50 font-medium bg-muted/50 px-1.5 py-0.5 rounded-full">
+      {count}
+    </span>
   </div>
 );
 
@@ -142,29 +145,38 @@ export const ChatList: React.FC<ChatListProps> = ({
           onRoomSelect?.(room.id);
         }
       }}
-      className={`w-full text-left group flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 hover:bg-surface-hover active:bg-muted transition-all duration-150 border-l-2 ${
+      className={`w-full text-left group flex items-center gap-3 p-3 sm:p-3.5 transition-all duration-200 relative rounded-lg mx-1 my-0.5 ${
         activeRoomId === room.id
-          ? 'bg-primary/5 border-l-primary'
+          ? 'bg-primary/8 shadow-sm'
           : isInvite
-            ? 'bg-emerald-500/5 border-l-emerald-500/50'
-            : 'border-l-transparent hover:border-l-primary/30'
+            ? 'bg-emerald-500/5 hover:bg-emerald-500/10'
+            : 'hover:bg-muted/60 hover:translate-x-1 hover:-translate-y-0.5 hover:shadow-md'
       }`}
     >
+      {/* Active indicator bar */}
+      {activeRoomId === room.id && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-primary to-primary/70 rounded-r-full" />
+      )}
+      {isInvite && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-emerald-500 to-emerald-500/70 rounded-r-full animate-pulse" />
+      )}
+
       {/* Avatar with online status */}
       <div className="relative flex-shrink-0">
         <Avatar
           src={room.avatar}
+          rawMxcUrl={room.rawMxcAvatarUrl}
           name={room.name}
           size="sm"
-          className="w-11 h-11 ring-2 ring-background shadow-sm"
+          className="w-12 h-12 ring-2 ring-background shadow-md transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105"
         />
         {/* Online status indicator */}
         {room.isOnline && !isInvite && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-card rounded-full shadow-sm" />
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-card rounded-full shadow-sm ring-2 ring-emerald-500/20" />
         )}
         {/* Invite badge */}
         {isInvite && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 border-2 border-card rounded-full flex items-center justify-center shadow-sm">
+          <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-gradient-to-br from-emerald-500 to-emerald-600 border-2 border-card rounded-full flex items-center justify-center shadow-md">
             <svg
               className="w-2.5 h-2.5 text-white"
               fill="none"
@@ -185,11 +197,13 @@ export const ChatList: React.FC<ChatListProps> = ({
       <div className="flex-1 min-w-0">
         <HStack justify="between" align="center">
           <HStack gap="xs" align="center" className="min-w-0 flex-1">
-            <span className="font-semibold text-[14px] text-foreground truncate">{room.name}</span>
+            <span className="font-semibold text-[14px] text-foreground truncate group-hover:text-primary transition-colors duration-200">
+              {room.name}
+            </span>
             {/* Verified badge */}
             {room.isVerified && (
               <svg
-                className="w-3.5 h-3.5 text-blue-500 flex-shrink-0"
+                className="w-4 h-4 text-blue-500 flex-shrink-0 drop-shadow-sm"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -203,7 +217,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             {/* Encrypted indicator */}
             {room.isEncrypted && !isInvite && (
               <svg
-                className="w-3 h-3 text-emerald-600 flex-shrink-0"
+                className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-label="End-to-end encrypted"
@@ -219,32 +233,32 @@ export const ChatList: React.FC<ChatListProps> = ({
             <RoomTypeBadge type={room.roomType} isExternal={room.isExternal} />
           </HStack>
           {room.lastMessageTime && !isInvite && (
-            <span className="text-[11px] text-muted-foreground flex-shrink-0 ml-2">
+            <span className="text-[10px] text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
               {room.lastMessageTime}
             </span>
           )}
         </HStack>
-        <HStack justify="between" align="center" className="mt-0.5">
+        <HStack justify="between" align="center" className="mt-1">
           {isInvite ? (
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-emerald-600 dark:text-emerald-400 font-medium">
+              <span className="text-[12px] text-emerald-600 dark:text-emerald-400 font-semibold">
                 {t('chat.invitedYou')}
               </span>
             </div>
           ) : (
-            <p className="text-[12px] text-muted-foreground/80 truncate">
+            <p className="text-[12px] text-muted-foreground/70 truncate leading-relaxed">
               {room.lastMessage || t('chat.noMessages')}
             </p>
           )}
           {isInvite ? (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
               <button
                 onClick={e => {
                   e.preventDefault();
                   e.stopPropagation();
                   onAcceptInvite?.(room.id);
                 }}
-                className="px-2 py-1 text-[10px] font-medium bg-emerald-500 hover:bg-emerald-600 text-white rounded-md transition-colors"
+                className="px-3 py-1.5 text-[10px] font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
               >
                 Accept
               </button>
@@ -254,13 +268,13 @@ export const ChatList: React.FC<ChatListProps> = ({
                   e.stopPropagation();
                   onRejectInvite?.(room.id);
                 }}
-                className="px-2 py-1 text-[10px] font-medium bg-muted hover:bg-muted/80 text-muted-foreground rounded-md transition-colors"
+                className="px-3 py-1.5 text-[10px] font-semibold bg-muted/80 hover:bg-muted text-muted-foreground rounded-lg transition-all"
               >
                 Decline
               </button>
             </div>
           ) : room.unreadCount && room.unreadCount > 0 ? (
-            <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1.5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+            <span className="flex-shrink-0 min-w-[20px] h-5 px-2 bg-gradient-to-r from-primary to-primary/90 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md shadow-primary/30 animate-pulse">
               {room.unreadCount > 99 ? '99+' : room.unreadCount}
             </span>
           ) : null}
@@ -367,33 +381,40 @@ export const ChatList: React.FC<ChatListProps> = ({
             ))}
           </VStack>
         ) : filteredRooms.length === 0 && invites.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <div className="w-16 h-16 mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/5 blur-3xl" />
             </div>
-            <p className="text-muted-foreground text-sm">
-              {searchQuery ? t('empty.noStoresFound') : t('chat.noMessages')}
-            </p>
-            {!searchQuery && (
-              <button
-                onClick={onNewChat}
-                className="mt-4 px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                {t('chat.startConversation')}
-              </button>
-            )}
+
+            <div className="relative z-10">
+              <div className="w-20 h-20 mb-5 rounded-2xl bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-sm flex items-center justify-center shadow-lg border border-border/30 rotate-3 hover:rotate-0 transition-transform duration-300">
+                <svg
+                  className="w-10 h-10 text-muted-foreground/60"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
+              <p className="text-muted-foreground/80 text-sm font-medium">
+                {searchQuery ? t('empty.noStoresFound') : t('chat.noMessages')}
+              </p>
+              {!searchQuery && (
+                <button
+                  onClick={onNewChat}
+                  className="mt-5 px-5 py-2.5 text-sm font-semibold text-primary hover:text-white hover:bg-primary rounded-xl transition-all duration-200 border border-primary/30 hover:border-transparent hover:shadow-lg hover:shadow-primary/20"
+                >
+                  {t('chat.startConversation')}
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <VStack gap="none">
@@ -488,8 +509,9 @@ export const ChatList: React.FC<ChatListProps> = ({
               </>
             )}
 
-            {/* If no sections needed (all direct messages) */}
+            {/* If no sections needed (no categories) */}
             {invites.length === 0 &&
+              directRooms.length === 0 &&
               groupRooms.length === 0 &&
               orderRooms.length === 0 &&
               filteredRooms.map(room => renderRoomItem(room))}
@@ -498,13 +520,18 @@ export const ChatList: React.FC<ChatListProps> = ({
       </div>
 
       {/* New Chat Button - Desktop only */}
-      <div className="hidden lg:block p-3 sm:p-4 border-t border-border/50 bg-gradient-to-t from-card to-transparent">
+      <div className="hidden lg:block p-4 border-t border-border/30 bg-gradient-to-t from-card via-card/95 to-transparent backdrop-blur-sm">
         <button
           onClick={onNewChat}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 active:from-primary/80 text-white rounded-xl transition-all duration-200 text-[13px] font-medium shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30"
+          className="w-full flex items-center justify-center gap-2.5 py-3 px-5 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 active:from-primary/90 text-white rounded-xl transition-all duration-300 text-[13px] font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           {t('chat.newMessage')}
         </button>

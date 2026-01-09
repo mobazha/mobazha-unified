@@ -19,6 +19,9 @@ import {
   saveCredentials,
   getCredentials,
   clearCredentials,
+  clearCredentialsKeepDevice,
+  clearAllCredentials,
+  updateTokens,
   STORAGE_KEYS,
   getStorage,
 } from './storage';
@@ -108,6 +111,7 @@ class MatrixClientService {
 
       // 2. 尝试获取或创建凭据
       let accessToken: string | null = null;
+      let refreshToken: string | null = null;
       let userId: string | null = null;
       let deviceId: string | null = null;
 
@@ -121,15 +125,15 @@ class MatrixClientService {
         if (isValid) {
           // 本地凭据有效
           accessToken = stored.accessToken;
+          refreshToken = stored.refreshToken;
           userId = stored.userId;
           deviceId = stored.deviceId;
-          console.info('[Matrix] Using valid cached credentials');
         } else {
           // Token 已过期，清除并重新登录
-          console.warn('[Matrix] Cached token expired, re-authenticating...');
           await clearCredentials();
           const credentials = await this._autoRegister(peerID, config);
           accessToken = credentials.accessToken;
+          refreshToken = credentials.refreshToken || null;
           userId = credentials.userId;
           deviceId = credentials.deviceId;
         }
@@ -137,6 +141,7 @@ class MatrixClientService {
         // 需要自动注册/登录
         const credentials = await this._autoRegister(peerID, config);
         accessToken = credentials.accessToken;
+        refreshToken = credentials.refreshToken || null;
         userId = credentials.userId;
         deviceId = credentials.deviceId;
       }
@@ -150,33 +155,39 @@ class MatrixClientService {
         await this._ensureCryptoStoreMatchesDevice(userId, deviceId);
       }
 
-      // 4. 创建 Matrix 客户端
+      // 4. 创建 Matrix 客户端（包含 token refresh 支持）
       const sdk = await import('matrix-js-sdk');
-      this.client = sdk.createClient({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientOpts: any = {
         baseUrl: config.homeserverURL,
         accessToken,
         userId,
         deviceId: deviceId || undefined,
         useAuthorizationHeader: true,
-      });
+      };
+
+      // 如果有 refresh token，配置自动刷新
+      if (refreshToken) {
+        clientOpts.refreshToken = refreshToken;
+        clientOpts.tokenRefreshFunction = this._createTokenRefreshFunction(config.homeserverURL);
+      }
+
+      this.client = sdk.createClient(clientOpts);
 
       // 5. 初始化 E2EE 加密 (在 startClient 之前)
       const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
       try {
-        console.info('[Matrix] Initializing E2EE crypto...');
         const cryptoDbPrefix = `matrix-crypto-${userId}`;
         await matrixClient.initRustCrypto({
           useIndexedDB: true,
           cryptoDatabasePrefix: cryptoDbPrefix,
         });
-        console.info('[Matrix] E2EE crypto initialized successfully');
 
         // 标记当前设备为 crypto store 的所有者
         if (deviceId) {
           this._markCryptoStoreDevice(userId, deviceId);
         }
-      } catch (cryptoError) {
-        console.warn('[Matrix] E2EE crypto init failed (messages may not decrypt):', cryptoError);
+      } catch {
         // 继续运行，但加密功能可能不可用
       }
 
@@ -230,7 +241,7 @@ class MatrixClientService {
   private async _autoRegister(
     peerID: string,
     config: { homeserverURL: string; serverName: string }
-  ): Promise<{ accessToken: string; userId: string; deviceId: string }> {
+  ): Promise<{ accessToken: string; refreshToken?: string; userId: string; deviceId: string }> {
     const deviceId = await this._getOrCreateDeviceId();
 
     // 尝试从节点获取凭据
@@ -271,7 +282,7 @@ class MatrixClientService {
     peerID: string,
     config: { homeserverURL: string; serverName: string },
     deviceId: string
-  ): Promise<{ accessToken: string; userId: string; deviceId: string }> {
+  ): Promise<{ accessToken: string; refreshToken?: string; userId: string; deviceId: string }> {
     // 获取派生密码
     const derivedPassword = await getDerivedPassword();
 
@@ -303,7 +314,7 @@ class MatrixClientService {
     peerID: string,
     config: { homeserverURL: string; serverName: string },
     deviceId: string
-  ): Promise<{ accessToken: string; userId: string; deviceId: string }> {
+  ): Promise<{ accessToken: string; refreshToken?: string; userId: string; deviceId: string }> {
     const derivedPassword = await getDerivedPassword();
     if (!derivedPassword) {
       throw new Error('Failed to get derived password');
@@ -336,7 +347,7 @@ class MatrixClientService {
     userId: string,
     password: string,
     deviceId: string
-  ): Promise<{ accessToken: string; userId: string; deviceId: string }> {
+  ): Promise<{ accessToken: string; refreshToken?: string; userId: string; deviceId: string }> {
     const sdk = await import('matrix-js-sdk');
     const tempClient = sdk.createClient({ baseUrl: homeserverUrl });
 
@@ -345,15 +356,55 @@ class MatrixClientService {
       password,
       device_id: deviceId,
       initial_device_display_name: 'Mobazha Web',
+      refresh_token: true, // 请求 refresh token
     });
 
-    // 保存凭据到本地
-    await saveCredentials(response.access_token, response.user_id, response.device_id);
+    // 保存凭据到本地（包括 refresh_token）
+    await saveCredentials(
+      response.access_token,
+      response.user_id,
+      response.device_id,
+      response.refresh_token
+    );
 
     return {
       accessToken: response.access_token,
+      refreshToken: response.refresh_token,
       userId: response.user_id,
       deviceId: response.device_id,
+    };
+  }
+
+  /**
+   * 创建 token 刷新函数
+   * 当 access token 过期时，matrix-js-sdk 会调用此函数获取新 token
+   */
+  private _createTokenRefreshFunction(
+    homeserverUrl: string
+  ): (refreshToken: string) => Promise<{ accessToken: string; refreshToken?: string }> {
+    return async (refreshToken: string) => {
+      try {
+        const sdk = await import('matrix-js-sdk');
+        const tempClient = sdk.createClient({ baseUrl: homeserverUrl });
+
+        // 调用 Matrix 服务器的 refresh token 端点
+        const response = await tempClient.refreshToken(refreshToken);
+
+        // 持久化新的 tokens
+        await updateTokens(response.access_token, response.refresh_token);
+
+        return {
+          accessToken: response.access_token,
+          refreshToken: response.refresh_token,
+        };
+      } catch (error) {
+        // 刷新失败，触发重新登录
+        matrixEvents.emit(MATRIX_EVENTS.ERROR, {
+          error: new Error('Token refresh failed, please re-login'),
+          code: 'TOKEN_REFRESH_FAILED',
+        });
+        throw error;
+      }
     };
   }
 
@@ -489,8 +540,11 @@ class MatrixClientService {
 
   /**
    * 登出
+   * @param clearDevice 是否清除设备 ID（默认 false）
+   *   - false: 普通登出，保留设备 ID，重新登录可恢复加密状态（推荐）
+   *   - true: 完全登出，清除设备 ID，重新登录将创建新设备
    */
-  async logout(): Promise<void> {
+  async logout(clearDevice: boolean = false): Promise<void> {
     // 停止自动备份
     this._stopAutoBackup();
 
@@ -504,7 +558,15 @@ class MatrixClientService {
       }
     }
 
-    await clearCredentials();
+    // 根据参数决定是否清除设备 ID
+    if (clearDevice) {
+      // 完全清除，包括设备 ID（用于切换账户或清除所有数据）
+      await clearAllCredentials();
+    } else {
+      // 普通登出，保留设备 ID（Matrix 标准做法）
+      await clearCredentialsKeepDevice();
+    }
+
     this.client = null;
     this.isInitialized = false;
     this.isConnected = false;
@@ -587,12 +649,8 @@ class MatrixClientService {
     const { getGatewayUrl, getAuthHeaders } = await import('../api/config');
 
     // 1. 初始化 crypto 服务
-    // 使用 getGatewayUrl() 获取正确的节点 API 基础 URL（已包含 /v1 前缀）
     const nodeBaseUrl = getGatewayUrl();
     const authHeaders = getAuthHeaders();
-
-    console.info('[Matrix] Setting up E2EE after sync...');
-    console.info('[Matrix] Node base URL for key backup:', nodeBaseUrl);
 
     await matrixCrypto.initialize(matrixClient, {
       nodeBaseUrl,
@@ -603,14 +661,10 @@ class MatrixClientService {
     try {
       const hasSecretsBackup = await matrixCrypto.hasSecretsBundleBackup();
       if (hasSecretsBackup) {
-        console.info('[Matrix] Found secrets bundle backup, restoring...');
-        const secretsResult = await matrixCrypto.restoreSecretsBundle();
-        if (secretsResult.success) {
-          console.info('[Matrix] Restored cross-signing secrets from node');
-        }
+        await matrixCrypto.restoreSecretsBundle();
       }
-    } catch (error) {
-      console.warn('[Matrix] Secrets bundle restore failed:', error);
+    } catch {
+      // Secrets bundle restore is optional
     }
 
     // 3. Bootstrap cross-signing（如果尚未设置）
@@ -622,42 +676,63 @@ class MatrixClientService {
         if (typeof cryptoAny.isCrossSigningReady === 'function') {
           const isCrossSigningReady = await cryptoAny.isCrossSigningReady();
           if (!isCrossSigningReady) {
-            console.info('[Matrix] Setting up cross-signing...');
             if (typeof cryptoAny.bootstrapCrossSigning === 'function') {
+              // 获取密码用于 UIA 认证
+              const derivedPassword = await getDerivedPassword();
+              const userId = this.config?.userId;
+
               await cryptoAny.bootstrapCrossSigning({
                 setupNewCrossSigning: true,
+                // 提供 UIA 回调处理 401 认证请求
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                authUploadDeviceSigningKeys: async (
+                  makeRequest: (authData: any) => Promise<any>
+                ) => {
+                  // 尝试不带认证先请求
+                  try {
+                    await makeRequest({});
+                    return;
+                  } catch (uiaError) {
+                    // 如果需要 UIA，使用密码认证
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const uiaErr = uiaError as any;
+                    if (uiaErr?.data?.flows && derivedPassword && userId) {
+                      await makeRequest({
+                        type: 'm.login.password',
+                        identifier: {
+                          type: 'm.id.user',
+                          user: userId,
+                        },
+                        password: derivedPassword,
+                      });
+                    } else {
+                      throw uiaError;
+                    }
+                  }
+                },
               });
-              console.info('[Matrix] Cross-signing setup complete');
               // 备份新创建的密钥
               await matrixCrypto.backupSecretsBundle();
             }
-          } else {
-            console.info('[Matrix] Cross-signing already set up');
           }
         }
       }
-    } catch (error) {
-      console.warn('[Matrix] Cross-signing setup failed:', error);
+    } catch {
+      // Cross-signing setup is optional
     }
 
     // 4. 尝试恢复房间密钥
     try {
       const hasKeyBackup = await matrixCrypto.hasKeyBackup();
       if (hasKeyBackup) {
-        console.info('[Matrix] Found key backup, restoring room keys...');
-        const result = await matrixCrypto.restoreRoomKeys();
-        if (result.success) {
-          console.info(`[Matrix] Restored ${result.keyCount} room keys from backup`);
-        }
+        await matrixCrypto.restoreRoomKeys();
       }
-    } catch (error) {
-      console.warn('[Matrix] Room key restore failed:', error);
+    } catch {
+      // Room key restore is optional
     }
 
     // 5. 启动自动备份
     this._startAutoBackup();
-
-    console.info('[Matrix] E2EE setup complete');
   }
 
   /**
@@ -704,14 +779,6 @@ class MatrixClientService {
     const timeline = room.getLiveTimeline();
     let events = timeline.getEvents();
 
-    // 调试：打印所有事件类型
-    const eventTypeCounts: Record<string, number> = {};
-    events.forEach(event => {
-      const t = event.getType();
-      eventTypeCounts[t] = (eventTypeCounts[t] || 0) + 1;
-    });
-    console.log('[Matrix] Timeline event types:', eventTypeCounts);
-
     // 过滤可显示的事件：消息、成员变更、房间创建、加密启用
     const displayableEventTypes = [
       'm.room.message',
@@ -736,7 +803,6 @@ class MatrixClientService {
     const paginationToken = timeline.getPaginationToken(sdk.Direction.Backward);
     if (displayableEvents.length < limit && paginationToken) {
       try {
-        console.log('[Matrix] Initial timeline has few messages, loading history...');
         await matrixClient.paginateEventTimeline(timeline, { backwards: true, limit });
 
         // 重新获取事件
@@ -752,7 +818,6 @@ class MatrixClientService {
 
           return true;
         });
-        console.log('[Matrix] After pagination, event count:', displayableEvents.length);
       } catch (error) {
         console.warn('[Matrix] Failed to paginate initial timeline:', error);
       }
@@ -793,15 +858,13 @@ class MatrixClientService {
       )
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    console.log(
-      '[Matrix] Returning messages:',
-      allMessages.length,
-      '(state:',
-      stateEvents.length,
-      ', timeline:',
-      timelineMessages.length,
-      ')'
-    );
+    // 将这些消息标记为已处理，避免 Timeline 事件重复处理
+    allMessages.forEach(msg => {
+      if (msg.id) {
+        this.processedMessageIds.add(msg.id);
+      }
+    });
+
     return allMessages;
   }
 
@@ -831,6 +894,9 @@ class MatrixClientService {
     const clearContent = isEncrypted ? e.getClearContent?.() : null;
     const content = clearContent || e.getContent();
 
+    // 获取发送者信息
+    const senderInfo = this.getSenderInfo(roomId, e.getSender());
+
     // 普通消息或已解密的加密消息
     if (eventType === 'm.room.message' || (isEncrypted && clearContent?.body)) {
       // 检查解密是否失败
@@ -839,6 +905,9 @@ class MatrixClientService {
           id: e.getId(),
           roomId,
           sender: e.getSender(),
+          senderName: senderInfo?.displayName,
+          senderAvatar: senderInfo?.avatarUrl,
+          senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
           content: '⚠️ Unable to decrypt message',
           type: 'text',
           timestamp: e.getTs(),
@@ -850,6 +919,9 @@ class MatrixClientService {
         id: e.getId(),
         roomId,
         sender: e.getSender(),
+        senderName: senderInfo?.displayName,
+        senderAvatar: senderInfo?.avatarUrl,
+        senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
         content: (content.body as string) || '',
         type: this.getMessageType((content.msgtype as string) || 'm.text'),
         timestamp: e.getTs(),
@@ -864,6 +936,9 @@ class MatrixClientService {
           id: e.getId(),
           roomId,
           sender: e.getSender(),
+          senderName: senderInfo?.displayName,
+          senderAvatar: senderInfo?.avatarUrl,
+          senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
           content: '⚠️ Unable to decrypt message',
           type: 'text',
           timestamp: e.getTs(),
@@ -875,6 +950,9 @@ class MatrixClientService {
         id: e.getId(),
         roomId,
         sender: e.getSender(),
+        senderName: senderInfo?.displayName,
+        senderAvatar: senderInfo?.avatarUrl,
+        senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
         content: '🔐 Decrypting...',
         type: 'text',
         timestamp: e.getTs(),
@@ -1055,14 +1133,10 @@ class MatrixClientService {
       try {
         const { matrixCrypto } = await import('./crypto');
         if (matrixCrypto.isCryptoInitialized()) {
-          console.info('[Matrix] Running scheduled key backup...');
-          const result = await matrixCrypto.backupRoomKeys();
-          if (result.success) {
-            console.info(`[Matrix] Backed up ${result.keyCount} room keys`);
-          }
+          await matrixCrypto.backupRoomKeys();
         }
-      } catch (error) {
-        console.warn('[Matrix] Scheduled key backup failed:', error);
+      } catch {
+        // Backup failed, will retry later
       }
     }, BACKUP_DEBOUNCE_DELAY);
   }
@@ -1081,13 +1155,10 @@ class MatrixClientService {
       try {
         const { matrixCrypto } = await import('./crypto');
         if (matrixCrypto.isCryptoInitialized()) {
-          const result = await matrixCrypto.backupRoomKeys();
-          if (result.success && result.keyCount && result.keyCount > 0) {
-            console.info(`[Matrix] Auto-backup: ${result.keyCount} room keys`);
-          }
+          await matrixCrypto.backupRoomKeys();
         }
-      } catch (error) {
-        console.warn('[Matrix] Auto-backup failed:', error);
+      } catch {
+        // Auto-backup failed, will retry later
       }
     }, AUTO_BACKUP_INTERVAL);
   }
@@ -1580,9 +1651,15 @@ class MatrixClientService {
       }
     });
 
-    // 新消息
-    matrixClient.on(sdk.RoomEvent.Timeline, (event, room) => {
-      if (!room || event.getType() !== 'm.room.message') return;
+    // 新消息（包括加密和未加密）
+    matrixClient.on(sdk.RoomEvent.Timeline, (event, room, toStartOfTimeline) => {
+      const eventType = event.getType();
+
+      // 跳过历史消息加载（toStartOfTimeline 为 true 表示是历史消息）
+      if (toStartOfTimeline) return;
+
+      // 只处理消息类型（包括加密消息）
+      if (!room || (eventType !== 'm.room.message' && eventType !== 'm.room.encrypted')) return;
 
       const eventId = event.getId();
       if (!eventId || this.processedMessageIds.has(eventId)) return;
@@ -1590,6 +1667,21 @@ class MatrixClientService {
 
       const message = this.formatMessage(event, room.roomId);
       matrixEvents.emit(MATRIX_EVENTS.MESSAGE_RECEIVED, message);
+    });
+
+    // 监听消息解密事件，更新已显示的加密消息
+    matrixClient.on(sdk.MatrixEventEvent.Decrypted, event => {
+      if (event.getType() !== 'm.room.message') return;
+
+      const eventId = event.getId();
+      const roomId = event.getRoomId();
+      if (!eventId || !roomId) return;
+
+      // 如果消息已经处理过，发送更新事件
+      if (this.processedMessageIds.has(eventId)) {
+        const message = this.formatMessage(event, roomId);
+        matrixEvents.emit(MATRIX_EVENTS.MESSAGE_UPDATED, message);
+      }
     });
 
     // 房间成员变化
@@ -1621,6 +1713,23 @@ class MatrixClientService {
       const userId = user.userId;
       const presence = user.presence as 'online' | 'offline' | 'unavailable';
       matrixEvents.emit(MATRIX_EVENTS.PRESENCE_CHANGED, { userId, presence });
+    });
+
+    // Room state events - listen for peerID updates from other members
+    matrixClient.on(sdk.RoomStateEvent.Events, event => {
+      const eventType = event.getType();
+
+      if (eventType === 'org.mobazha.member_peerid') {
+        const senderId = event.getSender();
+        if (senderId !== this.config?.userId) {
+          const content = event.getContent() as { peer_id?: string };
+          matrixEvents.emit(MATRIX_EVENTS.MEMBER_PEERID_UPDATED, {
+            roomId: event.getRoomId(),
+            userId: senderId,
+            peerID: content.peer_id,
+          });
+        }
+      }
     });
   }
 
@@ -1664,6 +1773,111 @@ class MatrixClientService {
   }
 
   /**
+   * 获取 Matrix 客户端的 baseUrl
+   */
+  private getBaseUrl(): string {
+    if (!this.client) {
+      return this.config?.homeserverUrl || '';
+    }
+    const matrixClient = this.client as { baseUrl?: string };
+    return matrixClient.baseUrl || this.config?.homeserverUrl || '';
+  }
+
+  /**
+   * 将 mxc:// URL 转换为认证媒体 URL
+   * 使用 /_matrix/client/v1/media/download/ 端点（需要认证）
+   */
+  private mxcToHttp(
+    mxcUrl: string | null | undefined,
+    _width = 48,
+    _height = 48
+  ): string | undefined {
+    if (!mxcUrl || !mxcUrl.startsWith('mxc://')) {
+      return undefined;
+    }
+    if (!this.client) {
+      return undefined;
+    }
+
+    // 解析 mxc URL: mxc://server/media_id
+    const parts = mxcUrl.replace('mxc://', '').split('/');
+    if (parts.length < 2) {
+      return undefined;
+    }
+    const [mediaServer, mediaId] = parts;
+
+    // 使用认证媒体端点（Matrix 1.11+）
+    // 格式: {homeserver}/_matrix/client/v1/media/download/{server}/{mediaId}
+    const baseUrl = this.getBaseUrl();
+    return `${baseUrl}/_matrix/client/v1/media/download/${mediaServer}/${mediaId}`;
+  }
+
+  // 图片缓存
+  private imageCache: Map<string, string> = new Map();
+
+  /**
+   * 下载需要认证的图片并返回 blob URL
+   * 这是处理 Matrix 媒体的正确方式
+   */
+  async downloadAuthenticatedImage(url: string): Promise<string | null> {
+    if (!url || !this.client) return null;
+
+    // 检查缓存
+    if (this.imageCache.has(url)) {
+      return this.imageCache.get(url) || null;
+    }
+
+    try {
+      let mediaUrl: string | undefined;
+
+      // 如果是 mxc:// URL，转换为认证媒体 URL
+      if (url.startsWith('mxc://')) {
+        mediaUrl = this.mxcToHttp(url);
+      }
+      // 如果已经是认证媒体 URL，直接使用
+      else if (url.includes('/_matrix/client/v1/media/')) {
+        mediaUrl = url;
+      }
+      // 其他 HTTP URL，直接返回（不需要认证）
+      else if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+
+      if (!mediaUrl) {
+        return null;
+      }
+
+      const matrixClient = this.client as { getAccessToken?: () => string | null };
+      const accessToken = matrixClient.getAccessToken?.();
+
+      if (!accessToken) {
+        return null;
+      }
+
+      const response = await fetch(mediaUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      // 缓存结果
+      this.imageCache.set(url, blobUrl);
+
+      return blobUrl;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * 格式化房间数据
    */
   private formatRoom(room: unknown): MatrixRoom {
@@ -1672,10 +1886,24 @@ class MatrixClientService {
       name?: string;
       normalizedName?: string;
       getJoinedMembers?: () => unknown[];
+      getAvatarUrl?: (
+        baseUrl: string,
+        width: number,
+        height: number,
+        resizeMethod: string,
+        allowDefault: boolean
+      ) => string | null;
+      getMxcAvatarUrl?: () => string | null;
       currentState?: {
         getStateEvents?: (type: string, stateKey?: string) => unknown;
       };
     };
+
+    // 获取房间头像 - 存储原始 mxc URL 用于认证下载
+    const roomMxcUrl = r.getMxcAvatarUrl?.() || null;
+
+    // 转换为认证媒体 URL
+    const avatarUrl = roomMxcUrl ? this.mxcToHttp(roomMxcUrl, 64, 64) : undefined;
 
     // 尝试获取房间类型
     let roomType: RoomType | undefined;
@@ -1707,14 +1935,27 @@ class MatrixClientService {
     }
 
     // 判断是否是直接聊天
+    // isDirectRoom 现在包含: getDMInviter 检查、m.direct 检查、成员数量检查
     const isDirect = roomType === 'direct' || (!roomType && this.isDirectRoom(r.roomId));
 
     // 获取房间成员
     const members = this.getRoomMembers(room);
 
+    // 如果房间没有头像，使用第一个成员的头像
+    // 不管是否是直接聊天，都可以使用成员头像作为 fallback
+    let finalAvatarUrl = avatarUrl;
+    let finalMxcUrl = roomMxcUrl;
+    if (!finalAvatarUrl && members.length > 0) {
+      // 使用第一个成员的头像
+      finalAvatarUrl = members[0].avatarUrl;
+      finalMxcUrl = members[0].rawMxcAvatarUrl || null;
+    }
+
     return {
       roomId: r.roomId,
       name: r.name || r.normalizedName,
+      avatarUrl: finalAvatarUrl,
+      rawMxcAvatarUrl: finalMxcUrl || undefined,
       isDirect,
       isEncrypted: this.isRoomEncrypted(room),
       unreadCount: this.getRoomUnreadCount(room),
@@ -1741,21 +1982,33 @@ class MatrixClientService {
           resizeMethod: string,
           allowDefault: boolean
         ) => string | null;
+        getMxcAvatarUrl?: () => string | null;
       }>;
     };
 
-    if (!r.getJoinedMembers) return [];
+    if (!r.getJoinedMembers) {
+      return [];
+    }
 
     try {
       const members = r.getJoinedMembers();
+
       return members
         .filter(m => m.userId !== this.config?.userId) // 排除自己
-        .map(m => ({
-          userId: m.userId,
-          displayName: m.name,
-          avatarUrl:
-            m.getAvatarUrl?.(this.config?.homeserverUrl || '', 40, 40, 'crop', false) || undefined,
-        }));
+        .map(m => {
+          // 获取原始 mxc URL（用于认证下载）
+          const rawMxcUrl = m.getMxcAvatarUrl?.() || undefined;
+
+          // 转换为认证媒体 URL
+          const avatarUrl = rawMxcUrl ? this.mxcToHttp(rawMxcUrl, 48, 48) : undefined;
+
+          return {
+            userId: m.userId,
+            displayName: m.name,
+            avatarUrl,
+            rawMxcAvatarUrl: rawMxcUrl,
+          };
+        });
     } catch {
       return [];
     }
@@ -1763,28 +2016,46 @@ class MatrixClientService {
 
   /**
    * 检查是否是直接聊天房间
+   * 参考移动端实现：
+   * 1. 检查 getDMInviter
+   * 2. 检查 m.direct 账户数据
+   * 3. 如果只有2个成员，认为是直接聊天
    */
   private isDirectRoom(roomId: string): boolean {
     if (!this.client) return false;
 
     try {
-      // 同步方式检查 - 避免 async 问题
       const matrixClient = this.client as {
+        getRoom?: (roomId: string) => {
+          getDMInviter?: () => string | null;
+          getJoinedMemberCount?: () => number;
+        } | null;
         getAccountData?: (type: string) => { getContent: () => Record<string, string[]> } | null;
       };
 
-      if (!matrixClient.getAccountData) return false;
+      const room = matrixClient.getRoom?.(roomId);
 
-      const directEvent = matrixClient.getAccountData('m.direct');
-      if (!directEvent) return false;
+      // 1. 检查 DM 邀请者
+      if (room?.getDMInviter?.()) {
+        return true;
+      }
 
-      const directContent = directEvent.getContent();
-
-      // 检查任何用户的直接聊天列表是否包含此房间
-      for (const roomIds of Object.values(directContent)) {
-        if (roomIds.includes(roomId)) {
-          return true;
+      // 2. 检查 m.direct 账户数据
+      if (matrixClient.getAccountData) {
+        const directEvent = matrixClient.getAccountData('m.direct');
+        if (directEvent) {
+          const directContent = directEvent.getContent();
+          for (const roomIds of Object.values(directContent)) {
+            if (roomIds.includes(roomId)) {
+              return true;
+            }
+          }
         }
+      }
+
+      // 3. 如果只有2个成员，认为是直接聊天
+      if (room?.getJoinedMemberCount?.() === 2) {
+        return true;
       }
 
       return false;
@@ -1850,12 +2121,18 @@ class MatrixClientService {
     const clearContent = isEncrypted ? e.getClearContent?.() : null;
     const content = clearContent || e.getContent();
 
+    // 获取发送者信息
+    const senderInfo = this.getSenderInfo(roomId, e.getSender());
+
     // 检查解密是否失败
     if (e.isDecryptionFailure?.()) {
       return {
         id: e.getId(),
         roomId,
         sender: e.getSender(),
+        senderName: senderInfo?.displayName,
+        senderAvatar: senderInfo?.avatarUrl,
+        senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
         content: '⚠️ Unable to decrypt message',
         type: 'text',
         timestamp: e.getTs(),
@@ -1869,6 +2146,9 @@ class MatrixClientService {
         id: e.getId(),
         roomId,
         sender: e.getSender(),
+        senderName: senderInfo?.displayName,
+        senderAvatar: senderInfo?.avatarUrl,
+        senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
         content: '🔐 Decrypting...',
         type: 'text',
         timestamp: e.getTs(),
@@ -1880,10 +2160,67 @@ class MatrixClientService {
       id: e.getId(),
       roomId,
       sender: e.getSender(),
+      senderName: senderInfo?.displayName,
+      senderAvatar: senderInfo?.avatarUrl,
+      senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
       content: content.body || '',
       type: this.getMessageType(content.msgtype || 'm.text'),
       timestamp: e.getTs(),
     };
+  }
+
+  /**
+   * 获取消息发送者信息
+   */
+  private getSenderInfo(
+    roomId: string,
+    senderId: string
+  ): { displayName?: string; avatarUrl?: string; rawMxcAvatarUrl?: string } | null {
+    if (!this.client) {
+      return null;
+    }
+
+    try {
+      const matrixClient = this.client as {
+        getRoom?: (roomId: string) => {
+          getMember?: (userId: string) => {
+            name?: string;
+            getAvatarUrl?: (
+              baseUrl: string,
+              width: number,
+              height: number,
+              resizeMethod: string,
+              allowDefault: boolean
+            ) => string | null;
+            getMxcAvatarUrl?: () => string | null;
+          } | null;
+        } | null;
+      };
+
+      const room = matrixClient.getRoom?.(roomId);
+      if (!room) {
+        return null;
+      }
+
+      const member = room.getMember?.(senderId);
+      if (!member) {
+        return null;
+      }
+
+      // 获取原始 mxc URL
+      const rawMxcAvatarUrl = member.getMxcAvatarUrl?.() || undefined;
+
+      // 转换为认证媒体 URL
+      const avatarUrl = rawMxcAvatarUrl ? this.mxcToHttp(rawMxcAvatarUrl, 48, 48) : undefined;
+
+      return {
+        displayName: member.name,
+        avatarUrl,
+        rawMxcAvatarUrl,
+      };
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -2015,15 +2352,11 @@ class MatrixClientService {
       console.warn(
         `[Matrix] Crypto store device mismatch: stored=${storedDeviceId}, current=${currentDeviceId}`
       );
-      console.info('[Matrix] Clearing stale crypto stores before client creation...');
-
       // 清除 crypto stores - 此时还没有活跃连接，不会被阻塞
       await this._clearAllCryptoStores(userId);
 
       // 清除存储的设备 ID
       localStorage.removeItem(storageKey);
-
-      console.info('[Matrix] Crypto stores cleared successfully');
     }
   }
 
@@ -2037,7 +2370,6 @@ class MatrixClientService {
     }
     const storageKey = `${MATRIX_CRYPTO_DEVICE_KEY}_${userId}`;
     localStorage.setItem(storageKey, deviceId);
-    console.info('[Matrix] Marked crypto store owned by device:', deviceId);
   }
 
   /**
@@ -2059,7 +2391,6 @@ class MatrixClientService {
       `matrix-crypto-${userId}:matrix-sdk-crypto`,
     ];
 
-    console.info('[Matrix] Clearing crypto stores...');
     for (const dbName of knownDbNames) {
       await this._clearIndexedDB(dbName);
       deletedDbs.add(dbName);
@@ -2084,12 +2415,10 @@ class MatrixClientService {
             deletedDbs.add(db.name);
           }
         }
-      } catch (err) {
-        console.warn('[Matrix] Could not enumerate databases:', err);
+      } catch {
+        // Could not enumerate databases
       }
     }
-
-    console.info('[Matrix] Cleared crypto stores:', Array.from(deletedDbs));
   }
 
   /**
@@ -2102,20 +2431,10 @@ class MatrixClientService {
     return new Promise(resolve => {
       try {
         const request = indexedDB.deleteDatabase(dbName);
-        request.onsuccess = () => {
-          console.info(`[Matrix] Deleted IndexedDB: ${dbName}`);
-          resolve();
-        };
-        request.onerror = () => {
-          console.warn(`[Matrix] Failed to delete IndexedDB: ${dbName}`);
-          resolve();
-        };
-        request.onblocked = () => {
-          console.warn(`[Matrix] IndexedDB deletion blocked: ${dbName}`);
-          resolve();
-        };
-      } catch (err) {
-        console.warn(`[Matrix] Error deleting IndexedDB ${dbName}:`, err);
+        request.onsuccess = () => resolve();
+        request.onerror = () => resolve();
+        request.onblocked = () => resolve();
+      } catch {
         resolve();
       }
     });

@@ -300,6 +300,32 @@ export interface TranslationResource {
     welcomeToMessages: string;
     selectConversation: string;
     searchConversations: string;
+    // Sections
+    directMessages: string;
+    communities: string;
+    orderChats: string;
+    invitations: string;
+    invitedYou: string;
+    inviteConfirm: string;
+    invitedBy: string;
+    // Room settings
+    roomSettings: string;
+    roomId: string;
+    members: string;
+    directMessage: string;
+    groupChat: string;
+    viewStore: string;
+    sendMessage: string;
+    // User info
+    unknownUser: string;
+    externalUser: string;
+    peerId: string;
+    matrixId: string;
+    // Time
+    today: string;
+    yesterday: string;
+    connecting: string;
+    startConversation: string;
   };
 
   // Matrix 房间事件

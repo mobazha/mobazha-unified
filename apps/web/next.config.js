@@ -29,6 +29,11 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      // Matrix media server
+      {
+        protocol: 'https',
+        hostname: 'matrix.mobazha.org',
+      },
     ],
     // 支持的图片格式
     formats: ['image/avif', 'image/webp'],

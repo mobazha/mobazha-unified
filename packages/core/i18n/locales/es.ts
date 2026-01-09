@@ -257,6 +257,32 @@ export const es: TranslationResource = {
     selectConversation:
       'Selecciona una conversación para comenzar a chatear, o crea una nueva para conectar con vendedores y compradores.',
     searchConversations: 'Buscar conversaciones...',
+    // Sections
+    directMessages: 'Mensajes directos',
+    communities: 'Comunidades',
+    orderChats: 'Discusiones de pedidos',
+    invitations: 'Invitaciones',
+    invitedYou: 'Te ha invitado a chatear',
+    inviteConfirm: 'Invitación',
+    invitedBy: 'Invitado por {{name}}',
+    // Room settings
+    roomSettings: 'Configuración de sala',
+    roomId: 'ID de sala',
+    members: 'Miembros',
+    directMessage: 'Mensaje directo',
+    groupChat: 'Chat grupal',
+    viewStore: 'Ver tienda',
+    sendMessage: 'Enviar mensaje',
+    // User info
+    unknownUser: 'Usuario desconocido',
+    externalUser: 'Usuario Matrix externo',
+    peerId: 'Peer ID',
+    matrixId: 'Matrix ID',
+    // Time
+    today: 'Hoy',
+    yesterday: 'Ayer',
+    connecting: 'Conectando al chat...',
+    startConversation: 'Iniciar conversación',
   },
 
   // Matrix 房间事件

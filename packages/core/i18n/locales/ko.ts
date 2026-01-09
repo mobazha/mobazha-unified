@@ -257,6 +257,32 @@ export const ko: TranslationResource = {
     selectConversation:
       '대화를 선택하여 채팅을 시작하거나 새 대화를 만들어 판매자 및 구매자와 연결하세요.',
     searchConversations: '대화 검색...',
+    // 섹션
+    directMessages: '다이렉트 메시지',
+    communities: '커뮤니티',
+    orderChats: '주문 토론',
+    invitations: '초대',
+    invitedYou: '채팅에 초대했습니다',
+    inviteConfirm: '초대',
+    invitedBy: '{{name}}의 초대',
+    // 방 설정
+    roomSettings: '방 설정',
+    roomId: '방 ID',
+    members: '멤버',
+    directMessage: '다이렉트 메시지',
+    groupChat: '그룹 채팅',
+    viewStore: '상점 보기',
+    sendMessage: '메시지 보내기',
+    // 사용자 정보
+    unknownUser: '알 수 없는 사용자',
+    externalUser: '외부 Matrix 사용자',
+    peerId: '피어 ID',
+    matrixId: 'Matrix ID',
+    // 시간
+    today: '오늘',
+    yesterday: '어제',
+    connecting: '채팅에 연결 중...',
+    startConversation: '대화 시작',
   },
 
   // Matrix 房间事件

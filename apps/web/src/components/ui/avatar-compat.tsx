@@ -3,9 +3,11 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 import { cn } from '@/lib/utils';
+import { useAuthenticatedImage } from '@mobazha/core';
 
 interface AvatarCompatProps {
   src?: string;
+  rawMxcUrl?: string; // 原始 mxc:// URL，用于认证下载
   name?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
@@ -23,10 +25,19 @@ const sizeClasses = {
 };
 
 /**
- * Avatar 兼容组件 - 兼容旧的 Avatar API
+ * 检查 URL 是否需要认证（Matrix 媒体 URL）
+ */
+function needsAuthentication(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.includes('/_matrix/client/v1/media/') || url.startsWith('mxc://');
+}
+
+/**
+ * Avatar 兼容组件 - 支持 Matrix 认证图片
  */
 export const AvatarCompat: React.FC<AvatarCompatProps> = ({
   src,
+  rawMxcUrl,
   name,
   size = 'md',
   className,
@@ -35,12 +46,57 @@ export const AvatarCompat: React.FC<AvatarCompatProps> = ({
   verified,
 }) => {
   const initial = name ? name.charAt(0).toUpperCase() : '?';
+  const [directImageError, setDirectImageError] = React.useState(false);
+
+  // 如果有 rawMxcUrl 或 src 需要认证，使用认证下载
+  const mxcUrlToLoad = rawMxcUrl || (needsAuthentication(src) ? src : undefined);
+  const {
+    imageUrl: authImageUrl,
+    loading: authLoading,
+    error: authError,
+  } = useAuthenticatedImage(
+    mxcUrlToLoad,
+    undefined // 不使用 fallback，让 Avatar fallback 显示首字母
+  );
+
+  // 最终使用的图片 URL
+  const finalImageUrl = React.useMemo(() => {
+    // 如果有认证图片 URL（blob URL），优先使用
+    if (authImageUrl) {
+      return authImageUrl;
+    }
+    // 如果 src 不需要认证，直接使用
+    if (src && !needsAuthentication(src) && !directImageError) {
+      return src;
+    }
+    return null;
+  }, [authImageUrl, src, directImageError]);
+
+  // Reset error state when src changes
+  React.useEffect(() => {
+    setDirectImageError(false);
+  }, [src]);
+
+  const handleImageError = React.useCallback(() => {
+    setDirectImageError(true);
+  }, []);
+
+  const showImage = finalImageUrl && !authError && !directImageError;
 
   return (
     <div className="relative inline-block">
       <Avatar className={cn(sizeClasses[size], className)}>
-        {src && <AvatarImage src={src} alt={name || 'Avatar'} />}
-        <AvatarFallback>{initial}</AvatarFallback>
+        {authLoading && (
+          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10">
+            <span className="animate-pulse w-full h-full rounded-full bg-muted" />
+          </AvatarFallback>
+        )}
+        {showImage && !authLoading && (
+          <AvatarImage src={finalImageUrl} alt={name || 'Avatar'} onError={handleImageError} />
+        )}
+        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
+          {initial}
+        </AvatarFallback>
       </Avatar>
       {showOnlineStatus && (
         <span

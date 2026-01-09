@@ -257,6 +257,32 @@ export const ja: TranslationResource = {
     selectConversation:
       '会話を選択してチャットを開始するか、新しい会話を作成して販売者や購入者と繋がりましょう。',
     searchConversations: '会話を検索...',
+    // セクション
+    directMessages: 'ダイレクトメッセージ',
+    communities: 'コミュニティ',
+    orderChats: '注文のディスカッション',
+    invitations: '招待',
+    invitedYou: 'チャットに招待しました',
+    inviteConfirm: '招待',
+    invitedBy: '{{name}}から招待',
+    // ルーム設定
+    roomSettings: 'ルーム設定',
+    roomId: 'ルームID',
+    members: 'メンバー',
+    directMessage: 'ダイレクトメッセージ',
+    groupChat: 'グループチャット',
+    viewStore: 'ストアを見る',
+    sendMessage: 'メッセージを送信',
+    // ユーザー情報
+    unknownUser: '不明なユーザー',
+    externalUser: '外部Matrixユーザー',
+    peerId: 'ピアID',
+    matrixId: 'Matrix ID',
+    // 時間
+    today: '今日',
+    yesterday: '昨日',
+    connecting: 'チャットに接続中...',
+    startConversation: '会話を始める',
   },
 
   // Matrix 房间事件

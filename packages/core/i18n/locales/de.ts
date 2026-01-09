@@ -257,6 +257,32 @@ export const de: TranslationResource = {
     selectConversation:
       'Wählen Sie eine Unterhaltung aus oder erstellen Sie eine neue, um mit Verkäufern und Käufern in Kontakt zu treten.',
     searchConversations: 'Unterhaltungen suchen...',
+    // Sections
+    directMessages: 'Direktnachrichten',
+    communities: 'Gemeinschaften',
+    orderChats: 'Bestelldiskussionen',
+    invitations: 'Einladungen',
+    invitedYou: 'Hat Sie zum Chat eingeladen',
+    inviteConfirm: 'Einladung',
+    invitedBy: 'Eingeladen von {{name}}',
+    // Room settings
+    roomSettings: 'Raumeinstellungen',
+    roomId: 'Raum-ID',
+    members: 'Mitglieder',
+    directMessage: 'Direktnachricht',
+    groupChat: 'Gruppenchat',
+    viewStore: 'Shop ansehen',
+    sendMessage: 'Nachricht senden',
+    // User info
+    unknownUser: 'Unbekannter Benutzer',
+    externalUser: 'Externer Matrix-Benutzer',
+    peerId: 'Peer-ID',
+    matrixId: 'Matrix-ID',
+    // Time
+    today: 'Heute',
+    yesterday: 'Gestern',
+    connecting: 'Verbindung wird hergestellt...',
+    startConversation: 'Unterhaltung beginnen',
   },
 
   // Matrix 房间事件

@@ -59,10 +59,12 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     setConnectionError,
     setRooms,
     addMessage,
+    updateMessage,
     updateRoom,
     setTypingUsers,
     setUserPresence,
     removeRoom,
+    updateRoomMemberPeerID,
     reset: resetChatStore,
   } = useChatStore();
 
@@ -173,13 +175,19 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     // 消息事件
     const onMessageReceived = (data: unknown) => {
       const message = data as MatrixMessage;
-      console.log(
-        '[Matrix] onMessageReceived:',
-        message.id,
-        message.roomId,
-        message.content?.substring(0, 50)
-      );
       addMessage(message.roomId, message);
+      updateRoom(message.roomId, {
+        lastMessage: message,
+        timestamp: message.timestamp,
+      });
+    };
+
+    // 消息更新事件（如解密后更新）
+    const onMessageUpdated = (data: unknown) => {
+      const message = data as MatrixMessage;
+      // 更新消息内容
+      updateMessage(message.roomId, message.id, message);
+      // 如果是最新消息，也更新房间的 lastMessage
       updateRoom(message.roomId, {
         lastMessage: message,
         timestamp: message.timestamp,
@@ -228,6 +236,18 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       }
     };
 
+    // 成员 peerID 更新事件
+    const onMemberPeerIDUpdated = (data: unknown) => {
+      const { roomId, userId, peerID } = data as {
+        roomId: string;
+        userId: string;
+        peerID: string;
+      };
+      if (peerID) {
+        updateRoomMemberPeerID(roomId, userId, peerID);
+      }
+    };
+
     // 连接状态
     const onConnected = () => {
       setConnected(true);
@@ -254,12 +274,14 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       matrixEvents.on(MATRIX_EVENTS.CONNECTED, onConnected),
       matrixEvents.on(MATRIX_EVENTS.DISCONNECTED, onDisconnected),
       matrixEvents.on(MATRIX_EVENTS.MESSAGE_RECEIVED, onMessageReceived),
+      matrixEvents.on(MATRIX_EVENTS.MESSAGE_UPDATED, onMessageUpdated),
       matrixEvents.on(MATRIX_EVENTS.ROOM_JOINED, onRoomJoined),
       matrixEvents.on(MATRIX_EVENTS.ROOM_LEFT, onRoomLeft),
       matrixEvents.on(MATRIX_EVENTS.ROOM_INVITE, onRoomInvite),
       matrixEvents.on(MATRIX_EVENTS.ROOM_EVENT, onRoomEvent),
       matrixEvents.on(MATRIX_EVENTS.TYPING, onTyping),
       matrixEvents.on(MATRIX_EVENTS.PRESENCE_CHANGED, onPresence),
+      matrixEvents.on(MATRIX_EVENTS.MEMBER_PEERID_UPDATED, onMemberPeerIDUpdated),
     ];
 
     return () => {
@@ -268,11 +290,13 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
   }, [
     enabled,
     addMessage,
+    updateMessage,
     updateRoom,
     setRooms,
     removeRoom,
     setTypingUsers,
     setUserPresence,
+    updateRoomMemberPeerID,
     setConnected,
     isAuthenticated,
     peerID,
