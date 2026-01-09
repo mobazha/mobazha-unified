@@ -181,10 +181,10 @@ export default function PaymentPage() {
     if (fee.feeType === 'percentage' && fee.percentage !== undefined) {
       return subtotal * (fee.percentage / 100);
     } else if (fee.feeType === 'fixed' && fee.fixedFee) {
-      return parseFloat(fee.fixedFee.amount) || 0;
+      return parseFloat(String(fee.fixedFee.amount)) || 0;
     } else if (fee.feeType === 'percentage_plus_fixed') {
       const percentageFee = fee.percentage !== undefined ? subtotal * (fee.percentage / 100) : 0;
-      const fixedFee = fee.fixedFee ? parseFloat(fee.fixedFee.amount) || 0 : 0;
+      const fixedFee = fee.fixedFee ? parseFloat(String(fee.fixedFee.amount)) || 0 : 0;
       return percentageFee + fixedFee;
     }
     return 0;

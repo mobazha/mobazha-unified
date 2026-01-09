@@ -50,10 +50,8 @@ export const AddressDrawer: React.FC<AddressDrawerProps> = ({
     <Sheet open={isOpen} onOpenChange={open => !open && onClose()}>
       <SheetContent side="right" className={cn('w-full sm:max-w-md', className)}>
         <SheetHeader>
-          <SheetTitle>{t('checkout.selectAddress', 'Select Shipping Address')}</SheetTitle>
-          <SheetDescription>
-            {t('checkout.selectAddressDesc', 'Choose where to deliver your order')}
-          </SheetDescription>
+          <SheetTitle>{t('checkout.selectAddress')}</SheetTitle>
+          <SheetDescription>{t('checkout.selectAddressDesc')}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">

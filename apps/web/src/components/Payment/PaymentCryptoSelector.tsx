@@ -142,13 +142,13 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
                 {showAllTokens ? (
                   <>
                     <ChevronUp className="w-4 h-4" />
-                    <span>{t('payment.showLess', 'Less')}</span>
+                    <span>{t('payment.showLess')}</span>
                   </>
                 ) : (
                   <>
                     <ChevronDown className="w-4 h-4" />
                     <span>
-                      {t('payment.showMore', 'More')} ({filteredTokens.length - maxVisibleTokens})
+                      {t('payment.showMore')} ({filteredTokens.length - maxVisibleTokens})
                     </span>
                   </>
                 )}
@@ -157,7 +157,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
           </>
         ) : (
           <div className="w-full py-4 text-center text-muted-foreground text-sm">
-            {t('payment.noTokensAvailable', 'No payment methods available')}
+            {t('payment.noTokensAvailable')}
           </div>
         )}
       </div>
@@ -166,7 +166,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
       {showFiatMethods && FIAT_METHODS.length > 0 && (
         <div className="space-y-2 pt-2 border-t border-border">
           <span className="text-xs text-muted-foreground font-medium">
-            {t('payment.otherMethods', 'Other Payment Methods')}
+            {t('payment.otherMethods')}
           </span>
           <div className="flex flex-wrap gap-2">
             {FIAT_METHODS.map(method => (
@@ -188,7 +188,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
                   <span className="text-sm font-medium">{method.name}</span>
                   {method.comingSoon && (
                     <Badge variant="secondary" className="text-[10px] h-4 px-1">
-                      {t('common.comingSoon', 'Coming Soon')}
+                      {t('common.comingSoon')}
                     </Badge>
                   )}
                 </div>

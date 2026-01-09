@@ -101,7 +101,7 @@ export const ModeratorSelector: React.FC<ModeratorSelectorProps> = ({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder={t('payment.searchModerators', 'Search moderators...')}
+          placeholder={t('payment.searchModerators')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="pl-9"
@@ -116,7 +116,7 @@ export const ModeratorSelector: React.FC<ModeratorSelectorProps> = ({
           <div className="flex flex-col items-center justify-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <span className="mt-2 text-sm text-muted-foreground">
-              {t('payment.loadingModerators', 'Loading moderators...')}
+              {t('payment.loadingModerators')}
             </span>
           </div>
         ) : filteredModerators.length > 0 ? (
@@ -133,9 +133,9 @@ export const ModeratorSelector: React.FC<ModeratorSelectorProps> = ({
           // 空状态
           <div className="text-center py-8 text-muted-foreground">
             {searchQuery ? (
-              <span>{t('payment.noModeratorsFound', 'No moderators found')}</span>
+              <span>{t('payment.noModeratorsFound')}</span>
             ) : (
-              <span>{t('payment.noModeratorsAvailable', 'No moderators available')}</span>
+              <span>{t('payment.noModeratorsAvailable')}</span>
             )}
           </div>
         )}

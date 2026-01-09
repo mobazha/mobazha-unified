@@ -59,9 +59,7 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
 
         {/* 支付方式信息 */}
         <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">
-            {t('payment.paymentMethod', 'Payment Method')}
-          </span>
+          <span className="text-xs text-muted-foreground">{t('payment.paymentMethod')}</span>
           {token ? (
             <span className="font-medium text-foreground">
               {token.token}
@@ -70,9 +68,7 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
               )}
             </span>
           ) : (
-            <span className="text-muted-foreground">
-              {t('payment.selectPaymentMethod', 'Select payment method')}
-            </span>
+            <span className="text-muted-foreground">{t('payment.selectPaymentMethod')}</span>
           )}
         </div>
       </div>
@@ -80,7 +76,7 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
       {/* 编辑按钮 */}
       <div className="flex items-center gap-1 text-primary">
         <Pencil className="w-3.5 h-3.5" />
-        <span className="text-sm">{t('common.edit', 'Edit')}</span>
+        <span className="text-sm">{t('common.edit')}</span>
       </div>
     </button>
   );

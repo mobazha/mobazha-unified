@@ -57,7 +57,7 @@ export function OrderSummaryCard({
         {/* Header */}
         <HStack justify="between" align="center" className="mb-4">
           <h2 className="text-base sm:text-lg font-semibold text-foreground">
-            {t('order.orderSummary', 'Order Summary')}
+            {t('order.orderSummary')}
           </h2>
           <span className="text-xs sm:text-sm text-muted-foreground font-mono">
             #{orderID.slice(0, 12)}...
@@ -87,7 +87,7 @@ export function OrderSummaryCard({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground line-clamp-2">{item.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('order.quantity', 'Qty')}: {item.quantity}
+                  {t('order.quantity')}: {item.quantity}
                 </p>
               </div>
               <p className="font-medium text-foreground text-sm">
@@ -99,15 +99,13 @@ export function OrderSummaryCard({
 
         {/* Vendor */}
         <div className="mb-4 pb-4 border-b border-border">
-          <p className="text-xs text-muted-foreground mb-1">{t('order.seller', 'Seller')}</p>
+          <p className="text-xs text-muted-foreground mb-1">{t('order.seller')}</p>
           <p className="text-sm font-medium text-foreground">{vendor.name}</p>
         </div>
 
         {/* Shipping Address */}
         <div className="mb-4 pb-4 border-b border-border">
-          <p className="text-xs text-muted-foreground mb-1">
-            {t('order.shippingAddress', 'Shipping Address')}
-          </p>
+          <p className="text-xs text-muted-foreground mb-1">{t('order.shippingAddress')}</p>
           <div className="text-sm text-foreground">
             <p className="font-medium">{shippingAddress.name}</p>
             <p className="text-muted-foreground">{shippingAddress.street}</p>
@@ -121,9 +119,7 @@ export function OrderSummaryCard({
         {/* Memo */}
         {memo && (
           <div>
-            <p className="text-xs text-muted-foreground mb-1">
-              {t('order.orderNote', 'Order Note')}
-            </p>
+            <p className="text-xs text-muted-foreground mb-1">{t('order.orderNote')}</p>
             <p className="text-sm text-foreground bg-muted/50 rounded-md p-2.5">{memo}</p>
           </div>
         )}

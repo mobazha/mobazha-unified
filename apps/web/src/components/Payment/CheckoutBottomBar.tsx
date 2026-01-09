@@ -64,7 +64,7 @@ export const CheckoutBottomBar: React.FC<CheckoutBottomBarProps> = ({
       return (
         <>
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          {t('checkout.processing', 'Processing...')}
+          {t('checkout.processing')}
         </>
       );
     }
@@ -73,7 +73,7 @@ export const CheckoutBottomBar: React.FC<CheckoutBottomBarProps> = ({
       return (
         <>
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          {t('wallet.connecting', 'Connecting...')}
+          {t('wallet.connecting')}
         </>
       );
     }
@@ -83,12 +83,12 @@ export const CheckoutBottomBar: React.FC<CheckoutBottomBarProps> = ({
       return (
         <>
           <Wallet className="w-4 h-4 mr-2" />
-          {t('wallet.connect', 'Connect Wallet')}
+          {t('wallet.connect')}
         </>
       );
     }
 
-    return t('checkout.pay', 'Pay');
+    return t('checkout.pay');
   };
 
   // 计算按钮禁用状态
@@ -109,7 +109,7 @@ export const CheckoutBottomBar: React.FC<CheckoutBottomBarProps> = ({
       <div className="flex items-center justify-between gap-4">
         {/* 价格信息 */}
         <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">{t('checkout.total', 'Total')}</span>
+          <span className="text-xs text-muted-foreground">{t('checkout.total')}</span>
           <div className="flex items-baseline gap-1.5">
             <span className="text-lg font-bold text-foreground">{formattedTotal}</span>
             {cryptoAmount && cryptoCurrency && (
