@@ -112,6 +112,33 @@ export interface TranslationResource {
     viewAll: string;
   };
 
+  // 个人中心 (Me) - 可选，fallback 到英文
+  me?: TranslationSection & {
+    title?: string;
+    anonymous?: string;
+    notLoggedIn?: string;
+    loginPrompt?: string;
+    myOrders?: string;
+    purchases?: string;
+    sales?: string;
+    privacyGroups?: string;
+    productGroups?: string;
+    userGroups?: string;
+    receivingAccounts?: string;
+    receivingAccountsDesc?: string;
+    wishlist?: string;
+    wishlistDesc?: string;
+    notifications?: string;
+    notificationsDesc?: string;
+    settings?: string;
+    settingsDesc?: string;
+    appearance?: string;
+    darkModeDesc?: string;
+    support?: string;
+    supportDesc?: string;
+    logout?: string;
+  };
+
   // 商品
   product: TranslationSection & {
     title: string;
@@ -700,6 +727,114 @@ export interface TranslationResource {
     purchases: string;
     settings: string;
     logout: string;
+  };
+
+  // 设置弹框 (Settings Modal)
+  settingsModal?: {
+    // General tab
+    languageDesc: string;
+    helpTranslate: string;
+    countryDesc: string;
+    currencyDesc: string;
+    matureContent: string;
+    soundNotifications: string;
+    soundNotificationsDesc: string;
+    voiceAnnouncements: string;
+    voiceAnnouncementsDesc: string;
+    notificationVolume: string;
+    test: string;
+    soundTest: string;
+    soundTestDesc: string;
+    settingsSaved: string;
+    saveFailed: string;
+    // Page tab
+    shortDescription: string;
+    shortDescLimit: string;
+    shortDescPlaceholder: string;
+    locationDesc: string;
+    locationPlaceholder: string;
+    avatarDesc: string;
+    selectPhoto: string;
+    avatarUploaded: string;
+    uploadFailed: string;
+    aboutDesc: string;
+    aboutPlaceholder: string;
+    links: string;
+    addLink: string;
+    nameRequired: string;
+    namePlaceholder: string;
+    profileSaved: string;
+    // Addresses tab
+    newAddress: string;
+    recipientName: string;
+    company: string;
+    optional: string;
+    street: string;
+    apartment: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    deliveryNotes: string;
+    deliveryNotesPlaceholder: string;
+    addAddress: string;
+    addressAdded: string;
+    addressDeleted: string;
+    fillRequired: string;
+    // Blocked tab
+    noBlockedUsers: string;
+    unblock: string;
+    // Moderation tab
+    disputeResolution: string;
+    disputeResolutionDesc: string;
+    moderateDisputes: string;
+    on: string;
+    off: string;
+    pricePerDispute: string;
+    pricePerDisputeDesc: string;
+    percentage: string;
+    fixedAmount: string;
+    moderationDescription: string;
+    moderationDescPlaceholder: string;
+    moderationTerms: string;
+    moderationTermsPlaceholder: string;
+    languages: string;
+    readGuidelines: string;
+    guidelinesLink: string;
+    understandTerms: string;
+    moderationSaved: string;
+    // Chat Encryption tab
+    e2eAvailable: string;
+    myChatId: string;
+    myChatIdDesc: string;
+    chatIdCopied: string;
+    copyFailed: string;
+    chatIdNote: string;
+    currentDevice: string;
+    browserDevice: string;
+    keyBackup: string;
+    keyBackupDesc: string;
+    backupExists: string;
+    lastBackup: string;
+    never: string;
+    keysBackedUp: string;
+    backupNow: string;
+    restoreKeys: string;
+    restoreKeysDesc: string;
+    messageInvites: string;
+    messageInvitesDesc: string;
+    autoAcceptAll: string;
+    autoAcceptAllDesc: string;
+    autoAcceptMobazha: string;
+    autoAcceptMobazhaDesc: string;
+    alwaysConfirm: string;
+    alwaysConfirmDesc: string;
+    notLoggedIn: string;
+    // Store tab
+    customize: string;
+    policyPlaceholder: string;
+    termsPlaceholder: string;
+    resyncComplete: string;
+    resyncFailed: string;
   };
 }
 

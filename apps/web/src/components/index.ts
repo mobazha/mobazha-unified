@@ -19,6 +19,7 @@ export { ThemeSwitcher } from './ThemeSwitcher';
 export { ErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
 export { AuthProvider } from './AuthProvider';
 export { CurrencyProvider } from './CurrencyProvider';
+export { SettingsModal, SettingsModalProvider, useSettingsModal } from './SettingsModal';
 
 // Payment Components
 export {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Header, Footer } from '@/components';
+import { Header, Footer, useSettingsModal } from '@/components';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import {
   useVerifiedModerators,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
-import { Pencil, Camera, Package } from 'lucide-react';
+import { Settings, Camera, Package } from 'lucide-react';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 
@@ -44,6 +44,7 @@ export default function StorePage() {
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
+  const { openSettings } = useSettingsModal();
   const peerId = params.peerId as string;
   const {
     isAuthenticated,
@@ -480,15 +481,17 @@ export default function StorePage() {
                     {/* Actions */}
                     <div className="flex gap-2 flex-shrink-0">
                       {isOwnStore ? (
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditing(true)}
-                          size="sm"
-                          className="touch-feedback gap-1.5"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span>{t('profile.editProfile')}</span>
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => openSettings('page')}
+                            size="sm"
+                            className="touch-feedback gap-1.5"
+                          >
+                            <Settings className="h-4 w-4" />
+                            <span>{t('settingsModal.customize')}</span>
+                          </Button>
+                        </>
                       ) : (
                         <>
                           <Button
