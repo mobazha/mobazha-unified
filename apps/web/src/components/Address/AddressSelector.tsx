@@ -45,13 +45,11 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
   if (addresses.length === 0) {
     return (
       <VStack gap="md" align="center" className={cn('py-8', className)}>
-        <p className="text-muted-foreground text-sm">
-          {t('checkout.noAddresses', 'No shipping addresses yet')}
-        </p>
+        <p className="text-muted-foreground text-sm">{t('checkout.noAddresses')}</p>
         {onAddNew && (
           <Button onClick={onAddNew} variant="outline" size="sm">
             <Plus className="w-4 h-4 mr-1" />
-            {t('checkout.addAddress', 'Add Address')}
+            {t('checkout.addAddress')}
           </Button>
         )}
       </VStack>
@@ -80,7 +78,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
                   <span className="font-medium text-foreground text-sm">{address.name}</span>
                   {address.isDefault && (
                     <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                      {t('common.default', 'Default')}
+                      {t('common.default')}
                     </span>
                   )}
                 </HStack>
@@ -110,7 +108,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
       {onAddNew && (
         <Button variant="outline" size="sm" className="w-full mt-2" onClick={onAddNew}>
           <Plus className="w-4 h-4 mr-1" />
-          {t('checkout.addAddress', 'Add Address')}
+          {t('checkout.addAddress')}
         </Button>
       )}
     </VStack>

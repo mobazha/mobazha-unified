@@ -58,14 +58,12 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
       <SheetContent side="right" className={cn('w-full sm:max-w-md', className)}>
         <SheetHeader>
           <SheetTitle>
-            {type === 'payment'
-              ? t('payment.selectPaymentMethod', 'Select Payment Method')
-              : t('payment.selectModerator', 'Select Moderator')}
+            {type === 'payment' ? t('payment.selectPaymentMethod') : t('payment.selectModerator')}
           </SheetTitle>
           <SheetDescription>
             {type === 'payment'
-              ? t('payment.selectPaymentMethodDesc', 'Choose how you want to pay for this order')
-              : t('payment.selectModeratorDesc', 'Choose a moderator to protect your payment')}
+              ? t('payment.selectPaymentMethodDesc')
+              : t('payment.selectModeratorDesc')}
           </SheetDescription>
         </SheetHeader>
 

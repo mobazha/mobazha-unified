@@ -79,7 +79,7 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
             {moderator.verifiedMod && <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
           </div>
           <span className="text-xs text-muted-foreground">
-            {t('payment.moderatorFee', 'Fee')}: {feeDisplay}
+            {t('payment.moderatorFee')}: {feeDisplay}
           </span>
         </div>
 
@@ -134,7 +134,7 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
                 className="bg-primary/10 text-primary text-[10px] h-5 gap-0.5"
               >
                 <Shield className="w-3 h-3" />
-                {t('payment.verified', 'Verified')}
+                {t('payment.verified')}
               </Badge>
             )}
           </div>
@@ -160,7 +160,7 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
       {/* 底部：费率和语言 */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
         <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">{t('payment.fee', 'Fee')}:</span>
+          <span className="text-xs text-muted-foreground">{t('payment.fee')}:</span>
           <span className="text-sm font-medium text-foreground">{feeDisplay}</span>
         </div>
 

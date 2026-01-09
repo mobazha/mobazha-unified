@@ -64,17 +64,13 @@ export const AddressSummary: React.FC<AddressSummaryProps> = ({
 
         {/* 地址信息 */}
         <div className="flex flex-col min-w-0 flex-1">
-          <span className="text-xs text-muted-foreground">
-            {t('checkout.shippingAddress', 'Shipping Address')}
-          </span>
+          <span className="text-xs text-muted-foreground">{t('checkout.shippingAddress')}</span>
           {address ? (
             <span className="font-medium text-foreground text-sm truncate">
               {formatAddressLine(address)}
             </span>
           ) : (
-            <span className="text-muted-foreground text-sm">
-              {t('checkout.selectAddress', 'Select shipping address')}
-            </span>
+            <span className="text-muted-foreground text-sm">{t('checkout.selectAddress')}</span>
           )}
         </div>
       </div>
@@ -82,7 +78,7 @@ export const AddressSummary: React.FC<AddressSummaryProps> = ({
       {/* 更改按钮 */}
       <div className="flex items-center gap-1 text-primary flex-shrink-0 ml-2">
         <Pencil className="w-3.5 h-3.5" />
-        <span className="text-sm">{t('common.edit', 'Edit')}</span>
+        <span className="text-sm">{t('common.edit')}</span>
       </div>
     </button>
   );

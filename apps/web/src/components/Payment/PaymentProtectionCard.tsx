@@ -53,9 +53,7 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="font-medium text-foreground">
-                {t('payment.paymentProtection', 'Payment Protection')}
-              </span>
+              <span className="font-medium text-foreground">{t('payment.paymentProtection')}</span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -109,7 +107,7 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>
-                    {t('payment.fee', 'Fee')}: {feeDisplay}
+                    {t('payment.fee')}: {feeDisplay}
                   </span>
                   {selectedModerator.location && (
                     <>
@@ -128,7 +126,7 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
               className="w-full justify-between"
               onClick={onChangeModerator}
             >
-              <span>{t('payment.selectModerator', 'Select a Moderator')}</span>
+              <span>{t('payment.selectModerator')}</span>
               <ChevronRight className="w-4 h-4" />
             </Button>
           )}
