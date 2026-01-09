@@ -62,8 +62,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     slug: item.slug,
     title: item.title,
     price: Number(item.price?.amount) || 0,
-    currency: item.price?.currencyCode || 'USD',
-    divisibility: item.price?.divisibility,
+    currency: item.price?.currency?.code || 'USD',
+    divisibility: item.price?.currency?.divisibility,
     image: thumbnailUrl,
     vendor: {
       peerID: item.vendorPeerID || '',
