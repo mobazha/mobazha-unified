@@ -189,7 +189,7 @@ export default function CheckoutPage() {
   const handleCreateOrder = useCallback(async () => {
     if (!selectedAddress) {
       toast({
-        title: t('checkout.selectAddressFirst', 'Please select a shipping address'),
+        title: t('checkout.selectAddressFirst'),
         variant: 'destructive',
       });
       return;
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
 
     if (checkoutItems.length === 0) {
       toast({
-        title: t('checkout.noItems', 'No items to checkout'),
+        title: t('checkout.noItems'),
         variant: 'destructive',
       });
       return;
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
       router.push(`/payment?orderID=${mockOrderID}`);
     } catch (error) {
       toast({
-        title: t('checkout.createOrderFailed', 'Failed to create order'),
+        title: t('checkout.createOrderFailed'),
         description: (error as Error).message,
         variant: 'destructive',
       });
@@ -260,9 +260,7 @@ export default function CheckoutPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              {t('checkout.title', 'Checkout')}
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('checkout.title')}</h1>
           </HStack>
 
           {/* Loading State */}
@@ -303,13 +301,11 @@ export default function CheckoutPage() {
                 />
               </svg>
               <h2 className="text-lg font-semibold text-foreground mb-2">
-                {t('checkout.noItems', 'No items to checkout')}
+                {t('checkout.noItems')}
               </h2>
-              <p className="text-muted-foreground mb-4">
-                {t('checkout.addItemsFirst', 'Please add items to your cart first')}
-              </p>
+              <p className="text-muted-foreground mb-4">{t('checkout.addItemsFirst')}</p>
               <Link href="/marketplace">
-                <Button>{t('checkout.browseMarketplace', 'Browse Marketplace')}</Button>
+                <Button>{t('checkout.browseMarketplace')}</Button>
               </Link>
             </div>
           ) : (
@@ -320,7 +316,7 @@ export default function CheckoutPage() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('checkout.shippingAddress', 'Shipping Address')}
+                      {t('checkout.shippingAddress')}
                     </h2>
                     <AddressSummary
                       address={mockAddresses.find(a => a.id === selectedAddress)}
@@ -333,7 +329,7 @@ export default function CheckoutPage() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3">
-                      {t('checkout.orderNote', 'Order Note (Optional)')}
+                      {t('checkout.orderNote')}
                     </h2>
                     <textarea
                       value={orderNote}
@@ -354,7 +350,7 @@ export default function CheckoutPage() {
                 <Card className="sticky top-4">
                   <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('checkout.orderSummary', 'Order Summary')}
+                      {t('checkout.orderSummary')}
                     </h2>
 
                     {/* Items */}
@@ -406,7 +402,7 @@ export default function CheckoutPage() {
                             className="mt-3 pt-3 border-t border-border"
                           >
                             <span className="text-xs text-muted-foreground">
-                              {t('checkout.quantity', 'Qty')}
+                              {t('checkout.quantity')}
                             </span>
                             <HStack gap="xs" align="center">
                               <button
@@ -470,7 +466,7 @@ export default function CheckoutPage() {
                     <div className="border-t border-border pt-3 sm:pt-4 space-y-2 sm:space-y-3">
                       <HStack justify="between">
                         <span className="text-xs sm:text-sm text-muted-foreground">
-                          {t('checkout.subtotal', 'Subtotal')}
+                          {t('checkout.subtotal')}
                         </span>
                         <span className="font-medium text-foreground text-xs sm:text-sm">
                           {renderPairedPrice(subtotal, checkoutItems[0]?.currency || 'USD')}
@@ -479,17 +475,17 @@ export default function CheckoutPage() {
 
                       <HStack justify="between">
                         <span className="text-xs sm:text-sm text-muted-foreground">
-                          {t('checkout.shipping', 'Shipping')}
+                          {t('checkout.shipping')}
                         </span>
                         <span className="font-medium text-emerald-600 text-xs sm:text-sm">
-                          {t('checkout.free', 'Free')}
+                          {t('checkout.free')}
                         </span>
                       </HStack>
 
                       <div className="border-t border-border pt-2 sm:pt-3">
                         <HStack justify="between">
                           <span className="text-base sm:text-lg font-semibold text-foreground">
-                            {t('checkout.total', 'Total')}
+                            {t('checkout.total')}
                           </span>
                           <p className="text-lg sm:text-xl font-bold text-primary">
                             {renderPairedPrice(total, checkoutItems[0]?.currency || 'USD')}
@@ -522,10 +518,10 @@ export default function CheckoutPage() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          <span>{t('checkout.creatingOrder', 'Creating Order...')}</span>
+                          <span>{t('checkout.creatingOrder')}</span>
                         </HStack>
                       ) : (
-                        t('checkout.placeOrder', 'Place Order')
+                        t('checkout.placeOrder')
                       )}
                     </Button>
 
@@ -533,7 +529,7 @@ export default function CheckoutPage() {
                     {!selectedAddress && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
-                          {t('checkout.selectAddressWarning', 'Please select a shipping address')}
+                          {t('checkout.selectAddressWarning')}
                         </p>
                       </div>
                     )}
@@ -575,7 +571,7 @@ export default function CheckoutPage() {
         <div className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-sm border-t border-border p-3 safe-area-bottom sm:hidden z-50">
           <HStack justify="between" align="center">
             <div>
-              <p className="text-xs text-muted-foreground">{t('checkout.total', 'Total')}</p>
+              <p className="text-xs text-muted-foreground">{t('checkout.total')}</p>
               <p className="text-lg font-bold text-primary">
                 {renderPairedPrice(total, checkoutItems[0]?.currency || 'USD')}
               </p>
@@ -603,10 +599,10 @@ export default function CheckoutPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  <span>{t('checkout.creating', 'Creating...')}</span>
+                  <span>{t('checkout.creating')}</span>
                 </HStack>
               ) : (
-                t('checkout.placeOrder', 'Place Order')
+                t('checkout.placeOrder')
               )}
             </Button>
           </HStack>

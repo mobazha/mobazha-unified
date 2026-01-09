@@ -115,7 +115,7 @@ export default function PaymentPage() {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!orderID) {
-        setError(t('payment.noOrderID', 'No order ID provided'));
+        setError(t('payment.noOrderID'));
         setIsLoadingOrder(false);
         return;
       }
@@ -163,7 +163,7 @@ export default function PaymentPage() {
         setOrderDetails(mockOrder);
       } catch (err) {
         console.error('Failed to fetch order details:', err);
-        setError(t('payment.loadOrderFailed', 'Failed to load order details'));
+        setError(t('payment.loadOrderFailed'));
       } finally {
         setIsLoadingOrder(false);
       }
@@ -201,7 +201,7 @@ export default function PaymentPage() {
   const handlePayment = useCallback(async () => {
     if (!orderDetails) {
       toast({
-        title: t('payment.noOrderData', 'No order data'),
+        title: t('payment.noOrderData'),
         variant: 'destructive',
       });
       return;
@@ -209,7 +209,7 @@ export default function PaymentPage() {
 
     if (!selectedTokenId) {
       toast({
-        title: t('payment.selectPaymentMethod', 'Please select a payment method'),
+        title: t('payment.selectPaymentMethod'),
         variant: 'destructive',
       });
       return;
@@ -217,7 +217,7 @@ export default function PaymentPage() {
 
     if (paymentProtectionEnabled && !paymentModerator) {
       toast({
-        title: t('payment.selectModerator', 'Please select a moderator for payment protection'),
+        title: t('payment.selectModerator'),
         variant: 'destructive',
       });
       return;
@@ -249,12 +249,12 @@ export default function PaymentPage() {
 
       // 支付成功，跳转到订单详情
       toast({
-        title: t('payment.success', 'Payment successful!'),
+        title: t('payment.success'),
       });
       router.push(`/orders/${orderDetails.orderID}`);
     } catch (error) {
       toast({
-        title: t('payment.failed', 'Payment failed'),
+        title: t('payment.failed'),
         description: (error as Error).message,
         variant: 'destructive',
       });
@@ -285,10 +285,10 @@ export default function PaymentPage() {
                 />
               </svg>
               <h2 className="text-lg font-semibold text-foreground mb-2">
-                {t('payment.errorTitle', 'Unable to Load Order')}
+                {t('payment.errorTitle')}
               </h2>
               <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={() => router.back()}>{t('common.goBack', 'Go Back')}</Button>
+              <Button onClick={() => router.back()}>{t('common.goBack')}</Button>
             </div>
           </Container>
         </main>
@@ -318,9 +318,7 @@ export default function PaymentPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              {t('payment.title', 'Payment')}
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('payment.title')}</h1>
           </HStack>
 
           {/* Loading State */}
@@ -367,7 +365,7 @@ export default function PaymentPage() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('payment.paymentMethod', 'Payment Method')}
+                      {t('payment.paymentMethod')}
                     </h2>
                     <PaymentMethodSummary
                       selectedTokenId={selectedTokenId}
@@ -391,13 +389,13 @@ export default function PaymentPage() {
                 <Card className="sticky top-4">
                   <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('payment.paymentSummary', 'Payment Summary')}
+                      {t('payment.paymentSummary')}
                     </h2>
 
                     <VStack gap="sm" className="border-b border-border pb-3 mb-3">
                       <HStack justify="between">
                         <span className="text-xs sm:text-sm text-muted-foreground">
-                          {t('payment.orderTotal', 'Order Total')}
+                          {t('payment.orderTotal')}
                         </span>
                         <span className="font-medium text-foreground text-xs sm:text-sm">
                           {renderPairedPrice(orderDetails.total, orderDetails.currency)}
@@ -407,7 +405,7 @@ export default function PaymentPage() {
                       {paymentProtectionEnabled && paymentModerator && moderatorFee > 0 && (
                         <HStack justify="between">
                           <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('payment.moderatorFee', 'Moderator Fee')}
+                            {t('payment.moderatorFee')}
                           </span>
                           <span className="font-medium text-foreground text-xs sm:text-sm">
                             {renderPairedPrice(moderatorFee, orderDetails.currency)}
@@ -418,7 +416,7 @@ export default function PaymentPage() {
 
                     <HStack justify="between" className="mb-4">
                       <span className="text-base sm:text-lg font-semibold text-foreground">
-                        {t('payment.totalToPay', 'Total to Pay')}
+                        {t('payment.totalToPay')}
                       </span>
                       <div className="text-right">
                         <p className="text-lg sm:text-xl font-bold text-primary">
@@ -461,7 +459,7 @@ export default function PaymentPage() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          <span>{t('payment.processing', 'Processing...')}</span>
+                          <span>{t('payment.processing')}</span>
                         </HStack>
                       ) : isConnecting ? (
                         <HStack gap="sm" align="center" justify="center">
@@ -480,12 +478,12 @@ export default function PaymentPage() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          <span>{t('payment.connecting', 'Connecting...')}</span>
+                          <span>{t('payment.connecting')}</span>
                         </HStack>
                       ) : !isConnected ? (
-                        t('payment.connectWallet', 'Connect Wallet to Pay')
+                        t('payment.connectWallet')
                       ) : (
-                        `${t('payment.pay', 'Pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
+                        `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
                       )}
                     </Button>
 
