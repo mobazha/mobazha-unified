@@ -48,6 +48,7 @@ export const ru: TranslationResource = {
     backToMarket: 'Вернуться на рынок',
     loadMore: 'Загрузить ещё',
     noMoreData: 'Больше данных нет',
+    comingSoon: 'Скоро',
   },
 
   nav: {
@@ -331,6 +332,10 @@ export const ru: TranslationResource = {
     back: 'Назад',
     yourAddress: 'Ваш адрес',
     copy: 'Копировать',
+    connect: 'Подключить кошелёк',
+    connecting: 'Подключение...',
+    disconnect: 'Отключить',
+    connected: 'Подключено',
   },
 
   profile: {
