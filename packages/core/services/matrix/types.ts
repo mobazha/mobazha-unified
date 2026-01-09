@@ -23,6 +23,7 @@ export const MATRIX_EVENTS = {
   TYPING: 'matrix_typing',
   PRESENCE_CHANGED: 'matrix_presence_changed',
   ERROR: 'matrix_error',
+  AUTH_REQUIRED: 'matrix_auth_required', // Token 过期需要重新登录
   // Verification events
   START_VERIFICATION: 'matrix_start_verification',
   VERIFICATION_REQUEST_RECEIVED: 'matrix_verification_request_received',

@@ -176,8 +176,9 @@ class MatrixClientService {
 
       // 5. 初始化 E2EE 加密 (在 startClient 之前)
       const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const cryptoDbPrefix = `matrix-crypto-${userId}`;
+
       try {
-        const cryptoDbPrefix = `matrix-crypto-${userId}`;
         await matrixClient.initRustCrypto({
           useIndexedDB: true,
           cryptoDatabasePrefix: cryptoDbPrefix,
@@ -187,8 +188,49 @@ class MatrixClientService {
         if (deviceId) {
           this._markCryptoStoreDevice(userId, deviceId);
         }
-      } catch {
-        // 继续运行，但加密功能可能不可用
+      } catch (cryptoError) {
+        // 检查是否是数据损坏错误（TextDecoder 失败或 WASM panic）
+        const errorMsg = cryptoError instanceof Error ? cryptoError.message : String(cryptoError);
+        const isCorruptedData =
+          errorMsg.includes('TextDecoder') ||
+          errorMsg.includes('decode') ||
+          errorMsg.includes('panic') ||
+          errorMsg.includes('wasm') ||
+          errorMsg.includes('unreachable');
+
+        if (isCorruptedData) {
+          console.warn('[Matrix] Crypto store data corrupted, clearing and retrying...');
+
+          // 清除所有 crypto stores
+          await this._clearAllCryptoStores(userId);
+
+          // 清除 localStorage 中的设备标记
+          if (typeof localStorage !== 'undefined') {
+            const storageKey = `${MATRIX_CRYPTO_DEVICE_KEY}_${userId}`;
+            localStorage.removeItem(storageKey);
+          }
+
+          // 重试初始化
+          try {
+            await matrixClient.initRustCrypto({
+              useIndexedDB: true,
+              cryptoDatabasePrefix: cryptoDbPrefix,
+            });
+
+            if (deviceId) {
+              this._markCryptoStoreDevice(userId, deviceId);
+            }
+            console.info(
+              '[Matrix] Crypto re-initialized successfully after clearing corrupted data'
+            );
+          } catch (retryError) {
+            console.error('[Matrix] Crypto initialization failed after retry:', retryError);
+            // 继续运行，但加密功能不可用
+          }
+        } else {
+          console.error('[Matrix] Crypto initialization failed:', cryptoError);
+          // 继续运行，但加密功能可能不可用
+        }
       }
 
       // 5. 设置事件监听
@@ -399,9 +441,9 @@ class MatrixClientService {
         };
       } catch (error) {
         // 刷新失败，触发重新登录
-        matrixEvents.emit(MATRIX_EVENTS.ERROR, {
-          error: new Error('Token refresh failed, please re-login'),
-          code: 'TOKEN_REFRESH_FAILED',
+        console.warn('[Matrix] Token refresh failed, triggering re-authentication');
+        matrixEvents.emit(MATRIX_EVENTS.AUTH_REQUIRED, {
+          reason: 'TOKEN_REFRESH_FAILED',
         });
         throw error;
       }
@@ -613,13 +655,26 @@ class MatrixClientService {
             // 正在同步中
             this.isConnected = true;
             break;
-          case 'ERROR':
+          case 'ERROR': {
             // 同步错误
             this.isConnected = false;
-            matrixEvents.emit(MATRIX_EVENTS.SYNC_ERROR, { error: data });
             console.error('[Matrix] Sync error:', data);
+
+            // 检查是否是 token 过期错误
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const errorData = data as any;
+            const errcode = errorData?.error?.errcode || errorData?.errcode;
+            if (errcode === 'M_UNKNOWN_TOKEN') {
+              console.warn('[Matrix] Token expired, triggering re-authentication');
+              matrixEvents.emit(MATRIX_EVENTS.AUTH_REQUIRED, {
+                reason: 'TOKEN_EXPIRED',
+              });
+            } else {
+              matrixEvents.emit(MATRIX_EVENTS.SYNC_ERROR, { error: data });
+            }
             // 不要 reject，让同步继续重试
             break;
+          }
           case 'STOPPED':
             // 同步停止
             this.isConnected = false;
@@ -684,7 +739,7 @@ class MatrixClientService {
               await cryptoAny.bootstrapCrossSigning({
                 setupNewCrossSigning: true,
                 // 提供 UIA 回调处理 401 认证请求
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 authUploadDeviceSigningKeys: async (
                   makeRequest: (authData: any) => Promise<any>
                 ) => {

@@ -103,7 +103,11 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
 
   // 关闭商品详情
   const closeProduct = useCallback(() => {
-    if (!isMobile) {
+    // 实时检测窗口尺寸，与 openProduct 保持一致，避免依赖可能过时的 isMobile 状态
+    const isCurrentlyMobile =
+      typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT;
+
+    if (!isCurrentlyMobile) {
       // 桌面端：关闭弹框，移除 URL 参数
       const params = new URLSearchParams(searchParams.toString());
       params.delete('product');
@@ -111,7 +115,7 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
     }
-  }, [isMobile, router, pathname, searchParams]);
+  }, [router, pathname, searchParams]);
 
   // 处理弹框关闭
   const handleModalOpenChange = useCallback(

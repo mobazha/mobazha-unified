@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useChatStore, selectTotalUnreadCount } from '@mobazha/core';
+import { useChatStore, selectTotalUnreadCount, useUserStore } from '@mobazha/core';
 
 interface NavItem {
   label: string;
@@ -108,7 +108,7 @@ const navItems: NavItem[] = [
   },
   {
     label: 'Me',
-    href: '/profile',
+    href: '/me',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -140,11 +140,24 @@ const HIDE_NAV_PATTERNS = [
   /^\/product\/[^/]+$/, // 商品详情页（有自己的底部操作栏）
 ];
 
+// 需要登录才能显示的导航项
+const AUTH_REQUIRED_ITEMS = ['Orders', 'Cart', 'Chat'];
+
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const totalUnread = useChatStore(selectTotalUnreadCount);
+  const { isAuthenticated } = useUserStore();
+
+  // 根据登录状态过滤导航项
+  const filteredNavItems = navItems.filter(item => {
+    if (!isAuthenticated) {
+      // 未登录时隐藏需要登录的项
+      return !AUTH_REQUIRED_ITEMS.includes(item.label);
+    }
+    return true;
+  });
 
   const isActive = (href?: string) => {
     if (!href) return false;
@@ -170,7 +183,7 @@ export const MobileNav: React.FC = () => {
       {/* Safe area padding for iOS */}
       <div className="relative pb-safe">
         <div className="flex items-center justify-around h-16 px-2">
-          {navItems.map((item, index) => {
+          {filteredNavItems.map((item, index) => {
             const active = item.isChat ? drawerOpen : isActive(item.href);
             const badge = item.isChat ? totalUnread : item.badge;
 

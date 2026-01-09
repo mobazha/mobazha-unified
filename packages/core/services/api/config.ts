@@ -42,11 +42,12 @@ export function getApiConfig(): ApiConfig {
   const env = getEnvConfig();
 
   // 浏览器环境使用代理
+  // 注意：服务器 nginx 直接代理 /v1, /info, /api 路径，无需 /proxy 前缀
   if (shouldUseProxy()) {
     return {
-      gatewayUrl: configOverrides.gatewayUrl ?? '/proxy/v1',
-      searchUrl: configOverrides.searchUrl ?? '/proxy/info',
-      mbzGatewayUrl: configOverrides.mbzGatewayUrl ?? '/proxy/info/v1',
+      gatewayUrl: configOverrides.gatewayUrl ?? '/v1',
+      searchUrl: configOverrides.searchUrl ?? '/info',
+      mbzGatewayUrl: configOverrides.mbzGatewayUrl ?? '/info/v1',
     };
   }
 
@@ -63,9 +64,9 @@ export function getApiConfig(): ApiConfig {
  * 这些接口不需要 /v1 前缀
  */
 export function getHostingUrl(): string {
-  // 浏览器环境使用代理（不含 /v1）
+  // 浏览器环境：服务器 nginx 直接代理 /api 路径
   if (shouldUseProxy()) {
-    return '/proxy';
+    return '';
   }
   const env = getEnvConfig();
   return env.api.baseUrl;
@@ -82,9 +83,9 @@ export function getGatewayUrl(): string {
   if (configOverrides.gatewayUrl) {
     return configOverrides.gatewayUrl;
   }
-  // 浏览器环境使用代理（包含 /v1 前缀）
+  // 浏览器环境：服务器 nginx 直接代理 /v1 路径
   if (shouldUseProxy()) {
-    return '/proxy/v1';
+    return '/v1';
   }
   const env = getEnvConfig();
   return env.api.gateway;
@@ -98,9 +99,9 @@ export function getSearchUrl(): string {
   if (configOverrides.searchUrl) {
     return configOverrides.searchUrl;
   }
-  // 浏览器环境使用代理
+  // 浏览器环境：服务器 nginx 直接代理 /info 路径
   if (shouldUseProxy()) {
-    return '/proxy/info';
+    return '/info';
   }
   const env = getEnvConfig();
   return env.api.search;
@@ -114,9 +115,9 @@ export function getMbzGatewayUrl(): string {
   if (configOverrides.mbzGatewayUrl) {
     return configOverrides.mbzGatewayUrl;
   }
-  // 浏览器环境使用代理
+  // 浏览器环境：服务器 nginx 直接代理 /info 路径
   if (shouldUseProxy()) {
-    return '/proxy/info/v1';
+    return '/info/v1';
   }
   const env = getEnvConfig();
   return env.api.mbzGateway;

@@ -269,10 +269,39 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       }
     };
 
+    // Token 过期需要重新登录
+    const onAuthRequired = async (data: unknown) => {
+      const { reason } = (data || {}) as { reason?: string };
+      console.warn(`[Matrix] Auth required: ${reason}, re-initializing...`);
+
+      // 清除重试定时器
+      clearRetryTimer();
+
+      // 先登出清除旧的 token
+      try {
+        await matrixClient.logout();
+      } catch {
+        // 忽略登出错误
+      }
+
+      // 重置状态
+      initRef.current = false;
+      retryCountRef.current = 0;
+
+      // 延迟后重新初始化（使用新的 token）
+      retryTimerRef.current = setTimeout(() => {
+        if (isAuthenticated && peerID) {
+          console.info('[Matrix] Re-initializing after auth required...');
+          initialize();
+        }
+      }, 2000);
+    };
+
     // 订阅事件
     const unsubscribers = [
       matrixEvents.on(MATRIX_EVENTS.CONNECTED, onConnected),
       matrixEvents.on(MATRIX_EVENTS.DISCONNECTED, onDisconnected),
+      matrixEvents.on(MATRIX_EVENTS.AUTH_REQUIRED, onAuthRequired),
       matrixEvents.on(MATRIX_EVENTS.MESSAGE_RECEIVED, onMessageReceived),
       matrixEvents.on(MATRIX_EVENTS.MESSAGE_UPDATED, onMessageUpdated),
       matrixEvents.on(MATRIX_EVENTS.ROOM_JOINED, onRoomJoined),
@@ -302,6 +331,8 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     peerID,
     maxRetries,
     retryInterval,
+    clearRetryTimer,
+    initialize,
   ]);
 
   // 自动初始化
