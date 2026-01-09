@@ -11,6 +11,8 @@ export const ko: TranslationResource = {
     success: '성공',
     cancel: '취소',
     confirm: '확인',
+    accept: '수락',
+    decline: '거절',
     save: '저장',
     delete: '삭제',
     edit: '편집',
@@ -255,6 +257,24 @@ export const ko: TranslationResource = {
     selectConversation:
       '대화를 선택하여 채팅을 시작하거나 새 대화를 만들어 판매자 및 구매자와 연결하세요.',
     searchConversations: '대화 검색...',
+  },
+
+  // Matrix 房间事件
+  matrix: {
+    events: {
+      join: '{{name}}님이 채팅에 참여했습니다',
+      left: '{{name}}님이 채팅에서 나갔습니다',
+      invited: '{{by}}님이 {{name}}님을 초대했습니다',
+      kicked: '{{by}}님이 {{name}}님을 채팅에서 제거했습니다',
+      banned: '{{by}}님이 {{name}}님을 차단했습니다',
+      unbanned: '{{by}}님이 {{name}}님의 차단을 해제했습니다',
+      nameChanged: '{{name}}님이 이름을 {{newName}}로 변경했습니다',
+      avatarChanged: '{{name}}님이 아바타를 변경했습니다',
+      roomNameChanged: '{{name}}님이 방 이름을 {{roomName}}로 변경했습니다',
+      roomTopicChanged: '{{name}}님이 주제를 {{topic}}로 설정했습니다',
+      encryptionEnabled: '종단간 암호화가 활성화되었습니다',
+      roomCreated: '{{name}}님이 이 채팅을 생성했습니다',
+    },
   },
 
   wallet: {

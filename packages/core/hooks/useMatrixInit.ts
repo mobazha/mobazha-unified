@@ -1,0 +1,320 @@
+/**
+ * Matrix 初始化 Hook
+ * 在用户登录后自动初始化 Matrix 连接
+ * 支持自动重试和断线重连
+ */
+
+import { useEffect, useRef, useCallback } from 'react';
+import { useUserStore } from '../stores/userStore';
+import { useChatStore } from '../stores/chatStore';
+import { matrixClient } from '../services/matrix/client';
+import { matrixEvents } from '../services/matrix/events';
+import { MATRIX_EVENTS } from '../services/matrix/types';
+import type { MatrixMessage } from '../services/matrix/types';
+
+export interface UseMatrixInitOptions {
+  /** 是否启用 Matrix */
+  enabled?: boolean;
+  /** 自动连接 */
+  autoConnect?: boolean;
+  /** 最大重试次数 */
+  maxRetries?: number;
+  /** 重试间隔（毫秒） */
+  retryInterval?: number;
+}
+
+export interface UseMatrixInitReturn {
+  isInitialized: boolean;
+  isConnected: boolean;
+  error: string | null;
+  retryCount: number;
+  initialize: () => Promise<boolean>;
+  disconnect: () => Promise<void>;
+  retry: () => Promise<boolean>;
+}
+
+/**
+ * Matrix 初始化 Hook
+ * 监听用户登录状态，自动初始化 Matrix
+ * 支持自动重试和断线重连
+ */
+export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInitReturn {
+  const { enabled = true, autoConnect = true, maxRetries = 3, retryInterval = 5000 } = options;
+
+  const initRef = useRef(false);
+  const initializingRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // User store
+  const { isAuthenticated, profile } = useUserStore();
+  const peerID = profile?.peerID;
+
+  // Chat store
+  const {
+    isConnected,
+    connectionError,
+    setConnected,
+    setInitializing,
+    setConnectionError,
+    setRooms,
+    addMessage,
+    updateRoom,
+    setTypingUsers,
+    setUserPresence,
+    removeRoom,
+    reset: resetChatStore,
+  } = useChatStore();
+
+  // 清除重试定时器
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
+  // 初始化 Matrix
+  const initialize = useCallback(async (): Promise<boolean> => {
+    if (!peerID || initializingRef.current) {
+      return false;
+    }
+
+    initializingRef.current = true;
+    setInitializing(true);
+    setConnectionError(null);
+    clearRetryTimer();
+
+    try {
+      // 使用 peerID 初始化 Matrix（自动登录）
+      const success = await matrixClient.initializeWithPeerID(peerID);
+
+      if (!success) {
+        throw new Error('Failed to initialize Matrix client');
+      }
+
+      // 启动同步
+      await matrixClient.startSync();
+
+      // 加载房间列表
+      const rooms = await matrixClient.getRooms();
+      setRooms(rooms);
+
+      initRef.current = true;
+      retryCountRef.current = 0; // 重置重试计数
+      setConnected(true);
+
+      // eslint-disable-next-line no-console
+      console.info('[Matrix] Initialized successfully with', rooms.length, 'rooms');
+      return true;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Matrix initialization failed';
+      console.error('[Matrix] Initialization failed:', errorMsg);
+      setConnectionError(errorMsg);
+
+      // 自动重试逻辑
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current += 1;
+        console.warn(
+          `[Matrix] Will retry in ${retryInterval / 1000}s (attempt ${retryCountRef.current}/${maxRetries})`
+        );
+
+        retryTimerRef.current = setTimeout(() => {
+          if (isAuthenticated && peerID) {
+            initialize();
+          }
+        }, retryInterval);
+      }
+
+      return false;
+    } finally {
+      initializingRef.current = false;
+      setInitializing(false);
+    }
+  }, [
+    peerID,
+    setInitializing,
+    setConnectionError,
+    setConnected,
+    setRooms,
+    clearRetryTimer,
+    maxRetries,
+    retryInterval,
+    isAuthenticated,
+  ]);
+
+  // 手动重试
+  const retry = useCallback(async (): Promise<boolean> => {
+    retryCountRef.current = 0; // 重置重试计数
+    clearRetryTimer();
+    return initialize();
+  }, [initialize, clearRetryTimer]);
+
+  // 断开连接
+  const disconnect = useCallback(async () => {
+    clearRetryTimer();
+
+    try {
+      await matrixClient.stopSync();
+      await matrixClient.logout();
+    } catch (err) {
+      console.warn('[Matrix] Disconnect error:', err);
+    }
+
+    initRef.current = false;
+    retryCountRef.current = 0;
+    resetChatStore();
+  }, [resetChatStore, clearRetryTimer]);
+
+  // 监听 Matrix 事件
+  useEffect(() => {
+    if (!enabled) return;
+
+    // 消息事件
+    const onMessageReceived = (data: unknown) => {
+      const message = data as MatrixMessage;
+      console.log(
+        '[Matrix] onMessageReceived:',
+        message.id,
+        message.roomId,
+        message.content?.substring(0, 50)
+      );
+      addMessage(message.roomId, message);
+      updateRoom(message.roomId, {
+        lastMessage: message,
+        timestamp: message.timestamp,
+      });
+    };
+
+    // 房间事件
+    const onRoomJoined = async () => {
+      // 刷新房间列表
+      const rooms = await matrixClient.getRooms();
+      setRooms(rooms);
+    };
+
+    const onRoomLeft = (data: unknown) => {
+      const { roomId } = data as { roomId: string };
+      removeRoom(roomId);
+    };
+
+    const onRoomInvite = async () => {
+      // 刷新房间列表（包括邀请）
+      const rooms = await matrixClient.getRooms();
+      setRooms(rooms);
+    };
+
+    // 输入状态
+    const onTyping = (data: unknown) => {
+      const { roomId, userIds } = data as { roomId: string; userIds: string[] };
+      setTypingUsers(roomId, userIds);
+    };
+
+    // 在线状态
+    const onPresence = (data: unknown) => {
+      const { userId, presence } = data as {
+        userId: string;
+        presence: 'online' | 'offline' | 'unavailable';
+      };
+      setUserPresence(userId, presence);
+    };
+
+    // 房间事件（成员变更等）
+    const onRoomEvent = (data: unknown) => {
+      const roomEvent = data as MatrixMessage;
+      if (roomEvent.isRoomEvent) {
+        // 添加房间事件到消息列表
+        addMessage(roomEvent.roomId, roomEvent);
+      }
+    };
+
+    // 连接状态
+    const onConnected = () => {
+      setConnected(true);
+      retryCountRef.current = 0; // 连接成功时重置重试计数
+    };
+
+    const onDisconnected = () => {
+      setConnected(false);
+      // 断线自动重连
+      if (isAuthenticated && peerID && initRef.current && retryCountRef.current < maxRetries) {
+        retryCountRef.current += 1;
+        console.warn(`[Matrix] Disconnected, will reconnect in ${retryInterval / 1000}s`);
+
+        retryTimerRef.current = setTimeout(() => {
+          if (isAuthenticated && peerID) {
+            matrixClient.startSync().catch(console.error);
+          }
+        }, retryInterval);
+      }
+    };
+
+    // 订阅事件
+    const unsubscribers = [
+      matrixEvents.on(MATRIX_EVENTS.CONNECTED, onConnected),
+      matrixEvents.on(MATRIX_EVENTS.DISCONNECTED, onDisconnected),
+      matrixEvents.on(MATRIX_EVENTS.MESSAGE_RECEIVED, onMessageReceived),
+      matrixEvents.on(MATRIX_EVENTS.ROOM_JOINED, onRoomJoined),
+      matrixEvents.on(MATRIX_EVENTS.ROOM_LEFT, onRoomLeft),
+      matrixEvents.on(MATRIX_EVENTS.ROOM_INVITE, onRoomInvite),
+      matrixEvents.on(MATRIX_EVENTS.ROOM_EVENT, onRoomEvent),
+      matrixEvents.on(MATRIX_EVENTS.TYPING, onTyping),
+      matrixEvents.on(MATRIX_EVENTS.PRESENCE_CHANGED, onPresence),
+    ];
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [
+    enabled,
+    addMessage,
+    updateRoom,
+    setRooms,
+    removeRoom,
+    setTypingUsers,
+    setUserPresence,
+    setConnected,
+    isAuthenticated,
+    peerID,
+    maxRetries,
+    retryInterval,
+  ]);
+
+  // 自动初始化
+  useEffect(() => {
+    if (!enabled || !autoConnect) return;
+
+    // 当用户登录且有 peerID 时自动初始化
+    if (isAuthenticated && peerID && !initRef.current && !initializingRef.current) {
+      // eslint-disable-next-line no-console
+      console.info('[Matrix] User authenticated, initializing...');
+      initialize();
+    }
+
+    // 当用户登出时断开连接
+    if (!isAuthenticated && initRef.current) {
+      // eslint-disable-next-line no-console
+      console.info('[Matrix] User logged out, disconnecting...');
+      disconnect();
+    }
+  }, [enabled, autoConnect, isAuthenticated, peerID, initialize, disconnect]);
+
+  // 清理
+  useEffect(() => {
+    return () => {
+      clearRetryTimer();
+    };
+  }, [clearRetryTimer]);
+
+  return {
+    isInitialized: initRef.current,
+    isConnected,
+    error: connectionError,
+    retryCount: retryCountRef.current,
+    initialize,
+    disconnect,
+    retry,
+  };
+}
+
+export default useMatrixInit;

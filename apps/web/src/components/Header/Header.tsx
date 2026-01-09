@@ -17,7 +17,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useI18n, useUserStore, getImageUrl, isHosted, startCasdoorLogin } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  useChatStore,
+  selectTotalUnreadCount,
+  getImageUrl,
+  isHosted,
+  startCasdoorLogin,
+} from '@mobazha/core';
 import {
   Search,
   ShoppingCart,
@@ -34,6 +42,8 @@ export const Header: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
+  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -87,15 +97,19 @@ export const Header: React.FC = () => {
                 {t('footer.marketplace')}
               </Button>
             </Link>
-            <Link href="/chat">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                {t('nav.messages')}
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:bg-primary/10 hover:text-primary transition-colors relative"
+              onClick={openChatDrawer}
+            >
+              {t('nav.messages')}
+              {totalUnread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full">
+                  {totalUnread > 99 ? '99+' : totalUnread}
+                </span>
+              )}
+            </Button>
             <Link href="/wallet">
               <Button
                 variant="ghost"

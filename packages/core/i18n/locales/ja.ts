@@ -11,6 +11,8 @@ export const ja: TranslationResource = {
     success: '成功',
     cancel: 'キャンセル',
     confirm: '確認',
+    accept: '承認',
+    decline: '拒否',
     save: '保存',
     delete: '削除',
     edit: '編集',
@@ -255,6 +257,24 @@ export const ja: TranslationResource = {
     selectConversation:
       '会話を選択してチャットを開始するか、新しい会話を作成して販売者や購入者と繋がりましょう。',
     searchConversations: '会話を検索...',
+  },
+
+  // Matrix 房间事件
+  matrix: {
+    events: {
+      join: '{{name}} がチャットに参加しました',
+      left: '{{name}} がチャットから退出しました',
+      invited: '{{by}} が {{name}} を招待しました',
+      kicked: '{{by}} が {{name}} をチャットから削除しました',
+      banned: '{{by}} が {{name}} をブロックしました',
+      unbanned: '{{by}} が {{name}} のブロックを解除しました',
+      nameChanged: '{{name}} が名前を {{newName}} に変更しました',
+      avatarChanged: '{{name}} がアバターを変更しました',
+      roomNameChanged: '{{name}} がルーム名を {{roomName}} に変更しました',
+      roomTopicChanged: '{{name}} がトピックを {{topic}} に設定しました',
+      encryptionEnabled: 'エンドツーエンド暗号化が有効になりました',
+      roomCreated: '{{name}} がこのチャットを作成しました',
+    },
   },
 
   wallet: {

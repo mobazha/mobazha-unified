@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { ProductCard } from '@/components/ProductCard';
+import { useChatStore } from '@mobazha/core';
 
 // Types
 interface Marketplace {
@@ -181,6 +182,7 @@ export default function MarketplaceDetailPage() {
   const [activeTab, setActiveTab] = useState<'products' | 'sellers' | 'about' | 'chat'>('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMember, setIsMember] = useState(false);
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   const marketplace = mockMarketplace;
 
@@ -479,11 +481,9 @@ export default function MarketplaceDetailPage() {
                     : 'Join this marketplace to access the community chat.'}
                 </p>
                 {isMember ? (
-                  <Link href={`/chat/${marketplace.chatRoomId}`}>
-                    <Button size="sm" className="touch-feedback">
-                      Open Chat
-                    </Button>
-                  </Link>
+                  <Button size="sm" className="touch-feedback" onClick={openChatDrawer}>
+                    Open Chat
+                  </Button>
                 ) : (
                   <Button size="sm" onClick={handleJoinMarketplace} className="touch-feedback">
                     Join to Chat

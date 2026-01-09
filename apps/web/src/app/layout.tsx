@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import {
   AuthProvider,
+  ChatSystem,
   CurrencyProvider,
   DevTools,
   MobileNav,
@@ -78,6 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                 {/* Mobile bottom navigation */}
                 <MobileNav />
+
+                {/* Chat floating button and drawer */}
+                <ChatSystem />
 
                 {/* PWA install prompt */}
                 <PWAInstall />

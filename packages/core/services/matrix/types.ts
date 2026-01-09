@@ -6,6 +6,7 @@
 export const MATRIX_EVENTS = {
   CONNECTED: 'matrix_connected',
   DISCONNECTED: 'matrix_disconnected',
+  SYNC_ERROR: 'matrix_sync_error',
   MESSAGE_RECEIVED: 'matrix_message_received',
   MESSAGE_SENT: 'matrix_message_sent',
   MESSAGE_SENDING: 'matrix_message_sending',
@@ -15,6 +16,7 @@ export const MATRIX_EVENTS = {
   ROOM_LEFT: 'matrix_room_left',
   ROOM_INVITE: 'matrix_room_invite',
   ROOM_INVITE_PENDING: 'matrix_room_invite_pending',
+  ROOM_EVENT: 'matrix_room_event', // 房间事件（成员变更等）
   MEMBER_PEERID_UPDATED: 'matrix_member_peerid_updated',
   MEMBER_CHANGED: 'matrix_member_changed',
   TYPING: 'matrix_typing',
@@ -86,8 +88,12 @@ export interface MatrixRoom {
   unreadCount: number;
   members: MatrixUser[];
   timestamp?: number;
+  // 成员状态
+  membership?: 'join' | 'invite' | 'leave' | 'ban' | 'knock';
+  inviter?: string; // 邀请者用户ID
   // 扩展字段
   roomType?: RoomType;
+  isExternal?: boolean; // 是否为外部 Matrix 房间
   orderId?: string; // 订单讨论关联的订单 ID
   storeId?: string; // 店铺社区关联的店铺 ID
   moderatorId?: string; // 仲裁讨论关联的仲裁人 ID
@@ -114,6 +120,21 @@ export interface RoomMetadata {
   customData?: Record<string, unknown>;
 }
 
+// 房间事件类型（用于显示成员变更等）
+export type RoomEventType =
+  | 'join' // 用户加入
+  | 'leave' // 用户离开
+  | 'invite' // 用户被邀请
+  | 'kick' // 用户被踢出
+  | 'ban' // 用户被禁止
+  | 'unban' // 用户被解禁
+  | 'name_change' // 用户改名
+  | 'avatar_change' // 用户改头像
+  | 'room_name' // 房间改名
+  | 'room_topic' // 房间话题变更
+  | 'encryption' // 启用加密
+  | 'room_created'; // 房间创建
+
 // Matrix 消息
 export interface MatrixMessage {
   id: string;
@@ -129,6 +150,11 @@ export interface MatrixMessage {
   isSystem?: boolean;
   replyTo?: string;
   attachments?: MatrixAttachment[];
+  // 房间事件相关
+  isRoomEvent?: boolean;
+  roomEventType?: RoomEventType;
+  targetUserId?: string; // 被操作的用户（如被邀请/踢出的人）
+  targetUserName?: string; // 被操作用户的显示名
 }
 
 // 消息类型

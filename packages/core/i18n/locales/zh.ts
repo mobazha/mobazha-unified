@@ -11,6 +11,8 @@ export const zh: TranslationResource = {
     success: '成功',
     cancel: '取消',
     confirm: '确认',
+    accept: '接受',
+    decline: '拒绝',
     save: '保存',
     delete: '删除',
     edit: '编辑',
@@ -481,10 +483,53 @@ export const zh: TranslationResource = {
     offline: '离线',
     lastSeen: '{{time}} 前在线',
     typing: '正在输入...',
-    encrypted: '消息已端到端加密',
+    encrypted: '端到端加密',
+    decentralized: '去中心化',
     welcomeToMessages: '欢迎使用消息',
     selectConversation: '选择一个会话开始聊天，或创建新会话与卖家和买家联系。',
     searchConversations: '搜索会话...',
+    // 登录状态
+    loginRequired: '需要登录',
+    loginToChat: '请登录以访问您的消息并开始与他人聊天。',
+    connecting: '正在连接聊天...',
+    // 空状态
+    noConversations: '暂无会话',
+    startFirstConversation: '点击下方按钮开始您的第一次对话，或访问店铺与卖家联系。',
+    startNewConversation: '开始新对话',
+    startConversation: '开始对话',
+    // 时间
+    today: '今天',
+    yesterday: '昨天',
+    // 分组
+    directMessages: '私信',
+    communities: '社群',
+    orderChats: '订单讨论',
+    invitations: '邀请',
+    invitedYou: '邀请您加入会话',
+    inviteConfirm: '邀请确认',
+    invitedBy: '由 {{name}} 邀请',
+    // 房间状态
+    roomNotFound: '房间未找到',
+    roomNotFoundDesc: '您要查找的聊天室不存在或您没有访问权限。',
+    backToMessages: '返回消息列表',
+  },
+
+  // Matrix 房间事件
+  matrix: {
+    events: {
+      join: '{{name}} 加入了聊天',
+      left: '{{name}} 离开了聊天',
+      invited: '{{by}} 邀请了 {{name}}',
+      kicked: '{{by}} 将 {{name}} 移出了聊天',
+      banned: '{{by}} 禁止了 {{name}}',
+      unbanned: '{{by}} 解禁了 {{name}}',
+      nameChanged: '{{name}} 将昵称改为 {{newName}}',
+      avatarChanged: '{{name}} 更换了头像',
+      roomNameChanged: '{{name}} 将房间名改为 {{roomName}}',
+      roomTopicChanged: '{{name}} 将话题改为 {{topic}}',
+      encryptionEnabled: '已启用端到端加密',
+      roomCreated: '{{name}} 创建了此聊天',
+    },
   },
 
   wallet: {

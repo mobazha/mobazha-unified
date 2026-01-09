@@ -11,6 +11,8 @@ export const ru: TranslationResource = {
     success: 'Успех',
     cancel: 'Отмена',
     confirm: 'Подтвердить',
+    accept: 'Принять',
+    decline: 'Отклонить',
     save: 'Сохранить',
     delete: 'Удалить',
     edit: 'Изменить',
@@ -255,6 +257,24 @@ export const ru: TranslationResource = {
     selectConversation:
       'Выберите разговор для начала общения или создайте новый для связи с продавцами и покупателями.',
     searchConversations: 'Поиск разговоров...',
+  },
+
+  // Matrix 房间事件
+  matrix: {
+    events: {
+      join: '{{name}} присоединился к чату',
+      left: '{{name}} покинул чат',
+      invited: '{{by}} пригласил {{name}}',
+      kicked: '{{by}} удалил {{name}} из чата',
+      banned: '{{by}} заблокировал {{name}}',
+      unbanned: '{{by}} разблокировал {{name}}',
+      nameChanged: '{{name}} изменил имя на {{newName}}',
+      avatarChanged: '{{name}} изменил аватар',
+      roomNameChanged: '{{name}} изменил название комнаты на {{roomName}}',
+      roomTopicChanged: '{{name}} установил тему: {{topic}}',
+      encryptionEnabled: 'Сквозное шифрование включено',
+      roomCreated: '{{name}} создал этот чат',
+    },
   },
 
   wallet: {

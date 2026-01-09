@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { toast } from '@/components/ui/use-toast';
+import { useChatStore } from '@mobazha/core';
 
 // Types
 type NotificationType = 'order' | 'payment' | 'dispute' | 'follow' | 'message' | 'system';
@@ -178,6 +179,7 @@ const typeColors: Record<NotificationType, string> = {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -229,7 +231,7 @@ export default function NotificationsPage() {
       case 'follow':
         return notification.data?.peerID ? `/store/${notification.data.peerID}` : '/profile';
       case 'message':
-        return '/chat';
+        return '#'; // Will be handled by onClick to open drawer
       default:
         return '#';
     }
@@ -343,7 +345,13 @@ export default function NotificationsPage() {
                     {/* Content */}
                     <Link
                       href={getNotificationLink(notification)}
-                      onClick={() => handleMarkAsRead(notification.id)}
+                      onClick={e => {
+                        handleMarkAsRead(notification.id);
+                        if (notification.type === 'message') {
+                          e.preventDefault();
+                          openChatDrawer();
+                        }
+                      }}
                       className="flex-1 min-w-0 touch-feedback"
                     >
                       <HStack justify="between" align="start">
