@@ -220,6 +220,7 @@ export async function fetchStoreListings(
 
 /**
  * 获取商品索引（自己的商品）
+ * 超时时间增加到 60 秒，因为网关 API 有时响应较慢
  */
 export async function getListingIndex(
   username?: string,
@@ -228,7 +229,7 @@ export async function getListingIndex(
   const url = `${getGatewayUrl()}/ob/listingindex`;
   const data = await safeRequest<ProductListItem[] | { success: false }>(
     url,
-    { headers: getHeadersWithContext(username, password) },
+    { headers: getHeadersWithContext(username, password), timeout: 60000 },
     []
   );
 
@@ -240,6 +241,7 @@ export async function getListingIndex(
 
 /**
  * 获取其他店铺的商品索引
+ * 超时时间增加到 60 秒，因为网关 API 有时响应较慢
  */
 export async function getStoreListingIndex(
   peerID: string,
@@ -249,7 +251,7 @@ export async function getStoreListingIndex(
   const url = `${getGatewayUrl()}/ob/listingindex/${peerID}`;
   const data = await safeRequest<ProductListItem[] | { success: false }>(
     url,
-    { headers: getHeadersWithContext(username, password) },
+    { headers: getHeadersWithContext(username, password), timeout: 60000 },
     []
   );
 
@@ -286,15 +288,15 @@ export async function getListing(
 
 /**
  * 获取公开商品详情（无需认证）
+ * 注意：移除了时间戳参数以支持请求去重缓存
  */
 export async function getPublicListing(slug: string, peerID?: string): Promise<Product | null> {
-  const timestamp = Date.now();
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/ob/listing/${slug}?`;
+    url = `${getGatewayUrl()}/ob/listing/${slug}`;
   } else {
-    url = `${getGatewayUrl()}/ob/listing/${peerID}/${slug}?usecache=true&${timestamp}`;
+    url = `${getGatewayUrl()}/ob/listing/${peerID}/${slug}?usecache=true`;
   }
 
   try {
@@ -355,6 +357,7 @@ export async function deleteListing(
 
 /**
  * 获取商品评价索引
+ * 注意：移除了时间戳参数以支持请求去重缓存
  */
 export async function getRatingIndex(
   peerID?: string,
@@ -362,13 +365,12 @@ export async function getRatingIndex(
   username?: string,
   password?: string
 ): Promise<ProductRating[]> {
-  const timestamp = Date.now();
   let url: string;
 
   if (peerID && slug) {
-    url = `${getGatewayUrl()}/ob/ratingindex/${peerID}/${slug}?usecache=true&${timestamp}`;
+    url = `${getGatewayUrl()}/ob/ratingindex/${peerID}/${slug}?usecache=true`;
   } else if (peerID) {
-    url = `${getGatewayUrl()}/ob/ratingindex/${peerID}?usecache=true&${timestamp}`;
+    url = `${getGatewayUrl()}/ob/ratingindex/${peerID}?usecache=true`;
   } else if (slug) {
     url = `${getGatewayUrl()}/ob/ratingindex/${slug}`;
   } else {

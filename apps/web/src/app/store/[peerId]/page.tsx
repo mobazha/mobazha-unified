@@ -63,7 +63,7 @@ export default function StorePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<UserProfile | null>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(true); // 初始为 true，显示加载骨架
 
   // 编辑相关状态
   const [isEditing, setIsEditing] = useState(false);

@@ -10,6 +10,7 @@ import {
   MobileNav,
   PWAInstall,
   ServiceWorkerProvider,
+  SettingsModalProvider,
   ThemeProvider,
 } from '@/components';
 import { Toaster } from '@/components/ui';
@@ -85,23 +86,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Suspense fallback={null}>
                   <ProductModalProvider>
                     <PaymentSelectorProvider>
-                      {/* Main content with bottom padding for mobile nav */}
-                      <div className="pb-20 md:pb-0">{children}</div>
+                      <SettingsModalProvider>
+                        {/* Main content with bottom padding for mobile nav */}
+                        <div className="pb-20 md:pb-0">{children}</div>
 
-                      {/* Mobile bottom navigation */}
-                      <MobileNav />
+                        {/* Mobile bottom navigation */}
+                        <MobileNav />
 
-                      {/* Chat floating button and drawer */}
-                      <ChatSystem />
+                        {/* Chat floating button and drawer */}
+                        <ChatSystem />
 
-                      {/* PWA install prompt */}
-                      <PWAInstall />
+                        {/* PWA install prompt */}
+                        <PWAInstall />
 
-                      {/* Dev tools (only in development) */}
-                      <DevTools />
+                        {/* Dev tools (only in development) */}
+                        <DevTools />
 
-                      {/* Toast notifications */}
-                      <Toaster />
+                        {/* Toast notifications */}
+                        <Toaster />
+                      </SettingsModalProvider>
                     </PaymentSelectorProvider>
                   </ProductModalProvider>
                 </Suspense>
