@@ -8,6 +8,7 @@ export const MATRIX_EVENTS = {
   DISCONNECTED: 'matrix_disconnected',
   SYNC_ERROR: 'matrix_sync_error',
   MESSAGE_RECEIVED: 'matrix_message_received',
+  MESSAGE_UPDATED: 'matrix_message_updated', // 消息更新（如解密后更新）
   MESSAGE_SENT: 'matrix_message_sent',
   MESSAGE_SENDING: 'matrix_message_sending',
   MESSAGE_FAILED: 'matrix_message_failed',
@@ -63,6 +64,7 @@ export interface MatrixUser {
   userId: string;
   displayName?: string;
   avatarUrl?: string;
+  rawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   peerID?: string;
   isExternal?: boolean;
 }
@@ -82,6 +84,7 @@ export interface MatrixRoom {
   name?: string;
   topic?: string;
   avatarUrl?: string;
+  rawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   isDirect: boolean;
   isEncrypted: boolean;
   lastMessage?: MatrixMessage;
@@ -94,6 +97,7 @@ export interface MatrixRoom {
   // 扩展字段
   roomType?: RoomType;
   isExternal?: boolean; // 是否为外部 Matrix 房间
+  memberPeerIDs?: Record<string, string>; // userId -> 原始 peerID 映射
   orderId?: string; // 订单讨论关联的订单 ID
   storeId?: string; // 店铺社区关联的店铺 ID
   moderatorId?: string; // 仲裁讨论关联的仲裁人 ID
@@ -143,6 +147,7 @@ export interface MatrixMessage {
   sender: string;
   senderName?: string;
   senderAvatar?: string;
+  senderRawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   content: string;
   type: MessageType;
   timestamp: number;

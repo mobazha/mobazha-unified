@@ -15,6 +15,8 @@ export {
   saveCredentials,
   getCredentials,
   clearCredentials,
+  clearCredentialsKeepDevice,
+  clearAllCredentials,
   STORAGE_KEYS,
 } from './storage';
 

@@ -13,6 +13,7 @@ export interface Message {
   senderId: string;
   senderName?: string;
   senderAvatar?: string;
+  senderRawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   timestamp: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   isSystem?: boolean;
@@ -29,6 +30,7 @@ export interface ChatMessagesProps {
   roomId: string;
   roomName: string;
   roomAvatar?: string;
+  roomRawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   isEncrypted?: boolean;
   isOnline?: boolean;
   isVerified?: boolean;
@@ -38,18 +40,19 @@ export interface ChatMessagesProps {
   typingUsers?: string[];
   onSendMessage: (content: string) => void;
   onBack?: () => void;
-  onViewProfile?: () => void;
+  onRoomSettings?: () => void;
+  onAvatarClick?: (senderId: string, senderName?: string, senderAvatar?: string) => void;
   onCall?: () => void;
 }
 
 // 日期分隔组件
 const DateSeparator: React.FC<{ date: string }> = ({ date }) => (
-  <div className="flex items-center gap-4 py-4">
-    <div className="flex-1 h-px bg-border/50" />
-    <span className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+  <div className="flex items-center gap-4 py-5">
+    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest px-3 py-1 rounded-full bg-muted/30 backdrop-blur-sm">
       {date}
     </span>
-    <div className="flex-1 h-px bg-border/50" />
+    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
   </div>
 );
 
@@ -143,22 +146,22 @@ const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
   if (!users.length) return null;
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2">
-      <div className="flex gap-1">
+    <div className="flex items-center gap-3 px-4 py-2 ml-10">
+      <div className="flex items-center gap-1 px-3 py-2 bg-muted/50 rounded-2xl rounded-bl-sm backdrop-blur-sm">
         <span
-          className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
-          style={{ animationDelay: '0ms' }}
+          className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-bounce"
+          style={{ animationDelay: '0ms', animationDuration: '600ms' }}
         />
         <span
-          className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
-          style={{ animationDelay: '150ms' }}
+          className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-bounce"
+          style={{ animationDelay: '150ms', animationDuration: '600ms' }}
         />
         <span
-          className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
-          style={{ animationDelay: '300ms' }}
+          className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-bounce"
+          style={{ animationDelay: '300ms', animationDuration: '600ms' }}
         />
       </div>
-      <span className="text-xs text-muted-foreground">
+      <span className="text-[11px] text-muted-foreground/70 font-medium">
         {users.length === 1 ? `${users[0]} is typing...` : `${users.length} people are typing...`}
       </span>
     </div>
@@ -168,6 +171,7 @@ const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
 export const ChatMessages: React.FC<ChatMessagesProps> = ({
   roomName,
   roomAvatar,
+  roomRawMxcAvatarUrl,
   isEncrypted = false,
   isOnline = false,
   isVerified = false,
@@ -177,7 +181,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   typingUsers = [],
   onSendMessage,
   onBack,
-  onViewProfile,
+  onRoomSettings,
+  onAvatarClick,
   onCall,
 }) => {
   const { t } = useI18n();
@@ -282,13 +287,20 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </button>
         )}
 
-        <button onClick={onViewProfile} className="hover:opacity-80 transition-opacity">
-          <Avatar src={roomAvatar} name={roomName} size="md" showOnlineStatus isOnline={isOnline} />
+        <button onClick={onRoomSettings} className="hover:opacity-80 transition-opacity">
+          <Avatar
+            src={roomAvatar}
+            rawMxcUrl={roomRawMxcAvatarUrl}
+            name={roomName}
+            size="md"
+            showOnlineStatus
+            isOnline={isOnline}
+          />
         </button>
 
         <div className="flex-1 min-w-0">
           <HStack gap="sm" align="center">
-            <button onClick={onViewProfile} className="hover:opacity-80 transition-opacity">
+            <button onClick={onRoomSettings} className="hover:opacity-80 transition-opacity">
               <h3 className="font-semibold text-[15px] text-foreground truncate">{roomName}</h3>
             </button>
             {/* Verified badge */}
@@ -350,6 +362,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             </button>
           )}
           <button
+            onClick={onRoomSettings}
             className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
             aria-label="More options"
           >
@@ -382,45 +395,92 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             ))}
           </VStack>
         ) : messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground relative">
-            <div className="absolute inset-0 opacity-[0.02]">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-primary" />
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground relative px-4">
+            {/* Background decorations */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div
+                className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-primary/5 blur-3xl animate-pulse"
+                style={{ animationDuration: '4s' }}
+              />
+              <div
+                className="absolute bottom-1/4 right-1/4 w-40 h-40 rounded-full bg-primary/3 blur-3xl animate-pulse"
+                style={{ animationDuration: '6s', animationDelay: '1s' }}
+              />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-primary/10 opacity-50" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-primary/5" />
             </div>
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="w-20 h-20 mb-4 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10">
-                <svg
-                  className="w-10 h-10 text-primary/60"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
+
+            <div className="relative z-10 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Icon container with layered effect */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 w-24 h-24 rounded-2xl bg-primary/10 blur-xl" />
+                <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-xl shadow-primary/10 backdrop-blur-sm rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <svg
+                    className="w-12 h-12 text-primary/70"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
               </div>
-              <p className="font-semibold text-foreground">{t('chat.noMessages')}</p>
-              <p className="text-sm mt-1">{t('chat.typeMessage')}</p>
+
+              <h3 className="text-lg font-bold text-foreground mb-1">{t('chat.noMessages')}</h3>
+              <p className="text-sm text-muted-foreground/70 text-center max-w-[200px]">
+                {t('chat.typeMessage')}
+              </p>
+
+              {/* Decorative dots */}
+              <div className="flex items-center gap-1.5 mt-6">
+                <div
+                  className="w-2 h-2 rounded-full bg-primary/30 animate-bounce"
+                  style={{ animationDelay: '0ms', animationDuration: '1s' }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  style={{ animationDelay: '150ms', animationDuration: '1s' }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full bg-primary/30 animate-bounce"
+                  style={{ animationDelay: '300ms', animationDuration: '1s' }}
+                />
+              </div>
             </div>
           </div>
         ) : (
           <VStack gap="sm">
             {/* Encryption Notice */}
             {isEncrypted && (
-              <div className="text-center py-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium bg-emerald-500/10 text-emerald-600 rounded-full border border-emerald-500/20">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Messages in this chat are end-to-end encrypted
-                </span>
+              <div className="text-center py-4 mb-2 animate-in fade-in duration-500">
+                <div className="inline-flex flex-col items-center gap-2 px-5 py-3 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 backdrop-blur-sm rounded-2xl border border-emerald-500/20 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <svg
+                        className="w-3.5 h-3.5 text-emerald-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">
+                      End-to-End Encrypted
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
+                    Messages in this chat are secured
+                  </span>
+                </div>
               </div>
             )}
 
@@ -434,8 +494,11 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
               if (message.isSystem) {
                 return (
-                  <div key={message.id} className="text-center py-2">
-                    <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                  <div
+                    key={message.id}
+                    className="text-center py-3 animate-in fade-in duration-300"
+                  >
+                    <span className="text-[11px] text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-full font-medium border border-border/20">
                       {message.content}
                     </span>
                   </div>
@@ -445,27 +508,39 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 group ${isOwn ? 'flex-row-reverse' : ''}`}
+                  className={`flex gap-2.5 group animate-in fade-in slide-in-from-bottom-2 duration-300 ${isOwn ? 'flex-row-reverse' : ''}`}
                 >
                   {!isOwn && (
-                    <div className="w-8 flex-shrink-0">
+                    <div className="w-9 flex-shrink-0">
                       {showAvatar && (
-                        <Avatar
-                          src={message.senderAvatar}
-                          name={message.senderName || 'User'}
-                          size="sm"
-                          className="ring-2 ring-background"
-                        />
+                        <button
+                          onClick={() =>
+                            onAvatarClick?.(
+                              message.senderId,
+                              message.senderName,
+                              message.senderAvatar
+                            )
+                          }
+                          className="block hover:scale-110 transition-transform duration-200"
+                        >
+                          <Avatar
+                            src={message.senderAvatar}
+                            rawMxcUrl={message.senderRawMxcAvatarUrl}
+                            name={message.senderName || 'User'}
+                            size="sm"
+                            className="ring-2 ring-background shadow-sm cursor-pointer"
+                          />
+                        </button>
                       )}
                     </div>
                   )}
 
-                  <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
                     <div
-                      className={`relative px-3.5 py-2.5 rounded-2xl transition-shadow duration-200 ${
+                      className={`relative px-4 py-3 transition-all duration-200 ${
                         isOwn
-                          ? 'bg-gradient-to-r from-primary to-primary/90 text-white rounded-br-md shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/25'
-                          : 'bg-card text-foreground rounded-bl-md shadow-sm border border-border/30 hover:shadow-md'
+                          ? 'bg-gradient-to-br from-primary via-primary to-primary/85 text-white rounded-2xl rounded-br-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5'
+                          : 'bg-card/95 backdrop-blur-sm text-foreground rounded-2xl rounded-bl-sm shadow-md border border-border/40 hover:shadow-lg hover:border-border/60 hover:-translate-y-0.5'
                       }`}
                     >
                       <p className="text-[14px] whitespace-pre-wrap break-words leading-relaxed">
@@ -474,14 +549,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
                       {/* Retry button for failed messages */}
                       {message.status === 'failed' && (
-                        <button className="absolute -right-1 -bottom-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors">
+                        <button className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full flex items-center justify-center text-xs font-medium hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg hover:scale-110">
                           ↻
                         </button>
                       )}
                     </div>
                     <HStack
                       gap="xs"
-                      className={`mt-1 text-[10px] text-muted-foreground/60 ${isOwn ? 'justify-end' : ''}`}
+                      className={`mt-1.5 text-[10px] text-muted-foreground/50 font-medium ${isOwn ? 'justify-end pr-1' : 'pl-1'}`}
                     >
                       <span>{formatTime(message.timestamp)}</span>
                       {isOwn && <MessageStatus status={message.status} />}
@@ -500,14 +575,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border/50">
+      <div className="p-4 bg-gradient-to-t from-card via-card/95 to-card/90 backdrop-blur-md border-t border-border/30 shadow-[0_-2px_20px_rgba(0,0,0,0.05)]">
         <HStack gap="sm" align="center">
           <button
-            className="p-2 hover:bg-surface-hover rounded-xl transition-colors"
+            className="p-2.5 hover:bg-muted/60 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 group"
             aria-label="Attach file"
           >
             <svg
-              className="w-5 h-5 text-muted-foreground"
+              className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -521,7 +596,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             </svg>
           </button>
 
-          <div className="flex-1 relative">
+          <div className="flex-1 relative group">
             <input
               ref={inputRef}
               type="text"
@@ -529,10 +604,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               onChange={e => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={t('chat.typeMessage')}
-              className="w-full px-4 py-2.5 pr-10 text-[14px] bg-muted/50 rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/20 text-foreground placeholder:text-muted-foreground/70 transition-all duration-200"
+              className="w-full px-5 py-3 pr-12 text-[14px] bg-muted/40 rounded-2xl border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-muted/60 text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 shadow-sm focus:shadow-md"
             />
             {/* Emoji button inside input */}
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+            <button className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all duration-200">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -547,7 +622,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim()}
-            className="rounded-xl w-10 h-10 p-0 flex items-center justify-center shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-200 disabled:opacity-50 disabled:shadow-none"
+            className="rounded-2xl w-11 h-11 p-0 flex items-center justify-center bg-gradient-to-br from-primary via-primary to-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:shadow-none disabled:scale-100 disabled:from-muted disabled:to-muted disabled:text-muted-foreground"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

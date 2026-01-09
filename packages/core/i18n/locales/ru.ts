@@ -257,6 +257,32 @@ export const ru: TranslationResource = {
     selectConversation:
       'Выберите разговор для начала общения или создайте новый для связи с продавцами и покупателями.',
     searchConversations: 'Поиск разговоров...',
+    // Разделы
+    directMessages: 'Личные сообщения',
+    communities: 'Сообщества',
+    orderChats: 'Обсуждения заказов',
+    invitations: 'Приглашения',
+    invitedYou: 'Пригласил вас в чат',
+    inviteConfirm: 'Приглашение',
+    invitedBy: 'Приглашен {{name}}',
+    // Настройки комнаты
+    roomSettings: 'Настройки комнаты',
+    roomId: 'ID комнаты',
+    members: 'Участники',
+    directMessage: 'Личное сообщение',
+    groupChat: 'Групповой чат',
+    viewStore: 'Посмотреть магазин',
+    sendMessage: 'Отправить сообщение',
+    // Информация о пользователе
+    unknownUser: 'Неизвестный пользователь',
+    externalUser: 'Внешний пользователь Matrix',
+    peerId: 'Peer ID',
+    matrixId: 'Matrix ID',
+    // Время
+    today: 'Сегодня',
+    yesterday: 'Вчера',
+    connecting: 'Подключение к чату...',
+    startConversation: 'Начать разговор',
   },
 
   // Matrix 房间事件

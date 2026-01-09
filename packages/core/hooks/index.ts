@@ -18,6 +18,7 @@ export * from './useProfile';
 export * from './useMatrix';
 export * from './useMatrixChat';
 export * from './useMatrixInit';
+export * from './useAuthenticatedImage';
 
 // E2E 加密相关
 export * from './useCrypto';

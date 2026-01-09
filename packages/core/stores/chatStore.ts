@@ -80,6 +80,7 @@ export interface ChatState {
   closeDrawer: () => void;
   toggleDrawer: () => void;
 
+  updateRoomMemberPeerID: (roomId: string, userId: string, peerID: string) => void;
   markRoomAsRead: (roomId: string) => void;
   clearMessages: (roomId: string) => void;
   reset: () => void;
@@ -146,6 +147,20 @@ export const useChatStore = create<ChatState>()(
         updateRoom: (roomId, updates) =>
           set(state => ({
             rooms: state.rooms.map(r => (r.roomId === roomId ? { ...r, ...updates } : r)),
+          })),
+
+        updateRoomMemberPeerID: (roomId, userId, peerID) =>
+          set(state => ({
+            rooms: state.rooms.map(r => {
+              if (r.roomId !== roomId) return r;
+              return {
+                ...r,
+                memberPeerIDs: {
+                  ...(r.memberPeerIDs || {}),
+                  [userId]: peerID,
+                },
+              };
+            }),
           })),
 
         removeRoom: roomId =>

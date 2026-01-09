@@ -510,6 +510,19 @@ export const zh: TranslationResource = {
     invitedYou: '邀请您加入会话',
     inviteConfirm: '邀请确认',
     invitedBy: '由 {{name}} 邀请',
+    // 房间设置
+    roomSettings: '房间设置',
+    roomId: '房间 ID',
+    members: '成员',
+    directMessage: '私信',
+    groupChat: '群聊',
+    viewStore: '查看店铺',
+    sendMessage: '发送消息',
+    // 用户信息
+    unknownUser: '未知用户',
+    externalUser: '外部 Matrix 用户',
+    peerId: 'Peer ID',
+    matrixId: 'Matrix ID',
     // 房间状态
     roomNotFound: '房间未找到',
     roomNotFoundDesc: '您要查找的聊天室不存在或您没有访问权限。',

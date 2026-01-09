@@ -524,6 +524,19 @@ export const en: TranslationResource = {
     invitedYou: 'Invited you to chat',
     inviteConfirm: 'Invitation',
     invitedBy: 'Invited by {{name}}',
+    // Room settings
+    roomSettings: 'Room Settings',
+    roomId: 'Room ID',
+    members: 'Members',
+    directMessage: 'Direct Message',
+    groupChat: 'Group Chat',
+    viewStore: 'View Store',
+    sendMessage: 'Send Message',
+    // User info
+    unknownUser: 'Unknown User',
+    externalUser: 'External Matrix User',
+    peerId: 'Peer ID',
+    matrixId: 'Matrix ID',
     // Room states
     roomNotFound: 'Room not found',
     roomNotFoundDesc:
