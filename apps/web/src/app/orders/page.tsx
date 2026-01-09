@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -137,7 +137,7 @@ function transformOrderListItem(item: OrderListItem): Order {
   };
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
@@ -509,5 +509,46 @@ export default function OrdersPage() {
         }}
       />
     </div>
+  );
+}
+
+// 加载占位组件
+function OrdersPageFallback() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="py-4 sm:py-8">
+        <Container>
+          <div className="mb-4 sm:mb-8">
+            <Skeleton variant="text" width="30%" height={32} />
+            <Skeleton variant="text" width="50%" height={20} className="mt-2" />
+          </div>
+          <VStack gap="lg">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <HStack gap="md" align="start" className="mb-4">
+                    <Skeleton variant="rectangular" width={64} height={64} className="rounded-lg" />
+                    <div className="flex-1">
+                      <Skeleton variant="text" width="60%" height={20} />
+                      <Skeleton variant="text" width="40%" height={16} className="mt-2" />
+                    </div>
+                    <Skeleton variant="rounded" width={100} height={28} />
+                  </HStack>
+                </CardContent>
+              </Card>
+            ))}
+          </VStack>
+        </Container>
+      </main>
+    </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<OrdersPageFallback />}>
+      <OrdersPageContent />
+    </Suspense>
   );
 }
