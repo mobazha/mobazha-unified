@@ -33,11 +33,6 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
 
   // 响应式状态
   const [isMobile, setIsMobile] = useState(true); // 默认为移动端，避免服务端渲染问题
-  const [modalState, setModalState] = useState<ProductModalState>({
-    isOpen: false,
-    slug: null,
-    peerID: null,
-  });
 
   // 检测窗口尺寸
   useEffect(() => {
@@ -53,13 +48,13 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 从 URL 参数恢复弹框状态（仅桌面端）
-  // 使用派生状态而不是 effect 中的 setState 来避免级联渲染
+  // 从 URL 参数计算弹框状态（直接使用派生状态，避免额外的 state 同步）
   const productSlug = searchParams.get('product');
   const productPeerID = searchParams.get('peerID');
 
   // 计算弹框状态（基于 URL 参数和设备类型）
-  const derivedModalState: ProductModalState = useMemo(() => {
+  // 直接使用 useMemo 的结果作为 modalState，避免使用 useEffect 同步导致的额外渲染
+  const modalState: ProductModalState = useMemo(() => {
     if (isMobile) {
       // 移动端不使用弹框
       return { isOpen: false, slug: null, peerID: null };
@@ -80,15 +75,14 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
     };
   }, [productSlug, productPeerID, isMobile]);
 
-  // 同步到 state（仅在派生状态变化时）
-  useEffect(() => {
-    setModalState(derivedModalState);
-  }, [derivedModalState]);
-
   // 打开商品详情
   const openProduct = useCallback(
     (slug: string, peerID?: string) => {
-      if (isMobile) {
+      // 实时检测窗口尺寸，避免依赖可能过时的 isMobile 状态
+      const isCurrentlyMobile =
+        typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT;
+
+      if (isCurrentlyMobile) {
         // 移动端：导航到商品详情页面
         const url = peerID ? `/product/${slug}?peerID=${peerID}` : `/product/${slug}`;
         router.push(url);
@@ -104,7 +98,7 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
       }
     },
-    [isMobile, router, pathname, searchParams]
+    [router, pathname, searchParams]
   );
 
   // 关闭商品详情

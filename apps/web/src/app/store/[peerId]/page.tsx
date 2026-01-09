@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
@@ -25,6 +25,7 @@ import {
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
 import { Pencil, Camera, Package } from 'lucide-react';
 import { useProductModal } from '@/hooks';
+import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 
 // 默认统计数据
 const defaultStats = {
@@ -78,8 +79,18 @@ export default function StorePage() {
     website: '',
   });
 
+  // 用于跟踪已加载的数据
+  const storeLoadedRef = useRef<string | null>(null);
+  const productsLoadedRef = useRef<string | null>(null);
+
   // 获取店铺数据
   useEffect(() => {
+    // 如果已经加载过相同的数据，直接返回
+    const loadKey = `${peerId}-${isOwnStore}`;
+    if (storeLoadedRef.current === loadKey) return;
+
+    let isCancelled = false;
+
     const fetchStoreData = async () => {
       if (!peerId) return;
 
@@ -87,19 +98,33 @@ export default function StorePage() {
       try {
         // 如果是自己的店铺，使用当前用户的 profile
         if (isOwnStore && currentUserProfile) {
-          setStore(currentUserProfile);
+          if (!isCancelled) {
+            setStore(currentUserProfile);
+            storeLoadedRef.current = loadKey;
+          }
         } else {
-          const profileData = await profileApi.getProfile(peerId);
-          setStore(profileData);
+          const profileData = await getProfileWithDedup(peerId, () =>
+            profileApi.getProfile(peerId)
+          );
+          if (!isCancelled && profileData) {
+            setStore(profileData);
+            storeLoadedRef.current = loadKey;
+          }
         }
       } catch (err) {
         console.error('Failed to fetch store profile:', err);
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchStoreData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [peerId, isOwnStore, currentUserProfile]);
 
   // 当 store 数据变化时，更新编辑表单
@@ -119,24 +144,42 @@ export default function StorePage() {
 
   // 获取店铺商品
   useEffect(() => {
+    // 如果已经加载过相同的数据，直接返回
+    const loadKey = `products-${peerId}-${isOwnStore}`;
+    if (productsLoadedRef.current === loadKey) return;
+
+    let isCancelled = false;
+
     const fetchStoreProducts = async () => {
       if (!peerId) return;
 
       setProductsLoading(true);
       try {
-        // 如果是自己的店铺，使用 getMyListings
-        const productsData = isOwnStore
-          ? await productDataService.getMyListings()
-          : await productDataService.getStoreListings(peerId);
-        setProducts(productsData);
+        // 如果是自己的店铺，使用 getMyListings，否则获取店铺商品
+        const productsData = await getListingsWithDedup(loadKey, () =>
+          isOwnStore
+            ? productDataService.getMyListings()
+            : productDataService.getStoreListings(peerId)
+        );
+
+        if (!isCancelled) {
+          setProducts(productsData as ProductListItem[]);
+          productsLoadedRef.current = loadKey;
+        }
       } catch (err) {
         console.error('Failed to fetch store products:', err);
       } finally {
-        setProductsLoading(false);
+        if (!isCancelled) {
+          setProductsLoading(false);
+        }
       }
     };
 
     fetchStoreProducts();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [peerId, isOwnStore]);
 
   // 检查是否已关注该店铺（仅当不是自己的店铺时）

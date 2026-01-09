@@ -107,6 +107,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   <Link
                     key={`${product.id}-${index}`}
                     href={productHref}
+                    prefetch={false}
                     onClick={e => handleProductClick(e, product)}
                   >
                     <ProductCard

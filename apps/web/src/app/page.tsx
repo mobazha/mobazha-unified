@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
 import { useI18n, productDataService, isMockMode, getImageUrl } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
+import { getListingsWithDedup } from '@/utils/requestDedup';
 
 // ProductSection 需要的展示格式
 interface DisplayProduct {
@@ -106,7 +107,15 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [dataSource, setDataSource] = useState<'mock' | 'api'>('mock');
 
+  // 防止重复加载
+  const loadedRef = useRef(false);
+
   useEffect(() => {
+    // 如果已经加载过，直接返回
+    if (loadedRef.current) return;
+
+    let isCancelled = false;
+
     const fetchProducts = async () => {
       setIsLoading(true);
       const mockMode = isMockMode();
@@ -115,34 +124,48 @@ export default function HomePage() {
       console.log(`📦 Fetching products (${mockMode ? 'Mock' : 'Real API'} mode)`);
 
       try {
+        // 使用去重函数防止重复请求
         const [trending, featured] = await Promise.all([
-          productDataService.getTrendingProducts(),
-          productDataService.getFeaturedProducts(),
+          getListingsWithDedup('trending', () => productDataService.getTrendingProducts()),
+          getListingsWithDedup('featured', () => productDataService.getFeaturedProducts()),
         ]);
 
-        if (trending.length > 0) {
-          setTrendingProducts(trending.map(convertToDisplayProduct));
+        if (isCancelled) return;
+
+        // 标记已加载
+        loadedRef.current = true;
+
+        if ((trending as ProductListItem[]).length > 0) {
+          setTrendingProducts((trending as ProductListItem[]).map(convertToDisplayProduct));
         } else {
           // 如果 API 返回空数据，使用占位数据
           setTrendingProducts(placeholderProducts);
         }
 
-        if (featured.length > 0) {
-          setFeaturedProducts(featured.map(convertToDisplayProduct));
+        if ((featured as ProductListItem[]).length > 0) {
+          setFeaturedProducts((featured as ProductListItem[]).map(convertToDisplayProduct));
         } else {
           setFeaturedProducts(placeholderProducts.slice(0, 4));
         }
       } catch (error) {
         console.error('Failed to fetch products:', error);
         // 出错时使用占位数据
-        setTrendingProducts(placeholderProducts);
-        setFeaturedProducts(placeholderProducts.slice(0, 4));
+        if (!isCancelled) {
+          setTrendingProducts(placeholderProducts);
+          setFeaturedProducts(placeholderProducts.slice(0, 4));
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchProducts();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   const categories = [
