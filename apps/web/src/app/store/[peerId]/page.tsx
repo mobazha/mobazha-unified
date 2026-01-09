@@ -109,9 +109,12 @@ export default function StorePage() {
           const profileData = await getProfileWithDedup(peerId, () =>
             profileApi.getProfile(peerId)
           );
-          if (!isCancelled && profileData) {
-            setStore(profileData);
+          if (!isCancelled) {
+            // 无论 profileData 是否为空，都标记为已尝试加载，防止重复请求
             storeLoadedRef.current = loadKey;
+            if (profileData) {
+              setStore(profileData);
+            }
           }
         }
       } catch (err) {

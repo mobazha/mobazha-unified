@@ -50,7 +50,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // 输出配置
+  // 输出配置 - standalone 模式，支持动态路由
   output: 'standalone',
 
   // 压缩
@@ -95,40 +95,8 @@ const nextConfig = {
     ];
   },
 
-  // API 代理配置 (解决 CORS 问题)
-  //
-  // API 路径分类（参考后端 gateway.go 和移动端 api/const.js）：
-  // - /api/*: Hosting 服务接口 (如 /api/signin, /api/userinfo) - 不需要 /v1
-  // - /v1/ob/*: 节点代理接口 (如 /v1/ob/profile, /v1/ob/listing) - 需要 /v1
-  // - /info/*: 搜索接口 (如 /info/api/listings)
-  // - /ws: WebSocket
-  async rewrites() {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://miniapptest.mobazha.org';
-    return [
-      // Hosting 服务 API 代理 (/api/*)
-      // 如 /api/signin, /api/userinfo - 不需要 /v1 前缀
-      {
-        source: '/proxy/api/:path*',
-        destination: `${apiBase}/api/:path*`,
-      },
-      // 节点 API 代理 (/v1/ob/*)
-      // 如 /v1/ob/profile, /v1/ob/listing
-      {
-        source: '/proxy/v1/:path*',
-        destination: `${apiBase}/v1/:path*`,
-      },
-      // Info/Search API 代理 (/info/*)
-      {
-        source: '/proxy/info/:path*',
-        destination: `${apiBase}/info/:path*`,
-      },
-      // WebSocket 代理
-      {
-        source: '/proxy/ws',
-        destination: `${apiBase}/ws`,
-      },
-    ];
-  },
+  // 注意：API 代理由服务器 nginx 处理（直接代理 /api, /v1, /info 路径）
+  // 不需要 Next.js rewrites
 };
 
 module.exports = nextConfig;
