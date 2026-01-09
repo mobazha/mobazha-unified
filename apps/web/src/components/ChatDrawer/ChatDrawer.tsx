@@ -108,9 +108,9 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       const displayRoom = toDisplayRoom(room);
       // 更新在线状态
       if (room.isDirect && room.members?.length) {
-        const otherMember = room.members.find(m => m.id !== currentUserId);
+        const otherMember = room.members.find(m => m.userId !== currentUserId);
         if (otherMember) {
-          displayRoom.isOnline = userPresence[otherMember.id] === 'online';
+          displayRoom.isOnline = userPresence[otherMember.userId] === 'online';
         }
       }
       return displayRoom;
@@ -137,8 +137,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   // 计算当前房间的在线状态
   const isCurrentRoomOnline = useMemo(() => {
     if (!currentRoom?.isDirect || !currentRoom.members?.length) return false;
-    const otherMember = currentRoom.members.find(m => m.id !== currentUserId);
-    return otherMember ? userPresence[otherMember.id] === 'online' : false;
+    const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);
+    return otherMember ? userPresence[otherMember.userId] === 'online' : false;
   }, [currentRoom, userPresence, currentUserId]);
 
   // 处理房间选择

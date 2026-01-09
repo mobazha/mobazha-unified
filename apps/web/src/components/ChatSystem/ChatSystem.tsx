@@ -45,10 +45,10 @@ export const ChatSystem: React.FC = () => {
     }
   }, []);
 
-  // 接受邀请
+  // 接受邀请（通过加入房间）
   const handleAcceptInvite = useCallback(async (roomId: string) => {
     try {
-      await matrixClient.acceptInvite(roomId);
+      await matrixClient.joinRoom(roomId);
       // 刷新房间列表
       const rooms = await matrixClient.getRooms();
       useChatStore.getState().setRooms(rooms);
@@ -58,10 +58,10 @@ export const ChatSystem: React.FC = () => {
     }
   }, []);
 
-  // 拒绝邀请
+  // 拒绝邀请（通过离开房间）
   const handleRejectInvite = useCallback(async (roomId: string) => {
     try {
-      await matrixClient.rejectInvite(roomId);
+      await matrixClient.leaveRoom(roomId);
       // 刷新房间列表
       const rooms = await matrixClient.getRooms();
       useChatStore.getState().setRooms(rooms);

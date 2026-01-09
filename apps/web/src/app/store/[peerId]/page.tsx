@@ -547,8 +547,8 @@ export default function StorePage() {
                         title={product.title}
                         imageUrl={getImageUrl(product.thumbnail?.medium)}
                         price={Number(product.price?.amount || 0)}
-                        currency={product.price?.currencyCode || 'USD'}
-                        divisibility={product.price?.divisibility}
+                        currency={product.price?.currency?.code || 'USD'}
+                        divisibility={product.price?.currency?.divisibility}
                         // 店主浏览自己店铺时不显示店名和头像
                         vendorName={isOwnStore ? undefined : store?.name}
                         vendorAvatar={
