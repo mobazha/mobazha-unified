@@ -13,6 +13,7 @@ export {
   type FilterState,
   type ProductType,
   type SortOption,
+  type CategoryItem,
   defaultFilterState,
 } from './StoreListingsToolbar';
 

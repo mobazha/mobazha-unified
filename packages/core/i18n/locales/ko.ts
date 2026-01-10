@@ -32,6 +32,7 @@ export const ko: TranslationResource = {
     retry: '재시도',
     refresh: '새로고침',
     submit: '제출',
+    apply: '적용',
     reset: '초기화',
     clear: '지우기',
     copy: '복사',

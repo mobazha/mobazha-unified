@@ -31,6 +31,7 @@ import {
   OtcTab,
   StoreListingsToolbar,
   type FilterState,
+  type CategoryItem,
   defaultFilterState,
   FilterSheet,
   StoreReviewsTab,
@@ -246,6 +247,28 @@ export default function StorePage() {
   };
 
   // 筛选后的商品列表
+  // 从商品数据中提取分类列表
+  const categories = useMemo((): CategoryItem[] => {
+    const categoryMap = new Map<string, number>();
+
+    products.forEach(product => {
+      if (product.categories && product.categories.length > 0) {
+        product.categories.forEach(cat => {
+          categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
+        });
+      }
+    });
+
+    return Array.from(categoryMap.entries())
+      .map(([value, count]) => ({
+        value,
+        label: value,
+        count,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [products]);
+
+  // 筛选后的商品列表
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
@@ -253,6 +276,13 @@ export default function StorePage() {
     if (filter.search.trim()) {
       const searchLower = filter.search.toLowerCase();
       result = result.filter(product => product.title?.toLowerCase().includes(searchLower));
+    }
+
+    // 分类过滤
+    if (filter.category !== 'all') {
+      result = result.filter(
+        product => product.categories && product.categories.includes(filter.category)
+      );
     }
 
     // 类型过滤
@@ -707,6 +737,7 @@ export default function StorePage() {
                   onFilterChange={setFilter}
                   totalCount={products.length}
                   filteredCount={filteredProducts.length}
+                  categories={categories}
                   onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
                 />
               )}
@@ -991,6 +1022,7 @@ export default function StorePage() {
         onOpenChange={setIsFilterSheetOpen}
         filter={filter}
         onFilterChange={setFilter}
+        categories={categories}
       />
     </div>
   );

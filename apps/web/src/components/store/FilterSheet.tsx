@@ -13,6 +13,7 @@ import {
   type FilterState,
   type ProductType,
   type SortOption,
+  type CategoryItem,
   defaultFilterState,
 } from './StoreListingsToolbar';
 
@@ -21,6 +22,7 @@ interface FilterSheetProps {
   onOpenChange: (open: boolean) => void;
   filter: FilterState;
   onFilterChange: (filter: FilterState) => void;
+  categories?: CategoryItem[];
 }
 
 // 商品类型配置（RWA 代币不单独筛选，在"全部"中显示）
@@ -63,6 +65,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
   onOpenChange,
   filter,
   onFilterChange,
+  categories = [],
 }) => {
   const { t } = useI18n();
 
@@ -91,6 +94,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
 
   const hasChanges =
     localFilter.type !== filter.type ||
+    localFilter.category !== filter.category ||
     localFilter.sortBy !== filter.sortBy ||
     localFilter.freeShipping !== filter.freeShipping;
 
@@ -102,6 +106,33 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
+          {/* 分类筛选 */}
+          {categories.length > 0 && (
+            <>
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t('filter.category') || '分类'}
+                </h3>
+                <div className="space-y-1">
+                  <RadioOption
+                    label={t('common.all') || '全部'}
+                    selected={localFilter.category === 'all'}
+                    onClick={() => updateLocalFilter({ category: 'all' })}
+                  />
+                  {categories.map(cat => (
+                    <RadioOption
+                      key={cat.value}
+                      label={cat.count !== undefined ? `${cat.label} (${cat.count})` : cat.label}
+                      selected={localFilter.category === cat.value}
+                      onClick={() => updateLocalFilter({ category: cat.value })}
+                    />
+                  ))}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
           {/* 商品类型 */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">
