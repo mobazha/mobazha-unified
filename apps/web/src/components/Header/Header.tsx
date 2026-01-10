@@ -27,7 +27,6 @@ import {
   getImageUrl,
   isHosted,
   startCasdoorLogin,
-  useWallet,
 } from '@mobazha/core';
 import {
   Search,
@@ -39,7 +38,7 @@ import {
   ShoppingBag,
   Settings,
   LogOut,
-  Wallet,
+  MessageCircle,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -49,13 +48,7 @@ export const Header: React.FC = () => {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
-  const { isConnected, isConnecting, walletInfo, connect, disconnect } = useWallet();
   const { openSettings } = useSettingsModal();
-
-  // 缩短地址显示
-  const shortenAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +90,7 @@ export const Header: React.FC = () => {
 
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="flex items-center">
+            {/* 市场入口 */}
             <Link href="/marketplace">
               <Button
                 variant="ghost"
@@ -106,31 +100,26 @@ export const Header: React.FC = () => {
                 {t('footer.marketplace')}
               </Button>
             </Link>
-            {/* 已登录用户才显示：消息、钱包、购物车、连接钱包 */}
+
+            {/* 已登录用户显示：消息、购物车 */}
             {isAuthenticated && (
               <>
+                {/* 消息图标 + 未读徽章 */}
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   className="hover:bg-primary/10 hover:text-primary transition-colors relative"
                   onClick={openChatDrawer}
                 >
-                  {t('nav.messages')}
+                  <MessageCircle className="h-5 w-5" />
                   {totalUnread > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full">
                       {totalUnread > 99 ? '99+' : totalUnread}
                     </span>
                   )}
                 </Button>
-                <Link href="/wallet">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-primary/10 hover:text-primary transition-colors"
-                  >
-                    {t('nav.wallet')}
-                  </Button>
-                </Link>
+
+                {/* 购物车图标 + 数量徽章 */}
                 <Link href="/cart" className="relative">
                   <Button
                     variant="ghost"
@@ -139,68 +128,14 @@ export const Header: React.FC = () => {
                   >
                     <ShoppingCart className="h-5 w-5" />
                   </Button>
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                     3
                   </span>
                 </Link>
-                <div className="w-px h-6 bg-border mx-2" />
-                {isConnected ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-2 font-mono text-xs">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        {walletInfo?.address && shortenAddress(walletInfo.address)}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">
-                            {walletInfo?.provider || 'Wallet'}
-                          </p>
-                          <p className="text-xs leading-none text-muted-foreground font-mono">
-                            {walletInfo?.address && shortenAddress(walletInfo.address)}
-                          </p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="justify-between">
-                        <span className="text-muted-foreground">{t('wallet.balance')}</span>
-                        <span className="font-medium">
-                          {parseFloat(walletInfo?.balance || '0').toFixed(4)} ETH
-                        </span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => router.push('/wallet')}
-                        className="cursor-pointer"
-                      >
-                        <Wallet className="mr-2 h-4 w-4" />
-                        {t('nav.wallet')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={disconnect}
-                        className="cursor-pointer text-destructive focus:text-destructive"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        {t('wallet.disconnect')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={connect}
-                    disabled={isConnecting}
-                  >
-                    <Wallet className="h-4 w-4" />
-                    {isConnecting ? t('wallet.connecting') : t('wallet.connect')}
-                  </Button>
-                )}
               </>
             )}
+
+            {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
             <ThemeSwitcher compact />
             {isLoading ? (
