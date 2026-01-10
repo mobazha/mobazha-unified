@@ -9,6 +9,22 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrencyFormat } from '@mobazha/core';
 
+// HTML 实体解码
+function decodeHtmlEntities(text: string): string {
+  if (typeof window === 'undefined') {
+    // SSR 环境下的简单解码
+    return text
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+  }
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
 /** 商品合约类型 */
 export type ProductContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
 
@@ -240,7 +256,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* 商品信息 */}
       <CardContent className={cn('space-y-1', compact ? 'p-2' : 'p-2.5 sm:p-3')}>
         {/* 标题 */}
-        <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-tight">{title}</h3>
+        <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-tight">
+          {decodeHtmlEntities(title)}
+        </h3>
 
         {/* 价格和评分 - 同一行 */}
         <div className="flex items-center justify-between gap-2">

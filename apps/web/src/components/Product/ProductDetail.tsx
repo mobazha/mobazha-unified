@@ -80,13 +80,13 @@ function sanitizeHtml(html: string): string {
   const parser = new window.DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
 
-  function cleanNode(node: globalThis.Node): void {
+  function cleanNode(node: globalThis.Node, isRoot = false): void {
     if (node.nodeType === window.Node.ELEMENT_NODE) {
       const element = node as Element;
       const tagName = element.tagName.toLowerCase();
 
-      // 如果标签不在白名单中，替换为其内容
-      if (!allowedTags.includes(tagName)) {
+      // 如果标签不在白名单中且不是根节点，替换为其内容
+      if (!isRoot && !allowedTags.includes(tagName)) {
         const parent = element.parentNode;
         while (element.firstChild) {
           parent?.insertBefore(element.firstChild, element);
@@ -95,25 +95,27 @@ function sanitizeHtml(html: string): string {
         return;
       }
 
-      // 移除不允许的属性
-      const attrs = Array.from(element.attributes);
-      for (const attr of attrs) {
-        if (!allowedAttrs.includes(attr.name.toLowerCase())) {
-          element.removeAttribute(attr.name);
+      // 移除不允许的属性（根节点除外）
+      if (!isRoot) {
+        const attrs = Array.from(element.attributes);
+        for (const attr of attrs) {
+          if (!allowedAttrs.includes(attr.name.toLowerCase())) {
+            element.removeAttribute(attr.name);
+          }
         }
-      }
 
-      // 为外部链接添加安全属性
-      if (tagName === 'a') {
-        element.setAttribute('target', '_blank');
-        element.setAttribute('rel', 'noopener noreferrer nofollow');
+        // 为外部链接添加安全属性
+        if (tagName === 'a') {
+          element.setAttribute('target', '_blank');
+          element.setAttribute('rel', 'noopener noreferrer nofollow');
+        }
       }
     }
 
     // 递归处理子节点
     const children = Array.from(node.childNodes);
     for (const child of children) {
-      cleanNode(child);
+      cleanNode(child, false);
     }
   }
 
@@ -122,7 +124,7 @@ function sanitizeHtml(html: string): string {
     return html;
   }
 
-  cleanNode(doc.body);
+  cleanNode(doc.body, true);
   return doc.body.innerHTML;
 }
 
