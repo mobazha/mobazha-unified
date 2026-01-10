@@ -43,3 +43,6 @@ export type {
   ModeratorSelectorProps,
   PaymentProtectionCardProps,
 } from './Payment';
+
+// Access Control Components
+export { StoreAccessGuard } from './StoreAccessGuard';
