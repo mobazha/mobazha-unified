@@ -3,7 +3,13 @@
 import React, { useCallback } from 'react';
 import { ChatFloatingButton } from '@/components/ChatFloatingButton';
 import { ChatDrawer } from '@/components/ChatDrawer';
-import { matrixClient, useMatrixInit, useUserStore, useChatStore } from '@mobazha/core';
+import {
+  matrixClient,
+  useMatrixInit,
+  useUserStore,
+  useChatStore,
+  isMatrixEnabled,
+} from '@mobazha/core';
 
 /**
  * ChatSystem 组件
@@ -82,8 +88,11 @@ export const ChatSystem: React.FC = () => {
     console.warn('[ChatSystem] Share chat ID dialog not implemented yet');
   }, []);
 
-  // 只在用户登录后渲染
-  if (!isAuthenticated) {
+  // Check if Matrix is enabled globally
+  const matrixEnabled = isMatrixEnabled();
+
+  // 只在 Matrix 启用且用户登录后渲染
+  if (!matrixEnabled || !isAuthenticated) {
     return null;
   }
 
