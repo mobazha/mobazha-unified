@@ -132,19 +132,19 @@ export function ConnectingModal({
             {/* 说明文字 */}
             <div className="mt-3 text-center max-w-xs">
               {productTitle ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-foreground/80">
                   {isFailed ? (
                     t('p2p.failedTextListing', { listing: productTitle })
                   ) : (
                     <>
                       {t('p2p.loadingText', { name: productTitle })}
                       <br />
-                      <span className="text-xs opacity-75">{t('p2p.fromP2pNetwork')}</span>
+                      <span className="text-xs text-foreground/60">{t('p2p.fromP2pNetwork')}</span>
                     </>
                   )}
                 </p>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-foreground/80">
                   {isFailed ? t('p2p.failedGeneric') : t('p2p.connectingToVendor')}
                 </p>
               )}
@@ -153,7 +153,7 @@ export function ConnectingModal({
 
           {/* 社交链接 */}
           <div className="text-center pt-2">
-            <p className="text-xs text-muted-foreground mb-3">
+            <p className="text-xs text-foreground/60 mb-3">
               {t('p2p.socialHeading')}
             </p>
             <div className="flex items-center justify-center gap-4">
@@ -161,7 +161,7 @@ export function ConnectingModal({
                 href="https://twitter.com/mobazha"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-[#1DA1F2] transition-colors"
+                className="text-foreground/70 hover:text-[#1DA1F2] transition-colors"
                 aria-label="Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@ export function ConnectingModal({
                 href="https://www.reddit.com/r/Mobazha/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-[#FF4500] transition-colors"
+                className="text-foreground/70 hover:text-[#FF4500] transition-colors"
                 aria-label="Reddit"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ export function ConnectingModal({
                 href="https://github.com/Mobazha/mobazha"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-foreground/70 hover:text-foreground transition-colors"
                 aria-label="GitHub"
               >
                 <Github className="w-5 h-5" />
@@ -192,7 +192,7 @@ export function ConnectingModal({
                 href="https://mobazha.org"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-foreground/70 hover:text-primary transition-colors"
                 aria-label="Website"
               >
                 <ExternalLink className="w-5 h-5" />
