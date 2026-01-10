@@ -766,6 +766,7 @@ export const en: TranslationResource = {
   },
 
   footer: {
+    slogan: 'Shop and grow with cryptos',
     tagline: 'The decentralized marketplace for the future of commerce.',
     marketplace: 'Marketplace',
     browseProducts: 'Browse Products',
@@ -777,6 +778,7 @@ export const en: TranslationResource = {
     documentation: 'Documentation',
     api: 'API',
     faq: 'FAQ',
+    community: 'Community',
     company: 'Company',
     about: 'About',
     blog: 'Blog',

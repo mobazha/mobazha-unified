@@ -751,6 +751,7 @@ export const zh: TranslationResource = {
   },
 
   footer: {
+    slogan: '用加密货币购物和成长',
     tagline: '面向未来商业的去中心化市场。',
     marketplace: '市场',
     browseProducts: '浏览商品',
@@ -762,6 +763,7 @@ export const zh: TranslationResource = {
     documentation: '文档',
     api: 'API',
     faq: '常见问题',
+    community: '社区',
     company: '公司',
     about: '关于我们',
     blog: '博客',
