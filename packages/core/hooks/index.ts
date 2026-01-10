@@ -61,3 +61,9 @@ export * from './useCurrency';
 
 // 认证仲裁员相关
 export * from './useVerifiedModerators';
+
+// 访问控制相关
+export * from './useAccessControl';
+export * from './useUserGroups';
+export * from './useProductGroups';
+export * from './useGroupContext';
