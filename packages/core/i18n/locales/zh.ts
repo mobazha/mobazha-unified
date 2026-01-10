@@ -144,6 +144,37 @@ export const zh: TranslationResource = {
     asAdvertised: '描述相符',
     delivery: '配送',
     service: '服务',
+    // Product attributes
+    type: '类型',
+    weight: '重量',
+    weightGrams: '{{weight}}g',
+    physicalGood: '实物商品',
+    digitalGood: '数字商品',
+    serviceType: '服务',
+    cryptocurrency: '加密货币',
+    conditionNew: '全新',
+    conditionUsedExcellent: '二手-极佳',
+    conditionUsedGood: '二手-良好',
+    conditionUsedPoor: '二手-一般',
+    conditionRefurbished: '翻新',
+    // Verified moderator
+    verifiedModerator: '认证仲裁员',
+    verifiedModeratorDesc: '此商品支持使用 Mobazha 认证仲裁员进行交易保护',
+    learnMore: '了解更多',
+    // Shipping options
+    shippingOptions: '配送选项',
+    shipTo: '配送到',
+    selectDestination: '选择目的地',
+    shippingService: '配送服务',
+    estimatedDelivery: '预计送达',
+    shippingFee: '运费',
+    additionalItemFee: '续件费',
+    noShippingOptions: '暂无配送选项',
+    localPickup: '到店自提',
+    worldwide: '全球',
+    // More from store
+    moreFromStore: '该店铺更多商品',
+    viewAllProducts: '查看全部',
   },
 
   search: {

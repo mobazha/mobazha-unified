@@ -9,3 +9,12 @@ export type { ProductDetailModalProps } from './ProductDetailModal';
 
 export { ConnectingModal } from './ConnectingModal';
 export type { ConnectingModalProps } from './ConnectingModal';
+
+export { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
+export type { VerifiedModeratorBadgeProps } from './VerifiedModeratorBadge';
+
+export { ShippingOptionsSection } from './ShippingOptionsSection';
+export type { ShippingOptionsSectionProps } from './ShippingOptionsSection';
+
+export { MoreFromStore } from './MoreFromStore';
+export type { MoreFromStoreProps } from './MoreFromStore';
