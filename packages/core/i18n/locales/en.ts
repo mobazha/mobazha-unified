@@ -881,6 +881,12 @@ export const en: TranslationResource = {
     digitalGoods: 'Digital Goods',
     services: 'Services',
     rwaTokens: 'RWA Tokens',
+    // Store filters
+    searchInStore: 'Search store products...',
+    freeShippingOnly: 'Free shipping only',
+    clearFilters: 'Clear Filters',
+    resetFilters: 'Reset',
+    productType: 'Product Type',
   },
 
   empty: {
@@ -1148,7 +1154,7 @@ export const en: TranslationResource = {
     transactionCompleted: 'Transaction completed',
     orderCancelled: 'Order cancelled',
     // Share
-    shareText: 'I\'m selling a private NFT asset, come check it out!',
+    shareText: "I'm selling a private NFT asset, come check it out!",
     shareToSell: 'Share the link below to potential buyers',
     shareToTelegram: 'Share to Telegram',
     viewOrder: 'View Order',
@@ -1168,8 +1174,11 @@ export const en: TranslationResource = {
     // Marketplace
     marketplaceOtcTitle: '🔐 Private OTC Trading',
     marketplaceOtcDesc: 'Private NFT and RWA share listings from community members',
+    // Filters
+    filterStatus: 'Status',
+    filterType: 'Type',
+    items: 'items',
   },
-
 };
 
 export default en;

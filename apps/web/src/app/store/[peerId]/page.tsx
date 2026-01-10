@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Header, Footer, useSettingsModal } from '@/components';
@@ -28,6 +28,12 @@ import { Settings, Camera, Package } from 'lucide-react';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 import { OtcTab } from '@/components/store/OtcTab';
+import {
+  StoreListingsToolbar,
+  type FilterState,
+  defaultFilterState,
+} from '@/components/store/StoreListingsToolbar';
+import { FilterSheet } from '@/components/store/FilterSheet';
 
 // 默认统计数据
 const defaultStats = {
@@ -67,6 +73,10 @@ export default function StorePage() {
   const [store, setStore] = useState<UserProfile | null>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(true); // 初始为 true，显示加载骨架
+
+  // 筛选相关状态
+  const [filter, setFilter] = useState<FilterState>(defaultFilterState);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
   // 编辑相关状态
   const [isEditing, setIsEditing] = useState(false);
@@ -232,6 +242,62 @@ export default function StorePage() {
       setFollowLoading(false);
     }
   };
+
+  // 筛选后的商品列表
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
+
+    // 搜索过滤（仅按标题搜索）
+    if (filter.search.trim()) {
+      const searchLower = filter.search.toLowerCase();
+      result = result.filter(product => product.title?.toLowerCase().includes(searchLower));
+    }
+
+    // 类型过滤
+    if (filter.type !== 'all') {
+      result = result.filter(product => {
+        const contractType = product.contractType?.toLowerCase();
+        switch (filter.type) {
+          case 'physical_good':
+            return contractType === 'physical_good';
+          case 'digital_good':
+            return contractType === 'digital_good';
+          case 'service':
+            return contractType === 'service';
+          case 'rwa_token':
+            return contractType === 'rwa_token';
+          default:
+            return true;
+        }
+      });
+    }
+
+    // 免运费过滤
+    if (filter.freeShipping) {
+      result = result.filter(product => product.freeShipping && product.freeShipping.length > 0);
+    }
+
+    // 排序
+    switch (filter.sortBy) {
+      case 'price-asc':
+        result.sort((a, b) => (a.price?.amount || 0) - (b.price?.amount || 0));
+        break;
+      case 'price-desc':
+        result.sort((a, b) => (b.price?.amount || 0) - (a.price?.amount || 0));
+        break;
+      case 'rating':
+        result.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+        break;
+      case 'newest':
+        // 由于 ProductListItem 没有 timestamp，保持原始顺序（通常 API 返回的是最新的在前）
+        break;
+      default:
+        // relevance - 保持原始顺序
+        break;
+    }
+
+    return result;
+  }, [products, filter]);
 
   // 编辑表单变更处理
   const handleEditChange = useCallback((field: string, value: string) => {
@@ -418,9 +484,9 @@ export default function StorePage() {
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
-            {/* 封面编辑按钮 - 仅自己的店铺显示 */}
+            {/* 封面编辑按钮 - 仅自己的店铺显示，放在右上角避免与下方按钮重叠 */}
             {isOwnStore && (
-              <label className="absolute bottom-4 right-4 cursor-pointer">
+              <label className="absolute top-4 right-4 cursor-pointer z-10">
                 <input
                   type="file"
                   accept="image/*"
@@ -543,8 +609,8 @@ export default function StorePage() {
                 </div>
               </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-5 sm:gap-6 mt-3 pt-3 border-t border-border text-sm">
+              {/* 移动端统计数据 - 仅在小屏幕显示 */}
+              <div className="flex sm:hidden items-center gap-4 mt-3 pt-3 border-t border-border text-sm">
                 <div className="flex items-baseline gap-1">
                   <span className="font-semibold text-foreground">{actualListingCount}</span>
                   <span className="text-muted-foreground">{t('profile.listings')}</span>
@@ -565,37 +631,70 @@ export default function StorePage() {
           </Container>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs + Stats 合并为一行 */}
         <div className="sticky top-16 z-30 bg-background border-b border-border">
           <Container size="xl">
-            <HStack gap="none" className="px-4 sm:px-6">
-              {(['products', 'otc', 'about', 'reviews'] as TabType[]).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 sm:px-5 py-3 text-sm font-medium transition-colors border-b-2 touch-feedback ${
-                    activeTab === tab
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {tab === 'products'
-                    ? t('profile.listings')
-                    : tab === 'otc'
-                      ? (t('profile.otc') || 'OTC')
-                      : tab === 'about'
-                        ? t('profile.about')
-                        : t('profile.reviews')}
-                </button>
-              ))}
-            </HStack>
+            <div className="flex items-center justify-between px-4 sm:px-6">
+              {/* 左侧：标签页 */}
+              <HStack gap="sm">
+                {(['products', 'otc', 'about', 'reviews'] as TabType[]).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 sm:px-5 py-3.5 text-base font-medium transition-colors border-b-2 touch-feedback ${
+                      activeTab === tab
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {tab === 'products'
+                      ? t('profile.listings')
+                      : tab === 'otc'
+                        ? t('profile.otc') || 'OTC'
+                        : tab === 'about'
+                          ? t('profile.about')
+                          : t('profile.reviews')}
+                  </button>
+                ))}
+              </HStack>
+
+              {/* 右侧：统计数据 */}
+              <div className="hidden sm:flex items-center gap-5 text-sm">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-semibold text-foreground">{actualListingCount}</span>
+                  <span className="text-muted-foreground">{t('profile.listings')}</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-semibold text-foreground">{stats.followerCount}</span>
+                  <span className="text-muted-foreground">{t('profile.followers')}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-yellow-500">★</span>
+                  <span className="font-semibold text-foreground">
+                    {stats.averageRating.toFixed(1)}
+                  </span>
+                  <span className="text-muted-foreground">({stats.ratingCount})</span>
+                </div>
+              </div>
+            </div>
           </Container>
         </div>
 
         {/* Tab Content */}
         <div className="py-2 sm:py-4">
           {activeTab === 'products' && (
-            <Container size="xl" className="px-4 sm:px-6">
+            <Container size="xl" className="px-4 sm:px-6 space-y-4">
+              {/* 筛选工具栏 */}
+              {!productsLoading && products.length > 0 && (
+                <StoreListingsToolbar
+                  filter={filter}
+                  onFilterChange={setFilter}
+                  totalCount={products.length}
+                  filteredCount={filteredProducts.length}
+                  onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
+                />
+              )}
+
               {/* Products Grid */}
               {productsLoading ? (
                 <Grid cols={4} colsMobile={2} gap="md">
@@ -603,9 +702,9 @@ export default function StorePage() {
                     <ProductCardSkeleton key={i} />
                   ))}
                 </Grid>
-              ) : products.length > 0 ? (
+              ) : filteredProducts.length > 0 ? (
                 <Grid cols={4} colsMobile={2} gap="md">
-                  {products.map((product, index) => (
+                  {filteredProducts.map((product, index) => (
                     <Link
                       key={`${product.slug}-${index}`}
                       href={`/product/${product.slug}?peerID=${peerId}`}
@@ -644,13 +743,25 @@ export default function StorePage() {
                     </Link>
                   ))}
                 </Grid>
-              ) : (
+              ) : products.length > 0 ? (
+                // 有商品但筛选后为空
                 <div className="text-center py-12">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                     <Package className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-base font-medium text-foreground mb-2">
-                    {t('search.noProductsFound')}
+                    {t('empty.noProductsFound')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
+                </div>
+              ) : (
+                // 店铺本身没有商品
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <Package className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-base font-medium text-foreground mb-2">
+                    {t('empty.noProductsFound')}
                   </h3>
                   <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
                 </div>
@@ -864,6 +975,14 @@ export default function StorePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 移动端筛选底部弹窗 */}
+      <FilterSheet
+        open={isFilterSheetOpen}
+        onOpenChange={setIsFilterSheetOpen}
+        filter={filter}
+        onFilterChange={setFilter}
+      />
     </div>
   );
 }

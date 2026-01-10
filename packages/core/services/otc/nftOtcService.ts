@@ -1,6 +1,6 @@
 /**
  * NFT OTC 交易服务
- * 
+ *
  * 处理 ERC721 NFT 的私密 OTC 交易
  */
 
@@ -64,7 +64,7 @@ export class NftOtcService {
     this.provider = provider;
     this.signer = signer;
     this.chainId = chainId;
-    
+
     const contractAddress = getContractAddress('NftOtcSwap', chainId);
     this.otcContract = new ethers.Contract(contractAddress, NFT_OTC_SWAP_ABI, signer);
   }
@@ -153,7 +153,7 @@ export class NftOtcService {
   async getOrderByPrivateId(privateId: string): Promise<NftOrder | null> {
     try {
       const order = await this.otcContract.orders(privateId);
-      
+
       // 检查订单是否存在 (createdAt > 0)
       if (order.createdAt === BigInt(0)) {
         return null;
@@ -285,7 +285,7 @@ export class NftOtcService {
   async getNftMetadata(nftContract: string, tokenId: number): Promise<NftMetadata | null> {
     try {
       const nft = new ethers.Contract(nftContract, EXAMPLE_NFT_ABI, this.provider);
-      
+
       // 尝试获取自定义元数据
       try {
         const metadata = await nft.getMetadata(tokenId);
@@ -315,24 +315,24 @@ export class NftOtcService {
   /**
    * 获取用户持有的 NFT 列表
    */
-  async getUserNfts(userAddress: string, nftContract: string): Promise<UserNft[]> {
+  async getUserNfts(_userAddress: string, nftContract: string): Promise<UserNft[]> {
     // 注意：标准 ERC721 没有枚举接口，这里返回 Demo 数据
     // 实际项目中应使用 Subgraph 或 NFT API
     const { DEMO_NFTS } = await import('../../config/otcConfig');
-    
-    return DEMO_NFTS
-      .filter(nft => nft.contractAddress.toLowerCase() === nftContract.toLowerCase())
-      .map(nft => ({
-        tokenId: nft.tokenId,
-        contractAddress: nft.contractAddress,
-        metadata: {
-          name: nft.name,
-          description: nft.description,
-          creator: nft.creator,
-          mintedAt: 0,
-          image: nft.image,
-        },
-      }));
+
+    return DEMO_NFTS.filter(
+      nft => nft.contractAddress.toLowerCase() === nftContract.toLowerCase()
+    ).map(nft => ({
+      tokenId: nft.tokenId,
+      contractAddress: nft.contractAddress,
+      metadata: {
+        name: nft.name,
+        description: nft.description,
+        creator: nft.creator,
+        mintedAt: 0,
+        image: nft.image,
+      },
+    }));
   }
 
   // ============================================================

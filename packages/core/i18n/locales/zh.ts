@@ -865,6 +865,12 @@ export const zh: TranslationResource = {
     digitalGoods: '数字商品',
     services: '服务',
     rwaTokens: 'RWA 代币',
+    // 店铺筛选
+    searchInStore: '搜索店铺商品...',
+    freeShippingOnly: '仅显示免运费',
+    clearFilters: '清除筛选',
+    resetFilters: '重置',
+    productType: '商品类型',
   },
 
   empty: {
@@ -1149,8 +1155,11 @@ export const zh: TranslationResource = {
     // 市场
     marketplaceOtcTitle: '🔐 私密 OTC 交易',
     marketplaceOtcDesc: '社区成员发布的 NFT 和 RWA 份额私密挂单',
+    // 筛选
+    filterStatus: '状态',
+    filterType: '类型',
+    items: '项',
   },
-
 };
 
 export default zh;

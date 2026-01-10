@@ -1,6 +1,6 @@
 /**
  * ERC3525 (RWA) OTC 交易服务
- * 
+ *
  * 处理 ERC3525 半同质化代币的 OTC 交易
  * 适用于音乐剧份额、房地产收益等 RWA 资产
  */
@@ -73,11 +73,11 @@ export class Erc3525OtcService {
 
   /**
    * 获取用户的 ERC3525 持仓
-   * 
+   *
    * 注意：标准 ERC3525 没有批量查询接口，实际项目中应使用 Subgraph
    * 这里返回 Demo 数据
    */
-  async getHoldings(userAddress: string, rwaTokenAddress?: string): Promise<Erc3525Holding[]> {
+  async getHoldings(_userAddress: string, _rwaTokenAddress?: string): Promise<Erc3525Holding[]> {
     // 返回 Demo 数据
     return DEMO_RWA_ASSETS.map(asset => ({
       tokenId: asset.tokenId,
@@ -94,7 +94,7 @@ export class Erc3525OtcService {
   async getTokenInfo(rwaTokenAddress: string, tokenId: number): Promise<Erc3525Holding | null> {
     try {
       const rwaToken = new ethers.Contract(rwaTokenAddress, ERC3525_ABI, this.provider);
-      
+
       const [slot, balance] = await Promise.all([
         rwaToken.slotOf(tokenId),
         rwaToken['balanceOf(uint256)'](tokenId),
@@ -143,7 +143,9 @@ export class Erc3525OtcService {
   /**
    * 创建 ERC3525 份额订单
    */
-  async createOrder(params: CreateErc3525OrderParams): Promise<OtcTransactionResult & { orderId?: string }> {
+  async createOrder(
+    params: CreateErc3525OrderParams
+  ): Promise<OtcTransactionResult & { orderId?: string }> {
     try {
       const { rwaToken, tokenId, shares, price, paymentToken } = params;
 
@@ -330,7 +332,7 @@ export class Erc3525OtcService {
 
   /**
    * 获取预期收益
-   * 
+   *
    * 注意：实际项目中应从收益分配合约或预言机获取
    * 这里返回 Demo 数据
    */
