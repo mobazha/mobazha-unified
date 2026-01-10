@@ -22,6 +22,104 @@ import {
   getProfileWithDedup,
   getRatingsWithDedup,
 } from '@/utils/requestDedup';
+import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
+import { ShippingOptionsSection } from './ShippingOptionsSection';
+import { MoreFromStore } from './MoreFromStore';
+
+// HTML 实体解码
+function decodeHtmlEntities(text: string): string {
+  if (typeof window === 'undefined') {
+    // SSR 环境下的简单解码
+    return text
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+  }
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
+// 安全的 HTML 消毒函数（允许基本的格式化标签）
+function sanitizeHtml(html: string): string {
+  if (typeof window === 'undefined') {
+    // SSR 环境下不处理
+    return html;
+  }
+
+  // 允许的标签白名单
+  const allowedTags = [
+    'p',
+    'br',
+    'b',
+    'i',
+    'strong',
+    'em',
+    'u',
+    'a',
+    'ul',
+    'ol',
+    'li',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+    'code',
+    'pre',
+    'span',
+    'div',
+  ];
+  // 允许的属性白名单
+  const allowedAttrs = ['href', 'target', 'rel', 'class'];
+
+  const parser = new window.DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  function cleanNode(node: globalThis.Node): void {
+    if (node.nodeType === window.Node.ELEMENT_NODE) {
+      const element = node as Element;
+      const tagName = element.tagName.toLowerCase();
+
+      // 如果标签不在白名单中，替换为其内容
+      if (!allowedTags.includes(tagName)) {
+        const parent = element.parentNode;
+        while (element.firstChild) {
+          parent?.insertBefore(element.firstChild, element);
+        }
+        parent?.removeChild(element);
+        return;
+      }
+
+      // 移除不允许的属性
+      const attrs = Array.from(element.attributes);
+      for (const attr of attrs) {
+        if (!allowedAttrs.includes(attr.name.toLowerCase())) {
+          element.removeAttribute(attr.name);
+        }
+      }
+
+      // 为外部链接添加安全属性
+      if (tagName === 'a') {
+        element.setAttribute('target', '_blank');
+        element.setAttribute('rel', 'noopener noreferrer nofollow');
+      }
+    }
+
+    // 递归处理子节点
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      cleanNode(child);
+    }
+  }
+
+  cleanNode(doc.body);
+  return doc.body.innerHTML;
+}
 
 // 星星评分组件
 function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {
@@ -488,7 +586,7 @@ export function ProductDetail({
               <h1
                 className={`${isModal ? 'text-lg sm:text-xl lg:text-2xl' : 'text-xl sm:text-2xl lg:text-3xl'} font-bold text-foreground mb-2`}
               >
-                {product.item.title}
+                {decodeHtmlEntities(product.item.title)}
               </h1>
               <HStack gap="sm" align="center">
                 <StarRating rating={averageRating} />
@@ -505,51 +603,96 @@ export function ProductDetail({
               </span>
             </div>
 
-            {/* Shipping */}
-            <div className="flex items-center gap-2 text-xs sm:text-sm flex-wrap">
-              {freeShipping ? (
-                <span className="inline-flex items-center gap-1 text-emerald-600">
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  {t('product.freeShipping')}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">{t('product.shippingAtCheckout')}</span>
-              )}
-              {estimatedDelivery && (
-                <>
-                  <span className="text-slate-400">•</span>
-                  <span className="text-muted-foreground">
-                    {t('product.estDelivery')}: {estimatedDelivery}
+            {/* Shipping - 仅对实物商品显示 */}
+            {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+              <div className="flex items-center gap-2 text-xs sm:text-sm flex-wrap">
+                {freeShipping ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    {t('product.freeShipping')}
                   </span>
-                </>
-              )}
-            </div>
-
-            {/* Contract Type Badge */}
-            {product.metadata?.contractType && (
-              <div className="flex gap-2">
-                <span className="px-2 py-1 text-xs rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
-                  {product.metadata.contractType.replace('_', ' ')}
-                </span>
-                {product.item.condition && (
-                  <span className="px-2 py-1 text-xs rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    {product.item.condition.replace('_', ' ')}
-                  </span>
+                ) : (
+                  <span className="text-muted-foreground">{t('product.shippingAtCheckout')}</span>
+                )}
+                {estimatedDelivery && (
+                  <>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-muted-foreground">
+                      {t('product.estDelivery')}: {estimatedDelivery}
+                    </span>
+                  </>
                 )}
               </div>
             )}
+
+            {/* Product Attributes Panel */}
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {/* Type Badge */}
+              {product.metadata?.contractType && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                  <span className="font-medium">{t('product.type')}:</span>
+                  <span>
+                    {product.metadata.contractType === 'PHYSICAL_GOOD' && t('product.physicalGood')}
+                    {product.metadata.contractType === 'DIGITAL_GOOD' && t('product.digitalGood')}
+                    {product.metadata.contractType === 'SERVICE' && t('product.serviceType')}
+                    {product.metadata.contractType === 'CRYPTOCURRENCY' &&
+                      t('product.cryptocurrency')}
+                    {!['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE', 'CRYPTOCURRENCY'].includes(
+                      product.metadata.contractType
+                    ) && product.metadata.contractType.replace('_', ' ')}
+                  </span>
+                </div>
+              )}
+              {/* Condition Badge */}
+              {product.item.condition && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  <span className="font-medium">{t('product.condition')}:</span>
+                  <span>{product.item.condition.replace('_', ' ')}</span>
+                </div>
+              )}
+              {/* Weight Badge */}
+              {product.item.grams !== undefined && product.item.grams > 0 && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  <span className="font-medium">{t('product.weight')}:</span>
+                  <span>{t('product.weightGrams', { weight: product.item.grams })}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Tags - 放在商品属性后面 */}
+            {tags.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  {t('product.tags')}
+                </span>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {tags.map(tag => (
+                    <Link
+                      key={tag}
+                      href={`/marketplace?tag=${tag}`}
+                      className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm border border-border bg-background text-muted-foreground rounded-full hover:bg-emerald-100 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 dark:hover:border-emerald-800 transition-colors touch-feedback"
+                    >
+                      #{tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Verified Moderator Badge */}
+            <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
 
             {/* Quantity & Add to Cart - 桌面端显示 */}
             <Card className="space-y-3 sm:space-y-4 p-4 sm:p-6 hidden lg:block">
@@ -680,60 +823,73 @@ export function ProductDetail({
               <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
                 {t('product.description')}
               </h2>
-              <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
-                {product.item.description.split('\n').map((paragraph, i) => (
-                  <p key={i} className="text-sm sm:text-base text-muted-foreground mb-3">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
+              <div
+                className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none text-sm sm:text-base text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
+                }}
+              />
 
-              {/* Terms & Refund Policy */}
+              {/* Terms & Refund Policy - 可折叠 */}
               {(product.termsAndConditions || product.refundPolicy) && (
-                <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-border space-y-4">
+                <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-border space-y-2">
                   {product.termsAndConditions && (
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground mb-2">
-                        {t('product.termsAndConditions')}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-medium text-foreground hover:text-primary transition-colors touch-feedback list-none">
+                        <span>{t('product.termsAndConditions')}</span>
+                        <svg
+                          className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </summary>
+                      <p className="text-xs sm:text-sm text-muted-foreground pb-2 pl-0">
                         {product.termsAndConditions}
                       </p>
-                    </div>
+                    </details>
                   )}
                   {product.refundPolicy && (
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground mb-2">
-                        {t('product.refundPolicy')}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-medium text-foreground hover:text-primary transition-colors touch-feedback list-none">
+                        <span>{t('product.refundPolicy')}</span>
+                        <svg
+                          className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </summary>
+                      <p className="text-xs sm:text-sm text-muted-foreground pb-2 pl-0">
                         {product.refundPolicy}
                       </p>
-                    </div>
+                    </details>
                   )}
-                </div>
-              )}
-
-              {/* Tags */}
-              {tags.length > 0 && (
-                <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-border">
-                  <span className="text-xs sm:text-sm text-muted-foreground">
-                    {t('product.tags')}:{' '}
-                  </span>
-                  <div className="inline-flex flex-wrap gap-1.5 sm:gap-2 mt-2">
-                    {tags.map(tag => (
-                      <Link
-                        key={tag}
-                        href={`/marketplace?tag=${tag}`}
-                        className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm bg-muted text-muted-foreground rounded-full hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 transition-colors touch-feedback"
-                      >
-                        #{tag}
-                      </Link>
-                    ))}
-                  </div>
                 </div>
               )}
             </Card>
+
+            {/* Shipping Options - 仅对实物商品显示 */}
+            {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+              <ShippingOptionsSection
+                shippingOptions={product.shippingOptions}
+                pricingCurrency={product.metadata?.pricingCurrency?.code}
+              />
+            )}
           </div>
 
           {/* Reviews Summary - 非弹框模式或单独展示 */}
@@ -843,6 +999,18 @@ export function ProductDetail({
             </div>
           )}
         </div>
+
+        {/* More from Store - 非弹框模式显示 */}
+        {!isModal && vendorPeerID && (
+          <div className="mt-6 sm:mt-8">
+            <MoreFromStore
+              vendorPeerID={vendorPeerID}
+              vendorName={vendor?.name}
+              currentSlug={product.slug}
+              maxItems={6}
+            />
+          </div>
+        )}
       </div>
 
       {/* 移动端底部操作栏占位空间 */}

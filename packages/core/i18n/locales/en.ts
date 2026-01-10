@@ -144,6 +144,38 @@ export const en: TranslationResource = {
     asAdvertised: 'As Advertised',
     delivery: 'Delivery',
     service: 'Service',
+    // Product attributes
+    type: 'Type',
+    weight: 'Weight',
+    weightGrams: '{{weight}}g',
+    physicalGood: 'Physical Good',
+    digitalGood: 'Digital Good',
+    serviceType: 'Service',
+    cryptocurrency: 'Cryptocurrency',
+    conditionNew: 'New',
+    conditionUsedExcellent: 'Used - Excellent',
+    conditionUsedGood: 'Used - Good',
+    conditionUsedPoor: 'Used - Poor',
+    conditionRefurbished: 'Refurbished',
+    // Verified moderator
+    verifiedModerator: 'Verified Moderator',
+    verifiedModeratorDesc:
+      'This listing can be purchased with a Mobazha verified moderator for transaction protection',
+    learnMore: 'Learn More',
+    // Shipping options
+    shippingOptions: 'Shipping Options',
+    shipTo: 'Ship to',
+    selectDestination: 'Select destination',
+    shippingService: 'Service',
+    estimatedDelivery: 'Est. Delivery',
+    shippingFee: 'Fee',
+    additionalItemFee: 'Additional Item',
+    noShippingOptions: 'No shipping options available',
+    localPickup: 'Local Pickup',
+    worldwide: 'Worldwide',
+    // More from store
+    moreFromStore: 'More from this store',
+    viewAllProducts: 'View All',
   },
 
   search: {
