@@ -21,3 +21,6 @@ export * from './currencyService';
 
 // 认证仲裁员服务
 export * from './verifiedModerators';
+
+// 群组上下文服务
+export * from './groupContext';
