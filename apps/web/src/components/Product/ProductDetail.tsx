@@ -117,6 +117,11 @@ function sanitizeHtml(html: string): string {
     }
   }
 
+  // 检查 body 是否存在
+  if (!doc.body) {
+    return html;
+  }
+
   cleanNode(doc.body);
   return doc.body.innerHTML;
 }
