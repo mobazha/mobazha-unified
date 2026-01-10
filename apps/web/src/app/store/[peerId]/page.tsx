@@ -46,7 +46,7 @@ const defaultStats = {
   averageRating: 0,
 };
 
-type TabType = 'products' | 'otc' | 'following' | 'followers' | 'about' | 'reviews';
+type TabType = 'about' | 'products' | 'otc' | 'reviews' | 'following' | 'followers';
 
 export default function StorePage() {
   const params = useParams();
@@ -68,7 +68,7 @@ export default function StorePage() {
   // 判断是否是自己的店铺
   const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
 
-  const [activeTab, setActiveTab] = useState<TabType>('products');
+  const [activeTab, setActiveTab] = useState<TabType>('about');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -550,12 +550,26 @@ export default function StorePage() {
                       <h1 className="text-lg sm:text-xl font-bold text-foreground">
                         {store.name || peerId.slice(0, 8)}
                       </h1>
-                      {store.location && (
-                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <span>📍</span>
-                          <span>{store.location}</span>
-                        </p>
-                      )}
+                      {/* 位置 + 评分（桌面端） */}
+                      <div className="flex items-center gap-3 mt-0.5">
+                        {store.location && (
+                          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                            <span>📍</span>
+                            <span>{store.location}</span>
+                          </p>
+                        )}
+                        {/* 评分 - 点击进入评价 Tab */}
+                        <button
+                          onClick={() => setActiveTab('reviews')}
+                          className="text-xs sm:text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="text-yellow-500">★</span>
+                          <span className="font-medium text-foreground">
+                            {stats.averageRating.toFixed(1)}
+                          </span>
+                          <span className="text-muted-foreground">({stats.ratingCount})</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Actions */}
@@ -611,107 +625,73 @@ export default function StorePage() {
                 </div>
               </div>
 
-              {/* 移动端统计数据 - 仅在小屏幕显示 */}
-              <div className="flex sm:hidden items-center gap-4 mt-3 pt-3 border-t border-border text-sm">
-                <div className="flex items-baseline gap-1">
-                  <span className="font-semibold text-foreground">{actualListingCount}</span>
-                  <span className="text-muted-foreground">{t('profile.listings')}</span>
-                </div>
-                <div className="flex items-baseline gap-1">
+              {/* 统计数据：关注中 / 粉丝 - 点击可查看列表 */}
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border text-sm">
+                <button
+                  onClick={() => setActiveTab('following')}
+                  className="flex items-baseline gap-1 hover:opacity-80 transition-opacity"
+                >
+                  <span className="font-semibold text-foreground">{stats.followingCount}</span>
+                  <span className="text-muted-foreground">{t('profile.following')}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('followers')}
+                  className="flex items-baseline gap-1 hover:opacity-80 transition-opacity"
+                >
                   <span className="font-semibold text-foreground">{stats.followerCount}</span>
                   <span className="text-muted-foreground">{t('profile.followers')}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-500">★</span>
-                  <span className="font-semibold text-foreground">
-                    {stats.averageRating.toFixed(1)}
-                  </span>
-                  <span className="text-muted-foreground">({stats.ratingCount})</span>
-                </div>
+                </button>
               </div>
             </div>
           </Container>
         </div>
 
-        {/* Tabs + Stats 合并为一行 */}
+        {/* Tabs - 精简为 3 个 */}
         <div className="sticky top-16 z-30 bg-background border-b border-border">
           <Container size="xl">
-            <div className="flex items-center justify-between px-4 sm:px-6 overflow-x-auto">
-              {/* 左侧：标签页 */}
-              <HStack gap="sm" className="flex-shrink-0">
-                {(
-                  ['products', 'otc', 'following', 'followers', 'about', 'reviews'] as TabType[]
-                ).map(tab => {
-                  // 获取标签显示文本和计数
-                  const getTabLabel = () => {
-                    switch (tab) {
-                      case 'products':
-                        return t('profile.listings');
-                      case 'otc':
-                        return t('profile.otc') || 'OTC';
-                      case 'following':
-                        return t('profile.following');
-                      case 'followers':
-                        return t('profile.followers');
-                      case 'about':
-                        return t('profile.about');
-                      case 'reviews':
-                        return t('profile.reviews');
-                      default:
-                        return tab;
-                    }
-                  };
-
-                  // 获取计数
-                  const getTabCount = () => {
-                    switch (tab) {
-                      case 'following':
-                        return stats.followingCount;
-                      case 'followers':
-                        return stats.followerCount;
-                      default:
-                        return null;
-                    }
-                  };
-
-                  const count = getTabCount();
-
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-3 sm:px-4 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback whitespace-nowrap ${
-                        activeTab === tab
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {getTabLabel()}
-                      {count !== null && count > 0 && (
-                        <span className="ml-1 text-xs sm:text-sm text-primary/80">{count}</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </HStack>
-
-              {/* 右侧：统计数据 */}
-              <div className="hidden lg:flex items-center gap-5 text-sm flex-shrink-0 ml-4">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-semibold text-foreground">{actualListingCount}</span>
-                  <span className="text-muted-foreground">{t('profile.listings')}</span>
-                </div>
+            <div className="flex items-center px-4 sm:px-6">
+              <HStack gap="md">
+                {/* 简介 Tab */}
                 <button
-                  onClick={() => setActiveTab('reviews')}
-                  className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                  onClick={() => setActiveTab('about')}
+                  className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                    activeTab === 'about'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <span className="text-yellow-500">★</span>
-                  <span className="font-semibold text-foreground">
-                    {stats.averageRating.toFixed(1)}
-                  </span>
-                  <span className="text-muted-foreground">({stats.ratingCount})</span>
+                  {t('profile.about')}
                 </button>
-              </div>
+
+                {/* 商品 Tab - 带数量 */}
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                    activeTab === 'products'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {t('profile.listings')}
+                  {actualListingCount > 0 && (
+                    <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                      {actualListingCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* OTC Tab */}
+                <button
+                  onClick={() => setActiveTab('otc')}
+                  className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                    activeTab === 'otc'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {t('profile.otc') || 'OTC'}
+                </button>
+              </HStack>
             </div>
           </Container>
         </div>
