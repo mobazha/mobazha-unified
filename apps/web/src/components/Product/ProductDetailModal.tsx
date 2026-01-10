@@ -20,7 +20,7 @@ export interface ProductDetailModalProps {
 // 连接超时时间（毫秒）
 const CONNECTION_TIMEOUT = 30000;
 // 显示连接弹框的最小延迟时间（毫秒）
-const MIN_CONNECTING_DISPLAY_TIME = 500;
+const MIN_CONNECTING_DISPLAY_TIME = 800;
 
 interface VendorInfo {
   name?: string;
@@ -33,139 +33,164 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
   const [vendorInfo, setVendorInfo] = useState<VendorInfo>({});
   const [productTitle, setProductTitle] = useState<string | undefined>();
   
-  // 用于跟踪组件是否已卸载
-  const isMountedRef = useRef(true);
-  // 用于跟踪当前加载的请求
-  const currentRequestRef = useRef<string | null>(null);
-  // 连接开始时间
-  const connectionStartTimeRef = useRef<number>(0);
+  // 用于取消请求的 abort controller
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
 
-  // 核心数据获取逻辑
-  const fetchProductAndVendor = useCallback(async (
-    onSuccess: () => void,
-    onFail: () => void,
-  ) => {
-    try {
-      // 获取商品数据
-      const product = await productDataService.getProduct(slug, peerID);
-      
-      if (!isMountedRef.current) return;
-
-      if (!product) {
-        onFail();
-        return;
-      }
-
-      setProductTitle(product.item?.title);
-      
-      // 获取卖家信息
-      const vendorPeerID = peerID || product.vendorID?.peerID;
-      if (vendorPeerID) {
-        const vendor = await profileApi.getProfile(vendorPeerID).catch(() => null);
-        if (vendor && isMountedRef.current) {
-          setVendorInfo({
-            name: vendor.name,
-            avatar: vendor.avatarHashes?.small 
-              ? getImageUrl(vendor.avatarHashes.small) 
-              : undefined,
-          });
-        }
-      }
-      
-      onSuccess();
-    } catch (error) {
-      console.error('Failed to fetch product data:', error);
-      if (isMountedRef.current) {
-        onFail();
-      }
-    }
-  }, [slug, peerID]);
-
   // 当弹框打开时，开始预取数据
   useEffect(() => {
+    // 弹框关闭时重置状态
     if (!open) {
-      // 重置状态
       setConnectionState('connecting');
       setVendorInfo({});
       setProductTitle(undefined);
-      currentRequestRef.current = null;
-      return;
-    }
-
-    const requestKey = `${slug}-${peerID || ''}`;
-    
-    // 防止重复请求
-    if (currentRequestRef.current === requestKey) {
-      return;
-    }
-    
-    currentRequestRef.current = requestKey;
-    isMountedRef.current = true;
-    connectionStartTimeRef.current = Date.now();
-    setConnectionState('connecting');
-
-    let timeoutId: NodeJS.Timeout | null = null;
-    let isCancelled = false;
-
-    // 设置超时
-    timeoutId = setTimeout(() => {
-      if (!isCancelled && isMountedRef.current) {
-        setConnectionState('failed');
+      // 取消之前的请求
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
-    }, CONNECTION_TIMEOUT);
+      return;
+    }
 
-    fetchProductAndVendor(
-      // onSuccess
-      () => {
-        if (isCancelled || !isMountedRef.current) return;
+    // 创建新的 abort controller
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
+    
+    const startTime = Date.now();
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const fetchData = async () => {
+      try {
+        console.log('[ConnectingModal] Starting to fetch product:', slug, peerID);
         
-        // 确保连接弹框至少显示一定时间，避免闪烁
-        const elapsed = Date.now() - connectionStartTimeRef.current;
+        // 设置超时
+        timeoutId = setTimeout(() => {
+          if (!signal.aborted) {
+            console.log('[ConnectingModal] Connection timeout');
+            setConnectionState('failed');
+          }
+        }, CONNECTION_TIMEOUT);
+
+        // 获取商品数据
+        const product = await productDataService.getProduct(slug, peerID);
+        
+        console.log('[ConnectingModal] Product fetched:', product ? 'success' : 'null');
+        
+        if (signal.aborted) {
+          console.log('[ConnectingModal] Request was aborted');
+          return;
+        }
+
+        if (!product) {
+          console.log('[ConnectingModal] No product found, setting failed');
+          setConnectionState('failed');
+          return;
+        }
+
+        setProductTitle(product.item?.title);
+        
+        // 获取卖家信息（非阻塞）
+        const vendorPeerID = peerID || product.vendorID?.peerID;
+        if (vendorPeerID) {
+          profileApi.getProfile(vendorPeerID)
+            .then(vendor => {
+              if (vendor && !signal.aborted) {
+                setVendorInfo({
+                  name: vendor.name,
+                  avatar: vendor.avatarHashes?.small 
+                    ? getImageUrl(vendor.avatarHashes.small) 
+                    : undefined,
+                });
+              }
+            })
+            .catch(() => {
+              // 忽略卖家信息获取失败
+            });
+        }
+        
+        // 确保连接弹框至少显示一定时间
+        const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, MIN_CONNECTING_DISPLAY_TIME - elapsed);
         
+        console.log('[ConnectingModal] Will show connected state in', remainingTime, 'ms');
+        
         setTimeout(() => {
-          if (!isCancelled && isMountedRef.current) {
+          if (!signal.aborted) {
             if (timeoutId) clearTimeout(timeoutId);
+            console.log('[ConnectingModal] Setting connected state');
             setConnectionState('connected');
           }
         }, remainingTime);
-      },
-      // onFail
-      () => {
-        if (!isCancelled && isMountedRef.current) {
+
+      } catch (error) {
+        console.error('[ConnectingModal] Failed to fetch product data:', error);
+        if (!signal.aborted) {
           setConnectionState('failed');
         }
       }
-    );
+    };
+
+    fetchData();
 
     return () => {
-      isCancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
-  }, [open, slug, peerID, fetchProductAndVendor]);
-
-  // 组件卸载时清理
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+  }, [open, slug, peerID]);
 
   // 重试连接
   const handleRetry = useCallback(() => {
-    currentRequestRef.current = `${slug}-${peerID || ''}-retry-${Date.now()}`;
     setConnectionState('connecting');
-    connectionStartTimeRef.current = Date.now();
     
-    fetchProductAndVendor(
-      () => setConnectionState('connected'),
-      () => setConnectionState('failed')
-    );
-  }, [slug, peerID, fetchProductAndVendor]);
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // 创建新的 abort controller
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
+
+    const fetchData = async () => {
+      try {
+        const product = await productDataService.getProduct(slug, peerID);
+        
+        if (signal.aborted) return;
+
+        if (product) {
+          setProductTitle(product.item?.title);
+          
+          const vendorPeerID = peerID || product.vendorID?.peerID;
+          if (vendorPeerID) {
+            const vendor = await profileApi.getProfile(vendorPeerID).catch(() => null);
+            if (vendor && !signal.aborted) {
+              setVendorInfo({
+                name: vendor.name,
+                avatar: vendor.avatarHashes?.small 
+                  ? getImageUrl(vendor.avatarHashes.small) 
+                  : undefined,
+              });
+            }
+          }
+          
+          setConnectionState('connected');
+        } else {
+          setConnectionState('failed');
+        }
+      } catch {
+        if (!signal.aborted) {
+          setConnectionState('failed');
+        }
+      }
+    };
+
+    fetchData();
+  }, [slug, peerID]);
 
   // 连接中或失败状态显示连接弹框
   if (connectionState !== 'connected') {
