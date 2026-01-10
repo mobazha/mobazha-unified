@@ -845,17 +845,75 @@ export interface TranslationResource {
     title: string;
     createNft: string;
     createErc3525: string;
+    createNftOrder: string;
+    createOrder: string;
     noOtcYet: string;
     noOtcInStore: string;
+    noOtcInMarketplace: string;
     createFirstOtc: string;
+    beFirstToCreate: string;
     activeOrders: string;
     historyOrders: string;
     fetchError: string;
+    // 步骤
+    step: {
+      selectNft: string;
+      setPrice: string;
+      shareLink: string;
+    };
+    // 状态
     status: {
       active: string;
       completed: string;
       cancelled: string;
     };
+    // 表单
+    price: string;
+    priceDesc: string;
+    shares: string;
+    totalPrice: string;
+    platformFeeNote: string;
+    youWillReceive: string;
+    selectNftDesc: string;
+    // 操作
+    creating: string;
+    purchasing: string;
+    cancelling: string;
+    buyNow: string;
+    buyShares: string;
+    cancelOrder: string;
+    confirmCancel: string;
+    // 结果消息
+    createFailed: string;
+    orderCreated: string;
+    purchaseSuccess: string;
+    purchaseFailed: string;
+    cancelSuccess: string;
+    cancelFailed: string;
+    orderNotFound: string;
+    transactionCompleted: string;
+    orderCancelled: string;
+    // 分享
+    shareText: string;
+    shareToSell: string;
+    shareToTelegram: string;
+    viewOrder: string;
+    createAnother: string;
+    // 详情页
+    contractInfo: string;
+    seller: string;
+    network: string;
+    expectedRevenue: string;
+    weeklyRevenue: string;
+    annualizedRevenue: string;
+    chatWithSeller: string;
+    // 钱包
+    connectWalletRequired: string;
+    connectWalletDesc: string;
+    backToStore: string;
+    // 市场
+    marketplaceOtcTitle: string;
+    marketplaceOtcDesc: string;
   };
 }
 
