@@ -406,6 +406,7 @@ export const ko: TranslationResource = {
     unfollow: '언팔로우',
     message: '메시지',
     block: '차단',
+    unblock: '차단 해제',
     report: '신고',
     myStore: '내 스토어',
     addNewListing: '새 상품 등록',

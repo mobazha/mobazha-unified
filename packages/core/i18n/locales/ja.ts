@@ -406,6 +406,7 @@ export const ja: TranslationResource = {
     unfollow: 'フォロー解除',
     message: 'メッセージ',
     block: 'ブロック',
+    unblock: 'ブロック解除',
     report: '報告',
     myStore: 'マイストア',
     addNewListing: '新規出品',

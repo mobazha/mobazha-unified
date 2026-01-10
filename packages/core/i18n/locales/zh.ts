@@ -667,6 +667,7 @@ export const zh: TranslationResource = {
     unfollow: '取消关注',
     message: '发消息',
     block: '屏蔽',
+    unblock: '取消屏蔽',
     report: '举报',
     myStore: '我的店铺',
     addNewListing: '添加新商品',

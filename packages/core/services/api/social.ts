@@ -4,7 +4,7 @@
  * Follow/Unfollow、粉丝/关注列表
  */
 
-import { get, post, safeRequest } from './client';
+import { get, post, put, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders, getHeadersWithContext } from './config';
 import { withMockFallback } from './mode';
 import { mockUsers } from '../mock/data';
@@ -157,3 +157,142 @@ export async function fetchProfiles(
   return withMockFallback(realFn, mockFn, '/ob/fetchprofiles');
 }
 
+// ============ Block 功能 ============
+
+// 本地缓存屏蔽列表
+let blockedNodesCache: string[] | null = null;
+
+/**
+ * 获取当前用户的屏蔽列表
+ */
+export async function getBlockedNodes(
+  username?: string,
+  password?: string
+): Promise<string[]> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/ob/preferences`;
+    const result = await get<{ blockedNodes?: string[] }>(url, getAuthHeaders(username, password));
+    blockedNodesCache = result.blockedNodes || [];
+    return blockedNodesCache;
+  };
+
+  const mockFn = async () => {
+    // Mock: 返回空列表
+    return blockedNodesCache || [];
+  };
+
+  return withMockFallback(realFn, mockFn, '/ob/preferences (blockedNodes)');
+}
+
+/**
+ * 屏蔽用户
+ */
+export async function blockUser(
+  peerID: string,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const realFn = async () => {
+    // 先获取当前屏蔽列表
+    const currentBlocked = blockedNodesCache || (await getBlockedNodes(username, password));
+
+    // 如果已经屏蔽，直接返回
+    if (currentBlocked.includes(peerID)) {
+      return { success: true };
+    }
+
+    // 添加到屏蔽列表
+    const newBlockedNodes = [...currentBlocked, peerID];
+
+    const url = `${getGatewayUrl()}/ob/preferences`;
+    await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
+
+    // 更新本地缓存
+    blockedNodesCache = newBlockedNodes;
+
+    return { success: true };
+  };
+
+  const mockFn = async () => {
+    // Mock: 添加到本地缓存
+    if (!blockedNodesCache) blockedNodesCache = [];
+    if (!blockedNodesCache.includes(peerID)) {
+      blockedNodesCache.push(peerID);
+    }
+    return { success: true };
+  };
+
+  return withMockFallback(realFn, mockFn, `/ob/preferences (block ${peerID})`);
+}
+
+/**
+ * 取消屏蔽用户
+ */
+export async function unblockUser(
+  peerID: string,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const realFn = async () => {
+    // 先获取当前屏蔽列表
+    const currentBlocked = blockedNodesCache || (await getBlockedNodes(username, password));
+
+    // 如果没有屏蔽，直接返回
+    if (!currentBlocked.includes(peerID)) {
+      return { success: true };
+    }
+
+    // 从屏蔽列表移除
+    const newBlockedNodes = currentBlocked.filter(id => id !== peerID);
+
+    const url = `${getGatewayUrl()}/ob/preferences`;
+    await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
+
+    // 更新本地缓存
+    blockedNodesCache = newBlockedNodes;
+
+    return { success: true };
+  };
+
+  const mockFn = async () => {
+    // Mock: 从本地缓存移除
+    if (blockedNodesCache) {
+      blockedNodesCache = blockedNodesCache.filter(id => id !== peerID);
+    }
+    return { success: true };
+  };
+
+  return withMockFallback(realFn, mockFn, `/ob/preferences (unblock ${peerID})`);
+}
+
+/**
+ * 检查用户是否被屏蔽
+ */
+export async function isBlocked(
+  peerID: string,
+  username?: string,
+  password?: string
+): Promise<boolean> {
+  // 优先使用缓存
+  if (blockedNodesCache !== null) {
+    return blockedNodesCache.includes(peerID);
+  }
+
+  // 没有缓存则获取
+  const blockedNodes = await getBlockedNodes(username, password);
+  return blockedNodes.includes(peerID);
+}
+
+/**
+ * 同步检查用户是否被屏蔽（使用缓存）
+ */
+export function isBlockedSync(peerID: string): boolean {
+  return blockedNodesCache?.includes(peerID) || false;
+}
+
+/**
+ * 清除屏蔽列表缓存
+ */
+export function clearBlockedNodesCache(): void {
+  blockedNodesCache = null;
+}
