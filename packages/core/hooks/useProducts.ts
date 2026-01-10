@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { ProductListItem, Product, ProductRating } from '../types';
+import type { ProductListItem, Product, RatingIndex, RatingDetail } from '../types';
 import { productsApi } from '../services/api';
 
 /**
@@ -129,10 +129,10 @@ export function useListing(slug: string | null, peerID?: string) {
 }
 
 /**
- * 获取商品评价
+ * 获取商品评价索引
  */
 export function useListingRatings(slug: string | null, peerID?: string) {
-  const [ratings, setRatings] = useState<ProductRating[]>([]);
+  const [ratingIndex, setRatingIndex] = useState<RatingIndex | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,7 +144,7 @@ export function useListingRatings(slug: string | null, peerID?: string) {
 
     try {
       const result = await productsApi.getRatingIndex(peerID, slug);
-      setRatings(result);
+      setRatingIndex(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取评价失败');
     } finally {
@@ -156,7 +156,89 @@ export function useListingRatings(slug: string | null, peerID?: string) {
     refetch();
   }, [refetch]);
 
-  return { ratings, isLoading, error, refetch };
+  return { ratingIndex, isLoading, error, refetch };
+}
+
+/**
+ * 获取店铺评价（包含统计和详细评价列表）
+ * @param peerID 店铺 peerID
+ * @param pageSize 每页加载数量，默认 5
+ */
+export function useStoreRatings(peerID: string | null, pageSize = 5) {
+  const [ratingIndex, setRatingIndex] = useState<RatingIndex | null>(null);
+  const [ratings, setRatings] = useState<RatingDetail[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(0);
+
+  // 获取评价索引
+  const fetchIndex = useCallback(async () => {
+    if (!peerID) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const index = await productsApi.getRatingIndex(peerID);
+      setRatingIndex(index);
+      setHasMore(index.ratings.length > 0);
+      setLoadedCount(0);
+      setRatings([]);
+
+      // 自动加载第一页详细评价
+      if (index.ratings.length > 0) {
+        const firstPageIds = index.ratings.slice(0, pageSize);
+        const details = await productsApi.fetchRatings(firstPageIds);
+        setRatings(details);
+        setLoadedCount(firstPageIds.length);
+        setHasMore(index.ratings.length > firstPageIds.length);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '获取评价失败');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [peerID, pageSize]);
+
+  // 加载更多评价
+  const loadMore = useCallback(async () => {
+    if (!ratingIndex || isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+
+    try {
+      const nextIds = ratingIndex.ratings.slice(loadedCount, loadedCount + pageSize);
+      if (nextIds.length > 0) {
+        const newDetails = await productsApi.fetchRatings(nextIds);
+        setRatings(prev => [...prev, ...newDetails]);
+        setLoadedCount(prev => prev + nextIds.length);
+        setHasMore(loadedCount + nextIds.length < ratingIndex.ratings.length);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error('Failed to load more ratings:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [ratingIndex, loadedCount, pageSize, isLoadingMore, hasMore]);
+
+  useEffect(() => {
+    fetchIndex();
+  }, [fetchIndex]);
+
+  return {
+    ratingIndex,
+    ratings,
+    isLoading,
+    isLoadingMore,
+    error,
+    hasMore,
+    loadMore,
+    refetch: fetchIndex,
+  };
 }
 
 /**

@@ -43,6 +43,8 @@ export type {
   Tax,
   Coupon,
   ProductRating,
+  RatingIndex,
+  RatingDetail,
 } from './product';
 
 // Order types

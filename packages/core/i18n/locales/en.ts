@@ -49,6 +49,7 @@ export const en: TranslationResource = {
     loadMore: 'Load More',
     noMoreData: 'No more data',
     comingSoon: 'Coming Soon',
+    by: 'by',
   },
 
   nav: {
@@ -135,6 +136,13 @@ export const en: TranslationResource = {
     noReviews: 'No reviews yet',
     viewAllReviews: 'View All Reviews',
     anonymous: 'Anonymous',
+    // Rating labels
+    overall: 'Overall',
+    overallRating: 'overall rating',
+    quality: 'Quality',
+    asAdvertised: 'As Advertised',
+    delivery: 'Delivery',
+    service: 'Service',
   },
 
   search: {
@@ -656,11 +664,13 @@ export const en: TranslationResource = {
     editProfile: 'Edit Profile',
     about: 'About',
     location: 'Location',
+    noLocation: 'No location',
     joined: 'Joined {{date}}',
     followers: 'Followers',
     following: 'Following',
     listings: 'Listings',
     reviews: 'Reviews',
+    review: 'review',
     verified: 'Verified',
     store: 'Store',
     otc: 'OTC',
@@ -683,6 +693,12 @@ export const en: TranslationResource = {
     bio: 'Bio',
     saveChanges: 'Save Changes',
     noProfileData: 'Unable to load profile data',
+    userNotFound: 'User not found',
+    anonymous: 'Anonymous',
+    noOwnFollowers: "You don't have any followers yet",
+    noFollowers: 'No followers yet',
+    noOwnFollowing: 'You are not following anyone yet',
+    noFollowing: 'Not following anyone',
   },
 
   settings: {
@@ -1180,6 +1196,18 @@ export const en: TranslationResource = {
     filterStatus: 'Status',
     filterType: 'Type',
     items: 'items',
+  },
+
+  // P2P Connection
+  p2p: {
+    connecting: 'Connecting...',
+    failedToConnect: 'Failed to Connect',
+    loadingText: 'Loading {{name}}',
+    failedTextListing: 'Unable to load {{listing}} from the peer-to-peer network.',
+    failedGeneric: 'Unable to connect to the vendor. Please try again.',
+    connectingToVendor: 'Connecting to the vendor on the peer-to-peer network...',
+    fromP2pNetwork: 'from somewhere on this global, peer-to-peer network for you...',
+    socialHeading: 'Mobazha News & Discussions:',
   },
 };
 

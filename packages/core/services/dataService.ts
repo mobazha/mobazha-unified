@@ -123,13 +123,33 @@ export const productDataService = {
   },
 
   /**
-   * 获取商品评价
+   * 获取商品评价索引
    */
   async getProductRatings(slug: string, peerID?: string) {
     if (isMockMode()) {
       return mockServices.products.getProductRatings(slug);
     }
     return await productsApi.getRatingIndex(peerID, slug);
+  },
+
+  /**
+   * 获取店铺评价索引（所有商品的评价汇总）
+   */
+  async getStoreRatings(peerID: string) {
+    if (isMockMode()) {
+      return { count: 0, average: 0, ratings: [] };
+    }
+    return await productsApi.getRatingIndex(peerID);
+  },
+
+  /**
+   * 获取详细评价数据
+   */
+  async fetchRatings(ratingIDs: string[]) {
+    if (isMockMode()) {
+      return [];
+    }
+    return await productsApi.fetchRatings(ratingIDs);
   },
 };
 
