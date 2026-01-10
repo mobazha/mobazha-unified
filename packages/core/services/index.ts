@@ -4,6 +4,9 @@ export * from './api';
 // 认证服务
 export * from './auth';
 
+// 存储服务（平台无关的存储抽象层）
+export * from './storage';
+
 // WebSocket 服务
 export * from './websocket';
 
