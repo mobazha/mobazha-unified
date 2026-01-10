@@ -53,6 +53,8 @@ export default function StorePage() {
     updateProfile,
     fetchProfile: refreshCurrentUserProfile,
   } = useUserStore();
+  // 获取 session 恢复状态，确保在 token 验证完成后再发起需要认证的请求
+  const isSessionRestored = useUserStore(state => state.isSessionRestored);
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 判断是否是自己的店铺
@@ -151,6 +153,12 @@ export default function StorePage() {
 
   // 获取店铺商品
   useEffect(() => {
+    // 等待 session 恢复完成，确保 token 状态已确定
+    // 这样可以避免在 token 未验证时发起需要认证的请求
+    if (!isSessionRestored) {
+      return;
+    }
+
     // 如果已经加载过相同的数据，直接返回
     const loadKey = `products-${peerId}-${isOwnStore}`;
     if (productsLoadedRef.current === loadKey) return;
@@ -187,7 +195,7 @@ export default function StorePage() {
     return () => {
       isCancelled = true;
     };
-  }, [peerId, isOwnStore]);
+  }, [peerId, isOwnStore, isSessionRestored]);
 
   // 检查是否已关注该店铺（仅当不是自己的店铺时）
   useEffect(() => {

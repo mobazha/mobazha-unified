@@ -34,6 +34,8 @@ interface UserState {
   token: string | null;
   /** 当前认证模式 */
   authMode: 'hosted' | 'basic';
+  /** 会话是否已恢复（用于防止在 token 验证前发起需要认证的请求） */
+  isSessionRestored: boolean;
 
   // 动作
   /** Basic Auth 登录（VPS 模式） */
@@ -66,6 +68,7 @@ export const useUserStore = create<UserState>()(
         error: null,
         token: null,
         authMode: getCurrentAuthMode(),
+        isSessionRestored: false,
 
         // Basic Auth 登录（VPS 模式）
         login: async (credentials: AuthCredentials) => {
@@ -97,6 +100,7 @@ export const useUserStore = create<UserState>()(
                 isAuthenticated: true,
                 isLoading: false,
                 authMode: 'basic',
+                isSessionRestored: true,
               });
 
               // 连接 WebSocket
@@ -108,6 +112,7 @@ export const useUserStore = create<UserState>()(
             set({
               error: '登录失败',
               isLoading: false,
+              isSessionRestored: true,
             });
             clearAuthCredentials();
             return false;
@@ -155,6 +160,7 @@ export const useUserStore = create<UserState>()(
                 isAuthenticated: true,
                 isLoading: false,
                 authMode: getCurrentAuthMode(),
+                isSessionRestored: true,
               });
 
               // 连接 WebSocket
@@ -169,6 +175,7 @@ export const useUserStore = create<UserState>()(
               isAuthenticated: true,
               isLoading: false,
               authMode: getCurrentAuthMode(),
+              isSessionRestored: true,
             });
 
             connectWebSocket();
@@ -177,6 +184,7 @@ export const useUserStore = create<UserState>()(
             set({
               error: err instanceof Error ? err.message : '登录失败',
               isLoading: false,
+              isSessionRestored: true,
             });
             clearAuth();
             return false;
@@ -217,6 +225,7 @@ export const useUserStore = create<UserState>()(
                 isAuthenticated: true,
                 isLoading: false,
                 authMode: 'hosted',
+                isSessionRestored: true,
               });
 
               // 连接 WebSocket
@@ -235,6 +244,7 @@ export const useUserStore = create<UserState>()(
               isAuthenticated: true,
               isLoading: false,
               authMode: 'hosted',
+              isSessionRestored: true,
             });
 
             // 连接 WebSocket
@@ -245,6 +255,7 @@ export const useUserStore = create<UserState>()(
             set({
               error: err instanceof Error ? err.message : '登录失败',
               isLoading: false,
+              isSessionRestored: true,
             });
             clearAuth();
             return false;
@@ -272,6 +283,7 @@ export const useUserStore = create<UserState>()(
                 token,
                 isAuthenticated: true,
                 isLoading: false,
+                isSessionRestored: true,
               });
 
               // 连接 WebSocket
@@ -285,12 +297,14 @@ export const useUserStore = create<UserState>()(
             set({
               error: 'Token 验证失败',
               isLoading: false,
+              isSessionRestored: true,
             });
             return false;
           } catch (err) {
             set({
               error: err instanceof Error ? err.message : '登录失败',
               isLoading: false,
+              isSessionRestored: true,
             });
             clearAuth();
             return false;
@@ -310,6 +324,7 @@ export const useUserStore = create<UserState>()(
             isAuthenticated: false,
             error: null,
             token: null,
+            isSessionRestored: true, // 保持为 true，因为用户主动登出是有意的
           });
         },
 
@@ -318,13 +333,20 @@ export const useUserStore = create<UserState>()(
           const token = getStoredToken();
 
           if (!token) {
+            // 如果没有 token，清除认证状态（可能是 persist 恢复了旧的 isAuthenticated）
+            set({
+              isAuthenticated: false,
+              profile: null,
+              token: null,
+              isSessionRestored: true,
+            });
             return false;
           }
 
           // 检查 Token 是否过期
           if (isTokenExpired(token)) {
             clearAuth();
-            set({ isAuthenticated: false, token: null });
+            set({ isAuthenticated: false, token: null, isSessionRestored: true });
             return false;
           }
 
@@ -343,6 +365,7 @@ export const useUserStore = create<UserState>()(
                 profile,
                 isAuthenticated: true,
                 isLoading: false,
+                isSessionRestored: true,
               });
 
               // 连接 WebSocket
@@ -358,6 +381,7 @@ export const useUserStore = create<UserState>()(
               isAuthenticated: false,
               token: null,
               isLoading: false,
+              isSessionRestored: true,
             });
             return false;
           } catch {
@@ -367,6 +391,7 @@ export const useUserStore = create<UserState>()(
               isAuthenticated: false,
               token: null,
               isLoading: false,
+              isSessionRestored: true,
             });
             return false;
           }
@@ -515,3 +540,4 @@ export const selectUser = (state: UserState) => state.profile;
 export const selectIsAuthenticated = (state: UserState) => state.isAuthenticated;
 export const selectUserLoading = (state: UserState) => state.isLoading;
 export const selectUserError = (state: UserState) => state.error;
+export const selectIsSessionRestored = (state: UserState) => state.isSessionRestored;
