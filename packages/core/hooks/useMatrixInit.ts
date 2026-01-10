@@ -11,6 +11,7 @@ import { matrixClient } from '../services/matrix/client';
 import { matrixEvents } from '../services/matrix/events';
 import { MATRIX_EVENTS } from '../services/matrix/types';
 import type { MatrixMessage } from '../services/matrix/types';
+import { isMatrixEnabled } from '../config';
 
 export interface UseMatrixInitOptions {
   /** 是否启用 Matrix */
@@ -40,6 +41,10 @@ export interface UseMatrixInitReturn {
  */
 export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInitReturn {
   const { enabled = true, autoConnect = true, maxRetries = 3, retryInterval = 5000 } = options;
+
+  // Check global Matrix enabled config (for development toggle)
+  const globalMatrixEnabled = isMatrixEnabled();
+  const effectiveEnabled = enabled && globalMatrixEnabled;
 
   const initRef = useRef(false);
   const initializingRef = useRef(false);
@@ -78,6 +83,13 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
   // 初始化 Matrix
   const initialize = useCallback(async (): Promise<boolean> => {
+    // Check if Matrix is globally disabled
+    if (!isMatrixEnabled()) {
+      // eslint-disable-next-line no-console
+      console.info('[Matrix] Matrix is disabled in config, skipping initialization');
+      return false;
+    }
+
     if (!peerID || initializingRef.current) {
       return false;
     }
@@ -170,7 +182,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
   // 监听 Matrix 事件
   useEffect(() => {
-    if (!enabled) return;
+    if (!effectiveEnabled) return;
 
     // 消息事件
     const onMessageReceived = (data: unknown) => {
@@ -317,7 +329,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       unsubscribers.forEach(unsub => unsub());
     };
   }, [
-    enabled,
+    effectiveEnabled,
     addMessage,
     updateMessage,
     updateRoom,
@@ -337,7 +349,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
   // 自动初始化
   useEffect(() => {
-    if (!enabled || !autoConnect) return;
+    if (!effectiveEnabled || !autoConnect) return;
 
     // 当用户登录且有 peerID 时自动初始化
     if (isAuthenticated && peerID && !initRef.current && !initializingRef.current) {
@@ -352,7 +364,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       console.info('[Matrix] User logged out, disconnecting...');
       disconnect();
     }
-  }, [enabled, autoConnect, isAuthenticated, peerID, initialize, disconnect]);
+  }, [effectiveEnabled, autoConnect, isAuthenticated, peerID, initialize, disconnect]);
 
   // 清理
   useEffect(() => {

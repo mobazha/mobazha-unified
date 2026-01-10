@@ -21,6 +21,8 @@ export interface AppConfig {
   apiBaseUrl: string;
   /** Matrix homeserver URL */
   matrixHomeserver: string;
+  /** Enable Matrix chat functionality (set to false to disable during development) */
+  matrixEnabled: boolean;
   /** Enable debug logging */
   debug: boolean;
 }
@@ -30,6 +32,7 @@ const defaultConfig: AppConfig = {
   useMockData: true, // Default to mock data for development
   apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   matrixHomeserver: process.env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org',
+  matrixEnabled: false, // Set to true to enable Matrix chat (disabled by default for development)
   debug: process.env.NODE_ENV === 'development',
 };
 
@@ -40,6 +43,17 @@ let runtimeConfig: Partial<AppConfig> = {};
  * Get the current application configuration
  */
 export function getConfig(): AppConfig {
+  // Check matrixEnabled from env or runtime config
+  const matrixEnabledFromEnv = process.env.NEXT_PUBLIC_MATRIX_ENABLED;
+  let matrixEnabled = defaultConfig.matrixEnabled;
+  if (matrixEnabledFromEnv === 'true') {
+    matrixEnabled = true;
+  } else if (matrixEnabledFromEnv === 'false') {
+    matrixEnabled = false;
+  } else if (runtimeConfig.matrixEnabled !== undefined) {
+    matrixEnabled = runtimeConfig.matrixEnabled;
+  }
+
   return {
     ...defaultConfig,
     ...runtimeConfig,
@@ -47,6 +61,7 @@ export function getConfig(): AppConfig {
     useMockData:
       process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ||
       (process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false' && runtimeConfig.useMockData !== false),
+    matrixEnabled,
   };
 }
 
@@ -62,6 +77,13 @@ export function setConfig(config: Partial<AppConfig>): void {
  */
 export function isMockMode(): boolean {
   return getConfig().useMockData;
+}
+
+/**
+ * Check if Matrix chat is enabled
+ */
+export function isMatrixEnabled(): boolean {
+  return getConfig().matrixEnabled;
 }
 
 /**
@@ -91,6 +113,7 @@ export default {
   getConfig,
   setConfig,
   isMockMode,
+  isMatrixEnabled,
   enableMockData,
   disableMockData,
   toggleMockData,
