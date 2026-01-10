@@ -27,6 +27,7 @@ import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
 import { Settings, Camera, Package } from 'lucide-react';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
+import { OtcTab } from '@/components/store/OtcTab';
 
 // 默认统计数据
 const defaultStats = {
@@ -37,7 +38,7 @@ const defaultStats = {
   averageRating: 0,
 };
 
-type TabType = 'products' | 'about' | 'reviews';
+type TabType = 'products' | 'otc' | 'about' | 'reviews';
 
 export default function StorePage() {
   const params = useParams();
@@ -560,7 +561,7 @@ export default function StorePage() {
         <div className="sticky top-16 z-30 bg-background border-b border-border">
           <Container size="xl">
             <HStack gap="none" className="px-4 sm:px-6">
-              {(['products', 'about', 'reviews'] as TabType[]).map(tab => (
+              {(['products', 'otc', 'about', 'reviews'] as TabType[]).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -572,9 +573,11 @@ export default function StorePage() {
                 >
                   {tab === 'products'
                     ? t('profile.listings')
-                    : tab === 'about'
-                      ? t('profile.about')
-                      : t('profile.reviews')}
+                    : tab === 'otc'
+                      ? (t('profile.otc') || 'OTC')
+                      : tab === 'about'
+                        ? t('profile.about')
+                        : t('profile.reviews')}
                 </button>
               ))}
             </HStack>
@@ -644,6 +647,12 @@ export default function StorePage() {
                   <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
                 </div>
               )}
+            </Container>
+          )}
+
+          {activeTab === 'otc' && (
+            <Container size="xl" className="px-4 sm:px-6">
+              <OtcTab peerId={peerId} isOwnStore={isOwnStore} />
             </Container>
           )}
 

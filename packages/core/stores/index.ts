@@ -20,6 +20,9 @@ export * from './currencyStore';
 // 聊天状态
 export * from './chatStore';
 
+// OTC 状态
+export * from './otcStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';

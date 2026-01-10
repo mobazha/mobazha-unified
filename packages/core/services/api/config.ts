@@ -207,6 +207,7 @@ export function getHeadersWithContext(
 /**
  * 将 IPFS hash 转换为完整的图片 URL
  * 参考移动端实现: mobazha-mobile/utils/files.js
+ * 图片通过 /v1/ob/image/ 路径获取，不是 /info/v1/ob/image/
  */
 export function getImageUrl(hash: string | undefined | null): string | undefined {
   if (!hash || hash === '') {
@@ -216,6 +217,6 @@ export function getImageUrl(hash: string | undefined | null): string | undefined
   if (hash.startsWith('http://') || hash.startsWith('https://') || hash.startsWith('/')) {
     return hash;
   }
-  // 将 IPFS hash 转换为 gateway URL
-  return `${getMbzGatewayUrl()}/ob/image/${hash}`;
+  // 将 IPFS hash 转换为 gateway URL（使用 /v1/ob/image/ 路径）
+  return `${getGatewayUrl()}/ob/image/${hash}`;
 }
