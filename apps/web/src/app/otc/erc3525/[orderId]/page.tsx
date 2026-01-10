@@ -8,9 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { useI18n, useWallet, useUserStore, useChatStore } from '@mobazha/core';
-import { ArrowLeft, ExternalLink, Copy, MessageSquare, Loader2, Check, AlertCircle, TrendingUp } from 'lucide-react';
-import { getOtcConfig, getContractAddress } from '@mobazha/core/config/otcConfig';
+import { useI18n, useWallet, useChatStore } from '@mobazha/core';
+import {
+  ArrowLeft,
+  ExternalLink,
+  Copy,
+  MessageSquare,
+  Loader2,
+  Check,
+  AlertCircle,
+  TrendingUp,
+} from 'lucide-react';
+import { getOtcConfig } from '@mobazha/core/config/otcConfig';
 
 // ERC3525 OTC 订单状态枚举
 enum Erc3525OrderStatus {
@@ -50,10 +59,9 @@ export default function Erc3525OtcDetailPage() {
   const router = useRouter();
   const orderId = params.orderId as string;
   const { t } = useI18n();
-  const { isConnected, walletInfo, connectWallet } = useWallet();
-  const { isAuthenticated } = useUserStore();
+  const { isConnected, walletInfo, connect: connectWallet } = useWallet();
   const openChatDrawer = useChatStore(state => state.openDrawer);
-  
+
   const networkConfig = getOtcConfig();
 
   const [order, setOrder] = useState<Erc3525Order | null>(null);
@@ -68,29 +76,30 @@ export default function Erc3525OtcDetailPage() {
   const fetchOrder = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // TODO: 实际从链上获取订单信息
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       const mockOrder: Erc3525Order = {
         orderId,
         seller: '0xC4736E41D02faa7D735819AA9afa2ffee1Ce5931',
         rwaToken: '0x4c1A1b21c4471CA57145EE08404Cbaf9C8B83991',
         tokenId: 1,
         shares: 100,
-        paymentToken: getContractAddress('MockUSDT'),
+        paymentToken: networkConfig.contracts.USDT || '0x0000000000000000000000000000000000000000', // Mock USDT address
         price: 500,
         status: Erc3525OrderStatus.Active,
         createdAt: Date.now() - 172800000,
       };
-      
+
       setOrder(mockOrder);
-      
+
       // Mock RWA 元数据
       setRwaMetadata({
         name: 'Starlight Dreams 票房份额',
-        description: '参与全球巡演音乐剧 "Starlight Dreams" 的票房收益分成。持有者可按份额比例获得每周收益分红。',
+        description:
+          '参与全球巡演音乐剧 "Starlight Dreams" 的票房收益分成。持有者可按份额比例获得每周收益分红。',
         projectName: 'Starlight Dreams',
         totalShares: 10000,
         expectedRevenue: {
@@ -104,7 +113,7 @@ export default function Erc3525OtcDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [orderId, t]);
+  }, [orderId, t, networkConfig.contracts.USDT]);
 
   useEffect(() => {
     fetchOrder();
@@ -144,17 +153,17 @@ export default function Erc3525OtcDetailPage() {
   // 执行购买
   const handleExecuteSwap = async () => {
     if (!order || !canBuy) return;
-    
+
     setExecuting(true);
     try {
       // TODO: 实际调用合约执行交换
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       await fetchOrder();
-      alert(t('otc.purchaseSuccess') || '购买成功！');
+      window.alert(t('otc.purchaseSuccess') || '购买成功！');
     } catch (err) {
       console.error('Failed to execute swap:', err);
-      alert(t('otc.purchaseFailed') || '购买失败');
+      window.alert(t('otc.purchaseFailed') || '购买失败');
     } finally {
       setExecuting(false);
     }
@@ -163,17 +172,17 @@ export default function Erc3525OtcDetailPage() {
   // 取消订单
   const handleCancelOrder = async () => {
     if (!order || !isSeller || order.status !== Erc3525OrderStatus.Active) return;
-    
-    if (!confirm(t('otc.confirmCancel') || '确定要取消此订单吗？')) return;
-    
+
+    if (!window.confirm(t('otc.confirmCancel') || '确定要取消此订单吗？')) return;
+
     setCancelling(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       await fetchOrder();
-      alert(t('otc.cancelSuccess') || '订单已取消');
+      window.alert(t('otc.cancelSuccess') || '订单已取消');
     } catch (err) {
       console.error('Failed to cancel order:', err);
-      alert(t('otc.cancelFailed') || '取消失败');
+      window.alert(t('otc.cancelFailed') || '取消失败');
     } finally {
       setCancelling(false);
     }
@@ -224,7 +233,9 @@ export default function Erc3525OtcDetailPage() {
         <Container size="lg" className="py-20">
           <VStack gap="md" align="center">
             <AlertCircle className="h-16 w-16 text-destructive" />
-            <h2 className="text-xl font-semibold">{error || t('otc.orderNotFound') || '订单不存在'}</h2>
+            <h2 className="text-xl font-semibold">
+              {error || t('otc.orderNotFound') || '订单不存在'}
+            </h2>
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               {t('common.back') || '返回'}
@@ -239,15 +250,10 @@ export default function Erc3525OtcDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <Container size="lg" className="py-6">
         {/* 返回按钮 */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-4"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" size="sm" className="mb-4" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('common.back') || '返回'}
         </Button>
@@ -305,12 +311,13 @@ export default function Erc3525OtcDetailPage() {
             {/* 标题和状态 */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                <Badge
+                  variant="secondary"
+                  className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+                >
                   ERC3525
                 </Badge>
-                <Badge 
-                  variant={order.status === Erc3525OrderStatus.Active ? 'default' : 'outline'}
-                >
+                <Badge variant={order.status === Erc3525OrderStatus.Active ? 'default' : 'outline'}>
                   {statusText}
                 </Badge>
               </div>
@@ -318,9 +325,7 @@ export default function Erc3525OtcDetailPage() {
                 {rwaMetadata?.name || `份额 #${order.tokenId}`}
               </h1>
               {rwaMetadata?.description && (
-                <p className="text-muted-foreground mt-2 text-sm">
-                  {rwaMetadata.description}
-                </p>
+                <p className="text-muted-foreground mt-2 text-sm">{rwaMetadata.description}</p>
               )}
             </div>
 
@@ -332,9 +337,7 @@ export default function Erc3525OtcDetailPage() {
                     <div className="text-sm text-muted-foreground mb-1">
                       {t('otc.shares') || '份额'}
                     </div>
-                    <div className="text-2xl font-bold">
-                      {order.shares.toLocaleString()} 份
-                    </div>
+                    <div className="text-2xl font-bold">{order.shares.toLocaleString()} 份</div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-muted-foreground mb-1">
@@ -388,7 +391,9 @@ export default function Erc3525OtcDetailPage() {
                   </a>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">{t('otc.network') || '网络'}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('otc.network') || '网络'}
+                  </span>
                   <span className="text-sm font-medium">{networkConfig.chainName}</span>
                 </div>
               </CardContent>
@@ -403,8 +408,8 @@ export default function Erc3525OtcDetailPage() {
                       {t('wallet.connect') || '连接钱包'}
                     </Button>
                   ) : canBuy ? (
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       size="lg"
                       onClick={handleExecuteSwap}
                       disabled={executing}
@@ -419,8 +424,8 @@ export default function Erc3525OtcDetailPage() {
                       )}
                     </Button>
                   ) : isSeller ? (
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       size="lg"
                       variant="destructive"
                       onClick={handleCancelOrder}
@@ -438,7 +443,7 @@ export default function Erc3525OtcDetailPage() {
                   ) : null}
                 </>
               )}
-              
+
               {order.status === Erc3525OrderStatus.Completed && (
                 <div className="text-center py-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <Check className="h-8 w-8 text-green-500 mx-auto mb-2" />
@@ -459,23 +464,12 @@ export default function Erc3525OtcDetailPage() {
 
               {/* 辅助操作 */}
               <HStack gap="sm" className="w-full">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={handleOpenChat}
-                >
+                <Button variant="outline" className="flex-1" onClick={handleOpenChat}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   {t('otc.chatWithSeller') || '联系卖家'}
                 </Button>
-                <Button 
-                  variant="outline"
-                  onClick={copyLink}
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
+                <Button variant="outline" onClick={copyLink}>
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </HStack>
             </VStack>
