@@ -27,13 +27,15 @@ import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
 import { Settings, Camera, Package } from 'lucide-react';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
-import { OtcTab } from '@/components/store/OtcTab';
 import {
+  OtcTab,
   StoreListingsToolbar,
   type FilterState,
   defaultFilterState,
-} from '@/components/store/StoreListingsToolbar';
-import { FilterSheet } from '@/components/store/FilterSheet';
+  FilterSheet,
+  StoreReviewsTab,
+  FollowTab,
+} from '@/components/store';
 
 // 默认统计数据
 const defaultStats = {
@@ -44,7 +46,7 @@ const defaultStats = {
   averageRating: 0,
 };
 
-type TabType = 'products' | 'otc' | 'about' | 'reviews';
+type TabType = 'products' | 'otc' | 'following' | 'followers' | 'about' | 'reviews';
 
 export default function StorePage() {
   const params = useParams();
@@ -634,47 +636,81 @@ export default function StorePage() {
         {/* Tabs + Stats 合并为一行 */}
         <div className="sticky top-16 z-30 bg-background border-b border-border">
           <Container size="xl">
-            <div className="flex items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center justify-between px-4 sm:px-6 overflow-x-auto">
               {/* 左侧：标签页 */}
-              <HStack gap="sm">
-                {(['products', 'otc', 'about', 'reviews'] as TabType[]).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 sm:px-5 py-3.5 text-base font-medium transition-colors border-b-2 touch-feedback ${
-                      activeTab === tab
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {tab === 'products'
-                      ? t('profile.listings')
-                      : tab === 'otc'
-                        ? t('profile.otc') || 'OTC'
-                        : tab === 'about'
-                          ? t('profile.about')
-                          : t('profile.reviews')}
-                  </button>
-                ))}
+              <HStack gap="sm" className="flex-shrink-0">
+                {(
+                  ['products', 'otc', 'following', 'followers', 'about', 'reviews'] as TabType[]
+                ).map(tab => {
+                  // 获取标签显示文本和计数
+                  const getTabLabel = () => {
+                    switch (tab) {
+                      case 'products':
+                        return t('profile.listings');
+                      case 'otc':
+                        return t('profile.otc') || 'OTC';
+                      case 'following':
+                        return t('profile.following');
+                      case 'followers':
+                        return t('profile.followers');
+                      case 'about':
+                        return t('profile.about');
+                      case 'reviews':
+                        return t('profile.reviews');
+                      default:
+                        return tab;
+                    }
+                  };
+
+                  // 获取计数
+                  const getTabCount = () => {
+                    switch (tab) {
+                      case 'following':
+                        return stats.followingCount;
+                      case 'followers':
+                        return stats.followerCount;
+                      default:
+                        return null;
+                    }
+                  };
+
+                  const count = getTabCount();
+
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-3 sm:px-4 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback whitespace-nowrap ${
+                        activeTab === tab
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {getTabLabel()}
+                      {count !== null && count > 0 && (
+                        <span className="ml-1 text-xs sm:text-sm text-primary/80">{count}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </HStack>
 
               {/* 右侧：统计数据 */}
-              <div className="hidden sm:flex items-center gap-5 text-sm">
+              <div className="hidden lg:flex items-center gap-5 text-sm flex-shrink-0 ml-4">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-semibold text-foreground">{actualListingCount}</span>
                   <span className="text-muted-foreground">{t('profile.listings')}</span>
                 </div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-semibold text-foreground">{stats.followerCount}</span>
-                  <span className="text-muted-foreground">{t('profile.followers')}</span>
-                </div>
-                <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                >
                   <span className="text-yellow-500">★</span>
                   <span className="font-semibold text-foreground">
                     {stats.averageRating.toFixed(1)}
                   </span>
                   <span className="text-muted-foreground">({stats.ratingCount})</span>
-                </div>
+                </button>
               </div>
             </div>
           </Container>
@@ -852,18 +888,11 @@ export default function StorePage() {
             </Container>
           )}
 
-          {activeTab === 'reviews' && (
-            <Container size="xl">
-              <Card className="p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">
-                  {t('profile.reviews')}
-                </h2>
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  {t('product.noReviews')}
-                </div>
-              </Card>
-            </Container>
-          )}
+          {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
+
+          {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
+
+          {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
         </div>
       </main>
 

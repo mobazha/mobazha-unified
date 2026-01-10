@@ -2,7 +2,7 @@
  * 商品 API 服务
  */
 
-import type { Product, ProductListItem, ProductRating } from '../../types';
+import type { Product, ProductListItem, RatingIndex, RatingDetail } from '../../types';
 import { get, post, put, del, safeRequest } from './client';
 import {
   getGatewayUrl,
@@ -358,13 +358,14 @@ export async function deleteListing(
 /**
  * 获取商品评价索引
  * 注意：移除了时间戳参数以支持请求去重缓存
+ * 返回评价统计信息和评价 ID 列表
  */
 export async function getRatingIndex(
   peerID?: string,
   slug?: string,
   username?: string,
   password?: string
-): Promise<ProductRating[]> {
+): Promise<RatingIndex> {
   let url: string;
 
   if (peerID && slug) {
@@ -377,11 +378,49 @@ export async function getRatingIndex(
     url = `${getGatewayUrl()}/ob/ratingindex`;
   }
 
-  return safeRequest<ProductRating[]>(
+  return safeRequest<RatingIndex>(
     url,
     { headers: getHeadersWithContext(username, password) },
-    []
+    { count: 0, average: 0, ratings: [] }
   );
+}
+
+/**
+ * 获取详细评价数据
+ * 通过评价 ID 列表获取完整的评价信息
+ * @param ratingIDs - 评价 CID 字符串数组
+ */
+export async function fetchRatings(
+  ratingIDs: string[],
+  username?: string,
+  password?: string
+): Promise<RatingDetail[]> {
+  if (!ratingIDs || ratingIDs.length === 0) {
+    return [];
+  }
+
+  const url = `${getGatewayUrl()}/ob/fetchratings?async=false`;
+
+  try {
+    const response = await post<Array<{ id: string; rating: RatingDetail }>>(
+      url,
+      ratingIDs,
+      getHeadersWithContext(username, password)
+    );
+
+    // API 返回格式: [{ id: "xxx", rating: {...} }, ...]
+    if (Array.isArray(response)) {
+      return response.map(item => ({
+        ...item.rating,
+        ratingID: item.id || item.rating?.ratingID,
+      }));
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Failed to fetch ratings:', error);
+    return [];
+  }
 }
 
 /**

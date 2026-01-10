@@ -193,7 +193,7 @@ export interface Coupon {
 }
 
 /**
- * 商品评分
+ * 商品评分（简略，用于商品详情页）
  */
 export interface ProductRating {
   ratingID: string;
@@ -208,5 +208,56 @@ export interface ProductRating {
   buyerID?: {
     peerID: string;
     handle?: string;
+  };
+}
+
+/**
+ * 评价索引（ratingindex API 返回）
+ * 包含统计信息和评价 ID 列表
+ */
+export interface RatingIndex {
+  slug?: string;
+  count: number;
+  average: number;
+  ratings: string[]; // CID 字符串数组
+}
+
+/**
+ * 详细评价数据（fetchratings API 返回）
+ * 包含完整的评价信息，用于店铺评价列表
+ */
+export interface RatingDetail {
+  ratingID: string;
+  timestamp: string;
+  overall: number;
+  quality?: number;
+  description?: number;
+  deliverySpeed?: number;
+  customerService?: number;
+  review?: string;
+  anonymous?: boolean;
+  buyerID?: {
+    peerID: string;
+    handle?: string;
+  };
+  vendorID?: {
+    peerID: string;
+    handle?: string;
+  };
+  vendorSig?: {
+    slug: string;
+    title?: string;
+    thumbnail?: {
+      tiny?: string;
+      small?: string;
+      medium?: string;
+    };
+    metadata?: {
+      thumbnail?: {
+        tiny?: string;
+        small?: string;
+        medium?: string;
+      };
+    };
   };
 }

@@ -49,6 +49,7 @@ export const zh: TranslationResource = {
     loadMore: '加载更多',
     noMoreData: '没有更多数据了',
     comingSoon: '即将推出',
+    by: '由',
   },
 
   nav: {
@@ -135,6 +136,13 @@ export const zh: TranslationResource = {
     noReviews: '暂无评价',
     viewAllReviews: '查看全部评价',
     anonymous: '匿名',
+    // Rating labels
+    overall: '综合',
+    overallRating: '综合评分',
+    quality: '质量',
+    asAdvertised: '描述相符',
+    delivery: '配送',
+    service: '服务',
   },
 
   search: {
@@ -641,11 +649,13 @@ export const zh: TranslationResource = {
     editProfile: '编辑资料',
     about: '简介',
     location: '位置',
+    noLocation: '暂无位置',
     joined: '{{date}} 加入',
     followers: '粉丝',
     following: '关注',
     listings: '商品',
     reviews: '评价',
+    review: '条评价',
     verified: '已验证',
     store: '店铺',
     otc: 'OTC',
@@ -668,6 +678,12 @@ export const zh: TranslationResource = {
     bio: '个人简介',
     saveChanges: '保存更改',
     noProfileData: '无法加载个人资料',
+    userNotFound: '用户未找到',
+    anonymous: '匿名',
+    noOwnFollowers: '您还没有粉丝',
+    noFollowers: '暂无粉丝',
+    noOwnFollowing: '您还没有关注任何人',
+    noFollowing: '暂无关注',
   },
 
   settings: {
@@ -1161,6 +1177,18 @@ export const zh: TranslationResource = {
     filterStatus: '状态',
     filterType: '类型',
     items: '项',
+  },
+
+  // P2P 连接
+  p2p: {
+    connecting: '连接中...',
+    failedToConnect: '连接失败',
+    loadingText: '正在加载 {{name}}',
+    failedTextListing: '无法从点对点网络加载 {{listing}}。',
+    failedGeneric: '无法连接到卖家，请重试。',
+    connectingToVendor: '正在连接点对点网络上的卖家...',
+    fromP2pNetwork: '从全球点对点网络为您获取数据...',
+    socialHeading: 'Mobazha 新闻与讨论：',
   },
 };
 
