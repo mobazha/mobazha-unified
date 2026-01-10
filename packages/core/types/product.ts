@@ -30,6 +30,8 @@ export interface ProductListItem {
   contractType?: ContractType;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
+  /** 商品分类 */
+  categories?: string[];
 }
 
 /**

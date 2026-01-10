@@ -32,6 +32,7 @@ export const ja: TranslationResource = {
     retry: '再試行',
     refresh: '更新',
     submit: '送信',
+    apply: '適用',
     reset: 'リセット',
     clear: 'クリア',
     copy: 'コピー',

@@ -32,6 +32,7 @@ export const ru: TranslationResource = {
     retry: 'Повторить',
     refresh: 'Обновить',
     submit: 'Отправить',
+    apply: 'Применить',
     reset: 'Сбросить',
     clear: 'Очистить',
     copy: 'Копировать',

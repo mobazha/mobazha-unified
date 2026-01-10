@@ -32,6 +32,7 @@ export const zh: TranslationResource = {
     retry: '重试',
     refresh: '刷新',
     submit: '提交',
+    apply: '应用',
     reset: '重置',
     clear: '清除',
     copy: '复制',

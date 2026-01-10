@@ -24,10 +24,18 @@ export type ProductType = 'all' | 'physical_good' | 'digital_good' | 'service' |
 // 排序方式
 export type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
 
+// 分类项
+export interface CategoryItem {
+  value: string;
+  label: string;
+  count?: number;
+}
+
 // 筛选状态
 export interface FilterState {
   search: string;
   type: ProductType;
+  category: string; // 'all' 或具体分类名
   sortBy: SortOption;
   freeShipping: boolean;
 }
@@ -36,6 +44,7 @@ export interface FilterState {
 export const defaultFilterState: FilterState = {
   search: '',
   type: 'all',
+  category: 'all',
   sortBy: 'relevance',
   freeShipping: false,
 };
@@ -45,6 +54,7 @@ interface StoreListingsToolbarProps {
   onFilterChange: (filter: FilterState) => void;
   totalCount: number;
   filteredCount?: number;
+  categories?: CategoryItem[]; // 可用的分类列表
   onOpenMobileFilter?: () => void;
   className?: string;
 }
@@ -71,6 +81,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
   onFilterChange,
   totalCount,
   filteredCount,
+  categories = [],
   onOpenMobileFilter,
   className,
 }) => {
@@ -81,7 +92,10 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
   };
 
   const hasActiveFilters =
-    filter.type !== 'all' || filter.freeShipping || filter.search.trim() !== '';
+    filter.type !== 'all' ||
+    filter.category !== 'all' ||
+    filter.freeShipping ||
+    filter.search.trim() !== '';
 
   const clearFilters = () => {
     onFilterChange(defaultFilterState);
@@ -149,17 +163,43 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
         </Select>
       </div>
 
-      {/* 桌面端第二行：免运费 + 商品数量 */}
+      {/* 桌面端第二行：分类 + 免运费 + 商品数量 */}
       <div className="hidden md:flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Switch
-            id="free-shipping"
-            checked={filter.freeShipping}
-            onCheckedChange={checked => updateFilter({ freeShipping: checked })}
-          />
-          <Label htmlFor="free-shipping" className="text-sm cursor-pointer">
-            {t('filter.freeShippingOnly') || '仅显示免运费'}
-          </Label>
+        <div className="flex items-center gap-4">
+          {/* 分类筛选 */}
+          {categories.length > 0 && (
+            <Select
+              value={filter.category}
+              onValueChange={(value: string) => updateFilter({ category: value })}
+            >
+              <SelectTrigger className="w-[140px] h-8">
+                <SelectValue placeholder={t('filter.category') || '分类'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('common.all') || '全部'}</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                    {cat.count !== undefined && (
+                      <span className="ml-1 text-muted-foreground">({cat.count})</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* 免运费开关 */}
+          <div className="flex items-center gap-2">
+            <Switch
+              id="free-shipping"
+              checked={filter.freeShipping}
+              onCheckedChange={checked => updateFilter({ freeShipping: checked })}
+            />
+            <Label htmlFor="free-shipping" className="text-sm cursor-pointer">
+              {t('filter.freeShippingOnly') || '仅显示免运费'}
+            </Label>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

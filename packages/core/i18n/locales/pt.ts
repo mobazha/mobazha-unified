@@ -32,6 +32,7 @@ export const pt: TranslationResource = {
     retry: 'Tentar novamente',
     refresh: 'Atualizar',
     submit: 'Enviar',
+    apply: 'Aplicar',
     reset: 'Redefinir',
     clear: 'Limpar',
     copy: 'Copiar',
