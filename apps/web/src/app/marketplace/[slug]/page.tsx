@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@/components/layouts';
+import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
+import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/ProductCard';
-import { useChatStore } from '@mobazha/core';
+import { useChatStore, useI18n } from '@mobazha/core';
+import { ExternalLink } from 'lucide-react';
 
 // Types
 interface Marketplace {
@@ -46,6 +48,24 @@ interface Seller {
   productCount: number;
   rating: number;
   joinedAt: string;
+}
+
+// OTC 订单状态枚举
+enum OtcOrderStatus {
+  Active = 0,
+  Completed = 1,
+  Cancelled = 2,
+}
+
+interface OtcListing {
+  orderId: string;
+  orderType: 'nft' | 'erc3525';
+  title: string;
+  image?: string;
+  price: number;
+  status: OtcOrderStatus;
+  seller: { name: string; avatar: string; id: string };
+  contractAddress: string;
 }
 
 // Mock data
@@ -174,17 +194,69 @@ const mockSellers: Seller[] = [
   },
 ];
 
+// Mock OTC 数据
+const mockOtcListings: OtcListing[] = [
+  {
+    orderId: '0x123abc',
+    orderType: 'nft',
+    title: 'KOL 限量签名照 #1',
+    image: 'https://via.placeholder.com/300/6366f1/ffffff?text=NFT',
+    price: 100,
+    status: OtcOrderStatus.Active,
+    seller: { name: 'CryptoKOL', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kol', id: 'kol1' },
+    contractAddress: '0x17ebC8FeE90E7556E1E12Aa42604477D6A243324',
+  },
+  {
+    orderId: '0x456def',
+    orderType: 'erc3525',
+    title: 'Starlight Dreams 份额',
+    image: 'https://via.placeholder.com/300/10b981/ffffff?text=RWA',
+    price: 500,
+    status: OtcOrderStatus.Active,
+    seller: { name: 'InvestorPro', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=investor', id: 'inv1' },
+    contractAddress: '0x4c1A1b21c4471CA57145EE08404Cbaf9C8B83991',
+  },
+  {
+    orderId: '0x789ghi',
+    orderType: 'nft',
+    title: '演唱会纪念 NFT #2',
+    image: 'https://via.placeholder.com/300/ec4899/ffffff?text=Concert',
+    price: 200,
+    status: OtcOrderStatus.Completed,
+    seller: { name: 'FanClub', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fan', id: 'fan1' },
+    contractAddress: '0x17ebC8FeE90E7556E1E12Aa42604477D6A243324',
+  },
+];
+
 export default function MarketplaceDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { t } = useI18n();
   // slug is used for routing, params.slug is available
   void params.slug;
 
-  const [activeTab, setActiveTab] = useState<'products' | 'sellers' | 'about' | 'chat'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'otc' | 'sellers' | 'about' | 'chat'>('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMember, setIsMember] = useState(false);
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
   const marketplace = mockMarketplace;
+  
+  // OTC 辅助函数
+  const handleOtcClick = (otc: OtcListing) => {
+    router.push(`/otc/${otc.orderType}/${otc.orderId}`);
+  };
+  
+  const otcStatusText = (status: OtcOrderStatus) => {
+    const texts: Record<OtcOrderStatus, string> = {
+      [OtcOrderStatus.Active]: t('otc.status.active') || '活跃',
+      [OtcOrderStatus.Completed]: t('otc.status.completed') || '已成交',
+      [OtcOrderStatus.Cancelled]: t('otc.status.cancelled') || '已取消',
+    };
+    return texts[status];
+  };
+  
+  const activeOtcListings = mockOtcListings.filter(o => o.status === OtcOrderStatus.Active);
 
   const handleJoinMarketplace = () => {
     setIsMember(true);
@@ -293,7 +365,7 @@ export default function MarketplaceDetailPage() {
           {/* Tabs */}
           <div className="border-b border-border mb-4 sm:mb-6 overflow-x-auto">
             <HStack gap="none" className="min-w-max">
-              {(['products', 'sellers', 'about', 'chat'] as const).map(tab => (
+              {(['products', 'otc', 'sellers', 'about', 'chat'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -303,7 +375,18 @@ export default function MarketplaceDetailPage() {
                       : 'text-muted-foreground hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  {tab}
+                  {tab === 'otc' ? (
+                    <span className="flex items-center gap-1.5">
+                      OTC
+                      {activeOtcListings.length > 0 && (
+                        <Badge variant="secondary" className="text-xs h-5 px-1.5">
+                          {activeOtcListings.length}
+                        </Badge>
+                      )}
+                    </span>
+                  ) : (
+                    tab
+                  )}
                 </button>
               ))}
             </HStack>
@@ -357,6 +440,114 @@ export default function MarketplaceDetailPage() {
                   Load More Products
                 </Button>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'otc' && (
+            <div className="space-y-6">
+              {/* OTC 介绍 */}
+              <Card className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
+                <HStack justify="between" align="center" className="flex-wrap gap-4">
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">
+                      {t('otc.marketplaceOtcTitle') || '🔐 私密 OTC 交易'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('otc.marketplaceOtcDesc') || '社区成员发布的 NFT 和 RWA 份额私密挂单'}
+                    </p>
+                  </div>
+                  {isMember && (
+                    <Link href="/otc/create">
+                      <Button size="sm" className="touch-feedback">
+                        {t('otc.createOrder') || '创建挂单'}
+                      </Button>
+                    </Link>
+                  )}
+                </HStack>
+              </Card>
+
+              {/* OTC 列表 */}
+              {activeOtcListings.length > 0 ? (
+                <Grid cols={4} colsMobile={2} gap="md">
+                  {activeOtcListings.map(otc => (
+                    <Card
+                      key={otc.orderId}
+                      className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden"
+                      onClick={() => handleOtcClick(otc)}
+                    >
+                      <div className="aspect-square bg-muted relative overflow-hidden">
+                        {otc.image ? (
+                          <img
+                            src={otc.image}
+                            alt={otc.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                            <span className="text-4xl">
+                              {otc.orderType === 'nft' ? '🎨' : '📊'}
+                            </span>
+                          </div>
+                        )}
+                        <Badge variant="secondary" className="absolute top-2 left-2 text-xs">
+                          {otc.orderType === 'nft' ? 'NFT' : 'ERC3525'}
+                        </Badge>
+                      </div>
+                      <CardContent className="p-3">
+                        <h3 className="font-medium text-sm truncate mb-1">{otc.title}</h3>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-primary font-semibold text-sm">
+                            {otc.price} USDT
+                          </span>
+                          <Badge
+                            variant={otc.status === OtcOrderStatus.Active ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {otcStatusText(otc.status)}
+                          </Badge>
+                        </div>
+                        {/* 卖家信息 */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-border">
+                          <img
+                            src={otc.seller.avatar}
+                            alt={otc.seller.name}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span className="text-xs text-muted-foreground truncate">
+                            {otc.seller.name}
+                          </span>
+                        </div>
+                        {/* 合约信息 */}
+                        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                          <span className="truncate">
+                            {otc.contractAddress.slice(0, 6)}...{otc.contractAddress.slice(-4)}
+                          </span>
+                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Grid>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-3xl">🔐</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    {t('otc.noOtcInMarketplace') || '暂无 OTC 资产'}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    {t('otc.beFirstToCreate') || '成为第一个在社区内发布 OTC 挂单的成员'}
+                  </p>
+                  {isMember && (
+                    <Link href="/otc/create">
+                      <Button size="sm" className="touch-feedback">
+                        {t('otc.createOrder') || '创建挂单'}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

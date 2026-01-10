@@ -110,3 +110,6 @@ export {
   DEFAULT_LOCAL_CURRENCY,
   EXCHANGE_RATE_REFRESH_INTERVAL,
 } from './currency';
+
+// OTC types
+export * from './otc';

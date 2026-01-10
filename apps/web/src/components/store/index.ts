@@ -12,4 +12,4 @@
 // - AboutTab: 关于标签
 // - ReviewsTab: 评价标签
 
-export {};
+export { OtcTab } from './OtcTab';
