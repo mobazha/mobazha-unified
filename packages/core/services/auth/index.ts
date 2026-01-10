@@ -42,6 +42,10 @@ export {
   getUserInfo,
   parseJwtToken,
   isTokenExpired,
+  // 用户 ID 相关
+  getStoredUserId,
+  getTelegramUserId,
+  isTelegramUser,
   // 类型
   type CasdoorUser,
   type CasdoorTokenResponse,
