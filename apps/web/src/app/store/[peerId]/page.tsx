@@ -68,7 +68,7 @@ export default function StorePage() {
   // 判断是否是自己的店铺
   const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
 
-  const [activeTab, setActiveTab] = useState<TabType>('about');
+  const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
