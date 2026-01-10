@@ -389,6 +389,9 @@ export const ru: TranslationResource = {
     reviews: 'Отзывы',
     verified: 'Подтверждён',
     store: 'Магазин',
+    otc: 'OTC',
+    posts: 'Публикации',
+    community: 'Сообщество',
     viewStore: 'Просмотр магазина',
     follow: 'Подписаться',
     unfollow: 'Отписаться',
@@ -664,6 +667,25 @@ export const ru: TranslationResource = {
     settings: 'Настройки',
     logout: 'Выйти',
   },
+
+  // OTC Частная торговля
+  otc: {
+    title: 'OTC Торговля',
+    createNft: 'Создать NFT заказ',
+    createErc3525: 'Создать заказ на акции',
+    noOtcYet: 'Пока нет OTC активов',
+    noOtcInStore: 'В этом магазине нет OTC активов',
+    createFirstOtc: 'Создайте свой первый OTC заказ, чтобы начать частную торговлю',
+    activeOrders: 'Активные заказы',
+    historyOrders: 'История',
+    fetchError: 'Не удалось загрузить OTC заказы',
+    status: {
+      active: 'Активный',
+      completed: 'Завершён',
+      cancelled: 'Отменён',
+    },
+  },
+
 };
 
 export default ru;

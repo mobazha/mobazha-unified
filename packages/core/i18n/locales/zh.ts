@@ -648,6 +648,9 @@ export const zh: TranslationResource = {
     reviews: '评价',
     verified: '已验证',
     store: '店铺',
+    otc: 'OTC',
+    posts: '动态',
+    community: '社区',
     viewStore: '访问店铺',
     follow: '关注',
     unfollow: '取消关注',
@@ -1071,6 +1074,25 @@ export const zh: TranslationResource = {
     resyncComplete: '交易同步完成',
     resyncFailed: '交易同步失败',
   },
+
+  // OTC 私密交易
+  otc: {
+    title: 'OTC 交易',
+    createNft: '创建 NFT 挂单',
+    createErc3525: '创建份额挂单',
+    noOtcYet: '还没有 OTC 资产',
+    noOtcInStore: '该店铺暂无 OTC 资产',
+    createFirstOtc: '创建您的第一个 OTC 挂单，开始私密交易',
+    activeOrders: '活跃挂单',
+    historyOrders: '历史记录',
+    fetchError: '获取 OTC 订单失败',
+    status: {
+      active: '活跃',
+      completed: '已成交',
+      cancelled: '已取消',
+    },
+  },
+
 };
 
 export default zh;
