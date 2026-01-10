@@ -88,7 +88,7 @@ export default function NftOtcDetailPage() {
       setNftMetadata({
         name: 'KOL 限量签名照 #1',
         description: '某知名 KOL 的限量签名照，全球仅发行 100 份。持有此 NFT 可获得专属粉丝福利。',
-        image: 'https://via.placeholder.com/400/6366f1/ffffff?text=KOL+NFT',
+        image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=600&h=600&fit=crop',
       });
     } catch (err) {
       console.error('Failed to fetch order:', err);

@@ -39,7 +39,7 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     id: item.slug,
     slug: item.slug,
     title: item.title,
-    imageUrl: item.thumbnail?.medium || item.thumbnail?.small || 'https://via.placeholder.com/400',
+    imageUrl: item.thumbnail?.medium || item.thumbnail?.small || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
     price: item.price?.amount || 0,
     currency: item.price?.currency?.code || 'USD',
     divisibility: item.price?.currency?.divisibility,

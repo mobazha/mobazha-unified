@@ -49,19 +49,19 @@ export default function CreateNftOtcPage() {
     {
       tokenId: 1,
       name: 'KOL 限量签名照 #1',
-      image: 'https://via.placeholder.com/200/6366f1/ffffff?text=NFT+1',
+      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&h=300&fit=crop',
       contractAddress: getContractAddress('ExampleNFT'),
     },
     {
       tokenId: 2,
       name: '演唱会纪念 NFT #2',
-      image: 'https://via.placeholder.com/200/8b5cf6/ffffff?text=NFT+2',
+      image: 'https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=300&h=300&fit=crop',
       contractAddress: getContractAddress('ExampleNFT'),
     },
     {
       tokenId: 3,
       name: '游戏主播签名头像 #3',
-      image: 'https://via.placeholder.com/200/ec4899/ffffff?text=NFT+3',
+      image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&h=300&fit=crop',
       contractAddress: getContractAddress('ExampleNFT'),
     },
   ]);
