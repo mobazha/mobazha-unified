@@ -86,6 +86,7 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
 
         if (!product) {
           console.log('[ConnectingModal] No product found, setting failed');
+          if (timeoutId) clearTimeout(timeoutId);
           setConnectionState('failed');
           return;
         }
@@ -127,6 +128,7 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
 
       } catch (error) {
         console.error('[ConnectingModal] Failed to fetch product data:', error);
+        if (timeoutId) clearTimeout(timeoutId);
         if (!signal.aborted) {
           setConnectionState('failed');
         }

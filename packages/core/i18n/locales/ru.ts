@@ -406,6 +406,7 @@ export const ru: TranslationResource = {
     unfollow: 'Отписаться',
     message: 'Сообщение',
     block: 'Заблокировать',
+    unblock: 'Разблокировать',
     report: 'Пожаловаться',
     myStore: 'Мой магазин',
     addNewListing: 'Новый товар',

@@ -406,6 +406,7 @@ export const pt: TranslationResource = {
     unfollow: 'Deixar de seguir',
     message: 'Mensagem',
     block: 'Bloquear',
+    unblock: 'Desbloquear',
     report: 'Denunciar',
     myStore: 'Minha loja',
     addNewListing: 'Novo produto',

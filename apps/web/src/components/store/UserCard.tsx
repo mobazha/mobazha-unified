@@ -8,7 +8,7 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { profileApi, socialApi, getImageUrl, useI18n, useUserStore } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
-import { MapPin, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { MapPin, UserPlus, UserMinus, Loader2, Ban, ShieldOff } from 'lucide-react';
 
 interface UserCardProps {
   /** 用户 peerID */
@@ -31,6 +31,8 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [isBlockedUser, setIsBlockedUser] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
 
   // 是否是自己
   const isOwnProfile = isAuthenticated && currentUserProfile?.peerID === peerID;
@@ -78,6 +80,22 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
     checkFollowStatus();
   }, [peerID, isAuthenticated, isOwnProfile]);
 
+  // 检查屏蔽状态
+  useEffect(() => {
+    if (!isAuthenticated || isOwnProfile) return;
+
+    const checkBlockStatus = async () => {
+      try {
+        const blocked = await socialApi.isBlocked(peerID);
+        setIsBlockedUser(blocked);
+      } catch (err) {
+        console.error('Failed to check block status:', err);
+      }
+    };
+
+    checkBlockStatus();
+  }, [peerID, isAuthenticated, isOwnProfile]);
+
   // 关注/取消关注
   const handleFollowToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -98,6 +116,29 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
       console.error('Failed to toggle follow:', err);
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  // 屏蔽/取消屏蔽
+  const handleBlockToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated || blockLoading || isOwnProfile) return;
+
+    setBlockLoading(true);
+    try {
+      if (isBlockedUser) {
+        await socialApi.unblockUser(peerID);
+        setIsBlockedUser(false);
+      } else {
+        await socialApi.blockUser(peerID);
+        setIsBlockedUser(true);
+      }
+    } catch (err) {
+      console.error('Failed to toggle block:', err);
+    } finally {
+      setBlockLoading(false);
     }
   };
 
@@ -162,19 +203,34 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
 
-        {/* 关注按钮 */}
+        {/* 操作按钮 */}
         {showFollowButton && !isOwnProfile && isAuthenticated && (
-          <div className="absolute top-2 right-2 z-10">
+          <div className="absolute top-2 right-2 z-10 flex gap-1">
+            {/* 关注按钮 */}
             <Button
               variant={isFollowing ? 'secondary' : 'default'}
               size="sm"
               onClick={handleFollowToggle}
               disabled={followLoading}
               className="h-7 px-2 text-xs"
+              title={isFollowing ? t('profile.unfollow') : t('profile.follow')}
             >
               {followLoading && <Loader2 className="h-3 w-3 animate-spin" />}
               {!followLoading && isFollowing && <UserMinus className="h-3 w-3" />}
               {!followLoading && !isFollowing && <UserPlus className="h-3 w-3" />}
+            </Button>
+            {/* 屏蔽按钮 */}
+            <Button
+              variant={isBlockedUser ? 'destructive' : 'secondary'}
+              size="sm"
+              onClick={handleBlockToggle}
+              disabled={blockLoading}
+              className="h-7 px-2 text-xs"
+              title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
+            >
+              {blockLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              {!blockLoading && isBlockedUser && <ShieldOff className="h-3 w-3" />}
+              {!blockLoading && !isBlockedUser && <Ban className="h-3 w-3" />}
             </Button>
           </div>
         )}

@@ -682,6 +682,7 @@ export const en: TranslationResource = {
     unfollow: 'Unfollow',
     message: 'Message',
     block: 'Block',
+    unblock: 'Unblock',
     report: 'Report',
     myStore: 'My Store',
     addNewListing: 'Add New Listing',
