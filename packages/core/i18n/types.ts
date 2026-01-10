@@ -423,6 +423,9 @@ export interface TranslationResource {
     reviews: string;
     verified: string;
     store: string;
+    otc: string;
+    posts: string;
+    community: string;
     viewStore: string;
     follow: string;
     unfollow: string;
@@ -835,6 +838,24 @@ export interface TranslationResource {
     termsPlaceholder: string;
     resyncComplete: string;
     resyncFailed: string;
+  };
+
+  // OTC 私密交易
+  otc: TranslationSection & {
+    title: string;
+    createNft: string;
+    createErc3525: string;
+    noOtcYet: string;
+    noOtcInStore: string;
+    createFirstOtc: string;
+    activeOrders: string;
+    historyOrders: string;
+    fetchError: string;
+    status: {
+      active: string;
+      completed: string;
+      cancelled: string;
+    };
   };
 }
 

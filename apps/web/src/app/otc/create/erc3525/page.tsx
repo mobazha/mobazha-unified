@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useI18n, useWallet, useUserStore } from '@mobazha/core';
 import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Loader2, Share2, TrendingUp } from 'lucide-react';
-import { getNetworkConfig, getOtcContractAddress } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, getContractAddress } from '@mobazha/core/config/otcConfig';
 
 // 步骤枚举
 enum Step {
@@ -40,7 +40,7 @@ export default function CreateErc3525OtcPage() {
   const { isConnected, walletInfo, connectWallet } = useWallet();
   const { isAuthenticated, profile } = useUserStore();
   
-  const networkConfig = getNetworkConfig();
+  const networkConfig = getOtcConfig();
 
   const [currentStep, setCurrentStep] = useState<Step>(Step.SelectShares);
   const [selectedHolding, setSelectedHolding] = useState<Erc3525Holding | null>(null);
@@ -58,7 +58,7 @@ export default function CreateErc3525OtcPage() {
       value: 1000,
       name: 'Starlight Dreams 票房份额',
       projectName: 'Starlight Dreams',
-      contractAddress: getOtcContractAddress('BroadwaySwap'),
+      contractAddress: getContractAddress('BroadwaySwap'),
       expectedRevenue: { weekly: 50, annualized: 2600 },
     },
     {
@@ -67,7 +67,7 @@ export default function CreateErc3525OtcPage() {
       value: 500,
       name: '音乐版权收益份额',
       projectName: 'Music Rights',
-      contractAddress: getOtcContractAddress('BroadwaySwap'),
+      contractAddress: getContractAddress('BroadwaySwap'),
       expectedRevenue: { weekly: 30, annualized: 1560 },
     },
   ]);

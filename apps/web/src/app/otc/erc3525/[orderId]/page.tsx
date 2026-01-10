@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { useI18n, useWallet, useUserStore, useChatStore } from '@mobazha/core';
 import { ArrowLeft, ExternalLink, Copy, MessageSquare, Loader2, Check, AlertCircle, TrendingUp } from 'lucide-react';
-import { getNetworkConfig, getOtcContractAddress } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, getContractAddress } from '@mobazha/core/config/otcConfig';
 
 // ERC3525 OTC 订单状态枚举
 enum Erc3525OrderStatus {
@@ -54,7 +54,7 @@ export default function Erc3525OtcDetailPage() {
   const { isAuthenticated } = useUserStore();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   
-  const networkConfig = getNetworkConfig();
+  const networkConfig = getOtcConfig();
 
   const [order, setOrder] = useState<Erc3525Order | null>(null);
   const [rwaMetadata, setRwaMetadata] = useState<RwaMetadata | null>(null);
@@ -79,7 +79,7 @@ export default function Erc3525OtcDetailPage() {
         rwaToken: '0x4c1A1b21c4471CA57145EE08404Cbaf9C8B83991',
         tokenId: 1,
         shares: 100,
-        paymentToken: getOtcContractAddress('MockUSDT'),
+        paymentToken: getContractAddress('MockUSDT'),
         price: 500,
         status: Erc3525OrderStatus.Active,
         createdAt: Date.now() - 172800000,

@@ -10,7 +10,7 @@ import { Grid } from '@/components/layouts';
 import { useI18n, useWallet, useUserStore } from '@mobazha/core';
 import { Plus, ExternalLink, Loader2 } from 'lucide-react';
 import { ethers } from 'ethers';
-import { getNetworkConfig, getOtcContractAddress } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, getContractAddress } from '@mobazha/core/config/otcConfig';
 
 // OTC 订单状态枚举
 enum OtcOrderStatus {
@@ -41,7 +41,7 @@ interface OtcTabProps {
 // OTC 订单卡片组件
 const OtcOrderCard: React.FC<{ order: OtcOrder }> = ({ order }) => {
   const { t } = useI18n();
-  const networkConfig = getNetworkConfig();
+  const networkConfig = getOtcConfig();
   
   const statusText = {
     [OtcOrderStatus.Active]: t('otc.status.active') || '活跃',

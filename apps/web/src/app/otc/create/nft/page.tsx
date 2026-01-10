@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { useI18n, useWallet, useUserStore } from '@mobazha/core';
 import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Loader2, Share2 } from 'lucide-react';
-import { getNetworkConfig, getOtcContractAddress } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, getContractAddress } from '@mobazha/core/config/otcConfig';
 
 // 步骤枚举
 enum Step {
@@ -34,7 +34,7 @@ export default function CreateNftOtcPage() {
   const { isConnected, walletInfo, connectWallet } = useWallet();
   const { isAuthenticated, profile } = useUserStore();
   
-  const networkConfig = getNetworkConfig();
+  const networkConfig = getOtcConfig();
 
   const [currentStep, setCurrentStep] = useState<Step>(Step.SelectNft);
   const [selectedNft, setSelectedNft] = useState<NftHolding | null>(null);
@@ -50,19 +50,19 @@ export default function CreateNftOtcPage() {
       tokenId: 1,
       name: 'KOL 限量签名照 #1',
       image: 'https://via.placeholder.com/200/6366f1/ffffff?text=NFT+1',
-      contractAddress: getOtcContractAddress('ExampleNFT'),
+      contractAddress: getContractAddress('ExampleNFT'),
     },
     {
       tokenId: 2,
       name: '演唱会纪念 NFT #2',
       image: 'https://via.placeholder.com/200/8b5cf6/ffffff?text=NFT+2',
-      contractAddress: getOtcContractAddress('ExampleNFT'),
+      contractAddress: getContractAddress('ExampleNFT'),
     },
     {
       tokenId: 3,
       name: '游戏主播签名头像 #3',
       image: 'https://via.placeholder.com/200/ec4899/ffffff?text=NFT+3',
-      contractAddress: getOtcContractAddress('ExampleNFT'),
+      contractAddress: getContractAddress('ExampleNFT'),
     },
   ]);
 

@@ -663,6 +663,9 @@ export const en: TranslationResource = {
     reviews: 'Reviews',
     verified: 'Verified',
     store: 'Store',
+    otc: 'OTC',
+    posts: 'Posts',
+    community: 'Community',
     viewStore: 'View Store',
     follow: 'Follow',
     unfollow: 'Unfollow',
@@ -1090,6 +1093,25 @@ export const en: TranslationResource = {
     resyncComplete: 'Transaction sync completed',
     resyncFailed: 'Failed to sync transactions',
   },
+
+  // OTC Private Trading
+  otc: {
+    title: 'OTC Trading',
+    createNft: 'Create NFT Order',
+    createErc3525: 'Create Share Order',
+    noOtcYet: 'No OTC assets yet',
+    noOtcInStore: 'No OTC assets in this store',
+    createFirstOtc: 'Create your first OTC order to start private trading',
+    activeOrders: 'Active Orders',
+    historyOrders: 'History',
+    fetchError: 'Failed to fetch OTC orders',
+    status: {
+      active: 'Active',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    },
+  },
+
 };
 
 export default en;

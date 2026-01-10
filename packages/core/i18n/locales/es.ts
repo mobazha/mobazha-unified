@@ -389,6 +389,9 @@ export const es: TranslationResource = {
     reviews: 'Reseñas',
     verified: 'Verificado',
     store: 'Tienda',
+    otc: 'OTC',
+    posts: 'Publicaciones',
+    community: 'Comunidad',
     viewStore: 'Ver tienda',
     follow: 'Seguir',
     unfollow: 'Dejar de seguir',
@@ -664,6 +667,25 @@ export const es: TranslationResource = {
     settings: 'Configuración',
     logout: 'Cerrar Sesión',
   },
+
+  // OTC Comercio Privado
+  otc: {
+    title: 'Comercio OTC',
+    createNft: 'Crear Orden NFT',
+    createErc3525: 'Crear Orden de Acciones',
+    noOtcYet: 'Sin activos OTC aún',
+    noOtcInStore: 'Sin activos OTC en esta tienda',
+    createFirstOtc: 'Crea tu primera orden OTC para comenzar el comercio privado',
+    activeOrders: 'Órdenes Activas',
+    historyOrders: 'Historial',
+    fetchError: 'Error al obtener órdenes OTC',
+    status: {
+      active: 'Activo',
+      completed: 'Completado',
+      cancelled: 'Cancelado',
+    },
+  },
+
 };
 
 export default es;

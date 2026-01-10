@@ -389,6 +389,9 @@ export const ja: TranslationResource = {
     reviews: 'レビュー',
     verified: '認証済み',
     store: 'ストア',
+    otc: 'OTC',
+    posts: '投稿',
+    community: 'コミュニティ',
     viewStore: 'ストアを見る',
     follow: 'フォロー',
     unfollow: 'フォロー解除',
@@ -664,6 +667,25 @@ export const ja: TranslationResource = {
     settings: '設定',
     logout: 'ログアウト',
   },
+
+  // OTC プライベート取引
+  otc: {
+    title: 'OTC取引',
+    createNft: 'NFT注文を作成',
+    createErc3525: 'シェア注文を作成',
+    noOtcYet: 'OTC資産がありません',
+    noOtcInStore: 'このストアにはOTC資産がありません',
+    createFirstOtc: '最初のOTC注文を作成してプライベート取引を開始',
+    activeOrders: 'アクティブな注文',
+    historyOrders: '履歴',
+    fetchError: 'OTC注文の取得に失敗しました',
+    status: {
+      active: 'アクティブ',
+      completed: '完了',
+      cancelled: 'キャンセル',
+    },
+  },
+
 };
 
 export default ja;

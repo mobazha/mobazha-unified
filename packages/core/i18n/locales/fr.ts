@@ -389,6 +389,9 @@ export const fr: TranslationResource = {
     reviews: 'Avis',
     verified: 'Vérifié',
     store: 'Boutique',
+    otc: 'OTC',
+    posts: 'Publications',
+    community: 'Communauté',
     viewStore: 'Voir la boutique',
     follow: 'Suivre',
     unfollow: 'Ne plus suivre',
@@ -664,6 +667,25 @@ export const fr: TranslationResource = {
     settings: 'Paramètres',
     logout: 'Déconnexion',
   },
+
+  // OTC Commerce Privé
+  otc: {
+    title: 'Commerce OTC',
+    createNft: 'Créer une Commande NFT',
+    createErc3525: 'Créer une Commande d\'Actions',
+    noOtcYet: 'Pas encore d\'actifs OTC',
+    noOtcInStore: 'Pas d\'actifs OTC dans cette boutique',
+    createFirstOtc: 'Créez votre première commande OTC pour commencer le commerce privé',
+    activeOrders: 'Commandes Actives',
+    historyOrders: 'Historique',
+    fetchError: 'Échec du chargement des commandes OTC',
+    status: {
+      active: 'Actif',
+      completed: 'Terminé',
+      cancelled: 'Annulé',
+    },
+  },
+
 };
 
 export default fr;

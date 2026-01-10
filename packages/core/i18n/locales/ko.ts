@@ -389,6 +389,9 @@ export const ko: TranslationResource = {
     reviews: '리뷰',
     verified: '인증됨',
     store: '스토어',
+    otc: 'OTC',
+    posts: '게시물',
+    community: '커뮤니티',
     viewStore: '스토어 보기',
     follow: '팔로우',
     unfollow: '언팔로우',
@@ -664,6 +667,25 @@ export const ko: TranslationResource = {
     settings: '설정',
     logout: '로그아웃',
   },
+
+  // OTC 개인 거래
+  otc: {
+    title: 'OTC 거래',
+    createNft: 'NFT 주문 생성',
+    createErc3525: '지분 주문 생성',
+    noOtcYet: 'OTC 자산이 없습니다',
+    noOtcInStore: '이 스토어에는 OTC 자산이 없습니다',
+    createFirstOtc: '첫 번째 OTC 주문을 생성하여 개인 거래를 시작하세요',
+    activeOrders: '활성 주문',
+    historyOrders: '기록',
+    fetchError: 'OTC 주문을 가져오지 못했습니다',
+    status: {
+      active: '활성',
+      completed: '완료됨',
+      cancelled: '취소됨',
+    },
+  },
+
 };
 
 export default ko;

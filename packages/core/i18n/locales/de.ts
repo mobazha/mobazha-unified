@@ -389,6 +389,9 @@ export const de: TranslationResource = {
     reviews: 'Bewertungen',
     verified: 'Verifiziert',
     store: 'Shop',
+    otc: 'OTC',
+    posts: 'Beiträge',
+    community: 'Community',
     viewStore: 'Shop ansehen',
     follow: 'Folgen',
     unfollow: 'Entfolgen',
@@ -664,6 +667,25 @@ export const de: TranslationResource = {
     settings: 'Einstellungen',
     logout: 'Abmelden',
   },
+
+  // OTC Privathandel
+  otc: {
+    title: 'OTC-Handel',
+    createNft: 'NFT-Auftrag erstellen',
+    createErc3525: 'Anteilsauftrag erstellen',
+    noOtcYet: 'Noch keine OTC-Assets',
+    noOtcInStore: 'Keine OTC-Assets in diesem Shop',
+    createFirstOtc: 'Erstellen Sie Ihren ersten OTC-Auftrag, um mit dem privaten Handel zu beginnen',
+    activeOrders: 'Aktive Aufträge',
+    historyOrders: 'Verlauf',
+    fetchError: 'OTC-Aufträge konnten nicht geladen werden',
+    status: {
+      active: 'Aktiv',
+      completed: 'Abgeschlossen',
+      cancelled: 'Storniert',
+    },
+  },
+
 };
 
 export default de;

@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { useI18n, useWallet, useUserStore, useChatStore } from '@mobazha/core';
 import { ArrowLeft, ExternalLink, Copy, MessageSquare, Loader2, Check, AlertCircle } from 'lucide-react';
 import { ethers } from 'ethers';
-import { getNetworkConfig, getOtcContractAddress } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, getContractAddress } from '@mobazha/core/config/otcConfig';
 
 // OTC 订单状态枚举
 enum NftOrderStatus {
@@ -51,7 +51,7 @@ export default function NftOtcDetailPage() {
   const { isAuthenticated, profile } = useUserStore();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   
-  const networkConfig = getNetworkConfig();
+  const networkConfig = getOtcConfig();
 
   const [order, setOrder] = useState<NftOrder | null>(null);
   const [nftMetadata, setNftMetadata] = useState<NftMetadata | null>(null);
@@ -76,7 +76,7 @@ export default function NftOtcDetailPage() {
         seller: '0xC4736E41D02faa7D735819AA9afa2ffee1Ce5931',
         nftContract: '0x17ebC8FeE90E7556E1E12Aa42604477D6A243324',
         tokenId: 1,
-        paymentToken: getOtcContractAddress('MockUSDT'),
+        paymentToken: getContractAddress('MockUSDT'),
         price: 100,
         status: NftOrderStatus.Active,
         createdAt: Date.now() - 86400000,
