@@ -6,3 +6,6 @@ export type { ProductBottomBarProps } from './ProductBottomBar';
 
 export { ProductDetailModal } from './ProductDetailModal';
 export type { ProductDetailModalProps } from './ProductDetailModal';
+
+export { ConnectingModal } from './ConnectingModal';
+export type { ConnectingModalProps } from './ConnectingModal';

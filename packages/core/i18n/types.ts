@@ -915,6 +915,18 @@ export interface TranslationResource {
     marketplaceOtcTitle: string;
     marketplaceOtcDesc: string;
   };
+
+  // P2P 连接状态
+  p2p?: TranslationSection & {
+    connecting: string;
+    failedToConnect: string;
+    loadingText: string;
+    failedTextListing: string;
+    failedGeneric: string;
+    connectingToVendor: string;
+    fromP2pNetwork: string;
+    socialHeading: string;
+  };
 }
 
 // i18n 上下文类型
