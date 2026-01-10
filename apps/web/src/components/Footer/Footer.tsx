@@ -94,7 +94,7 @@ export const Footer: React.FC = () => {
               <MobazhaLogo size={36} className="text-primary" />
               <span className="font-bold text-xl text-foreground">Mobazha</span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-1 italic">Shop and grow with cryptos</p>
+            <p className="text-sm text-muted-foreground mb-1 italic">{t('footer.slogan')}</p>
             <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
             <HStack gap="sm">
               {socialLinks.map(social => (
