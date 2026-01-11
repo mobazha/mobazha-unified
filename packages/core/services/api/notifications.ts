@@ -2,11 +2,11 @@
  * 通知 API 服务
  */
 
-import { get, post, safeRequest } from './client';
+import { post, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
 
-// 通知类型
+// 通知类型（简化分类）
 export type NotificationType =
   | 'order'
   | 'payment'
@@ -16,10 +16,42 @@ export type NotificationType =
   | 'message'
   | 'system';
 
-// 通知项
+// 后端返回的原始通知记录格式
+interface BackendNotificationRecord {
+  timestamp: string;
+  read: boolean;
+  type: string; // 后端返回的是详细事件类型，如 'newOrder', 'orderFunded' 等
+  notification: {
+    // 不同类型的通知有不同的字段
+    notificationId?: string;
+    orderID?: string;
+    orderId?: string;
+    peerID?: string;
+    peerId?: string;
+    caseId?: string;
+    txid?: string;
+    slug?: string;
+    title?: string;
+    thumbnail?: { tiny?: string; small?: string };
+    vendorHandle?: string;
+    vendorId?: string;
+    buyerId?: string;
+    buyerHandle?: string;
+    [key: string]: unknown;
+  };
+}
+
+// 后端返回的通知列表响应格式
+interface BackendNotificationsResponse {
+  unread: number;
+  total: number;
+  notifications: BackendNotificationRecord[];
+}
+
+// 前端使用的通知项格式
 export interface Notification {
   id: string;
-  type: NotificationType;
+  type: string; // 保留原始事件类型，如 'newOrder'
   title: string;
   message: string;
   read: boolean;
@@ -29,6 +61,8 @@ export interface Notification {
     peerID?: string;
     txid?: string;
     caseId?: string;
+    slug?: string;
+    thumbnail?: { tiny?: string; small?: string };
   };
 }
 
@@ -73,6 +107,84 @@ const mockNotifications: Notification[] = [
 ];
 
 /**
+ * 生成通知标题
+ */
+function generateNotificationTitle(type: string, notification: BackendNotificationRecord['notification']): string {
+  switch (type) {
+    case 'newOrder':
+      return 'New Order';
+    case 'orderFunded':
+    case 'orderPaymentReceived':
+      return 'Payment Received';
+    case 'orderConfirmation':
+      return 'Order Confirmed';
+    case 'orderDeclined':
+      return 'Order Declined';
+    case 'orderCancel':
+      return 'Order Cancelled';
+    case 'refund':
+      return 'Refund Received';
+    case 'orderFulfillment':
+      return 'Order Fulfilled';
+    case 'orderCompletion':
+      return 'Order Completed';
+    case 'vendorFinalizedPayment':
+      return 'Payment Finalized';
+    case 'disputeOpen':
+    case 'caseOpen':
+      return 'Dispute Opened';
+    case 'disputeClose':
+      return 'Dispute Resolved';
+    case 'disputeAccepted':
+      return 'Dispute Accepted';
+    case 'caseUpdate':
+      return 'Case Update';
+    case 'follow':
+      return 'New Follower';
+    case 'unfollow':
+      return 'Unfollowed';
+    case 'moderatorAdd':
+      return 'Moderator Added';
+    case 'moderatorRemove':
+      return 'Moderator Removed';
+    default:
+      return notification.title || type;
+  }
+}
+
+/**
+ * 生成通知消息
+ */
+function generateNotificationMessage(type: string, notification: BackendNotificationRecord['notification']): string {
+  const orderId = notification.orderID || notification.orderId || '';
+  const vendorHandle = notification.vendorHandle || '';
+  const buyerHandle = notification.buyerHandle || '';
+
+  switch (type) {
+    case 'newOrder':
+      return orderId ? `You received a new order #${orderId.slice(0, 8)}` : 'You received a new order';
+    case 'orderFunded':
+    case 'orderPaymentReceived':
+      return orderId ? `Payment received for order #${orderId.slice(0, 8)}` : 'Payment received';
+    case 'orderConfirmation':
+      return orderId ? `Order #${orderId.slice(0, 8)} has been confirmed` : 'Order confirmed';
+    case 'orderFulfillment':
+      return orderId ? `Order #${orderId.slice(0, 8)} has been shipped` : 'Order shipped';
+    case 'orderCompletion':
+      return orderId ? `Order #${orderId.slice(0, 8)} is complete` : 'Order completed';
+    case 'disputeOpen':
+    case 'caseOpen':
+      return orderId ? `A dispute has been opened for order #${orderId.slice(0, 8)}` : 'A dispute has been opened';
+    case 'follow':
+      return buyerHandle ? `${buyerHandle} started following you` : 'Someone started following you';
+    case 'unfollow':
+      return buyerHandle ? `${buyerHandle} unfollowed you` : 'Someone unfollowed you';
+    default:
+      return vendorHandle || buyerHandle || 'Notification';
+  }
+}
+
+/**
  * 获取通知列表
  */
 export async function getNotifications(
@@ -83,7 +195,32 @@ export async function getNotifications(
 ): Promise<Notification[]> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/ob/notifications?limit=${limit}&offsetId=${offsetId}`;
-    return safeRequest<Notification[]>(url, { headers: getAuthHeaders(username, password) }, []);
+    const response = await safeRequest<BackendNotificationsResponse>(
+      url,
+      { headers: getAuthHeaders(username, password) },
+      { unread: 0, total: 0, notifications: [] }
+    );
+
+    // 转换后端格式到前端格式
+    return (response.notifications || []).map((record): Notification => {
+      const notif = record.notification || {};
+      return {
+        id: notif.notificationId || `${record.type}-${record.timestamp}`,
+        type: record.type,
+        title: generateNotificationTitle(record.type, notif),
+        message: generateNotificationMessage(record.type, notif),
+        read: record.read,
+        timestamp: record.timestamp,
+        data: {
+          orderId: notif.orderID || notif.orderId,
+          peerID: notif.peerID || notif.peerId,
+          txid: notif.txid,
+          caseId: notif.caseId,
+          slug: notif.slug,
+          thumbnail: notif.thumbnail,
+        },
+      };
+    });
   };
 
   const mockFn = async () => {
@@ -102,8 +239,12 @@ export async function getUnreadNotificationCount(
 ): Promise<number> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/ob/notifications/count`;
-    const result = await get<{ count: number }>(url, getAuthHeaders(username, password));
-    return result.count;
+    const result = await safeRequest<{ unread: number; total: number }>(
+      url,
+      { headers: getAuthHeaders(username, password) },
+      { unread: 0, total: 0 }
+    );
+    return result.unread;
   };
 
   const mockFn = async () => {

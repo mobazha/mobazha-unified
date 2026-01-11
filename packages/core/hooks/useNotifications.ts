@@ -132,18 +132,31 @@ export function useNotifications(
 
         // 根据类型添加必要的属性
         if (n.data?.orderId) {
+          // 订单相关通知
           return {
             ...base,
             orderID: n.data.orderId,
           } as NotificationData;
         } else if (n.data?.peerID) {
+          // 社交相关通知（需要 peerID）
           return {
             ...base,
             peerID: n.data.peerID,
           } as NotificationData;
+        } else if (eventType === 'chatMessage' || eventType === 'systemMessage') {
+          // 系统/消息通知（peerID 可选）
+          return {
+            ...base,
+            message: n.message,
+            title: n.title,
+          } as NotificationData;
         }
 
-        return base as NotificationData;
+        // 默认返回系统通知类型（不需要 peerID）
+        return {
+          ...base,
+          type: 'systemMessage' as const,
+        } as NotificationData;
       });
       store.setNotifications(convertedNotifications);
       return convertedNotifications;
