@@ -20,7 +20,7 @@ import {
 import {
   useProductGroups,
   useUserStore,
-  getTelegramUserId,
+  getCasdoorUserId,
   GROUP_COLORS,
   type ProductGroup,
 } from '@mobazha/core';
@@ -37,9 +37,9 @@ export default function ProductGroupsPage() {
   const { profile, isAuthenticated } = useUserStore();
   const ownerPeerID = profile?.peerID || '';
 
-  // 获取 Telegram User ID（产品组使用 userID 而非 peerID）
-  const telegramUserId = getTelegramUserId();
-  const userID = telegramUserId || ownerPeerID; // fallback 到 peerID
+  // 产品组使用 Casdoor userID（如 telegram_123456），fallback 到 peerID
+  const casdoorUserId = getCasdoorUserId();
+  const userID = casdoorUserId || ownerPeerID;
 
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
     useProductGroups({ userID, autoLoad: false });

@@ -46,6 +46,7 @@ export {
   getStoredUserId,
   getTelegramUserId,
   isTelegramUser,
+  getCasdoorUserId,
   // 类型
   type CasdoorUser,
   type CasdoorTokenResponse,

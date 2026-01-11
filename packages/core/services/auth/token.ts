@@ -21,6 +21,8 @@ export interface StoredUser {
   displayName?: string;
   avatar?: string;
   role?: string;
+  /** Casdoor User ID (如 telegram_123456, discord_789012) */
+  casdoorId?: string;
 }
 
 /**

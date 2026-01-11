@@ -368,3 +368,35 @@ export function getTelegramUserId(): string | null {
 export function isTelegramUser(): boolean {
   return getTelegramUserId() !== null;
 }
+
+/**
+ * 获取存储的 Casdoor User ID
+ * 返回格式: telegram_123456, discord_789012, google_xxx 等
+ * 这是后端 API（如产品组）所需的用户标识
+ */
+export function getCasdoorUserId(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const userInfoStr =
+      localStorage.getItem('mobazha_auth_user') ||
+      localStorage.getItem('userInfo');
+
+    if (userInfoStr) {
+      const userInfo = JSON.parse(userInfoStr);
+      // 优先返回 casdoorId
+      if (userInfo.casdoorId) {
+        return userInfo.casdoorId;
+      }
+      // 兼容：如果 id 不是 peerID 格式（不以 Qm 或 12D3 开头），可能是 userID
+      if (userInfo.id && !userInfo.id.startsWith('Qm') && !userInfo.id.startsWith('12D3')) {
+        return userInfo.id;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}

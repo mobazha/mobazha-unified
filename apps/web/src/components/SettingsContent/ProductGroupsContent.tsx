@@ -23,6 +23,7 @@ import {
   useProductGroups,
   useUserStore,
   useI18n,
+  getCasdoorUserId,
   GROUP_COLORS,
   type ProductGroup,
 } from '@mobazha/core';
@@ -48,8 +49,12 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
   const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
   const ownerPeerID = profile?.peerID || '';
 
+  // 产品组使用 Casdoor userID（如 telegram_123456），fallback 到 peerID
+  const casdoorUserId = getCasdoorUserId();
+  const userID = casdoorUserId || ownerPeerID;
+
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
-    useProductGroups({ userID: ownerPeerID, autoLoad: false });
+    useProductGroups({ userID, autoLoad: false });
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<ProductGroup | null>(null);
@@ -62,18 +67,18 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && ownerPeerID) {
-      loadGroups(ownerPeerID);
+    if (isAuthenticated && userID) {
+      loadGroups(userID);
     }
-  }, [isAuthenticated, ownerPeerID, loadGroups]);
+  }, [isAuthenticated, userID, loadGroups]);
 
   const handleCreateGroup = useCallback(async () => {
-    if (!ownerPeerID || !newGroup.name.trim()) return;
+    if (!userID || !newGroup.name.trim()) return;
 
     setSaving(true);
     try {
       const result = await createGroup({
-        userID: ownerPeerID,
+        userID,
         name: newGroup.name.trim(),
         description: newGroup.description.trim() || undefined,
       });
@@ -85,7 +90,7 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
     } finally {
       setSaving(false);
     }
-  }, [ownerPeerID, newGroup, createGroup]);
+  }, [userID, newGroup, createGroup]);
 
   const handleUpdateGroup = useCallback(async () => {
     if (!editingGroup) return;
@@ -158,7 +163,7 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
         <Button
           size="sm"
           onClick={() => setShowCreateModal(true)}
-          disabled={!isAuthenticated || !ownerPeerID}
+          disabled={!isAuthenticated || !userID}
         >
           <Plus className="w-4 h-4 mr-2" />
           {t('common.create')}
@@ -279,7 +284,7 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
           <div className="text-center">
             <Button
               onClick={() => setShowCreateModal(true)}
-              disabled={!isAuthenticated || !ownerPeerID}
+              disabled={!isAuthenticated || !userID}
             >
               <Plus className="w-4 h-4 mr-2" />
               {t('settings.accessControl.createFirstProductGroup')}
