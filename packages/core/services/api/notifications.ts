@@ -303,10 +303,12 @@ export async function getNotifications(
     );
 
     // 转换后端格式到前端格式
-    const notifications = (response.notifications || []).map((record): Notification => {
+    const notifications = (response.notifications || []).map((record, index): Notification => {
       const notif = record.notification || {};
+      // 确保 ID 唯一：优先使用 notificationId，否则用 type-timestamp-index
+      const uniqueId = notif.notificationId || `${record.type}-${record.timestamp}-${index}`;
       return {
-        id: notif.notificationId || `${record.type}-${record.timestamp}`,
+        id: uniqueId,
         type: record.type,
         title: generateNotificationTitle(record.type, notif),
         message: generateNotificationMessage(record.type, notif),
