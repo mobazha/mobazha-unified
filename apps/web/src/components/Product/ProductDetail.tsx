@@ -215,6 +215,7 @@ export function ProductDetail({
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [_isWishlist, _setIsWishlist] = useState(false);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   void _isWishlist; // Reserved for future wishlist feature
 
   // 存储回调函数的 ref，避免在依赖数组中引用
@@ -512,6 +513,46 @@ export function ProductDetail({
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''}>
+      {/* 弹框模式顶部商家栏 */}
+      {isModal && vendor && (
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 pr-14">
+          <div className="flex items-center justify-between">
+            <Link
+              href={`/store/${vendorPeerID}`}
+              className="flex items-center gap-3 min-w-0 flex-1"
+            >
+              <Avatar
+                src={getImageUrl(vendor?.avatarHashes?.small)}
+                name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
+                size="sm"
+                className="w-9 h-9 flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <h3 className="font-semibold text-foreground text-sm truncate">
+                  {vendor?.name || vendorPeerID?.slice(0, 8)}
+                </h3>
+                <span className="text-xs text-primary hover:underline">
+                  {t('product.goToStore')}
+                </span>
+              </div>
+            </Link>
+            <HStack gap="xs" className="flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs"
+                onClick={() => router.push(`/chat/${vendorPeerID}`)}
+              >
+                {t('profile.message')}
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                {t('profile.follow')}
+              </Button>
+            </HStack>
+          </div>
+        </div>
+      )}
+
       <div className={isModal ? 'p-4 sm:p-6' : ''}>
         {/* Breadcrumb - 非弹框模式显示 */}
         {!isModal && (
@@ -535,7 +576,9 @@ export function ProductDetail({
               </>
             )}
             <span>/</span>
-            <span className="text-foreground truncate max-w-[200px]">{product.item.title}</span>
+            <span className="text-foreground truncate max-w-[200px]">
+              {decodeHtmlEntities(product.item.title)}
+            </span>
           </nav>
         )}
 
@@ -543,15 +586,38 @@ export function ProductDetail({
           className={`grid grid-cols-1 ${isModal ? 'lg:grid-cols-2' : 'lg:grid-cols-2'} gap-4 sm:gap-8 lg:gap-12`}
         >
           {/* Image Gallery */}
-          <div className="space-y-3 sm:space-y-4">
+          <div className={isModal ? 'space-y-2' : 'space-y-3 sm:space-y-4'}>
             {/* Main Image */}
-            <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-card">
+            <div
+              className={`relative ${isModal ? 'aspect-[4/3]' : 'aspect-square'} rounded-xl sm:rounded-2xl overflow-hidden bg-card cursor-pointer group`}
+              onClick={() => imageUrls.length > 0 && setIsImagePreviewOpen(true)}
+            >
               {imageUrls.length > 0 ? (
-                <img
-                  src={imageUrls[selectedImage] || imageUrls[0]}
-                  alt={product.item.title}
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <img
+                    src={imageUrls[selectedImage] || imageUrls[0]}
+                    alt={product.item.title}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  {/* 放大提示 */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-2">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -566,32 +632,43 @@ export function ProductDetail({
               )}
             </div>
 
-            {/* Thumbnails */}
-            {imageUrls.length > 1 && (
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2">
-                {imageUrls.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
-                      selectedImage === index
-                        ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                        : 'border-transparent hover:border-slate-300'
-                    }`}
-                  >
-                    <img src={image} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Thumbnails & View Photos */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {imageUrls.length > 1 && (
+                <div className="flex gap-2 sm:gap-3 overflow-x-auto flex-1">
+                  {imageUrls.slice(0, isModal ? 4 : imageUrls.length).map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`flex-shrink-0 ${isModal ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
+                        selectedImage === index
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                          : 'border-transparent hover:border-slate-300'
+                      }`}
+                    >
+                      <img src={image} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* 查看图片链接 */}
+              {imageUrls.length > 0 && (
+                <button
+                  onClick={() => setIsImagePreviewOpen(true)}
+                  className="text-sm text-primary hover:underline whitespace-nowrap flex-shrink-0"
+                >
+                  {t('product.viewPhotos', { count: imageUrls.length })}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Product Info */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             {/* Title & Rating */}
             <div>
               <h1
-                className={`${isModal ? 'text-lg sm:text-xl lg:text-2xl' : 'text-xl sm:text-2xl lg:text-3xl'} font-bold text-foreground mb-2`}
+                className={`${isModal ? 'text-sm sm:text-base lg:text-lg' : 'text-base sm:text-lg lg:text-xl'} font-bold text-foreground mb-1.5`}
               >
                 {decodeHtmlEntities(product.item.title)}
               </h1>
@@ -604,8 +681,8 @@ export function ProductDetail({
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-2 sm:gap-3">
-              <span className="text-2xl sm:text-3xl font-bold text-emerald-600">
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-600">
                 {priceInfo.pairedPrice}
               </span>
             </div>
@@ -714,7 +791,19 @@ export function ProductDetail({
                   >
                     -
                   </button>
-                  <span className="w-10 sm:w-12 text-center font-medium text-sm">{quantity}</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={stock}
+                    value={quantity}
+                    onChange={e => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val) && val >= 1) {
+                        setQuantity(Math.min(stock, val));
+                      }
+                    }}
+                    className="w-12 sm:w-14 h-7 sm:h-8 text-center font-medium text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button
                     onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover touch-feedback"
@@ -784,39 +873,43 @@ export function ProductDetail({
               )}
             </Card>
 
-            {/* Vendor Info */}
-            <Card className="p-4 sm:p-6">
-              <Link href={`/store/${vendorPeerID}`} className="touch-feedback block">
-                <HStack gap="sm" align="center">
-                  <Avatar
-                    src={getImageUrl(vendor?.avatarHashes?.medium)}
-                    name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
-                    size="md"
-                    className="w-10 h-10 sm:w-12 sm:h-12"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm sm:text-base">
-                      {vendor?.name || vendorPeerID?.slice(0, 8)}
-                    </h3>
-                    {vendor?.location && (
-                      <p className="text-xs sm:text-sm text-muted-foreground">{vendor.location}</p>
-                    )}
-                    {vendor?.stats && (
-                      <HStack gap="xs" align="center" className="mt-0.5">
-                        <span className="text-amber-500 text-sm">★</span>
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          {vendor.stats.averageRating?.toFixed(1) || '0'} (
-                          {vendor.stats.ratingCount || 0} {t('product.reviews')})
-                        </span>
-                      </HStack>
-                    )}
-                  </div>
-                  <Button variant="outline" size="sm" className="flex-shrink-0 text-xs">
-                    {t('product.viewStore')}
-                  </Button>
-                </HStack>
-              </Link>
-            </Card>
+            {/* Vendor Info - 非弹框模式显示（弹框模式已在顶部显示） */}
+            {!isModal && (
+              <Card className="p-4 sm:p-6">
+                <Link href={`/store/${vendorPeerID}`} className="touch-feedback block">
+                  <HStack gap="sm" align="center">
+                    <Avatar
+                      src={getImageUrl(vendor?.avatarHashes?.medium)}
+                      name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
+                      size="md"
+                      className="w-10 h-10 sm:w-12 sm:h-12"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-sm sm:text-base">
+                        {vendor?.name || vendorPeerID?.slice(0, 8)}
+                      </h3>
+                      {vendor?.location && (
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {vendor.location}
+                        </p>
+                      )}
+                      {vendor?.stats && (
+                        <HStack gap="xs" align="center" className="mt-0.5">
+                          <span className="text-amber-500 text-sm">★</span>
+                          <span className="text-xs sm:text-sm text-muted-foreground">
+                            {vendor.stats.averageRating?.toFixed(1) || '0'} (
+                            {vendor.stats.ratingCount || 0} {t('product.reviews')})
+                          </span>
+                        </HStack>
+                      )}
+                    </div>
+                    <Button variant="outline" size="sm" className="flex-shrink-0 text-xs">
+                      {t('product.viewStore')}
+                    </Button>
+                  </HStack>
+                </Link>
+              </Card>
+            )}
           </div>
         </div>
 
@@ -902,9 +995,9 @@ export function ProductDetail({
           {/* Reviews Summary - 非弹框模式或单独展示 */}
           {!isModal && (
             <div>
-              <Card className="p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
-                  {t('product.reviews')}
+              <Card className="p-3 sm:p-4">
+                <h2 className="text-sm sm:text-base font-bold text-foreground mb-2 sm:mb-3">
+                  {t('product.reviewsTitle')}
                 </h2>
 
                 {/* 评论加载状态 */}
@@ -934,14 +1027,14 @@ export function ProductDetail({
                 ) : (
                   <>
                     {/* Rating Summary */}
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="text-3xl sm:text-4xl font-bold text-foreground">
+                    <div className="text-center mb-3 sm:mb-4">
+                      <div className="text-2xl sm:text-3xl font-bold text-foreground">
                         {averageRating.toFixed(1)}
                       </div>
-                      <HStack gap="xs" justify="center" className="my-1.5 sm:my-2">
-                        <StarRating rating={averageRating} />
+                      <HStack gap="xs" justify="center" className="my-1 sm:my-1.5">
+                        <StarRating rating={averageRating} size="sm" />
                       </HStack>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {safeRatings.length} {t('product.reviews')}
                       </p>
                     </div>
@@ -1007,14 +1100,14 @@ export function ProductDetail({
           )}
         </div>
 
-        {/* More from Store - 非弹框模式显示 */}
-        {!isModal && vendorPeerID && (
+        {/* More from Store */}
+        {vendorPeerID && (
           <div className="mt-6 sm:mt-8">
             <MoreFromStore
               vendorPeerID={vendorPeerID}
               vendorName={vendor?.name}
               currentSlug={product.slug}
-              maxItems={6}
+              maxItems={isModal ? 4 : 6}
             />
           </div>
         )}
@@ -1022,6 +1115,118 @@ export function ProductDetail({
 
       {/* 移动端底部操作栏占位空间 */}
       <div className="h-20 lg:hidden" />
+
+      {/* 图片预览模态框 */}
+      {isImagePreviewOpen && imageUrls.length > 0 && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
+          onClick={() => setIsImagePreviewOpen(false)}
+        >
+          {/* 关闭按钮 */}
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
+            onClick={() => setIsImagePreviewOpen(false)}
+          >
+            <svg
+              className="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          {/* 图片计数 */}
+          <div className="absolute top-4 left-4 text-white/80 text-sm">
+            {selectedImage + 1} / {imageUrls.length}
+          </div>
+
+          {/* 主图片 */}
+          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <img
+              src={imageUrls[selectedImage]}
+              alt={product.item.title}
+              className="max-w-full max-h-[85vh] object-contain"
+            />
+          </div>
+
+          {/* 左右切换按钮 */}
+          {imageUrls.length > 1 && (
+            <>
+              <button
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                onClick={e => {
+                  e.stopPropagation();
+                  setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+                }}
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                onClick={e => {
+                  e.stopPropagation();
+                  setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
+                }}
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* 底部缩略图 */}
+          {imageUrls.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 rounded-lg p-2">
+              {imageUrls.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setSelectedImage(index);
+                  }}
+                  className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${
+                    selectedImage === index
+                      ? 'border-white'
+                      : 'border-transparent opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <img src={image} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

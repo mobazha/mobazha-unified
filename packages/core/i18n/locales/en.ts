@@ -76,6 +76,7 @@ export const en: TranslationResource = {
 
   nav: {
     home: 'Home',
+    market: 'Market',
     search: 'Search',
     messages: 'Messages',
     orders: 'Orders',
@@ -136,6 +137,7 @@ export const en: TranslationResource = {
     stock: 'Stock',
     inStock: 'in stock',
     outOfStock: 'Out of Stock',
+    wishlist: 'Wishlist',
     category: 'Category',
     condition: 'Condition',
     shipping: 'Shipping',
@@ -145,6 +147,7 @@ export const en: TranslationResource = {
     returns: 'Returns',
     seller: 'Seller',
     reviews: 'reviews',
+    reviewsTitle: 'Customer Reviews',
     rating: 'Rating',
     addToCart: 'Add to Cart',
     addedToCart: 'Added to Cart',
@@ -156,6 +159,9 @@ export const en: TranslationResource = {
     variants: 'Variants',
     notFound: 'Product not found',
     viewStore: 'View Store',
+    goToStore: 'Go to Store',
+    viewPhotos: 'View {{count}} Photo(s)',
+    details: 'Product Details',
     acceptedCurrencies: 'Accepted',
     termsAndConditions: 'Terms and Conditions',
     refundPolicy: 'Refund Policy',
@@ -230,6 +236,7 @@ export const en: TranslationResource = {
     checkout: 'Checkout',
     remove: 'Remove',
     quantity: 'Qty',
+    items: 'items',
     itemCount: '{{count}} items',
     itemsInCart: '{{count}} items in your cart',
     selectAll: 'Select All',
@@ -239,6 +246,8 @@ export const en: TranslationResource = {
     free: 'Free',
     acceptedPayments: 'Accepted Payment Methods',
     startShopping: 'Start Shopping',
+    clear: 'Clear',
+    p2pNotice: 'P2P transactions require separate checkout for each vendor',
   },
 
   checkout: {
@@ -1308,7 +1317,7 @@ export const en: TranslationResource = {
     resyncFailed: 'Failed to sync transactions',
   },
 
-// OTC Private Trading
+  // OTC Private Trading
   otc: {
     title: 'OTC Trading',
     createNft: 'Create NFT Order',

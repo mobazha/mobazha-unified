@@ -56,6 +56,7 @@ export const ru: TranslationResource = {
 
   nav: {
     home: 'Главная',
+    market: 'Маркет',
     search: 'Поиск',
     messages: 'Сообщения',
     orders: 'Заказы',
@@ -85,6 +86,7 @@ export const ru: TranslationResource = {
     stock: 'На складе',
     inStock: 'в наличии',
     outOfStock: 'Нет в наличии',
+    wishlist: 'Избранное',
     category: 'Категория',
     condition: 'Состояние',
     shipping: 'Доставка',
@@ -94,6 +96,7 @@ export const ru: TranslationResource = {
     returns: 'Возврат',
     seller: 'Продавец',
     reviews: 'отзывов',
+    reviewsTitle: 'Отзывы покупателей',
     rating: 'Рейтинг',
     addToCart: 'В корзину',
     addedToCart: 'Добавлено в корзину',
@@ -105,6 +108,9 @@ export const ru: TranslationResource = {
     variants: 'Варианты',
     notFound: 'Товар не найден',
     viewStore: 'Посмотреть магазин',
+    goToStore: 'Перейти в магазин',
+    viewPhotos: 'Посмотреть {{count}} фото',
+    details: 'Детали товара',
     acceptedCurrencies: 'Принимаем',
     termsAndConditions: 'Условия использования',
     refundPolicy: 'Политика возврата',
@@ -156,6 +162,9 @@ export const ru: TranslationResource = {
     free: 'Бесплатно',
     acceptedPayments: 'Принимаемые способы оплаты',
     startShopping: 'Начать покупки',
+    items: 'товаров',
+    clear: 'Очистить',
+    p2pNotice: 'P2P-транзакции требуют отдельной оплаты для каждого продавца',
   },
 
   checkout: {

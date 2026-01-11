@@ -56,6 +56,7 @@ export const ko: TranslationResource = {
 
   nav: {
     home: '홈',
+    market: '마켓',
     search: '검색',
     messages: '메시지',
     orders: '주문',
@@ -85,6 +86,7 @@ export const ko: TranslationResource = {
     stock: '재고',
     inStock: '개 재고',
     outOfStock: '품절',
+    wishlist: '찜하기',
     category: '카테고리',
     condition: '상태',
     shipping: '배송',
@@ -94,6 +96,7 @@ export const ko: TranslationResource = {
     returns: '반품',
     seller: '판매자',
     reviews: '개 리뷰',
+    reviewsTitle: '고객 리뷰',
     rating: '평점',
     addToCart: '장바구니에 추가',
     addedToCart: '장바구니에 추가됨',
@@ -105,6 +108,9 @@ export const ko: TranslationResource = {
     variants: '옵션',
     notFound: '상품을 찾을 수 없습니다',
     viewStore: '스토어 보기',
+    goToStore: '스토어로 이동',
+    viewPhotos: '사진 {{count}}장 보기',
+    details: '상품 상세',
     acceptedCurrencies: '결제 가능',
     termsAndConditions: '이용약관',
     refundPolicy: '환불 정책',
@@ -156,6 +162,9 @@ export const ko: TranslationResource = {
     free: '무료',
     acceptedPayments: '결제 가능한 수단',
     startShopping: '쇼핑 시작',
+    items: '개',
+    clear: '비우기',
+    p2pNotice: 'P2P 거래는 각 판매자별로 별도 결제가 필요합니다',
   },
 
   checkout: {

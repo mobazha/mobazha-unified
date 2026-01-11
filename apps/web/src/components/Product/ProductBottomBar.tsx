@@ -87,17 +87,17 @@ export function ProductBottomBar({
   if (!product) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-3 z-50 lg:hidden">
-      <HStack gap="sm" align="center">
+    <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-3 py-2.5 z-50 lg:hidden pb-safe">
+      <HStack gap="xs" align="center">
         {/* 左侧图标按钮组 */}
-        <HStack gap="xs" className="flex-shrink-0">
+        <HStack gap="none" className="flex-shrink-0">
           {/* 消息按钮 */}
           <button
             onClick={handleMessage}
-            className="flex flex-col items-center justify-center w-11 h-11 touch-feedback"
+            className="flex flex-col items-center justify-center w-10 h-10 touch-feedback active:bg-muted/50 rounded-lg"
           >
             <svg
-              className="w-6 h-6 text-muted-foreground"
+              className="w-5 h-5 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -109,18 +109,18 @@ export function ProductBottomBar({
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <span className="text-[10px] text-muted-foreground mt-0.5">
-              {t('product.message') || '消息'}
+            <span className="text-[9px] text-muted-foreground leading-tight">
+              {t('profile.message')}
             </span>
           </button>
 
           {/* 购物车按钮 */}
           <button
             onClick={handleGoToCart}
-            className="flex flex-col items-center justify-center w-11 h-11 touch-feedback relative"
+            className="flex flex-col items-center justify-center w-10 h-10 touch-feedback active:bg-muted/50 rounded-lg relative"
           >
             <svg
-              className="w-6 h-6 text-muted-foreground"
+              className="w-5 h-5 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -132,12 +132,10 @@ export function ProductBottomBar({
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            <span className="text-[10px] text-muted-foreground mt-0.5">
-              {t('product.cart') || '购物车'}
-            </span>
+            <span className="text-[9px] text-muted-foreground leading-tight">{t('nav.cart')}</span>
             {/* 购物车徽章 */}
             {cartItemCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center px-1">
+              <span className="absolute top-0 right-0.5 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-medium rounded-full flex items-center justify-center px-0.5">
                 {cartItemCount > 99 ? '99+' : cartItemCount}
               </span>
             )}
@@ -146,10 +144,10 @@ export function ProductBottomBar({
           {/* 收藏按钮 */}
           <button
             onClick={onToggleWishlist}
-            className="flex flex-col items-center justify-center w-11 h-11 touch-feedback"
+            className="flex flex-col items-center justify-center w-10 h-10 touch-feedback active:bg-muted/50 rounded-lg"
           >
             <svg
-              className={`w-6 h-6 ${isWishlist ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`}
+              className={`w-5 h-5 ${isWishlist ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`}
               fill={isWishlist ? 'currentColor' : 'none'}
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -161,8 +159,8 @@ export function ProductBottomBar({
                 d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
               />
             </svg>
-            <span className="text-[10px] text-muted-foreground mt-0.5">
-              {t('product.favorite') || '收藏'}
+            <span className="text-[9px] text-muted-foreground leading-tight">
+              {t('product.wishlist')}
             </span>
           </button>
         </HStack>
@@ -171,16 +169,16 @@ export function ProductBottomBar({
         <HStack gap="sm" className="flex-1">
           {/* 添加到购物车按钮 */}
           <Button
-            variant="secondary"
-            size="default"
-            className="flex-1 rounded-full h-11 text-sm font-medium touch-feedback"
+            variant="outline"
+            size="sm"
+            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
             onClick={handleAddToCart}
             disabled={addingToCart || stock === 0}
           >
             {addingToCart ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : cartSuccess ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -195,8 +193,8 @@ export function ProductBottomBar({
 
           {/* 立即购买按钮 */}
           <Button
-            size="default"
-            className="flex-1 rounded-full h-11 text-sm font-medium touch-feedback bg-emerald-500 hover:bg-emerald-600"
+            size="sm"
+            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white"
             onClick={handleBuyNow}
             disabled={stock === 0}
           >

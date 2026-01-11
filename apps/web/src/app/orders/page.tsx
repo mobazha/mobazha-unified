@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Header } from '@/components';
+import { Header, MobilePageHeader } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
@@ -230,19 +230,22 @@ function OrdersPageContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {/* 移动端顶部导航栏 */}
+      <MobilePageHeader title={t('nav.orders')} />
 
-      <main className="py-4 sm:py-8">
+      <main className="py-3 sm:py-8">
         <Container>
-          {/* Page Header */}
-          <div className="mb-4 sm:mb-8">
-            <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
-              {t('nav.orders')}
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">{t('order.manageOrders')}</p>
+          {/* Page Header - 仅桌面端显示 */}
+          <div className="hidden lg:block mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('nav.orders')}</h1>
+            <p className="text-base text-muted-foreground">{t('order.manageOrders')}</p>
           </div>
 
+          {/* 移动端副标题 */}
+          <p className="lg:hidden text-xs text-muted-foreground mb-3">{t('order.manageOrders')}</p>
+
           {/* Order Type Toggle */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-3 sm:mb-6">
             <div className="inline-flex rounded-lg bg-muted p-1">
               {(['purchases', 'sales'] as OrderType[]).map(type => (
                 <button
@@ -251,7 +254,7 @@ function OrdersPageContent() {
                     // 更新 URL 参数，orderType 将通过 useMemo 自动更新
                     router.push(`/orders?tab=${type}`);
                   }}
-                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
                     orderType === type
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'

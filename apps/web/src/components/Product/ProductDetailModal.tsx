@@ -29,23 +29,28 @@ interface VendorInfo {
 
 export function ProductDetailModal({ open, onOpenChange, slug, peerID }: ProductDetailModalProps) {
   // 连接状态
-  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'failed'>('connecting');
+  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'failed'>(
+    'connecting'
+  );
   const [vendorInfo, setVendorInfo] = useState<VendorInfo>({});
   const [productTitle, setProductTitle] = useState<string | undefined>();
-  
+
   // 用于取消请求的 abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
-  
+
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
 
   // 当弹框打开时，开始预取数据
   useEffect(() => {
-    // 弹框关闭时重置状态
+    // 弹框关闭时重置状态 - 这是标准的清理模式
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnectionState('connecting');
+
       setVendorInfo({});
+
       setProductTitle(undefined);
       // 取消之前的请求
       if (abortControllerRef.current) {
@@ -58,14 +63,33 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
     // 创建新的 abort controller
     abortControllerRef.current = new AbortController();
     const { signal } = abortControllerRef.current;
-    
+
     const startTime = Date.now();
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    // 如果有 peerID，立即开始获取卖家信息（不等待商品数据）
+    if (peerID) {
+      profileApi
+        .getProfile(peerID)
+        .then(vendor => {
+          if (vendor && !signal.aborted) {
+            setVendorInfo({
+              name: vendor.name,
+              avatar: vendor.avatarHashes?.small
+                ? getImageUrl(vendor.avatarHashes.small)
+                : undefined,
+            });
+          }
+        })
+        .catch(() => {
+          // 忽略卖家信息获取失败
+        });
+    }
 
     const fetchData = async () => {
       try {
         console.log('[ConnectingModal] Starting to fetch product:', slug, peerID);
-        
+
         // 设置超时
         timeoutId = setTimeout(() => {
           if (!signal.aborted) {
@@ -76,9 +100,9 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
 
         // 获取商品数据
         const product = await productDataService.getProduct(slug, peerID);
-        
+
         console.log('[ConnectingModal] Product fetched:', product ? 'success' : 'null');
-        
+
         if (signal.aborted) {
           console.log('[ConnectingModal] Request was aborted');
           return;
@@ -92,17 +116,17 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
         }
 
         setProductTitle(product.item?.title);
-        
-        // 获取卖家信息（非阻塞）
-        const vendorPeerID = peerID || product.vendorID?.peerID;
-        if (vendorPeerID) {
-          profileApi.getProfile(vendorPeerID)
+
+        // 如果之前没有 peerID，现在从商品数据获取卖家信息
+        if (!peerID && product.vendorID?.peerID) {
+          profileApi
+            .getProfile(product.vendorID.peerID)
             .then(vendor => {
               if (vendor && !signal.aborted) {
                 setVendorInfo({
                   name: vendor.name,
-                  avatar: vendor.avatarHashes?.small 
-                    ? getImageUrl(vendor.avatarHashes.small) 
+                  avatar: vendor.avatarHashes?.small
+                    ? getImageUrl(vendor.avatarHashes.small)
                     : undefined,
                 });
               }
@@ -111,13 +135,13 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
               // 忽略卖家信息获取失败
             });
         }
-        
+
         // 确保连接弹框至少显示一定时间
         const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, MIN_CONNECTING_DISPLAY_TIME - elapsed);
-        
+
         console.log('[ConnectingModal] Will show connected state in', remainingTime, 'ms');
-        
+
         setTimeout(() => {
           if (!signal.aborted) {
             if (timeoutId) clearTimeout(timeoutId);
@@ -125,7 +149,6 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
             setConnectionState('connected');
           }
         }, remainingTime);
-
       } catch (error) {
         console.error('[ConnectingModal] Failed to fetch product data:', error);
         if (timeoutId) clearTimeout(timeoutId);
@@ -148,12 +171,12 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
   // 重试连接
   const handleRetry = useCallback(() => {
     setConnectionState('connecting');
-    
+
     // 取消之前的请求
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     // 创建新的 abort controller
     abortControllerRef.current = new AbortController();
     const { signal } = abortControllerRef.current;
@@ -161,25 +184,25 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
     const fetchData = async () => {
       try {
         const product = await productDataService.getProduct(slug, peerID);
-        
+
         if (signal.aborted) return;
 
         if (product) {
           setProductTitle(product.item?.title);
-          
+
           const vendorPeerID = peerID || product.vendorID?.peerID;
           if (vendorPeerID) {
             const vendor = await profileApi.getProfile(vendorPeerID).catch(() => null);
             if (vendor && !signal.aborted) {
               setVendorInfo({
                 name: vendor.name,
-                avatar: vendor.avatarHashes?.small 
-                  ? getImageUrl(vendor.avatarHashes.small) 
+                avatar: vendor.avatarHashes?.small
+                  ? getImageUrl(vendor.avatarHashes.small)
                   : undefined,
               });
             }
           }
-          
+
           setConnectionState('connected');
         } else {
           setConnectionState('failed');

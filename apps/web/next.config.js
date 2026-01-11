@@ -2,6 +2,9 @@
 const nextConfig = {
   transpilePackages: ['@mobazha/ui', '@mobazha/core'],
 
+  // 禁用开发指示器（左下角的 "N" 图标）
+  devIndicators: false,
+
   // 图片优化配置
   images: {
     remotePatterns: [

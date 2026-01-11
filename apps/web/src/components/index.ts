@@ -11,6 +11,8 @@ export type { ChatFloatingButtonProps } from './ChatFloatingButton';
 export { ChatSystem } from './ChatSystem';
 export { DevTools } from './DevTools';
 export { MobileNav } from './MobileNav';
+export { MobilePageHeader } from './MobilePageHeader';
+export type { MobilePageHeaderProps } from './MobilePageHeader';
 export { PWAInstall } from './PWAInstall';
 export { ServiceWorkerProvider } from './ServiceWorkerProvider';
 export { LanguageSwitcher } from './LanguageSwitcher';
