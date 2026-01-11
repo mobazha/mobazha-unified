@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const pt: TranslationResource = {
   common: {
     loading: 'Carregando...',
+    redirecting: 'Redirecionando...',
     error: 'Erro',
     success: 'Sucesso',
     cancel: 'Cancelar',

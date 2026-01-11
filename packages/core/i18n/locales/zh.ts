@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const zh: TranslationResource = {
   common: {
     loading: '加载中...',
+    redirecting: '正在跳转...',
     error: '错误',
     success: '成功',
     cancel: '取消',

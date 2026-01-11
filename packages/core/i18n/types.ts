@@ -43,6 +43,7 @@ export interface TranslationResource {
   // 通用
   common: TranslationSection & {
     loading: string;
+    redirecting: string;
     error: string;
     success: string;
     cancel: string;

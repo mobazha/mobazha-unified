@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const ru: TranslationResource = {
   common: {
     loading: 'Загрузка...',
+    redirecting: 'Перенаправление...',
     error: 'Ошибка',
     success: 'Успех',
     cancel: 'Отмена',
