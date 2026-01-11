@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, Check, CheckCheck, Package, AlertTriangle, UserPlus, MessageSquare, CreditCard, Settings } from 'lucide-react';
+import { Bell, Check, CheckCheck, Package, AlertTriangle, UserPlus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useNotifications, useUnreadNotificationCount, getNotificationCategory } from '@mobazha/core';
+import { useNotifications, useUnreadNotificationCount, getNotificationCategory, useI18n } from '@mobazha/core';
 import type { NotificationData, NotificationCategory } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -20,12 +20,8 @@ function getNotificationIcon(category: NotificationCategory) {
       return <Package className="h-4 w-4 text-blue-500" />;
     case 'dispute':
       return <AlertTriangle className="h-4 w-4 text-amber-500" />;
-    case 'social':
+    case 'peer':
       return <UserPlus className="h-4 w-4 text-green-500" />;
-    case 'chat':
-      return <MessageSquare className="h-4 w-4 text-purple-500" />;
-    case 'wallet':
-      return <CreditCard className="h-4 w-4 text-emerald-500" />;
     default:
       return <Bell className="h-4 w-4 text-gray-500" />;
   }
@@ -34,7 +30,7 @@ function getNotificationIcon(category: NotificationCategory) {
 /**
  * 格式化时间
  */
-function formatTimeAgo(timestamp: string): string {
+function formatTimeAgo(timestamp: string, t: (key: string, params?: Record<string, string | number>) => string): string {
   const now = new Date();
   const date = new Date(timestamp);
   const diffMs = now.getTime() - date.getTime();
@@ -42,10 +38,10 @@ function formatTimeAgo(timestamp: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t('time.justNow');
+  if (diffMins < 60) return t('time.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return t('time.hoursAgo', { count: diffHours });
+  if (diffDays < 7) return t('time.daysAgo', { count: diffDays });
   return date.toLocaleDateString();
 }
 
@@ -55,9 +51,11 @@ function formatTimeAgo(timestamp: string): string {
 function NotificationItem({
   notification,
   onMarkAsRead,
+  t,
 }: {
   notification: NotificationData;
   onMarkAsRead: (id: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const category = getNotificationCategory(notification.type);
   const icon = getNotificationIcon(category);
@@ -66,25 +64,25 @@ function NotificationItem({
   const getNotificationText = () => {
     switch (notification.type) {
       case 'newOrder':
-        return 'You received a new order';
+        return t('notifications.order.youReceivedOrder');
       case 'orderPaymentReceived':
       case 'orderFunded':
-        return 'Payment received';
+        return t('notifications.order.orderFunded');
       case 'orderConfirmation':
-        return 'Order confirmed';
+        return t('notifications.order.orderConfirmed');
       case 'orderFulfillment':
-        return 'Order fulfilled';
+        return t('notifications.order.orderFulfilled');
       case 'orderCompletion':
-        return 'Order completed';
+        return t('notifications.order.orderCompleted');
       case 'disputeOpen':
       case 'caseOpen':
-        return 'Dispute opened';
+        return t('notifications.dispute.disputeOpened');
       case 'disputeClose':
-        return 'Dispute resolved';
+        return t('notifications.dispute.disputeClosed');
       case 'follow':
-        return 'Someone followed you';
+        return t('notifications.social.someoneFollowed');
       case 'unfollow':
-        return 'Someone unfollowed you';
+        return t('notifications.social.someoneUnfollowed');
       default:
         return notification.type;
     }
@@ -108,7 +106,7 @@ function NotificationItem({
         >
           {getNotificationText()}
         </p>
-        <p className="text-xs text-text-tertiary mt-1">{formatTimeAgo(notification.timestamp)}</p>
+        <p className="text-xs text-text-tertiary mt-1">{formatTimeAgo(notification.timestamp, t)}</p>
       </div>
       {!notification.read && (
         <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -139,6 +137,7 @@ interface NotificationDropdownProps {
  * 提供更好的桌面端用户体验，点击通知图标时显示下拉面板而不是跳转页面
  */
 export function NotificationDropdown({ className }: NotificationDropdownProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const unreadCount = useUnreadNotificationCount();
   const { notifications, isLoading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications({
@@ -191,7 +190,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h3 className="font-semibold text-text-primary">Notifications</h3>
+          <h3 className="font-semibold text-text-primary">{t('notifications.title')}</h3>
           <div className="flex items-center gap-1">
             {hasUnread && (
               <Button
@@ -201,7 +200,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
                 onClick={handleMarkAllAsRead}
               >
                 <CheckCheck className="h-3.5 w-3.5 mr-1" />
-                Mark all read
+                {t('notifications.markAllRead')}
               </Button>
             )}
             <Link href="/notifications">
@@ -221,8 +220,8 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
           ) : recentNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <Bell className="h-10 w-10 text-text-tertiary mb-3" />
-              <p className="text-text-secondary font-medium">No notifications</p>
-              <p className="text-xs text-text-tertiary mt-1">You&apos;re all caught up!</p>
+              <p className="text-text-secondary font-medium">{t('notifications.noNotifications')}</p>
+              <p className="text-xs text-text-tertiary mt-1">{t('notifications.allCaughtUp')}</p>
             </div>
           ) : (
             <div className="p-2">
@@ -231,6 +230,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
                   key={notification.id}
                   notification={notification}
                   onMarkAsRead={handleMarkAsRead}
+                  t={t}
                 />
               ))}
             </div>
@@ -248,7 +248,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
                   className="w-full h-9 text-sm text-primary hover:text-primary"
                   onClick={() => setOpen(false)}
                 >
-                  View all notifications
+                  {t('notifications.viewAll')}
                 </Button>
               </Link>
             </div>

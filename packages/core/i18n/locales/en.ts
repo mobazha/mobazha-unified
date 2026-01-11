@@ -1237,17 +1237,24 @@ export const en: TranslationResource = {
     title: 'Notifications',
     markAllRead: 'Mark all as read',
     noNotifications: 'No notifications',
+    noUnread: 'No unread notifications',
     unreadCount: '{{count}} unread notifications',
     allCaughtUp: 'All caught up!',
+    newNotificationsDesc: "You'll see new notifications here.",
+    viewAll: 'View all notifications',
     filterAll: 'All',
     filterUnread: 'Unread',
     // Order notifications
     order: {
       youPlacedOrder: 'You placed an order',
       placedOrder: 'placed an order',
+      youReceivedOrder: 'You received a new order',
       yourPaymentSent: 'Your payment was sent',
       sentPayment: 'sent payment',
       orderFunded: 'Order has been funded',
+      orderConfirmed: 'Order confirmed',
+      orderFulfilled: 'Order fulfilled',
+      orderCompleted: 'Order completed',
       acceptedYourOrder: 'accepted your order',
       youAcceptedOrder: 'You accepted an order',
       declinedYourOrder: 'declined your order',
@@ -1263,6 +1270,8 @@ export const en: TranslationResource = {
     // Dispute notifications
     dispute: {
       startedDispute: 'started a dispute',
+      disputeOpened: 'Dispute opened',
+      disputeClosed: 'Dispute resolved',
       openedCase: 'opened a case',
       modCaseOpened: 'opened a case against {{disputeeName}}',
       caseUpdated: 'updated the case',
@@ -1273,6 +1282,8 @@ export const en: TranslationResource = {
     // Social notifications
     social: {
       startedFollowing: 'started following you',
+      someoneFollowed: 'Someone followed you',
+      someoneUnfollowed: 'Someone unfollowed you',
       unfollowed: 'unfollowed you',
       addedAsModerator: 'added you as a moderator',
       removedAsModerator: 'removed you as a moderator',

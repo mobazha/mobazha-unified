@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useChatStore, selectTotalUnreadCount, useUserStore } from '@mobazha/core';
+import { useChatStore, selectTotalUnreadCount, useUserStore, useI18n } from '@mobazha/core';
 
 interface NavItem {
-  label: string;
+  labelKey: string; // i18n key
   href?: string;
   onClick?: () => void;
   icon: React.ReactNode;
@@ -17,7 +17,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: 'Home',
+    labelKey: 'nav.home',
     href: '/',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    label: 'Orders',
+    labelKey: 'nav.orders',
     href: '/orders',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    label: 'Cart',
+    labelKey: 'nav.cart',
     href: '/cart',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@ const navItems: NavItem[] = [
     badge: 3,
   },
   {
-    label: 'Chat',
+    labelKey: 'chat.title',
     isChat: true, // 使用 drawer 而非路由
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    label: 'Me',
+    labelKey: 'me.title',
     href: '/me',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,11 +140,12 @@ const HIDE_NAV_PATTERNS = [
   /^\/product\/[^/]+$/, // 商品详情页（有自己的底部操作栏）
 ];
 
-// 需要登录才能显示的导航项
-const AUTH_REQUIRED_ITEMS = ['Orders', 'Cart', 'Chat'];
+// 需要登录才能显示的导航项 (使用 labelKey)
+const AUTH_REQUIRED_LABEL_KEYS = ['nav.orders', 'nav.cart', 'chat.title'];
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
+  const { t } = useI18n();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const totalUnread = useChatStore(selectTotalUnreadCount);
@@ -154,7 +155,7 @@ export const MobileNav: React.FC = () => {
   const filteredNavItems = navItems.filter(item => {
     if (!isAuthenticated) {
       // 未登录时隐藏需要登录的项
-      return !AUTH_REQUIRED_ITEMS.includes(item.label);
+      return !AUTH_REQUIRED_LABEL_KEYS.includes(item.labelKey);
     }
     return true;
   });
@@ -200,14 +201,14 @@ export const MobileNav: React.FC = () => {
                   {/* Icon with badge */}
                   <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
                     {active ? item.activeIcon || item.icon : item.icon}
-                    {badge && badge > 0 && (
+                    {badge !== undefined && badge > 0 && (
                       <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                         {badge > 9 ? '9+' : badge}
                       </span>
                     )}
                   </span>
                   <span className={`text-[10px] mt-1 font-medium ${active ? 'font-semibold' : ''}`}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                   {active && (
                     <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
@@ -229,7 +230,7 @@ export const MobileNav: React.FC = () => {
                 <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
                   {active ? item.activeIcon || item.icon : item.icon}
                   {/* Badge - small red circle with number */}
-                  {badge && badge > 0 && (
+                  {badge !== undefined && badge > 0 && (
                     <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                       {badge > 9 ? '9+' : badge}
                     </span>
@@ -238,7 +239,7 @@ export const MobileNav: React.FC = () => {
 
                 {/* Label */}
                 <span className={`text-[10px] mt-1 font-medium ${active ? 'font-semibold' : ''}`}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
 
                 {/* Active indicator */}

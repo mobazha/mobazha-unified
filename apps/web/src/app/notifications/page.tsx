@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { toast } from '@/components/ui/use-toast';
-import { useChatStore, useNotifications } from '@mobazha/core';
+import { useChatStore, useNotifications, useI18n } from '@mobazha/core';
 import type { NotificationData } from '@mobazha/core';
 
 // ============ 类型映射 ============
@@ -122,7 +122,7 @@ const typeColors: Record<DisplayNotificationType, string> = {
 
 // ============ 时间格式化 ============
 
-function formatTimestamp(timestamp: string): string {
+function formatTimestamp(timestamp: string, t: (key: string, params?: Record<string, string | number>) => string): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
@@ -131,16 +131,17 @@ function formatTimestamp(timestamp: string): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
+  if (minutes < 1) return t('time.justNow');
+  if (minutes < 60) return t('time.minutesAgo', { count: minutes });
+  if (hours < 24) return t('time.hoursAgo', { count: hours });
+  if (days < 7) return t('time.daysAgo', { count: days });
   return date.toLocaleDateString();
 }
 
 // ============ 主组件 ============
 
 export default function NotificationsPage() {
+  const { t } = useI18n();
   const {
     notifications,
     unreadCount,
@@ -215,13 +216,13 @@ export default function NotificationsPage() {
           {/* Page Header */}
           <HStack justify="between" align="center" className="mb-4 sm:mb-6">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Notifications</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('notifications.title')}</h1>
               <p className="text-sm text-muted-foreground">
                 {isLoading
-                  ? 'Loading...'
+                  ? t('common.loading')
                   : unreadCount > 0
-                    ? `${unreadCount} unread notifications`
-                    : 'All caught up!'}
+                    ? t('notifications.unreadCount', { count: unreadCount })
+                    : t('notifications.allCaughtUp')}
               </p>
             </div>
             {unreadCount > 0 && (
@@ -231,7 +232,7 @@ export default function NotificationsPage() {
                 onClick={handleMarkAllAsRead}
                 className="text-xs sm:text-sm"
               >
-                Mark all as read
+                {t('notifications.markAllRead')}
               </Button>
             )}
           </HStack>
@@ -247,7 +248,7 @@ export default function NotificationsPage() {
                     : 'text-muted-foreground hover:bg-surface-hover'
                 }`}
               >
-                All ({notifications.length})
+                {t('notifications.filterAll')} ({notifications.length})
               </button>
               <button
                 onClick={() => setFilter('unread')}
@@ -257,7 +258,7 @@ export default function NotificationsPage() {
                     : 'text-muted-foreground hover:bg-surface-hover'
                 }`}
               >
-                Unread ({unreadCount})
+                {t('notifications.filterUnread')} ({unreadCount})
               </button>
             </HStack>
           </Card>
@@ -281,12 +282,12 @@ export default function NotificationsPage() {
                 </svg>
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
-                {filter === 'unread' ? 'No unread notifications' : 'No notifications'}
+                {filter === 'unread' ? t('notifications.noUnread') : t('notifications.noNotifications')}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {filter === 'unread'
-                  ? "You're all caught up!"
-                  : "You'll see new notifications here."}
+                  ? t('notifications.allCaughtUp')
+                  : t('notifications.newNotificationsDesc')}
               </p>
             </Card>
           ) : (
@@ -329,7 +330,7 @@ export default function NotificationsPage() {
                               {title}
                             </h3>
                             <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
-                              {formatTimestamp(notification.timestamp)}
+                              {formatTimestamp(notification.timestamp, t)}
                             </p>
                           </div>
 
