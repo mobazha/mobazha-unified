@@ -393,6 +393,62 @@ export function isSocialNotification(
 }
 
 /**
+ * API 简化分类类型
+ */
+export type ApiNotificationCategory =
+  | 'order'
+  | 'payment'
+  | 'dispute'
+  | 'moderator'
+  | 'follow'
+  | 'message'
+  | 'system';
+
+/**
+ * API 分类到默认事件类型的映射
+ * 用于处理从 API 返回的简化分类类型
+ */
+const API_CATEGORY_TO_EVENT_TYPE: Record<ApiNotificationCategory, NotificationEventType> = {
+  order: 'newOrder',
+  payment: 'orderPaymentReceived',
+  dispute: 'disputeOpen',
+  moderator: 'moderatorAdd',
+  follow: 'follow',
+  message: 'follow', // 消息类型暂时映射到 follow，因为没有专门的消息事件类型
+  system: 'follow', // 系统通知暂时映射到 follow
+};
+
+/**
+ * 检查是否为有效的通知事件类型
+ */
+export function isValidNotificationEventType(type: string): type is NotificationEventType {
+  return (
+    (ORDER_NOTIFICATION_TYPES as readonly string[]).includes(type) ||
+    (DISPUTE_NOTIFICATION_TYPES as readonly string[]).includes(type) ||
+    (SOCIAL_NOTIFICATION_TYPES as readonly string[]).includes(type)
+  );
+}
+
+/**
+ * 将 API 返回的类型转换为内部事件类型
+ * 如果是有效的事件类型则直接使用，否则从分类映射转换
+ */
+export function normalizeNotificationType(type: string): NotificationEventType {
+  // 如果已经是有效的事件类型，直接返回
+  if (isValidNotificationEventType(type)) {
+    return type;
+  }
+
+  // 否则尝试从 API 分类映射
+  if (type in API_CATEGORY_TO_EVENT_TYPE) {
+    return API_CATEGORY_TO_EVENT_TYPE[type as ApiNotificationCategory];
+  }
+
+  // 默认返回 follow
+  return 'follow';
+}
+
+/**
  * 事件类型到声音类型的映射
  */
 export function eventTypeToSoundType(eventType: NotificationEventType): SoundNotificationType {
