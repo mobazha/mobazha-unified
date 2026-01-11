@@ -161,3 +161,35 @@ export {
   isValidNotificationEventType,
   normalizeNotificationType,
 } from './notification';
+
+// Access control types
+export type {
+  UserGroup,
+  UserGroupMember,
+  CreateUserGroupRequest,
+  UpdateUserGroupRequest,
+  ProductGroup,
+  ProductGroupItem,
+  CreateProductGroupRequest,
+  UpdateProductGroupRequest,
+  AuthorizationType,
+  ProductGroupAuthorization,
+  AddProductGroupAuthorizationRequest,
+  AccessRequestStatus,
+  StoreAccessRequest,
+  SubmitAccessRequestData,
+  ReviewAccessRequestData,
+  StoreAccessSettings,
+  StoreAccessCheckResult,
+  StoreAccessListItem,
+  GroupPlatform,
+  GroupContext,
+  GroupMarketplace,
+  GroupSeller,
+  ApplyAsSellerRequest,
+  ReviewSellerRequest,
+  GroupPermissions,
+  StorePrivacySettings,
+} from './access';
+
+export { ProductGroupVisibility, GROUP_COLORS } from './access';

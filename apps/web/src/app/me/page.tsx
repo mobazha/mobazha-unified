@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Header, Footer, useSettingsModal } from '@/components';
+import { Header, Footer } from '@/components';
 import { Container, VStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,6 @@ import {
   HelpCircle,
   LogOut,
   Wallet,
-  Users,
   ChevronRight,
   LogIn,
 } from 'lucide-react';
@@ -74,7 +73,6 @@ export default function MePage() {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { isDark, toggleDarkMode } = useTheme();
-  const { openSettings } = useSettingsModal();
 
   const handleLogout = () => {
     logout();
@@ -187,11 +185,6 @@ export default function MePage() {
                 description={t('me.notificationsDesc')}
                 href="/notifications"
               />
-              <FeatureItem
-                icon={<Users className="w-5 h-5" />}
-                title={t('me.userGroups')}
-                href="/groups"
-              />
             </div>
           )}
 
@@ -201,7 +194,7 @@ export default function MePage() {
               icon={<Settings className="w-5 h-5" />}
               title={t('me.settings')}
               description={t('me.settingsDesc')}
-              onClick={() => openSettings()}
+              href="/settings"
             />
             <div className="flex items-center gap-3 p-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">

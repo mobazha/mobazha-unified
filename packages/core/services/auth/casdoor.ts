@@ -319,3 +319,52 @@ export function isTokenExpired(token: string): boolean {
   const now = Math.floor(Date.now() / 1000);
   return claims.exp < now;
 }
+
+/**
+ * 获取存储的用户 ID（Telegram 或其他平台）
+ * 返回格式: telegram_123456
+ */
+export function getStoredUserId(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    // 从多个可能的存储位置查找
+    const userInfoStr =
+      localStorage.getItem('userInfo') ||
+      sessionStorage.getItem('userInfo') ||
+      localStorage.getItem('mobazha_auth_user');
+
+    if (userInfoStr) {
+      const userInfo = JSON.parse(userInfoStr);
+      // 检查是否有 id 字段，格式可能是 telegram_xxx 或其他
+      if (userInfo.id) {
+        return userInfo.id;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 获取 Telegram User ID
+ * 返回格式: telegram_123456，如果不是 Telegram 用户则返回 null
+ */
+export function getTelegramUserId(): string | null {
+  const userId = getStoredUserId();
+  if (userId && userId.startsWith('telegram_')) {
+    return userId;
+  }
+  return null;
+}
+
+/**
+ * 检查当前用户是否通过 Telegram 登录
+ */
+export function isTelegramUser(): boolean {
+  return getTelegramUserId() !== null;
+}

@@ -30,3 +30,6 @@ export * from './otc';
 
 // 通知服务
 export * from './notification';
+
+// 群组上下文服务
+export * from './groupContext';

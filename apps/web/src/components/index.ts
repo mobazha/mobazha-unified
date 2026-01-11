@@ -19,7 +19,7 @@ export { ThemeSwitcher } from './ThemeSwitcher';
 export { ErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
 export { AuthProvider } from './AuthProvider';
 export { CurrencyProvider } from './CurrencyProvider';
-export { SettingsModal, SettingsModalProvider, useSettingsModal } from './SettingsModal';
+// SettingsModal removed - settings are now at /settings page
 
 // Notification Components
 export { NotificationBadge, NotificationDropdown } from './Notification';
@@ -46,3 +46,12 @@ export type {
   ModeratorSelectorProps,
   PaymentProtectionCardProps,
 } from './Payment';
+
+// Access Control Components
+export { StoreAccessGuard } from './StoreAccessGuard';
+
+// Settings Components
+export { SettingsSidebar } from './SettingsSidebar';
+
+// Auth Components
+export { AuthGuard } from './AuthGuard';
