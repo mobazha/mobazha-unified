@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, createContext, useContext, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useMemo, createContext, useContext, useRef, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -2414,9 +2414,18 @@ interface SettingsDrawerProviderProps {
 
 export const SettingsDrawerProvider: React.FC<SettingsDrawerProviderProps> = ({ children }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<SettingsSection>('main');
   const [initialSection, setInitialSection] = useState<SettingsSection>('main');
+
+  // 路由变化时关闭 Modal（用于处理 Modal 内的链接点击）
+  useEffect(() => {
+    if (isOpen) {
+      setIsOpen(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const openSettings = useCallback(
     (section: SettingsSection = 'main') => {
