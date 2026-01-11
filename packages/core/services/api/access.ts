@@ -101,7 +101,14 @@ export async function getUserGroups(peerID: string): Promise<UserGroup[]> {
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get user groups');
   }
-  return data.groups || data || [];
+  // 处理 API 返回 {"groups": null} 的情况
+  if (Array.isArray(data.groups)) {
+    return data.groups;
+  }
+  if (Array.isArray(data)) {
+    return data;
+  }
+  return [];
 }
 
 /**
@@ -167,7 +174,7 @@ export async function getUserGroupMembers(groupId: number): Promise<UserGroupMem
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get members');
   }
-  return data.members || data || [];
+  return Array.isArray(data.members) ? data.members : Array.isArray(data) ? data : [];
 }
 
 /**
@@ -240,7 +247,7 @@ export async function getProductGroups(userID: string): Promise<ProductGroup[]> 
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get product groups');
   }
-  return data.productGroups || data || [];
+  return Array.isArray(data.productGroups) ? data.productGroups : Array.isArray(data) ? data : [];
 }
 
 /**
@@ -304,7 +311,7 @@ export async function getProductGroupItems(groupId: number): Promise<ProductGrou
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get items');
   }
-  return data.data || data || [];
+  return Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
 }
 
 /**
@@ -360,7 +367,7 @@ export async function getProductGroupAuthorizations(
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get authorizations');
   }
-  return data.authorizations || data || [];
+  return Array.isArray(data.authorizations) ? data.authorizations : Array.isArray(data) ? data : [];
 }
 
 /**
@@ -426,7 +433,7 @@ export async function getStoreAccessRequests(
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get access requests');
   }
-  return data.requests || data || [];
+  return Array.isArray(data.requests) ? data.requests : Array.isArray(data) ? data : [];
 }
 
 /**
@@ -548,7 +555,7 @@ export async function getStoreAccessList(storePeerID: string): Promise<StoreAcce
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get access list');
   }
-  return data.list || data || [];
+  return Array.isArray(data.list) ? data.list : Array.isArray(data) ? data : [];
 }
 
 /**
@@ -642,7 +649,7 @@ export async function getGroupSellers(
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get sellers');
   }
-  return data.sellers || data || [];
+  return Array.isArray(data.sellers) ? data.sellers : Array.isArray(data) ? data : [];
 }
 
 /**
