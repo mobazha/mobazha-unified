@@ -18,6 +18,8 @@ export interface UserProfile {
   nsfw?: boolean;
   vendor?: boolean;
   moderator?: boolean;
+  /** 是否为私密店铺（仅授权用户可访问） */
+  private?: boolean;
   avatarHashes?: Image;
   headerHashes?: Image;
   stats?: ProfileStats;

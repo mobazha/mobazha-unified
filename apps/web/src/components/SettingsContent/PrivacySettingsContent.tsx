@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -40,11 +40,14 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
 /**
  * 隐私设置内容组件
  * 可在独立页面和 Modal 中复用
+ *
+ * 注意：isPrivateStore（私密店铺）值从 profile.private 获取，与老版移动端一致
+ * 其他访问控制设置（allowAccessRequests, autoApproveRequests 等）从 store-access-settings 获取
  */
 export const PrivacySettingsContent: React.FC = () => {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { profile } = useUserStore();
+  const { profile, updateProfile } = useUserStore();
   const storePeerID = profile?.peerID || '';
 
   const {
@@ -55,16 +58,27 @@ export const PrivacySettingsContent: React.FC = () => {
   } = useAccessControl({ storePeerID });
 
   // Local state for form
-  const [isPrivateStore, setIsPrivateStore] = useState(false);
+  // 从 profile.private 获取私密店铺状态（与老版移动端一致）
+  const [isPrivateStore, setIsPrivateStore] = useState(profile?.private ?? false);
   const [allowAccessRequests, setAllowAccessRequests] = useState(true);
   const [autoApproveRequests, setAutoApproveRequests] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync with fetched settings
+  // 追踪初始值，用于判断是否有变更
+  const initialPrivateRef = useRef(profile?.private ?? false);
+
+  // 当 profile 更新时同步私密店铺状态
+  useEffect(() => {
+    const profilePrivate = profile?.private ?? false;
+    setIsPrivateStore(profilePrivate);
+    initialPrivateRef.current = profilePrivate;
+  }, [profile?.private]);
+
+  // Sync with fetched settings (access control settings only)
   useEffect(() => {
     if (privacySettings) {
-      setIsPrivateStore(privacySettings.isPrivateStore || false);
+      // 注意：不再从 privacySettings 获取 isPrivateStore，而是从 profile.private 获取
       setAllowAccessRequests(privacySettings.allowAccessRequests !== false);
       setAutoApproveRequests(privacySettings.autoApproveRequests || false);
       setWelcomeMessage(privacySettings.welcomeMessage || '');
@@ -79,12 +93,24 @@ export const PrivacySettingsContent: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // 1. 如果私密店铺状态有变化，通过 updateProfile 更新 profile.private
+      const privateChanged = isPrivateStore !== initialPrivateRef.current;
+      if (privateChanged) {
+        const profileUpdateSuccess = await updateProfile({ private: isPrivateStore });
+        if (!profileUpdateSuccess) {
+          throw new Error('Failed to update profile');
+        }
+        // 更新初始值引用
+        initialPrivateRef.current = isPrivateStore;
+      }
+
+      // 2. 更新访问控制设置（不包含 isPrivateStore）
       await updateSettings({
-        isPrivateStore,
         allowAccessRequests,
         autoApproveRequests,
         welcomeMessage: welcomeMessage.trim(),
       });
+
       toast({
         title: t('common.success'),
         description: t('settings.accessControl.settingsSaved'),
@@ -100,12 +126,13 @@ export const PrivacySettingsContent: React.FC = () => {
     }
   };
 
+  // 检查是否有变更
   const hasChanges =
-    privacySettings &&
-    (isPrivateStore !== (privacySettings.isPrivateStore || false) ||
-      allowAccessRequests !== (privacySettings.allowAccessRequests !== false) ||
-      autoApproveRequests !== (privacySettings.autoApproveRequests || false) ||
-      welcomeMessage.trim() !== (privacySettings.welcomeMessage || ''));
+    isPrivateStore !== initialPrivateRef.current ||
+    (privacySettings &&
+      (allowAccessRequests !== (privacySettings.allowAccessRequests !== false) ||
+        autoApproveRequests !== (privacySettings.autoApproveRequests || false) ||
+        welcomeMessage.trim() !== (privacySettings.welcomeMessage || '')));
 
   if (isLoadingPrivacy) {
     return (

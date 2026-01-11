@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
@@ -28,6 +29,7 @@ import {
   type ProductGroup,
 } from '@mobazha/core';
 import { Loader2, Plus, Layers, AlertCircle } from 'lucide-react';
+import { useSettingsDrawerOptional } from '@/components/SettingsDrawer/SettingsDrawer';
 
 interface ProductGroupForm {
   name: string;
@@ -46,12 +48,28 @@ interface ProductGroupsContentProps {
  */
 export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inModal = false }) => {
   const { t } = useI18n();
+  const router = useRouter();
   const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
   const ownerPeerID = profile?.peerID || '';
 
   // 产品组使用 Casdoor userID（如 telegram_123456），fallback 到 peerID
   const casdoorUserId = getCasdoorUserId();
   const userID = casdoorUserId || ownerPeerID;
+
+  // 可选的 SettingsDrawer context（可能不在 Provider 内）
+  const settingsDrawer = useSettingsDrawerOptional();
+
+  // 导航处理函数 - Modal 模式下关闭弹框后导航，否则直接导航
+  const handleNavigate = useCallback(
+    (path: string) => {
+      if (inModal && settingsDrawer?.navigateToPage) {
+        settingsDrawer.navigateToPage(path);
+      } else {
+        router.push(path);
+      }
+    },
+    [inModal, settingsDrawer, router]
+  );
 
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
     useProductGroups({ userID, autoLoad: false });
@@ -226,18 +244,43 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
               )}
 
               <div className="pt-3 border-t border-border space-y-2">
-                <Link
-                  href={`/settings/access-control/product-groups/${group.id}`}
-                  className="block text-sm text-primary hover:underline"
-                >
-                  {t('settings.accessControl.manageProducts')} →
-                </Link>
-                <Link
-                  href={`/settings/access-control/product-groups/${group.id}/authorization`}
-                  className="block text-sm text-blue-600 hover:underline"
-                >
-                  {t('settings.accessControl.configureAccess')} →
-                </Link>
+                {inModal ? (
+                  <>
+                    <button
+                      onClick={() =>
+                        handleNavigate(`/settings/access-control/product-groups/${group.id}`)
+                      }
+                      className="block text-sm text-primary hover:underline text-left"
+                    >
+                      {t('settings.accessControl.manageProducts')} →
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleNavigate(
+                          `/settings/access-control/product-groups/${group.id}/authorization`
+                        )
+                      }
+                      className="block text-sm text-blue-600 hover:underline text-left"
+                    >
+                      {t('settings.accessControl.configureAccess')} →
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={`/settings/access-control/product-groups/${group.id}`}
+                      className="block text-sm text-primary hover:underline"
+                    >
+                      {t('settings.accessControl.manageProducts')} →
+                    </Link>
+                    <Link
+                      href={`/settings/access-control/product-groups/${group.id}/authorization`}
+                      className="block text-sm text-blue-600 hover:underline"
+                    >
+                      {t('settings.accessControl.configureAccess')} →
+                    </Link>
+                  </>
+                )}
               </div>
             </Card>
           ))}
@@ -280,10 +323,7 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
           </div>
 
           <div className="text-center">
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              disabled={!isAuthenticated || !userID}
-            >
+            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated || !userID}>
               <Plus className="w-4 h-4 mr-2" />
               {t('settings.accessControl.createFirstProductGroup')}
             </Button>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui';
 import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
 import { Loader2, Plus, Users, AlertCircle } from 'lucide-react';
+import { useSettingsDrawerOptional } from '@/components/SettingsDrawer/SettingsDrawer';
 
 interface UserGroupForm {
   name: string;
@@ -39,8 +41,24 @@ interface UserGroupsContentProps {
  */
 export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = false }) => {
   const { t } = useI18n();
+  const router = useRouter();
   const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
   const ownerPeerID = profile?.peerID || '';
+
+  // 可选的 SettingsDrawer context（可能不在 Provider 内）
+  const settingsDrawer = useSettingsDrawerOptional();
+
+  // 导航处理函数 - Modal 模式下关闭弹框后导航，否则直接导航
+  const handleNavigate = useCallback(
+    (path: string) => {
+      if (inModal && settingsDrawer?.navigateToPage) {
+        settingsDrawer.navigateToPage(path);
+      } else {
+        router.push(path);
+      }
+    },
+    [inModal, settingsDrawer, router]
+  );
 
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
     useUserGroups({ ownerPeerID, autoLoad: false });
@@ -183,7 +201,9 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold truncate">{group.name}</h3>
                     {group.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{group.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {group.description}
+                      </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-2">
                       {group.memberCount || 0} {t('common.members')}
@@ -193,11 +213,24 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
 
                 {/* 操作按钮 */}
                 <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-start">
-                  <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
-                    <Button size="sm" variant="ghost" className="text-xs sm:text-sm px-2 sm:px-3">
+                  {inModal ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs sm:text-sm px-2 sm:px-3"
+                      onClick={() =>
+                        handleNavigate(`/settings/access-control/user-groups/${group.id}/members`)
+                      }
+                    >
                       {t('common.members')}
                     </Button>
-                  </Link>
+                  ) : (
+                    <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
+                      <Button size="sm" variant="ghost" className="text-xs sm:text-sm px-2 sm:px-3">
+                        {t('common.members')}
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     size="sm"
                     variant="ghost"

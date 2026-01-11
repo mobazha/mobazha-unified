@@ -28,7 +28,7 @@ export interface StoredUser {
 /**
  * 获取存储的 Token（同步版本）
  *
- * 优先从 localStorage 读取，保持与 Zustand persist 一致
+ * 统一从 localStorage 读取，与 Zustand persist 保持一致
  */
 export function getStoredToken(): string | null {
   if (typeof window === 'undefined') {
@@ -36,22 +36,7 @@ export function getStoredToken(): string | null {
   }
 
   try {
-    // 统一从 localStorage 读取
-    // 兼容：也检查 sessionStorage（用于迁移旧数据）
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token) {
-      return token;
-    }
-
-    // 迁移：如果 sessionStorage 中有 token，迁移到 localStorage
-    const sessionToken = sessionStorage.getItem(TOKEN_KEY);
-    if (sessionToken) {
-      localStorage.setItem(TOKEN_KEY, sessionToken);
-      sessionStorage.removeItem(TOKEN_KEY);
-      return sessionToken;
-    }
-
-    return null;
+    return localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
@@ -61,18 +46,14 @@ export function getStoredToken(): string | null {
  * 保存 Token
  *
  * @param token - JWT Token
- * @param _persistent - 保留参数，现在始终持久化到 localStorage
  */
-export function saveToken(token: string, _persistent = true): void {
+export function saveToken(token: string): void {
   if (typeof window === 'undefined') {
     return;
   }
 
   try {
-    // 统一保存到 localStorage
     localStorage.setItem(TOKEN_KEY, token);
-    // 清理可能存在的 sessionStorage 数据
-    sessionStorage.removeItem(TOKEN_KEY);
   } catch (error) {
     console.error('Failed to save token:', error);
   }
@@ -87,9 +68,7 @@ export function clearToken(): void {
   }
 
   try {
-    // 同时清理两个存储位置
     localStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
   } catch (error) {
     console.error('Failed to clear token:', error);
   }
@@ -104,20 +83,10 @@ export function getStoredUser(): StoredUser | null {
   }
 
   try {
-    // 优先从 localStorage 读取
     const userStr = localStorage.getItem(USER_KEY);
     if (userStr) {
       return JSON.parse(userStr);
     }
-
-    // 迁移：如果 sessionStorage 中有数据，迁移到 localStorage
-    const sessionUserStr = sessionStorage.getItem(USER_KEY);
-    if (sessionUserStr) {
-      localStorage.setItem(USER_KEY, sessionUserStr);
-      sessionStorage.removeItem(USER_KEY);
-      return JSON.parse(sessionUserStr);
-    }
-
     return null;
   } catch {
     return null;
@@ -128,19 +97,15 @@ export function getStoredUser(): StoredUser | null {
  * 保存用户信息
  *
  * @param user - 用户信息
- * @param _persistent - 保留参数，现在始终持久化到 localStorage
  */
-export function saveUser(user: StoredUser, _persistent = true): void {
+export function saveUser(user: StoredUser): void {
   if (typeof window === 'undefined') {
     return;
   }
 
   try {
     const userStr = JSON.stringify(user);
-    // 统一保存到 localStorage
     localStorage.setItem(USER_KEY, userStr);
-    // 清理可能存在的 sessionStorage 数据
-    sessionStorage.removeItem(USER_KEY);
   } catch (error) {
     console.error('Failed to save user:', error);
   }
@@ -155,9 +120,7 @@ export function clearUser(): void {
   }
 
   try {
-    // 同时清理两个存储位置
     localStorage.removeItem(USER_KEY);
-    sessionStorage.removeItem(USER_KEY);
   } catch (error) {
     console.error('Failed to clear user:', error);
   }
@@ -191,6 +154,17 @@ export function getAuthHeaders(): Record<string, string> {
     };
   }
 
+  // 处理不同的 token 格式
+  if (token.startsWith('basic:')) {
+    // Basic Auth 格式: "basic:base64encoded"
+    const base64Credentials = token.slice(6); // 移除 "basic:" 前缀
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${base64Credentials}`,
+    };
+  }
+
+  // JWT/OAuth token
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,

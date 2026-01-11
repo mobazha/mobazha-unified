@@ -750,6 +750,7 @@ export interface TranslationResource {
     backupComingSoon: string;
     restoreComingSoon: string;
     followingSystem: string;
+    returnToPreviousPage: string;
     // Advanced tab sections
     privacy: string;
     backup: string;
@@ -766,6 +767,14 @@ export interface TranslationResource {
     themeStyle: string;
     themeStyleDesc: string;
     currentEffect: string;
+    // Sound Settings
+    soundSettings: string;
+    soundNotifications: string;
+    soundNotificationsDesc: string;
+    voiceAnnouncements: string;
+    voiceAnnouncementsDesc: string;
+    volume: string;
+    test: string;
     // Access Control
     accessControl: string;
     userGroups: string;
@@ -1124,6 +1133,8 @@ export interface TranslationResource {
     requestRejectedDesc: string;
     privateStore: string;
     privateStoreDesc: string;
+    privateStoreBadge: string;
+    fullAccessGranted: string;
     accessingViaGroup: string;
     requestAccess: string;
     requestNote: string;
@@ -1132,6 +1143,19 @@ export interface TranslationResource {
     submitRequest: string;
     noAccess: string;
     noAccessDesc: string;
+    // Access request management
+    pendingRequests: string;
+    approvedRequests: string;
+    rejectedRequests: string;
+    accessList: string;
+    noAccessList: string;
+    addUser: string;
+    addUserHint: string;
+    peerIDLabel: string;
+    peerIDPlaceholder: string;
+    removeFromList: string;
+    confirmRemove: string;
+    confirmRemoveMessage: string;
   };
 }
 

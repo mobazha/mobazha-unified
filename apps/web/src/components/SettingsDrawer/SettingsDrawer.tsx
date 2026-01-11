@@ -1,6 +1,14 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, createContext, useContext, useRef, useEffect } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  createContext,
+  useContext,
+  useRef,
+  useEffect,
+} from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,8 +48,10 @@ import {
   CRYPTO_CURRENCIES,
   getPopularCurrencies,
   getImageUrl,
+  useNotificationStore,
+  testNotificationSound,
 } from '@mobazha/core';
-import type { CurrencyInfo } from '@mobazha/core';
+import type { CurrencyInfo, Locale } from '@mobazha/core';
 import {
   X,
   Check,
@@ -108,7 +118,7 @@ const countries = [
   { code: 'RU', name: 'Russia' },
 ];
 
-const languages = [
+const languages: { code: Locale; name: string }[] = [
   { code: 'en', name: 'English (English, America)' },
   { code: 'zh', name: '中文 (Chinese)' },
   { code: 'es', name: 'Español (Spanish)' },
@@ -118,7 +128,6 @@ const languages = [
   { code: 'ko', name: '한국어 (Korean)' },
   { code: 'ru', name: 'Русский (Russian)' },
   { code: 'pt', name: 'Português (Portuguese)' },
-  { code: 'it', name: 'Italiano (Italian)' },
 ];
 
 const acceptedCoins = [
@@ -235,6 +244,8 @@ interface SettingsDrawerContextType {
   closeSettings: () => void;
   navigateTo: (section: SettingsSection) => void;
   goBack: () => void;
+  /** 关闭弹框并导航到指定页面（用于复杂操作需要跳转到独立页面时） */
+  navigateToPage: (path: string) => void;
 }
 
 const SettingsDrawerContext = createContext<SettingsDrawerContextType | null>(null);
@@ -245,6 +256,11 @@ export function useSettingsDrawer() {
     throw new Error('useSettingsDrawer must be used within SettingsDrawerProvider');
   }
   return context;
+}
+
+/** 可选版本的 useSettingsDrawer，在没有 Provider 时返回 null 而不是抛出错误 */
+export function useSettingsDrawerOptional() {
+  return useContext(SettingsDrawerContext);
 }
 
 // ============ Helper Components ============
@@ -380,21 +396,26 @@ const RadioOption = ({ value, label, checked, onChange, name }: RadioOptionProps
 // (复用自 SettingsModal，简化版本)
 
 const GeneralTabContent: React.FC = () => {
-  const { t } = useI18n();
+  const { t, language: currentLanguage, setLanguage: setI18nLanguage } = useI18n();
   const { toast } = useToast();
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
   const { localCurrency, setLocalCurrency } = useLocalCurrency();
+  const { soundEnabled, ttsEnabled, volume, setSoundEnabled, setTtsEnabled, setVolume } =
+    useNotificationStore();
 
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(currentLanguage || 'en');
   const [country, setCountry] = useState('US');
-  const [showMatureContent, setShowMatureContent] = useState(false);
-  const [soundNotifications, setSoundNotifications] = useState(true);
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [currencySearchQuery, setCurrencySearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // 测试声音
+  const handleTestSound = useCallback(() => {
+    testNotificationSound('chat_message');
+  }, []);
 
   const currencyOptions = useMemo(() => {
     const popular = getPopularCurrencies();
@@ -478,45 +499,50 @@ const GeneralTabContent: React.FC = () => {
           </Button>
         </FormField>
 
-        {/* Display Mature Content */}
-        <FormField label={t('settingsModal.matureContent')}>
-          <div className="flex gap-6">
-            <RadioOption
-              name="matureContent"
-              value="yes"
-              label={t('common.yes')}
-              checked={showMatureContent}
-              onChange={() => setShowMatureContent(true)}
-            />
-            <RadioOption
-              name="matureContent"
-              value="no"
-              label={t('common.no')}
-              checked={!showMatureContent}
-              onChange={() => setShowMatureContent(false)}
-            />
-          </div>
-        </FormField>
+        {/* Sound Settings */}
+        <div className="space-y-4 border-t pt-4 mt-4">
+          <h3 className="text-sm font-semibold text-muted-foreground">
+            {t('settingsExtended.soundSettings')}
+          </h3>
 
-        {/* Sound Notifications */}
-        <FormField label={t('settingsModal.soundNotifications')}>
-          <div className="flex gap-6">
-            <RadioOption
-              name="soundNotifications"
-              value="yes"
-              label={t('common.yes')}
-              checked={soundNotifications}
-              onChange={() => setSoundNotifications(true)}
-            />
-            <RadioOption
-              name="soundNotifications"
-              value="no"
-              label={t('common.no')}
-              checked={!soundNotifications}
-              onChange={() => setSoundNotifications(false)}
-            />
+          <FormField label={t('settingsExtended.soundNotifications')}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {t('settingsExtended.soundNotificationsDesc')}
+              </span>
+              <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+            </div>
+          </FormField>
+
+          <FormField label={t('settingsExtended.voiceAnnouncements')}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {t('settingsExtended.voiceAnnouncementsDesc')}
+              </span>
+              <Switch checked={ttsEnabled} onCheckedChange={setTtsEnabled} />
+            </div>
+          </FormField>
+
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-sm">{t('settingsExtended.volume')}</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={Math.round(volume * 100)}
+                onChange={e => setVolume(parseInt(e.target.value) / 100)}
+                className="w-24 accent-primary"
+              />
+              <span className="text-sm text-muted-foreground w-10 text-right">
+                {Math.round(volume * 100)}%
+              </span>
+              <Button size="sm" variant="outline" onClick={handleTestSound}>
+                {t('settingsExtended.test')}
+              </Button>
+            </div>
           </div>
-        </FormField>
+        </div>
 
         {/* Theme */}
         <FormField label={t('settings.theme')}>
@@ -567,6 +593,7 @@ const GeneralTabContent: React.FC = () => {
                   key={l.code}
                   onClick={() => {
                     setLanguage(l.code);
+                    setI18nLanguage(l.code);
                     setShowLanguageModal(false);
                   }}
                   className={cn(
@@ -1190,7 +1217,7 @@ const AddressesContent: React.FC = () => {
 
   const [addresses, setAddresses] = useState<ShippingAddress[]>(mockAddresses);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [_editingId, setEditingId] = useState<string | null>(null);
   const [newAddress, setNewAddress] = useState<Partial<ShippingAddress>>({
     name: '',
     company: '',
@@ -2185,7 +2212,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
     }
   }, [open, initialSection]);
 
-  const navigateTo = useCallback(
+  const _navigateTo = useCallback(
     (section: SettingsSection) => {
       setNavigationStack(prev => [...prev, currentSection]);
       setCurrentSection(section);
@@ -2217,7 +2244,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   };
 
   // 判断是否在子菜单中
-  const isInSubmenu =
+  const _isInSubmenu =
     currentSection.startsWith('accessControl.') || currentSection === 'accessControl';
   const showBackInContent =
     currentSection.startsWith('accessControl.') && currentSection !== 'accessControl';
@@ -2467,9 +2494,33 @@ export const SettingsDrawerProvider: React.FC<SettingsDrawerProviderProps> = ({ 
     setCurrentSection('main');
   }, []);
 
+  // 关闭弹框并导航到指定页面（用于复杂操作需要跳转到独立页面时）
+  const navigateToPage = useCallback(
+    (path: string) => {
+      // 保存当前路径作为来源，方便用户返回
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('settings_referrer', pathname || '/');
+      }
+      setIsOpen(false);
+      // 使用 setTimeout 确保弹框关闭动画完成后再导航
+      setTimeout(() => {
+        router.push(path);
+      }, 100);
+    },
+    [router, pathname]
+  );
+
   return (
     <SettingsDrawerContext.Provider
-      value={{ isOpen, currentSection, openSettings, closeSettings, navigateTo, goBack }}
+      value={{
+        isOpen,
+        currentSection,
+        openSettings,
+        closeSettings,
+        navigateTo,
+        goBack,
+        navigateToPage,
+      }}
     >
       {children}
       <SettingsDrawer open={isOpen} onOpenChange={setIsOpen} initialSection={initialSection} />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import {
   DialogTitle,
   ScrollArea,
   useToast,
+  Slider,
 } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,9 +23,11 @@ import {
   FIAT_CURRENCIES,
   CRYPTO_CURRENCIES,
   getPopularCurrencies,
+  useNotificationStore,
+  testNotificationSound,
 } from '@mobazha/core';
 import type { CurrencyInfo, Locale } from '@mobazha/core';
-import { ChevronLeft, Check } from 'lucide-react';
+import { ChevronLeft, Check, Volume2 } from 'lucide-react';
 
 // Countries data
 const countries = [
@@ -137,6 +140,10 @@ export default function GeneralSettingsPage() {
   const { toast } = useToast();
   const { localCurrency, setLocalCurrency } = useLocalCurrency();
 
+  // 声音设置 from store
+  const { soundEnabled, ttsEnabled, volume, setSoundEnabled, setTtsEnabled, setVolume } =
+    useNotificationStore();
+
   // State
   const [country, setCountry] = useState('US');
   const [showCountryModal, setShowCountryModal] = useState(false);
@@ -144,6 +151,27 @@ export default function GeneralSettingsPage() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+  const [localVolume, setLocalVolume] = useState(Math.round(volume * 100));
+
+  // 同步音量
+  useEffect(() => {
+    setLocalVolume(Math.round(volume * 100));
+  }, [volume]);
+
+  // 测试声音
+  const handleTestSound = useCallback(() => {
+    testNotificationSound('chat_message');
+  }, []);
+
+  // 音量变化
+  const handleVolumeChange = useCallback(
+    (values: number[]) => {
+      const newVolume = values[0];
+      setLocalVolume(newVolume);
+      setVolume(newVolume / 100);
+    },
+    [setVolume]
+  );
 
   // 获取货币列表
   const currencyOptions = useMemo(() => {
@@ -213,6 +241,48 @@ export default function GeneralSettingsPage() {
           value={THEME_INFO[theme]?.icon || '🌊'}
           onClick={() => setShowThemeModal(true)}
         />
+      </SettingGroup>
+
+      {/* Sound Settings */}
+      <SettingGroup title={t('settingsExtended.soundSettings')}>
+        <SettingItem
+          title={t('settingsExtended.soundNotifications')}
+          description={t('settingsExtended.soundNotificationsDesc')}
+          toggle
+          toggleValue={soundEnabled}
+          onToggle={setSoundEnabled}
+        />
+        <SettingItem
+          title={t('settingsExtended.voiceAnnouncements')}
+          description={t('settingsExtended.voiceAnnouncementsDesc')}
+          toggle
+          toggleValue={ttsEnabled}
+          onToggle={setTtsEnabled}
+        />
+        <div className="p-3 border-b border-border last:border-0">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium text-sm">{t('settingsExtended.volume')}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={[localVolume]}
+                onValueChange={handleVolumeChange}
+                max={100}
+                min={0}
+                step={1}
+                className="w-32"
+              />
+              <span className="text-sm text-muted-foreground min-w-[40px] text-right">
+                {localVolume}%
+              </span>
+              <Button size="sm" variant="outline" onClick={handleTestSound} className="shrink-0">
+                {t('settingsExtended.test')}
+              </Button>
+            </div>
+          </div>
+        </div>
       </SettingGroup>
 
       {/* Language Modal */}

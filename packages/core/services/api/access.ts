@@ -48,22 +48,52 @@ function getAuthHeaders(): Record<string, string> {
   // 获取 token（使用统一的 token 存储）
   const token = getStoredToken();
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    // 处理不同的 token 格式
+    if (token.startsWith('basic:')) {
+      // Basic Auth 格式: "basic:base64encoded"
+      const base64Credentials = token.slice(6); // 移除 "basic:" 前缀
+      headers.Authorization = `Basic ${base64Credentials}`;
+    } else {
+      // JWT/OAuth token
+      headers.Authorization = `Bearer ${token}`;
+    }
   }
 
   // 获取当前用户的 peerID 和群组上下文（仅浏览器环境）
   if (typeof window !== 'undefined') {
-    // 获取当前用户的 peerID（如果有）
-    const userProfile = localStorage.getItem('userProfile');
-    if (userProfile) {
+    // 获取当前用户的 peerID
+    let peerID: string | undefined;
+
+    // 1. 从 Zustand persist 存储读取 (userStore)
+    const zustandStorage = localStorage.getItem('mobazha-user-storage');
+    if (zustandStorage) {
       try {
-        const profile = JSON.parse(userProfile);
-        if (profile.peerID) {
-          headers['X-Requestor-PeerID'] = profile.peerID;
+        const data = JSON.parse(zustandStorage);
+        if (data?.state?.profile?.peerID) {
+          peerID = data.state.profile.peerID;
         }
       } catch {
         // ignore parse error
       }
+    }
+
+    // 2. 从 token.ts 的 user 存储读取
+    if (!peerID) {
+      const authUser = localStorage.getItem('mobazha_auth_user');
+      if (authUser) {
+        try {
+          const user = JSON.parse(authUser);
+          if (user?.id) {
+            peerID = user.id;
+          }
+        } catch {
+          // ignore parse error
+        }
+      }
+    }
+
+    if (peerID) {
+      headers['X-Requestor-PeerID'] = peerID;
     }
 
     // 获取群组上下文（如果有）
@@ -555,7 +585,8 @@ export async function getStoreAccessList(storePeerID: string): Promise<StoreAcce
   if (!response.ok) {
     throw new Error(data.error || data.message || 'Failed to get access list');
   }
-  return Array.isArray(data.list) ? data.list : Array.isArray(data) ? data : [];
+  // 后端返回格式: { accessList: [...], total: n }
+  return Array.isArray(data.accessList) ? data.accessList : Array.isArray(data) ? data : [];
 }
 
 /**

@@ -881,9 +881,11 @@ export const en: TranslationResource = {
       authorizationDesc: '{{count}} authorization rules',
       addAuthorization: 'Add Authorization',
       authorizationInfo: 'About Authorization',
-      authorizationInfoDesc: 'Authorization rules control who can see products in this group. You can authorize specific user groups or group marketplace members.',
+      authorizationInfoDesc:
+        'Authorization rules control who can see products in this group. You can authorize specific user groups or group marketplace members.',
       noAuthorizations: 'No authorization rules',
-      noAuthorizationsDesc: 'This product group is currently open to everyone. Add authorization rules to restrict access.',
+      noAuthorizationsDesc:
+        'This product group is currently open to everyone. Add authorization rules to restrict access.',
       authorizationType: 'Authorization Type',
       userGroupAuth: 'User Group Authorization',
       groupMarketplaceAuth: 'Group Marketplace Authorization',
@@ -892,7 +894,8 @@ export const en: TranslationResource = {
       selectUserGroupPlaceholder: 'Select a user group',
       willAuthorizeGroup: 'Will authorize current group:',
       removeAuthorization: 'Remove Authorization',
-      removeAuthorizationConfirm: 'Are you sure you want to remove this authorization? Users will no longer have access to products in this group.',
+      removeAuthorizationConfirm:
+        'Are you sure you want to remove this authorization? Users will no longer have access to products in this group.',
       userGroup: 'User Group',
       groupMarketplace: 'Group Marketplace',
       // User Group Members Page
@@ -905,7 +908,8 @@ export const en: TranslationResource = {
       removeMember: 'Remove Member',
       removeMemberConfirm: 'Are you sure you want to remove this member from the user group?',
       addedOn: 'Added on',
-      requestsDescription: 'View and manage access requests to your private store',
+      requestsTitle: 'Store Access Requests',
+      requestsDescription: 'Manage user access requests to your private store',
       noRequests: 'No access requests',
       reviewRequest: 'Review Request',
       reviewNote: 'Note (optional)',
@@ -1176,6 +1180,7 @@ export const en: TranslationResource = {
     backupComingSoon: 'Backup wallet feature coming soon!',
     restoreComingSoon: 'Restore profile feature coming soon!',
     followingSystem: 'Following system',
+    returnToPreviousPage: 'You came from another page',
     // Advanced tab sections
     privacy: 'Privacy',
     backup: 'Backup',
@@ -1193,6 +1198,14 @@ export const en: TranslationResource = {
     themeStyle: 'Theme Style',
     themeStyleDesc: 'Choose a color scheme that adapts to your display mode',
     currentEffect: 'Current effect',
+    // Sound Settings
+    soundSettings: 'Sound Settings',
+    soundNotifications: 'Sound Notifications',
+    soundNotificationsDesc: 'Play sound when receiving messages and notifications',
+    voiceAnnouncements: 'Voice Announcements',
+    voiceAnnouncementsDesc: 'Read notification content aloud',
+    volume: 'Volume',
+    test: 'Test',
     // Access Control
     accessControl: 'Access Control',
     userGroups: 'User Groups',
@@ -1571,6 +1584,8 @@ export const en: TranslationResource = {
     requestRejectedDesc: 'Sorry, your access request was not approved.',
     privateStore: 'Private Store',
     privateStoreDesc: 'This store requires access permission to browse products.',
+    privateStoreBadge: 'Private',
+    fullAccessGranted: 'You have full access to this private store',
     accessingViaGroup: 'You are accessing via {{group}} group',
     requestAccess: 'Request Access',
     requestNote: 'Request Note (Optional)',
@@ -1579,6 +1594,19 @@ export const en: TranslationResource = {
     submitRequest: 'Submit Request',
     noAccess: 'Access Denied',
     noAccessDesc: 'You do not have permission to access this store.',
+    // Access request management
+    pendingRequests: 'Pending',
+    approvedRequests: 'Approved',
+    rejectedRequests: 'Rejected',
+    accessList: 'Whitelist',
+    noAccessList: 'Whitelist is empty',
+    addUser: 'Add User',
+    addUserHint: "Enter the user's Peer ID to add directly to whitelist",
+    peerIDLabel: 'Peer ID',
+    peerIDPlaceholder: 'Enter Peer ID...',
+    removeFromList: 'Remove',
+    confirmRemove: 'Confirm Removal',
+    confirmRemoveMessage: 'Are you sure you want to remove this user from the whitelist?',
   },
 };
 
