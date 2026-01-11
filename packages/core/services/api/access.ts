@@ -7,6 +7,7 @@
  */
 
 import { getEnvConfig } from '../../config/env';
+import { getStoredToken } from '../auth/token';
 import type {
   UserGroup,
   UserGroupMember,
@@ -44,13 +45,14 @@ function getAuthHeaders(): Record<string, string> {
     'Content-Type': 'application/json',
   };
 
-  // 获取 token（兼容浏览器和 Node 环境）
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+  // 获取 token（使用统一的 token 存储）
+  const token = getStoredToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
+  // 获取当前用户的 peerID 和群组上下文（仅浏览器环境）
+  if (typeof window !== 'undefined') {
     // 获取当前用户的 peerID（如果有）
     const userProfile = localStorage.getItem('userProfile');
     if (userProfile) {
