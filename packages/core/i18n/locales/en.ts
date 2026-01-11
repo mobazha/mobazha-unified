@@ -84,7 +84,9 @@ export const en: TranslationResource = {
     sales: 'Sales',
     privacyGroups: 'Privacy & Groups',
     productGroups: 'Product Groups',
+    productGroupsDesc: 'Organize products and control visibility',
     userGroups: 'User Groups',
+    userGroupsDesc: 'Manage user groups for access control',
     receivingAccounts: 'Receiving Accounts',
     receivingAccountsDesc: 'Manage payment addresses',
     wishlist: 'Wishlist',
@@ -98,6 +100,9 @@ export const en: TranslationResource = {
     support: 'Help & Support',
     supportDesc: 'Get help and FAQ',
     logout: 'Logout',
+    accessControl: 'Access Control',
+    accessRequests: 'Access Requests',
+    accessRequestsDesc: 'Review pending access requests',
   },
 
   product: {
@@ -968,6 +973,15 @@ export const en: TranslationResource = {
     followingSystem: 'Following system',
     enabled: 'Enabled',
     disabled: 'Disabled',
+    // Access Control
+    accessControl: 'Access Control',
+    userGroups: 'User Groups',
+    userGroupsDesc: 'Manage user groups for access control',
+    productGroups: 'Product Groups',
+    productGroupsDesc: 'Organize products and control their visibility',
+    accessRequests: 'Access Requests',
+    accessRequestsDesc: 'Review pending access requests',
+    storeSettings: 'Store Settings',
   },
 
   userMenu: {
