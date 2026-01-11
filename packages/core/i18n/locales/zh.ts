@@ -1045,6 +1045,18 @@ export const zh: TranslationResource = {
     accessRequests: '访问申请',
     accessRequestsDesc: '审核待处理的访问申请',
     storeSettings: '店铺设置',
+    // Addresses
+    addAddress: '添加地址',
+    noAddresses: '暂无保存的地址',
+  },
+
+  // Address form fields
+  address: {
+    street: '街道',
+    city: '城市',
+    state: '省/州',
+    postalCode: '邮政编码',
+    country: '国家',
   },
 
   userMenu: {
@@ -1074,6 +1086,40 @@ export const zh: TranslationResource = {
     soundTestDesc: '测试通知声音已播放',
     settingsSaved: '设置保存成功',
     saveFailed: '保存设置失败',
+    // Blocked Users
+    blockUser: '屏蔽用户',
+    blockUserDesc: '输入要屏蔽的用户 Peer ID',
+    enterPeerId: '输入 Peer ID',
+    peerIdRequired: 'Peer ID 不能为空',
+    block: '屏蔽',
+    userBlocked: '用户已被屏蔽',
+    userUnblocked: '用户已被取消屏蔽',
+    noBlockedUsers: '暂无屏蔽用户',
+    blockedOn: '屏蔽时间',
+    unblock: '取消屏蔽',
+    unblockConfirmTitle: '取消屏蔽',
+    unblockConfirmDesc: '确定要取消屏蔽 {{name}} 吗？',
+    // Moderation
+    addModerator: '添加调解员',
+    addModeratorDesc: '输入要添加的调解员 Peer ID',
+    moderationDesc: '调解员帮助解决买家和卖家之间的纠纷',
+    noModerators: '暂未添加调解员',
+    moderatorAdded: '调解员添加成功',
+    moderatorRemoved: '调解员已移除',
+    fee: '费用',
+    // Chat Encryption
+    e2eEncryption: '端对端加密',
+    e2eEncryptionDesc: '您的消息已加密，只有您和收件人可以阅读',
+    yourEncryptionKey: '您的加密密钥',
+    created: '创建时间',
+    keyFingerprint: '密钥指纹',
+    fingerprintCopied: '指纹已复制到剪贴板',
+    regenerateKeys: '重新生成密钥',
+    regenerateKeysWarning: '警告：重新生成密钥将使旧的加密消息无法读取',
+    regenerate: '重新生成',
+    keysRegenerated: '密钥重新生成成功',
+    regenerateConfirmTitle: '重新生成加密密钥',
+    regenerateConfirmDesc: '这将使您当前的密钥失效。旧的加密消息可能无法读取。确定要继续吗？',
     // Page tab
     shortDescription: '简介',
     shortDescLimit: '160字符以内',
@@ -1107,9 +1153,6 @@ export const zh: TranslationResource = {
     addressAdded: '地址添加成功',
     addressDeleted: '地址已删除',
     fillRequired: '请填写所有必填字段',
-    // Blocked tab
-    noBlockedUsers: '您没有屏蔽任何人。',
-    unblock: '解除屏蔽',
     // Moderation tab
     disputeResolution: '纠纷调解',
     disputeResolutionDesc:

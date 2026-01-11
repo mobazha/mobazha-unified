@@ -1064,6 +1064,18 @@ export const en: TranslationResource = {
     accessRequests: 'Access Requests',
     accessRequestsDesc: 'Review pending access requests',
     storeSettings: 'Store Settings',
+    // Addresses
+    addAddress: 'Add Address',
+    noAddresses: 'No addresses saved yet',
+  },
+
+  // Address form fields
+  address: {
+    street: 'Street',
+    city: 'City',
+    state: 'State/Province',
+    postalCode: 'Postal Code',
+    country: 'Country',
   },
 
   userMenu: {
@@ -1093,6 +1105,41 @@ export const en: TranslationResource = {
     soundTestDesc: 'Test notification sound played',
     settingsSaved: 'Settings saved successfully',
     saveFailed: 'Failed to save settings',
+    // Blocked Users
+    blockUser: 'Block User',
+    blockUserDesc: 'Enter the Peer ID of the user you want to block',
+    enterPeerId: 'Enter Peer ID',
+    peerIdRequired: 'Peer ID is required',
+    block: 'Block',
+    userBlocked: 'User has been blocked',
+    userUnblocked: 'User has been unblocked',
+    noBlockedUsers: 'You are not blocking anyone',
+    blockedOn: 'Blocked on',
+    unblock: 'Unblock',
+    unblockConfirmTitle: 'Unblock User',
+    unblockConfirmDesc: 'Are you sure you want to unblock {{name}}?',
+    // Moderation
+    addModerator: 'Add Moderator',
+    addModeratorDesc: 'Enter the Peer ID of the moderator to add',
+    moderationDesc: 'Moderators help resolve disputes between buyers and sellers',
+    noModerators: 'No moderators added yet',
+    moderatorAdded: 'Moderator added successfully',
+    moderatorRemoved: 'Moderator removed',
+    fee: 'Fee',
+    // Chat Encryption
+    e2eEncryption: 'End-to-End Encryption',
+    e2eEncryptionDesc: 'Your messages are encrypted and can only be read by you and the recipient',
+    yourEncryptionKey: 'Your Encryption Key',
+    created: 'Created',
+    keyFingerprint: 'Key Fingerprint',
+    fingerprintCopied: 'Fingerprint copied to clipboard',
+    regenerateKeys: 'Regenerate Keys',
+    regenerateKeysWarning: 'Warning: Regenerating keys will make old encrypted messages unreadable',
+    regenerate: 'Regenerate',
+    keysRegenerated: 'Keys regenerated successfully',
+    regenerateConfirmTitle: 'Regenerate Encryption Keys',
+    regenerateConfirmDesc:
+      'This will invalidate your current keys. Old encrypted messages may become unreadable. Are you sure?',
     // Page tab
     shortDescription: 'Short Description',
     shortDescLimit: '160 characters or less',
@@ -1126,9 +1173,6 @@ export const en: TranslationResource = {
     addressAdded: 'Address added successfully',
     addressDeleted: 'Address deleted',
     fillRequired: 'Please fill in all required fields',
-    // Blocked tab
-    noBlockedUsers: 'You are not blocking anyone.',
-    unblock: 'Unblock',
     // Moderation tab
     disputeResolution: 'Dispute Resolution',
     disputeResolutionDesc:
