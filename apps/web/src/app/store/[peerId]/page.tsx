@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { Header, Footer, useSettingsModal } from '@/components';
+import { useParams, useRouter } from 'next/navigation';
+import { Header, Footer } from '@/components';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -51,10 +51,10 @@ type TabType = 'about' | 'products' | 'otc' | 'reviews' | 'following' | 'followe
 
 export default function StorePage() {
   const params = useParams();
+  const router = useRouter();
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
-  const { openSettings } = useSettingsModal();
   const peerId = params.peerId as string;
   const {
     isAuthenticated,
@@ -608,7 +608,7 @@ export default function StorePage() {
                         <>
                           <Button
                             variant="outline"
-                            onClick={() => openSettings('page')}
+                            onClick={() => router.push('/settings/page-profile')}
                             size="sm"
                             className="touch-feedback gap-1.5"
                           >

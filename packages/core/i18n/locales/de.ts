@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const de: TranslationResource = {
   common: {
     loading: 'Laden...',
+    redirecting: 'Weiterleitung...',
     error: 'Fehler',
     success: 'Erfolg',
     cancel: 'Abbrechen',
@@ -674,6 +675,31 @@ export const de: TranslationResource = {
     followingSystem: 'Systemeinstellung',
     enabled: 'Aktiviert',
     disabled: 'Deaktiviert',
+    displayModeDesc: 'Wähle das App-Aussehen: Hell, Dunkel oder Systemeinstellung folgen',
+    themeStyle: 'Theme-Stil',
+    themeStyleDesc: 'Wähle ein Farbschema, das sich an deinen Anzeigemodus anpasst',
+    currentEffect: 'Aktueller Effekt',
+    // Access Control
+    accessControl: 'Zugriffskontrolle',
+    userGroups: 'Benutzergruppen',
+    userGroupsDesc: 'Benutzergruppen für Zugriffskontrolle verwalten',
+    productGroups: 'Produktgruppen',
+    productGroupsDesc: 'Produkte organisieren und Sichtbarkeit steuern',
+    accessRequests: 'Zugriffsanfragen',
+    accessRequestsDesc: 'Ausstehende Zugriffsanfragen überprüfen',
+    storeSettings: 'Shop-Einstellungen',
+    // Addresses
+    addAddress: 'Adresse hinzufügen',
+    noAddresses: 'Keine Adressen gespeichert',
+  },
+
+  // Address form fields
+  address: {
+    street: 'Straße',
+    city: 'Stadt',
+    state: 'Bundesland',
+    postalCode: 'Postleitzahl',
+    country: 'Land',
   },
 
   userMenu: {

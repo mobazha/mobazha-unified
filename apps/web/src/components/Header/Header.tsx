@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useSettingsModal } from '../SettingsModal';
 import {
   useI18n,
   useUserStore,
@@ -49,7 +48,6 @@ export const Header: React.FC = () => {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
-  const { openSettings } = useSettingsModal();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,7 +200,10 @@ export const Header: React.FC = () => {
                   <DropdownMenuSeparator />
 
                   {/* 系统操作 */}
-                  <DropdownMenuItem onClick={() => openSettings()} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => router.push('/settings')}
+                    className="cursor-pointer"
+                  >
                     <Settings className="mr-2 h-4 w-4" />
                     {t('userMenu.settings')}
                   </DropdownMenuItem>

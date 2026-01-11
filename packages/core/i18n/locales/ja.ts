@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const ja: TranslationResource = {
   common: {
     loading: '読み込み中...',
+    redirecting: 'リダイレクト中...',
     error: 'エラー',
     success: '成功',
     cancel: 'キャンセル',
@@ -674,6 +675,31 @@ export const ja: TranslationResource = {
     followingSystem: 'システムに従う',
     enabled: '有効',
     disabled: '無効',
+    displayModeDesc: 'アプリの外観を選択：ライト、ダーク、またはシステム設定に従う',
+    themeStyle: 'テーマスタイル',
+    themeStyleDesc: '表示モードに合わせたカラースキームを選択',
+    currentEffect: '現在の効果',
+    // Access Control
+    accessControl: 'アクセス制御',
+    userGroups: 'ユーザーグループ',
+    userGroupsDesc: 'アクセス制御のためのユーザーグループを管理',
+    productGroups: '製品グループ',
+    productGroupsDesc: '製品を整理し、可視性を制御',
+    accessRequests: 'アクセスリクエスト',
+    accessRequestsDesc: '保留中のアクセスリクエストを確認',
+    storeSettings: 'ストア設定',
+    // Addresses
+    addAddress: '住所を追加',
+    noAddresses: '保存された住所がありません',
+  },
+
+  // Address form fields
+  address: {
+    street: '番地',
+    city: '市区町村',
+    state: '都道府県',
+    postalCode: '郵便番号',
+    country: '国',
   },
 
   userMenu: {

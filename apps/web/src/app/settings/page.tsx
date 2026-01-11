@@ -1,644 +1,131 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@/components/layouts';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { useI18n } from '@mobazha/core';
 import {
-  Switch,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  ScrollArea,
-  useToast,
-} from '@/components/ui';
-import {
-  useTheme,
-  THEME_INFO,
-  useI18n,
-  useUserStore,
-  useLocalCurrency,
-  FIAT_CURRENCIES,
-  CRYPTO_CURRENCIES,
-  getPopularCurrencies,
-} from '@mobazha/core';
-import type { CurrencyInfo } from '@mobazha/core';
+  Settings,
+  User,
+  Store,
+  Shield,
+  MapPin,
+  Ban,
+  Scale,
+  Lock,
+  Wrench,
+  ChevronRight,
+} from 'lucide-react';
 
-// Countries data
-const countries = [
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'CN', name: 'China' },
-];
-
-const acceptedCoins = [
-  { symbol: 'BTC', name: 'Bitcoin', enabled: true },
-  { symbol: 'ETH', name: 'Ethereum', enabled: true },
-  { symbol: 'USDT', name: 'Tether', enabled: true },
-  { symbol: 'USDC', name: 'USD Coin', enabled: false },
-  { symbol: 'BNB', name: 'Binance Coin', enabled: false },
-];
-
-interface SettingItemProps {
+interface SettingsCategoryProps {
+  icon: React.ReactNode;
   title: string;
   description?: string;
-  value?: string;
-  onClick?: () => void;
-  toggle?: boolean;
-  toggleValue?: boolean;
-  onToggle?: (value: boolean) => void;
-  danger?: boolean;
+  href: string;
 }
 
-const SettingItem = ({
-  title,
-  description,
-  value,
-  onClick,
-  toggle,
-  toggleValue,
-  onToggle,
-  danger,
-}: SettingItemProps) => {
-  const content = (
-    <>
-      <div className="flex-1 text-left min-w-0">
-        <p
-          className={`font-medium text-sm sm:text-base ${danger ? 'text-red-600' : 'text-foreground'}`}
-        >
-          {title}
-        </p>
-        {description && (
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">
-            {description}
-          </p>
-        )}
-      </div>
-      {toggle ? (
-        <Switch
-          checked={toggleValue}
-          onCheckedChange={value => {
-            onToggle?.(value);
-          }}
-          className="ml-3 flex-shrink-0"
-        />
-      ) : value ? (
-        <span className="text-muted-foreground text-sm sm:text-base ml-3 flex-shrink-0">
-          {value}
-        </span>
-      ) : (
-        <svg
-          className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-3 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      )}
-    </>
-  );
-
-  const baseClassName = `w-full flex items-center justify-between p-3 sm:p-4 hover:bg-surface-hover/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
-    danger ? 'text-red-600' : ''
-  }`;
-
-  // 当有 toggle 时使用 div 避免 button 嵌套问题
-  if (toggle) {
-    return <div className={baseClassName}>{content}</div>;
-  }
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseClassName} active:bg-slate-100 dark:active:bg-slate-700/50`}
-    >
-      {content}
-    </button>
-  );
-};
-
-interface SettingGroupProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-const SettingGroup = ({ title, children }: SettingGroupProps) => (
-  <div className="mb-4 sm:mb-6">
-    <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1.5 sm:mb-2 px-1">
-      {title}
-    </h3>
-    <Card className="overflow-hidden">{children}</Card>
-  </div>
+const SettingsCategory: React.FC<SettingsCategoryProps> = ({ icon, title, description, href }) => (
+  <Link
+    href={href}
+    className="flex items-center gap-4 p-4 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border last:border-0"
+  >
+    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+      {icon}
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-sm">{title}</p>
+      {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+    </div>
+    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+  </Link>
 );
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
-  const { toast } = useToast();
   const { t } = useI18n();
-  const { logout } = useUserStore();
-  const { localCurrency, setLocalCurrency } = useLocalCurrency();
+  const router = useRouter();
 
-  // State
-  const [country, setCountry] = useState('US');
-  const [isPrivateStore, setIsPrivateStore] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [analytics, setAnalytics] = useState(true);
-  const [showThemeModal, setShowThemeModal] = useState(false);
+  // 桌面端重定向到 general 页面
+  React.useEffect(() => {
+    const checkAndRedirect = () => {
+      if (window.innerWidth >= 1024) {
+        router.replace('/settings/general');
+      }
+    };
 
-  // Modal states
-  const [showCountryModal, setShowCountryModal] = useState(false);
-  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const [showCoinsModal, setShowCoinsModal] = useState(false);
-  const [coins, setCoins] = useState(acceptedCoins);
-  const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+    checkAndRedirect();
+    window.addEventListener('resize', checkAndRedirect);
+    return () => window.removeEventListener('resize', checkAndRedirect);
+  }, [router]);
 
-  // 获取货币列表：热门货币 + 所有法币，支持搜索
-  const currencyOptions = useMemo(() => {
-    const popular = getPopularCurrencies();
-    const all = [...FIAT_CURRENCIES, ...CRYPTO_CURRENCIES];
-
-    // 搜索过滤
-    if (currencySearchQuery.trim()) {
-      const query = currencySearchQuery.toLowerCase();
-      return all.filter(
-        c =>
-          c.code.toLowerCase().includes(query) ||
-          c.name.toLowerCase().includes(query) ||
-          c.symbol.toLowerCase().includes(query)
-      );
-    }
-
-    // 默认显示热门货币在前
-    const popularCodes = new Set(popular.map(p => p.code));
-    const otherCurrencies = all.filter(c => !popularCodes.has(c.code));
-
-    return [...popular, ...otherCurrencies];
-  }, [currencySearchQuery]);
-
-  // 获取当前选择的货币信息
-  const selectedCurrencyInfo = useMemo(() => {
-    return currencyOptions.find(c => c.code === localCurrency) || currencyOptions[0];
-  }, [localCurrency, currencyOptions]);
-
-  // AlertDialog states
-  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-
-  const handleCoinToggle = useCallback((symbol: string) => {
-    setCoins(prev =>
-      prev.map(coin => (coin.symbol === symbol ? { ...coin, enabled: !coin.enabled } : coin))
-    );
-  }, []);
-
-  const handleBackup = useCallback(() => {
-    // In real app, this would trigger backup flow
-    toast({
-      title: t('settingsExtended.comingSoon'),
-      description: t('settingsExtended.backupComingSoon'),
-    });
-  }, [toast, t]);
-
-  const handleRestoreConfirm = useCallback(() => {
-    // In real app, this would trigger restore flow
-    toast({
-      title: t('settingsExtended.comingSoon'),
-      description: t('settingsExtended.restoreComingSoon'),
-    });
-    setShowRestoreDialog(false);
-  }, [toast, t]);
-
-  const handleLogoutConfirm = useCallback(() => {
-    logout(); // 清除认证状态
-    router.push('/');
-  }, [logout, router]);
-
-  const enabledCoinsCount = coins.filter(c => c.enabled).length;
-
+  // 移动端显示分类列表
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="lg:hidden">
+      <h1 className="text-xl font-semibold mb-4">{t('settings.title')}</h1>
 
-      <main className="py-4 sm:py-8">
-        <Container size="md">
-          {/* Page Header */}
-          <HStack gap="sm" align="center" className="mb-4 sm:mb-8 sm:gap-4">
-            <Link
-              href="/profile"
-              className="p-1.5 sm:p-2 hover:bg-surface-hover active:bg-slate-200 dark:active:bg-slate-700 rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('settings.title')}</h1>
-          </HStack>
+      <div className="bg-card rounded-lg border overflow-hidden mb-4">
+        <SettingsCategory
+          icon={<Settings className="w-5 h-5" />}
+          title={t('settings.sidebar.general')}
+          description={t('settingsModal.languageDesc')}
+          href="/settings/general"
+        />
+        <SettingsCategory
+          icon={<User className="w-5 h-5" />}
+          title={t('settings.sidebar.page')}
+          description={t('settingsModal.shortDescription')}
+          href="/settings/page-profile"
+        />
+        <SettingsCategory
+          icon={<Store className="w-5 h-5" />}
+          title={t('settings.sidebar.store')}
+          description={t('settingsExtended.storePoliciesDesc')}
+          href="/settings/store"
+        />
+      </div>
 
-          {/* Profile Settings */}
-          <SettingGroup title={t('settingsExtended.profile')}>
-            <SettingItem
-              title={t('settingsExtended.country')}
-              value={countries.find(c => c.code === country)?.name}
-              onClick={() => setShowCountryModal(true)}
-            />
-            <SettingItem
-              title={t('settings.currency')}
-              value={`${selectedCurrencyInfo?.symbol || ''} ${selectedCurrencyInfo?.code || ''}`}
-              onClick={() => setShowCurrencyModal(true)}
-            />
-            <SettingItem
-              title={t('settingsExtended.shippingAddresses')}
-              description={t('settingsExtended.manageAddresses')}
-              onClick={() => router.push('/settings/addresses')}
-            />
-            <SettingItem
-              title={t('settingsExtended.blockedUsers')}
-              description={t('settingsExtended.manageBlocked')}
-              onClick={() => router.push('/settings/blocked')}
-            />
-          </SettingGroup>
+      <div className="bg-card rounded-lg border overflow-hidden mb-4">
+        <SettingsCategory
+          icon={<Shield className="w-5 h-5" />}
+          title={t('settings.sidebar.accessControl')}
+          description={t('settingsExtended.privateStoreDesc')}
+          href="/settings/access-control"
+        />
+      </div>
 
-          {/* Notifications */}
-          <SettingGroup title={t('settings.notifications')}>
-            <SettingItem
-              title={t('settingsExtended.pushNotifications')}
-              description={t('settingsExtended.pushDescription')}
-              toggle
-              toggleValue={pushNotifications}
-              onToggle={setPushNotifications}
-            />
-            <SettingItem
-              title={t('settingsExtended.emailNotifications')}
-              description={t('settingsExtended.emailDescription')}
-              toggle
-              toggleValue={emailNotifications}
-              onToggle={setEmailNotifications}
-            />
-          </SettingGroup>
+      <div className="bg-card rounded-lg border overflow-hidden mb-4">
+        <SettingsCategory
+          icon={<MapPin className="w-5 h-5" />}
+          title={t('settings.sidebar.addresses')}
+          description={t('settingsExtended.manageAddresses')}
+          href="/settings/addresses"
+        />
+        <SettingsCategory
+          icon={<Ban className="w-5 h-5" />}
+          title={t('settings.sidebar.blocked')}
+          description={t('settingsExtended.manageBlocked')}
+          href="/settings/blocked"
+        />
+        <SettingsCategory
+          icon={<Scale className="w-5 h-5" />}
+          title={t('settings.sidebar.moderation')}
+          description={t('settingsExtended.moderatorsDesc')}
+          href="/settings/moderation"
+        />
+        <SettingsCategory
+          icon={<Lock className="w-5 h-5" />}
+          title={t('settings.sidebar.chatEncryption')}
+          href="/settings/chat-encryption"
+        />
+      </div>
 
-          {/* Store Settings */}
-          <SettingGroup title={t('settingsExtended.store')}>
-            <SettingItem
-              title={t('settingsExtended.privateStore')}
-              description={t('settingsExtended.privateStoreDesc')}
-              toggle
-              toggleValue={isPrivateStore}
-              onToggle={setIsPrivateStore}
-            />
-            <SettingItem
-              title={t('settingsExtended.storePolicies')}
-              description={t('settingsExtended.storePoliciesDesc')}
-              onClick={() => router.push('/settings/policies')}
-            />
-            <SettingItem
-              title={t('settingsExtended.moderators')}
-              description={t('settingsExtended.moderatorsDesc')}
-              onClick={() => router.push('/settings/moderators')}
-            />
-            <SettingItem
-              title={t('settingsExtended.acceptedCryptocurrencies')}
-              value={t('settingsExtended.selected', { count: enabledCoinsCount })}
-              onClick={() => setShowCoinsModal(true)}
-            />
-            <SettingItem
-              title={t('settingsExtended.shippingOptions')}
-              description={t('settingsExtended.shippingOptionsDesc')}
-              onClick={() => router.push('/settings/shipping')}
-            />
-          </SettingGroup>
-
-          {/* Appearance */}
-          <SettingGroup title={t('settings.appearance')}>
-            <SettingItem
-              title={t('settings.theme')}
-              description={THEME_INFO[theme]?.displayName || 'Classic'}
-              value={THEME_INFO[theme]?.icon || '🌊'}
-              onClick={() => setShowThemeModal(true)}
-            />
-            <SettingItem
-              title={t('settings.darkMode')}
-              description={
-                mode === 'system'
-                  ? t('settingsExtended.followingSystem')
-                  : isDark
-                    ? t('settingsExtended.enabled')
-                    : t('settingsExtended.disabled')
-              }
-              toggle
-              toggleValue={isDark}
-              onToggle={value => setMode(value ? 'dark' : 'light')}
-            />
-          </SettingGroup>
-
-          {/* Advanced */}
-          <SettingGroup title={t('settingsExtended.advanced')}>
-            <SettingItem
-              title={t('settingsExtended.analytics')}
-              description={t('settingsExtended.analyticsDesc')}
-              toggle
-              toggleValue={analytics}
-              onToggle={setAnalytics}
-            />
-            <SettingItem
-              title={t('settingsExtended.backupWallet')}
-              description={t('settingsExtended.backupWalletDesc')}
-              onClick={handleBackup}
-            />
-            <SettingItem
-              title={t('settingsExtended.backupProfile')}
-              description={t('settingsExtended.backupProfileDesc')}
-              onClick={() => router.push('/settings/backup')}
-            />
-            <SettingItem
-              title={t('settingsExtended.restoreProfile')}
-              description={t('settingsExtended.restoreProfileDesc')}
-              onClick={() => setShowRestoreDialog(true)}
-            />
-            <SettingItem
-              title={t('settingsExtended.resyncTransactions')}
-              description={t('settingsExtended.resyncDesc')}
-              onClick={() => router.push('/settings/resync')}
-            />
-            <SettingItem
-              title={t('settingsExtended.serverLogs')}
-              description={t('settingsExtended.serverLogsDesc')}
-              onClick={() => router.push('/settings/logs')}
-            />
-          </SettingGroup>
-
-          {/* Version & Logout */}
-          <SettingGroup title={t('settings.about')}>
-            <SettingItem
-              title={t('settings.version')}
-              value="1.0.0 (Build 123)"
-              onClick={() => {}}
-            />
-            <SettingItem
-              title={t('settingsExtended.checkForUpdates')}
-              onClick={() =>
-                toast({
-                  title: t('settingsExtended.upToDate'),
-                  description: t('settingsExtended.latestVersion'),
-                })
-              }
-            />
-            <SettingItem
-              title={t('settings.logout')}
-              danger
-              onClick={() => setShowLogoutDialog(true)}
-            />
-          </SettingGroup>
-        </Container>
-      </main>
-
-      {/* Country Modal */}
-      <Dialog open={showCountryModal} onOpenChange={setShowCountryModal}>
-        <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t('settingsExtended.selectCountry')}</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
-            {countries.map(c => (
-              <button
-                key={c.code}
-                onClick={() => {
-                  setCountry(c.code);
-                  setShowCountryModal(false);
-                }}
-                className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
-                  country === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
-                }`}
-              >
-                <span className="text-foreground">{c.name}</span>
-                {country === c.code && (
-                  <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-              </button>
-            ))}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-      {/* Currency Modal */}
-      <Dialog
-        open={showCurrencyModal}
-        onOpenChange={open => {
-          setShowCurrencyModal(open);
-          if (!open) setCurrencySearchQuery('');
-        }}
-      >
-        <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t('settingsExtended.selectCurrency')}</DialogTitle>
-          </DialogHeader>
-          {/* 搜索框 */}
-          <div className="mb-2">
-            <Input
-              placeholder={t('common.search') + '...'}
-              value={currencySearchQuery}
-              onChange={e => setCurrencySearchQuery(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <ScrollArea className="flex-1 -mx-6 px-6 max-h-[50vh]">
-            {currencyOptions.map((c: CurrencyInfo) => (
-              <button
-                key={c.code}
-                onClick={() => {
-                  setLocalCurrency(c.code);
-                  setShowCurrencyModal(false);
-                  setCurrencySearchQuery('');
-                  toast({
-                    title: t('settings.currency'),
-                    description: `${t('settingsExtended.currencyUpdated')}: ${c.name} (${c.symbol})`,
-                  });
-                }}
-                className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
-                  localCurrency === c.code ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-medium w-10">{c.symbol}</span>
-                  <div>
-                    <span className="text-foreground">{c.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">({c.code})</span>
-                  </div>
-                </div>
-                {localCurrency === c.code && (
-                  <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-              </button>
-            ))}
-            {currencyOptions.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">{t('common.noResults')}</div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-      {/* Theme Modal */}
-      <Dialog open={showThemeModal} onOpenChange={setShowThemeModal}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('settings.chooseTheme')}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {themes.map(t => (
-              <button
-                key={t.name}
-                onClick={() => {
-                  setTheme(t.name as typeof theme);
-                }}
-                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all ${
-                  theme === t.name
-                    ? 'bg-primary/10 border-2 border-primary'
-                    : 'bg-background-alt hover:bg-surface-hover border-2 border-transparent'
-                }`}
-              >
-                <span className="text-3xl">{t.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-text-primary">{t.displayName}</p>
-                  <p className="text-xs text-text-muted truncate">{t.description}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-          <div className="border-t border-border pt-4">
-            <h3 className="text-sm font-medium text-text-secondary mb-3">
-              {t('settings.displayMode')}
-            </h3>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { value: 'light', label: t('settingsExtended.light'), icon: '☀️' },
-                { value: 'dark', label: t('settingsExtended.dark'), icon: '🌙' },
-                { value: 'system', label: t('settings.system'), icon: '💻' },
-              ].map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => setMode(option.value as typeof mode)}
-                  className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
-                    mode === option.value
-                      ? 'bg-primary text-text-inverse'
-                      : 'bg-background-alt hover:bg-surface-hover text-text-primary'
-                  }`}
-                >
-                  <span>{option.icon}</span>
-                  <span className="text-sm">{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <Button className="w-full mt-4" onClick={() => setShowThemeModal(false)}>
-            {t('settingsExtended.done')}
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* Coins Modal */}
-      <Dialog open={showCoinsModal} onOpenChange={setShowCoinsModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('settingsExtended.acceptedCryptocurrencies')}</DialogTitle>
-          </DialogHeader>
-          <VStack gap="sm">
-            {coins.map(coin => (
-              <HStack
-                key={coin.symbol}
-                justify="between"
-                align="center"
-                className="p-3 rounded-lg bg-muted"
-              >
-                <div>
-                  <p className="font-medium text-foreground">{coin.symbol}</p>
-                  <p className="text-sm text-muted-foreground">{coin.name}</p>
-                </div>
-                <Switch
-                  checked={coin.enabled}
-                  onCheckedChange={() => handleCoinToggle(coin.symbol)}
-                />
-              </HStack>
-            ))}
-          </VStack>
-          <Button className="w-full mt-4" onClick={() => setShowCoinsModal(false)}>
-            {t('settingsExtended.done')}
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* Restore Profile AlertDialog */}
-      <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsExtended.restoreConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsExtended.restoreConfirmDesc')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestoreConfirm}>
-              {t('settingsExtended.continue')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Logout AlertDialog */}
-      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsExtended.logoutConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsExtended.logoutConfirmDesc')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogoutConfirm}>
-              {t('settings.logout')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Footer />
+      <div className="bg-card rounded-lg border overflow-hidden">
+        <SettingsCategory
+          icon={<Wrench className="w-5 h-5" />}
+          title={t('settings.sidebar.advanced')}
+          description={t('settingsExtended.analyticsDesc')}
+          href="/settings/advanced"
+        />
+      </div>
     </div>
   );
 }

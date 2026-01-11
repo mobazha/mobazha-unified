@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
@@ -17,119 +17,98 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
+import { useUserGroups, useUserStore, GROUP_COLORS, type UserGroup } from '@mobazha/core';
+import { Loader2 } from 'lucide-react';
 
-// Types
-interface UserGroup {
-  id: string;
+// 本地表单类型（UI 使用）
+interface UserGroupForm {
   name: string;
   description: string;
   color: string;
-  memberCount: number;
-  isDefault: boolean;
-  permissions: {
-    canViewProducts: boolean;
-    canPurchase: boolean;
-    canAccessChat: boolean;
-    discountPercentage: number;
-  };
 }
 
-// Mock data
-const mockGroups: UserGroup[] = [
-  {
-    id: 'g1',
-    name: 'VIP Customers',
-    description: 'Loyal customers with exclusive access and discounts',
-    color: '#F59E0B',
-    memberCount: 45,
-    isDefault: false,
-    permissions: {
-      canViewProducts: true,
-      canPurchase: true,
-      canAccessChat: true,
-      discountPercentage: 15,
-    },
-  },
-  {
-    id: 'g2',
-    name: 'Premium Members',
-    description: 'Members with early access to new products',
-    color: '#8B5CF6',
-    memberCount: 128,
-    isDefault: false,
-    permissions: {
-      canViewProducts: true,
-      canPurchase: true,
-      canAccessChat: true,
-      discountPercentage: 10,
-    },
-  },
-  {
-    id: 'g3',
-    name: 'Regular Members',
-    description: 'Standard store access',
-    color: '#10B981',
-    memberCount: 342,
-    isDefault: true,
-    permissions: {
-      canViewProducts: true,
-      canPurchase: true,
-      canAccessChat: false,
-      discountPercentage: 0,
-    },
-  },
-];
-
-const GROUP_COLORS = [
-  '#10B981',
-  '#3B82F6',
-  '#8B5CF6',
-  '#EC4899',
-  '#F59E0B',
-  '#EF4444',
-  '#6366F1',
-  '#14B8A6',
-];
-
 export default function UserGroupsPage() {
-  const [groups, setGroups] = useState(mockGroups);
+  const { profile, isAuthenticated } = useUserStore();
+  const ownerPeerID = profile?.peerID || '';
+
+  const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
+    useUserGroups({ ownerPeerID, autoLoad: false });
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
-  const [newGroup, setNewGroup] = useState({
+  const [newGroup, setNewGroup] = useState<UserGroupForm>({
     name: '',
     description: '',
     color: GROUP_COLORS[0],
-    discountPercentage: 0,
   });
-  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
+  const [deleteGroupId, setDeleteGroupId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const handleCreateGroup = () => {
-    const group: UserGroup = {
-      id: `g${Date.now()}`,
-      name: newGroup.name,
-      description: newGroup.description,
-      color: newGroup.color,
-      memberCount: 0,
-      isDefault: false,
-      permissions: {
-        canViewProducts: true,
-        canPurchase: true,
-        canAccessChat: false,
-        discountPercentage: newGroup.discountPercentage,
-      },
-    };
-    setGroups(prev => [...prev, group]);
-    setShowCreateModal(false);
-    setNewGroup({ name: '', description: '', color: GROUP_COLORS[0], discountPercentage: 0 });
-    window.alert('User group created!');
-  };
-
-  const handleDeleteGroupConfirm = () => {
-    if (deleteGroupId) {
-      setGroups(prev => prev.filter(g => g.id !== deleteGroupId));
-      window.alert('Group deleted!');
-      setDeleteGroupId(null);
+  // 加载用户组
+  useEffect(() => {
+    if (isAuthenticated && ownerPeerID) {
+      loadGroups(ownerPeerID);
     }
+  }, [isAuthenticated, ownerPeerID, loadGroups]);
+
+  // 创建用户组
+  const handleCreateGroup = useCallback(async () => {
+    if (!ownerPeerID || !newGroup.name.trim()) return;
+
+    setSaving(true);
+    try {
+      const result = await createGroup({
+        ownerPeerID,
+        name: newGroup.name.trim(),
+        description: newGroup.description.trim() || undefined,
+      });
+
+      if (result) {
+        setShowCreateModal(false);
+        setNewGroup({ name: '', description: '', color: GROUP_COLORS[0] });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [ownerPeerID, newGroup, createGroup]);
+
+  // 更新用户组
+  const handleUpdateGroup = useCallback(async () => {
+    if (!editingGroup) return;
+
+    setSaving(true);
+    try {
+      const result = await updateGroup(editingGroup.id, {
+        name: editingGroup.name.trim(),
+        description: editingGroup.description?.trim() || undefined,
+      });
+
+      if (result) {
+        setEditingGroup(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [editingGroup, updateGroup]);
+
+  // 删除用户组
+  const handleDeleteGroupConfirm = useCallback(async () => {
+    if (deleteGroupId === null) return;
+
+    setSaving(true);
+    try {
+      const success = await deleteGroup(deleteGroupId);
+      if (success) {
+        setDeleteGroupId(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [deleteGroupId, deleteGroup]);
+
+  // 获取随机颜色（基于 id）
+  const getGroupColor = (id: number) => {
+    return GROUP_COLORS[id % GROUP_COLORS.length];
   };
 
   return (
@@ -151,77 +130,94 @@ export default function UserGroupsPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Privacy Settings
+            返回隐私设置
           </Link>
 
           <HStack justify="between" align="center" className="mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">User Groups</h1>
-              <p className="text-muted-foreground">
-                Create and manage customer groups with different permissions
-              </p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">用户组</h1>
+              <p className="text-muted-foreground">创建和管理不同权限的客户群组</p>
             </div>
-            <Button onClick={() => setShowCreateModal(true)}>Create Group</Button>
+            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+              创建用户组
+            </Button>
           </HStack>
 
-          {/* Groups List */}
-          <VStack gap="md">
-            {groups.map(group => (
-              <Card key={group.id}>
-                <HStack justify="between" align="start">
-                  <HStack gap="lg" align="start">
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-                      style={{ backgroundColor: group.color }}
-                    >
-                      {group.name.charAt(0)}
-                    </div>
-                    <div>
-                      <HStack gap="sm" align="center" className="mb-1">
-                        <h3 className="font-semibold text-foreground">{group.name}</h3>
-                        {group.isDefault && (
-                          <span className="text-xs px-2 py-0.5 bg-muted text-slate-500 rounded">
-                            Default
-                          </span>
-                        )}
-                      </HStack>
-                      <p className="text-sm text-slate-500 mb-3">{group.description}</p>
-                      <HStack gap="md" className="text-sm">
-                        <span className="text-muted-foreground">{group.memberCount} members</span>
-                        {group.permissions.discountPercentage > 0 && (
-                          <span className="text-emerald-600">
-                            {group.permissions.discountPercentage}% discount
-                          </span>
-                        )}
-                        {group.permissions.canAccessChat && (
-                          <span className="text-blue-600">Chat access</span>
-                        )}
-                      </HStack>
-                    </div>
-                  </HStack>
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
 
-                  <HStack gap="sm">
-                    <Button size="sm" variant="ghost" onClick={() => setEditingGroup(group)}>
-                      Edit
-                    </Button>
-                    {!group.isDefault && (
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Groups List */}
+          {!loading && groups.length > 0 && (
+            <VStack gap="md">
+              {groups.map(group => (
+                <Card key={group.id}>
+                  <HStack justify="between" align="start">
+                    <HStack gap="lg" align="start">
+                      <div
+                        className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
+                        style={{ backgroundColor: getGroupColor(group.id) }}
+                      >
+                        {group.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">{group.name}</h3>
+                        {group.description && (
+                          <p className="text-sm text-slate-500 mb-3">{group.description}</p>
+                        )}
+                        <HStack gap="md" className="text-sm">
+                          <span className="text-muted-foreground">
+                            {group.memberCount || 0} 位成员
+                          </span>
+                        </HStack>
+                      </div>
+                    </HStack>
+
+                    <HStack gap="sm">
+                      <Link href={`/settings/user-groups/${group.id}/members`}>
+                        <Button size="sm" variant="ghost">
+                          成员管理
+                        </Button>
+                      </Link>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          setEditingGroup({
+                            ...group,
+                            description: group.description || '',
+                          })
+                        }
+                      >
+                        编辑
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="text-red-500 hover:text-red-600"
                         onClick={() => setDeleteGroupId(group.id)}
                       >
-                        Delete
+                        删除
                       </Button>
-                    )}
+                    </HStack>
                   </HStack>
-                </HStack>
-              </Card>
-            ))}
-          </VStack>
+                </Card>
+              ))}
+            </VStack>
+          )}
 
           {/* Empty State */}
-          {groups.length === 0 && (
+          {!loading && groups.length === 0 && (
             <Card className="text-center py-12">
               <VStack gap="md" align="center">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
@@ -239,11 +235,23 @@ export default function UserGroupsPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">No user groups yet</h3>
-                <p className="text-muted-foreground">
-                  Create your first user group to organize your customers
-                </p>
-                <Button onClick={() => setShowCreateModal(true)}>Create Group</Button>
+                <h3 className="text-lg font-semibold text-foreground">暂无用户组</h3>
+                <p className="text-muted-foreground">创建第一个用户组来管理您的客户</p>
+                <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+                  创建用户组
+                </Button>
+              </VStack>
+            </Card>
+          )}
+
+          {/* Not Authenticated */}
+          {!isAuthenticated && !loading && (
+            <Card className="text-center py-12">
+              <VStack gap="md" align="center">
+                <p className="text-muted-foreground">请先登录以管理用户组</p>
+                <Link href="/login">
+                  <Button>登录</Button>
+                </Link>
               </VStack>
             </Card>
           )}
@@ -257,13 +265,13 @@ export default function UserGroupsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-foreground mb-6">
-              {editingGroup ? 'Edit User Group' : 'Create User Group'}
+              {editingGroup ? '编辑用户组' : '创建用户组'}
             </h2>
 
             <VStack gap="lg">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Group Name *
+                  用户组名称 *
                 </label>
                 <Input
                   value={editingGroup?.name || newGroup.name}
@@ -272,14 +280,12 @@ export default function UserGroupsPage() {
                       ? setEditingGroup({ ...editingGroup, name: e.target.value })
                       : setNewGroup(prev => ({ ...prev, name: e.target.value }))
                   }
-                  placeholder="e.g., VIP Customers"
+                  placeholder="例如：VIP 客户"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">描述</label>
                 <textarea
                   value={editingGroup?.description || newGroup.description}
                   onChange={e =>
@@ -289,62 +295,31 @@ export default function UserGroupsPage() {
                   }
                   rows={2}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                  placeholder="Describe this group..."
+                  placeholder="描述这个用户组..."
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Color
-                </label>
-                <div className="flex gap-2">
-                  {GROUP_COLORS.map(color => (
-                    <button
-                      key={color}
-                      onClick={() =>
-                        editingGroup
-                          ? setEditingGroup({ ...editingGroup, color })
-                          : setNewGroup(prev => ({ ...prev, color }))
-                      }
-                      className={`w-8 h-8 rounded-lg transition-transform ${
-                        (editingGroup?.color || newGroup.color) === color
-                          ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
-                          : ''
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+              {!editingGroup && (
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    颜色
+                  </label>
+                  <div className="flex gap-2">
+                    {GROUP_COLORS.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setNewGroup(prev => ({ ...prev, color }))}
+                        className={`w-8 h-8 rounded-lg transition-transform ${
+                          newGroup.color === color
+                            ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
+                            : ''
+                        }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Discount Percentage
-                </label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={
-                    editingGroup?.permissions.discountPercentage || newGroup.discountPercentage
-                  }
-                  onChange={e =>
-                    editingGroup
-                      ? setEditingGroup({
-                          ...editingGroup,
-                          permissions: {
-                            ...editingGroup.permissions,
-                            discountPercentage: parseInt(e.target.value) || 0,
-                          },
-                        })
-                      : setNewGroup(prev => ({
-                          ...prev,
-                          discountPercentage: parseInt(e.target.value) || 0,
-                        }))
-                  }
-                  placeholder="0"
-                />
-              </div>
+              )}
             </VStack>
 
             <HStack justify="end" gap="sm" className="mt-6">
@@ -354,24 +329,24 @@ export default function UserGroupsPage() {
                   setShowCreateModal(false);
                   setEditingGroup(null);
                 }}
+                disabled={saving}
               >
-                Cancel
+                取消
               </Button>
               <Button
-                onClick={
-                  editingGroup
-                    ? () => {
-                        setGroups(prev =>
-                          prev.map(g => (g.id === editingGroup.id ? editingGroup : g))
-                        );
-                        setEditingGroup(null);
-                        window.alert('Group updated!');
-                      }
-                    : handleCreateGroup
-                }
-                disabled={!(editingGroup?.name || newGroup.name)}
+                onClick={editingGroup ? handleUpdateGroup : handleCreateGroup}
+                disabled={!(editingGroup?.name || newGroup.name) || saving}
               >
-                {editingGroup ? 'Save Changes' : 'Create Group'}
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    保存中...
+                  </>
+                ) : editingGroup ? (
+                  '保存'
+                ) : (
+                  '创建'
+                )}
               </Button>
             </HStack>
           </Card>
@@ -379,22 +354,25 @@ export default function UserGroupsPage() {
       )}
 
       {/* Delete Confirmation AlertDialog */}
-      <AlertDialog open={!!deleteGroupId} onOpenChange={open => !open && setDeleteGroupId(null)}>
+      <AlertDialog
+        open={deleteGroupId !== null}
+        onOpenChange={open => !open && setDeleteGroupId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete User Group</AlertDialogTitle>
+            <AlertDialogTitle>删除用户组</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this user group? Members in this group will be moved
-              to the default group.
+              确定要删除这个用户组吗？该组中的成员将被移除。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGroupConfirm}
               className="bg-red-600 hover:bg-red-700"
+              disabled={saving}
             >
-              Delete
+              {saving ? '删除中...' : '删除'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
