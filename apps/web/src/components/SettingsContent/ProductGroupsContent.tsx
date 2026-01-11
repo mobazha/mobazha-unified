@@ -225,22 +225,20 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
                 <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
               )}
 
-              {!inModal && (
-                <div className="pt-3 border-t border-border space-y-2">
-                  <Link
-                    href={`/settings/access-control/product-groups/${group.id}`}
-                    className="block text-sm text-primary hover:underline"
-                  >
-                    {t('settings.accessControl.manageProducts')} →
-                  </Link>
-                  <Link
-                    href={`/settings/access-control/product-groups/${group.id}/authorization`}
-                    className="block text-sm text-blue-600 hover:underline"
-                  >
-                    {t('settings.accessControl.configureAccess')} →
-                  </Link>
-                </div>
-              )}
+              <div className="pt-3 border-t border-border space-y-2">
+                <Link
+                  href={`/settings/access-control/product-groups/${group.id}`}
+                  className="block text-sm text-primary hover:underline"
+                >
+                  {t('settings.accessControl.manageProducts')} →
+                </Link>
+                <Link
+                  href={`/settings/access-control/product-groups/${group.id}/authorization`}
+                  className="block text-sm text-blue-600 hover:underline"
+                >
+                  {t('settings.accessControl.configureAccess')} →
+                </Link>
+              </div>
             </Card>
           ))}
         </div>

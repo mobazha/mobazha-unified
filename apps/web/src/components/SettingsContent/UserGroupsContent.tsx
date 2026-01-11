@@ -193,13 +193,11 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
 
                 {/* 操作按钮 */}
                 <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-start">
-                  {!inModal && (
-                    <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
-                      <Button size="sm" variant="ghost" className="text-xs sm:text-sm px-2 sm:px-3">
-                        {t('common.members')}
-                      </Button>
-                    </Link>
-                  )}
+                  <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
+                    <Button size="sm" variant="ghost" className="text-xs sm:text-sm px-2 sm:px-3">
+                      {t('common.members')}
+                    </Button>
+                  </Link>
                   <Button
                     size="sm"
                     variant="ghost"
