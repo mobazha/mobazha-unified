@@ -171,18 +171,19 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
         <div className="space-y-3">
           {groups.map(group => (
             <Card key={group.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                {/* 用户组信息 */}
+                <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0"
                     style={{ backgroundColor: getGroupColor(group.id) }}
                   >
                     {group.name.charAt(0)}
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{group.name}</h3>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold truncate">{group.name}</h3>
                     {group.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{group.description}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-2">
                       {group.memberCount || 0} {t('common.members')}
@@ -190,10 +191,11 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* 操作按钮 */}
+                <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-start">
                   {!inModal && (
                     <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
-                      <Button size="sm" variant="ghost">
+                      <Button size="sm" variant="ghost" className="text-xs sm:text-sm px-2 sm:px-3">
                         {t('common.members')}
                       </Button>
                     </Link>
@@ -201,6 +203,7 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                     onClick={() =>
                       setEditingGroup({
                         ...group,
@@ -213,7 +216,7 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive text-xs sm:text-sm px-2 sm:px-3"
                     onClick={() => setDeleteGroupId(group.id)}
                   >
                     {t('common.delete')}
