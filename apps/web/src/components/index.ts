@@ -49,3 +49,6 @@ export { StoreAccessGuard } from './StoreAccessGuard';
 
 // Settings Components
 export { SettingsSidebar } from './SettingsSidebar';
+
+// Auth Components
+export { AuthGuard } from './AuthGuard';

@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const ja: TranslationResource = {
   common: {
     loading: '読み込み中...',
+    redirecting: 'リダイレクト中...',
     error: 'エラー',
     success: '成功',
     cancel: 'キャンセル',

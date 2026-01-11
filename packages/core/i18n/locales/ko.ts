@@ -7,6 +7,7 @@ import type { TranslationResource } from '../types';
 export const ko: TranslationResource = {
   common: {
     loading: '로딩 중...',
+    redirecting: '리디렉션 중...',
     error: '오류',
     success: '성공',
     cancel: '취소',
