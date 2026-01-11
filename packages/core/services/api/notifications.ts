@@ -32,14 +32,38 @@ interface BackendNotificationRecord {
     txid?: string;
     slug?: string;
     title?: string;
-    thumbnail?: { tiny?: string; small?: string };
+    thumbnail?: { tiny?: string; small?: string; medium?: string; large?: string; original?: string };
+    avatarHashes?: { tiny?: string; small?: string; medium?: string; large?: string; original?: string };
     vendorHandle?: string;
     vendorId?: string;
+    vendorID?: string;
     buyerId?: string;
+    buyerID?: string;
     buyerHandle?: string;
+    // 价格信息
+    price?: {
+      amount: number;
+      currencyCode: string;
+    };
+    // 争议相关
+    disputerID?: string;
+    disputerHandle?: string;
+    disputeeID?: string;
+    disputeeHandle?: string;
+    buyer?: string;
     [key: string]: unknown;
   };
 }
+
+// 通知过滤器类型
+export type NotificationFilter = 'all' | 'orders' | 'followers';
+
+// 过滤器到后端类型的映射
+export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
+  all: '',
+  orders: 'newOrder,orderPaymentReceived,orderFunded,orderConfirmation,orderDeclined,orderCancel,refund,orderFulfillment,orderCompletion,disputeOpen,disputeClose,disputeAccepted,caseOpen,caseUpdate,vendorFinalizedPayment',
+  followers: 'follow,moderatorAdd,moderatorRemove',
+};
 
 // 后端返回的通知列表响应格式
 interface BackendNotificationsResponse {
@@ -62,29 +86,69 @@ export interface Notification {
     txid?: string;
     caseId?: string;
     slug?: string;
-    thumbnail?: { tiny?: string; small?: string };
+    // 商品/头像图片
+    thumbnail?: { tiny?: string; small?: string; medium?: string; large?: string; original?: string };
+    avatarHashes?: { tiny?: string; small?: string; medium?: string; large?: string; original?: string };
+    // 商品信息
+    productTitle?: string;
+    price?: {
+      amount: number;
+      currencyCode: string;
+    };
+    // 用户信息
+    vendorHandle?: string;
+    vendorId?: string;
+    buyerHandle?: string;
+    buyerId?: string;
+    // 争议相关
+    disputerHandle?: string;
+    disputerId?: string;
+    disputeeHandle?: string;
+    disputeeId?: string;
   };
+}
+
+// 分页结果
+export interface NotificationsResult {
+  notifications: Notification[];
+  total: number;
+  unread: number;
+  hasMore: boolean;
+  lastOffsetId?: string;
 }
 
 // Mock 通知数据
 const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
-    type: 'order',
-    title: 'Order Shipped',
-    message: 'Your order #ORD-2024-002 has been shipped',
+    type: 'newOrder',
+    title: 'New Order',
+    message: 'Buyer placed an order',
     read: false,
     timestamp: new Date(Date.now() - 3600000).toISOString(),
-    data: { orderId: 'ORD-002' },
+    data: {
+      orderId: 'QmOrder001',
+      productTitle: 'Vintage T-Shirt',
+      price: { amount: 2500, currencyCode: 'USD' },
+      buyerHandle: 'alice_buyer',
+      buyerId: 'QmBuyer001',
+      thumbnail: { tiny: '', small: '' },
+    },
   },
   {
     id: 'notif-2',
-    type: 'payment',
+    type: 'orderFunded',
     title: 'Payment Received',
-    message: 'You received 0.015 BTC for order #ORD-2024-001',
+    message: 'Order has been funded',
     read: false,
     timestamp: new Date(Date.now() - 7200000).toISOString(),
-    data: { orderId: 'ORD-001' },
+    data: {
+      orderId: 'QmOrder002',
+      productTitle: 'Handmade Bracelet',
+      price: { amount: 1500, currencyCode: 'USD' },
+      buyerHandle: 'bob_shop',
+      buyerId: 'QmBuyer002',
+    },
   },
   {
     id: 'notif-3',
@@ -93,16 +157,37 @@ const mockNotifications: Notification[] = [
     message: 'Alice Chen started following you',
     read: true,
     timestamp: new Date(Date.now() - 86400000).toISOString(),
-    data: { peerID: 'QmUser001' },
+    data: {
+      peerID: 'QmUser001',
+      buyerHandle: 'alice_chen',
+      avatarHashes: { tiny: '', small: '' },
+    },
   },
   {
     id: 'notif-4',
-    type: 'message',
-    title: 'New Message',
-    message: 'TechGear Store sent you a message',
+    type: 'follow',
+    title: 'New Follower',
+    message: 'TechGear Store started following you',
     read: true,
     timestamp: new Date(Date.now() - 172800000).toISOString(),
-    data: { peerID: 'QmVendor123' },
+    data: {
+      peerID: 'QmVendor123',
+      buyerHandle: 'techgear_store',
+    },
+  },
+  {
+    id: 'notif-5',
+    type: 'disputeOpen',
+    title: 'Dispute Opened',
+    message: 'A dispute has been opened',
+    read: false,
+    timestamp: new Date(Date.now() - 259200000).toISOString(),
+    data: {
+      orderId: 'QmOrder003',
+      caseId: 'QmCase001',
+      disputerHandle: 'unhappy_buyer',
+      disputerId: 'QmDisputer001',
+    },
   },
 ];
 
@@ -185,16 +270,32 @@ function generateNotificationMessage(type: string, notification: BackendNotifica
 }
 
 /**
- * 获取通知列表
+ * 获取通知列表（带分页和过滤）
  */
 export async function getNotifications(
-  limit = 20,
-  offsetId = '',
-  username?: string,
-  password?: string
-): Promise<Notification[]> {
+  options: {
+    limit?: number;
+    offsetId?: string;
+    filter?: NotificationFilter;
+    username?: string;
+    password?: string;
+  } = {}
+): Promise<NotificationsResult> {
+  const { limit = 20, offsetId = '', filter = 'all', username, password } = options;
+  
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/notifications?limit=${limit}&offsetId=${offsetId}`;
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    if (offsetId) {
+      params.append('offsetId', offsetId);
+    }
+    // 添加 filter 参数
+    const filterTypes = NOTIFICATION_FILTER_TYPES[filter];
+    if (filterTypes) {
+      params.append('filter', filterTypes);
+    }
+    
+    const url = `${getGatewayUrl()}/ob/notifications?${params.toString()}`;
     const response = await safeRequest<BackendNotificationsResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -202,7 +303,7 @@ export async function getNotifications(
     );
 
     // 转换后端格式到前端格式
-    return (response.notifications || []).map((record): Notification => {
+    const notifications = (response.notifications || []).map((record): Notification => {
       const notif = record.notification || {};
       return {
         id: notif.notificationId || `${record.type}-${record.timestamp}`,
@@ -218,16 +319,66 @@ export async function getNotifications(
           caseId: notif.caseId,
           slug: notif.slug,
           thumbnail: notif.thumbnail,
+          avatarHashes: notif.avatarHashes,
+          productTitle: notif.title,
+          price: notif.price,
+          vendorHandle: notif.vendorHandle,
+          vendorId: notif.vendorId || notif.vendorID,
+          buyerHandle: notif.buyerHandle,
+          buyerId: notif.buyerId || notif.buyerID,
+          disputerHandle: notif.disputerHandle,
+          disputerId: notif.disputerID,
+          disputeeHandle: notif.disputeeHandle,
+          disputeeId: notif.disputeeID,
         },
       };
     });
+
+    const lastNotif = notifications[notifications.length - 1];
+    return {
+      notifications,
+      total: response.total || 0,
+      unread: response.unread || 0,
+      hasMore: notifications.length >= limit && notifications.length < (response.total || 0),
+      lastOffsetId: lastNotif?.id,
+    };
   };
 
   const mockFn = async () => {
-    return mockNotifications;
+    // Mock 数据也支持过滤
+    let filtered = mockNotifications;
+    if (filter === 'orders') {
+      filtered = mockNotifications.filter(n => 
+        ['order', 'payment', 'dispute'].includes(n.type) ||
+        n.type.startsWith('order') || n.type.startsWith('dispute') || n.type.startsWith('case')
+      );
+    } else if (filter === 'followers') {
+      filtered = mockNotifications.filter(n => 
+        n.type === 'follow' || n.type === 'moderatorAdd' || n.type === 'moderatorRemove'
+      );
+    }
+    return {
+      notifications: filtered,
+      total: filtered.length,
+      unread: filtered.filter(n => !n.read).length,
+      hasMore: false,
+    };
   };
 
   return withMockFallback(realFn, mockFn, '/ob/notifications');
+}
+
+/**
+ * 获取通知列表（简化版，兼容旧接口）
+ */
+export async function getNotificationsList(
+  limit = 20,
+  offsetId = '',
+  username?: string,
+  password?: string
+): Promise<Notification[]> {
+  const result = await getNotifications({ limit, offsetId, username, password });
+  return result.notifications;
 }
 
 /**
@@ -324,13 +475,49 @@ export async function batchNotifications(
 }
 
 /**
+ * 获取通知的路由地址
+ */
+export function getNotificationRoute(notification: Notification): string | null {
+  const { type, data } = notification;
+  
+  // 订单相关通知
+  if (type.startsWith('order') || type === 'newOrder' || type === 'refund' || type === 'vendorFinalizedPayment') {
+    if (data?.orderId) {
+      return `/orders/${data.orderId}`;
+    }
+  }
+  
+  // 争议相关通知
+  if (type.startsWith('dispute') || type.startsWith('case')) {
+    if (data?.orderId) {
+      return `/orders/${data.orderId}?tab=dispute`;
+    }
+    if (data?.caseId) {
+      return `/moderator/cases/${data.caseId}`;
+    }
+  }
+  
+  // 关注相关通知
+  if (type === 'follow' || type === 'unfollow' || type === 'moderatorAdd' || type === 'moderatorRemove') {
+    if (data?.peerID) {
+      return `/store/${data.peerID}`;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * 通知 API 导出对象
  */
 export const notificationsApi = {
   getNotifications,
+  getNotificationsList,
   getUnreadNotificationCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   batchNotifications,
+  getNotificationRoute,
+  NOTIFICATION_FILTER_TYPES,
 };
 
