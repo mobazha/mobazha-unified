@@ -1186,6 +1186,24 @@ export const en: TranslationResource = {
     resyncComplete: 'Transaction sync completed',
     resyncFailed: 'Failed to sync transactions',
   },
+
+  storeAccess: {
+    requestSubmitted: 'Access Request Submitted',
+    waitingForApproval:
+      'Your access request is pending. Please wait for the store owner to review.',
+    requestRejected: 'Access Request Rejected',
+    requestRejectedDesc: 'Sorry, your access request was not approved.',
+    privateStore: 'Private Store',
+    privateStoreDesc: 'This store requires access permission to browse products.',
+    accessingViaGroup: 'You are accessing via {{group}} group',
+    requestAccess: 'Request Access',
+    requestNote: 'Request Note (Optional)',
+    requestNotePlaceholder: 'Briefly describe your purpose...',
+    submitting: 'Submitting...',
+    submitRequest: 'Submit Request',
+    noAccess: 'Access Denied',
+    noAccessDesc: 'You do not have permission to access this store.',
+  },
 };
 
 export default en;

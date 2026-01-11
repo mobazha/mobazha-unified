@@ -653,6 +653,19 @@ export const ja: TranslationResource = {
     followingSystem: 'システムに従う',
     enabled: '有効',
     disabled: '無効',
+    displayModeDesc: 'アプリの外観を選択：ライト、ダーク、またはシステム設定に従う',
+    themeStyle: 'テーマスタイル',
+    themeStyleDesc: '表示モードに合わせたカラースキームを選択',
+    currentEffect: '現在の効果',
+    // Access Control
+    accessControl: 'アクセス制御',
+    userGroups: 'ユーザーグループ',
+    userGroupsDesc: 'アクセス制御のためのユーザーグループを管理',
+    productGroups: '製品グループ',
+    productGroupsDesc: '製品を整理し、可視性を制御',
+    accessRequests: 'アクセスリクエスト',
+    accessRequestsDesc: '保留中のアクセスリクエストを確認',
+    storeSettings: 'ストア設定',
   },
 
   userMenu: {

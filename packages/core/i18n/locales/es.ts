@@ -653,6 +653,19 @@ export const es: TranslationResource = {
     followingSystem: 'Siguiendo sistema',
     enabled: 'Activado',
     disabled: 'Desactivado',
+    displayModeDesc: 'Elige cómo se ve la app: claro, oscuro o seguir configuración del sistema',
+    themeStyle: 'Estilo del Tema',
+    themeStyleDesc: 'Elige un esquema de color que se adapte a tu modo de pantalla',
+    currentEffect: 'Efecto actual',
+    // Access Control
+    accessControl: 'Control de Acceso',
+    userGroups: 'Grupos de Usuarios',
+    userGroupsDesc: 'Gestionar grupos de usuarios para control de acceso',
+    productGroups: 'Grupos de Productos',
+    productGroupsDesc: 'Organizar productos y controlar su visibilidad',
+    accessRequests: 'Solicitudes de Acceso',
+    accessRequestsDesc: 'Revisar solicitudes de acceso pendientes',
+    storeSettings: 'Configuración de Tienda',
   },
 
   userMenu: {

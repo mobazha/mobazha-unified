@@ -4,11 +4,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { VStack, HStack } from '@/components/layouts';
-import { Input } from '@/components/ui/input-compat';
 import {
   useAccessControl,
   useUserStore,
   useGroupContext,
+  useI18n,
   type StoreAccessCheckResult,
 } from '@mobazha/core';
 import { ShieldX, ShieldCheck, Clock, Send, Loader2 } from 'lucide-react';
@@ -33,6 +33,7 @@ export function StoreAccessGuard({
   children,
   isOwnStore = false,
 }: StoreAccessGuardProps) {
+  const { t } = useI18n();
   const { profile, isAuthenticated } = useUserStore();
   const requestorPeerID = profile?.peerID || '';
   const { context: groupContext } = useGroupContext();
@@ -150,10 +151,10 @@ export function StoreAccessGuard({
               <Clock className="w-8 h-8 text-amber-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-2">访问申请已提交</h2>
-              <p className="text-muted-foreground">
-                您的访问申请正在等待店铺所有者审核，请耐心等待。
-              </p>
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                {t('storeAccess.requestSubmitted')}
+              </h2>
+              <p className="text-muted-foreground">{t('storeAccess.waitingForApproval')}</p>
             </div>
           </VStack>
         </Card>
@@ -171,8 +172,10 @@ export function StoreAccessGuard({
               <ShieldX className="w-8 h-8 text-red-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-2">访问申请被拒绝</h2>
-              <p className="text-muted-foreground">很抱歉，您的访问申请未能通过审核。</p>
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                {t('storeAccess.requestRejected')}
+              </h2>
+              <p className="text-muted-foreground">{t('storeAccess.requestRejectedDesc')}</p>
             </div>
           </VStack>
         </Card>
@@ -190,16 +193,20 @@ export function StoreAccessGuard({
               <ShieldCheck className="w-8 h-8 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-2">私密店铺</h2>
-              <p className="text-muted-foreground mb-4">此店铺需要申请访问权限才能浏览商品。</p>
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                {t('storeAccess.privateStore')}
+              </h2>
+              <p className="text-muted-foreground mb-4">{t('storeAccess.privateStoreDesc')}</p>
               {groupContext && (
                 <p className="text-sm text-blue-600 mb-4">
-                  您正在通过 {groupContext.chatTitle || groupContext.chatId} 群组访问
+                  {t('storeAccess.accessingViaGroup', {
+                    group: groupContext.chatTitle || groupContext.chatId,
+                  })}
                 </p>
               )}
               <Button onClick={() => setShowRequestModal(true)}>
                 <Send className="w-4 h-4 mr-2" />
-                申请访问
+                {t('storeAccess.requestAccess')}
               </Button>
             </div>
           </VStack>
@@ -209,19 +216,21 @@ export function StoreAccessGuard({
         {showRequestModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md">
-              <h2 className="text-xl font-bold text-foreground mb-6">申请访问</h2>
+              <h2 className="text-xl font-bold text-foreground mb-6">
+                {t('storeAccess.requestAccess')}
+              </h2>
 
               <VStack gap="lg">
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    申请说明（可选）
+                    {t('storeAccess.requestNote')}
                   </label>
                   <textarea
                     value={requestNote}
                     onChange={e => setRequestNote(e.target.value)}
                     rows={3}
                     className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                    placeholder="简要说明您的访问目的..."
+                    placeholder={t('storeAccess.requestNotePlaceholder')}
                   />
                 </div>
 
@@ -234,16 +243,16 @@ export function StoreAccessGuard({
                   onClick={() => setShowRequestModal(false)}
                   disabled={submitting}
                 >
-                  取消
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleSubmitRequest} disabled={submitting}>
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      提交中...
+                      {t('storeAccess.submitting')}
                     </>
                   ) : (
-                    '提交申请'
+                    t('storeAccess.submitRequest')
                   )}
                 </Button>
               </HStack>
@@ -263,8 +272,8 @@ export function StoreAccessGuard({
             <ShieldX className="w-8 h-8 text-slate-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground mb-2">无法访问</h2>
-            <p className="text-muted-foreground">您目前没有权限访问此店铺。</p>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('storeAccess.noAccess')}</h2>
+            <p className="text-muted-foreground">{t('storeAccess.noAccessDesc')}</p>
           </div>
         </VStack>
       </Card>

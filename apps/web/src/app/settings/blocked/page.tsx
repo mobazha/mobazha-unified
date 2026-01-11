@@ -32,6 +32,7 @@ interface BlockedUser {
   blockedAt: string;
 }
 
+// TODO: 集成真实 API - 替换 mock 数据，使用后端黑名单管理 API
 const mockBlockedUsers: BlockedUser[] = [
   {
     id: '1',
