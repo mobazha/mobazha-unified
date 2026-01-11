@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Header, Footer, useSettingsModal } from '@/components';
+import { Header, Footer } from '@/components';
 import { Container, VStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,8 @@ import {
   HelpCircle,
   LogOut,
   Wallet,
-  Users,
   ChevronRight,
   LogIn,
-  Lock,
-  Layers,
 } from 'lucide-react';
 
 // 功能列表项组件
@@ -76,7 +73,6 @@ export default function MePage() {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { isDark, toggleDarkMode } = useTheme();
-  const { openSettings } = useSettingsModal();
 
   const handleLogout = () => {
     logout();
@@ -192,42 +188,13 @@ export default function MePage() {
             </div>
           )}
 
-          {/* 访问控制 */}
-          {isAuthenticated && (
-            <div className="bg-card rounded-xl border overflow-hidden">
-              <div className="px-3 pt-3 pb-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {t('me.accessControl')}
-                </p>
-              </div>
-              <FeatureItem
-                icon={<Users className="w-5 h-5" />}
-                title={t('me.userGroups')}
-                description={t('me.userGroupsDesc')}
-                href="/settings/user-groups"
-              />
-              <FeatureItem
-                icon={<Layers className="w-5 h-5" />}
-                title={t('me.productGroups')}
-                description={t('me.productGroupsDesc')}
-                href="/settings/product-groups"
-              />
-              <FeatureItem
-                icon={<Lock className="w-5 h-5" />}
-                title={t('me.accessRequests')}
-                description={t('me.accessRequestsDesc')}
-                href="/settings/access-requests"
-              />
-            </div>
-          )}
-
           {/* 设置区域 */}
           <div className="bg-card rounded-xl border overflow-hidden">
             <FeatureItem
               icon={<Settings className="w-5 h-5" />}
               title={t('me.settings')}
               description={t('me.settingsDesc')}
-              onClick={() => openSettings()}
+              href="/settings"
             />
             <div className="flex items-center gap-3 p-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
