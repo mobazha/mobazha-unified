@@ -22,7 +22,7 @@ export { CurrencyProvider } from './CurrencyProvider';
 export { SettingsModal, SettingsModalProvider, useSettingsModal } from './SettingsModal';
 
 // Notification Components
-export { NotificationBadge } from './Notification';
+export { NotificationBadge, NotificationDropdown } from './Notification';
 
 // Payment Components
 export {

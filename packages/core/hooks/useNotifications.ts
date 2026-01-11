@@ -101,8 +101,9 @@ export function useNotifications(
   const ttsEnabled = useNotificationStore(selectTtsEnabled);
   const volume = useNotificationStore(selectVolume);
 
-  // 获取 Store 动作
-  const store = useNotificationStore();
+  // 使用 getState() 获取稳定的 store 方法引用，避免无限循环
+  // 注意：不要在 useCallback 依赖中使用整个 store 对象，因为它每次渲染都会变化
+  const getStoreActions = useCallback(() => useNotificationStore.getState(), []);
 
   // ============ 通知管理 ============
 
@@ -110,6 +111,7 @@ export function useNotifications(
    * 获取通知列表
    */
   const fetchNotifications = useCallback(async (): Promise<NotificationData[]> => {
+    const store = getStoreActions();
     store.setLoading(true);
     try {
       const apiNotifications = await notificationsApi.getNotifications();
@@ -150,7 +152,7 @@ export function useNotifications(
       store.setError(errorMessage);
       return [];
     }
-  }, [store]);
+  }, [getStoreActions]);
 
   /**
    * 获取未读数量
@@ -173,7 +175,7 @@ export function useNotifications(
       try {
         const result = await notificationsApi.markNotificationAsRead(id);
         if (result.success) {
-          store.markAsRead(id);
+          getStoreActions().markAsRead(id);
         }
         return result;
       } catch (err) {
@@ -181,7 +183,7 @@ export function useNotifications(
         return { success: false, error: errorMessage };
       }
     },
-    [store]
+    [getStoreActions]
   );
 
   /**
@@ -191,54 +193,54 @@ export function useNotifications(
     try {
       const result = await notificationsApi.markAllNotificationsAsRead();
       if (result.success) {
-        store.markAllAsRead();
+        getStoreActions().markAllAsRead();
       }
       return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to mark all as read';
       return { success: false, error: errorMessage };
     }
-  }, [store]);
+  }, [getStoreActions]);
 
   /**
    * 删除通知
    */
   const deleteNotification = useCallback(
     (id: string): void => {
-      store.removeNotification(id);
+      getStoreActions().removeNotification(id);
     },
-    [store]
+    [getStoreActions]
   );
 
   /**
    * 清空所有通知
    */
   const clearNotifications = useCallback((): void => {
-    store.clearNotifications();
-  }, [store]);
+    getStoreActions().clearNotifications();
+  }, [getStoreActions]);
 
   // ============ 声音设置 ============
 
   const setSoundEnabled = useCallback(
     (enabled: boolean): void => {
-      store.setSoundEnabled(enabled);
+      getStoreActions().setSoundEnabled(enabled);
     },
-    [store]
+    [getStoreActions]
   );
 
   const setTtsEnabled = useCallback(
     (enabled: boolean): void => {
-      store.setTtsEnabled(enabled);
+      getStoreActions().setTtsEnabled(enabled);
     },
-    [store]
+    [getStoreActions]
   );
 
   const setVolume = useCallback(
     (newVolume: number): void => {
-      store.setVolume(newVolume);
+      getStoreActions().setVolume(newVolume);
       soundService.updateVolume(newVolume);
     },
-    [store]
+    [getStoreActions]
   );
 
   const testSound = useCallback((type?: SoundNotificationType): void => {
@@ -249,9 +251,9 @@ export function useNotifications(
 
   const setCurrentRoom = useCallback(
     (roomId: string | null): void => {
-      store.setCurrentRoom(roomId);
+      getStoreActions().setCurrentRoom(roomId);
     },
-    [store]
+    [getStoreActions]
   );
 
   // ============ 选择器 ============
@@ -275,16 +277,16 @@ export function useNotifications(
   }, [notifications]);
 
   const getOrderNotifications = useCallback((): NotificationData[] => {
-    return store.getOrderNotifications();
-  }, [store]);
+    return getStoreActions().getOrderNotifications();
+  }, [getStoreActions]);
 
   const getDisputeNotifications = useCallback((): NotificationData[] => {
-    return store.getDisputeNotifications();
-  }, [store]);
+    return getStoreActions().getDisputeNotifications();
+  }, [getStoreActions]);
 
   const getSocialNotifications = useCallback((): NotificationData[] => {
-    return store.getSocialNotifications();
-  }, [store]);
+    return getStoreActions().getSocialNotifications();
+  }, [getStoreActions]);
 
   // ============ 显示数据 ============
 
