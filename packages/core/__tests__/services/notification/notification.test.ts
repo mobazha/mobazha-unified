@@ -15,6 +15,8 @@ import {
   isDisputeNotification,
   isSocialNotification,
   eventTypeToSoundType,
+  isValidNotificationEventType,
+  normalizeNotificationType,
   ORDER_NOTIFICATION_TYPES,
   DISPUTE_NOTIFICATION_TYPES,
   SOCIAL_NOTIFICATION_TYPES,
@@ -113,6 +115,58 @@ describe('Notification Types', () => {
     it('should map follow events to chat_message (default)', () => {
       expect(eventTypeToSoundType('follow')).toBe('chat_message');
       expect(eventTypeToSoundType('unfollow')).toBe('chat_message');
+    });
+  });
+
+  describe('isValidNotificationEventType', () => {
+    it('should return true for valid order event types', () => {
+      expect(isValidNotificationEventType('newOrder')).toBe(true);
+      expect(isValidNotificationEventType('orderPaymentReceived')).toBe(true);
+      expect(isValidNotificationEventType('orderFulfillment')).toBe(true);
+    });
+
+    it('should return true for valid dispute event types', () => {
+      expect(isValidNotificationEventType('disputeOpen')).toBe(true);
+      expect(isValidNotificationEventType('caseOpen')).toBe(true);
+    });
+
+    it('should return true for valid social event types', () => {
+      expect(isValidNotificationEventType('follow')).toBe(true);
+      expect(isValidNotificationEventType('unfollow')).toBe(true);
+    });
+
+    it('should return false for API category types', () => {
+      expect(isValidNotificationEventType('order')).toBe(false);
+      expect(isValidNotificationEventType('payment')).toBe(false);
+      expect(isValidNotificationEventType('dispute')).toBe(false);
+      expect(isValidNotificationEventType('message')).toBe(false);
+    });
+
+    it('should return false for invalid types', () => {
+      expect(isValidNotificationEventType('invalid')).toBe(false);
+      expect(isValidNotificationEventType('')).toBe(false);
+    });
+  });
+
+  describe('normalizeNotificationType', () => {
+    it('should pass through valid event types unchanged', () => {
+      expect(normalizeNotificationType('newOrder')).toBe('newOrder');
+      expect(normalizeNotificationType('orderPaymentReceived')).toBe('orderPaymentReceived');
+      expect(normalizeNotificationType('disputeOpen')).toBe('disputeOpen');
+      expect(normalizeNotificationType('follow')).toBe('follow');
+    });
+
+    it('should convert API category types to default event types', () => {
+      expect(normalizeNotificationType('order')).toBe('newOrder');
+      expect(normalizeNotificationType('payment')).toBe('orderPaymentReceived');
+      expect(normalizeNotificationType('dispute')).toBe('disputeOpen');
+      expect(normalizeNotificationType('follow')).toBe('follow');
+      expect(normalizeNotificationType('moderator')).toBe('moderatorAdd');
+    });
+
+    it('should return follow for unknown types', () => {
+      expect(normalizeNotificationType('unknown')).toBe('follow');
+      expect(normalizeNotificationType('')).toBe('follow');
     });
   });
 

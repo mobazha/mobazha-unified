@@ -28,7 +28,7 @@ import type {
   SoundNotificationType,
   NotificationDisplayData,
 } from '../types/notification';
-import { getNotificationCategory } from '../types/notification';
+import { getNotificationCategory, normalizeNotificationType } from '../types/notification';
 
 // ============ 类型定义 ============
 
@@ -114,12 +114,16 @@ export function useNotifications(
     try {
       const apiNotifications = await notificationsApi.getNotifications();
       // 转换 API 返回的通知到内部格式
-      // 由于 API 返回的类型可能不完整，我们需要构建符合 NotificationData 的对象
+      // API 可能返回详细事件类型（如 'newOrder'）或简化分类（如 'order'）
+      // normalizeNotificationType 会正确处理两种情况
       const convertedNotifications: NotificationData[] = apiNotifications.map(n => {
+        // 将 API 类型规范化为内部事件类型
+        const eventType = normalizeNotificationType(n.type);
+
         // 基础属性
         const base = {
           id: n.id,
-          type: n.type as NotificationEventType,
+          type: eventType,
           timestamp: n.timestamp,
           read: n.read,
         };

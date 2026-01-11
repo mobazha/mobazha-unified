@@ -141,6 +141,7 @@ export type {
   WebSocketNotificationMessage,
   NotificationDisplayData,
   NotificationSettings,
+  ApiNotificationCategory,
 } from './notification';
 
 export {
@@ -154,4 +155,6 @@ export {
   isDisputeNotification,
   isSocialNotification,
   eventTypeToSoundType,
+  isValidNotificationEventType,
+  normalizeNotificationType,
 } from './notification';
