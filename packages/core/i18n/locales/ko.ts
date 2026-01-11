@@ -457,6 +457,27 @@ export const ko: TranslationResource = {
     avatar: '아바타',
     loadAvatar: '아바타 변경',
     loadHeader: '커버 변경',
+    sidebar: {
+      general: '일반',
+      page: '프로필 페이지',
+      store: '스토어',
+      accessControl: '접근 제어',
+      privacy: '개인정보',
+      userGroups: '사용자 그룹',
+      productGroups: '상품 그룹',
+      accessRequests: '접근 요청',
+      addresses: '주소',
+      blocked: '차단됨',
+      moderation: '중재',
+      chatEncryption: '채팅 암호화',
+      advanced: '고급',
+    },
+    accessControl: {
+      privacyDesc: '스토어를 볼 수 있는 사람 관리',
+      userGroupsDesc: '고객 그룹 생성 및 관리',
+      productGroupsDesc: '가시성별로 상품 정리',
+      requestsDesc: '접근 요청 관리',
+    },
   },
 
   theme: {

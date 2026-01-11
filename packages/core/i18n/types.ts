@@ -474,6 +474,29 @@ export interface TranslationResource {
     avatar: string;
     loadAvatar: string;
     loadHeader: string;
+    // 侧边栏导航
+    sidebar?: {
+      general: string;
+      page: string;
+      store: string;
+      accessControl: string;
+      privacy: string;
+      userGroups: string;
+      productGroups: string;
+      accessRequests: string;
+      addresses: string;
+      blocked: string;
+      moderation: string;
+      chatEncryption: string;
+      advanced: string;
+    };
+    // 访问控制
+    accessControl?: TranslationSection & {
+      privacyDesc: string;
+      userGroupsDesc: string;
+      productGroupsDesc: string;
+      requestsDesc: string;
+    };
   };
 
   // 主题

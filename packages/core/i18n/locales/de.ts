@@ -457,6 +457,27 @@ export const de: TranslationResource = {
     avatar: 'Profilbild',
     loadAvatar: 'Profilbild ändern',
     loadHeader: 'Titelbild ändern',
+    sidebar: {
+      general: 'Allgemein',
+      page: 'Profilseite',
+      store: 'Shop',
+      accessControl: 'Zugriffskontrolle',
+      privacy: 'Datenschutz',
+      userGroups: 'Benutzergruppen',
+      productGroups: 'Produktgruppen',
+      accessRequests: 'Zugriffsanfragen',
+      addresses: 'Adressen',
+      blocked: 'Blockiert',
+      moderation: 'Moderation',
+      chatEncryption: 'Chat-Verschlüsselung',
+      advanced: 'Erweitert',
+    },
+    accessControl: {
+      privacyDesc: 'Kontrollieren Sie, wer Ihren Shop sehen kann',
+      userGroupsDesc: 'Kundengruppen erstellen und verwalten',
+      productGroupsDesc: 'Produkte nach Sichtbarkeit organisieren',
+      requestsDesc: 'Zugriffsanfragen verwalten',
+    },
   },
 
   theme: {
