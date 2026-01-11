@@ -89,8 +89,8 @@ function getOrderNotificationDisplay(
     case 'newOrder':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
-        ? i18n.t('notifications.order.youPlacedOrder', { defaultValue: 'You placed an order' })
-        : i18n.t('notifications.order.placedOrder', { defaultValue: 'placed an order' });
+        ? i18n.t('notifications.order.youPlacedOrder')
+        : i18n.t('notifications.order.placedOrder');
       if (title) {
         text += ` - ${title}`;
       }
@@ -99,52 +99,52 @@ function getOrderNotificationDisplay(
     case 'orderPaymentReceived':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
-        ? i18n.t('notifications.order.yourPaymentSent', { defaultValue: 'Your payment was sent' })
-        : i18n.t('notifications.order.sentPayment', { defaultValue: 'sent payment' });
+        ? i18n.t('notifications.order.yourPaymentSent')
+        : i18n.t('notifications.order.sentPayment');
       break;
 
     case 'orderFunded':
-      text = i18n.t('notifications.order.orderFunded', { defaultValue: 'Order has been funded' });
+      text = i18n.t('notifications.order.orderFunded');
       break;
 
     case 'orderConfirmation':
       name = isBuyer ? vendorName : '';
       text = isBuyer
-        ? i18n.t('notifications.order.acceptedYourOrder', { defaultValue: 'accepted your order' })
-        : i18n.t('notifications.order.youAcceptedOrder', { defaultValue: 'You accepted an order' });
+        ? i18n.t('notifications.order.acceptedYourOrder')
+        : i18n.t('notifications.order.youAcceptedOrder');
       break;
 
     case 'orderDeclined':
       name = isBuyer ? vendorName : '';
       text = isBuyer
-        ? i18n.t('notifications.order.declinedYourOrder', { defaultValue: 'declined your order' })
-        : i18n.t('notifications.order.youDeclinedOrder', { defaultValue: 'You declined an order' });
+        ? i18n.t('notifications.order.declinedYourOrder')
+        : i18n.t('notifications.order.youDeclinedOrder');
       break;
 
     case 'orderCancel':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
-        ? i18n.t('notifications.order.youCancelledOrder', { defaultValue: 'You cancelled the order' })
-        : i18n.t('notifications.order.cancelledOrder', { defaultValue: 'cancelled their order' });
+        ? i18n.t('notifications.order.youCancelledOrder')
+        : i18n.t('notifications.order.cancelledOrder');
       break;
 
     case 'refund':
       name = isBuyer ? vendorName : '';
       text = isBuyer
-        ? i18n.t('notifications.order.refundedYourOrder', { defaultValue: 'refunded your order' })
-        : i18n.t('notifications.order.youRefundedOrder', { defaultValue: 'You refunded an order' });
+        ? i18n.t('notifications.order.refundedYourOrder')
+        : i18n.t('notifications.order.youRefundedOrder');
       break;
 
     case 'orderFulfillment':
       name = isBuyer ? vendorName : '';
       text = isBuyer
-        ? i18n.t('notifications.order.fulfilledYourOrder', { defaultValue: 'fulfilled your order' })
-        : i18n.t('notifications.order.youFulfilledOrder', { defaultValue: 'You fulfilled an order' });
+        ? i18n.t('notifications.order.fulfilledYourOrder')
+        : i18n.t('notifications.order.youFulfilledOrder');
       break;
 
     case 'orderCompletion':
       name = buyerName;
-      text = i18n.t('notifications.order.completedOrder', { defaultValue: 'completed the order' });
+      text = i18n.t('notifications.order.completedOrder');
       break;
 
     default:
@@ -189,7 +189,7 @@ function getDisputeNotificationDisplay(
   switch (type) {
     case 'disputeOpen':
       name = disputerName;
-      text = i18n.t('notifications.dispute.startedDispute', { defaultValue: 'started a dispute' });
+      text = i18n.t('notifications.dispute.startedDispute');
       route = buyer === disputerID
         ? `/orders/purchases?orderID=${caseID || orderID}`
         : `/orders/sales?orderID=${caseID || orderID}`;
@@ -199,29 +199,24 @@ function getDisputeNotificationDisplay(
       // 判断当前用户是争议方还是调解员
       if (disputeeID === currentUserId) {
         name = disputerName;
-        text = i18n.t('notifications.dispute.openedCase', { defaultValue: 'opened a case' });
+        text = i18n.t('notifications.dispute.openedCase');
         route = `/orders/${buyer === disputerID ? 'purchases' : 'sales'}?orderID=${caseID}`;
       } else {
         name = disputerName;
-        text = i18n.t('notifications.dispute.modCaseOpened', {
-          disputeeName,
-          defaultValue: `opened a case against ${disputeeName}`,
-        });
+        text = i18n.t('notifications.dispute.modCaseOpened', { disputeeName });
         route = `/orders/cases?caseID=${caseID}`;
       }
       break;
 
     case 'caseUpdate':
       name = moderatorName;
-      text = i18n.t('notifications.dispute.caseUpdated', { defaultValue: 'updated the case' });
+      text = i18n.t('notifications.dispute.caseUpdated');
       route = `/orders/cases?caseID=${caseID}`;
       break;
 
     case 'disputeClose':
       name = otherPartyName;
-      text = i18n.t('notifications.dispute.proposedOutcome', {
-        defaultValue: 'proposed a dispute outcome',
-      });
+      text = i18n.t('notifications.dispute.proposedOutcome');
       route = buyer === otherPartyID
         ? `/orders/purchases?orderID=${orderID}`
         : `/orders/sales?orderID=${orderID}`;
@@ -229,17 +224,13 @@ function getDisputeNotificationDisplay(
 
     case 'disputeAccepted':
       name = buyerAccepted ? getDisplayName(undefined, buyer) : disputeeName;
-      text = i18n.t('notifications.dispute.acceptedPayout', {
-        defaultValue: 'accepted the dispute payout',
-      });
+      text = i18n.t('notifications.dispute.acceptedPayout');
       route = `/orders/${buyer === otherPartyID ? 'purchases' : 'sales'}?orderID=${orderID}`;
       break;
 
     case 'vendorFinalizedPayment':
       name = disputeeName;
-      text = i18n.t('notifications.dispute.claimedPayment', {
-        defaultValue: 'claimed their payment',
-      });
+      text = i18n.t('notifications.dispute.claimedPayment');
       route = `/orders/purchases?orderID=${orderID}`;
       break;
 
@@ -267,25 +258,19 @@ function getSocialNotificationDisplay(
 
   switch (type) {
     case 'follow':
-      text = i18n.t('notifications.social.startedFollowing', {
-        defaultValue: 'started following you',
-      });
+      text = i18n.t('notifications.social.startedFollowing');
       break;
 
     case 'unfollow':
-      text = i18n.t('notifications.social.unfollowed', { defaultValue: 'unfollowed you' });
+      text = i18n.t('notifications.social.unfollowed');
       break;
 
     case 'moderatorAdd':
-      text = i18n.t('notifications.social.addedAsModerator', {
-        defaultValue: 'added you as a moderator',
-      });
+      text = i18n.t('notifications.social.addedAsModerator');
       break;
 
     case 'moderatorRemove':
-      text = i18n.t('notifications.social.removedAsModerator', {
-        defaultValue: 'removed you as a moderator',
-      });
+      text = i18n.t('notifications.social.removedAsModerator');
       break;
 
     default:
