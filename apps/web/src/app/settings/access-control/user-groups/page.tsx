@@ -19,7 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui';
-import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
+import {
+  useUserGroups,
+  useUserStore,
+  useI18n,
+  getTelegramUserId,
+  GROUP_COLORS,
+  type UserGroup,
+} from '@mobazha/core';
 import { Loader2, ChevronLeft, Plus, Users } from 'lucide-react';
 
 interface UserGroupForm {
@@ -32,9 +39,12 @@ export default function UserGroupsPage() {
   const { t } = useI18n();
   const { profile, isAuthenticated } = useUserStore();
   const ownerPeerID = profile?.peerID || '';
+  const telegramUserId = getTelegramUserId();
+  // 使用 telegramUserId 或 ownerPeerID
+  const userID = telegramUserId || ownerPeerID;
 
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
-    useUserGroups({ ownerPeerID, autoLoad: false });
+    useUserGroups({ ownerPeerID: userID, autoLoad: false });
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
@@ -47,18 +57,18 @@ export default function UserGroupsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && ownerPeerID) {
-      loadGroups(ownerPeerID);
+    if (isAuthenticated && userID) {
+      loadGroups(userID);
     }
-  }, [isAuthenticated, ownerPeerID, loadGroups]);
+  }, [isAuthenticated, userID, loadGroups]);
 
   const handleCreateGroup = useCallback(async () => {
-    if (!ownerPeerID || !newGroup.name.trim()) return;
+    if (!userID || !newGroup.name.trim()) return;
 
     setSaving(true);
     try {
       const result = await createGroup({
-        ownerPeerID,
+        ownerPeerID: userID,
         name: newGroup.name.trim(),
         description: newGroup.description.trim() || undefined,
       });
@@ -70,7 +80,7 @@ export default function UserGroupsPage() {
     } finally {
       setSaving(false);
     }
-  }, [ownerPeerID, newGroup, createGroup]);
+  }, [userID, newGroup, createGroup]);
 
   const handleUpdateGroup = useCallback(async () => {
     if (!editingGroup) return;
