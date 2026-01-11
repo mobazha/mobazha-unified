@@ -2,6 +2,8 @@
  * 争议处理流程端到端测试
  */
 
+/* eslint-disable no-console */
+
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ordersApi, disputesApi, profileApi } from '../../../services/api';
 import { switchRole, logoutCurrentRole } from '../../../testing/roleManager';

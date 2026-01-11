@@ -25,10 +25,7 @@ declare global {
             value: string,
             callback?: (error: Error | null, success?: boolean) => void
           ) => void;
-          getItem: (
-            key: string,
-            callback?: (error: Error | null, value?: string) => void
-          ) => void;
+          getItem: (key: string, callback?: (error: Error | null, value?: string) => void) => void;
           getItems: (
             keys: string[],
             callback?: (error: Error | null, values?: Record<string, string>) => void
@@ -47,6 +44,7 @@ declare global {
     };
 
     // Discord SDK 预留（未来扩展）
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     DiscordSDK?: {
       // Discord Embedded App SDK 类型
       // https://discord.com/developers/docs/activities/overview
