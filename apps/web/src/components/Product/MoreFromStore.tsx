@@ -99,11 +99,11 @@ export const MoreFromStore = memo(function MoreFromStore({
   }
 
   return (
-    <Card className={cn('p-4 sm:p-6', className)} data-testid="more-from-store">
+    <Card className={cn('p-3 sm:p-4', className)} data-testid="more-from-store">
       {/* 标题栏 */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
-          <Store className="w-5 h-5 text-muted-foreground" />
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1.5">
+          <Store className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           {t('product.moreFromStore')}
           {vendorName && (
             <span className="text-muted-foreground font-normal text-base hidden sm:inline">

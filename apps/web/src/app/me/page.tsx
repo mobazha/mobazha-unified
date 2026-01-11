@@ -49,15 +49,15 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   rightElement,
 }) => {
   const content = (
-    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer">
-      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+    <div className="flex items-center gap-2.5 py-2.5 px-3 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer touch-feedback">
+      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">{title}</p>
-        {description && <p className="text-xs text-muted-foreground truncate">{description}</p>}
+        {description && <p className="text-[11px] text-muted-foreground truncate">{description}</p>}
       </div>
-      {rightElement || <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+      {rightElement || <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
     </div>
   );
 
@@ -92,43 +92,51 @@ export default function MePage() {
     <div className="min-h-screen bg-background md:hidden">
       <Header />
 
-      <Container size="sm" className="py-4">
-        <VStack gap="md">
+      {/* 移动端顶部标题栏 */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center justify-center h-11">
+          <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
+        </div>
+      </div>
+
+      <Container size="sm" className="py-3">
+        <VStack gap="sm">
           {/* 用户信息卡片 */}
-          <div className="bg-card rounded-xl p-4 border">
+          <div className="bg-card rounded-xl p-3 border">
             {isLoading ? (
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-muted animate-pulse" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-muted rounded animate-pulse w-24" />
-                  <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                  <div className="h-4 bg-muted rounded animate-pulse w-24" />
+                  <div className="h-3 bg-muted rounded animate-pulse w-32" />
                 </div>
               </div>
             ) : isAuthenticated && profile ? (
-              <Link href={`/store/${profile.peerID}`} className="flex items-center gap-4">
+              <Link href={`/store/${profile.peerID}`} className="flex items-center gap-3">
                 <Avatar
                   src={getImageUrl(profile.avatarHashes?.small)}
                   name={profile.name || 'User'}
                   size="lg"
+                  className="w-14 h-14"
                 />
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold truncate">
+                  <h2 className="text-base font-semibold truncate">
                     {profile.name || t('me.anonymous')}
                   </h2>
-                  <p className="text-sm text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {profile.peerID?.slice(0, 8)}...{profile.peerID?.slice(-4)}
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
               </Link>
             ) : (
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <LogIn className="w-8 h-8 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
+                  <LogIn className="w-7 h-7 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold">{t('me.notLoggedIn')}</h2>
-                  <p className="text-sm text-muted-foreground">{t('me.loginPrompt')}</p>
+                  <h2 className="text-base font-semibold">{t('me.notLoggedIn')}</h2>
+                  <p className="text-xs text-muted-foreground">{t('me.loginPrompt')}</p>
                 </div>
                 <Button size="sm" onClick={handleLogin}>
                   {t('nav.login')}
@@ -139,26 +147,26 @@ export default function MePage() {
 
           {/* 订单区域 */}
           {isAuthenticated && (
-            <div className="bg-card rounded-xl p-4 border">
-              <h3 className="text-sm font-medium mb-3">{t('me.myOrders')}</h3>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="bg-card rounded-xl p-3 border">
+              <h3 className="text-xs font-medium mb-2 text-muted-foreground">{t('me.myOrders')}</h3>
+              <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/orders?tab=purchases"
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                     <ShoppingBag className="w-5 h-5 text-blue-500" />
                   </div>
-                  <span className="text-sm">{t('me.purchases')}</span>
+                  <span className="text-xs">{t('me.purchases')}</span>
                 </Link>
                 <Link
                   href="/orders?tab=sales"
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
                 >
                   <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
                     <Package className="w-5 h-5 text-green-500" />
                   </div>
-                  <span className="text-sm">{t('me.sales')}</span>
+                  <span className="text-xs">{t('me.sales')}</span>
                 </Link>
               </div>
             </div>

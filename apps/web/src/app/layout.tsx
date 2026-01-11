@@ -6,7 +6,6 @@ import {
   AuthProvider,
   ChatSystem,
   CurrencyProvider,
-  DevTools,
   MobileNav,
   PWAInstall,
   ServiceWorkerProvider,
@@ -97,8 +96,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       {/* PWA install prompt */}
                       <PWAInstall />
 
-                      {/* Dev tools (only in development) */}
-                      <DevTools />
+                      {/* Dev tools (only in development) - 临时禁用 */}
+                      {/* <DevTools /> */}
 
                       {/* Toast notifications */}
                       <Toaster />

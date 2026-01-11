@@ -56,6 +56,7 @@ export const de: TranslationResource = {
 
   nav: {
     home: 'Startseite',
+    market: 'Markt',
     search: 'Suchen',
     messages: 'Nachrichten',
     orders: 'Bestellungen',
@@ -85,6 +86,7 @@ export const de: TranslationResource = {
     stock: 'Lagerbestand',
     inStock: 'auf Lager',
     outOfStock: 'Ausverkauft',
+    wishlist: 'Wunschliste',
     category: 'Kategorie',
     condition: 'Zustand',
     shipping: 'Versand',
@@ -94,6 +96,7 @@ export const de: TranslationResource = {
     returns: 'Rückgabe',
     seller: 'Verkäufer',
     reviews: 'Bewertungen',
+    reviewsTitle: 'Kundenbewertungen',
     rating: 'Bewertung',
     addToCart: 'In den Warenkorb',
     addedToCart: 'Zum Warenkorb hinzugefügt',
@@ -105,6 +108,9 @@ export const de: TranslationResource = {
     variants: 'Varianten',
     notFound: 'Produkt nicht gefunden',
     viewStore: 'Shop ansehen',
+    goToStore: 'Zum Shop',
+    viewPhotos: '{{count}} Foto(s) ansehen',
+    details: 'Produktdetails',
     acceptedCurrencies: 'Akzeptiert',
     termsAndConditions: 'Geschäftsbedingungen',
     refundPolicy: 'Rückerstattungsrichtlinie',
@@ -156,6 +162,9 @@ export const de: TranslationResource = {
     free: 'Kostenlos',
     acceptedPayments: 'Akzeptierte Zahlungsmethoden',
     startShopping: 'Einkauf starten',
+    items: 'Artikel',
+    clear: 'Leeren',
+    p2pNotice: 'P2P-Transaktionen erfordern separate Kaufabwicklung für jeden Verkäufer',
   },
 
   checkout: {

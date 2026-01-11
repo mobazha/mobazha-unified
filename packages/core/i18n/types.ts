@@ -91,6 +91,7 @@ export interface TranslationResource {
   // 导航
   nav: TranslationSection & {
     home: string;
+    market: string;
     search: string;
     messages: string;
     orders: string;
@@ -149,6 +150,7 @@ export interface TranslationResource {
     stock: string;
     inStock: string;
     outOfStock: string;
+    wishlist: string;
     category: string;
     condition: string;
     shipping: string;
@@ -158,6 +160,7 @@ export interface TranslationResource {
     returns: string;
     seller: string;
     reviews: string;
+    reviewsTitle: string;
     rating: string;
     addToCart: string;
     addedToCart: string;
@@ -169,6 +172,9 @@ export interface TranslationResource {
     variants: string;
     notFound: string;
     viewStore: string;
+    goToStore: string;
+    viewPhotos: string;
+    details: string;
     acceptedCurrencies: string;
     termsAndConditions: string;
     refundPolicy: string;
@@ -206,6 +212,7 @@ export interface TranslationResource {
     checkout: string;
     remove: string;
     quantity: string;
+    items: string;
     itemCount: string;
     itemsInCart: string;
     selectAll: string;
@@ -215,6 +222,8 @@ export interface TranslationResource {
     free: string;
     acceptedPayments: string;
     startShopping: string;
+    clear: string;
+    p2pNotice: string;
   };
 
   // 结账
@@ -918,7 +927,7 @@ export interface TranslationResource {
     resyncFailed: string;
   };
 
-// OTC 私密交易
+  // OTC 私密交易
   otc: TranslationSection & {
     title: string;
     createNft: string;

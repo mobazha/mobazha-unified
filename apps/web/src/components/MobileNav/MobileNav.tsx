@@ -3,7 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useChatStore, selectTotalUnreadCount, useUserStore, useI18n } from '@mobazha/core';
+import {
+  useChatStore,
+  selectTotalUnreadCount,
+  useUserStore,
+  useI18n,
+  getImageUrl,
+} from '@mobazha/core';
 
 interface NavItem {
   labelKey: string; // i18n key
@@ -13,6 +19,8 @@ interface NavItem {
   activeIcon?: React.ReactNode;
   badge?: number;
   isChat?: boolean; // 标记是否是聊天项，用于动态获取未读数
+  isMe?: boolean; // 标记是否是"我"项，用于显示用户头像
+  isCart?: boolean; // 标记是否是购物车项，用于动态获取商品数量
 }
 
 const navItems: NavItem[] = [
@@ -66,6 +74,7 @@ const navItems: NavItem[] = [
   {
     labelKey: 'nav.cart',
     href: '/cart',
+    isCart: true, // 标记为购物车项，用于动态获取商品数量
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -81,7 +90,7 @@ const navItems: NavItem[] = [
         <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
       </svg>
     ),
-    badge: 3,
+    // badge 由 useCartStore 动态获取
   },
   {
     labelKey: 'chat.title',
@@ -109,6 +118,7 @@ const navItems: NavItem[] = [
   {
     labelKey: 'me.title',
     href: '/me',
+    isMe: true, // 用于显示用户头像
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -149,7 +159,14 @@ export const MobileNav: React.FC = () => {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const totalUnread = useChatStore(selectTotalUnreadCount);
-  const { isAuthenticated } = useUserStore();
+  const { isAuthenticated, profile } = useUserStore();
+
+  // TODO: 接入真实的购物车 store
+  // 目前使用 mock 数据，后续应该从 useCartStore 获取商品总数量
+  const cartItemCount = 3; // Mock: 购物车中的商品总数量
+
+  // 获取用户头像 URL（和 Me 页面使用相同的方式）
+  const userAvatarUrl = getImageUrl(profile?.avatarHashes?.small);
 
   // 根据登录状态过滤导航项
   const filteredNavItems = navItems.filter(item => {
@@ -186,7 +203,8 @@ export const MobileNav: React.FC = () => {
         <div className="flex items-center justify-around h-16 px-2">
           {filteredNavItems.map((item, index) => {
             const active = item.isChat ? drawerOpen : isActive(item.href);
-            const badge = item.isChat ? totalUnread : item.badge;
+            // 动态获取 badge：聊天用未读数，购物车用商品数量，其他用静态值
+            const badge = item.isChat ? totalUnread : item.isCart ? cartItemCount : item.badge;
 
             // Chat 项使用按钮
             if (item.isChat) {
@@ -199,15 +217,17 @@ export const MobileNav: React.FC = () => {
                   }`}
                 >
                   {/* Icon with badge */}
-                  <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
+                  <span className={`relative transition-transform ${active ? 'scale-105' : ''}`}>
                     {active ? item.activeIcon || item.icon : item.icon}
                     {badge !== undefined && badge > 0 && (
-                      <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {badge > 9 ? '9+' : badge}
+                      <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                        {badge > 99 ? '99+' : badge}
                       </span>
                     )}
                   </span>
-                  <span className={`text-[10px] mt-1 font-medium ${active ? 'font-semibold' : ''}`}>
+                  <span
+                    className={`text-[10px] mt-1.5 font-medium ${active ? 'font-semibold' : ''}`}
+                  >
                     {t(item.labelKey)}
                   </span>
                   {active && (
@@ -218,6 +238,9 @@ export const MobileNav: React.FC = () => {
             }
 
             // 其他项使用 Link
+            // 对于"我"项，如果用户已登录且有头像，显示用户头像
+            const showUserAvatar = item.isMe && isAuthenticated && userAvatarUrl;
+
             return (
               <Link
                 key={item.href}
@@ -227,18 +250,34 @@ export const MobileNav: React.FC = () => {
                 }`}
               >
                 {/* Icon with badge */}
-                <span className={`relative transition-transform ${active ? 'scale-110' : ''}`}>
-                  {active ? item.activeIcon || item.icon : item.icon}
+                <span className={`relative transition-transform ${active ? 'scale-105' : ''}`}>
+                  {showUserAvatar ? (
+                    // 显示用户头像 - 使用和图标相同的视觉大小
+                    <div
+                      className={`w-6 h-6 rounded-full overflow-hidden ${active ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}`}
+                    >
+                      <img
+                        src={userAvatarUrl}
+                        alt={profile?.name || 'User'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : // 显示默认图标
+                  active ? (
+                    item.activeIcon || item.icon
+                  ) : (
+                    item.icon
+                  )}
                   {/* Badge - small red circle with number */}
                   {badge !== undefined && badge > 0 && (
-                    <span className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {badge > 9 ? '9+' : badge}
+                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                      {badge > 99 ? '99+' : badge}
                     </span>
                   )}
                 </span>
 
                 {/* Label */}
-                <span className={`text-[10px] mt-1 font-medium ${active ? 'font-semibold' : ''}`}>
+                <span className={`text-[10px] mt-1.5 font-medium ${active ? 'font-semibold' : ''}`}>
                   {t(item.labelKey)}
                 </span>
 

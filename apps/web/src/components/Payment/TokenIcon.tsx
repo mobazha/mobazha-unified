@@ -36,7 +36,33 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   POLYGON: 'matic',
   // Conflux
   CFX: 'cfx',
+  // MBZ
+  MBZ: 'mbz',
 };
+
+// 法币映射 - 用于法币时显示默认图标
+const FIAT_CURRENCIES = new Set([
+  'USD',
+  'EUR',
+  'GBP',
+  'CNY',
+  'JPY',
+  'KRW',
+  'AUD',
+  'CAD',
+  'CHF',
+  'HKD',
+  'SGD',
+  'INR',
+  'RUB',
+  'BRL',
+  'MXN',
+  'ZAR',
+  'TRY',
+  'NZD',
+  'SEK',
+  'NOK',
+]);
 
 // 本地图标文件名映射（用于 fallback）
 const LOCAL_ICON_MAP: Record<string, string> = {
@@ -111,6 +137,7 @@ const getSymbol = (tokenId: string): string => {
  * 优先使用 CDN 图标 (cryptocurrency-icons)
  * CDN 失败时 fallback 到本地图标
  * 本地图标失败时显示默认图标
+ * 法币（USD、EUR等）直接显示默认图标
  */
 export const TokenIcon: React.FC<TokenIconProps> = ({
   token,
@@ -119,7 +146,11 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
   showChainBadge = false,
   chainId,
 }) => {
-  const [iconState, setIconState] = useState<'cdn' | 'local' | 'default'>('cdn');
+  // 检查是否为法币
+  const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
+  const [iconState, setIconState] = useState<'cdn' | 'local' | 'default'>(
+    isFiat ? 'default' : 'cdn'
+  );
 
   const symbol = getSymbol(token);
   const chainSymbol = chainId ? getSymbol(chainId) : null;
@@ -159,18 +190,18 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
         onError={handleError}
         loading="lazy"
       />
-      {/* 链图标徽章 */}
+      {/* 链图标徽章 - 增大比例以便看清 */}
       {showChainBadge && chainSymbol && (
         <div
-          className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5"
-          style={{ width: size * 0.55, height: size * 0.55 }}
+          className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-[1px] ring-1 ring-background"
+          style={{ width: Math.max(size * 0.6, 12), height: Math.max(size * 0.6, 12) }}
         >
           <img
             src={getCDNIconUrl(chainSymbol)}
             alt={chainId || 'chain'}
-            width={Math.round(size * 0.45)}
-            height={Math.round(size * 0.45)}
-            className="rounded-full object-cover"
+            width={Math.max(Math.round(size * 0.55), 10)}
+            height={Math.max(Math.round(size * 0.55), 10)}
+            className="rounded-full object-cover w-full h-full"
             onError={e => {
               (e.target as HTMLImageElement).src = getLocalIconUrl(chainSymbol);
             }}

@@ -3,8 +3,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@/components/layouts';
+import { Header, Footer, MobilePageHeader } from '@/components';
+import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -122,25 +122,37 @@ export default function CartPage() {
     return Object.values(groups);
   }, [cartItems]);
 
-  // Calculate totals
-  const totals = useMemo(() => {
-    let subtotal = 0;
-    let itemCount = 0;
+  // 计算商户的选中状态
+  const getVendorCheckStatus = useCallback(
+    (group: CartGroup): 'checked' | 'unchecked' | 'indeterminate' => {
+      const allChecked = group.items.every(item => selectedItems.has(item.id));
+      if (allChecked) return 'checked';
 
-    cartItems.forEach(item => {
-      if (selectedItems.has(item.id)) {
-        subtotal += item.price * item.quantity;
-        itemCount += item.quantity;
-      }
-    });
+      const allUnchecked = group.items.every(item => !selectedItems.has(item.id));
+      if (allUnchecked) return 'unchecked';
 
-    return {
-      subtotal,
-      itemCount,
-      shipping: 0, // Free shipping
-      total: subtotal,
-    };
-  }, [cartItems, selectedItems]);
+      return 'indeterminate';
+    },
+    [selectedItems]
+  );
+
+  // 计算商户的小计
+  const getVendorTotal = useCallback(
+    (group: CartGroup) => {
+      let subtotal = 0;
+      let itemCount = 0;
+
+      group.items.forEach(item => {
+        if (selectedItems.has(item.id)) {
+          subtotal += item.price * item.quantity;
+          itemCount += item.quantity;
+        }
+      });
+
+      return { subtotal, itemCount };
+    },
+    [selectedItems]
+  );
 
   // Handlers
   const handleQuantityChange = useCallback((itemId: string, newQuantity: number) => {
@@ -174,26 +186,53 @@ export default function CartPage() {
     });
   }, []);
 
-  const handleSelectAll = useCallback(() => {
-    if (selectedItems.size === cartItems.length) {
-      setSelectedItems(new Set());
-    } else {
-      setSelectedItems(new Set(cartItems.map(item => item.id)));
-    }
-  }, [cartItems, selectedItems]);
+  // 商户级别的全选/取消选择
+  const handleToggleVendorSelect = useCallback(
+    (group: CartGroup) => {
+      const currentStatus = getVendorCheckStatus(group);
+      const shouldCheck = currentStatus !== 'checked';
 
-  const handleCheckout = useCallback(() => {
-    if (selectedItems.size === 0) {
-      return;
-    }
-    router.push('/checkout');
-  }, [selectedItems, router]);
+      setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        group.items.forEach(item => {
+          if (shouldCheck) {
+            newSet.add(item.id);
+          } else {
+            newSet.delete(item.id);
+          }
+        });
+        return newSet;
+      });
+    },
+    [getVendorCheckStatus]
+  );
+
+  // 清空购物车
+  const handleClearCart = useCallback(() => {
+    setCartItems([]);
+    setSelectedItems(new Set());
+  }, []);
+
+  // 结算单个商户
+  const handleCheckoutVendor = useCallback(
+    (group: CartGroup) => {
+      const selectedVendorItems = group.items.filter(item => selectedItems.has(item.id));
+      if (selectedVendorItems.length === 0) {
+        return;
+      }
+      // TODO: 传递选中的商品到结算页面
+      router.push(`/checkout?vendor=${group.vendorId}`);
+    },
+    [selectedItems, router]
+  );
 
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="py-8 sm:py-16">
+        {/* 移动端顶部导航栏 */}
+        <MobilePageHeader title={t('cart.title')} />
+        <main className="py-4 sm:py-16">
           <Container size="md">
             <Card className="text-center">
               <CardContent className="py-8 sm:py-12 px-4">
@@ -233,47 +272,106 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {/* 移动端顶部导航栏 - 清空购物车 */}
+      <MobilePageHeader
+        title={t('cart.title')}
+        rightAction={
+          <button
+            onClick={handleClearCart}
+            className="text-muted-foreground hover:text-red-500 font-medium text-xs touch-feedback"
+          >
+            {t('cart.clear')}
+          </button>
+        }
+      />
 
-      <main className="py-4 sm:py-8">
-        <Container size="xl">
-          {/* Page Header */}
-          <HStack justify="between" align="center" className="mb-4 sm:mb-6">
+      <main className="py-3 sm:py-8">
+        <Container size="lg">
+          {/* Page Header - 仅桌面端显示 */}
+          <HStack justify="between" align="center" className="hidden lg:flex mb-6">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('cart.title')}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{t('cart.title')}</h1>
               <p className="text-sm text-muted-foreground">
                 {t('cart.itemsInCart', { count: cartItems.length })}
               </p>
             </div>
             <button
-              onClick={handleSelectAll}
-              className="text-emerald-600 hover:text-emerald-700 font-medium text-sm touch-feedback"
+              onClick={handleClearCart}
+              className="text-muted-foreground hover:text-red-500 font-medium text-sm touch-feedback"
             >
-              {selectedItems.size === cartItems.length
-                ? t('cart.deselectAll')
-                : t('cart.selectAll')}
+              {t('cart.clear')}
             </button>
           </HStack>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-              {cartGroups.map(group => (
+          {/* 移动端副标题 */}
+          <p className="lg:hidden text-xs text-muted-foreground mb-3">
+            {t('cart.itemsInCart', { count: cartItems.length })}
+          </p>
+
+          {/* P2P 提示 */}
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+              {t('cart.p2pNotice')}
+            </p>
+          </div>
+
+          {/* Cart Items - 每个商户独立 */}
+          <div className="space-y-3 sm:space-y-4">
+            {cartGroups.map(group => {
+              const vendorStatus = getVendorCheckStatus(group);
+              const vendorTotal = getVendorTotal(group);
+              const hasSelectedItems = vendorTotal.itemCount > 0;
+
+              return (
                 <Card key={group.vendorId} className="overflow-hidden">
-                  {/* Vendor Header */}
-                  <div className="px-3 py-2.5 sm:px-6 sm:py-4 bg-muted/50 border-b border-border">
-                    <Link href={`/store/${group.vendorId}`} className="touch-feedback inline-flex">
-                      <HStack gap="sm" align="center">
+                  {/* Vendor Header - 带全选 */}
+                  <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-muted/50 border-b border-border">
+                    <HStack gap="sm" align="center">
+                      {/* 商户全选复选框 */}
+                      <button
+                        onClick={() => handleToggleVendorSelect(group)}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors touch-feedback flex-shrink-0 ${
+                          vendorStatus === 'checked'
+                            ? 'bg-emerald-500 border-emerald-500'
+                            : vendorStatus === 'indeterminate'
+                              ? 'bg-emerald-500/50 border-emerald-500'
+                              : 'border-slate-300 dark:border-slate-600'
+                        }`}
+                      >
+                        {vendorStatus === 'checked' && (
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                        {vendorStatus === 'indeterminate' && (
+                          <div className="w-2 h-0.5 bg-white rounded" />
+                        )}
+                      </button>
+
+                      {/* 商户信息 */}
+                      <Link
+                        href={`/store/${group.vendorId}`}
+                        className="touch-feedback inline-flex items-center flex-1 min-w-0"
+                      >
                         <Avatar
                           name={group.vendorName}
                           src={group.vendorAvatar}
                           size="sm"
-                          className="w-8 h-8 sm:w-10 sm:h-10"
+                          className="w-7 h-7 sm:w-8 sm:h-8"
                         />
-                        <span className="font-medium text-foreground text-sm sm:text-base">
+                        <span className="font-medium text-foreground text-sm sm:text-base ml-2 truncate">
                           {group.vendorName}
                         </span>
                         <svg
-                          className="w-3.5 h-3.5 text-slate-400"
+                          className="w-3.5 h-3.5 text-slate-400 ml-1 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -285,42 +383,47 @@ export default function CartPage() {
                             d="M9 5l7 7-7 7"
                           />
                         </svg>
-                      </HStack>
-                    </Link>
+                      </Link>
+                    </HStack>
                   </div>
 
                   {/* Items */}
                   <div className="divide-y divide-border">
                     {group.items.map(item => (
-                      <div key={item.id} className="p-3 sm:p-6">
-                        <div className="flex gap-2 sm:gap-4">
+                      <div key={item.id} className="p-3 sm:p-4">
+                        <div className="flex gap-2.5 sm:gap-3">
                           {/* Checkbox */}
-                          <button
-                            onClick={() => handleToggleSelect(item.id)}
-                            className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors touch-feedback ${
-                              selectedItems.has(item.id)
-                                ? 'bg-emerald-500 border-emerald-500'
-                                : 'border-border'
-                            }`}
-                          >
-                            {selectedItems.has(item.id) && (
-                              <svg
-                                className="w-3 h-3 text-white"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </button>
+                          <div className="flex-shrink-0 flex items-center justify-center w-6">
+                            <button
+                              onClick={() => handleToggleSelect(item.id)}
+                              className={`w-4.5 h-4.5 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center transition-colors touch-feedback ${
+                                selectedItems.has(item.id)
+                                  ? 'bg-emerald-500 border-emerald-500'
+                                  : 'border-slate-300 dark:border-slate-600'
+                              }`}
+                            >
+                              {selectedItems.has(item.id) && (
+                                <svg
+                                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
 
                           {/* Image */}
-                          <Link href={`/product/${item.slug}`} className="flex-shrink-0">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted">
+                          <Link
+                            href={`/product/${item.slug}`}
+                            className="flex-shrink-0 touch-feedback"
+                          >
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted">
                               <img
                                 src={item.image}
                                 alt={item.title}
@@ -329,27 +432,20 @@ export default function CartPage() {
                             </div>
                           </Link>
 
-                          {/* Details & Price */}
-                          <div className="flex-1 min-w-0">
-                            {/* Mobile: Title + Price in row, Desktop: separate */}
-                            <div className="flex items-start justify-between gap-2">
-                              <Link href={`/product/${item.slug}`} className="flex-1 min-w-0">
-                                <h3 className="font-medium text-foreground text-sm sm:text-base line-clamp-2 hover:text-emerald-600">
-                                  {item.title}
-                                </h3>
-                              </Link>
-                              {/* Desktop only: Item Total */}
-                              <p className="hidden sm:block text-base font-bold text-foreground flex-shrink-0">
-                                ${(item.price * item.quantity).toFixed(2)}
-                              </p>
-                            </div>
+                          {/* Details */}
+                          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                            <Link href={`/product/${item.slug}`} className="min-w-0">
+                              <h3 className="font-medium text-foreground text-sm line-clamp-2 hover:text-emerald-600">
+                                {item.title}
+                              </h3>
+                            </Link>
 
                             {item.options && item.options.length > 0 && (
-                              <div className="mt-1 flex flex-wrap gap-1 sm:gap-2">
+                              <div className="flex flex-wrap gap-1">
                                 {item.options.map((opt, i) => (
                                   <span
                                     key={i}
-                                    className="text-[10px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 sm:px-2 sm:py-1 rounded"
+                                    className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
                                   >
                                     {opt.name}: {opt.value}
                                   </span>
@@ -357,120 +453,95 @@ export default function CartPage() {
                               </div>
                             )}
 
-                            {/* Price - Mobile: show unit price */}
-                            <p className="text-base sm:text-lg font-bold text-emerald-600 mt-1.5 sm:mt-2">
-                              ${item.price.toFixed(2)}
-                            </p>
+                            {/* Price & Quantity */}
+                            <div className="flex items-center justify-between mt-auto pt-1">
+                              <span className="text-sm font-bold text-emerald-600">
+                                ${item.price.toFixed(2)}
+                              </span>
 
-                            {/* Quantity & Actions */}
-                            <div className="flex items-center gap-3 sm:gap-4 mt-2 sm:mt-3">
-                              <div className="flex items-center border border-border rounded-md sm:rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center border border-border rounded bg-muted/30">
+                                  <button
+                                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                    disabled={item.quantity <= 1}
+                                    className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-muted disabled:opacity-40 text-sm touch-feedback rounded-l"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="w-7 sm:w-8 text-center font-medium text-xs sm:text-sm text-foreground">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                    disabled={item.quantity >= item.stock}
+                                    className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-muted disabled:opacity-40 text-sm touch-feedback rounded-r"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+
                                 <button
-                                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                  disabled={item.quantity <= 1}
-                                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-surface-hover disabled:opacity-50 text-sm touch-feedback"
+                                  onClick={() => handleRemoveItem(item.id)}
+                                  className="text-slate-400 hover:text-red-500 touch-feedback p-1"
+                                  aria-label={t('cart.remove')}
                                 >
-                                  -
-                                </button>
-                                <span className="w-8 sm:w-10 text-center font-medium text-sm text-foreground">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                  disabled={item.quantity >= item.stock}
-                                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-surface-hover disabled:opacity-50 text-sm touch-feedback"
-                                >
-                                  +
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
                                 </button>
                               </div>
-
-                              <button
-                                onClick={() => handleRemoveItem(item.id)}
-                                className="text-red-500 hover:text-red-600 text-xs sm:text-sm touch-feedback"
-                              >
-                                {t('cart.remove')}
-                              </button>
                             </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                </Card>
-              ))}
-            </div>
 
-            {/* Order Summary */}
-            <div className="space-y-4 sm:space-y-6">
-              <Card className="sticky top-4">
-                <CardContent className="p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                    {t('cart.orderSummary')}
-                  </h2>
-
-                  <VStack gap="sm">
-                    <HStack justify="between">
-                      <span className="text-sm text-muted-foreground">
-                        {t('cart.subtotal')} ({t('cart.itemCount', { count: totals.itemCount })})
-                      </span>
-                      <span className="font-medium text-foreground text-sm">
-                        ${totals.subtotal.toFixed(2)}
-                      </span>
-                    </HStack>
-
-                    <HStack justify="between">
-                      <span className="text-sm text-muted-foreground">{t('cart.shipping')}</span>
-                      <span className="font-medium text-emerald-600 text-sm">
-                        {totals.shipping === 0 ? t('cart.free') : `$${totals.shipping.toFixed(2)}`}
-                      </span>
-                    </HStack>
-
-                    <div className="border-t border-border pt-3 sm:pt-4">
-                      <HStack justify="between">
-                        <span className="text-base sm:text-lg font-semibold text-foreground">
-                          {t('cart.total')}
-                        </span>
-                        <span className="text-lg sm:text-xl font-bold text-emerald-600">
-                          ${totals.total.toFixed(2)}
-                        </span>
+                  {/* Vendor Checkout Footer - 只在有选中商品时显示 */}
+                  {hasSelectedItems && (
+                    <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-muted/30 border-t border-border">
+                      <HStack justify="between" align="center">
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
+                          <span className="font-bold text-foreground ml-1.5">
+                            ${vendorTotal.subtotal.toFixed(2)}
+                          </span>
+                          <span className="text-muted-foreground text-xs ml-1">
+                            ({vendorTotal.itemCount} {t('cart.items')})
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="touch-feedback h-8 px-4 text-xs sm:text-sm"
+                          onClick={() => handleCheckoutVendor(group)}
+                        >
+                          {t('cart.checkout')}
+                        </Button>
                       </HStack>
                     </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
 
-                    <Button
-                      className="w-full touch-feedback"
-                      size="default"
-                      onClick={handleCheckout}
-                      disabled={selectedItems.size === 0}
-                    >
-                      {t('cart.proceedToCheckout')} ({selectedItems.size})
-                    </Button>
-
-                    <Link href="/" className="block">
-                      <Button variant="ghost" className="w-full text-sm" size="sm">
-                        {t('cart.continueShopping')}
-                      </Button>
-                    </Link>
-                  </VStack>
-
-                  {/* Payment Methods */}
-                  <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-border">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
-                      {t('cart.acceptedPayments')}
-                    </p>
-                    <HStack gap="xs">
-                      {['BTC', 'ETH', 'USDT'].map(coin => (
-                        <span
-                          key={coin}
-                          className="px-2 py-0.5 sm:px-3 sm:py-1 bg-muted text-foreground rounded text-xs sm:text-sm font-medium"
-                        >
-                          {coin}
-                        </span>
-                      ))}
-                    </HStack>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          {/* Continue Shopping */}
+          <div className="mt-4 sm:mt-6 text-center">
+            <Link href="/">
+              <Button variant="ghost" className="text-sm touch-feedback">
+                {t('cart.continueShopping')}
+              </Button>
+            </Link>
           </div>
         </Container>
       </main>

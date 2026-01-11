@@ -56,6 +56,7 @@ export const ja: TranslationResource = {
 
   nav: {
     home: 'ホーム',
+    market: 'マーケット',
     search: '検索',
     messages: 'メッセージ',
     orders: '注文',
@@ -85,6 +86,7 @@ export const ja: TranslationResource = {
     stock: '在庫',
     inStock: '点在庫あり',
     outOfStock: '在庫切れ',
+    wishlist: 'お気に入り',
     category: 'カテゴリー',
     condition: '状態',
     shipping: '配送',
@@ -94,6 +96,7 @@ export const ja: TranslationResource = {
     returns: '返品',
     seller: '販売者',
     reviews: '件のレビュー',
+    reviewsTitle: 'カスタマーレビュー',
     rating: '評価',
     addToCart: 'カートに追加',
     addedToCart: 'カートに追加しました',
@@ -105,6 +108,9 @@ export const ja: TranslationResource = {
     variants: 'バリエーション',
     notFound: '商品が見つかりません',
     viewStore: 'ショップを見る',
+    goToStore: 'ショップへ',
+    viewPhotos: '{{count}}枚の写真を見る',
+    details: '商品詳細',
     acceptedCurrencies: '対応通貨',
     termsAndConditions: '利用規約',
     refundPolicy: '返金ポリシー',
@@ -156,6 +162,9 @@ export const ja: TranslationResource = {
     free: '無料',
     acceptedPayments: '利用可能な支払い方法',
     startShopping: 'ショッピングを始める',
+    items: '点',
+    clear: 'クリア',
+    p2pNotice: 'P2P取引では、各販売者ごとに個別に決済する必要があります',
   },
 
   checkout: {

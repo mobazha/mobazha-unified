@@ -3,9 +3,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { Header, Footer } from '@/components';
+import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container } from '@/components/layouts';
 import { ProductDetail, ProductBottomBar } from '@/components/Product';
+import { useI18n } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 
 // 获取库存数量（从 SKU 计算）
@@ -17,6 +18,7 @@ function getStockQuantity(product: Product): number {
 }
 
 export default function ProductPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -64,7 +66,10 @@ export default function ProductPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="py-4 sm:py-8">
+      {/* 移动端顶部返回导航栏 */}
+      <MobilePageHeader title={t('product.details')} />
+
+      <main className="py-4 sm:py-8 pb-24 lg:pb-8">
         <Container size="xl">
           <ProductDetail
             slug={slug}

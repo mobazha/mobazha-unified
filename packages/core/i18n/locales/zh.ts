@@ -76,6 +76,7 @@ export const zh: TranslationResource = {
 
   nav: {
     home: '首页',
+    market: '市场',
     search: '搜索',
     messages: '消息',
     orders: '订单',
@@ -136,6 +137,7 @@ export const zh: TranslationResource = {
     stock: '库存',
     inStock: '件有货',
     outOfStock: '缺货',
+    wishlist: '收藏',
     category: '分类',
     condition: '成色',
     shipping: '配送',
@@ -145,6 +147,7 @@ export const zh: TranslationResource = {
     returns: '退货',
     seller: '卖家',
     reviews: '条评价',
+    reviewsTitle: '用户评价',
     rating: '评分',
     addToCart: '加入购物车',
     addedToCart: '已加入购物车',
@@ -156,6 +159,9 @@ export const zh: TranslationResource = {
     variants: '规格',
     notFound: '商品未找到',
     viewStore: '访问店铺',
+    goToStore: '进入店铺',
+    viewPhotos: '查看 {{count}} 张图片',
+    details: '商品详情',
     acceptedCurrencies: '接受支付',
     termsAndConditions: '交易条款',
     refundPolicy: '退款政策',
@@ -229,6 +235,7 @@ export const zh: TranslationResource = {
     checkout: '结算',
     remove: '删除',
     quantity: '数量',
+    items: '件',
     itemCount: '{{count}} 件商品',
     itemsInCart: '购物车中有 {{count}} 件商品',
     selectAll: '全选',
@@ -238,6 +245,8 @@ export const zh: TranslationResource = {
     free: '免运费',
     acceptedPayments: '支持的支付方式',
     startShopping: '开始购物',
+    clear: '清空',
+    p2pNotice: '每次只能结算一个商户的商品，不同商户需分开结算',
   },
 
   checkout: {
@@ -1285,7 +1294,7 @@ export const zh: TranslationResource = {
     resyncFailed: '交易同步失败',
   },
 
-// OTC 私密交易
+  // OTC 私密交易
   otc: {
     title: 'OTC 交易',
     createNft: '创建 NFT 挂单',
