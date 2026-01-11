@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { 
   Bell, 
   Check, 
@@ -169,12 +168,13 @@ function NotificationItem({
           <div className="flex items-center gap-2 mt-1.5">
             {data.thumbnail?.small && (
               <div className="relative w-6 h-6 rounded overflow-hidden bg-muted flex-shrink-0">
-                <Image
-                  src={`/api/ob/image/${data.thumbnail.small}`}
+                <img
+                  src={`/v1/ob/image/${data.thumbnail.small}`}
                   alt={data.productTitle}
-                  fill
-                  className="object-cover"
-                  sizes="24px"
+                  className="w-full h-full object-cover"
+                  onError={e => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
             )}

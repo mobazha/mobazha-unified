@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Package,
   ShoppingCart,
@@ -34,8 +33,8 @@ interface NotificationCardProps {
  */
 function getImageUrl(hash?: string): string | null {
   if (!hash) return null;
-  // 根据实际的图片网关配置
-  return `/api/ob/image/${hash}`;
+  // 使用 /v1/ob/image/ 路径（参考 API config）
+  return `/v1/ob/image/${hash}`;
 }
 
 /**
@@ -169,13 +168,14 @@ export function OrderNotificationCard({
         {(thumbnail || productTitle) && (
           <div className="flex items-center gap-2 mt-2">
             {thumbnail && (
-              <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                <Image
-                  src={getImageUrl(thumbnail) || '/placeholder-product.png'}
+              <div className="w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
+                <img
+                  src={getImageUrl(thumbnail) || ''}
                   alt={productTitle || 'Product'}
-                  fill
-                  className="object-cover"
-                  sizes="40px"
+                  className="w-full h-full object-cover"
+                  onError={e => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
             )}
@@ -242,12 +242,18 @@ export function FollowNotificationCard({
       {/* 头像 */}
       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
         {avatarHash ? (
-          <Image
-            src={getImageUrl(avatarHash) || '/placeholder-avatar.png'}
+          <img
+            src={getImageUrl(avatarHash) || ''}
             alt={handle || 'User'}
-            width={40}
-            height={40}
-            className="object-cover"
+            className="w-full h-full object-cover"
+            onError={e => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              // 显示默认图标
+              const parent = (e.target as HTMLImageElement).parentElement;
+              if (parent) {
+                parent.innerHTML = '<svg class="h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+              }
+            }}
           />
         ) : (
           <User className="h-5 w-5 text-primary" />
