@@ -8,6 +8,8 @@
  * 注意：需要设置 RUN_INTEGRATION_TESTS=true 环境变量来运行网络相关测试
  */
 
+/* eslint-disable no-console */
+
 import { describe, it, expect, beforeAll } from 'vitest';
 import { TEST_ACCOUNTS } from '../../config/testAccounts';
 import { validateToken, isTokenExpired } from '../../services/auth/casdoor';
