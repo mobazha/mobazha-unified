@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
+import { useSettingsDrawer } from '../SettingsDrawer';
 import {
   useI18n,
   useUserStore,
@@ -38,6 +39,7 @@ import {
   Settings,
   LogOut,
   MessageCircle,
+  Shield,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
 
@@ -47,6 +49,7 @@ export const Header: React.FC = () => {
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
+  const { openSettings } = useSettingsDrawer();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -201,12 +204,20 @@ export const Header: React.FC = () => {
 
                   {/* 系统操作 */}
                   <DropdownMenuItem
-                    onClick={() => router.push('/settings')}
+                    onClick={() => openSettings('general')}
                     className="cursor-pointer"
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     {t('userMenu.settings')}
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => openSettings('accessControl')}
+                    className="cursor-pointer"
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    {t('settings.sidebar.accessControl')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer text-destructive focus:text-destructive"

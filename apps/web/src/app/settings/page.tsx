@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
+import { useSettingsDrawer } from '@/components/SettingsDrawer';
 import {
   Settings,
   User,
@@ -21,13 +21,18 @@ interface SettingsCategoryProps {
   icon: React.ReactNode;
   title: string;
   description?: string;
-  href: string;
+  onClick?: () => void;
 }
 
-const SettingsCategory: React.FC<SettingsCategoryProps> = ({ icon, title, description, href }) => (
-  <Link
-    href={href}
-    className="flex items-center gap-4 p-4 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border last:border-0"
+const SettingsCategory: React.FC<SettingsCategoryProps> = ({
+  icon,
+  title,
+  description,
+  onClick,
+}) => (
+  <button
+    onClick={onClick}
+    className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border last:border-0 text-left"
   >
     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
       {icon}
@@ -37,27 +42,27 @@ const SettingsCategory: React.FC<SettingsCategoryProps> = ({ icon, title, descri
       {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
     </div>
     <ChevronRight className="w-5 h-5 text-muted-foreground" />
-  </Link>
+  </button>
 );
 
 export default function SettingsPage() {
   const { t } = useI18n();
   const router = useRouter();
+  const { openSettings } = useSettingsDrawer();
 
-  // 桌面端重定向到 general 页面
-  React.useEffect(() => {
+  // 桌面端：打开 Drawer 并返回首页
+  useEffect(() => {
     const checkAndRedirect = () => {
       if (window.innerWidth >= 1024) {
-        router.replace('/settings/general');
+        openSettings('general');
+        router.replace('/');
       }
     };
 
     checkAndRedirect();
-    window.addEventListener('resize', checkAndRedirect);
-    return () => window.removeEventListener('resize', checkAndRedirect);
-  }, [router]);
+  }, [router, openSettings]);
 
-  // 移动端显示分类列表
+  // 移动端显示分类列表（点击打开 Drawer）
   return (
     <div className="lg:hidden">
       <h1 className="text-xl font-semibold mb-4">{t('settings.title')}</h1>
@@ -67,19 +72,19 @@ export default function SettingsPage() {
           icon={<Settings className="w-5 h-5" />}
           title={t('settings.sidebar.general')}
           description={t('settingsModal.languageDesc')}
-          href="/settings/general"
+          onClick={() => openSettings('general')}
         />
         <SettingsCategory
           icon={<User className="w-5 h-5" />}
           title={t('settings.sidebar.page')}
           description={t('settingsModal.shortDescription')}
-          href="/settings/page-profile"
+          onClick={() => openSettings('page')}
         />
         <SettingsCategory
           icon={<Store className="w-5 h-5" />}
           title={t('settings.sidebar.store')}
           description={t('settingsExtended.storePoliciesDesc')}
-          href="/settings/store"
+          onClick={() => openSettings('store')}
         />
       </div>
 
@@ -88,7 +93,7 @@ export default function SettingsPage() {
           icon={<Shield className="w-5 h-5" />}
           title={t('settings.sidebar.accessControl')}
           description={t('settingsExtended.privateStoreDesc')}
-          href="/settings/access-control"
+          onClick={() => openSettings('accessControl')}
         />
       </div>
 
@@ -97,24 +102,24 @@ export default function SettingsPage() {
           icon={<MapPin className="w-5 h-5" />}
           title={t('settings.sidebar.addresses')}
           description={t('settingsExtended.manageAddresses')}
-          href="/settings/addresses"
+          onClick={() => openSettings('addresses')}
         />
         <SettingsCategory
           icon={<Ban className="w-5 h-5" />}
           title={t('settings.sidebar.blocked')}
           description={t('settingsExtended.manageBlocked')}
-          href="/settings/blocked"
+          onClick={() => openSettings('blocked')}
         />
         <SettingsCategory
           icon={<Scale className="w-5 h-5" />}
           title={t('settings.sidebar.moderation')}
           description={t('settingsExtended.moderatorsDesc')}
-          href="/settings/moderation"
+          onClick={() => openSettings('moderation')}
         />
         <SettingsCategory
           icon={<Lock className="w-5 h-5" />}
           title={t('settings.sidebar.chatEncryption')}
-          href="/settings/chat-encryption"
+          onClick={() => openSettings('chatEncryption')}
         />
       </div>
 
@@ -123,7 +128,7 @@ export default function SettingsPage() {
           icon={<Wrench className="w-5 h-5" />}
           title={t('settings.sidebar.advanced')}
           description={t('settingsExtended.analyticsDesc')}
-          href="/settings/advanced"
+          onClick={() => openSettings('advanced')}
         />
       </div>
     </div>
