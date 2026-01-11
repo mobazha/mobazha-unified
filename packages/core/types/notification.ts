@@ -41,12 +41,21 @@ export type SocialNotificationType =
   | 'moderatorRemove'; // 移除调解员
 
 /**
+ * 系统/消息通知类型
+ * 用于处理 API 返回的 'message' 和 'system' 分类
+ */
+export type SystemNotificationType =
+  | 'chatMessage' // 聊天消息通知
+  | 'systemMessage'; // 系统消息通知
+
+/**
  * 所有通知事件类型（与后端对齐）
  */
 export type NotificationEventType =
   | OrderNotificationType
   | DisputeNotificationType
-  | SocialNotificationType;
+  | SocialNotificationType
+  | SystemNotificationType;
 
 /**
  * 通知类别
@@ -137,12 +146,25 @@ export interface SocialNotificationData extends BaseNotificationData {
 }
 
 /**
+ * 系统/消息通知数据
+ * 用于 chatMessage 和 systemMessage 类型
+ */
+export interface SystemNotificationData extends BaseNotificationData {
+  type: SystemNotificationType;
+  peerID?: string; // 可选，消息可能有发送者
+  handle?: string;
+  message?: string; // 系统消息内容
+  title?: string; // 消息标题
+}
+
+/**
  * 通用通知数据（联合类型）
  */
 export type NotificationData =
   | OrderNotificationData
   | DisputeNotificationData
-  | SocialNotificationData;
+  | SocialNotificationData
+  | SystemNotificationData;
 
 /**
  * API 返回的通知记录
@@ -312,6 +334,14 @@ export const SOCIAL_NOTIFICATION_TYPES: SocialNotificationType[] = [
 ];
 
 /**
+ * 系统通知类型列表
+ */
+export const SYSTEM_NOTIFICATION_TYPES: SystemNotificationType[] = [
+  'chatMessage',
+  'systemMessage',
+];
+
+/**
  * 声音配置映射
  */
 export const SOUND_CONFIGS: Record<SoundNotificationType, SoundConfig> = {
@@ -414,8 +444,8 @@ const API_CATEGORY_TO_EVENT_TYPE: Record<ApiNotificationCategory, NotificationEv
   dispute: 'disputeOpen',
   moderator: 'moderatorAdd',
   follow: 'follow',
-  message: 'follow', // 消息类型暂时映射到 follow，因为没有专门的消息事件类型
-  system: 'follow', // 系统通知暂时映射到 follow
+  message: 'chatMessage', // 消息类型映射到 chatMessage
+  system: 'systemMessage', // 系统通知映射到 systemMessage
 };
 
 /**
@@ -425,7 +455,8 @@ export function isValidNotificationEventType(type: string): type is Notification
   return (
     (ORDER_NOTIFICATION_TYPES as readonly string[]).includes(type) ||
     (DISPUTE_NOTIFICATION_TYPES as readonly string[]).includes(type) ||
-    (SOCIAL_NOTIFICATION_TYPES as readonly string[]).includes(type)
+    (SOCIAL_NOTIFICATION_TYPES as readonly string[]).includes(type) ||
+    (SYSTEM_NOTIFICATION_TYPES as readonly string[]).includes(type)
   );
 }
 
