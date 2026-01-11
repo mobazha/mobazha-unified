@@ -23,11 +23,10 @@ import {
   useProductGroups,
   useUserStore,
   useI18n,
-  getTelegramUserId,
   GROUP_COLORS,
   type ProductGroup,
 } from '@mobazha/core';
-import { Loader2, ChevronLeft, Plus, Layers } from 'lucide-react';
+import { Loader2, ChevronLeft, Plus, Layers, AlertCircle } from 'lucide-react';
 
 interface ProductGroupForm {
   name: string;
@@ -37,13 +36,12 @@ interface ProductGroupForm {
 
 export default function ProductGroupsPage() {
   const { t } = useI18n();
-  const { profile, isAuthenticated } = useUserStore();
+  const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
+  // 始终使用 peerID 作为所有者标识
   const ownerPeerID = profile?.peerID || '';
-  const telegramUserId = getTelegramUserId();
-  const userID = telegramUserId || ownerPeerID;
 
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
-    useProductGroups({ userID, autoLoad: false });
+    useProductGroups({ userID: ownerPeerID, autoLoad: false });
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<ProductGroup | null>(null);
@@ -56,18 +54,18 @@ export default function ProductGroupsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && userID) {
-      loadGroups(userID);
+    if (isAuthenticated && ownerPeerID) {
+      loadGroups(ownerPeerID);
     }
-  }, [isAuthenticated, userID, loadGroups]);
+  }, [isAuthenticated, ownerPeerID, loadGroups]);
 
   const handleCreateGroup = useCallback(async () => {
-    if (!userID || !newGroup.name.trim()) return;
+    if (!ownerPeerID || !newGroup.name.trim()) return;
 
     setSaving(true);
     try {
       const result = await createGroup({
-        userID,
+        userID: ownerPeerID,
         name: newGroup.name.trim(),
         description: newGroup.description.trim() || undefined,
       });
@@ -79,7 +77,7 @@ export default function ProductGroupsPage() {
     } finally {
       setSaving(false);
     }
-  }, [userID, newGroup, createGroup]);
+  }, [ownerPeerID, newGroup, createGroup]);
 
   const handleUpdateGroup = useCallback(async () => {
     if (!editingGroup) return;
@@ -137,130 +135,160 @@ export default function ProductGroupsPage() {
             {t('settings.accessControl.productGroupsDesc')}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+        <Button
+          size="sm"
+          onClick={() => setShowCreateModal(true)}
+          disabled={!isAuthenticated || !ownerPeerID}
+        >
           <Plus className="w-4 h-4 mr-2" />
           {t('common.create')}
         </Button>
       </div>
 
-      {error && (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6">{error}</div>
-      )}
-
-      {loading && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
-      {!loading && groups.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {groups.map(group => (
-            <Card key={group.id} className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: getGroupColor(group.id) }}
-                  >
-                    {group.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{group.name}</h3>
-                    <span className="text-xs px-2 py-0.5 rounded-full text-primary bg-primary/10">
-                      {group.itemCount || 0} {t('common.items')}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      setEditingGroup({
-                        ...group,
-                        description: group.description || '',
-                      })
-                    }
-                  >
-                    {t('common.edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive"
-                    onClick={() => setDeleteGroupId(group.id)}
-                  >
-                    {t('common.delete')}
-                  </Button>
-                </div>
-              </div>
-
-              {group.description && (
-                <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
-              )}
-
-              <div className="pt-3 border-t border-border space-y-2">
-                <Link
-                  href={`/settings/access-control/product-groups/${group.id}`}
-                  className="block text-sm text-primary hover:underline"
-                >
-                  {t('settings.accessControl.manageProducts')} →
-                </Link>
-                <Link
-                  href={`/settings/access-control/product-groups/${group.id}/authorization`}
-                  className="block text-sm text-blue-600 hover:underline"
-                >
-                  {t('settings.accessControl.configureAccess')} →
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {!loading && groups.length === 0 && (
+      {/* 无 peerID 时显示提示 */}
+      {!isLoadingProfile && isAuthenticated && !ownerPeerID && (
         <Card className="p-8">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Layers className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">
-              {t('settings.accessControl.noProductGroups')}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              {t('settings.accessControl.noProductGroupsDesc')}
-            </p>
-          </div>
-
-          {/* 功能说明 */}
-          <div className="bg-muted/50 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-sm mb-3">
-              {t('settings.accessControl.productGroupsHelp')}
-            </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                {t('settings.accessControl.productGroupsHelp1')}
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                {t('settings.accessControl.productGroupsHelp2')}
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                {t('settings.accessControl.productGroupsHelp3')}
-              </li>
-            </ul>
-          </div>
-
           <div className="text-center">
-            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-              <Plus className="w-4 h-4 mr-2" />
-              {t('settings.accessControl.createFirstProductGroup')}
-            </Button>
+            <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-warning" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+              {t('settings.accessControl.noPeerIDDesc')}
+            </p>
+            <Link href="/settings/page-profile">
+              <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
+            </Link>
           </div>
         </Card>
+      )}
+
+      {/* 正常内容（仅当有 peerID 时显示） */}
+      {ownerPeerID && (
+        <>
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6">{error}</div>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!loading && groups.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {groups.map(group => (
+                <Card key={group.id} className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                        style={{ backgroundColor: getGroupColor(group.id) }}
+                      >
+                        {group.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{group.name}</h3>
+                        <span className="text-xs px-2 py-0.5 rounded-full text-primary bg-primary/10">
+                          {group.itemCount || 0} {t('common.items')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          setEditingGroup({
+                            ...group,
+                            description: group.description || '',
+                          })
+                        }
+                      >
+                        {t('common.edit')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        onClick={() => setDeleteGroupId(group.id)}
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {group.description && (
+                    <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
+                  )}
+
+                  <div className="pt-3 border-t border-border space-y-2">
+                    <Link
+                      href={`/settings/access-control/product-groups/${group.id}`}
+                      className="block text-sm text-primary hover:underline"
+                    >
+                      {t('settings.accessControl.manageProducts')} →
+                    </Link>
+                    <Link
+                      href={`/settings/access-control/product-groups/${group.id}/authorization`}
+                      className="block text-sm text-blue-600 hover:underline"
+                    >
+                      {t('settings.accessControl.configureAccess')} →
+                    </Link>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!loading && groups.length === 0 && (
+            <Card className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Layers className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">
+                  {t('settings.accessControl.noProductGroups')}
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {t('settings.accessControl.noProductGroupsDesc')}
+                </p>
+              </div>
+
+              {/* 功能说明 */}
+              <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                <h4 className="font-medium text-sm mb-3">
+                  {t('settings.accessControl.productGroupsHelp')}
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    {t('settings.accessControl.productGroupsHelp1')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    {t('settings.accessControl.productGroupsHelp2')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    {t('settings.accessControl.productGroupsHelp3')}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="text-center">
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  disabled={!isAuthenticated || !ownerPeerID}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('settings.accessControl.createFirstProductGroup')}
+                </Button>
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Create/Edit Modal */}

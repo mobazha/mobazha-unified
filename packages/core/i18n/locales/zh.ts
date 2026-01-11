@@ -753,6 +753,10 @@ export const zh: TranslationResource = {
       welcomeMessageDesc: '用户获批后显示的欢迎消息',
       welcomeMessagePlaceholder: '欢迎光临我的店铺！请随意浏览...',
       settingsSaved: '隐私设置已保存',
+      // No PeerID warning
+      noPeerID: '需要完成店铺设置',
+      noPeerIDDesc: '用户组/产品组功能需要您的店铺节点已初始化。请先完成店铺资料设置。',
+      goToStoreSettings: '前往店铺设置',
       noUserGroups: '暂无用户组',
       noUserGroupsDesc: '创建第一个用户组来管理客户',
       userGroupsHelp: '用户组可以做什么？',

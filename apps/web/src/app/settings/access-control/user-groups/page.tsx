@@ -19,15 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui';
-import {
-  useUserGroups,
-  useUserStore,
-  useI18n,
-  getTelegramUserId,
-  GROUP_COLORS,
-  type UserGroup,
-} from '@mobazha/core';
-import { Loader2, ChevronLeft, Plus, Users } from 'lucide-react';
+import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
+import { Loader2, ChevronLeft, Plus, Users, AlertCircle } from 'lucide-react';
 
 interface UserGroupForm {
   name: string;
@@ -37,14 +30,12 @@ interface UserGroupForm {
 
 export default function UserGroupsPage() {
   const { t } = useI18n();
-  const { profile, isAuthenticated } = useUserStore();
+  const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
+  // 始终使用 peerID 作为所有者标识
   const ownerPeerID = profile?.peerID || '';
-  const telegramUserId = getTelegramUserId();
-  // 使用 telegramUserId 或 ownerPeerID
-  const userID = telegramUserId || ownerPeerID;
 
   const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
-    useUserGroups({ ownerPeerID: userID, autoLoad: false });
+    useUserGroups({ ownerPeerID, autoLoad: false });
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
@@ -57,18 +48,18 @@ export default function UserGroupsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && userID) {
-      loadGroups(userID);
+    if (isAuthenticated && ownerPeerID) {
+      loadGroups(ownerPeerID);
     }
-  }, [isAuthenticated, userID, loadGroups]);
+  }, [isAuthenticated, ownerPeerID, loadGroups]);
 
   const handleCreateGroup = useCallback(async () => {
-    if (!userID || !newGroup.name.trim()) return;
+    if (!ownerPeerID || !newGroup.name.trim()) return;
 
     setSaving(true);
     try {
       const result = await createGroup({
-        ownerPeerID: userID,
+        ownerPeerID,
         name: newGroup.name.trim(),
         description: newGroup.description.trim() || undefined,
       });
@@ -80,7 +71,7 @@ export default function UserGroupsPage() {
     } finally {
       setSaving(false);
     }
-  }, [userID, newGroup, createGroup]);
+  }, [ownerPeerID, newGroup, createGroup]);
 
   const handleUpdateGroup = useCallback(async () => {
     if (!editingGroup) return;
@@ -138,120 +129,150 @@ export default function UserGroupsPage() {
             {t('settings.accessControl.userGroupsDesc')}
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+        <Button
+          size="sm"
+          onClick={() => setShowCreateModal(true)}
+          disabled={!isAuthenticated || !ownerPeerID}
+        >
           <Plus className="w-4 h-4 mr-2" />
           {t('common.create')}
         </Button>
       </div>
 
-      {error && (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6">{error}</div>
-      )}
-
-      {loading && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
-      {!loading && groups.length > 0 && (
-        <div className="space-y-3">
-          {groups.map(group => (
-            <Card key={group.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: getGroupColor(group.id) }}
-                  >
-                    {group.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{group.name}</h3>
-                    {group.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {group.memberCount || 0} {t('common.members')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
-                    <Button size="sm" variant="ghost">
-                      {t('common.members')}
-                    </Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      setEditingGroup({
-                        ...group,
-                        description: group.description || '',
-                      })
-                    }
-                  >
-                    {t('common.edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteGroupId(group.id)}
-                  >
-                    {t('common.delete')}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {!loading && groups.length === 0 && (
+      {/* 无 peerID 时显示提示 */}
+      {!isLoadingProfile && isAuthenticated && !ownerPeerID && (
         <Card className="p-8">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">
-              {t('settings.accessControl.noUserGroups')}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              {t('settings.accessControl.noUserGroupsDesc')}
-            </p>
-          </div>
-
-          {/* 功能说明 */}
-          <div className="bg-muted/50 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-sm mb-3">
-              {t('settings.accessControl.userGroupsHelp')}
-            </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                {t('settings.accessControl.userGroupsHelp1')}
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                {t('settings.accessControl.userGroupsHelp2')}
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                {t('settings.accessControl.userGroupsHelp3')}
-              </li>
-            </ul>
-          </div>
-
           <div className="text-center">
-            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-              <Plus className="w-4 h-4 mr-2" />
-              {t('settings.accessControl.createFirstUserGroup')}
-            </Button>
+            <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-warning" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+              {t('settings.accessControl.noPeerIDDesc')}
+            </p>
+            <Link href="/settings/page-profile">
+              <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
+            </Link>
           </div>
         </Card>
+      )}
+
+      {/* 正常内容（仅当有 peerID 时显示） */}
+      {ownerPeerID && (
+        <>
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6">{error}</div>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!loading && groups.length > 0 && (
+            <div className="space-y-3">
+              {groups.map(group => (
+                <Card key={group.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                        style={{ backgroundColor: getGroupColor(group.id) }}
+                      >
+                        {group.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{group.name}</h3>
+                        {group.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {group.memberCount || 0} {t('common.members')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
+                        <Button size="sm" variant="ghost">
+                          {t('common.members')}
+                        </Button>
+                      </Link>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          setEditingGroup({
+                            ...group,
+                            description: group.description || '',
+                          })
+                        }
+                      >
+                        {t('common.edit')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleteGroupId(group.id)}
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!loading && groups.length === 0 && (
+            <Card className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">
+                  {t('settings.accessControl.noUserGroups')}
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {t('settings.accessControl.noUserGroupsDesc')}
+                </p>
+              </div>
+
+              {/* 功能说明 */}
+              <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                <h4 className="font-medium text-sm mb-3">
+                  {t('settings.accessControl.userGroupsHelp')}
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    {t('settings.accessControl.userGroupsHelp1')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    {t('settings.accessControl.userGroupsHelp2')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    {t('settings.accessControl.userGroupsHelp3')}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="text-center">
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  disabled={!isAuthenticated || !ownerPeerID}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('settings.accessControl.createFirstUserGroup')}
+                </Button>
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Create/Edit Modal */}

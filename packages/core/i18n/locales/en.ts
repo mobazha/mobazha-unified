@@ -768,6 +768,11 @@ export const en: TranslationResource = {
       welcomeMessageDesc: 'Message shown to users after approval',
       welcomeMessagePlaceholder: 'Welcome to my store! Feel free to browse...',
       settingsSaved: 'Privacy settings saved',
+      // No PeerID warning
+      noPeerID: 'Store Setup Required',
+      noPeerIDDesc:
+        'User/Product Groups require your store node to be initialized. Please complete your store profile setup first.',
+      goToStoreSettings: 'Go to Store Settings',
       noUserGroups: 'No User Groups',
       noUserGroupsDesc: 'Create your first user group to manage customers',
       userGroupsHelp: 'What can you do with user groups?',
