@@ -1212,6 +1212,62 @@ export const zh: TranslationResource = {
     items: '项',
   },
 
+  // 通知
+  notifications: {
+    title: '通知',
+    markAllRead: '全部标为已读',
+    noNotifications: '暂无通知',
+    unreadCount: '{{count}} 条未读通知',
+    allCaughtUp: '已全部处理完毕！',
+    filterAll: '全部',
+    filterUnread: '未读',
+    // 订单通知
+    order: {
+      youPlacedOrder: '您下了一个订单',
+      placedOrder: '下了一个订单',
+      yourPaymentSent: '您的付款已发送',
+      sentPayment: '发送了付款',
+      orderFunded: '订单已到账',
+      acceptedYourOrder: '接受了您的订单',
+      youAcceptedOrder: '您接受了一个订单',
+      declinedYourOrder: '拒绝了您的订单',
+      youDeclinedOrder: '您拒绝了一个订单',
+      youCancelledOrder: '您取消了订单',
+      cancelledOrder: '取消了订单',
+      refundedYourOrder: '为您的订单退款',
+      youRefundedOrder: '您退款了一个订单',
+      fulfilledYourOrder: '发货了您的订单',
+      youFulfilledOrder: '您发货了一个订单',
+      completedOrder: '完成了订单',
+    },
+    // 争议通知
+    dispute: {
+      startedDispute: '发起了争议',
+      openedCase: '开启了案例',
+      modCaseOpened: '对 {{disputeeName}} 开启了案例',
+      caseUpdated: '更新了案例',
+      proposedOutcome: '提议了争议结果',
+      acceptedPayout: '接受了争议赔付',
+      claimedPayment: '领取了付款',
+    },
+    // 社交通知
+    social: {
+      startedFollowing: '关注了您',
+      unfollowed: '取消关注了您',
+      addedAsModerator: '将您添加为调解员',
+      removedAsModerator: '移除了您的调解员身份',
+    },
+    // TTS (语音播报)
+    tts: {
+      newMessage: '新消息',
+      orderChat: '订单消息',
+      newOrder: '收到新订单',
+      payment: '收到付款',
+      dispute: '有争议需要处理',
+      orderComplete: '订单已完成',
+    },
+  },
+
   // P2P 连接
   p2p: {
     connecting: '连接中...',

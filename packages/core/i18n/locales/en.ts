@@ -1232,6 +1232,62 @@ export const en: TranslationResource = {
     items: 'items',
   },
 
+  // Notifications
+  notifications: {
+    title: 'Notifications',
+    markAllRead: 'Mark all as read',
+    noNotifications: 'No notifications',
+    unreadCount: '{{count}} unread notifications',
+    allCaughtUp: 'All caught up!',
+    filterAll: 'All',
+    filterUnread: 'Unread',
+    // Order notifications
+    order: {
+      youPlacedOrder: 'You placed an order',
+      placedOrder: 'placed an order',
+      yourPaymentSent: 'Your payment was sent',
+      sentPayment: 'sent payment',
+      orderFunded: 'Order has been funded',
+      acceptedYourOrder: 'accepted your order',
+      youAcceptedOrder: 'You accepted an order',
+      declinedYourOrder: 'declined your order',
+      youDeclinedOrder: 'You declined an order',
+      youCancelledOrder: 'You cancelled the order',
+      cancelledOrder: 'cancelled their order',
+      refundedYourOrder: 'refunded your order',
+      youRefundedOrder: 'You refunded an order',
+      fulfilledYourOrder: 'fulfilled your order',
+      youFulfilledOrder: 'You fulfilled an order',
+      completedOrder: 'completed the order',
+    },
+    // Dispute notifications
+    dispute: {
+      startedDispute: 'started a dispute',
+      openedCase: 'opened a case',
+      modCaseOpened: 'opened a case against {{disputeeName}}',
+      caseUpdated: 'updated the case',
+      proposedOutcome: 'proposed a dispute outcome',
+      acceptedPayout: 'accepted the dispute payout',
+      claimedPayment: 'claimed their payment',
+    },
+    // Social notifications
+    social: {
+      startedFollowing: 'started following you',
+      unfollowed: 'unfollowed you',
+      addedAsModerator: 'added you as a moderator',
+      removedAsModerator: 'removed you as a moderator',
+    },
+    // TTS (Text-to-Speech) announcements
+    tts: {
+      newMessage: 'New message',
+      orderChat: 'Order message',
+      newOrder: 'New order received',
+      payment: 'Payment received',
+      dispute: 'Dispute requires attention',
+      orderComplete: 'Order completed',
+    },
+  },
+
   // P2P Connection
   p2p: {
     connecting: 'Connecting...',

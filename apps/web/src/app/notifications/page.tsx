@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -8,103 +8,47 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { toast } from '@/components/ui/use-toast';
-import { useChatStore } from '@mobazha/core';
+import { useChatStore, useNotifications } from '@mobazha/core';
+import type { NotificationData } from '@mobazha/core';
 
-// Types
-type NotificationType = 'order' | 'payment' | 'dispute' | 'follow' | 'message' | 'system';
+// ============ 类型映射 ============
 
-interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  read: boolean;
-  timestamp: string;
-  data?: {
-    orderId?: string;
-    peerID?: string;
-    txid?: string;
-    caseId?: string;
-    avatar?: string;
-    name?: string;
-  };
+type DisplayNotificationType = 'order' | 'payment' | 'dispute' | 'follow' | 'message' | 'system';
+
+// 事件类型到显示类型的详细映射
+function getDisplayType(notification: NotificationData): DisplayNotificationType {
+  switch (notification.type) {
+    case 'newOrder':
+    case 'orderFunded':
+    case 'orderConfirmation':
+    case 'orderDeclined':
+    case 'orderCancel':
+    case 'orderFulfillment':
+    case 'orderCompletion':
+      return 'order';
+    case 'orderPaymentReceived':
+    case 'refund':
+      return 'payment';
+    case 'disputeOpen':
+    case 'caseOpen':
+    case 'caseUpdate':
+    case 'disputeClose':
+    case 'disputeAccepted':
+    case 'vendorFinalizedPayment':
+      return 'dispute';
+    case 'follow':
+    case 'unfollow':
+    case 'moderatorAdd':
+    case 'moderatorRemove':
+      return 'follow';
+    default:
+      return 'system';
+  }
 }
 
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'order',
-    title: 'Order Shipped',
-    message: 'Your order #ORD-2024-0002 has been shipped. Track your package.',
-    read: false,
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    data: { orderId: 'ORD-002' },
-  },
-  {
-    id: '2',
-    type: 'payment',
-    title: 'Payment Received',
-    message: 'You received 0.015 BTC for order #ORD-2024-0001',
-    read: false,
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-    data: { orderId: 'ORD-001', txid: '0xabc...' },
-  },
-  {
-    id: '3',
-    type: 'dispute',
-    title: 'Dispute Update',
-    message: 'New message in dispute case #CASE-001',
-    read: false,
-    timestamp: new Date(Date.now() - 14400000).toISOString(),
-    data: { caseId: 'CASE-001', orderId: 'ORD-003' },
-  },
-  {
-    id: '4',
-    type: 'follow',
-    title: 'New Follower',
-    message: 'Alice Chen started following you',
-    read: true,
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-    data: {
-      peerID: 'QmUser001',
-      name: 'Alice Chen',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alice',
-    },
-  },
-  {
-    id: '5',
-    type: 'message',
-    title: 'New Message',
-    message: 'TechGear Store sent you a message: "Your order is ready for pickup..."',
-    read: true,
-    timestamp: new Date(Date.now() - 172800000).toISOString(),
-    data: {
-      peerID: 'QmVendor123',
-      name: 'TechGear Store',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-    },
-  },
-  {
-    id: '6',
-    type: 'system',
-    title: 'Welcome to Mobazha!',
-    message: 'Complete your profile to start buying and selling.',
-    read: true,
-    timestamp: new Date(Date.now() - 604800000).toISOString(),
-  },
-  {
-    id: '7',
-    type: 'order',
-    title: 'Order Completed',
-    message: 'Order #ORD-2024-0001 has been completed. Leave a review!',
-    read: true,
-    timestamp: new Date(Date.now() - 259200000).toISOString(),
-    data: { orderId: 'ORD-001' },
-  },
-];
+// ============ 图标配置 ============
 
-const typeIcons: Record<NotificationType, React.ReactNode> = {
+const typeIcons: Record<DisplayNotificationType, React.ReactNode> = {
   order: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -167,7 +111,7 @@ const typeIcons: Record<NotificationType, React.ReactNode> = {
   ),
 };
 
-const typeColors: Record<NotificationType, string> = {
+const typeColors: Record<DisplayNotificationType, string> = {
   order: 'bg-blue-500',
   payment: 'bg-emerald-500',
   dispute: 'bg-red-500',
@@ -176,66 +120,91 @@ const typeColors: Record<NotificationType, string> = {
   system: 'bg-slate-500',
 };
 
+// ============ 时间格式化 ============
+
+function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+}
+
+// ============ 主组件 ============
+
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
-  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    getDisplayData,
+  } = useNotifications();
+
+  const [filter, setFilter] = React.useState<'all' | 'unread'>('all');
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === 'unread') return !n.read;
-    return true;
-  });
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
-  };
-
-  const handleMarkAsRead = useCallback((notificationId: string) => {
-    setNotifications(prev => prev.map(n => (n.id === notificationId ? { ...n, read: true } : n)));
-  }, []);
-
-  const handleMarkAllAsRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    toast({ title: 'All notifications marked as read' });
-  }, []);
-
-  const handleDeleteNotification = useCallback((notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    toast({ title: 'Notification deleted' });
-  }, []);
-
-  const getNotificationLink = (notification: Notification) => {
-    switch (notification.type) {
-      case 'order':
-        return notification.data?.orderId ? `/orders/${notification.data.orderId}` : '/orders';
-      case 'payment':
-        return '/wallet';
-      case 'dispute':
-        return notification.data?.orderId
-          ? `/moderator/cases/${notification.data.orderId}`
-          : '/orders';
-      case 'follow':
-        return notification.data?.peerID ? `/store/${notification.data.peerID}` : '/profile';
-      case 'message':
-        return '#'; // Will be handled by onClick to open drawer
-      default:
-        return '#';
+  // 过滤通知
+  const filteredNotifications = useMemo(() => {
+    if (filter === 'unread') {
+      return notifications.filter(n => !n.read);
     }
-  };
+    return notifications;
+  }, [notifications, filter]);
+
+  // 获取通知链接
+  const getNotificationLink = useCallback(
+    (notification: NotificationData): string => {
+      const displayData = getDisplayData(notification);
+      return displayData.route || '/notifications';
+    },
+    [getDisplayData]
+  );
+
+  // 获取通知标题
+  const getNotificationTitle = useCallback(
+    (notification: NotificationData): string => {
+      const displayData = getDisplayData(notification);
+      if (displayData.name) {
+        return `${displayData.name} ${displayData.text}`;
+      }
+      return displayData.text || notification.type;
+    },
+    [getDisplayData]
+  );
+
+  // 处理标记已读
+  const handleMarkAsRead = useCallback(
+    async (notificationId: string) => {
+      await markAsRead(notificationId);
+    },
+    [markAsRead]
+  );
+
+  // 处理标记全部已读
+  const handleMarkAllAsRead = useCallback(async () => {
+    await markAllAsRead();
+    toast({ title: 'All notifications marked as read' });
+  }, [markAllAsRead]);
+
+  // 处理删除通知
+  const handleDeleteNotification = useCallback(
+    (notificationId: string) => {
+      deleteNotification(notificationId);
+      toast({ title: 'Notification deleted' });
+    },
+    [deleteNotification]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -248,7 +217,11 @@ export default function NotificationsPage() {
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">Notifications</h1>
               <p className="text-sm text-muted-foreground">
-                {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
+                {isLoading
+                  ? 'Loading...'
+                  : unreadCount > 0
+                    ? `${unreadCount} unread notifications`
+                    : 'All caught up!'}
               </p>
             </div>
             {unreadCount > 0 && (
@@ -318,85 +291,77 @@ export default function NotificationsPage() {
             </Card>
           ) : (
             <VStack gap="xs">
-              {filteredNotifications.map(notification => (
-                <Card
-                  key={notification.id}
-                  className={`transition-all p-3 sm:p-4 ${!notification.read ? 'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
-                >
-                  <HStack gap="sm" align="start">
-                    {/* Icon or Avatar */}
-                    {notification.data?.avatar ? (
-                      <Avatar
-                        src={notification.data.avatar}
-                        name={notification.data.name || ''}
-                        size="sm"
-                        className="w-8 h-8 sm:w-10 sm:h-10"
-                      />
-                    ) : (
+              {filteredNotifications.map(notification => {
+                const displayType = getDisplayType(notification);
+                const title = getNotificationTitle(notification);
+                const link = getNotificationLink(notification);
+
+                return (
+                  <Card
+                    key={notification.id}
+                    className={`transition-all p-3 sm:p-4 ${!notification.read ? 'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
+                  >
+                    <HStack gap="sm" align="start">
+                      {/* Icon */}
                       <div
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 ${typeColors[notification.type]}`}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 ${typeColors[displayType]}`}
                       >
-                        <span className="scale-75 sm:scale-100">
-                          {typeIcons[notification.type]}
-                        </span>
+                        <span className="scale-75 sm:scale-100">{typeIcons[displayType]}</span>
                       </div>
-                    )}
 
-                    {/* Content */}
-                    <Link
-                      href={getNotificationLink(notification)}
-                      onClick={e => {
-                        handleMarkAsRead(notification.id);
-                        if (notification.type === 'message') {
-                          e.preventDefault();
-                          openChatDrawer();
-                        }
-                      }}
-                      className="flex-1 min-w-0 touch-feedback"
-                    >
-                      <HStack justify="between" align="start">
-                        <div className="flex-1 min-w-0">
-                          <h3
-                            className={`font-medium text-sm sm:text-base ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}
-                          >
-                            {notification.title}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-0.5">
-                            {notification.message}
-                          </p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
-                            {formatTimestamp(notification.timestamp)}
-                          </p>
-                        </div>
-
-                        {!notification.read && (
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
-                        )}
-                      </HStack>
-                    </Link>
-
-                    {/* Actions */}
-                    <button
-                      onClick={() => handleDeleteNotification(notification.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-500 transition-colors flex-shrink-0 touch-feedback"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      {/* Content */}
+                      <Link
+                        href={link}
+                        onClick={e => {
+                          handleMarkAsRead(notification.id);
+                          if (displayType === 'message') {
+                            e.preventDefault();
+                            openChatDrawer();
+                          }
+                        }}
+                        className="flex-1 min-w-0 touch-feedback"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </HStack>
-                </Card>
-              ))}
+                        <HStack justify="between" align="start">
+                          <div className="flex-1 min-w-0">
+                            <h3
+                              className={`font-medium text-sm sm:text-base ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}
+                            >
+                              {title}
+                            </h3>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
+                              {formatTimestamp(notification.timestamp)}
+                            </p>
+                          </div>
+
+                          {!notification.read && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
+                          )}
+                        </HStack>
+                      </Link>
+
+                      {/* Actions */}
+                      <button
+                        onClick={() => handleDeleteNotification(notification.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 transition-colors flex-shrink-0 touch-feedback"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </HStack>
+                  </Card>
+                );
+              })}
             </VStack>
           )}
         </Container>

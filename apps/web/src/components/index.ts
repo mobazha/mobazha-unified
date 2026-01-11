@@ -21,6 +21,9 @@ export { AuthProvider } from './AuthProvider';
 export { CurrencyProvider } from './CurrencyProvider';
 export { SettingsModal, SettingsModalProvider, useSettingsModal } from './SettingsModal';
 
+// Notification Components
+export { NotificationBadge } from './Notification';
+
 // Payment Components
 export {
   PaymentCryptoSelector,

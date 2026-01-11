@@ -23,6 +23,9 @@ export * from './chatStore';
 // OTC 状态
 export * from './otcStore';
 
+// 通知状态
+export * from './notificationStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';
