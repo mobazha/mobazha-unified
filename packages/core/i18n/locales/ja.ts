@@ -457,6 +457,27 @@ export const ja: TranslationResource = {
     avatar: 'アバター',
     loadAvatar: 'アバターを変更',
     loadHeader: 'カバーを変更',
+    sidebar: {
+      general: '一般',
+      page: 'プロフィールページ',
+      store: 'ストア',
+      accessControl: 'アクセス制御',
+      privacy: 'プライバシー',
+      userGroups: 'ユーザーグループ',
+      productGroups: '商品グループ',
+      accessRequests: 'アクセスリクエスト',
+      addresses: '住所',
+      blocked: 'ブロック',
+      moderation: 'モデレーション',
+      chatEncryption: 'チャット暗号化',
+      advanced: '詳細設定',
+    },
+    accessControl: {
+      privacyDesc: 'ストアを閲覧できる人を管理',
+      userGroupsDesc: '顧客グループの作成と管理',
+      productGroupsDesc: '可視性で商品を整理',
+      requestsDesc: 'アクセスリクエストを管理',
+    },
   },
 
   theme: {

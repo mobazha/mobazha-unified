@@ -457,6 +457,27 @@ export const ru: TranslationResource = {
     avatar: 'Аватар',
     loadAvatar: 'Изменить аватар',
     loadHeader: 'Изменить обложку',
+    sidebar: {
+      general: 'Общие',
+      page: 'Страница профиля',
+      store: 'Магазин',
+      accessControl: 'Управление доступом',
+      privacy: 'Конфиденциальность',
+      userGroups: 'Группы пользователей',
+      productGroups: 'Группы товаров',
+      accessRequests: 'Запросы доступа',
+      addresses: 'Адреса',
+      blocked: 'Заблокированные',
+      moderation: 'Модерация',
+      chatEncryption: 'Шифрование чата',
+      advanced: 'Дополнительно',
+    },
+    accessControl: {
+      privacyDesc: 'Управляйте тем, кто может видеть ваш магазин',
+      userGroupsDesc: 'Создание и управление группами клиентов',
+      productGroupsDesc: 'Организация товаров по видимости',
+      requestsDesc: 'Управление запросами на доступ',
+    },
   },
 
   theme: {
