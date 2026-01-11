@@ -23,7 +23,7 @@ import {
   CRYPTO_CURRENCIES,
   getPopularCurrencies,
 } from '@mobazha/core';
-import type { CurrencyInfo } from '@mobazha/core';
+import type { CurrencyInfo, Locale } from '@mobazha/core';
 import { ChevronLeft, Check } from 'lucide-react';
 
 // Countries data
@@ -43,7 +43,7 @@ const countries = [
 ];
 
 // Languages data
-const languages = [
+const languages: { code: Locale; name: string }[] = [
   { code: 'en', name: 'English' },
   { code: 'zh', name: '中文' },
   { code: 'es', name: 'Español' },

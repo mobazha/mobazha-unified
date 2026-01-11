@@ -180,6 +180,14 @@ export interface StoreAccessSettings {
   peerID: string;
   allowExternalApplications: boolean;
   autoApprove?: boolean;
+  /** 是否为私密店铺 */
+  isPrivateStore?: boolean;
+  /** 是否允许访问申请 */
+  allowAccessRequests?: boolean;
+  /** 是否自动批准申请 */
+  autoApproveRequests?: boolean;
+  /** 欢迎消息 */
+  welcomeMessage?: string;
 }
 
 /**

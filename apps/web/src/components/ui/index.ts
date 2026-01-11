@@ -14,6 +14,7 @@ export * from './input';
 export * from './label';
 export * from './checkbox';
 export * from './switch';
+export * from './slider';
 export * from './scroll-area';
 export * from './separator';
 export * from './avatar';

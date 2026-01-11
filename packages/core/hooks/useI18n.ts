@@ -19,6 +19,10 @@ import { DEFAULT_LOCALE, SUPPORTED_LOCALES, LOCALE_INFO } from '../i18n/types';
 export interface UseI18nReturn extends I18nContextType {
   supportedLocales: typeof SUPPORTED_LOCALES;
   localeInfo: typeof LOCALE_INFO;
+  /** 别名：等同于 locale */
+  language: Locale;
+  /** 别名：等同于 setLocale */
+  setLanguage: (locale: Locale) => void;
 }
 
 /**
@@ -102,6 +106,9 @@ export function useI18n(): UseI18nReturn {
     () => ({
       locale,
       setLocale,
+      // 别名：兼容 language/setLanguage 命名
+      language: locale,
+      setLanguage: setLocale,
       t,
       formatNumber: formatNum,
       formatCurrency: formatCurr,

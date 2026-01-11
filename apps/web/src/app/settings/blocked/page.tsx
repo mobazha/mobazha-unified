@@ -173,7 +173,7 @@ export default function BlockedSettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('settingsModal.unblockConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('settingsModal.unblockConfirmDesc', { name: unblockTarget?.name })}
+              {t('settingsModal.unblockConfirmDesc', { name: unblockTarget?.name || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

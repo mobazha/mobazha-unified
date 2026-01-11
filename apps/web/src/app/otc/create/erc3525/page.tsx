@@ -309,7 +309,7 @@ export default function CreateErc3525OtcPage() {
                     </div>
                     <Slider
                       value={[sharesToSell]}
-                      onValueChange={(value) => setSharesToSell(value[0])}
+                      onValueChange={(value: number[]) => setSharesToSell(value[0])}
                       min={1}
                       max={selectedHolding.value}
                       step={1}

@@ -23,6 +23,8 @@ interface UseWalletReturn {
 
   // 方法
   connect: () => Promise<WalletInfo | null>;
+  /** 别名：等同于 connect */
+  connectWallet: () => Promise<WalletInfo | null>;
   disconnect: () => Promise<void>;
   switchChain: (chainId: ChainId) => Promise<boolean>;
   refreshBalance: () => Promise<string | null>;
@@ -159,6 +161,7 @@ export function useWallet(): UseWalletReturn {
 
     // 方法
     connect,
+    connectWallet: connect, // 别名
     disconnect,
     switchChain,
     refreshBalance,
