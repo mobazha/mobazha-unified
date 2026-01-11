@@ -19,7 +19,7 @@ export { ThemeSwitcher } from './ThemeSwitcher';
 export { ErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
 export { AuthProvider } from './AuthProvider';
 export { CurrencyProvider } from './CurrencyProvider';
-export { SettingsModal, SettingsModalProvider, useSettingsModal } from './SettingsModal';
+// SettingsModal removed - settings are now at /settings page
 
 // Payment Components
 export {
@@ -46,3 +46,6 @@ export type {
 
 // Access Control Components
 export { StoreAccessGuard } from './StoreAccessGuard';
+
+// Settings Components
+export { SettingsSidebar } from './SettingsSidebar';
