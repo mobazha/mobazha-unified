@@ -83,8 +83,10 @@ export const zh: TranslationResource = {
     purchases: '购买',
     sales: '出售',
     privacyGroups: '隐私与分组',
-    productGroups: '商品组',
+    productGroups: '产品组',
+    productGroupsDesc: '组织产品并控制可见性',
     userGroups: '用户组',
+    userGroupsDesc: '管理用户组以控制访问权限',
     receivingAccounts: '接收账户',
     receivingAccountsDesc: '管理支付地址',
     wishlist: '收藏',
@@ -98,6 +100,9 @@ export const zh: TranslationResource = {
     support: '帮助与支持',
     supportDesc: '获取帮助和常见问题',
     logout: '退出登录',
+    accessControl: '访问控制',
+    accessRequests: '访问申请',
+    accessRequestsDesc: '审核待处理的访问申请',
   },
 
   product: {
@@ -950,6 +955,15 @@ export const zh: TranslationResource = {
     followingSystem: '跟随系统',
     enabled: '已启用',
     disabled: '已禁用',
+    // Access Control
+    accessControl: '访问控制',
+    userGroups: '用户组',
+    userGroupsDesc: '管理用户组以控制访问权限',
+    productGroups: '产品组',
+    productGroupsDesc: '组织产品并控制其可见性',
+    accessRequests: '访问申请',
+    accessRequestsDesc: '审核待处理的访问申请',
+    storeSettings: '店铺设置',
   },
 
   userMenu: {

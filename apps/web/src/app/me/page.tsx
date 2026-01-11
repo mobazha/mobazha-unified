@@ -29,6 +29,8 @@ import {
   Users,
   ChevronRight,
   LogIn,
+  Lock,
+  Layers,
 } from 'lucide-react';
 
 // 功能列表项组件
@@ -187,10 +189,34 @@ export default function MePage() {
                 description={t('me.notificationsDesc')}
                 href="/notifications"
               />
+            </div>
+          )}
+
+          {/* 访问控制 */}
+          {isAuthenticated && (
+            <div className="bg-card rounded-xl border overflow-hidden">
+              <div className="px-3 pt-3 pb-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {t('me.accessControl')}
+                </p>
+              </div>
               <FeatureItem
                 icon={<Users className="w-5 h-5" />}
                 title={t('me.userGroups')}
-                href="/groups"
+                description={t('me.userGroupsDesc')}
+                href="/settings/user-groups"
+              />
+              <FeatureItem
+                icon={<Layers className="w-5 h-5" />}
+                title={t('me.productGroups')}
+                description={t('me.productGroupsDesc')}
+                href="/settings/product-groups"
+              />
+              <FeatureItem
+                icon={<Lock className="w-5 h-5" />}
+                title={t('me.accessRequests')}
+                description={t('me.accessRequestsDesc')}
+                href="/settings/access-requests"
               />
             </div>
           )}

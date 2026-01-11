@@ -40,7 +40,20 @@ import {
   getPopularCurrencies,
 } from '@mobazha/core';
 import type { CurrencyInfo } from '@mobazha/core';
-import { X, Check, Copy, Share2, Shield, Laptop, Key, Trash2, Plus } from 'lucide-react';
+import {
+  X,
+  Check,
+  Copy,
+  Share2,
+  Shield,
+  Laptop,
+  Key,
+  Trash2,
+  Plus,
+  Users,
+  Package,
+  Lock,
+} from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
 // Countries data
@@ -937,6 +950,8 @@ const PageTabContent: React.FC = () => {
 const StoreTabContent: React.FC = () => {
   const { t } = useI18n();
   const { toast } = useToast();
+  const router = useRouter();
+  const { closeSettings } = useSettingsModal();
 
   const [isPrivateStore, setIsPrivateStore] = useState(false);
   const [showCoinsModal, setShowCoinsModal] = useState(false);
@@ -976,9 +991,16 @@ const StoreTabContent: React.FC = () => {
     setShippingOptions(newOptions);
   };
 
+  // 导航到访问控制相关页面
+  const navigateToAccessControl = (path: string) => {
+    closeSettings();
+    router.push(path);
+  };
+
   return (
     <>
-      <SettingGroup>
+      {/* 访问控制设置组 */}
+      <SettingGroup title={t('settingsExtended.accessControl')}>
         <SettingItem
           title={t('settingsExtended.privateStore')}
           description={t('settingsExtended.privateStoreDesc')}
@@ -986,6 +1008,25 @@ const StoreTabContent: React.FC = () => {
           toggleValue={isPrivateStore}
           onToggle={setIsPrivateStore}
         />
+        <SettingItem
+          title={t('settingsExtended.userGroups')}
+          description={t('settingsExtended.userGroupsDesc')}
+          onClick={() => navigateToAccessControl('/settings/user-groups')}
+        />
+        <SettingItem
+          title={t('settingsExtended.productGroups')}
+          description={t('settingsExtended.productGroupsDesc')}
+          onClick={() => navigateToAccessControl('/settings/product-groups')}
+        />
+        <SettingItem
+          title={t('settingsExtended.accessRequests')}
+          description={t('settingsExtended.accessRequestsDesc')}
+          onClick={() => navigateToAccessControl('/settings/access-requests')}
+        />
+      </SettingGroup>
+
+      {/* 店铺设置组 */}
+      <SettingGroup title={t('settingsExtended.storeSettings')}>
         <SettingItem
           title={t('settingsExtended.storePolicies')}
           description={t('settingsExtended.storePoliciesDesc')}
