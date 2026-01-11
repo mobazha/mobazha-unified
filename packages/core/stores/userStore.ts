@@ -19,6 +19,7 @@ import {
   isTokenExpired,
   getAuthService,
   getCurrentAuthMode,
+  parseJwtToken,
   type LoginCredentials,
 } from '../services/auth';
 import { connectWebSocket, disconnectWebSocket } from '../services/websocket';
@@ -149,11 +150,20 @@ export const useUserStore = create<UserState>()(
             disableMockData();
             console.log('🔄 Switched to real API mode');
 
+            // 从 JWT token 中解析 Casdoor User ID（如 telegram_123456）
+            const claims = parseJwtToken(result.token);
+            const casdoorId = claims?.sub || claims?.name;
+            console.log('📝 Parsed casdoorId from JWT:', casdoorId);
+
             // 获取用户资料
             const profile = await profileApi.getMyProfile();
 
             if (profile) {
-              saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
+              saveUser({
+                id: profile.peerID,
+                name: profile.name || profile.peerID,
+                casdoorId, // 保存 Casdoor User ID
+              });
               set({
                 profile,
                 token: result.token,
@@ -169,7 +179,10 @@ export const useUserStore = create<UserState>()(
               return true;
             }
 
-            // 即使获取资料失败，登录仍然成功
+            // 即使获取资料失败，登录仍然成功，也要保存 casdoorId
+            if (casdoorId) {
+              saveUser({ id: casdoorId, name: casdoorId, casdoorId });
+            }
             set({
               token: result.token,
               isAuthenticated: true,
@@ -214,11 +227,20 @@ export const useUserStore = create<UserState>()(
             disableMockData();
             console.log('🔄 Switched to real API mode (hosted)');
 
+            // 从 JWT token 中解析 Casdoor User ID（如 telegram_123456）
+            const claims = parseJwtToken(result.token);
+            const casdoorId = claims?.sub || claims?.name;
+            console.log('📝 Parsed casdoorId from JWT:', casdoorId);
+
             // 获取用户资料
             const profile = await profileApi.getMyProfile();
 
             if (profile) {
-              saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
+              saveUser({
+                id: profile.peerID,
+                name: profile.name || profile.peerID,
+                casdoorId, // 保存 Casdoor User ID
+              });
               set({
                 profile,
                 token: result.token,
@@ -238,7 +260,10 @@ export const useUserStore = create<UserState>()(
               return true;
             }
 
-            // 即使获取资料失败，登录仍然成功
+            // 即使获取资料失败，登录仍然成功，也要保存 casdoorId
+            if (casdoorId) {
+              saveUser({ id: casdoorId, name: casdoorId, casdoorId });
+            }
             set({
               token: result.token,
               isAuthenticated: true,
