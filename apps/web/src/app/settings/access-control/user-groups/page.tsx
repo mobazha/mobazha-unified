@@ -201,16 +201,46 @@ export default function UserGroupsPage() {
       )}
 
       {!loading && groups.length === 0 && (
-        <Card className="p-8 text-center">
-          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold mb-2">{t('settings.accessControl.noUserGroups')}</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {t('settings.accessControl.noUserGroupsDesc')}
-          </p>
-          <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-            <Plus className="w-4 h-4 mr-2" />
-            {t('common.create')}
-          </Button>
+        <Card className="p-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">
+              {t('settings.accessControl.noUserGroups')}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              {t('settings.accessControl.noUserGroupsDesc')}
+            </p>
+          </div>
+
+          {/* 功能说明 */}
+          <div className="bg-muted/50 rounded-lg p-4 mb-6">
+            <h4 className="font-medium text-sm mb-3">
+              {t('settings.accessControl.userGroupsHelp')}
+            </h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                {t('settings.accessControl.userGroupsHelp1')}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                {t('settings.accessControl.userGroupsHelp2')}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                {t('settings.accessControl.userGroupsHelp3')}
+              </li>
+            </ul>
+          </div>
+
+          <div className="text-center">
+            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+              <Plus className="w-4 h-4 mr-2" />
+              {t('settings.accessControl.createFirstUserGroup')}
+            </Button>
+          </div>
         </Card>
       )}
 
