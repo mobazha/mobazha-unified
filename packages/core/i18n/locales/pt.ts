@@ -666,6 +666,18 @@ export const pt: TranslationResource = {
     accessRequests: 'Solicitações de Acesso',
     accessRequestsDesc: 'Revisar solicitações de acesso pendentes',
     storeSettings: 'Configurações da Loja',
+    // Addresses
+    addAddress: 'Adicionar endereço',
+    noAddresses: 'Nenhum endereço salvo',
+  },
+
+  // Address form fields
+  address: {
+    street: 'Rua',
+    city: 'Cidade',
+    state: 'Estado',
+    postalCode: 'CEP',
+    country: 'País',
   },
 
   userMenu: {

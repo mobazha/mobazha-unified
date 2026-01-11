@@ -666,6 +666,18 @@ export const ja: TranslationResource = {
     accessRequests: 'アクセスリクエスト',
     accessRequestsDesc: '保留中のアクセスリクエストを確認',
     storeSettings: 'ストア設定',
+    // Addresses
+    addAddress: '住所を追加',
+    noAddresses: '保存された住所がありません',
+  },
+
+  // Address form fields
+  address: {
+    street: '番地',
+    city: '市区町村',
+    state: '都道府県',
+    postalCode: '郵便番号',
+    country: '国',
   },
 
   userMenu: {
