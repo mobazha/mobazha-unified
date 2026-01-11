@@ -125,18 +125,11 @@ export default function PrivacySettingsPage() {
         </div>
       ) : (
         <>
-          {/* Info Card */}
-          <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-primary mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">{t('settings.accessControl.privacyTitle')}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('settings.accessControl.privacyDescription')}
-                </p>
-              </div>
-            </div>
-          </Card>
+          {/* Info Banner - 使用不同的样式明确这是说明文字 */}
+          <div className="flex items-start gap-3 p-4 mb-6 rounded-lg bg-muted/50 text-muted-foreground">
+            <Shield className="w-5 h-5 mt-0.5 shrink-0" />
+            <p className="text-sm">{t('settings.accessControl.privacyDescription')}</p>
+          </div>
 
           {/* Privacy Settings */}
           <Card className="overflow-hidden mb-6">
