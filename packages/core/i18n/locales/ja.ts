@@ -703,6 +703,17 @@ export const ja: TranslationResource = {
     backupComingSoon: 'ウォレットバックアップ機能は近日公開！',
     restoreComingSoon: 'プロフィール復元機能は近日公開！',
     followingSystem: 'システムに従う',
+    // Advanced tab sections
+    privacy: 'プライバシー',
+    backup: 'バックアップ',
+    developer: '開発者',
+    about: 'アプリについて',
+    dangerZone: '危険ゾーン',
+    deleteAccount: 'アカウント削除',
+    deleteAccountDesc: 'アカウントを削除すると、すべてのデータが完全に削除されます',
+    logoutWarning:
+      'ログアウトしてもよろしいですか？アカウントにアクセスするには再度ログインが必要です。',
+    version: 'バージョン',
     enabled: '有効',
     disabled: '無効',
     displayModeDesc: 'アプリの外観を選択：ライト、ダーク、またはシステム設定に従う',

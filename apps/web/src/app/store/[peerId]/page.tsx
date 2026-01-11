@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { Header, Footer } from '@/components';
+import { Header, Footer, useSettingsDrawer } from '@/components';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,7 @@ export default function StorePage() {
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
+  const { openSettings } = useSettingsDrawer();
   const peerId = params.peerId as string;
   const {
     isAuthenticated,
@@ -608,7 +609,7 @@ export default function StorePage() {
                         <>
                           <Button
                             variant="outline"
-                            onClick={() => router.push('/settings/page-profile')}
+                            onClick={() => openSettings('page')}
                             size="sm"
                             className="touch-feedback gap-1.5"
                           >

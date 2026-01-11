@@ -703,6 +703,18 @@ export const fr: TranslationResource = {
     backupComingSoon: 'Fonction de sauvegarde du portefeuille bientôt disponible !',
     restoreComingSoon: 'Fonction de restauration du profil bientôt disponible !',
     followingSystem: 'Selon le système',
+    // Advanced tab sections
+    privacy: 'Confidentialité',
+    backup: 'Sauvegarde',
+    developer: 'Développeur',
+    about: 'À propos',
+    dangerZone: 'Zone Dangereuse',
+    deleteAccount: 'Supprimer le Compte',
+    deleteAccountDesc:
+      'La suppression de votre compte supprimera définitivement toutes vos données',
+    logoutWarning:
+      'Voulez-vous vraiment vous déconnecter ? Vous devrez vous reconnecter pour accéder à votre compte.',
+    version: 'Version',
     enabled: 'Activé',
     disabled: 'Désactivé',
     displayModeDesc:

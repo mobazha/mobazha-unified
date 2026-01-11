@@ -750,6 +750,16 @@ export interface TranslationResource {
     backupComingSoon: string;
     restoreComingSoon: string;
     followingSystem: string;
+    // Advanced tab sections
+    privacy: string;
+    backup: string;
+    developer: string;
+    about: string;
+    dangerZone: string;
+    deleteAccount: string;
+    deleteAccountDesc: string;
+    logoutWarning: string;
+    version: string;
     enabled: string;
     disabled: string;
     displayModeDesc: string;
@@ -851,9 +861,33 @@ export interface TranslationResource {
     userUnblocked: string;
     noBlockedUsers: string;
     blockedOn: string;
+    blockedAt: string;
+    blockedDescription: string;
+    peerID: string;
+    peerIDPlaceholder: string;
+    blockFailed: string;
     unblock: string;
+    unblockFailed: string;
     unblockConfirmTitle: string;
     unblockConfirmDesc: string;
+    // Contact Info
+    contactInfo: string;
+    email: string;
+    emailPlaceholder: string;
+    website: string;
+    websitePlaceholder: string;
+    phoneNumber: string;
+    phonePlaceholder: string;
+    // Social Links
+    socialLinks: string;
+    noSocialLinks: string;
+    usernamePlaceholder: string;
+    // Addresses tab extra
+    addressesDescription: string;
+    noAddresses: string;
+    default: string;
+    setDefault: string;
+    defaultAddressSet: string;
     // Moderation tab
     addModerator: string;
     addModeratorDesc: string;
