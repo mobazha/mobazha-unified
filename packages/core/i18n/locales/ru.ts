@@ -653,6 +653,19 @@ export const ru: TranslationResource = {
     followingSystem: 'Системная',
     enabled: 'Включено',
     disabled: 'Отключено',
+    displayModeDesc: 'Выберите внешний вид приложения: светлая, тёмная или системные настройки',
+    themeStyle: 'Стиль темы',
+    themeStyleDesc: 'Выберите цветовую схему, которая адаптируется к режиму отображения',
+    currentEffect: 'Текущий эффект',
+    // Access Control
+    accessControl: 'Контроль доступа',
+    userGroups: 'Группы пользователей',
+    userGroupsDesc: 'Управление группами пользователей для контроля доступа',
+    productGroups: 'Группы товаров',
+    productGroupsDesc: 'Организация товаров и управление их видимостью',
+    accessRequests: 'Запросы на доступ',
+    accessRequestsDesc: 'Просмотр ожидающих запросов на доступ',
+    storeSettings: 'Настройки магазина',
   },
 
   userMenu: {

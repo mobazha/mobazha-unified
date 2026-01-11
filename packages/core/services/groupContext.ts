@@ -9,6 +9,13 @@
 import type { GroupContext, GroupPlatform } from '../types/access';
 import { getEnvConfig } from '../config/env';
 
+// 调试日志（仅在开发环境输出）
+const debug = (...args: unknown[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[GroupContext]', ...args);
+  }
+};
+
 // 存储 key
 const GROUP_CONTEXT_KEY = 'current_group_context';
 const USER_PEER_ID_KEY = 'user_peer_id';
@@ -85,7 +92,9 @@ export async function detectGroupContext(): Promise<GroupContext | null> {
 
     return null;
   } catch (error) {
-    console.error('[GroupContext] Detection error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Detection error:', error);
+    }
     return null;
   }
 }
@@ -100,9 +109,11 @@ export async function saveGroupContext(context: GroupContext): Promise<void> {
 
   try {
     localStorage.setItem(GROUP_CONTEXT_KEY, JSON.stringify(context));
-    console.log('[GroupContext] Saved:', context.platform, context.chatId);
+    debug('Saved:', context.platform, context.chatId);
   } catch (error) {
-    console.error('[GroupContext] Save error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Save error:', error);
+    }
   }
 }
 
@@ -118,7 +129,9 @@ export function getCurrentGroupContext(): GroupContext | null {
     const jsonValue = localStorage.getItem(GROUP_CONTEXT_KEY);
     return jsonValue ? (JSON.parse(jsonValue) as GroupContext) : null;
   } catch (error) {
-    console.error('[GroupContext] Get error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Get error:', error);
+    }
     return null;
   }
 }
@@ -140,9 +153,11 @@ export function clearGroupContext(): void {
 
   try {
     localStorage.removeItem(GROUP_CONTEXT_KEY);
-    console.log('[GroupContext] Cleared');
+    debug('Cleared');
   } catch (error) {
-    console.error('[GroupContext] Clear error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Clear error:', error);
+    }
   }
 }
 
@@ -155,7 +170,9 @@ export function setUserPeerID(peerID: string): void {
     try {
       localStorage.setItem(USER_PEER_ID_KEY, peerID);
     } catch (error) {
-      console.error('[GroupContext] Set peerID error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[GroupContext] Set peerID error:', error);
+      }
     }
   }
 }
@@ -262,7 +279,9 @@ export async function verifyGroupMembership(
       chatTitle: data.chatTitle,
     };
   } catch (error) {
-    console.error('[GroupContext] Verify error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Verify error:', error);
+    }
     return { verified: false };
   }
 }
@@ -277,7 +296,7 @@ export async function initializeGroupMarketplace(): Promise<GroupContext | null>
     const context = await detectGroupContext();
 
     if (!context) {
-      console.log('[GroupContext] Not in group context');
+      debug('Not in group context');
       return null;
     }
 
@@ -288,7 +307,7 @@ export async function initializeGroupMarketplace(): Promise<GroupContext | null>
     if (context.needsVerification) {
       const result = await verifyGroupMembership(context.platform, context.chatId);
       if (!result.verified) {
-        console.warn('[GroupContext] Membership verification failed');
+        debug('Membership verification failed');
         clearGroupContext();
         return null;
       }
@@ -304,10 +323,12 @@ export async function initializeGroupMarketplace(): Promise<GroupContext | null>
     // 4. 注册群组集市
     await registerGroupMarketplace(context);
 
-    console.log('[GroupContext] Initialized:', context.platform, context.chatId);
+    debug('Initialized:', context.platform, context.chatId);
     return context;
   } catch (error) {
-    console.error('[GroupContext] Initialize error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Initialize error:', error);
+    }
     return null;
   }
 }
@@ -333,15 +354,19 @@ async function registerGroupMarketplace(context: GroupContext): Promise<boolean>
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[GroupContext] Register failed:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        const error = await response.text();
+        console.error('[GroupContext] Register failed:', error);
+      }
       return false;
     }
 
-    console.log('[GroupContext] Registered:', context.chatTitle || context.chatId);
+    debug('Registered:', context.chatTitle || context.chatId);
     return true;
   } catch (error) {
-    console.error('[GroupContext] Register error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[GroupContext] Register error:', error);
+    }
     return false;
   }
 }

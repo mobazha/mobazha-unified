@@ -21,6 +21,7 @@ interface Address {
   isDefault: boolean;
 }
 
+// TODO: 集成真实 API - 替换 mock 数据，使用后端地址管理 API
 const mockAddresses: Address[] = [
   {
     id: '1',

@@ -7,7 +7,6 @@
  */
 
 import { getEnvConfig } from '../../config/env';
-import { apiClient } from './client';
 import type {
   UserGroup,
   UserGroupMember,
@@ -763,6 +762,3 @@ export const accessApi = {
   reviewSeller,
   checkGroupAdmin,
 };
-
-// 保持旧版 apiClient 风格导出的兼容性
-export { apiClient };

@@ -27,7 +27,8 @@ interface AccessRequest {
   };
 }
 
-// Mock data
+// TODO: 集成真实 API - 替换 mock 数据
+// 参考: useAccessControl hook 的 loadRequests 和 approveRequest/rejectRequest 方法
 const mockRequests: AccessRequest[] = [
   {
     id: 'req1',

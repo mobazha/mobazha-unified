@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch, useToast } from '@/components/ui';
-import { useI18n, useAccessControl } from '@mobazha/core';
+import { useI18n, useAccessControl, useUserStore } from '@mobazha/core';
 import { ChevronLeft, Shield, Eye, EyeOff, UserCheck, Zap, Loader2 } from 'lucide-react';
 
 interface SettingToggleProps {
@@ -41,8 +41,15 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
 export default function PrivacySettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { privacySettings, isLoadingPrivacy, updateSettings, refreshPrivacySettings } =
-    useAccessControl();
+  const { profile } = useUserStore();
+  const storePeerID = profile?.peerID || '';
+
+  const {
+    settings: privacySettings,
+    settingsLoading: isLoadingPrivacy,
+    updateSettings,
+    loadSettings: refreshPrivacySettings,
+  } = useAccessControl({ storePeerID });
 
   // Local state for form
   const [isPrivateStore, setIsPrivateStore] = useState(false);

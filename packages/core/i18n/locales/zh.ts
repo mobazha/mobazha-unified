@@ -1166,6 +1166,23 @@ export const zh: TranslationResource = {
     resyncComplete: '交易同步完成',
     resyncFailed: '交易同步失败',
   },
+
+  storeAccess: {
+    requestSubmitted: '访问申请已提交',
+    waitingForApproval: '您的访问申请正在等待店铺所有者审核，请耐心等待。',
+    requestRejected: '访问申请被拒绝',
+    requestRejectedDesc: '很抱歉，您的访问申请未能通过审核。',
+    privateStore: '私密店铺',
+    privateStoreDesc: '此店铺需要申请访问权限才能浏览商品。',
+    accessingViaGroup: '您正在通过 {{group}} 群组访问',
+    requestAccess: '申请访问',
+    requestNote: '申请说明（可选）',
+    requestNotePlaceholder: '简要说明您的访问目的...',
+    submitting: '提交中...',
+    submitRequest: '提交申请',
+    noAccess: '无法访问',
+    noAccessDesc: '您目前没有权限访问此店铺。',
+  },
 };
 
 export default zh;

@@ -653,6 +653,19 @@ export const ko: TranslationResource = {
     followingSystem: '시스템 설정 따름',
     enabled: '활성화됨',
     disabled: '비활성화됨',
+    displayModeDesc: '앱 모양 선택: 라이트, 다크 또는 시스템 설정 따름',
+    themeStyle: '테마 스타일',
+    themeStyleDesc: '디스플레이 모드에 맞는 색상 테마 선택',
+    currentEffect: '현재 효과',
+    // Access Control
+    accessControl: '액세스 제어',
+    userGroups: '사용자 그룹',
+    userGroupsDesc: '액세스 제어를 위한 사용자 그룹 관리',
+    productGroups: '제품 그룹',
+    productGroupsDesc: '제품을 구성하고 가시성 제어',
+    accessRequests: '액세스 요청',
+    accessRequestsDesc: '대기 중인 액세스 요청 검토',
+    storeSettings: '스토어 설정',
   },
 
   userMenu: {

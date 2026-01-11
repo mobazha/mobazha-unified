@@ -716,6 +716,19 @@ export interface TranslationResource {
     followingSystem: string;
     enabled: string;
     disabled: string;
+    displayModeDesc: string;
+    themeStyle: string;
+    themeStyleDesc: string;
+    currentEffect: string;
+    // Access Control
+    accessControl: string;
+    userGroups: string;
+    userGroupsDesc: string;
+    productGroups: string;
+    productGroupsDesc: string;
+    accessRequests: string;
+    accessRequestsDesc: string;
+    storeSettings: string;
   };
 
   // 用户菜单
@@ -835,6 +848,24 @@ export interface TranslationResource {
     termsPlaceholder: string;
     resyncComplete: string;
     resyncFailed: string;
+  };
+
+  // 店铺访问
+  storeAccess?: {
+    requestSubmitted: string;
+    waitingForApproval: string;
+    requestRejected: string;
+    requestRejectedDesc: string;
+    privateStore: string;
+    privateStoreDesc: string;
+    accessingViaGroup: string;
+    requestAccess: string;
+    requestNote: string;
+    requestNotePlaceholder: string;
+    submitting: string;
+    submitRequest: string;
+    noAccess: string;
+    noAccessDesc: string;
   };
 }
 
