@@ -921,17 +921,24 @@ export interface TranslationResource {
     title: string;
     markAllRead: string;
     noNotifications: string;
+    noUnread: string;
     unreadCount: string;
     allCaughtUp: string;
+    newNotificationsDesc: string;
+    viewAll: string;
     filterAll: string;
     filterUnread: string;
     // 订单通知
     order: {
       youPlacedOrder: string;
       placedOrder: string;
+      youReceivedOrder: string;
       yourPaymentSent: string;
       sentPayment: string;
       orderFunded: string;
+      orderConfirmed: string;
+      orderFulfilled: string;
+      orderCompleted: string;
       acceptedYourOrder: string;
       youAcceptedOrder: string;
       declinedYourOrder: string;
@@ -947,6 +954,8 @@ export interface TranslationResource {
     // 争议通知
     dispute: {
       startedDispute: string;
+      disputeOpened: string;
+      disputeClosed: string;
       openedCase: string;
       modCaseOpened: string;
       caseUpdated: string;
@@ -957,6 +966,8 @@ export interface TranslationResource {
     // 社交通知
     social: {
       startedFollowing: string;
+      someoneFollowed: string;
+      someoneUnfollowed: string;
       unfollowed: string;
       addedAsModerator: string;
       removedAsModerator: string;

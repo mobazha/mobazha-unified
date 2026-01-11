@@ -1217,17 +1217,24 @@ export const zh: TranslationResource = {
     title: '通知',
     markAllRead: '全部标为已读',
     noNotifications: '暂无通知',
+    noUnread: '暂无未读通知',
     unreadCount: '{{count}} 条未读通知',
     allCaughtUp: '已全部处理完毕！',
+    newNotificationsDesc: '您将在此处看到新通知。',
+    viewAll: '查看所有通知',
     filterAll: '全部',
     filterUnread: '未读',
     // 订单通知
     order: {
       youPlacedOrder: '您下了一个订单',
       placedOrder: '下了一个订单',
+      youReceivedOrder: '您收到了一个新订单',
       yourPaymentSent: '您的付款已发送',
       sentPayment: '发送了付款',
       orderFunded: '订单已到账',
+      orderConfirmed: '订单已确认',
+      orderFulfilled: '订单已发货',
+      orderCompleted: '订单已完成',
       acceptedYourOrder: '接受了您的订单',
       youAcceptedOrder: '您接受了一个订单',
       declinedYourOrder: '拒绝了您的订单',
@@ -1243,6 +1250,8 @@ export const zh: TranslationResource = {
     // 争议通知
     dispute: {
       startedDispute: '发起了争议',
+      disputeOpened: '争议已开启',
+      disputeClosed: '争议已解决',
       openedCase: '开启了案例',
       modCaseOpened: '对 {{disputeeName}} 开启了案例',
       caseUpdated: '更新了案例',
@@ -1253,6 +1262,8 @@ export const zh: TranslationResource = {
     // 社交通知
     social: {
       startedFollowing: '关注了您',
+      someoneFollowed: '有人关注了您',
+      someoneUnfollowed: '有人取消关注了您',
       unfollowed: '取消关注了您',
       addedAsModerator: '将您添加为调解员',
       removedAsModerator: '移除了您的调解员身份',
