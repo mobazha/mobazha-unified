@@ -65,7 +65,7 @@ export default function SettingsPage() {
   // 移动端显示分类列表（点击打开 Drawer）
   return (
     <div className="lg:hidden">
-      <h1 className="text-xl font-semibold mb-4">{t('settings.title')}</h1>
+      <h1 className="text-lg font-semibold mb-4">{t('settings.title')}</h1>
 
       <div className="bg-card rounded-lg border overflow-hidden mb-4">
         <SettingsCategory

@@ -212,7 +212,7 @@ export default function GeneralSettingsPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-6">{t('settings.sidebar.general')}</h1>
+      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.general')}</h1>
 
       {/* Language & Region */}
       <SettingGroup title={t('settings.language')}>

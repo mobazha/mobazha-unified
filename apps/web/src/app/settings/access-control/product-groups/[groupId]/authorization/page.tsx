@@ -205,7 +205,7 @@ export default function ProductGroupAuthorizationPage() {
       {/* 页面标题 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold">{t('settings.accessControl.configureAccess')}</h1>
+          <h1 className="text-lg font-semibold">{t('settings.accessControl.configureAccess')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t('settings.accessControl.authorizationDesc', { count: authorizations.length })}
           </p>

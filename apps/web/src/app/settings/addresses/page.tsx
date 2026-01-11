@@ -101,7 +101,7 @@ export default function AddressesSettingsPage() {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold">{t('settings.sidebar.addresses')}</h1>
+        <h1 className="text-lg font-semibold">{t('settings.sidebar.addresses')}</h1>
         <Button size="sm" onClick={() => setShowAddModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           {t('common.add')}

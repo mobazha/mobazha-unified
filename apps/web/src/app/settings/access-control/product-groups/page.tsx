@@ -22,7 +22,7 @@ export default function ProductGroupsPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-6">{t('settings.sidebar.productGroups')}</h1>
+      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.productGroups')}</h1>
 
       <ProductGroupsContent />
     </div>

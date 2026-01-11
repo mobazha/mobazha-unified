@@ -156,7 +156,7 @@ export default function UserGroupMembersPage() {
       {/* 页面标题 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-semibold">
+          <h1 className="text-lg font-semibold">
             {currentGroup.name} - {t('common.members')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">

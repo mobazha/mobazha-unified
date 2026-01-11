@@ -64,7 +64,7 @@ export default function AccessControlPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-4">{t('settings.sidebar.accessControl')}</h1>
+      <h1 className="text-lg font-semibold mb-4">{t('settings.sidebar.accessControl')}</h1>
 
       <div className="bg-card rounded-lg border overflow-hidden">
         <AccessControlItem
