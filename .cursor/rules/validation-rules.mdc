@@ -1,0 +1,75 @@
+---
+description: 代码验证规范 - 提交前必须执行的验证步骤
+alwaysApply: true
+---
+
+# 代码验证规范
+
+## 提交前验证清单
+
+每次提交代码前，必须按顺序执行以下验证步骤：
+
+### 1. TypeScript 类型检查
+
+```bash
+cd packages/core && pnpm exec tsc --noEmit
+```
+
+### 2. 代码风格检查
+
+```bash
+pnpm --filter @mobazha/core lint
+```
+
+### 3. 单元测试
+
+```bash
+pnpm --filter @mobazha/core test
+```
+
+### 4. 完整构建验证（推荐）
+
+```bash
+pnpm build
+```
+
+> 完整构建能捕获导入/导出错误、路由问题等开发模式下可能遗漏的问题
+
+## 常见问题处理
+
+### Next.js 缓存问题
+
+当遇到模块导出错误但文件确实存在时：
+
+```bash
+cd apps/web && rm -rf .next && pnpm dev
+```
+
+### Core 包更新后
+
+修改 `packages/core` 后需重新构建：
+
+```bash
+pnpm --filter @mobazha/core build
+```
+
+然后重启 web 开发服务器
+
+## 快捷命令
+
+```bash
+# 快速验证（lint + tsc）
+pnpm validate:quick
+
+# 完整验证（lint + tsc + test + build）
+pnpm validate
+```
+
+## AI 助手验证要求
+
+在完成代码修改后，AI 助手应：
+
+1. 运行 TypeScript 检查确认无类型错误
+2. 运行 lint 检查确认代码风格
+3. 如果修改了 `packages/core`，重新构建该包
+4. 提交前确认所有验证通过
