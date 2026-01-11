@@ -241,7 +241,7 @@ export default function ProductGroupDetailPage() {
       </div>
 
       {/* 产品组信息 */}
-      <Card className="p-6 mb-6">
+      <Card className="p-4 sm:p-6 mb-6">
         {isEditing ? (
           <VStack gap="md">
             <div>
@@ -260,8 +260,8 @@ export default function ProductGroupDetailPage() {
                 placeholder={t('settings.accessControl.productGroupDescPlaceholder')}
               />
             </div>
-            <HStack gap="sm">
-              <Button onClick={handleSave} disabled={saving || !editName.trim()}>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleSave} disabled={saving || !editName.trim()} size="sm">
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : (
@@ -269,28 +269,28 @@ export default function ProductGroupDetailPage() {
                 )}
                 {t('common.save')}
               </Button>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
                 <X className="w-4 h-4 mr-2" />
                 {t('common.cancel')}
               </Button>
-            </HStack>
+            </div>
           </VStack>
         ) : (
-          <HStack justify="between" align="start">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">{currentGroup.name}</h1>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold mb-1">{currentGroup.name}</h1>
               {currentGroup.description && (
-                <p className="text-muted-foreground">{currentGroup.description}</p>
+                <p className="text-muted-foreground text-sm">{currentGroup.description}</p>
               )}
               <p className="text-sm text-muted-foreground mt-2">
                 {items.length} {t('common.items')}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="self-start">
               <Edit2 className="w-4 h-4 mr-2" />
               {t('common.edit')}
             </Button>
-          </HStack>
+          </div>
         )}
       </Card>
 
@@ -304,14 +304,14 @@ export default function ProductGroupDetailPage() {
       </div>
 
       {/* 商品列表 */}
-      <Card className="p-6">
-        <HStack justify="between" align="center" className="mb-4">
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg font-semibold">{t('settings.accessControl.productList')}</h2>
-          <Button onClick={handleOpenAddModal} disabled={!isAuthenticated}>
-            <Plus className="w-4 h-4 mr-2" />
-            {t('settings.accessControl.addProducts')}
+          <Button onClick={handleOpenAddModal} disabled={!isAuthenticated} size="sm">
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t('settings.accessControl.addProducts')}</span>
           </Button>
-        </HStack>
+        </div>
 
         {error && <div className="text-destructive text-sm mb-4">{error}</div>}
 
