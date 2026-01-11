@@ -1244,6 +1244,18 @@ export const en: TranslationResource = {
     viewAll: 'View all notifications',
     filterAll: 'All',
     filterUnread: 'Unread',
+    // Category tabs
+    tabAll: 'All',
+    tabOrders: 'Orders',
+    tabFollowers: 'Followers',
+    // Empty states
+    noOrderNotifications: 'No order notifications',
+    noFollowerNotifications: 'No follower notifications',
+    noMoreNotifications: 'No more notifications',
+    // Misc
+    totalCount: '{{count}} notifications in total',
+    allMarkedRead: 'All notifications marked as read',
+    notificationDeleted: 'Notification deleted',
     // Order notifications
     order: {
       youPlacedOrder: 'You placed an order',

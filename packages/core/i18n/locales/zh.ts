@@ -1224,6 +1224,18 @@ export const zh: TranslationResource = {
     viewAll: '查看所有通知',
     filterAll: '全部',
     filterUnread: '未读',
+    // 分类标签
+    tabAll: '全部',
+    tabOrders: '订单',
+    tabFollowers: '关注',
+    // 空状态
+    noOrderNotifications: '暂无订单通知',
+    noFollowerNotifications: '暂无关注通知',
+    noMoreNotifications: '没有更多通知了',
+    // 其他
+    totalCount: '共 {{count}} 条通知',
+    allMarkedRead: '已将所有通知标为已读',
+    notificationDeleted: '通知已删除',
     // 订单通知
     order: {
       youPlacedOrder: '您下了一个订单',

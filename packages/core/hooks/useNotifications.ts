@@ -4,8 +4,9 @@
  * 提供通知列表、实时订阅、声音设置等功能
  */
 
-import { useCallback, useEffect, useMemo } from 'react';
-import { notificationsApi } from '../services/api/notifications';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { notificationsApi, getNotificationRoute } from '../services/api/notifications';
+import type { NotificationFilter, Notification as ApiNotification } from '../services/api/notifications';
 import {
   useNotificationStore,
   selectNotifications,
@@ -30,6 +31,9 @@ import type {
 } from '../types/notification';
 import { getNotificationCategory, normalizeNotificationType } from '../types/notification';
 
+// 重导出 API 类型
+export type { NotificationFilter, ApiNotification };
+
 // ============ 类型定义 ============
 
 interface UseNotificationsOptions {
@@ -39,14 +43,26 @@ interface UseNotificationsOptions {
   refreshInterval?: number;
   /** 是否启用实时订阅 */
   enableRealtime?: boolean;
+  /** 过滤器类型 */
+  filter?: NotificationFilter;
+  /** 每页数量 */
+  pageSize?: number;
 }
 
 interface UseNotificationsReturn {
   // 状态
   notifications: NotificationData[];
+  /** API 原始通知数据（包含更多详细信息） */
+  apiNotifications: ApiNotification[];
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
+  /** 是否有更多通知可加载 */
+  hasMore: boolean;
+  /** 当前过滤器 */
+  currentFilter: NotificationFilter;
+  /** 总数 */
+  total: number;
 
   // 声音设置
   soundEnabled: boolean;
@@ -54,8 +70,12 @@ interface UseNotificationsReturn {
   volume: number;
 
   // 动作：通知管理
-  fetchNotifications: () => Promise<NotificationData[]>;
+  fetchNotifications: (reset?: boolean) => Promise<NotificationData[]>;
   fetchUnreadCount: () => Promise<number>;
+  /** 加载更多通知 */
+  loadMore: () => Promise<void>;
+  /** 切换过滤器 */
+  setFilter: (filter: NotificationFilter) => void;
   markAsRead: (id: string) => Promise<{ success: boolean; error?: string }>;
   markAllAsRead: () => Promise<{ success: boolean; error?: string }>;
   deleteNotification: (id: string) => void;
@@ -83,6 +103,9 @@ interface UseNotificationsReturn {
     notification: NotificationData,
     options?: { isBuyer?: boolean }
   ) => NotificationDisplayData;
+  
+  /** 获取通知的路由地址 */
+  getRoute: (notification: ApiNotification) => string | null;
 }
 
 // ============ Hook 实现 ============
@@ -90,7 +113,13 @@ interface UseNotificationsReturn {
 export function useNotifications(
   options: UseNotificationsOptions = {}
 ): UseNotificationsReturn {
-  const { autoLoad = true, refreshInterval = 30000, enableRealtime = true } = options;
+  const { 
+    autoLoad = true, 
+    refreshInterval = 30000, 
+    enableRealtime = true,
+    filter: initialFilter = 'all',
+    pageSize = 20,
+  } = options;
 
   // 从 Store 获取状态
   const notifications = useNotificationStore(selectNotifications);
@@ -101,6 +130,13 @@ export function useNotifications(
   const ttsEnabled = useNotificationStore(selectTtsEnabled);
   const volume = useNotificationStore(selectVolume);
 
+  // 本地分页状态
+  const [currentFilter, setCurrentFilter] = useState<NotificationFilter>(initialFilter);
+  const [apiNotifications, setApiNotifications] = useState<ApiNotification[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [lastOffsetId, setLastOffsetId] = useState<string>('');
+
   // 使用 getState() 获取稳定的 store 方法引用，避免无限循环
   // 注意：不要在 useCallback 依赖中使用整个 store 对象，因为它每次渲染都会变化
   const getStoreActions = useCallback(() => useNotificationStore.getState(), []);
@@ -108,64 +144,104 @@ export function useNotifications(
   // ============ 通知管理 ============
 
   /**
+   * 转换 API 通知到内部格式
+   */
+  const convertApiToInternal = useCallback((apiNotifs: ApiNotification[]): NotificationData[] => {
+    return apiNotifs.map(n => {
+      // 将 API 类型规范化为内部事件类型
+      const eventType = normalizeNotificationType(n.type);
+
+      // 基础属性
+      const base = {
+        id: n.id,
+        type: eventType,
+        timestamp: n.timestamp,
+        read: n.read,
+      };
+
+      // 根据类型添加必要的属性
+      if (n.data?.orderId) {
+        // 订单相关通知
+        return {
+          ...base,
+          orderID: n.data.orderId,
+        } as NotificationData;
+      } else if (n.data?.peerID) {
+        // 社交相关通知（需要 peerID）
+        return {
+          ...base,
+          peerID: n.data.peerID,
+        } as NotificationData;
+      } else if (eventType === 'chatMessage' || eventType === 'systemMessage') {
+        // 系统/消息通知（peerID 可选）
+        return {
+          ...base,
+          message: n.message,
+          title: n.title,
+        } as NotificationData;
+      }
+
+      // 默认返回系统通知类型（不需要 peerID）
+      return {
+        ...base,
+        type: 'systemMessage' as const,
+      } as NotificationData;
+    });
+  }, []);
+
+  /**
    * 获取通知列表
    */
-  const fetchNotifications = useCallback(async (): Promise<NotificationData[]> => {
+  const fetchNotifications = useCallback(async (reset = true): Promise<NotificationData[]> => {
     const store = getStoreActions();
     store.setLoading(true);
     try {
-      const apiNotifications = await notificationsApi.getNotifications();
-      // 转换 API 返回的通知到内部格式
-      // API 可能返回详细事件类型（如 'newOrder'）或简化分类（如 'order'）
-      // normalizeNotificationType 会正确处理两种情况
-      const convertedNotifications: NotificationData[] = apiNotifications.map(n => {
-        // 将 API 类型规范化为内部事件类型
-        const eventType = normalizeNotificationType(n.type);
-
-        // 基础属性
-        const base = {
-          id: n.id,
-          type: eventType,
-          timestamp: n.timestamp,
-          read: n.read,
-        };
-
-        // 根据类型添加必要的属性
-        if (n.data?.orderId) {
-          // 订单相关通知
-          return {
-            ...base,
-            orderID: n.data.orderId,
-          } as NotificationData;
-        } else if (n.data?.peerID) {
-          // 社交相关通知（需要 peerID）
-          return {
-            ...base,
-            peerID: n.data.peerID,
-          } as NotificationData;
-        } else if (eventType === 'chatMessage' || eventType === 'systemMessage') {
-          // 系统/消息通知（peerID 可选）
-          return {
-            ...base,
-            message: n.message,
-            title: n.title,
-          } as NotificationData;
-        }
-
-        // 默认返回系统通知类型（不需要 peerID）
-        return {
-          ...base,
-          type: 'systemMessage' as const,
-        } as NotificationData;
+      const result = await notificationsApi.getNotifications({
+        limit: pageSize,
+        offsetId: reset ? '' : lastOffsetId,
+        filter: currentFilter,
       });
+      
+      // 更新分页状态
+      if (reset) {
+        setApiNotifications(result.notifications);
+      } else {
+        setApiNotifications(prev => [...prev, ...result.notifications]);
+      }
+      setHasMore(result.hasMore);
+      setTotal(result.total);
+      setLastOffsetId(result.lastOffsetId || '');
+      
+      // 转换并存储到 store
+      const allApiNotifs = reset ? result.notifications : [...apiNotifications, ...result.notifications];
+      const convertedNotifications = convertApiToInternal(allApiNotifs);
       store.setNotifications(convertedNotifications);
+      
       return convertedNotifications;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
       store.setError(errorMessage);
       return [];
     }
-  }, [getStoreActions]);
+  }, [getStoreActions, pageSize, lastOffsetId, currentFilter, apiNotifications, convertApiToInternal]);
+
+  /**
+   * 加载更多通知
+   */
+  const loadMore = useCallback(async (): Promise<void> => {
+    if (!hasMore || isLoading) return;
+    await fetchNotifications(false);
+  }, [hasMore, isLoading, fetchNotifications]);
+
+  /**
+   * 切换过滤器
+   */
+  const setFilter = useCallback((filter: NotificationFilter): void => {
+    setCurrentFilter(filter);
+    setLastOffsetId('');
+    setHasMore(true);
+    // 切换过滤器后重新加载
+  }, []);
 
   /**
    * 获取未读数量
@@ -310,6 +386,13 @@ export function useNotifications(
     []
   );
 
+  /**
+   * 获取通知的路由地址
+   */
+  const getRoute = useCallback((notification: ApiNotification): string | null => {
+    return getNotificationRoute(notification);
+  }, []);
+
   // ============ 副作用 ============
 
   // 初始化通知服务和加载数据
@@ -319,9 +402,16 @@ export function useNotifications(
     }
 
     if (autoLoad) {
-      void fetchNotifications();
+      void fetchNotifications(true);
     }
-  }, [autoLoad, enableRealtime, fetchNotifications]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLoad, enableRealtime]);
+
+  // 过滤器变化时重新加载
+  useEffect(() => {
+    void fetchNotifications(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFilter]);
 
   // 自动刷新未读数量
   useEffect(() => {
@@ -353,9 +443,13 @@ export function useNotifications(
     () => ({
       // 状态
       notifications,
+      apiNotifications,
       unreadCount,
       isLoading,
       error,
+      hasMore,
+      currentFilter,
+      total,
 
       // 声音设置
       soundEnabled,
@@ -365,6 +459,8 @@ export function useNotifications(
       // 动作：通知管理
       fetchNotifications,
       fetchUnreadCount,
+      loadMore,
+      setFilter,
       markAsRead,
       markAllAsRead,
       deleteNotification,
@@ -389,17 +485,24 @@ export function useNotifications(
 
       // 显示数据
       getDisplayData,
+      getRoute,
     }),
     [
       notifications,
+      apiNotifications,
       unreadCount,
       isLoading,
       error,
+      hasMore,
+      currentFilter,
+      total,
       soundEnabled,
       ttsEnabled,
       volume,
       fetchNotifications,
       fetchUnreadCount,
+      loadMore,
+      setFilter,
       markAsRead,
       markAllAsRead,
       deleteNotification,
@@ -416,6 +519,7 @@ export function useNotifications(
       getDisputeNotifications,
       getSocialNotifications,
       getDisplayData,
+      getRoute,
     ]
   );
 }

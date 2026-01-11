@@ -1,29 +1,65 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Bell, Check, CheckCheck, Package, AlertTriangle, UserPlus, Settings } from 'lucide-react';
+import Image from 'next/image';
+import { 
+  Bell, 
+  Check, 
+  CheckCheck, 
+  Package, 
+  AlertTriangle, 
+  UserPlus, 
+  Settings,
+  CreditCard,
+  ShoppingCart,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useNotifications, useUnreadNotificationCount, getNotificationCategory, useI18n } from '@mobazha/core';
-import type { NotificationData, NotificationCategory } from '@mobazha/core';
+import { 
+  useNotifications, 
+  useUnreadNotificationCount, 
+  useI18n,
+  getNotificationRoute,
+} from '@mobazha/core';
+import type { Notification } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
 /**
  * 获取通知图标
  */
-function getNotificationIcon(category: NotificationCategory) {
-  switch (category) {
-    case 'order':
-      return <Package className="h-4 w-4 text-blue-500" />;
-    case 'dispute':
-      return <AlertTriangle className="h-4 w-4 text-amber-500" />;
-    case 'peer':
-      return <UserPlus className="h-4 w-4 text-green-500" />;
+function getNotificationIcon(type: string) {
+  const iconClass = 'h-4 w-4';
+  
+  switch (type) {
+    case 'newOrder':
+      return <ShoppingCart className={cn(iconClass, 'text-blue-500')} />;
+    case 'orderFunded':
+    case 'orderPaymentReceived':
+      return <CreditCard className={cn(iconClass, 'text-emerald-500')} />;
+    case 'orderConfirmation':
+    case 'orderCompletion':
+      return <CheckCircle className={cn(iconClass, 'text-green-500')} />;
+    case 'orderDeclined':
+    case 'orderCancel':
+      return <XCircle className={cn(iconClass, 'text-red-500')} />;
+    case 'orderFulfillment':
+      return <Package className={cn(iconClass, 'text-indigo-500')} />;
+    case 'disputeOpen':
+    case 'caseOpen':
+    case 'disputeClose':
+    case 'caseUpdate':
+      return <AlertTriangle className={cn(iconClass, 'text-amber-500')} />;
+    case 'follow':
+    case 'moderatorAdd':
+    case 'moderatorRemove':
+      return <UserPlus className={cn(iconClass, 'text-purple-500')} />;
     default:
-      return <Bell className="h-4 w-4 text-gray-500" />;
+      return <Bell className={cn(iconClass, 'text-gray-500')} />;
   }
 }
 
@@ -46,69 +82,117 @@ function formatTimeAgo(timestamp: string, t: (key: string, params?: Record<strin
 }
 
 /**
- * 通知项组件
+ * 截断 Peer ID
+ */
+function truncatePeerId(peerId?: string): string {
+  if (!peerId) return '';
+  if (peerId.length <= 12) return peerId;
+  return `${peerId.slice(0, 12)}...`;
+}
+
+/**
+ * 格式化价格
+ */
+function formatPrice(amount?: number): string {
+  if (amount === undefined) return '';
+  const value = amount / 100;
+  return `$${value.toFixed(2)}`;
+}
+
+/**
+ * 通知项组件（增强版）
  */
 function NotificationItem({
   notification,
   onMarkAsRead,
+  onClick,
   t,
 }: {
-  notification: NotificationData;
+  notification: Notification;
   onMarkAsRead: (id: string) => void;
+  onClick?: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
-  const category = getNotificationCategory(notification.type);
-  const icon = getNotificationIcon(category);
+  const icon = getNotificationIcon(notification.type);
+  const route = getNotificationRoute(notification);
+  const { data, read, timestamp, type, message } = notification;
 
-  // 生成通知文本
-  const getNotificationText = () => {
-    switch (notification.type) {
-      case 'newOrder':
-        return t('notifications.order.youReceivedOrder');
-      case 'orderPaymentReceived':
-      case 'orderFunded':
-        return t('notifications.order.orderFunded');
-      case 'orderConfirmation':
-        return t('notifications.order.orderConfirmed');
-      case 'orderFulfillment':
-        return t('notifications.order.orderFulfilled');
-      case 'orderCompletion':
-        return t('notifications.order.orderCompleted');
-      case 'disputeOpen':
-      case 'caseOpen':
-        return t('notifications.dispute.disputeOpened');
-      case 'disputeClose':
-        return t('notifications.dispute.disputeClosed');
-      case 'follow':
-        return t('notifications.social.someoneFollowed');
-      case 'unfollow':
-        return t('notifications.social.someoneUnfollowed');
-      default:
-        return notification.type;
+  // 是否是订单类型
+  const isOrderType = [
+    'newOrder', 'orderFunded', 'orderPaymentReceived', 'orderConfirmation',
+    'orderDeclined', 'orderCancel', 'refund', 'orderFulfillment', 'orderCompletion',
+    'vendorFinalizedPayment',
+  ].includes(type);
+
+  // 是否是关注类型
+  const isFollowType = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(type);
+
+  const handleClick = () => {
+    if (!read) {
+      onMarkAsRead(notification.id);
     }
+    onClick?.();
   };
 
-  return (
+  const content = (
     <div
       className={cn(
         'group flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
-        notification.read ? 'bg-transparent hover:bg-muted/50' : 'bg-primary/5 hover:bg-primary/10'
+        read ? 'bg-transparent hover:bg-muted/50' : 'bg-primary/5 hover:bg-primary/10'
       )}
-      onClick={() => !notification.read && onMarkAsRead(notification.id)}
+      onClick={handleClick}
     >
-      <div className="flex-shrink-0 mt-0.5">{icon}</div>
+      {/* 图标 */}
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+        {icon}
+      </div>
+
+      {/* 内容 */}
       <div className="flex-1 min-w-0">
+        {/* 主文本 */}
         <p
           className={cn(
             'text-sm leading-tight',
-            notification.read ? 'text-text-secondary' : 'text-text-primary font-medium'
+            read ? 'text-text-secondary' : 'text-text-primary font-medium'
           )}
         >
-          {getNotificationText()}
+          {isFollowType && (data?.buyerHandle || data?.peerID) && (
+            <span className="text-primary font-medium">
+              {data.buyerHandle || truncatePeerId(data.peerID)}{' '}
+            </span>
+          )}
+          {message}
         </p>
-        <p className="text-xs text-text-tertiary mt-1">{formatTimeAgo(notification.timestamp, t)}</p>
+
+        {/* 订单商品预览 */}
+        {isOrderType && data?.productTitle && (
+          <div className="flex items-center gap-2 mt-1.5">
+            {data.thumbnail?.small && (
+              <div className="relative w-6 h-6 rounded overflow-hidden bg-muted flex-shrink-0">
+                <Image
+                  src={`/api/ob/image/${data.thumbnail.small}`}
+                  alt={data.productTitle}
+                  fill
+                  className="object-cover"
+                  sizes="24px"
+                />
+              </div>
+            )}
+            <span className="text-xs text-text-tertiary truncate">{data.productTitle}</span>
+            {data.price && (
+              <span className="text-xs font-semibold text-emerald-600 flex-shrink-0">
+                {formatPrice(data.price.amount)}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* 时间 */}
+        <p className="text-xs text-text-tertiary mt-1">{formatTimeAgo(timestamp, t)}</p>
       </div>
-      {!notification.read && (
+
+      {/* 标记已读按钮 */}
+      {!read && (
         <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
@@ -125,6 +209,12 @@ function NotificationItem({
       )}
     </div>
   );
+
+  if (route) {
+    return <Link href={route}>{content}</Link>;
+  }
+
+  return content;
 }
 
 interface NotificationDropdownProps {
@@ -140,28 +230,34 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const unreadCount = useUnreadNotificationCount();
-  const { notifications, isLoading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications({
-    autoLoad: false, // 手动控制加载
+  const { 
+    apiNotifications, 
+    isLoading, 
+    markAsRead, 
+    markAllAsRead, 
+    fetchNotifications,
+  } = useNotifications({
+    autoLoad: false,
     enableRealtime: true,
   });
 
   // 打开时加载通知
   useEffect(() => {
     if (open) {
-      void fetchNotifications();
+      void fetchNotifications(true);
     }
   }, [open, fetchNotifications]);
 
-  const handleMarkAsRead = async (id: string) => {
+  const handleMarkAsRead = useCallback(async (id: string) => {
     await markAsRead(id);
-  };
+  }, [markAsRead]);
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = useCallback(async () => {
     await markAllAsRead();
-  };
+  }, [markAllAsRead]);
 
   // 只显示最近 10 条通知
-  const recentNotifications = notifications.slice(0, 10);
+  const recentNotifications = apiNotifications.slice(0, 10);
   const hasUnread = unreadCount > 0;
 
   return (
@@ -185,7 +281,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="w-80 p-0"
+        className="w-96 p-0"
         sideOffset={8}
       >
         {/* Header */}
@@ -213,7 +309,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
         {/* Notification List */}
         <ScrollArea className="h-[400px]">
-          {isLoading ? (
+          {isLoading && recentNotifications.length === 0 ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
@@ -230,6 +326,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
                   key={notification.id}
                   notification={notification}
                   onMarkAsRead={handleMarkAsRead}
+                  onClick={() => setOpen(false)}
                   t={t}
                 />
               ))}
@@ -238,7 +335,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
         </ScrollArea>
 
         {/* Footer */}
-        {notifications.length > 0 && (
+        {apiNotifications.length > 0 && (
           <>
             <Separator />
             <div className="p-2">

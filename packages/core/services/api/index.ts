@@ -57,6 +57,16 @@ export * as cartApi from './cart';
 
 // 通知 API
 export * as notificationsApi from './notifications';
+export type { 
+  Notification, 
+  NotificationFilter, 
+  NotificationsResult,
+  NotificationType,
+} from './notifications';
+export { 
+  getNotificationRoute,
+  NOTIFICATION_FILTER_TYPES,
+} from './notifications';
 
 // 争议/仲裁 API
 export * as disputesApi from './disputes';
