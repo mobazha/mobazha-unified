@@ -666,6 +666,18 @@ export const ko: TranslationResource = {
     accessRequests: '액세스 요청',
     accessRequestsDesc: '대기 중인 액세스 요청 검토',
     storeSettings: '스토어 설정',
+    // Addresses
+    addAddress: '주소 추가',
+    noAddresses: '저장된 주소 없음',
+  },
+
+  // Address form fields
+  address: {
+    street: '도로명',
+    city: '시/군/구',
+    state: '시/도',
+    postalCode: '우편번호',
+    country: '국가',
   },
 
   userMenu: {

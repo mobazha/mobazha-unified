@@ -666,6 +666,18 @@ export const de: TranslationResource = {
     accessRequests: 'Zugriffsanfragen',
     accessRequestsDesc: 'Ausstehende Zugriffsanfragen überprüfen',
     storeSettings: 'Shop-Einstellungen',
+    // Addresses
+    addAddress: 'Adresse hinzufügen',
+    noAddresses: 'Keine Adressen gespeichert',
+  },
+
+  // Address form fields
+  address: {
+    street: 'Straße',
+    city: 'Stadt',
+    state: 'Bundesland',
+    postalCode: 'Postleitzahl',
+    country: 'Land',
   },
 
   userMenu: {

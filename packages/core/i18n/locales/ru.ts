@@ -666,6 +666,18 @@ export const ru: TranslationResource = {
     accessRequests: 'Запросы на доступ',
     accessRequestsDesc: 'Просмотр ожидающих запросов на доступ',
     storeSettings: 'Настройки магазина',
+    // Addresses
+    addAddress: 'Добавить адрес',
+    noAddresses: 'Адреса не сохранены',
+  },
+
+  // Address form fields
+  address: {
+    street: 'Улица',
+    city: 'Город',
+    state: 'Область/Регион',
+    postalCode: 'Почтовый индекс',
+    country: 'Страна',
   },
 
   userMenu: {

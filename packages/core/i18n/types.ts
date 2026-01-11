@@ -729,6 +729,18 @@ export interface TranslationResource {
     accessRequests: string;
     accessRequestsDesc: string;
     storeSettings: string;
+    // Addresses
+    addAddress: string;
+    noAddresses: string;
+  };
+
+  // Address form fields
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
   };
 
   // 用户菜单
@@ -794,9 +806,26 @@ export interface TranslationResource {
     addressDeleted: string;
     fillRequired: string;
     // Blocked tab
+    blockUser: string;
+    blockUserDesc: string;
+    enterPeerId: string;
+    peerIdRequired: string;
+    block: string;
+    userBlocked: string;
+    userUnblocked: string;
     noBlockedUsers: string;
+    blockedOn: string;
     unblock: string;
+    unblockConfirmTitle: string;
+    unblockConfirmDesc: string;
     // Moderation tab
+    addModerator: string;
+    addModeratorDesc: string;
+    moderationDesc: string;
+    noModerators: string;
+    moderatorAdded: string;
+    moderatorRemoved: string;
+    fee: string;
     disputeResolution: string;
     disputeResolutionDesc: string;
     moderateDisputes: string;
@@ -816,6 +845,18 @@ export interface TranslationResource {
     understandTerms: string;
     moderationSaved: string;
     // Chat Encryption tab
+    e2eEncryption: string;
+    e2eEncryptionDesc: string;
+    yourEncryptionKey: string;
+    created: string;
+    keyFingerprint: string;
+    fingerprintCopied: string;
+    regenerateKeys: string;
+    regenerateKeysWarning: string;
+    regenerate: string;
+    keysRegenerated: string;
+    regenerateConfirmTitle: string;
+    regenerateConfirmDesc: string;
     e2eAvailable: string;
     myChatId: string;
     myChatIdDesc: string;
