@@ -8,7 +8,7 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { profileApi, socialApi, getImageUrl, useI18n, useUserStore } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
-import { MapPin, UserPlus, UserMinus, Loader2, Ban, ShieldOff } from 'lucide-react';
+import { MapPin, UserPlus, UserMinus, Loader2, Ban, ShieldOff, Lock } from 'lucide-react';
 
 interface UserCardProps {
   /** 用户 peerID */
@@ -250,9 +250,21 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
 
         {/* 名称和 handle */}
         <div className="min-w-0">
-          <h3 className="font-semibold text-foreground truncate text-sm">
-            {profile.name || peerID.slice(0, 12)}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-foreground truncate text-sm">
+              {profile.name || peerID.slice(0, 12)}
+            </h3>
+            {/* 隐私店铺徽标 */}
+            {profile.private && (
+              <span
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 shrink-0"
+                title={t('storeAccess.privateStore')}
+              >
+                <Lock className="h-2.5 w-2.5" />
+                {t('storeAccess.privateStoreBadge') || t('common.private')}
+              </span>
+            )}
+          </div>
           {profile.handle && (
             <p className="text-xs text-muted-foreground truncate">@{profile.handle}</p>
           )}

@@ -36,6 +36,7 @@ import {
   type AuthorizationType,
 } from '@mobazha/core';
 import { Loader2, Plus, Trash2, Shield, Users, Globe, ChevronLeft } from 'lucide-react';
+import { SettingsReferrerBanner } from '@/components/SettingsContent';
 
 export default function ProductGroupAuthorizationPage() {
   const params = useParams();
@@ -101,7 +102,15 @@ export default function ProductGroupAuthorizationPage() {
     };
 
     loadData();
-  }, [isAuthenticated, userID, ownerPeerID, groupId, loadGroups, loadUserGroups, loadAuthorizations]);
+  }, [
+    isAuthenticated,
+    userID,
+    ownerPeerID,
+    groupId,
+    loadGroups,
+    loadUserGroups,
+    loadAuthorizations,
+  ]);
 
   // 添加授权
   const handleAddAuthorization = useCallback(async () => {
@@ -181,6 +190,9 @@ export default function ProductGroupAuthorizationPage() {
 
   return (
     <div>
+      {/* 返回来源页面横幅 */}
+      <SettingsReferrerBanner />
+
       {/* 面包屑导航 */}
       <Link
         href={`/settings/access-control/product-groups/${groupId}`}
@@ -193,9 +205,7 @@ export default function ProductGroupAuthorizationPage() {
       {/* 页面标题 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold">
-            {t('settings.accessControl.configureAccess')}
-          </h1>
+          <h1 className="text-xl font-semibold">{t('settings.accessControl.configureAccess')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t('settings.accessControl.authorizationDesc', { count: authorizations.length })}
           </p>
@@ -263,7 +273,9 @@ export default function ProductGroupAuthorizationPage() {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
               <Shield className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">{t('settings.accessControl.noAuthorizations')}</h3>
+            <h3 className="text-lg font-semibold">
+              {t('settings.accessControl.noAuthorizations')}
+            </h3>
             <p className="text-muted-foreground max-w-md">
               {t('settings.accessControl.noAuthorizationsDesc')}
             </p>
@@ -287,14 +299,20 @@ export default function ProductGroupAuthorizationPage() {
               <label className="block text-sm font-medium mb-2">
                 {t('settings.accessControl.authorizationType')}
               </label>
-              <Select value={newAuthType} onValueChange={v => setNewAuthType(v as AuthorizationType)}>
+              <Select
+                value={newAuthType}
+                onValueChange={v => setNewAuthType(v as AuthorizationType)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user_group">{t('settings.accessControl.userGroupAuth')}</SelectItem>
+                  <SelectItem value="user_group">
+                    {t('settings.accessControl.userGroupAuth')}
+                  </SelectItem>
                   <SelectItem value="group_marketplace" disabled={!groupContext}>
-                    {t('settings.accessControl.groupMarketplaceAuth')} {!groupContext && `(${t('settings.accessControl.notInGroup')})`}
+                    {t('settings.accessControl.groupMarketplaceAuth')}{' '}
+                    {!groupContext && `(${t('settings.accessControl.notInGroup')})`}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -307,7 +325,9 @@ export default function ProductGroupAuthorizationPage() {
                 </label>
                 <Select value={selectedUserGroupId} onValueChange={setSelectedUserGroupId}>
                   <SelectTrigger>
-                    <SelectValue placeholder={t('settings.accessControl.selectUserGroupPlaceholder')} />
+                    <SelectValue
+                      placeholder={t('settings.accessControl.selectUserGroupPlaceholder')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {userGroups.map(group => (
@@ -364,7 +384,10 @@ export default function ProductGroupAuthorizationPage() {
       </Dialog>
 
       {/* 删除确认弹窗 */}
-      <AlertDialog open={removingAuthId !== null} onOpenChange={open => !open && setRemovingAuthId(null)}>
+      <AlertDialog
+        open={removingAuthId !== null}
+        onOpenChange={open => !open && setRemovingAuthId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('settings.accessControl.removeAuthorization')}</AlertDialogTitle>

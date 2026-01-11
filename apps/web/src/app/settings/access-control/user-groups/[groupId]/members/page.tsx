@@ -22,7 +22,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui';
 import { useUserGroups, useUserStore, useI18n, type UserGroupMember } from '@mobazha/core';
-import { Loader2, ChevronLeft, Plus, Trash2, Users, UserPlus, Search } from 'lucide-react';
+import { Loader2, ChevronLeft, Trash2, Users, UserPlus } from 'lucide-react';
+import { SettingsReferrerBanner } from '@/components/SettingsContent';
 
 export default function UserGroupMembersPage() {
   const params = useParams();
@@ -126,7 +127,9 @@ export default function UserGroupMembersPage() {
   if (!currentGroup) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-muted-foreground mb-4">{t('settings.accessControl.userGroupNotFound')}</p>
+        <p className="text-muted-foreground mb-4">
+          {t('settings.accessControl.userGroupNotFound')}
+        </p>
         <Link href="/settings/access-control/user-groups">
           <Button>{t('common.back')}</Button>
         </Link>
@@ -136,6 +139,9 @@ export default function UserGroupMembersPage() {
 
   return (
     <div>
+      {/* 返回来源页面横幅 */}
+      <SettingsReferrerBanner />
+
       {/* 面包屑导航 */}
       <div className="mb-6">
         <Link
@@ -150,7 +156,9 @@ export default function UserGroupMembersPage() {
       {/* 页面标题 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-semibold">{currentGroup.name} - {t('common.members')}</h1>
+          <h1 className="text-xl font-semibold">
+            {currentGroup.name} - {t('common.members')}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {members.length} {t('common.members')}
           </p>
@@ -193,7 +201,8 @@ export default function UserGroupMembersPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{member.peerID}</p>
                     <p className="text-xs text-muted-foreground">
-                      {t('settings.accessControl.addedOn')} {new Date(member.addedAt).toLocaleDateString()}
+                      {t('settings.accessControl.addedOn')}{' '}
+                      {new Date(member.addedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

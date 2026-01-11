@@ -142,17 +142,42 @@ export type AccessRequestStatus = 'pending' | 'approved' | 'rejected';
 /**
  * 店铺访问申请
  */
+/**
+ * 申请人的 Profile 信息（从后端获取）
+ */
+export interface RequestorProfile {
+  peerID: string;
+  name?: string;
+  avatarHashes?: {
+    tiny?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    original?: string;
+  };
+  handle?: string;
+}
+
 export interface StoreAccessRequest {
   id: number;
   storePeerID: string;
   requestorPeerID: string;
+  /** @deprecated 使用 requestorProfile.name */
   requestorName?: string;
+  /** @deprecated 使用 requestorProfile.avatarHashes */
   requestorAvatar?: string;
+  /** 申请人的完整 profile 信息 */
+  requestorProfile?: RequestorProfile;
   note?: string;
   status: AccessRequestStatus;
   reviewedAt?: string;
   reviewNote?: string;
   assignedUserGroupID?: number;
+  /** 批准时分配的用户组信息 */
+  userGroup?: {
+    id: number;
+    name: string;
+  };
   createdAt: string;
 }
 
@@ -220,6 +245,8 @@ export interface StoreAccessListItem {
   storePeerID: string;
   requestorPeerID: string;
   addedAt: string;
+  /** 用户的完整 profile 信息 */
+  userProfile?: RequestorProfile;
 }
 
 // ============ 群组集市 (Group Marketplace) ============

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Header, Footer, useSettingsDrawer } from '@/components';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
@@ -22,9 +22,10 @@ import {
   useChatStore,
   getImageUrl,
   useVerifiedModerators,
+  useAccessControl,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
-import { Settings, Camera, Package } from 'lucide-react';
+import { Settings, Camera, Package, Lock, ShieldCheck } from 'lucide-react';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 import {
@@ -51,7 +52,6 @@ type TabType = 'about' | 'products' | 'otc' | 'reviews' | 'following' | 'followe
 
 export default function StorePage() {
   const params = useParams();
-  const router = useRouter();
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
@@ -69,6 +69,13 @@ export default function StorePage() {
 
   // 判断是否是自己的店铺
   const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
+
+  // 访问权限检查（仅对私密店铺生效）
+  const { accessCheck } = useAccessControl({
+    storePeerID: peerId,
+    requestorPeerID: currentUserProfile?.peerID || '',
+    autoCheck: !isOwnStore && isAuthenticated,
+  });
 
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
@@ -578,9 +585,21 @@ export default function StorePage() {
                   {/* 名称和操作按钮 */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                        {store.name || peerId.slice(0, 8)}
-                      </h1>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                          {store.name || peerId.slice(0, 8)}
+                        </h1>
+                        {/* 隐私店铺徽标 */}
+                        {store.private && (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 shrink-0"
+                            title={t('storeAccess.privateStore')}
+                          >
+                            <Lock className="h-3 w-3" />
+                            {t('storeAccess.privateStoreBadge') || t('common.private')}
+                          </span>
+                        )}
+                      </div>
                       {/* 位置 + 评分（桌面端） */}
                       <div className="flex items-center gap-3 mt-0.5">
                         {store.location && (
@@ -673,6 +692,14 @@ export default function StorePage() {
                   <span className="text-muted-foreground">{t('profile.followers')}</span>
                 </button>
               </div>
+
+              {/* 私密店铺完整访问权限提示 */}
+              {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
+                <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 text-sm border border-teal-200 dark:border-teal-800">
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                  <span>{t('storeAccess.fullAccessGranted')}</span>
+                </div>
+              )}
             </div>
           </Container>
         </div>

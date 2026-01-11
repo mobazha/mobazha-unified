@@ -42,6 +42,7 @@ import {
   Search,
   Check,
 } from 'lucide-react';
+import { SettingsReferrerBanner } from '@/components/SettingsContent';
 
 export default function ProductGroupDetailPage() {
   const params = useParams();
@@ -219,7 +220,9 @@ export default function ProductGroupDetailPage() {
   if (!currentGroup) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-muted-foreground mb-4">{t('settings.accessControl.productGroupNotFound')}</p>
+        <p className="text-muted-foreground mb-4">
+          {t('settings.accessControl.productGroupNotFound')}
+        </p>
         <Link href="/settings/access-control/product-groups">
           <Button>{t('common.back')}</Button>
         </Link>
@@ -229,6 +232,9 @@ export default function ProductGroupDetailPage() {
 
   return (
     <div>
+      {/* 返回来源页面横幅 */}
+      <SettingsReferrerBanner />
+
       {/* 面包屑导航 */}
       <div className="mb-6">
         <Link
@@ -286,7 +292,12 @@ export default function ProductGroupDetailPage() {
                 {items.length} {t('common.items')}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="self-start">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+              className="self-start"
+            >
               <Edit2 className="w-4 h-4 mr-2" />
               {t('common.edit')}
             </Button>
@@ -297,9 +308,7 @@ export default function ProductGroupDetailPage() {
       {/* 快捷操作 */}
       <div className="mb-6">
         <Link href={`/settings/access-control/product-groups/${groupId}/authorization`}>
-          <Button variant="outline">
-            {t('settings.accessControl.configureAccess')} →
-          </Button>
+          <Button variant="outline">{t('settings.accessControl.configureAccess')} →</Button>
         </Link>
       </div>
 
