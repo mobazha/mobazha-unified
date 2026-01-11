@@ -284,7 +284,7 @@ export default function ProductGroupDetailPage() {
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold mb-1">{currentGroup.name}</h1>
+              <h1 className="text-lg font-semibold mb-1">{currentGroup.name}</h1>
               {currentGroup.description && (
                 <p className="text-muted-foreground text-sm">{currentGroup.description}</p>
               )}

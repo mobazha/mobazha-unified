@@ -168,7 +168,7 @@ export default function AdvancedSettingsPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-6">{t('settings.sidebar.advanced')}</h1>
+      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.advanced')}</h1>
 
       {/* Privacy */}
       <SettingGroup title={t('settings.privacy')}>

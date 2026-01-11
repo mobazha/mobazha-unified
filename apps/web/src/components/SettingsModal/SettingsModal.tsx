@@ -1699,18 +1699,18 @@ const ChatEncryptionTabContent: React.FC = () => {
       <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
         <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
           <Shield className="w-5 h-5" />
-          <span className="font-medium">{t('settingsModal.e2eAvailable')}</span>
+          <span className="font-medium text-sm">{t('settingsModal.e2eAvailable')}</span>
         </div>
       </div>
 
       {/* My Chat ID */}
       <div className="space-y-3">
         <div>
-          <h3 className="font-semibold">{t('settingsModal.myChatId')}</h3>
-          <p className="text-sm text-muted-foreground">{t('settingsModal.myChatIdDesc')}</p>
+          <h3 className="font-medium text-sm">{t('settingsModal.myChatId')}</h3>
+          <p className="text-xs text-muted-foreground">{t('settingsModal.myChatIdDesc')}</p>
         </div>
         <div className="flex gap-2">
-          <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm break-all">
+          <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-xs break-all">
             {chatId || t('settingsModal.notLoggedIn')}
           </div>
           <div className="flex flex-col gap-2">
@@ -1729,11 +1729,11 @@ const ChatEncryptionTabContent: React.FC = () => {
 
       {/* Current Device */}
       <div className="space-y-3">
-        <h3 className="font-semibold">{t('settingsModal.currentDevice')}</h3>
+        <h3 className="font-medium text-sm">{t('settingsModal.currentDevice')}</h3>
         <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
           <Laptop className="w-8 h-8 text-muted-foreground" />
           <div>
-            <p className="font-medium">{t('settingsModal.browserDevice')}</p>
+            <p className="font-medium text-sm">{t('settingsModal.browserDevice')}</p>
             <p className="text-xs text-muted-foreground">Device ID: {deviceId}</p>
           </div>
         </div>
@@ -1742,8 +1742,8 @@ const ChatEncryptionTabContent: React.FC = () => {
       {/* Key Backup */}
       <div className="space-y-3">
         <div>
-          <h3 className="font-semibold">{t('settingsModal.keyBackup')}</h3>
-          <p className="text-sm text-muted-foreground">{t('settingsModal.keyBackupDesc')}</p>
+          <h3 className="font-medium text-sm">{t('settingsModal.keyBackup')}</h3>
+          <p className="text-xs text-muted-foreground">{t('settingsModal.keyBackupDesc')}</p>
         </div>
         {lastBackup && (
           <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
@@ -1756,11 +1756,11 @@ const ChatEncryptionTabContent: React.FC = () => {
           {lastBackup?.toLocaleString() || t('settingsModal.never')}
         </p>
         <div className="flex gap-2">
-          <Button onClick={handleBackup}>
+          <Button size="sm" onClick={handleBackup}>
             <Key className="w-4 h-4 mr-2" />
             {t('settingsModal.backupNow')}
           </Button>
-          <Button variant="outline" onClick={handleRestore}>
+          <Button variant="outline" size="sm" onClick={handleRestore}>
             {t('settingsModal.restoreKeys')}
           </Button>
         </div>
@@ -1769,8 +1769,8 @@ const ChatEncryptionTabContent: React.FC = () => {
       {/* Message Invites */}
       <div className="space-y-3">
         <div>
-          <h3 className="font-semibold">{t('settingsModal.messageInvites')}</h3>
-          <p className="text-sm text-muted-foreground">{t('settingsModal.messageInvitesDesc')}</p>
+          <h3 className="font-medium text-sm">{t('settingsModal.messageInvites')}</h3>
+          <p className="text-xs text-muted-foreground">{t('settingsModal.messageInvitesDesc')}</p>
         </div>
         <div className="space-y-2">
           {[
@@ -1805,8 +1805,8 @@ const ChatEncryptionTabContent: React.FC = () => {
                 className="mt-0.5 w-4 h-4 text-primary border-border focus:ring-primary"
               />
               <div>
-                <p className="font-medium">{option.title}</p>
-                <p className="text-sm text-muted-foreground">{option.desc}</p>
+                <p className="font-medium text-sm">{option.title}</p>
+                <p className="text-xs text-muted-foreground">{option.desc}</p>
               </div>
             </label>
           ))}

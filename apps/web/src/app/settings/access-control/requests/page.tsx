@@ -22,7 +22,7 @@ export default function AccessRequestsPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-6">{t('settings.sidebar.accessRequests')}</h1>
+      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.accessRequests')}</h1>
 
       <AccessRequestsContent />
     </div>

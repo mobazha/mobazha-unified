@@ -200,7 +200,7 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </button>
         )}
         <div>
-          <h2 className="text-xl font-bold">{t('settings.accessControl.requestsTitle')}</h2>
+          <h2 className="text-lg font-semibold">{t('settings.accessControl.requestsTitle')}</h2>
           <p className="text-sm text-muted-foreground">
             {t('settings.accessControl.requestsDescription')}
           </p>

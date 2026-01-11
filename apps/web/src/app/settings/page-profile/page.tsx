@@ -133,7 +133,7 @@ export default function PageSettingsPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-6">{t('settings.sidebar.page')}</h1>
+      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.page')}</h1>
 
       <Card className="p-6">
         <div className="space-y-6">

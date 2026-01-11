@@ -4,47 +4,62 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  useToast,
-} from '@/components/ui';
-import { useI18n } from '@mobazha/core';
-import { ChevronLeft, Key, Copy, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/components/ui';
+import { useI18n, useUserStore } from '@mobazha/core';
+import { ChevronLeft, Key, Copy, Shield, Share2, Laptop, Check } from 'lucide-react';
 
 export default function ChatEncryptionSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  const { profile } = useUserStore();
 
-  // Mock key data
-  const keyFingerprint = 'A1B2 C3D4 E5F6 7890 1234 5678 9ABC DEF0';
-  const keyCreated = '2025-01-01';
+  const [invitePolicy, setInvitePolicy] = useState<'all' | 'mobazha' | 'confirm'>('mobazha');
+  const [lastBackup, setLastBackup] = useState<Date | null>(new Date());
+  // Generate stable device ID using useState initializer (runs only once)
+  const [deviceId] = useState(() => `MBZ_DESKTOP_${Date.now().toString(36).toUpperCase()}`);
 
-  const handleCopyFingerprint = () => {
-    navigator.clipboard.writeText(keyFingerprint.replace(/\s/g, ''));
+  const chatId = profile?.peerID ? `@peer_${profile.peerID.toLowerCase()}:matrix.mobazha.org` : '';
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(chatId);
+      toast({
+        title: t('common.copied'),
+        description: t('settingsModal.chatIdCopied'),
+      });
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('settingsModal.copyFailed'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: 'My Chat ID',
+        text: chatId,
+      });
+    } catch {
+      // Fallback to copy
+      handleCopy();
+    }
+  };
+
+  const handleBackup = async () => {
+    setLastBackup(new Date());
     toast({
       title: t('common.success'),
-      description: t('settingsModal.fingerprintCopied'),
+      description: t('settingsModal.keysBackedUp'),
     });
   };
 
-  const handleRegenerate = async () => {
-    setIsRegenerating(true);
-    // Simulate regeneration
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsRegenerating(false);
-    setShowRegenerateDialog(false);
+  const handleRestore = () => {
     toast({
-      title: t('common.success'),
-      description: t('settingsModal.keysRegenerated'),
+      title: t('settingsModal.restoreKeys'),
+      description: t('settingsModal.restoreKeysDesc'),
     });
   };
 
@@ -61,86 +76,125 @@ export default function ChatEncryptionSettingsPage() {
         </Link>
       </div>
 
-      <h1 className="text-xl font-semibold mb-6">{t('settings.sidebar.chatEncryption')}</h1>
+      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.chatEncryption')}</h1>
 
-      {/* Info Card */}
-      <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
-        <div className="flex items-start gap-3">
-          <Shield className="w-5 h-5 text-primary mt-0.5" />
+      {/* Encryption Status */}
+      <Card className="p-4 mb-4 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900">
+        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+          <Shield className="w-5 h-5" />
+          <span className="font-medium text-sm">{t('settingsModal.e2eAvailable')}</span>
+        </div>
+      </Card>
+
+      {/* My Chat ID */}
+      <Card className="p-4 mb-4">
+        <div className="mb-3">
+          <h3 className="font-medium text-sm">{t('settingsModal.myChatId')}</h3>
+          <p className="text-xs text-muted-foreground">{t('settingsModal.myChatIdDesc')}</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-xs break-all">
+            {chatId || t('settingsModal.notLoggedIn')}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" size="sm" onClick={handleCopy} disabled={!chatId}>
+              <Copy className="w-4 h-4 mr-1" />
+              {t('common.copy')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleShare} disabled={!chatId}>
+              <Share2 className="w-4 h-4 mr-1" />
+              {t('common.share')}
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">{t('settingsModal.chatIdNote')}</p>
+      </Card>
+
+      {/* Current Device */}
+      <Card className="p-4 mb-4">
+        <h3 className="font-medium text-sm mb-3">{t('settingsModal.currentDevice')}</h3>
+        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+          <Laptop className="w-8 h-8 text-muted-foreground" />
           <div>
-            <p className="font-medium text-sm">{t('settingsModal.e2eEncryption')}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('settingsModal.e2eEncryptionDesc')}
-            </p>
+            <p className="font-medium text-sm">{t('settingsModal.browserDevice')}</p>
+            <p className="text-xs text-muted-foreground">Device ID: {deviceId}</p>
           </div>
         </div>
       </Card>
 
-      {/* Key Info */}
-      <Card className="p-4 mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <Key className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="font-medium">{t('settingsModal.yourEncryptionKey')}</p>
-            <p className="text-xs text-muted-foreground">
-              {t('settingsModal.created')}: {keyCreated}
-            </p>
-          </div>
+      {/* Key Backup */}
+      <Card className="p-4 mb-4">
+        <div className="mb-3">
+          <h3 className="font-medium text-sm">{t('settingsModal.keyBackup')}</h3>
+          <p className="text-xs text-muted-foreground">{t('settingsModal.keyBackupDesc')}</p>
         </div>
-
-        <div className="bg-muted rounded-lg p-3 mb-4">
-          <p className="text-xs text-muted-foreground mb-1">{t('settingsModal.keyFingerprint')}</p>
-          <p className="font-mono text-sm break-all">{keyFingerprint}</p>
-        </div>
-
+        {lastBackup && (
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
+            <Check className="w-4 h-4" />
+            <span className="text-sm">{t('settingsModal.backupExists')}</span>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground mb-3">
+          {t('settingsModal.lastBackup')}:{' '}
+          {lastBackup?.toLocaleString() || t('settingsModal.never')}
+        </p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleCopyFingerprint}>
-            <Copy className="w-4 h-4 mr-2" />
-            {t('common.copy')}
+          <Button onClick={handleBackup} size="sm">
+            <Key className="w-4 h-4 mr-2" />
+            {t('settingsModal.backupNow')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRestore}>
+            {t('settingsModal.restoreKeys')}
           </Button>
         </div>
       </Card>
 
-      {/* Regenerate Section */}
-      <Card className="p-4 border-destructive/20">
-        <div className="flex items-start gap-3 mb-4">
-          <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
-          <div>
-            <p className="font-medium text-sm">{t('settingsModal.regenerateKeys')}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('settingsModal.regenerateKeysWarning')}
-            </p>
-          </div>
+      {/* Message Invites */}
+      <Card className="p-4">
+        <div className="mb-3">
+          <h3 className="font-medium text-sm">{t('settingsModal.messageInvites')}</h3>
+          <p className="text-xs text-muted-foreground">{t('settingsModal.messageInvitesDesc')}</p>
         </div>
-        <Button variant="destructive" size="sm" onClick={() => setShowRegenerateDialog(true)}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          {t('settingsModal.regenerate')}
-        </Button>
-      </Card>
-
-      {/* Regenerate Confirmation */}
-      <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsModal.regenerateConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsModal.regenerateConfirmDesc')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleRegenerate}
-              disabled={isRegenerating}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        <div className="space-y-2">
+          {[
+            {
+              value: 'all' as const,
+              title: t('settingsModal.autoAcceptAll'),
+              desc: t('settingsModal.autoAcceptAllDesc'),
+            },
+            {
+              value: 'mobazha' as const,
+              title: t('settingsModal.autoAcceptMobazha'),
+              desc: t('settingsModal.autoAcceptMobazhaDesc'),
+            },
+            {
+              value: 'confirm' as const,
+              title: t('settingsModal.alwaysConfirm'),
+              desc: t('settingsModal.alwaysConfirmDesc'),
+            },
+          ].map(option => (
+            <label
+              key={option.value}
+              className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                invitePolicy === option.value ? 'bg-primary/5 border-primary' : 'hover:bg-muted/50'
+              }`}
             >
-              {isRegenerating ? t('common.loading') : t('settingsModal.regenerate')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <input
+                type="radio"
+                name="invitePolicy"
+                value={option.value}
+                checked={invitePolicy === option.value}
+                onChange={() => setInvitePolicy(option.value)}
+                className="mt-0.5 w-4 h-4 text-primary border-border focus:ring-primary"
+              />
+              <div>
+                <p className="font-medium text-sm">{option.title}</p>
+                <p className="text-xs text-muted-foreground">{option.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
