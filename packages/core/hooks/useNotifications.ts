@@ -1,57 +1,161 @@
 /**
  * 通知 Hook
+ *
+ * 提供通知列表、实时订阅、声音设置等功能
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { notificationsApi, type Notification } from '../services/api/notifications';
+import { useCallback, useEffect, useMemo } from 'react';
+import { notificationsApi } from '../services/api/notifications';
+import {
+  useNotificationStore,
+  selectNotifications,
+  selectUnreadCount,
+  selectNotificationLoading,
+  selectNotificationError,
+  selectSoundEnabled,
+  selectTtsEnabled,
+  selectVolume,
+} from '../stores/notificationStore';
+import {
+  notificationService,
+  soundService,
+  getNotificationDisplayData,
+} from '../services/notification';
+import type {
+  NotificationData,
+  NotificationEventType,
+  NotificationCategory,
+  SoundNotificationType,
+  NotificationDisplayData,
+} from '../types/notification';
+import { getNotificationCategory } from '../types/notification';
 
-interface NotificationsState {
-  notifications: Notification[];
+// ============ 类型定义 ============
+
+interface UseNotificationsOptions {
+  /** 是否自动加载 */
+  autoLoad?: boolean;
+  /** 自动刷新未读数量的间隔（毫秒），0 表示不自动刷新 */
+  refreshInterval?: number;
+  /** 是否启用实时订阅 */
+  enableRealtime?: boolean;
+}
+
+interface UseNotificationsReturn {
+  // 状态
+  notifications: NotificationData[];
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
+
+  // 声音设置
+  soundEnabled: boolean;
+  ttsEnabled: boolean;
+  volume: number;
+
+  // 动作：通知管理
+  fetchNotifications: () => Promise<NotificationData[]>;
+  fetchUnreadCount: () => Promise<number>;
+  markAsRead: (id: string) => Promise<{ success: boolean; error?: string }>;
+  markAllAsRead: () => Promise<{ success: boolean; error?: string }>;
+  deleteNotification: (id: string) => void;
+  clearNotifications: () => void;
+
+  // 动作：声音设置
+  setSoundEnabled: (enabled: boolean) => void;
+  setTtsEnabled: (enabled: boolean) => void;
+  setVolume: (volume: number) => void;
+  testSound: (type?: SoundNotificationType) => void;
+
+  // 动作：当前上下文
+  setCurrentRoom: (roomId: string | null) => void;
+
+  // 选择器
+  getNotificationsByType: (type: NotificationEventType) => NotificationData[];
+  getNotificationsByCategory: (category: NotificationCategory) => NotificationData[];
+  getUnreadNotifications: () => NotificationData[];
+  getOrderNotifications: () => NotificationData[];
+  getDisputeNotifications: () => NotificationData[];
+  getSocialNotifications: () => NotificationData[];
+
+  // 显示数据
+  getDisplayData: (
+    notification: NotificationData,
+    options?: { isBuyer?: boolean }
+  ) => NotificationDisplayData;
 }
 
-interface UseNotificationsOptions {
-  autoRefresh?: boolean;
-  refreshInterval?: number; // ms
-}
+// ============ Hook 实现 ============
 
-export function useNotifications(options: UseNotificationsOptions = {}) {
-  const { autoRefresh = true, refreshInterval = 30000 } = options;
+export function useNotifications(
+  options: UseNotificationsOptions = {}
+): UseNotificationsReturn {
+  const { autoLoad = true, refreshInterval = 30000, enableRealtime = true } = options;
 
-  const [state, setState] = useState<NotificationsState>({
-    notifications: [],
-    unreadCount: 0,
-    isLoading: false,
-    error: null,
-  });
+  // 从 Store 获取状态
+  const notifications = useNotificationStore(selectNotifications);
+  const unreadCount = useNotificationStore(selectUnreadCount);
+  const isLoading = useNotificationStore(selectNotificationLoading);
+  const error = useNotificationStore(selectNotificationError);
+  const soundEnabled = useNotificationStore(selectSoundEnabled);
+  const ttsEnabled = useNotificationStore(selectTtsEnabled);
+  const volume = useNotificationStore(selectVolume);
+
+  // 获取 Store 动作
+  const store = useNotificationStore();
+
+  // ============ 通知管理 ============
 
   /**
    * 获取通知列表
    */
-  const fetchNotifications = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+  const fetchNotifications = useCallback(async (): Promise<NotificationData[]> => {
+    store.setLoading(true);
     try {
-      const notifications = await notificationsApi.getNotifications();
-      const unreadCount = notifications.filter(n => !n.read).length;
-      setState({ notifications, unreadCount, isLoading: false, error: null });
-      return notifications;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notifications';
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
+      const apiNotifications = await notificationsApi.getNotifications();
+      // 转换 API 返回的通知到内部格式
+      // 由于 API 返回的类型可能不完整，我们需要构建符合 NotificationData 的对象
+      const convertedNotifications: NotificationData[] = apiNotifications.map(n => {
+        // 基础属性
+        const base = {
+          id: n.id,
+          type: n.type as NotificationEventType,
+          timestamp: n.timestamp,
+          read: n.read,
+        };
+
+        // 根据类型添加必要的属性
+        if (n.data?.orderId) {
+          return {
+            ...base,
+            orderID: n.data.orderId,
+          } as NotificationData;
+        } else if (n.data?.peerID) {
+          return {
+            ...base,
+            peerID: n.data.peerID,
+          } as NotificationData;
+        }
+
+        return base as NotificationData;
+      });
+      store.setNotifications(convertedNotifications);
+      return convertedNotifications;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
+      store.setError(errorMessage);
       return [];
     }
-  }, []);
+  }, [store]);
 
   /**
    * 获取未读数量
    */
-  const fetchUnreadCount = useCallback(async () => {
+  const fetchUnreadCount = useCallback(async (): Promise<number> => {
     try {
-      const unreadCount = await notificationsApi.getUnreadNotificationCount();
-      setState(prev => ({ ...prev, unreadCount }));
-      return unreadCount;
+      const count = await notificationsApi.getUnreadNotificationCount();
+      // Store 会自动计算 unreadCount，这里只是同步服务器数据
+      return count;
     } catch {
       return 0;
     }
@@ -60,124 +164,272 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   /**
    * 标记单个通知为已读
    */
-  const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      const result = await notificationsApi.markNotificationAsRead(notificationId);
-      if (result.success) {
-        setState(prev => ({
-          ...prev,
-          notifications: prev.notifications.map(n =>
-            n.id === notificationId ? { ...n, read: true } : n
-          ),
-          unreadCount: Math.max(0, prev.unreadCount - 1),
-        }));
+  const markAsRead = useCallback(
+    async (id: string): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const result = await notificationsApi.markNotificationAsRead(id);
+        if (result.success) {
+          store.markAsRead(id);
+        }
+        return result;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to mark as read';
+        return { success: false, error: errorMessage };
       }
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark as read';
-      return { success: false, error: errorMessage };
-    }
-  }, []);
+    },
+    [store]
+  );
 
   /**
    * 标记所有通知为已读
    */
-  const markAllAsRead = useCallback(async () => {
+  const markAllAsRead = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
       const result = await notificationsApi.markAllNotificationsAsRead();
       if (result.success) {
-        setState(prev => ({
-          ...prev,
-          notifications: prev.notifications.map(n => ({ ...n, read: true })),
-          unreadCount: 0,
-        }));
+        store.markAllAsRead();
       }
       return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark all as read';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to mark all as read';
       return { success: false, error: errorMessage };
     }
-  }, []);
+  }, [store]);
 
   /**
-   * 筛选通知
+   * 删除通知
    */
-  const getNotificationsByType = useCallback(
-    (type: Notification['type']) => {
-      return state.notifications.filter(n => n.type === type);
+  const deleteNotification = useCallback(
+    (id: string): void => {
+      store.removeNotification(id);
     },
-    [state.notifications]
+    [store]
   );
 
   /**
-   * 获取未读通知
+   * 清空所有通知
    */
-  const getUnreadNotifications = useCallback(() => {
-    return state.notifications.filter(n => !n.read);
-  }, [state.notifications]);
+  const clearNotifications = useCallback((): void => {
+    store.clearNotifications();
+  }, [store]);
 
-  // 初始加载
+  // ============ 声音设置 ============
+
+  const setSoundEnabled = useCallback(
+    (enabled: boolean): void => {
+      store.setSoundEnabled(enabled);
+    },
+    [store]
+  );
+
+  const setTtsEnabled = useCallback(
+    (enabled: boolean): void => {
+      store.setTtsEnabled(enabled);
+    },
+    [store]
+  );
+
+  const setVolume = useCallback(
+    (newVolume: number): void => {
+      store.setVolume(newVolume);
+      soundService.updateVolume(newVolume);
+    },
+    [store]
+  );
+
+  const testSound = useCallback((type?: SoundNotificationType): void => {
+    soundService.testPlay(type || 'chat_message');
+  }, []);
+
+  // ============ 当前上下文 ============
+
+  const setCurrentRoom = useCallback(
+    (roomId: string | null): void => {
+      store.setCurrentRoom(roomId);
+    },
+    [store]
+  );
+
+  // ============ 选择器 ============
+
+  const getNotificationsByType = useCallback(
+    (type: NotificationEventType): NotificationData[] => {
+      return notifications.filter(n => n.type === type);
+    },
+    [notifications]
+  );
+
+  const getNotificationsByCategory = useCallback(
+    (category: NotificationCategory): NotificationData[] => {
+      return notifications.filter(n => getNotificationCategory(n.type) === category);
+    },
+    [notifications]
+  );
+
+  const getUnreadNotifications = useCallback((): NotificationData[] => {
+    return notifications.filter(n => !n.read);
+  }, [notifications]);
+
+  const getOrderNotifications = useCallback((): NotificationData[] => {
+    return store.getOrderNotifications();
+  }, [store]);
+
+  const getDisputeNotifications = useCallback((): NotificationData[] => {
+    return store.getDisputeNotifications();
+  }, [store]);
+
+  const getSocialNotifications = useCallback((): NotificationData[] => {
+    return store.getSocialNotifications();
+  }, [store]);
+
+  // ============ 显示数据 ============
+
+  const getDisplayData = useCallback(
+    (notification: NotificationData, opts?: { isBuyer?: boolean }): NotificationDisplayData => {
+      return getNotificationDisplayData(notification, opts);
+    },
+    []
+  );
+
+  // ============ 副作用 ============
+
+  // 初始化通知服务和加载数据
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (enableRealtime) {
+      notificationService.init();
+    }
 
-    let isMounted = true;
+    if (autoLoad) {
+      void fetchNotifications();
+    }
+  }, [autoLoad, enableRealtime, fetchNotifications]);
 
-    const loadNotifications = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      try {
-        const notifications = await notificationsApi.getNotifications();
-        if (isMounted) {
-          const unreadCount = notifications.filter(n => !n.read).length;
-          setState({ notifications, unreadCount, isLoading: false, error: null });
-        }
-      } catch (error) {
-        if (isMounted) {
-          const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch notifications';
-          setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
-        }
-      }
-    };
-
-    void loadNotifications();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [autoRefresh]);
-
-  // 自动刷新
+  // 自动刷新未读数量
   useEffect(() => {
-    if (!autoRefresh || refreshInterval <= 0) return;
+    if (refreshInterval <= 0) return;
 
-    let isMounted = true;
-
-    const timer = setInterval(async () => {
-      if (!isMounted) return;
-      try {
-        const unreadCount = await notificationsApi.getUnreadNotificationCount();
-        if (isMounted) {
-          setState(prev => ({ ...prev, unreadCount }));
-        }
-      } catch {
-        // 静默失败，下次重试
-      }
+    const timer = setInterval(() => {
+      void fetchUnreadCount();
     }, refreshInterval);
 
     return () => {
-      isMounted = false;
       clearInterval(timer);
     };
-  }, [autoRefresh, refreshInterval]);
+  }, [refreshInterval, fetchUnreadCount]);
+
+  // 订阅实时通知
+  useEffect(() => {
+    if (!enableRealtime) return;
+
+    const unsubscribe = notificationService.subscribe();
+
+    return () => {
+      unsubscribe();
+    };
+  }, [enableRealtime]);
+
+  // ============ 返回 ============
+
+  return useMemo(
+    () => ({
+      // 状态
+      notifications,
+      unreadCount,
+      isLoading,
+      error,
+
+      // 声音设置
+      soundEnabled,
+      ttsEnabled,
+      volume,
+
+      // 动作：通知管理
+      fetchNotifications,
+      fetchUnreadCount,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      clearNotifications,
+
+      // 动作：声音设置
+      setSoundEnabled,
+      setTtsEnabled,
+      setVolume,
+      testSound,
+
+      // 动作：当前上下文
+      setCurrentRoom,
+
+      // 选择器
+      getNotificationsByType,
+      getNotificationsByCategory,
+      getUnreadNotifications,
+      getOrderNotifications,
+      getDisputeNotifications,
+      getSocialNotifications,
+
+      // 显示数据
+      getDisplayData,
+    }),
+    [
+      notifications,
+      unreadCount,
+      isLoading,
+      error,
+      soundEnabled,
+      ttsEnabled,
+      volume,
+      fetchNotifications,
+      fetchUnreadCount,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      clearNotifications,
+      setSoundEnabled,
+      setTtsEnabled,
+      setVolume,
+      testSound,
+      setCurrentRoom,
+      getNotificationsByType,
+      getNotificationsByCategory,
+      getUnreadNotifications,
+      getOrderNotifications,
+      getDisputeNotifications,
+      getSocialNotifications,
+      getDisplayData,
+    ]
+  );
+}
+
+// ============ 便捷 Hook ============
+
+/**
+ * 仅获取未读数量的轻量级 Hook
+ */
+export function useUnreadNotificationCount(): number {
+  return useNotificationStore(selectUnreadCount);
+}
+
+/**
+ * 仅获取通知声音设置的 Hook
+ */
+export function useNotificationSoundSettings() {
+  const soundEnabled = useNotificationStore(selectSoundEnabled);
+  const ttsEnabled = useNotificationStore(selectTtsEnabled);
+  const volume = useNotificationStore(selectVolume);
+  const store = useNotificationStore();
 
   return {
-    ...state,
-    fetchNotifications,
-    fetchUnreadCount,
-    markAsRead,
-    markAllAsRead,
-    getNotificationsByType,
-    getUnreadNotifications,
+    soundEnabled,
+    ttsEnabled,
+    volume,
+    setSoundEnabled: store.setSoundEnabled,
+    setTtsEnabled: store.setTtsEnabled,
+    setVolume: (v: number) => {
+      store.setVolume(v);
+      soundService.updateVolume(v);
+    },
+    testSound: (type?: SoundNotificationType) => soundService.testPlay(type || 'chat_message'),
   };
 }
 

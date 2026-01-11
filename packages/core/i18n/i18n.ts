@@ -194,6 +194,17 @@ export const i18n = {
   formatDate,
   formatRelativeTime,
   getTranslations,
+  language: currentLocale,
 };
+
+/**
+ * 获取 i18n 实例（用于非 React 环境）
+ */
+export function getI18n() {
+  return {
+    t: getTranslation,
+    language: currentLocale,
+  };
+}
 
 export default i18n;

@@ -115,3 +115,43 @@ export {
 
 // OTC types
 export * from './otc';
+
+// Notification types
+export type {
+  OrderNotificationType,
+  DisputeNotificationType,
+  SocialNotificationType,
+  NotificationEventType,
+  NotificationCategory,
+  SoundNotificationType,
+  SoundPriority,
+  SoundConfig,
+  BaseNotificationData,
+  OrderNotificationData,
+  DisputeNotificationData,
+  SocialNotificationData,
+  NotificationData,
+  NotificationRecord,
+  NotificationWrapper,
+  ChatMessageWrapper,
+  MessageReadWrapper,
+  MessageTypingWrapper,
+  WalletWrapper,
+  StatusWrapper,
+  WebSocketNotificationMessage,
+  NotificationDisplayData,
+  NotificationSettings,
+} from './notification';
+
+export {
+  DEFAULT_NOTIFICATION_SETTINGS,
+  ORDER_NOTIFICATION_TYPES,
+  DISPUTE_NOTIFICATION_TYPES,
+  SOCIAL_NOTIFICATION_TYPES,
+  SOUND_CONFIGS,
+  getNotificationCategory,
+  isOrderNotification,
+  isDisputeNotification,
+  isSocialNotification,
+  eventTypeToSoundType,
+} from './notification';

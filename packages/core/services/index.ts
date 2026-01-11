@@ -27,3 +27,6 @@ export * from './verifiedModerators';
 
 // OTC 服务
 export * from './otc';
+
+// 通知服务
+export * from './notification';

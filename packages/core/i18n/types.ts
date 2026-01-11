@@ -916,6 +916,62 @@ export interface TranslationResource {
     marketplaceOtcDesc: string;
   };
 
+  // 通知
+  notifications?: TranslationSection & {
+    title: string;
+    markAllRead: string;
+    noNotifications: string;
+    unreadCount: string;
+    allCaughtUp: string;
+    filterAll: string;
+    filterUnread: string;
+    // 订单通知
+    order: {
+      youPlacedOrder: string;
+      placedOrder: string;
+      yourPaymentSent: string;
+      sentPayment: string;
+      orderFunded: string;
+      acceptedYourOrder: string;
+      youAcceptedOrder: string;
+      declinedYourOrder: string;
+      youDeclinedOrder: string;
+      youCancelledOrder: string;
+      cancelledOrder: string;
+      refundedYourOrder: string;
+      youRefundedOrder: string;
+      fulfilledYourOrder: string;
+      youFulfilledOrder: string;
+      completedOrder: string;
+    };
+    // 争议通知
+    dispute: {
+      startedDispute: string;
+      openedCase: string;
+      modCaseOpened: string;
+      caseUpdated: string;
+      proposedOutcome: string;
+      acceptedPayout: string;
+      claimedPayment: string;
+    };
+    // 社交通知
+    social: {
+      startedFollowing: string;
+      unfollowed: string;
+      addedAsModerator: string;
+      removedAsModerator: string;
+    };
+    // TTS (语音播报)
+    tts: {
+      newMessage: string;
+      orderChat: string;
+      newOrder: string;
+      payment: string;
+      dispute: string;
+      orderComplete: string;
+    };
+  };
+
   // P2P 连接状态
   p2p?: TranslationSection & {
     connecting: string;

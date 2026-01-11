@@ -40,6 +40,7 @@ import {
   LogOut,
   MessageCircle,
 } from 'lucide-react';
+import { NotificationBadge } from '../Notification';
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -101,9 +102,12 @@ export const Header: React.FC = () => {
               </Button>
             </Link>
 
-            {/* 已登录用户显示：消息、购物车 */}
+            {/* 已登录用户显示：通知、消息、购物车 */}
             {isAuthenticated && (
               <>
+                {/* 通知图标 + 未读徽章 */}
+                <NotificationBadge />
+
                 {/* 消息图标 + 未读徽章 */}
                 <Button
                   variant="ghost"
