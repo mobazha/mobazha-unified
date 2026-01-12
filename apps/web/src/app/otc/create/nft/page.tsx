@@ -132,7 +132,7 @@ export default function CreateNftOtcPage() {
   // 创建新订单
   const createNewOrder = () => {
     setCurrentStep(Step.SelectNft);
-    selectNft(null as unknown as (typeof userNfts)[0]);
+    selectNft(null);
     setPrice('100');
     setCreatedOrderId(null);
   };

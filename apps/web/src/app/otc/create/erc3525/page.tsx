@@ -146,7 +146,7 @@ export default function CreateErc3525OtcPage() {
   // 创建新订单
   const createNewOrder = () => {
     setCurrentStep(Step.SelectShares);
-    selectHolding(null as unknown as (typeof userHoldings)[0]);
+    selectHolding(null);
     setSharesToSell(100);
     setPricePerShare('5');
     setCreatedOrderId(null);
