@@ -5,6 +5,8 @@
 
 import { getHostingUrl } from '../api/config';
 import { getStoredToken } from './token';
+import { parseJwtToken } from './casdoor';
+import { getEnvConfig } from '../../config/env';
 import type {
   LinkedAccountsResponse,
   LinkUrlResponse,
@@ -48,47 +50,44 @@ export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
 
 /**
  * 获取绑定账号的 OAuth URL
- * 用户访问此 URL 后，通过 OAuth 流程绑定新账号到当前用户
+ * 直接使用前端的 Casdoor 配置生成 URL，避免前后端配置不一致
  *
  * @param provider 要绑定的 provider 类型
  * @param redirectUri 绑定完成后的回调 URL
  */
-export async function getLinkUrl(
-  provider: OAuthProvider,
-  redirectUri: string
-): Promise<LinkUrlResponse> {
-  const baseUrl = getHostingUrl();
+export function getLinkUrl(provider: OAuthProvider, redirectUri: string): LinkUrlResponse {
   const token = getStoredToken();
 
   if (!token) {
     throw new Error('Not authenticated');
   }
 
+  // 从 token 中获取用户名
+  const claims = parseJwtToken(token);
+  if (!claims || !claims.name) {
+    throw new Error('Invalid token: missing user name');
+  }
+
+  // 使用前端的 Casdoor 配置
+  const env = getEnvConfig();
+  const { serverUrl, clientId } = env.casdoor;
+
+  // 构建 state: link:<username>
+  const state = `link:${claims.name}`;
+
+  // 构建 OAuth URL
   const params = new URLSearchParams({
-    provider,
+    client_id: clientId,
     redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid profile email',
+    state,
+    provider,
   });
 
-  const response = await fetch(`${baseUrl}/api/account/link-url?${params}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${serverUrl}/login/oauth/authorize?${params.toString()}`;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to get link URL: ${errorText}`);
-  }
-
-  const data = await response.json();
-
-  if (data.status !== 'ok') {
-    throw new Error(data.msg || 'Failed to get link URL');
-  }
-
-  return data.data as LinkUrlResponse;
+  return { url };
 }
 
 /**
@@ -98,10 +97,7 @@ export async function getLinkUrl(
  * @param provider 要绑定的 provider 类型
  * @param redirectUri 绑定完成后的回调 URL（可选，默认使用当前页面）
  */
-export async function startLinkAccount(
-  provider: OAuthProvider,
-  redirectUri?: string
-): Promise<void> {
+export function startLinkAccount(provider: OAuthProvider, redirectUri?: string): void {
   if (typeof window === 'undefined') {
     throw new Error('startLinkAccount can only be called in browser');
   }
@@ -112,7 +108,7 @@ export async function startLinkAccount(
   sessionStorage.setItem('link_provider', provider);
   sessionStorage.setItem('link_redirect', window.location.pathname);
 
-  const { url } = await getLinkUrl(provider, callbackUrl);
+  const { url } = getLinkUrl(provider, callbackUrl);
   window.location.href = url;
 }
 
