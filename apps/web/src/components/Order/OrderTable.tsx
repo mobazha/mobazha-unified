@@ -53,8 +53,8 @@ const statusConfig: Record<
   paid: { label: 'Paid', variant: 'default', color: 'bg-blue-500' },
   processing: { label: 'Processing', variant: 'default', color: 'bg-blue-500' },
   shipped: { label: 'Fulfilled', variant: 'default', color: 'bg-purple-500' },
-  delivered: { label: 'Delivered', variant: 'default', color: 'bg-emerald-500' },
-  completed: { label: 'Complete', variant: 'default', color: 'bg-emerald-500' },
+  delivered: { label: 'Delivered', variant: 'default', color: 'bg-primary' },
+  completed: { label: 'Complete', variant: 'default', color: 'bg-primary' },
   disputed: { label: 'Disputed', variant: 'destructive' },
   refunded: { label: 'Refunded', variant: 'secondary' },
   cancelled: { label: 'Declined', variant: 'secondary' },
@@ -216,7 +216,7 @@ export const OrderTable = memo(function OrderTable({
                         </Button>
                         <Button
                           size="sm"
-                          className="h-7 px-3 text-xs bg-emerald-500 hover:bg-emerald-600"
+                          className="h-7 px-3 text-xs bg-primary hover:bg-primary/90"
                           onClick={e => handleButtonClick(e, () => onAccept?.(order.id))}
                         >
                           Accept

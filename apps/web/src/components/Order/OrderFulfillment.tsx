@@ -48,12 +48,7 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
   return (
     <Card className={`p-4 sm:p-6 ${className}`}>
       <h3 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
-        <svg
-          className="w-5 h-5 text-emerald-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -131,7 +126,7 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
                         href={fulfillment.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-emerald-600 hover:underline truncate max-w-xs"
+                        className="text-sm text-primary hover:underline truncate max-w-xs"
                       >
                         {fulfillment.fileUrl}
                       </a>

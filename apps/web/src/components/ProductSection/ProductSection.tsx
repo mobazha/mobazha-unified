@@ -155,7 +155,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-slate-400"
+                className="w-8 h-8 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -169,7 +169,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
               </svg>
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">No products found</h3>
-            <p className="text-slate-500 dark:text-slate-300">Check back later for new listings.</p>
+            <p className="text-muted-foreground">Check back later for new listings.</p>
           </div>
         )}
       </Container>

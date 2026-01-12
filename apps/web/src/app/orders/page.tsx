@@ -302,7 +302,7 @@ function OrdersPageContent() {
                     onClick={() => setStatusFilter(tab.value)}
                     className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                       statusFilter === tab.value
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : 'bg-card text-muted-foreground hover:text-foreground hover:bg-surface-hover border border-border'
                     }`}
                   >
@@ -370,7 +370,7 @@ function OrdersPageContent() {
               <CardContent className="py-16">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
                   <svg
-                    className="w-10 h-10 text-slate-400"
+                    className="w-10 h-10 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -425,7 +425,7 @@ function OrdersPageContent() {
                   <button
                     onClick={loadMore}
                     disabled={isLoadingMore}
-                    className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-feedback"
+                    className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-feedback"
                   >
                     {isLoadingMore ? (
                       <span className="flex items-center gap-2">

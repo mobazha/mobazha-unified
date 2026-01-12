@@ -102,7 +102,7 @@ export function getRoleColor(role: string): string {
   switch (role) {
     case 'seller':
     case 'vendor':
-      return 'text-emerald-600';
+      return 'text-primary';
     case 'buyer':
       return 'text-blue-600';
     case 'moderator':

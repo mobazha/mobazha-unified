@@ -52,7 +52,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
       title={copied ? 'Copied!' : 'Copy'}
     >
       {copied ? (
-        <Check className="w-3 h-3 text-emerald-600" />
+        <Check className="w-3 h-3 text-primary" />
       ) : (
         <Copy className="w-3 h-3 text-muted-foreground" />
       )}
@@ -110,7 +110,7 @@ export const PaymentDetails = memo(function PaymentDetails({
               {amount} {currency}
             </span>
             {funded && (
-              <span className="text-xs px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded">
+              <span className="text-xs px-1.5 py-0.5 bg-primary/10 dark:bg-primary/20 text-primary rounded">
                 Paid
               </span>
             )}

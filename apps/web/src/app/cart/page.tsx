@@ -237,7 +237,7 @@ export default function CartPage() {
             <Card className="text-center">
               <CardContent className="py-8 sm:py-12 px-4">
                 <svg
-                  className="w-16 h-16 sm:w-24 sm:h-24 mx-auto text-slate-300 mb-4 sm:mb-6"
+                  className="w-16 h-16 sm:w-24 sm:h-24 mx-auto text-muted-foreground/50 mb-4 sm:mb-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -332,10 +332,10 @@ export default function CartPage() {
                         onClick={() => handleToggleVendorSelect(group)}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors touch-feedback flex-shrink-0 ${
                           vendorStatus === 'checked'
-                            ? 'bg-emerald-500 border-emerald-500'
+                            ? 'bg-primary border-primary'
                             : vendorStatus === 'indeterminate'
-                              ? 'bg-emerald-500/50 border-emerald-500'
-                              : 'border-slate-300 dark:border-slate-600'
+                              ? 'bg-primary/50 border-primary'
+                              : 'border-muted-foreground/40'
                         }`}
                       >
                         {vendorStatus === 'checked' && (
@@ -371,7 +371,7 @@ export default function CartPage() {
                           {group.vendorName}
                         </span>
                         <svg
-                          className="w-3.5 h-3.5 text-slate-400 ml-1 flex-shrink-0"
+                          className="w-3.5 h-3.5 text-muted-foreground ml-1 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -398,8 +398,8 @@ export default function CartPage() {
                               onClick={() => handleToggleSelect(item.id)}
                               className={`w-4.5 h-4.5 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center transition-colors touch-feedback ${
                                 selectedItems.has(item.id)
-                                  ? 'bg-emerald-500 border-emerald-500'
-                                  : 'border-slate-300 dark:border-slate-600'
+                                  ? 'bg-primary border-primary'
+                                  : 'border-muted-foreground/40'
                               }`}
                             >
                               {selectedItems.has(item.id) && (
@@ -435,7 +435,7 @@ export default function CartPage() {
                           {/* Details */}
                           <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                             <Link href={`/product/${item.slug}`} className="min-w-0">
-                              <h3 className="font-medium text-foreground text-sm line-clamp-2 hover:text-emerald-600">
+                              <h3 className="font-medium text-foreground text-sm line-clamp-2 hover:text-primary">
                                 {item.title}
                               </h3>
                             </Link>
@@ -455,7 +455,7 @@ export default function CartPage() {
 
                             {/* Price & Quantity */}
                             <div className="flex items-center justify-between mt-auto pt-1">
-                              <span className="text-sm font-bold text-emerald-600">
+                              <span className="text-sm font-bold text-primary">
                                 ${item.price.toFixed(2)}
                               </span>
 
@@ -482,7 +482,7 @@ export default function CartPage() {
 
                                 <button
                                   onClick={() => handleRemoveItem(item.id)}
-                                  className="text-slate-400 hover:text-red-500 touch-feedback p-1"
+                                  className="text-muted-foreground hover:text-destructive touch-feedback p-1"
                                   aria-label={t('cart.remove')}
                                 >
                                   <svg

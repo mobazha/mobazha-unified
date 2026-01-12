@@ -474,7 +474,7 @@ export default function CheckoutPage() {
                         <span className="text-xs sm:text-sm text-muted-foreground">
                           {t('checkout.shipping')}
                         </span>
-                        <span className="font-medium text-emerald-600 text-xs sm:text-sm">
+                        <span className="font-medium text-primary text-xs sm:text-sm">
                           {t('checkout.free')}
                         </span>
                       </HStack>

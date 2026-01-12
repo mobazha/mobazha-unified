@@ -141,7 +141,7 @@ function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md
       {[...Array(5)].map((_, i) => (
         <svg
           key={i}
-          className={`${sizeClass} ${i < Math.floor(rating) ? 'text-amber-500' : 'text-slate-300'}`}
+          className={`${sizeClass} ${i < Math.floor(rating) ? 'text-amber-500' : 'text-muted-foreground/40'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -513,9 +513,9 @@ export function ProductDetail({
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''}>
-      {/* 弹框模式顶部商家栏 */}
+      {/* 弹框模式顶部商家栏 - 不使用 sticky，避免遮挡图片 */}
       {isModal && vendor && (
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 pr-14">
+        <div className="bg-background border-b border-border px-4 py-3 pr-14">
           <div className="flex items-center justify-between">
             <Link
               href={`/store/${vendorPeerID}`}
@@ -556,12 +556,12 @@ export function ProductDetail({
       <div className={isModal ? 'p-4 sm:p-6' : ''}>
         {/* Breadcrumb - 非弹框模式显示 */}
         {!isModal && (
-          <nav className="hidden sm:flex items-center gap-2 text-sm text-slate-500 mb-6">
-            <Link href="/" className="hover:text-emerald-600">
+          <nav className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link href="/" className="hover:text-primary">
               {t('nav.home')}
             </Link>
             <span>/</span>
-            <Link href="/marketplace" className="hover:text-emerald-600">
+            <Link href="/marketplace" className="hover:text-primary">
               {t('nav.market')}
             </Link>
             {category && (
@@ -569,7 +569,7 @@ export function ProductDetail({
                 <span>/</span>
                 <Link
                   href={`/marketplace?category=${category.toLowerCase()}`}
-                  className="hover:text-emerald-600"
+                  className="hover:text-primary"
                 >
                   {category}
                 </Link>
@@ -587,9 +587,9 @@ export function ProductDetail({
         >
           {/* Image Gallery */}
           <div className={isModal ? 'space-y-2' : 'space-y-3 sm:space-y-4'}>
-            {/* Main Image */}
+            {/* Main Image - 弹窗模式使用 object-contain 保持图片完整显示 */}
             <div
-              className={`relative ${isModal ? 'aspect-[4/3]' : 'aspect-square'} rounded-xl sm:rounded-2xl overflow-hidden bg-card cursor-pointer group`}
+              className={`relative ${isModal ? 'aspect-[4/3]' : 'aspect-square'} rounded-xl sm:rounded-2xl overflow-hidden bg-muted cursor-pointer group`}
               onClick={() => imageUrls.length > 0 && setIsImagePreviewOpen(true)}
             >
               {imageUrls.length > 0 ? (
@@ -597,7 +597,7 @@ export function ProductDetail({
                   <img
                     src={imageUrls[selectedImage] || imageUrls[0]}
                     alt={product.item.title}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal ? 'object-contain' : 'object-cover'}`}
                   />
                   {/* 放大提示 */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -642,8 +642,8 @@ export function ProductDetail({
                       onClick={() => setSelectedImage(index)}
                       className={`flex-shrink-0 ${isModal ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
                         selectedImage === index
-                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                          : 'border-transparent hover:border-slate-300'
+                          ? 'border-primary ring-2 ring-primary/20'
+                          : 'border-transparent hover:border-border'
                       }`}
                     >
                       <img src={image} alt="" className="w-full h-full object-cover" />
@@ -682,7 +682,7 @@ export function ProductDetail({
 
             {/* Price */}
             <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-600">
+              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-primary">
                 {priceInfo.pairedPrice}
               </span>
             </div>
@@ -691,7 +691,7 @@ export function ProductDetail({
             {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
               <div className="flex items-center gap-2 text-xs sm:text-sm flex-wrap">
                 {freeShipping ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                  <span className="inline-flex items-center gap-1 text-primary">
                     <svg
                       className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="none"
@@ -712,7 +712,7 @@ export function ProductDetail({
                 )}
                 {estimatedDelivery && (
                   <>
-                    <span className="text-slate-400">•</span>
+                    <span className="text-muted-foreground/60">•</span>
                     <span className="text-muted-foreground">
                       {t('product.estDelivery')}: {estimatedDelivery}
                     </span>
@@ -723,9 +723,9 @@ export function ProductDetail({
 
             {/* Product Attributes Panel */}
             <div className="flex flex-wrap gap-2 sm:gap-3">
-              {/* Type Badge */}
+              {/* Type Badge - 使用 primary 主题色增强对比度 */}
               {product.metadata?.contractType && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20">
                   <span className="font-medium">{t('product.type')}:</span>
                   <span>
                     {product.metadata.contractType === 'PHYSICAL_GOOD' && t('product.physicalGood')}
@@ -741,14 +741,14 @@ export function ProductDetail({
               )}
               {/* Condition Badge */}
               {product.item.condition && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-muted text-foreground border border-border">
                   <span className="font-medium">{t('product.condition')}:</span>
                   <span>{product.item.condition.replace('_', ' ')}</span>
                 </div>
               )}
               {/* Weight Badge */}
               {product.item.grams !== undefined && product.item.grams > 0 && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-muted text-foreground border border-border">
                   <span className="font-medium">{t('product.weight')}:</span>
                   <span>{t('product.weightGrams', { weight: product.item.grams })}</span>
                 </div>
@@ -766,7 +766,7 @@ export function ProductDetail({
                     <Link
                       key={tag}
                       href={`/marketplace?tag=${tag}`}
-                      className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm border border-border bg-background text-muted-foreground rounded-full hover:bg-emerald-100 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 dark:hover:border-emerald-800 transition-colors touch-feedback"
+                      className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm border border-border bg-background text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors touch-feedback"
                     >
                       #{tag}
                     </Link>

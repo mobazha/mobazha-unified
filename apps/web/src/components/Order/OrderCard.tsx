@@ -93,7 +93,7 @@ const statusConfig = {
   },
   delivered: {
     label: 'Delivered',
-    color: 'bg-emerald-500/20 text-emerald-600',
+    color: 'bg-primary/20 text-primary',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -121,7 +121,7 @@ const statusConfig = {
   },
   completed: {
     label: 'Completed',
-    color: 'bg-emerald-500/20 text-emerald-600',
+    color: 'bg-primary/20 text-primary',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -197,7 +197,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             </span>
             <Link
               href={`/store/${order.vendor.id}`}
-              className="font-medium text-sm sm:text-base text-foreground hover:text-emerald-600"
+              className="font-medium text-sm sm:text-base text-foreground hover:text-primary"
             >
               {order.vendor.name}
             </Link>

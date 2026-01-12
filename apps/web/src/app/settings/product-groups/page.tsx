@@ -130,7 +130,7 @@ export default function ProductGroupsPage() {
           {/* Back Link */}
           <Link
             href="/settings/privacy"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -182,7 +182,7 @@ export default function ProductGroupsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground">{group.name}</h3>
-                        <span className="text-xs px-2 py-0.5 rounded-full text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30">
+                        <span className="text-xs px-2 py-0.5 rounded-full text-primary bg-primary/10">
                           {group.itemCount || 0} 件商品
                         </span>
                       </div>
@@ -212,13 +212,13 @@ export default function ProductGroupsPage() {
                   </HStack>
 
                   {group.description && (
-                    <p className="text-sm text-slate-500 mb-3">{group.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
                   )}
 
                   <div className="pt-4 border-t border-border space-y-2">
                     <Link
                       href={`/settings/product-groups/${group.id}`}
-                      className="block text-sm text-emerald-600 hover:text-emerald-700"
+                      className="block text-sm text-primary hover:text-primary/80"
                     >
                       管理商品 →
                     </Link>
@@ -240,7 +240,7 @@ export default function ProductGroupsPage() {
               <VStack gap="md" align="center">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-slate-400"
+                    className="w-8 h-8 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

@@ -54,7 +54,7 @@ export const VendorInfo: React.FC<VendorInfoProps> = ({
   const getRoleColor = () => {
     switch (role) {
       case 'vendor':
-        return 'text-emerald-600';
+        return 'text-primary';
       case 'buyer':
         return 'text-blue-600';
       case 'moderator':
@@ -75,7 +75,7 @@ export const VendorInfo: React.FC<VendorInfoProps> = ({
             <span className={`text-xs font-medium ${getRoleColor()}`}>{getRoleLabel()}</span>
             <Link
               href={`/store/${party.peerID}`}
-              className="text-sm font-medium text-foreground hover:text-emerald-600 transition-colors"
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
               {displayName}
             </Link>

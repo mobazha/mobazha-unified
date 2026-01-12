@@ -43,8 +43,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
                 <span
                   className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap ${
                     balance.change24h >= 0
-                      ? 'bg-emerald-500/20 text-emerald-600'
-                      : 'bg-red-500/20 text-red-600'
+                      ? 'bg-primary/20 text-primary'
+                      : 'bg-destructive/20 text-destructive'
                   }`}
                 >
                   {balance.change24h >= 0 ? '+' : ''}
@@ -70,7 +70,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
               e.stopPropagation();
               onSend?.();
             }}
-            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 sm:px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs sm:text-sm"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 sm:px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-xs sm:text-sm"
           >
             <svg
               className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"

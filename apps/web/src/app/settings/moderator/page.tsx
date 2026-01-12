@@ -131,19 +131,16 @@ export default function ModeratorSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Link
-            href="/settings"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-          >
+          <Link href="/settings" className="p-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">仲裁人设置</h1>
-            <p className="text-gray-500 dark:text-gray-400">配置您的仲裁服务，帮助解决交易纠纷</p>
+            <h1 className="text-2xl font-bold text-foreground">仲裁人设置</h1>
+            <p className="text-muted-foreground">配置您的仲裁服务，帮助解决交易纠纷</p>
           </div>
         </div>
 
@@ -187,7 +184,7 @@ export default function ModeratorSettingsPage() {
                         setSettings(prev => ({ ...prev, shortDescription: e.target.value }))
                       }
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {settings.shortDescription.length}/160 字符
                     </p>
                   </div>
@@ -259,7 +256,7 @@ export default function ModeratorSettingsPage() {
                           }))
                         }
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         争议金额的 {settings.fee.percentage}% 作为仲裁费用
                       </p>
                     </div>

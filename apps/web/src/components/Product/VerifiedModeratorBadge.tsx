@@ -46,8 +46,8 @@ export const VerifiedModeratorBadge = memo(function VerifiedModeratorBadge({
   return (
     <div
       className={cn(
-        'rounded-lg border border-emerald-200 dark:border-emerald-800',
-        'bg-emerald-50 dark:bg-emerald-900/20',
+        'rounded-lg border border-primary/30',
+        'bg-primary/5 dark:bg-primary/10',
         'p-3 sm:p-4',
         className
       )}
@@ -55,23 +55,23 @@ export const VerifiedModeratorBadge = memo(function VerifiedModeratorBadge({
     >
       <div className="flex items-start gap-3">
         {/* 图标 */}
-        <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 dark:bg-emerald-800/50 flex items-center justify-center">
-          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/15 dark:bg-primary/25 flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
         </div>
 
         {/* 文字内容 */}
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm sm:text-base font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+          <h4 className="text-sm sm:text-base font-semibold text-primary flex items-center gap-1.5">
             <span>{t('product.verifiedModerator')}</span>
           </h4>
           {showDescription && (
-            <p className="text-xs sm:text-sm text-emerald-600/80 dark:text-emerald-400/80 mt-0.5 leading-relaxed">
+            <p className="text-xs sm:text-sm text-foreground/80 mt-0.5 leading-relaxed">
               {t('product.verifiedModeratorDesc')}
             </p>
           )}
           <Link
             href="/moderators"
-            className="inline-flex items-center gap-1 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline mt-1.5 touch-feedback"
+            className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:text-primary/80 hover:underline mt-1.5 touch-feedback"
           >
             {t('product.learnMore')}
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

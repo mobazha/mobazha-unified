@@ -163,7 +163,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
           key={action}
           size="sm"
           onClick={() => onAction(action)}
-          className="whitespace-nowrap px-6 bg-emerald-500 hover:bg-emerald-600 text-white"
+          className="whitespace-nowrap px-6 bg-primary hover:bg-primary/90 text-white"
         >
           {getActionLabel(action)}
         </Button>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer, useSettingsDrawer } from '@/components';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
@@ -12,6 +12,17 @@ import { Input } from '@/components/ui/input';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/components/ui';
 import {
   profileApi,
   productDataService,
@@ -52,7 +63,9 @@ type TabType = 'about' | 'products' | 'otc' | 'reviews' | 'following' | 'followe
 
 export default function StorePage() {
   const params = useParams();
+  const router = useRouter();
   const { t } = useI18n();
+  const { toast } = useToast();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
   const { openSettings } = useSettingsDrawer();
@@ -110,6 +123,13 @@ export default function StorePage() {
     phoneNumber: '',
     website: '',
   });
+
+  // 商品删除相关状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<{ slug: string; title: string } | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 用于跟踪已加载的数据
   const storeLoadedRef = useRef<string | null>(null);
@@ -504,6 +524,56 @@ export default function StorePage() {
     // TODO: 后续可以添加逻辑来自动选择或创建与该用户的聊天房间
     openChatDrawer();
   };
+
+  // 编辑商品
+  const handleEditListing = useCallback(
+    (slug: string) => {
+      router.push(`/listing/edit/${slug}`);
+    },
+    [router]
+  );
+
+  // 克隆商品
+  const handleCloneListing = useCallback(
+    (slug: string) => {
+      router.push(`/listing/new?clone=${slug}`);
+    },
+    [router]
+  );
+
+  // 打开删除确认对话框
+  const handleOpenDeleteDialog = useCallback((slug: string, title: string) => {
+    setProductToDelete({ slug, title });
+    setDeleteDialogOpen(true);
+  }, []);
+
+  // 确认删除商品
+  const handleConfirmDelete = useCallback(async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await productDataService.deleteListing(productToDelete.slug);
+      // 从本地状态中移除被删除的商品
+      setProducts(prev => prev.filter(p => p.slug !== productToDelete.slug));
+      // 清除加载缓存，以便下次能重新加载
+      productsLoadedRef.current = null;
+      toast({
+        title: t('common.success') || 'Success',
+        description: t('listing.deleteSuccess') || 'Listing deleted successfully!',
+      });
+    } catch {
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('listing.deleteFailed') || 'Failed to delete listing',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  }, [productToDelete, t, toast]);
 
   // 获取店铺的统计数据 - 使用实际的 products.length 来保持一致性
   const stats = store?.stats || defaultStats;
@@ -905,6 +975,14 @@ export default function StorePage() {
                         onBlock={() => {
                           /* TODO: 实现屏蔽卖家功能 */
                         }}
+                        // 自己商品的快捷操作
+                        onEdit={isOwnStore ? () => handleEditListing(product.slug) : undefined}
+                        onClone={isOwnStore ? () => handleCloneListing(product.slug) : undefined}
+                        onDelete={
+                          isOwnStore
+                            ? () => handleOpenDeleteDialog(product.slug, product.title)
+                            : undefined
+                        }
                       />
                     </Link>
                   ))}
@@ -1000,7 +1078,7 @@ export default function StorePage() {
                             href={store.contactInfo.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block font-medium text-emerald-600 hover:underline text-sm"
+                            className="block font-medium text-primary hover:underline text-sm"
                           >
                             {store.contactInfo.website}
                           </a>
@@ -1180,6 +1258,45 @@ export default function StorePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 删除商品确认对话框 */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('listingCard.confirmDelete.title') || 'Delete Listing'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('listingCard.confirmDelete.body') ||
+                'Are you sure you want to delete this listing? This action cannot be undone.'}
+              {productToDelete && (
+                <span className="block mt-2 font-medium text-foreground">
+                  &quot;{productToDelete.title}&quot;
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t('common.cancel') || 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                  {t('common.deleting') || 'Deleting...'}
+                </span>
+              ) : (
+                t('common.delete') || 'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

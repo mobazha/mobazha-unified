@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, X, Eye, Tag, FolderTree, Gift, FileText, Loader2 } from 'lucide-react';
 import { Header, Footer } from '@/components';
@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui';
-import { useListingForm, useI18n, getGatewayUrl } from '@mobazha/core';
-import type { ContractType, Image, ShippingOption } from '@mobazha/core';
+import { useListingForm, useI18n, getGatewayUrl, productDataService } from '@mobazha/core';
+import type { ContractType, Image, ShippingOption, ListingFormData } from '@mobazha/core';
 
 import {
   ProductTypeSelector,
@@ -72,8 +72,13 @@ const tabs: TabItem[] = [
 
 export default function CreateListingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const { toast } = useToast();
+
+  // 获取克隆参数
+  const cloneSlug = searchParams.get('clone');
+  const [isCloneLoading, setIsCloneLoading] = useState(!!cloneSlug);
 
   // 使用 useListingForm hook
   const {
@@ -81,12 +86,64 @@ export default function CreateListingPage() {
     errors,
     isSubmitting,
     updateField,
+    updateFields,
     changeContractType,
     addTag,
     removeTag,
     validate,
     submit,
   } = useListingForm();
+
+  // 加载被克隆商品的数据
+  useEffect(() => {
+    if (!cloneSlug) return;
+
+    const loadCloneData = async () => {
+      try {
+        const listing = await productDataService.getProduct(cloneSlug);
+        if (listing) {
+          // 转换商品数据为表单数据格式，不包含 slug（克隆是创建新商品）
+          const cloneData: Partial<ListingFormData> = {
+            title: listing.item?.title ? `${listing.item.title} (Copy)` : '',
+            description: listing.item?.description || '',
+            price: listing.item?.price?.toString() || '',
+            pricingCurrency: listing.metadata?.pricingCurrency?.code || 'USD',
+            contractType: (listing.metadata?.contractType as ContractType) || 'PHYSICAL_GOOD',
+            condition: listing.item?.condition,
+            grams: listing.item?.grams,
+            images: listing.item?.images || [],
+            tags: listing.item?.tags || [],
+            categories: listing.item?.categories || [],
+            nsfw: listing.item?.nsfw || false,
+            termsAndConditions: listing.termsAndConditions || '',
+            refundPolicy: listing.refundPolicy || '',
+            // RWA Token 字段
+            cryptoListingCurrencyCode: listing.item?.cryptoListingCurrencyCode,
+            acceptedCurrencies: listing.metadata?.acceptedCurrencies,
+          };
+
+          // 批量更新表单数据
+          updateFields(cloneData);
+
+          toast({
+            title: t('common.success') || 'Success',
+            description: t('listing.cloneLoaded') || 'Listing data loaded for cloning',
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load listing for cloning:', err);
+        toast({
+          title: t('common.error') || 'Error',
+          description: t('listing.cloneLoadFailed') || 'Failed to load listing data',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsCloneLoading(false);
+      }
+    };
+
+    loadCloneData();
+  }, [cloneSlug, updateFields, toast, t]);
 
   // 当前激活的标签
   const [activeTab, setActiveTab] = useState<TabKey>('general');
@@ -209,6 +266,28 @@ export default function CreateListingPage() {
     return `${getGatewayUrl()}/ob/images/${hash}`;
   }, []);
 
+  // 克隆加载中显示骨架屏
+  if (isCloneLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="py-6">
+          <Container size="xl">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">
+                  {t('listing.loadingCloneData') || 'Loading listing data...'}
+                </p>
+              </div>
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -223,10 +302,15 @@ export default function CreateListingPage() {
               </Link>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  {t('listing.createListing') || 'Create Listing'}
+                  {cloneSlug
+                    ? t('listing.cloneListing') || 'Clone Listing'
+                    : t('listing.createListing') || 'Create Listing'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {t('listing.createListingDesc') || 'Add a new product or service to your store'}
+                  {cloneSlug
+                    ? t('listing.cloneListingDesc') || 'Create a copy of an existing listing'
+                    : t('listing.createListingDesc') ||
+                      'Add a new product or service to your store'}
                 </p>
               </div>
             </div>

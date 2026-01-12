@@ -164,7 +164,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                     <TokenIcon token={token} size={20} showChainBadge={isToken} chainId={chainId} />
                   );
                 })()}
-                <span className="text-sm font-semibold text-emerald-600">${order.total}</span>
+                <span className="text-sm font-semibold text-primary">${order.total}</span>
               </div>
 
               {/* Bottom: Status + Order ID - 增加间距 */}

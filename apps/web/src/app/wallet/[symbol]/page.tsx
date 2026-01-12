@@ -50,7 +50,7 @@ const mockAssets: Record<
     balanceUSD: 862.5,
     change24h: 0.87,
     changeUSD: 7.45,
-    color: 'bg-gray-500',
+    color: 'bg-muted-foreground',
     address: 'LcHK7a24cKhP9pHbVHVqPfSqJ4gQ8GJgBL',
   },
   zec: {
@@ -181,7 +181,7 @@ export default function AssetDetailPage() {
                 ${asset.balanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
               <p
-                className={`text-xs sm:text-sm ${asset.change24h >= 0 ? 'text-emerald-200' : 'text-red-200'}`}
+                className={`text-xs sm:text-sm ${asset.change24h >= 0 ? 'text-primary-foreground/70' : 'text-red-200'}`}
               >
                 {asset.change24h >= 0 ? '▲' : '▼'} {asset.change24h >= 0 ? '+' : ''}
                 {asset.change24h.toFixed(2)}% ({asset.changeUSD >= 0 ? '+' : ''}$
@@ -293,11 +293,11 @@ export default function AssetDetailPage() {
                     {/* Icon */}
                     <div
                       className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        tx.type === 'receive' ? 'bg-emerald-500/20' : 'bg-red-500/20'
+                        tx.type === 'receive' ? 'bg-primary/20' : 'bg-destructive/20'
                       }`}
                     >
                       <svg
-                        className={`w-4 h-4 sm:w-5 sm:h-5 ${tx.type === 'receive' ? 'text-emerald-600' : 'text-red-600'}`}
+                        className={`w-4 h-4 sm:w-5 sm:h-5 ${tx.type === 'receive' ? 'text-primary' : 'text-destructive'}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -327,7 +327,7 @@ export default function AssetDetailPage() {
                           {tx.type === 'receive' ? t('wallet.received') : t('wallet.sent')}
                         </span>
                         <span
-                          className={`font-semibold text-sm sm:text-base ${tx.type === 'receive' ? 'text-emerald-600' : 'text-foreground'}`}
+                          className={`font-semibold text-sm sm:text-base ${tx.type === 'receive' ? 'text-primary' : 'text-foreground'}`}
                         >
                           {tx.type === 'receive' ? '+' : '-'}
                           {tx.amount} {asset.symbol}

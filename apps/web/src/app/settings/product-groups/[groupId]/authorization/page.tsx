@@ -188,7 +188,7 @@ export default function ProductGroupAuthorizationPage() {
           {/* Back Link */}
           <Link
             href="/settings/product-groups"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -280,7 +280,7 @@ export default function ProductGroupAuthorizationPage() {
             <Card className="text-center py-12">
               <VStack gap="md" align="center">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <Shield className="w-8 h-8 text-slate-400" />
+                  <Shield className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">暂无授权规则</h3>
                 <p className="text-muted-foreground">

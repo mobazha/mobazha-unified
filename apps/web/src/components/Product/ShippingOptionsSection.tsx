@@ -174,9 +174,7 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
                   </TableCell>
                   <TableCell className="text-right">
                     {service.price === 0 ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {t('product.freeShipping')}
-                      </span>
+                      <span className="text-primary font-medium">{t('product.freeShipping')}</span>
                     ) : (
                       <span className="font-medium">
                         {formatPrice(service.price, pricingCurrency)}
@@ -223,9 +221,7 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t('product.shippingFee')}</span>
                 {service.price === 0 ? (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    {t('product.freeShipping')}
-                  </span>
+                  <span className="text-primary font-medium">{t('product.freeShipping')}</span>
                 ) : (
                   <span className="font-medium">{formatPrice(service.price, pricingCurrency)}</span>
                 )}

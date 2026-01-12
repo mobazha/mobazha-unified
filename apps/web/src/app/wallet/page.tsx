@@ -49,7 +49,7 @@ const mockBalances = [
     balanceUSD: 862.5,
     change24h: 0.87,
     changeUSD: 7.45,
-    color: 'bg-gray-500',
+    color: 'bg-muted-foreground',
     icon: (
       <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-4.18v-1.73l1.33-.54 1.21-5.03-2.59 1.02-.37-1.5 2.84-1.1 1.07-4.45H9.18V5h5.89l-1.06 4.46 2.24-.87.37 1.5-2.58 1-.95 3.97 2.45-.97.37 1.5-2.5.97v1.53z" />
@@ -87,14 +87,14 @@ export default function WalletPage() {
             <div className="relative p-4 sm:p-8 bg-gradient-to-br from-emerald-600 to-emerald-800 text-center">
               <div className="absolute inset-0 bg-black/10" />
               <div className="relative">
-                <p className="text-emerald-100 text-xs sm:text-sm mb-1">
+                <p className="text-primary-foreground/80 text-xs sm:text-sm mb-1">
                   {t('wallet.totalBalance')}
                 </p>
                 <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">
                   ${totalBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </h1>
                 <p
-                  className={`text-xs sm:text-sm ${totalChangeUSD >= 0 ? 'text-emerald-200' : 'text-red-200'}`}
+                  className={`text-xs sm:text-sm ${totalChangeUSD >= 0 ? 'text-primary-foreground/70' : 'text-red-200'}`}
                 >
                   {totalChangeUSD >= 0 ? '▲' : '▼'} {totalChangeUSD >= 0 ? '+' : ''}$
                   {Math.abs(totalChangeUSD).toFixed(2)} ({totalChangePercent >= 0 ? '+' : ''}
@@ -198,7 +198,7 @@ export default function WalletPage() {
                     </span>
                     <span
                       className={`text-xs sm:text-sm font-medium ${
-                        asset.change24h >= 0 ? 'text-emerald-600' : 'text-red-600'
+                        asset.change24h >= 0 ? 'text-primary' : 'text-destructive'
                       }`}
                     >
                       {asset.change24h >= 0 ? '+' : ''}

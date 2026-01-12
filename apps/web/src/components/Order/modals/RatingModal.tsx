@@ -213,7 +213,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
               type="checkbox"
               checked={anonymous}
               onChange={e => setAnonymous(e.target.checked)}
-              className="rounded border-border text-emerald-600 focus:ring-emerald-500"
+              className="rounded border-border text-primary focus:ring-primary"
             />
             <span className="text-sm text-foreground">{t('order.rating.anonymous')}</span>
           </label>

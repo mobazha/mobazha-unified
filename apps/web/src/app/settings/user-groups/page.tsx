@@ -120,7 +120,7 @@ export default function UserGroupsPage() {
           {/* Back Link */}
           <Link
             href="/settings/privacy"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -173,7 +173,7 @@ export default function UserGroupsPage() {
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">{group.name}</h3>
                         {group.description && (
-                          <p className="text-sm text-slate-500 mb-3">{group.description}</p>
+                          <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
                         )}
                         <HStack gap="md" className="text-sm">
                           <span className="text-muted-foreground">
@@ -222,7 +222,7 @@ export default function UserGroupsPage() {
               <VStack gap="md" align="center">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-slate-400"
+                    className="w-8 h-8 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

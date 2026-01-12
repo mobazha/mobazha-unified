@@ -150,7 +150,7 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
           {copied === 'amount' ? (
             <>
               <svg
-                className="w-4 h-4 mr-1.5 text-emerald-600"
+                className="w-4 h-4 mr-1.5 text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -222,7 +222,7 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
           {copied === 'address' ? (
             <>
               <svg
-                className="w-4 h-4 mr-1.5 text-emerald-600"
+                className="w-4 h-4 mr-1.5 text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -254,20 +254,20 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
 
       {/* Payment Status */}
       {confirmations > 0 && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mb-6">
+        <div className="bg-primary/5 dark:bg-primary/10 border border-primary/30 rounded-lg p-4 mb-6">
           <HStack justify="between" align="center">
             <HStack gap="sm" align="center">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-primary">
                 {t('order.paymentInstructions.paymentDetected')}
               </span>
             </HStack>
-            <span className="text-sm text-emerald-600">
+            <span className="text-sm text-primary">
               {confirmations}/{requiredConfirmations} {t('order.payment.confirmations')}
             </span>
           </HStack>
           {confirmations >= requiredConfirmations && (
-            <p className="text-xs text-emerald-600 mt-2">
+            <p className="text-xs text-primary mt-2">
               {t('order.paymentInstructions.paymentConfirmed')}
             </p>
           )}

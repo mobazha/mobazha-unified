@@ -106,7 +106,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'seller':
-        return 'text-emerald-600';
+        return 'text-primary';
       case 'buyer':
         return 'text-blue-600';
       case 'moderator':
@@ -173,7 +173,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
             </p>
           </div>
           {isEncrypted && (
-            <div className="flex items-center gap-1 text-emerald-600">
+            <div className="flex items-center gap-1 text-primary">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -195,7 +195,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
               className="flex items-center gap-1 px-2 py-0.5 bg-muted rounded-full"
             >
               <div
-                className={`w-2 h-2 rounded-full ${participant.isOnline ? 'bg-emerald-500' : 'bg-gray-400'}`}
+                className={`w-2 h-2 rounded-full ${participant.isOnline ? 'bg-primary' : 'bg-muted-foreground/50'}`}
               />
               <span className={`text-xs ${getRoleColor(participant.role)}`}>
                 {participant.name}
@@ -233,7 +233,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
                   <div
                     className={`px-3 py-2 rounded-2xl ${
                       isOwnMessage
-                        ? 'bg-emerald-600 text-white rounded-br-sm'
+                        ? 'bg-primary text-white rounded-br-sm'
                         : 'bg-muted text-foreground rounded-bl-sm'
                     }`}
                   >
@@ -247,7 +247,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
                       <span className="ml-1">
                         {message.status === 'sent' && '✓'}
                         {message.status === 'delivered' && '✓✓'}
-                        {message.status === 'read' && <span className="text-emerald-600">✓✓</span>}
+                        {message.status === 'read' && <span className="text-primary">✓✓</span>}
                       </span>
                     )}
                   </p>

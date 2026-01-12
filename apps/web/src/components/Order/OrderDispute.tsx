@@ -47,7 +47,7 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
       case 'decided':
         return 'bg-blue-100 text-blue-700 border-blue-300';
       case 'resolved':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-300';
+        return 'bg-primary/10 text-primary border-primary/30';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-300';
     }
@@ -153,8 +153,8 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
 
         {/* Resolution */}
         {dispute.resolution && (
-          <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-4 border border-emerald-200 dark:border-emerald-800">
-            <h4 className="text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-3">
+          <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-4 border border-primary/30">
+            <h4 className="text-sm font-medium text-primary mb-3">
               {t('order.disputeDisplay.resolution')}
             </h4>
             <VStack gap="sm">

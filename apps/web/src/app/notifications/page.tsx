@@ -112,14 +112,29 @@ export default function NotificationsPage() {
     (notification: Notification) => {
       const route = getNotificationRoute(notification);
       const isOrderType = [
-        'newOrder', 'orderFunded', 'orderPaymentReceived', 'orderConfirmation',
-        'orderDeclined', 'orderCancel', 'refund', 'orderFulfillment', 'orderCompletion',
+        'newOrder',
+        'orderFunded',
+        'orderPaymentReceived',
+        'orderConfirmation',
+        'orderDeclined',
+        'orderCancel',
+        'refund',
+        'orderFulfillment',
+        'orderCompletion',
         'vendorFinalizedPayment',
       ].includes(notification.type);
 
-      const isFollowType = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(notification.type);
+      const isFollowType = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(
+        notification.type
+      );
 
-      const isDisputeType = ['disputeOpen', 'disputeClose', 'disputeAccepted', 'caseOpen', 'caseUpdate'].includes(notification.type);
+      const isDisputeType = [
+        'disputeOpen',
+        'disputeClose',
+        'disputeAccepted',
+        'caseOpen',
+        'caseUpdate',
+      ].includes(notification.type);
 
       if (isOrderType) {
         return (
@@ -225,7 +240,7 @@ export default function NotificationsPage() {
           {apiNotifications.length === 0 && !isLoading ? (
             <Card className="text-center py-10 sm:py-16">
               <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
+                <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
                 {currentFilter === 'orders'
@@ -256,7 +271,7 @@ export default function NotificationsPage() {
                         e.stopPropagation();
                         handleDeleteNotification(notification.id);
                       }}
-                      className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 touch-feedback"
+                      className="absolute top-3 right-3 p-1.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 touch-feedback"
                     >
                       <svg
                         className="w-4 h-4"

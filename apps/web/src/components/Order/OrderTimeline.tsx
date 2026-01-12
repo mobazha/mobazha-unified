@@ -99,9 +99,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
     switch (type) {
       case 'complete':
         return {
-          icon: <Check className="w-3.5 h-3.5 text-emerald-600" />,
+          icon: <Check className="w-3.5 h-3.5 text-primary" />,
           title: 'Order Complete',
-          bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+          bgColor: 'bg-primary/10 dark:bg-primary/20',
         };
       case 'fulfilled':
         return {
@@ -111,9 +111,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
         };
       case 'accepted':
         return {
-          icon: <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />,
+          icon: <CheckCircle className="w-3.5 h-3.5 text-primary" />,
           title: 'Accepted',
-          bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+          bgColor: 'bg-primary/10 dark:bg-primary/20',
         };
       case 'disputed':
         return {
@@ -135,9 +135,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
         };
       case 'resolved':
         return {
-          icon: <Check className="w-3.5 h-3.5 text-emerald-600" />,
+          icon: <Check className="w-3.5 h-3.5 text-primary" />,
           title: 'Resolved',
-          bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+          bgColor: 'bg-primary/10 dark:bg-primary/20',
         };
       default:
         return {

@@ -220,7 +220,7 @@ export default function ReceivingAddressesPage() {
   const availableCoins = SUPPORTED_COINS.filter(c => !addresses.some(a => a.coin === c.code));
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <Container className="py-8">
@@ -228,8 +228,8 @@ export default function ReceivingAddressesPage() {
           {/* 标题 */}
           <div className="flex items-center justify-between w-full">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">收款地址</h1>
-              <p className="text-gray-600 mt-1">管理您的外部钱包收款地址</p>
+              <h1 className="text-2xl font-bold text-foreground">收款地址</h1>
+              <p className="text-muted-foreground mt-1">管理您的外部钱包收款地址</p>
             </div>
             {availableCoins.length > 0 && !showAddForm && (
               <Button onClick={() => setShowAddForm(true)}>添加地址</Button>
@@ -243,7 +243,7 @@ export default function ReceivingAddressesPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">币种 *</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">币种 *</label>
                     <Select value={newCoin} onValueChange={setNewCoin}>
                       <SelectTrigger>
                         <SelectValue placeholder="选择币种" />
@@ -259,7 +259,7 @@ export default function ReceivingAddressesPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">标签</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">标签</label>
                     <Input
                       value={newLabel}
                       onChange={e => setNewLabel(e.target.value)}
@@ -268,7 +268,7 @@ export default function ReceivingAddressesPage() {
                   </div>
                 </div>
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">地址 *</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">地址 *</label>
                   <Input
                     value={newAddress}
                     onChange={e => setNewAddress(e.target.value)}
@@ -298,12 +298,12 @@ export default function ReceivingAddressesPage() {
 
           {/* 地址列表 */}
           {isLoading ? (
-            <div className="w-full py-12 text-center text-gray-500">加载中...</div>
+            <div className="w-full py-12 text-center text-muted-foreground">加载中...</div>
           ) : addresses.length === 0 ? (
             <Card className="w-full p-12 text-center">
-              <div className="text-gray-400 text-5xl mb-4">💳</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">暂无收款地址</h3>
-              <p className="text-gray-600 mb-4">添加外部钱包地址以接收加密货币支付</p>
+              <div className="text-muted-foreground/70 text-5xl mb-4">💳</div>
+              <h3 className="text-lg font-medium text-foreground mb-2">暂无收款地址</h3>
+              <p className="text-muted-foreground mb-4">添加外部钱包地址以接收加密货币支付</p>
               {availableCoins.length > 0 && (
                 <Button onClick={() => setShowAddForm(true)}>添加第一个地址</Button>
               )}
@@ -318,13 +318,13 @@ export default function ReceivingAddressesPage() {
                   <Card key={addr.coin} className="w-full p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-2xl">
                           {coinInfo?.icon || '💰'}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{coinInfo?.name || addr.coin}</span>
-                            <span className="text-sm text-gray-500">({addr.coin})</span>
+                            <span className="text-sm text-muted-foreground">({addr.coin})</span>
                             {addr.isExternal && (
                               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
                                 外部钱包
@@ -347,11 +347,13 @@ export default function ReceivingAddressesPage() {
                             </div>
                           ) : (
                             <>
-                              <div className="font-mono text-sm text-gray-600 mt-1 break-all">
+                              <div className="font-mono text-sm text-muted-foreground mt-1 break-all">
                                 {addr.address}
                               </div>
                               {addr.label && (
-                                <div className="text-sm text-gray-500 mt-1">{addr.label}</div>
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {addr.label}
+                                </div>
                               )}
                             </>
                           )}
