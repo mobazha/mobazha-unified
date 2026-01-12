@@ -58,3 +58,8 @@ export { SettingsDrawer, SettingsDrawerProvider, useSettingsDrawer } from './Set
 
 // Auth Components
 export { AuthGuard } from './AuthGuard';
+
+// Wallet Components
+export { AppKitProvider } from './AppKitProvider';
+export { WalletConnectButton } from './Wallet';
+export type { WalletConnectButtonProps } from './Wallet';
