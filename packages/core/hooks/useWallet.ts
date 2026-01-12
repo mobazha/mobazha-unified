@@ -1,17 +1,15 @@
 /**
  * useWallet Hook
- * 钱包连接 React Hook
+ * 钱包连接 React Hook - 基于 AppKit
+ *
+ * 改造版本：使用 AppKit provider 替代直接调用 window.ethereum
+ * 注意：必须在 AppKitProvider 内部使用
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import {
-  getWalletService,
-  WalletService,
-  WalletConnectionState,
-  WalletInfo,
-  WalletEvent,
-  ChainId,
-} from '../services/payment';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { BrowserProvider, JsonRpcSigner, formatEther } from 'ethers';
+import { ChainId, WalletConnectionState, WalletInfo, WalletEvent } from '../services/payment';
+import { useAppKit } from '../providers/AppKitProvider';
 
 interface UseWalletReturn {
   // 状态
@@ -34,127 +32,247 @@ interface UseWalletReturn {
   getSupportedChains: () => ChainId[];
   getCurrentChainId: () => ChainId | null;
   getCurrentAddress: () => string | null;
+
+  // AppKit 扩展
+  openModal: (options?: { view?: 'Connect' | 'Account' | 'Networks' }) => Promise<void>;
+  getProvider: () => BrowserProvider | null;
+  getSigner: () => Promise<JsonRpcSigner | null>;
 }
 
+/**
+ * useWallet Hook - 使用 AppKit 进行钱包连接
+ *
+ * 注意：必须在 AppKitProvider 内部使用此 Hook
+ *
+ * @example
+ * ```tsx
+ * const { isConnected, connect, disconnect, walletInfo } = useWallet();
+ *
+ * // 连接钱包（打开 AppKit Modal）
+ * await connect();
+ *
+ * // 断开连接
+ * await disconnect();
+ *
+ * // 获取当前地址
+ * const address = walletInfo?.address;
+ * ```
+ */
 export function useWallet(): UseWalletReturn {
-  const [walletService] = useState<WalletService>(() => getWalletService());
-  const [connectionState, setConnectionState] = useState<WalletConnectionState>(
-    WalletConnectionState.DISCONNECTED
-  );
-  const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  // 使用 AppKit Context - 必须在顶层调用
+  const appKitContext = useAppKit();
+
+  const {
+    isConnected: appKitConnected,
+    isInitializing,
+    address: appKitAddress,
+    chain: appKitChain,
+    connect: appKitConnect,
+    disconnect: appKitDisconnect,
+    switchNetwork: appKitSwitchNetwork,
+    openModal: appKitOpenModal,
+    getWalletProvider,
+    networks,
+  } = appKitContext;
+
+  // 本地状态
   const [error, setError] = useState<Error | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
+  const [provider, setProvider] = useState<BrowserProvider | null>(null);
 
-  // 监听钱包事件
+  // 派生连接状态
+  const connectionState = useMemo((): WalletConnectionState => {
+    if (isInitializing) return WalletConnectionState.CONNECTING;
+    if (appKitConnected) return WalletConnectionState.CONNECTED;
+    if (error) return WalletConnectionState.ERROR;
+    return WalletConnectionState.DISCONNECTED;
+  }, [isInitializing, appKitConnected, error]);
+
+  // 获取链 ID
+  const chainId = useMemo((): ChainId | null => {
+    if (!appKitChain) return null;
+    // AppKit chain 可能是 number 或 string (caip format)
+    const id =
+      typeof appKitChain.id === 'number' ? appKitChain.id : parseInt(String(appKitChain.id));
+    return isNaN(id) ? null : (id as ChainId);
+  }, [appKitChain]);
+
+  // 构建钱包信息
+  const walletInfo = useMemo((): WalletInfo | null => {
+    if (!appKitConnected || !appKitAddress) return null;
+    return {
+      address: appKitAddress,
+      chainId: chainId || (11155111 as ChainId), // 默认 Sepolia
+      balance: balance || '0',
+      provider: 'AppKit',
+    };
+  }, [appKitConnected, appKitAddress, chainId, balance]);
+
+  // 初始化 Provider
   useEffect(() => {
-    const handleConnected = (info: unknown) => {
-      setWalletInfo(info as WalletInfo);
-      setConnectionState(WalletConnectionState.CONNECTED);
-      setError(null);
-    };
-
-    const handleDisconnected = () => {
-      setWalletInfo(null);
-      setConnectionState(WalletConnectionState.DISCONNECTED);
-    };
-
-    const handleChainChanged = (info: unknown) => {
-      setWalletInfo(info as WalletInfo);
-    };
-
-    const handleAccountChanged = (info: unknown) => {
-      setWalletInfo(info as WalletInfo);
-    };
-
-    const handleError = (err: unknown) => {
-      setError(err as Error);
-      setConnectionState(WalletConnectionState.ERROR);
-    };
-
-    // 订阅事件
-    const unsubConnected = walletService.on(WalletEvent.CONNECTED, handleConnected);
-    const unsubDisconnected = walletService.on(WalletEvent.DISCONNECTED, handleDisconnected);
-    const unsubChainChanged = walletService.on(WalletEvent.CHAIN_CHANGED, handleChainChanged);
-    const unsubAccountChanged = walletService.on(WalletEvent.ACCOUNT_CHANGED, handleAccountChanged);
-    const unsubError = walletService.on(WalletEvent.ERROR, handleError);
-
-    // 初始化状态 - 使用 setTimeout 避免同步调用
-    const initializeState = () => {
-      const state = walletService.getState();
-      const info = walletService.getWalletInfo();
-      if (state !== connectionState) {
-        setConnectionState(state);
+    const initProvider = async () => {
+      if (!appKitConnected || !getWalletProvider) {
+        setProvider(null);
+        return;
       }
-      if (info !== walletInfo) {
-        setWalletInfo(info);
+
+      try {
+        const walletProvider = getWalletProvider();
+        if (walletProvider) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const browserProvider = new BrowserProvider(walletProvider as any);
+          setProvider(browserProvider);
+
+          // 获取余额
+          if (appKitAddress) {
+            const bal = await browserProvider.getBalance(appKitAddress);
+            setBalance(formatEther(bal));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to initialize provider:', err);
+        setProvider(null);
       }
     };
 
-    // 延迟初始化以避免同步 setState
-    const timeoutId = setTimeout(initializeState, 0);
-
-    // 清理
-    return () => {
-      clearTimeout(timeoutId);
-      unsubConnected();
-      unsubDisconnected();
-      unsubChainChanged();
-      unsubAccountChanged();
-      unsubError();
-    };
-  }, [walletService, connectionState, walletInfo]);
+    initProvider();
+  }, [appKitConnected, appKitAddress, getWalletProvider]);
 
   // 连接钱包
   const connect = useCallback(async (): Promise<WalletInfo | null> => {
-    setConnectionState(WalletConnectionState.CONNECTING);
+    if (!appKitConnect) {
+      setError(new Error('AppKit not initialized'));
+      return null;
+    }
+
     setError(null);
-    return walletService.connect();
-  }, [walletService]);
+    try {
+      const result = await appKitConnect();
+      if (!result.success) {
+        setError(result.error || new Error('Connection failed'));
+        return null;
+      }
+      // 返回当前钱包信息（会在状态更新后可用）
+      return walletInfo;
+    } catch (err) {
+      setError(err as Error);
+      return null;
+    }
+  }, [appKitConnect, walletInfo]);
 
   // 断开连接
   const disconnect = useCallback(async (): Promise<void> => {
-    await walletService.disconnect();
-  }, [walletService]);
+    if (!appKitDisconnect) return;
+
+    try {
+      await appKitDisconnect();
+      setBalance(null);
+      setProvider(null);
+      setError(null);
+    } catch (err) {
+      setError(err as Error);
+    }
+  }, [appKitDisconnect]);
 
   // 切换链
   const switchChain = useCallback(
-    async (chainId: ChainId): Promise<boolean> => {
-      return walletService.switchChain(chainId);
+    async (targetChainId: ChainId): Promise<boolean> => {
+      if (!appKitSwitchNetwork) return false;
+
+      try {
+        // 从 networks 中找到对应的网络配置
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const targetNetwork = networks.find((n: any) => n.id === targetChainId);
+        if (!targetNetwork) {
+          setError(new Error(`Network ${targetChainId} not supported`));
+          return false;
+        }
+
+        const result = await appKitSwitchNetwork(targetNetwork);
+        return result.success;
+      } catch (err) {
+        setError(err as Error);
+        return false;
+      }
     },
-    [walletService]
+    [appKitSwitchNetwork, networks]
   );
 
   // 刷新余额
   const refreshBalance = useCallback(async (): Promise<string | null> => {
-    return walletService.refreshBalance();
-  }, [walletService]);
+    if (!provider || !appKitAddress) return null;
+
+    try {
+      const bal = await provider.getBalance(appKitAddress);
+      const balStr = formatEther(bal);
+      setBalance(balStr);
+      return balStr;
+    } catch {
+      return null;
+    }
+  }, [provider, appKitAddress]);
 
   // 签名消息
   const signMessage = useCallback(
     async (message: string): Promise<string | null> => {
-      return walletService.signMessage(message);
+      if (!provider) return null;
+
+      try {
+        const signer = await provider.getSigner();
+        return await signer.signMessage(message);
+      } catch (err) {
+        setError(err as Error);
+        return null;
+      }
     },
-    [walletService]
+    [provider]
   );
 
   // 获取支持的链
   const getSupportedChains = useCallback((): ChainId[] => {
-    return walletService.getSupportedChains();
-  }, [walletService]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return networks.map((n: any) => n.id as ChainId);
+  }, [networks]);
 
   // 获取当前链 ID
   const getCurrentChainId = useCallback((): ChainId | null => {
-    return walletService.getCurrentChainId();
-  }, [walletService]);
+    return chainId;
+  }, [chainId]);
 
   // 获取当前地址
   const getCurrentAddress = useCallback((): string | null => {
-    return walletService.getCurrentAddress();
-  }, [walletService]);
+    return appKitAddress;
+  }, [appKitAddress]);
+
+  // 打开 Modal
+  const openModal = useCallback(
+    async (options?: { view?: 'Connect' | 'Account' | 'Networks' }) => {
+      if (appKitOpenModal) {
+        await appKitOpenModal(options);
+      }
+    },
+    [appKitOpenModal]
+  );
+
+  // 获取 Provider
+  const getProvider = useCallback((): BrowserProvider | null => {
+    return provider;
+  }, [provider]);
+
+  // 获取 Signer
+  const getSigner = useCallback(async (): Promise<JsonRpcSigner | null> => {
+    if (!provider) return null;
+    try {
+      return await provider.getSigner();
+    } catch {
+      return null;
+    }
+  }, [provider]);
 
   return {
     // 状态
-    isConnected: connectionState === WalletConnectionState.CONNECTED,
-    isConnecting: connectionState === WalletConnectionState.CONNECTING,
+    isConnected: appKitConnected,
+    isConnecting: isInitializing,
     walletInfo,
     connectionState,
     error,
@@ -171,5 +289,13 @@ export function useWallet(): UseWalletReturn {
     getSupportedChains,
     getCurrentChainId,
     getCurrentAddress,
+
+    // AppKit 扩展
+    openModal,
+    getProvider,
+    getSigner,
   };
 }
+
+// 导出事件类型以保持兼容性
+export { WalletEvent };
