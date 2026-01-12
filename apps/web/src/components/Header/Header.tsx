@@ -141,8 +141,8 @@ export const Header: React.FC = () => {
               </>
             )}
 
-            {/* 钱包连接 */}
-            <WalletConnectButton size="sm" variant="outline" />
+            {/* 钱包连接 - 使用 AppKit 原生组件，包含余额显示 */}
+            <WalletConnectButton />
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
