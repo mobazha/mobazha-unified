@@ -113,7 +113,7 @@ const MessageStatus: React.FC<{ status?: string }> = ({ status }) => {
       )}
       {status === 'read' && (
         <svg
-          className="w-4 h-4 text-emerald-500"
+          className="w-4 h-4 text-primary"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -318,7 +318,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               </svg>
             )}
             {isEncrypted && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/15 text-emerald-600 rounded-md">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-primary/15 text-primary rounded-md">
                 <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -332,7 +332,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </HStack>
           <p className="text-[12px] text-muted-foreground mt-0.5">
             {isOnline ? (
-              <span className="text-emerald-500">{t('chat.online')}</span>
+              <span className="text-primary">{t('chat.online')}</span>
             ) : (
               t('chat.offline')
             )}
@@ -460,9 +460,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               <div className="text-center py-4 mb-2 animate-in fade-in duration-500">
                 <div className="inline-flex flex-col items-center gap-2 px-5 py-3 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 backdrop-blur-sm rounded-2xl border border-emerald-500/20 shadow-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                       <svg
-                        className="w-3.5 h-3.5 text-emerald-600"
+                        className="w-3.5 h-3.5 text-primary"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -473,11 +473,11 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                         />
                       </svg>
                     </div>
-                    <span className="text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">
+                    <span className="text-[12px] font-semibold text-primary">
                       End-to-End Encrypted
                     </span>
                   </div>
-                  <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
+                  <span className="text-[10px] text-primary/70">
                     Messages in this chat are secured
                   </span>
                 </div>

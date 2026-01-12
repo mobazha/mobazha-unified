@@ -211,7 +211,7 @@ export default function ModeratorsPage() {
                       type="checkbox"
                       checked={verifiedOnly}
                       onChange={e => setVerifiedOnly(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                     />
                     <span className="text-sm text-muted-foreground">
                       {t('moderator.verifiedOnly')}
@@ -273,7 +273,7 @@ export default function ModeratorsPage() {
                         <img
                           src={moderator.avatar}
                           alt={moderator.name}
-                          className="w-16 h-16 rounded-full bg-slate-200"
+                          className="w-16 h-16 rounded-full bg-muted"
                         />
 
                         {/* Info */}
@@ -306,12 +306,12 @@ export default function ModeratorsPage() {
                               <span className="font-medium text-foreground">
                                 {moderator.rating}
                               </span>
-                              <span className="text-slate-500 text-sm">
+                              <span className="text-muted-foreground text-sm">
                                 ({moderator.ratingCount})
                               </span>
                             </HStack>
 
-                            <span className="text-slate-300 dark:text-slate-600">|</span>
+                            <span className="text-muted-foreground/50">|</span>
 
                             <span className="text-sm text-muted-foreground">
                               {t('moderator.disputesHandled', {
@@ -319,9 +319,9 @@ export default function ModeratorsPage() {
                               })}
                             </span>
 
-                            <span className="text-slate-300 dark:text-slate-600">|</span>
+                            <span className="text-muted-foreground/50">|</span>
 
-                            <span className="text-sm text-emerald-600">
+                            <span className="text-sm text-primary">
                               {t('moderator.success', { rate: moderator.successRate })}
                             </span>
                           </HStack>
@@ -341,7 +341,7 @@ export default function ModeratorsPage() {
 
                         {/* Fee */}
                         <div className="text-right flex-shrink-0">
-                          <p className="text-2xl font-bold text-emerald-600">{moderator.fee}%</p>
+                          <p className="text-2xl font-bold text-primary">{moderator.fee}%</p>
                           <p className="text-sm text-muted-foreground">{t('moderator.fee')}</p>
                         </div>
                       </HStack>
@@ -354,7 +354,7 @@ export default function ModeratorsPage() {
                     <VStack gap="md" align="center" className="py-8">
                       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                         <svg
-                          className="w-8 h-8 text-slate-400"
+                          className="w-8 h-8 text-muted-foreground"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"

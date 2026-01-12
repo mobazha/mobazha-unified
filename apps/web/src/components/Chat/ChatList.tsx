@@ -44,7 +44,7 @@ export interface ChatListProps {
 const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type, isExternal }) => {
   if (isExternal) {
     return (
-      <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+      <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-primary/10 text-primary">
         Matrix
       </span>
     );
@@ -149,7 +149,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         activeRoomId === room.id
           ? 'bg-primary/8 shadow-sm'
           : isInvite
-            ? 'bg-emerald-500/5 hover:bg-emerald-500/10'
+            ? 'bg-primary/5 hover:bg-primary/10'
             : 'hover:bg-muted/60 hover:translate-x-1 hover:-translate-y-0.5 hover:shadow-md'
       }`}
     >
@@ -172,7 +172,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         />
         {/* Online status indicator */}
         {room.isOnline && !isInvite && (
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-card rounded-full shadow-sm ring-2 ring-emerald-500/20" />
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary border-2 border-card rounded-full shadow-sm ring-2 ring-primary/20" />
         )}
         {/* Invite badge */}
         {isInvite && (
@@ -217,7 +217,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             {/* Encrypted indicator */}
             {room.isEncrypted && !isInvite && (
               <svg
-                className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"
+                className="w-3.5 h-3.5 text-primary flex-shrink-0"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-label="End-to-end encrypted"
@@ -241,9 +241,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         <HStack justify="between" align="center" className="mt-1">
           {isInvite ? (
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                {t('chat.invitedYou')}
-              </span>
+              <span className="text-[12px] text-primary font-semibold">{t('chat.invitedYou')}</span>
             </div>
           ) : (
             <p className="text-[12px] text-muted-foreground/70 truncate leading-relaxed">
