@@ -1173,6 +1173,49 @@ export interface TranslationResource {
     confirmRemove: string;
     confirmRemoveMessage: string;
   };
+
+  // 用户页面（店铺页面）
+  userPage?: {
+    customize: string;
+    createListing: string;
+    importListings: string;
+    storeWelcomeCalloutTitle: string;
+    storeWelcomeCalloutBody: string;
+    storeWelcomeCalloutBtnClose: string;
+  };
+
+  // 导入商品
+  importListings?: {
+    title: string;
+    subtitle: string;
+    step1Title: string;
+    step1Desc: string;
+    downloadTemplate: string;
+    downloadError: string;
+    step2Title: string;
+    step2Desc: string;
+    dropOrClick: string;
+    maxSize: string;
+    fileTooLarge: string;
+    clearFile: string;
+    startImport: string;
+    importing: string;
+    uploadingProgress: string;
+    resultsTitle: string;
+    total: string;
+    created: string;
+    updated: string;
+    failed: string;
+    errorDetails: string;
+    row: string;
+    showDetails: string;
+    hideDetails: string;
+    createdItems: string;
+    updatedItems: string;
+    success: string;
+    importComplete: string;
+    error: string;
+  };
 }
 
 // i18n 上下文类型
