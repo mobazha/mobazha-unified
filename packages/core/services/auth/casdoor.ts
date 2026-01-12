@@ -5,6 +5,7 @@
 
 import { getEnvConfig } from '../../config/env';
 import { getHostingUrl } from '../api/config';
+import { getCasdoorThemeParams } from '../../theme/casdoorTheme';
 
 export interface CasdoorUser {
   id: string;
@@ -84,6 +85,14 @@ export function getSigninUrl(redirectUri?: string): string {
     state,
   });
 
+  // 添加主题参数，让 Casdoor 页面与当前主题保持一致
+  if (typeof window !== 'undefined') {
+    const themeParams = getCasdoorThemeParams();
+    params.set('theme', themeParams.theme);
+    params.set('colorPrimary', themeParams.colorPrimary);
+    params.set('borderRadius', String(themeParams.borderRadius));
+  }
+
   return `${serverUrl}/login/oauth/authorize?${params.toString()}`;
 }
 
@@ -110,6 +119,14 @@ export function getSignupUrl(redirectUri?: string): string {
     scope: 'openid profile email',
     state,
   });
+
+  // 添加主题参数，让 Casdoor 页面与当前主题保持一致
+  if (typeof window !== 'undefined') {
+    const themeParams = getCasdoorThemeParams();
+    params.set('theme', themeParams.theme);
+    params.set('colorPrimary', themeParams.colorPrimary);
+    params.set('borderRadius', String(themeParams.borderRadius));
+  }
 
   return `${serverUrl}/signup/oauth/authorize?${params.toString()}`;
 }
@@ -381,8 +398,7 @@ export function getCasdoorUserId(): string | null {
 
   try {
     const userInfoStr =
-      localStorage.getItem('mobazha_auth_user') ||
-      localStorage.getItem('userInfo');
+      localStorage.getItem('mobazha_auth_user') || localStorage.getItem('userInfo');
 
     if (userInfoStr) {
       const userInfo = JSON.parse(userInfoStr);
