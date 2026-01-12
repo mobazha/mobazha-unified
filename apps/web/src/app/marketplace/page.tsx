@@ -174,7 +174,7 @@ export default function MarketplacesPage() {
                   className="h-9 sm:h-10 text-sm"
                   leftIcon={
                     <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -237,7 +237,7 @@ export default function MarketplacesPage() {
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-emerald-500 text-white text-[10px] sm:text-xs font-medium rounded">
+                        <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary text-primary-foreground text-[10px] sm:text-xs font-medium rounded">
                           {t('marketplace.featured')}
                         </span>
                       </div>
@@ -328,7 +328,7 @@ export default function MarketplacesPage() {
                             {marketplace.name}
                           </h3>
                           {marketplace.featured && (
-                            <span className="px-1.5 sm:px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-xs font-medium rounded">
+                            <span className="px-1.5 sm:px-2 py-0.5 bg-primary/10 text-primary text-[10px] sm:text-xs font-medium rounded">
                               {t('marketplace.featured')}
                             </span>
                           )}
@@ -352,7 +352,7 @@ export default function MarketplacesPage() {
                           {marketplace.categories.slice(0, 3).map(cat => (
                             <span
                               key={cat}
-                              className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-muted-foreground rounded"
+                              className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-muted text-muted-foreground rounded"
                             >
                               {cat}
                             </span>
@@ -370,7 +370,7 @@ export default function MarketplacesPage() {
                 <VStack gap="md" align="center">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                     <svg
-                      className="w-8 h-8 text-slate-400"
+                      className="w-8 h-8 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

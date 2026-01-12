@@ -309,8 +309,8 @@ export default function CartPage() {
           </p>
 
           {/* P2P 提示 */}
-          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg">
+            <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium">
               {t('cart.p2pNotice')}
             </p>
           </div>

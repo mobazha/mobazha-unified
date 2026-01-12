@@ -118,7 +118,7 @@ export default function ModeratorDetailPage() {
           {/* Back Link */}
           <Link
             href="/moderators"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -140,7 +140,7 @@ export default function ModeratorDetailPage() {
                   <img
                     src={moderator.avatar}
                     alt={moderator.name}
-                    className="w-24 h-24 rounded-full bg-slate-200"
+                    className="w-24 h-24 rounded-full bg-muted"
                   />
 
                   <div className="flex-1">
@@ -180,7 +180,7 @@ export default function ModeratorDetailPage() {
                         <p className="text-sm text-muted-foreground">Disputes</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-emerald-600">
+                        <p className="text-2xl font-bold text-primary">
                           {moderator.stats.successRate}%
                         </p>
                         <p className="text-sm text-muted-foreground">Success Rate</p>
@@ -206,8 +206,8 @@ export default function ModeratorDetailPage() {
                         onClick={() => setActiveTab(tab)}
                         className={`px-6 py-4 text-sm font-medium transition-colors capitalize ${
                           activeTab === tab
-                            ? 'text-emerald-600 border-b-2 border-emerald-600'
-                            : 'text-muted-foreground hover:text-slate-900 dark:hover:text-white'
+                            ? 'text-primary border-b-2 border-primary'
+                            : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
                         {tab === 'terms' ? 'Terms & Conditions' : tab}
@@ -245,7 +245,7 @@ export default function ModeratorDetailPage() {
                           {moderator.acceptedCurrencies.map(currency => (
                             <span
                               key={currency}
-                              className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-sm font-medium"
+                              className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
                             >
                               {currency}
                             </span>
@@ -264,7 +264,7 @@ export default function ModeratorDetailPage() {
                         >
                           <HStack justify="between" align="center" className="mb-2">
                             <HStack gap="sm" align="center">
-                              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-medium text-muted-foreground">
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
                                 {review.reviewer[0]}
                               </div>
                               <span className="font-medium text-foreground">{review.reviewer}</span>
@@ -273,7 +273,7 @@ export default function ModeratorDetailPage() {
                               {[...Array(5)].map((_, i) => (
                                 <svg
                                   key={i}
-                                  className={`w-4 h-4 ${i < review.rating ? 'text-amber-500' : 'text-slate-300'}`}
+                                  className={`w-4 h-4 ${i < review.rating ? 'text-amber-500' : 'text-muted-foreground/40'}`}
                                   fill="currentColor"
                                   viewBox="0 0 20 20"
                                 >
@@ -283,7 +283,7 @@ export default function ModeratorDetailPage() {
                             </HStack>
                           </HStack>
                           <p className="text-muted-foreground">{review.comment}</p>
-                          <p className="text-sm text-slate-500 mt-2">{review.date}</p>
+                          <p className="text-sm text-muted-foreground mt-2">{review.date}</p>
                         </div>
                       ))}
                     </VStack>
@@ -304,8 +304,8 @@ export default function ModeratorDetailPage() {
               <Card>
                 <h3 className="font-semibold text-foreground mb-4">Moderator Fee</h3>
                 <div className="text-center py-4">
-                  <p className="text-4xl font-bold text-emerald-600">{moderator.fee.percentage}%</p>
-                  <p className="text-slate-500 mt-1">of transaction value</p>
+                  <p className="text-4xl font-bold text-primary">{moderator.fee.percentage}%</p>
+                  <p className="text-muted-foreground mt-1">of transaction value</p>
                 </div>
                 <Button className="w-full mt-4" size="lg">
                   Select as Moderator
@@ -320,7 +320,7 @@ export default function ModeratorDetailPage() {
                     {moderator.contactInfo.email && (
                       <HStack gap="sm" align="center">
                         <svg
-                          className="w-5 h-5 text-slate-400"
+                          className="w-5 h-5 text-muted-foreground"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -338,7 +338,7 @@ export default function ModeratorDetailPage() {
                     {moderator.contactInfo.website && (
                       <HStack gap="sm" align="center">
                         <svg
-                          className="w-5 h-5 text-slate-400"
+                          className="w-5 h-5 text-muted-foreground"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -354,7 +354,7 @@ export default function ModeratorDetailPage() {
                           href={moderator.contactInfo.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-emerald-600 hover:underline"
+                          className="text-primary hover:underline"
                         >
                           {moderator.contactInfo.website}
                         </a>
@@ -363,7 +363,7 @@ export default function ModeratorDetailPage() {
                     {moderator.contactInfo.social?.twitter && (
                       <HStack gap="sm" align="center">
                         <svg
-                          className="w-5 h-5 text-slate-400"
+                          className="w-5 h-5 text-muted-foreground"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >
@@ -377,7 +377,7 @@ export default function ModeratorDetailPage() {
                     {moderator.contactInfo.social?.telegram && (
                       <HStack gap="sm" align="center">
                         <svg
-                          className="w-5 h-5 text-slate-400"
+                          className="w-5 h-5 text-muted-foreground"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >

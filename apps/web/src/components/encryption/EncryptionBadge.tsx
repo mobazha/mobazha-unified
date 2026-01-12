@@ -2,12 +2,7 @@
 
 import { Lock, LockOpen, Shield, ShieldOff, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export type EncryptionStatus = 'encrypted' | 'decrypted' | 'decrypting' | 'failed' | 'none';
 
@@ -36,8 +31,8 @@ const statusConfig = {
     icon: LockOpen,
     label: '已解密',
     tooltip: '内容已成功解密',
-    className: 'text-emerald-500',
-    bgClass: 'bg-emerald-100 dark:bg-emerald-900/30',
+    className: 'text-primary',
+    bgClass: 'bg-primary/10',
   },
   decrypting: {
     icon: Loader2,
@@ -107,7 +102,7 @@ export function LockIcon({
   className?: string;
 }) {
   const Icon = locked ? Lock : LockOpen;
-  const colorClass = locked ? 'text-amber-500' : 'text-emerald-500';
+  const colorClass = locked ? 'text-amber-500' : 'text-primary';
 
   return <Icon className={cn(sizeClasses[size], colorClass, className)} />;
 }
@@ -139,7 +134,7 @@ export function E2EBadge({ className }: { className?: string }) {
           <div
             className={cn(
               'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium',
-              'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
+              'bg-primary/10 text-primary',
               className
             )}
           >
@@ -154,4 +149,3 @@ export function E2EBadge({ className }: { className?: string }) {
     </TooltipProvider>
   );
 }
-
