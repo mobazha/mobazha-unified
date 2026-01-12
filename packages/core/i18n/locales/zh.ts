@@ -708,6 +708,14 @@ export const zh: TranslationResource = {
     connecting: '连接中...',
     disconnect: '断开连接',
     connected: '已连接',
+    connectWallet: '连接钱包',
+    initializing: '初始化中...',
+    network: '网络',
+    unknownNetwork: '未知网络',
+    copyAddress: '复制地址',
+    copied: '已复制',
+    viewInExplorer: '在浏览器中查看',
+    walletDetails: '钱包详情',
   },
 
   profile: {
@@ -1385,6 +1393,7 @@ export const zh: TranslationResource = {
     createNft: '创建 NFT 挂单',
     createErc3525: '创建份额挂单',
     createNftOrder: '创建 NFT 私密挂单',
+    createErc3525Order: '创建 ERC3525 份额挂单',
     createOrder: '创建挂单',
     noOtcYet: '还没有 OTC 资产',
     noOtcInStore: '该店铺暂无 OTC 资产',
@@ -1397,6 +1406,7 @@ export const zh: TranslationResource = {
     // 步骤
     step: {
       selectNft: '选择 NFT',
+      selectShares: '选择份额',
       setPrice: '设定价格',
       shareLink: '分享链接',
     },
@@ -1414,6 +1424,12 @@ export const zh: TranslationResource = {
     platformFeeNote: '* 平台收取 5% 交易手续费',
     youWillReceive: '您将收到',
     selectNftDesc: '选择您要出售的 NFT',
+    selectSharesDesc: '选择您要出售的 RWA 份额',
+    noNfts: '您还没有可出售的 NFT',
+    noHoldings: '您还没有可出售的 RWA 份额',
+    yourShares: '持有份额',
+    sharesToSell: '出售份额',
+    pricePerShare: '每份价格',
     // 操作
     creating: '创建中...',
     purchasing: '购买中...',

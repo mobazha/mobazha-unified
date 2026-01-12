@@ -724,6 +724,14 @@ export const en: TranslationResource = {
     connecting: 'Connecting...',
     disconnect: 'Disconnect',
     connected: 'Connected',
+    connectWallet: 'Connect Wallet',
+    initializing: 'Initializing...',
+    network: 'Network',
+    unknownNetwork: 'Unknown Network',
+    copyAddress: 'Copy Address',
+    copied: 'Copied',
+    viewInExplorer: 'View in Explorer',
+    walletDetails: 'Wallet Details',
   },
 
   profile: {
@@ -1411,6 +1419,7 @@ export const en: TranslationResource = {
     createNft: 'Create NFT Order',
     createErc3525: 'Create Share Order',
     createNftOrder: 'Create Private NFT Order',
+    createErc3525Order: 'Create ERC3525 Share Order',
     createOrder: 'Create Order',
     noOtcYet: 'No OTC assets yet',
     noOtcInStore: 'No OTC assets in this store',
@@ -1423,6 +1432,7 @@ export const en: TranslationResource = {
     // Steps
     step: {
       selectNft: 'Select NFT',
+      selectShares: 'Select Shares',
       setPrice: 'Set Price',
       shareLink: 'Share Link',
     },
@@ -1440,6 +1450,12 @@ export const en: TranslationResource = {
     platformFeeNote: '* Platform charges 5% transaction fee',
     youWillReceive: 'You will receive',
     selectNftDesc: 'Select the NFT you want to sell',
+    selectSharesDesc: 'Select the RWA shares you want to sell',
+    noNfts: 'No NFTs available to sell',
+    noHoldings: 'No RWA shares available to sell',
+    yourShares: 'Your Shares',
+    sharesToSell: 'Shares to Sell',
+    pricePerShare: 'Price per Share',
     // Actions
     creating: 'Creating...',
     purchasing: 'Purchasing...',

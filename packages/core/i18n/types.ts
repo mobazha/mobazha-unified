@@ -417,6 +417,14 @@ export interface TranslationResource {
     connecting: string;
     disconnect: string;
     connected: string;
+    connectWallet: string;
+    initializing: string;
+    network: string;
+    unknownNetwork: string;
+    copyAddress: string;
+    copied: string;
+    viewInExplorer: string;
+    walletDetails: string;
   };
 
   // 用户资料
@@ -976,6 +984,7 @@ export interface TranslationResource {
     createNft: string;
     createErc3525: string;
     createNftOrder: string;
+    createErc3525Order: string;
     createOrder: string;
     noOtcYet: string;
     noOtcInStore: string;
@@ -988,6 +997,7 @@ export interface TranslationResource {
     // 步骤
     step: {
       selectNft: string;
+      selectShares: string;
       setPrice: string;
       shareLink: string;
     };
@@ -1005,6 +1015,12 @@ export interface TranslationResource {
     platformFeeNote: string;
     youWillReceive: string;
     selectNftDesc: string;
+    selectSharesDesc: string;
+    noNfts: string;
+    noHoldings: string;
+    yourShares: string;
+    sharesToSell: string;
+    pricePerShare: string;
     // 操作
     creating: string;
     purchasing: string;

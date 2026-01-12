@@ -6,8 +6,8 @@
  * 使用 AppKit 的 Web Component 显示钱包连接 UI
  */
 
-import { useEffect, useState } from 'react';
-import { useAppKit } from '@mobazha/core';
+import { useState } from 'react';
+import { useAppKit, useI18n } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Wallet, ChevronDown, LogOut, Copy, ExternalLink, Check } from 'lucide-react';
 import {
@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getTxUrl, getAddressUrl } from '@mobazha/core';
+import { getAddressUrl } from '@mobazha/core';
 
 // 格式化地址显示
 function formatAddress(address: string): string {
@@ -44,6 +44,7 @@ export function WalletConnectButton({
 }: WalletConnectButtonProps) {
   const { isConnected, address, chain, connect, disconnect, openModal, isInitializing } =
     useAppKit();
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   // 复制地址
@@ -74,14 +75,14 @@ export function WalletConnectButton({
         disabled={isInitializing}
       >
         <Wallet className="w-4 h-4 mr-2" />
-        {isInitializing ? '初始化中...' : '连接钱包'}
+        {isInitializing ? t('wallet.initializing') : t('wallet.connectWallet')}
       </Button>
     );
   }
 
   // 已连接状态
   const displayAddress = showFullAddress ? address : formatAddress(address || '');
-  const networkName = chain?.name || '未知网络';
+  const networkName = chain?.name || t('wallet.unknownNetwork');
 
   return (
     <DropdownMenu>
@@ -97,7 +98,7 @@ export function WalletConnectButton({
       <DropdownMenuContent align="end" className="w-56">
         {/* 网络信息 */}
         <div className="px-2 py-1.5">
-          <div className="text-xs text-muted-foreground">网络</div>
+          <div className="text-xs text-muted-foreground">{t('wallet.network')}</div>
           <div className="text-sm font-medium">{networkName}</div>
         </div>
         <DropdownMenuSeparator />
@@ -109,19 +110,19 @@ export function WalletConnectButton({
           ) : (
             <Copy className="w-4 h-4 mr-2" />
           )}
-          {copied ? '已复制' : '复制地址'}
+          {copied ? t('wallet.copied') : t('wallet.copyAddress')}
         </DropdownMenuItem>
 
         {/* 在浏览器中查看 */}
         <DropdownMenuItem onClick={handleViewInExplorer}>
           <ExternalLink className="w-4 h-4 mr-2" />
-          在浏览器中查看
+          {t('wallet.viewInExplorer')}
         </DropdownMenuItem>
 
         {/* 打开钱包详情 */}
         <DropdownMenuItem onClick={() => openModal({ view: 'Account' })}>
           <Wallet className="w-4 h-4 mr-2" />
-          钱包详情
+          {t('wallet.walletDetails')}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -129,7 +130,7 @@ export function WalletConnectButton({
         {/* 断开连接 */}
         <DropdownMenuItem onClick={() => disconnect()} className="text-destructive">
           <LogOut className="w-4 h-4 mr-2" />
-          断开连接
+          {t('wallet.disconnect')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
