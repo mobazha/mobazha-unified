@@ -20,6 +20,23 @@ import { createAppKit, type AppKit } from '@reown/appkit/react';
 import { EthersAdapter } from '@reown/appkit-adapter-ethers';
 import { APPKIT_PROJECT_ID, APPKIT_METADATA, getSupportedNetworks } from '../config/appkit';
 
+// ============= Theme Utils =============
+
+/**
+ * 获取当前主题模式
+ */
+function getCurrentThemeMode(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark';
+
+  // 检查 document class 或 data-theme 属性
+  const isDark =
+    document.documentElement.classList.contains('dark') ||
+    document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  return isDark ? 'dark' : 'light';
+}
+
 // ============= Types =============
 
 // 通用网络类型
@@ -227,6 +244,14 @@ export function AppKitProvider({
             email: false,
             socials: false,
           },
+          // 主题配置 - 适配应用主题
+          themeMode: getCurrentThemeMode(),
+          themeVariables: {
+            // 根据主题使用不同的强调色，深色主题用更低调的颜色
+            '--w3m-accent': getCurrentThemeMode() === 'dark' ? '#059669' : '#10b981',
+            // 圆角与应用保持一致
+            '--w3m-border-radius-master': '8px',
+          },
         });
 
         // 检查并断开不支持的网络
@@ -360,6 +385,38 @@ export function AppKitProvider({
       });
     }
   }, [autoInit, initialize]);
+
+  // 监听主题变化，同步更新 AppKit 主题
+  useEffect(() => {
+    if (!appKit) return;
+
+    // 更新主题和强调色
+    const updateTheme = () => {
+      const newTheme = getCurrentThemeMode();
+      appKit.setThemeMode(newTheme);
+      // 同时更新强调色
+      appKit.setThemeVariables({
+        '--w3m-accent': newTheme === 'dark' ? '#059669' : '#10b981',
+      });
+    };
+
+    // 创建 MutationObserver 监听 html 元素的 class 和 data-theme 变化
+    const observer = new MutationObserver(updateTheme);
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+
+    // 同时监听系统主题变化
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener('change', updateTheme);
+    };
+  }, [appKit]);
 
   // 清理订阅
   useEffect(() => {
