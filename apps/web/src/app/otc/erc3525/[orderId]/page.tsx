@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { useI18n, useWallet, useChatStore } from '@mobazha/core';
+import { useI18n, useChatStore } from '@mobazha/core';
+import { useErc3525Otc } from '@mobazha/core/hooks/useOtc';
 import {
   ArrowLeft,
   ExternalLink,
@@ -19,7 +20,7 @@ import {
   AlertCircle,
   TrendingUp,
 } from 'lucide-react';
-import { getOtcConfig } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, DEFAULT_CHAIN_ID } from '@mobazha/core/config/otcConfig';
 
 // ERC3525 OTC 订单状态枚举
 enum Erc3525OrderStatus {
@@ -28,163 +29,110 @@ enum Erc3525OrderStatus {
   Cancelled = 2,
 }
 
-// ERC3525 OTC 订单类型
-interface Erc3525Order {
-  orderId: string;
-  seller: string;
-  rwaToken: string;
-  tokenId: number;
-  shares: number;
-  paymentToken: string;
-  price: number;
-  status: Erc3525OrderStatus;
-  createdAt: number;
-  completedAt?: number;
-}
-
-// RWA 资产元数据
-interface RwaMetadata {
-  name: string;
-  description: string;
-  projectName: string;
-  totalShares: number;
-  expectedRevenue: {
-    weekly: number;
-    annualized: number;
-  };
-}
-
 export default function Erc3525OtcDetailPage() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.orderId as string;
   const { t } = useI18n();
-  const { isConnected, walletInfo, connect: connectWallet } = useWallet();
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
-  const networkConfig = getOtcConfig();
+  // 使用 ERC3525 OTC Hook
+  const {
+    isConnected,
+    address,
+    currentRwaOrder,
+    isLoadingOrder,
+    isProcessing,
+    error,
+    loadOrder,
+    executeSwap,
+    cancelOrder,
+    formatAddress,
+    clearError,
+  } = useErc3525Otc();
 
-  const [order, setOrder] = useState<Erc3525Order | null>(null);
-  const [rwaMetadata, setRwaMetadata] = useState<RwaMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [executing, setExecuting] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const networkConfig = getOtcConfig(DEFAULT_CHAIN_ID);
+
   const [copied, setCopied] = useState(false);
 
-  // 获取订单详情
-  const fetchOrder = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // TODO: 实际从链上获取订单信息
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const mockOrder: Erc3525Order = {
-        orderId,
-        seller: '0xC4736E41D02faa7D735819AA9afa2ffee1Ce5931',
-        rwaToken: '0x4c1A1b21c4471CA57145EE08404Cbaf9C8B83991',
-        tokenId: 1,
-        shares: 100,
-        paymentToken: networkConfig.contracts.USDT || '0x0000000000000000000000000000000000000000', // Mock USDT address
-        price: 500,
-        status: Erc3525OrderStatus.Active,
-        createdAt: Date.now() - 172800000,
-      };
-
-      setOrder(mockOrder);
-
-      // Mock RWA 元数据
-      setRwaMetadata({
-        name: 'Starlight Dreams 票房份额',
-        description:
-          '参与全球巡演音乐剧 "Starlight Dreams" 的票房收益分成。持有者可按份额比例获得每周收益分红。',
-        projectName: 'Starlight Dreams',
-        totalShares: 10000,
-        expectedRevenue: {
-          weekly: 50, // 每份每周预期收益
-          annualized: 2600, // 每份年化预期收益
-        },
-      });
-    } catch (err) {
-      console.error('Failed to fetch order:', err);
-      setError(t('otc.fetchError') || '获取订单失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [orderId, t, networkConfig.contracts.USDT]);
-
+  // 加载订单
   useEffect(() => {
-    fetchOrder();
-  }, [fetchOrder]);
+    if (orderId) {
+      loadOrder(orderId);
+    }
+  }, [orderId, loadOrder]);
+
+  // RWA 元数据（TODO: 从链上获取真实数据）
+  const rwaMetadata = useMemo(() => {
+    if (!currentRwaOrder) return null;
+    return {
+      name: 'Starlight Dreams 票房份额',
+      description:
+        '参与全球巡演音乐剧 "Starlight Dreams" 的票房收益分成。持有者可按份额比例获得每周收益分红。',
+      projectName: 'Starlight Dreams',
+      totalShares: 10000,
+      expectedRevenue: {
+        weekly: 50, // 每份每周预期收益
+        annualized: 2600, // 每份年化预期收益
+      },
+    };
+  }, [currentRwaOrder]);
 
   // 判断当前用户是否是卖家
   const isSeller = useMemo(() => {
-    if (!order || !walletInfo?.address) return false;
-    return order.seller.toLowerCase() === walletInfo.address.toLowerCase();
-  }, [order, walletInfo?.address]);
+    if (!currentRwaOrder || !address) return false;
+    return currentRwaOrder.seller.toLowerCase() === address.toLowerCase();
+  }, [currentRwaOrder, address]);
 
   // 判断当前用户是否可以购买
   const canBuy = useMemo(() => {
-    return isConnected && order?.status === Erc3525OrderStatus.Active && !isSeller;
-  }, [isConnected, order?.status, isSeller]);
+    return isConnected && currentRwaOrder?.status === Erc3525OrderStatus.Active && !isSeller;
+  }, [isConnected, currentRwaOrder?.status, isSeller]);
 
   // 订单状态文本
   const statusText = useMemo(() => {
-    if (!order) return '';
+    if (!currentRwaOrder) return '';
     const texts = {
       [Erc3525OrderStatus.Active]: t('otc.status.active') || '活跃',
       [Erc3525OrderStatus.Completed]: t('otc.status.completed') || '已成交',
       [Erc3525OrderStatus.Cancelled]: t('otc.status.cancelled') || '已取消',
     };
-    return texts[order.status];
-  }, [order, t]);
+    return texts[currentRwaOrder.status];
+  }, [currentRwaOrder, t]);
 
   // 计算预期收益
   const expectedRevenueForShares = useMemo(() => {
-    if (!order || !rwaMetadata) return null;
+    if (!currentRwaOrder || !rwaMetadata) return null;
     return {
-      weekly: rwaMetadata.expectedRevenue.weekly * order.shares,
-      annualized: rwaMetadata.expectedRevenue.annualized * order.shares,
+      weekly: rwaMetadata.expectedRevenue.weekly * currentRwaOrder.shares,
+      annualized: rwaMetadata.expectedRevenue.annualized * currentRwaOrder.shares,
     };
-  }, [order, rwaMetadata]);
+  }, [currentRwaOrder, rwaMetadata]);
 
   // 执行购买
   const handleExecuteSwap = async () => {
-    if (!order || !canBuy) return;
+    if (!currentRwaOrder || !canBuy) return;
 
-    setExecuting(true);
-    try {
-      // TODO: 实际调用合约执行交换
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    clearError();
+    const result = await executeSwap(orderId);
 
-      await fetchOrder();
+    if (result?.success) {
       window.alert(t('otc.purchaseSuccess') || '购买成功！');
-    } catch (err) {
-      console.error('Failed to execute swap:', err);
-      window.alert(t('otc.purchaseFailed') || '购买失败');
-    } finally {
-      setExecuting(false);
     }
   };
 
   // 取消订单
   const handleCancelOrder = async () => {
-    if (!order || !isSeller || order.status !== Erc3525OrderStatus.Active) return;
+    if (!currentRwaOrder || !isSeller || currentRwaOrder.status !== Erc3525OrderStatus.Active)
+      return;
 
     if (!window.confirm(t('otc.confirmCancel') || '确定要取消此订单吗？')) return;
 
-    setCancelling(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await fetchOrder();
+    clearError();
+    const result = await cancelOrder(orderId);
+
+    if (result?.success) {
       window.alert(t('otc.cancelSuccess') || '订单已取消');
-    } catch (err) {
-      console.error('Failed to cancel order:', err);
-      window.alert(t('otc.cancelFailed') || '取消失败');
-    } finally {
-      setCancelling(false);
     }
   };
 
@@ -196,23 +144,18 @@ export default function Erc3525OtcDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // 格式化地址
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
   // 打开聊天
   const handleOpenChat = () => {
     openChatDrawer();
   };
 
-  if (loading) {
+  if (isLoadingOrder) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <Container size="lg" className="py-8">
           <div className="grid md:grid-cols-2 gap-8">
-            <Skeleton variant="rectangular" className="aspect-square rounded-xl" />
+            <Skeleton variant="rectangular" className="aspect-video rounded-xl" />
             <VStack gap="md" align="stretch">
               <Skeleton variant="text" className="h-8 w-3/4" />
               <Skeleton variant="text" className="h-6 w-1/2" />
@@ -226,7 +169,7 @@ export default function Erc3525OtcDetailPage() {
     );
   }
 
-  if (error || !order) {
+  if (error || !currentRwaOrder) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -317,12 +260,16 @@ export default function Erc3525OtcDetailPage() {
                 >
                   ERC3525
                 </Badge>
-                <Badge variant={order.status === Erc3525OrderStatus.Active ? 'default' : 'outline'}>
+                <Badge
+                  variant={
+                    currentRwaOrder.status === Erc3525OrderStatus.Active ? 'default' : 'outline'
+                  }
+                >
                   {statusText}
                 </Badge>
               </div>
               <h1 className="text-2xl font-bold">
-                {rwaMetadata?.name || `份额 #${order.tokenId}`}
+                {rwaMetadata?.name || `份额 #${currentRwaOrder.tokenId}`}
               </h1>
               {rwaMetadata?.description && (
                 <p className="text-muted-foreground mt-2 text-sm">{rwaMetadata.description}</p>
@@ -337,19 +284,22 @@ export default function Erc3525OtcDetailPage() {
                     <div className="text-sm text-muted-foreground mb-1">
                       {t('otc.shares') || '份额'}
                     </div>
-                    <div className="text-2xl font-bold">{order.shares.toLocaleString()} 份</div>
+                    <div className="text-2xl font-bold">
+                      {currentRwaOrder.shares.toLocaleString()} 份
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-muted-foreground mb-1">
                       {t('otc.totalPrice') || '总价'}
                     </div>
                     <div className="text-2xl font-bold text-primary">
-                      {order.price.toLocaleString()} USDT
+                      {currentRwaOrder.price.toLocaleString()} USDT
                     </div>
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground text-center border-t pt-3">
-                  ≈ {(order.price / order.shares).toFixed(2)} USDT / 份
+                  ≈ {(parseFloat(currentRwaOrder.price) / currentRwaOrder.shares).toFixed(2)} USDT /
+                  份
                 </div>
               </CardContent>
             </Card>
@@ -365,28 +315,28 @@ export default function Erc3525OtcDetailPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">RWA 合约</span>
                   <a
-                    href={`${networkConfig.blockExplorerUrl}/address/${order.rwaToken}`}
+                    href={`${networkConfig.blockExplorerUrl}/address/${currentRwaOrder.rwaToken}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary flex items-center gap-1 hover:underline"
                   >
-                    {formatAddress(order.rwaToken)}
+                    {formatAddress(currentRwaOrder.rwaToken)}
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Token ID</span>
-                  <span className="text-sm font-medium">#{order.tokenId}</span>
+                  <span className="text-sm font-medium">#{currentRwaOrder.tokenId}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">{t('otc.seller') || '卖家'}</span>
                   <a
-                    href={`${networkConfig.blockExplorerUrl}/address/${order.seller}`}
+                    href={`${networkConfig.blockExplorerUrl}/address/${currentRwaOrder.seller}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary flex items-center gap-1 hover:underline"
                   >
-                    {formatAddress(order.seller)}
+                    {formatAddress(currentRwaOrder.seller)}
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
@@ -399,22 +349,32 @@ export default function Erc3525OtcDetailPage() {
               </CardContent>
             </Card>
 
+            {/* 错误提示 */}
+            {error && (
+              <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
             {/* 操作按钮 */}
             <VStack gap="sm">
-              {order.status === Erc3525OrderStatus.Active && (
+              {currentRwaOrder.status === Erc3525OrderStatus.Active && (
                 <>
                   {!isConnected ? (
-                    <Button className="w-full" size="lg" onClick={connectWallet}>
-                      {t('wallet.connect') || '连接钱包'}
-                    </Button>
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground mb-2">请先连接钱包</p>
+                      <p className="text-sm text-muted-foreground">
+                        点击页面右上角的「连接钱包」按钮
+                      </p>
+                    </div>
                   ) : canBuy ? (
                     <Button
                       className="w-full"
                       size="lg"
                       onClick={handleExecuteSwap}
-                      disabled={executing}
+                      disabled={isProcessing}
                     >
-                      {executing ? (
+                      {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           {t('otc.purchasing') || '购买中...'}
@@ -429,9 +389,9 @@ export default function Erc3525OtcDetailPage() {
                       size="lg"
                       variant="destructive"
                       onClick={handleCancelOrder}
-                      disabled={cancelling}
+                      disabled={isProcessing}
                     >
-                      {cancelling ? (
+                      {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           {t('otc.cancelling') || '取消中...'}
@@ -444,7 +404,7 @@ export default function Erc3525OtcDetailPage() {
                 </>
               )}
 
-              {order.status === Erc3525OrderStatus.Completed && (
+              {currentRwaOrder.status === Erc3525OrderStatus.Completed && (
                 <div className="text-center py-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <Check className="h-8 w-8 text-green-500 mx-auto mb-2" />
                   <p className="text-green-600 dark:text-green-400 font-medium">
@@ -453,7 +413,7 @@ export default function Erc3525OtcDetailPage() {
                 </div>
               )}
 
-              {order.status === Erc3525OrderStatus.Cancelled && (
+              {currentRwaOrder.status === Erc3525OrderStatus.Cancelled && (
                 <div className="text-center py-4 bg-muted rounded-lg">
                   <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground font-medium">
