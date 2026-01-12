@@ -313,10 +313,10 @@ export function AppKitProvider({
         console.log(`✅ 已切换到 ${network.name} 网络`);
         return { success: true };
       } catch (error) {
-        console.error('切换网络失败:', error);
+        console.error('Failed to switch network:', error);
         return {
           success: false,
-          error: (error as Error).message || '切换网络失败',
+          error: (error as Error).message || 'Failed to switch network',
         };
       }
     },
