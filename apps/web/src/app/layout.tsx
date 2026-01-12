@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import {
+  AppKitProvider,
   AuthProvider,
   ChatSystem,
   CurrencyProvider,
@@ -80,35 +81,37 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider>
           <ServiceWorkerProvider>
-            <CurrencyProvider>
-              <AuthProvider>
-                <Suspense fallback={null}>
-                  <ProductModalProvider>
-                    <PaymentSelectorProvider>
-                      <SettingsDrawerProvider>
-                        {/* Main content with bottom padding for mobile nav */}
-                        <div className="pb-20 md:pb-0">{children}</div>
+            <AppKitProvider>
+              <CurrencyProvider>
+                <AuthProvider>
+                  <Suspense fallback={null}>
+                    <ProductModalProvider>
+                      <PaymentSelectorProvider>
+                        <SettingsDrawerProvider>
+                          {/* Main content with bottom padding for mobile nav */}
+                          <div className="pb-20 md:pb-0">{children}</div>
 
-                        {/* Mobile bottom navigation */}
-                        <MobileNav />
+                          {/* Mobile bottom navigation */}
+                          <MobileNav />
 
-                        {/* Chat floating button and drawer */}
-                        <ChatSystem />
+                          {/* Chat floating button and drawer */}
+                          <ChatSystem />
 
-                        {/* PWA install prompt */}
-                        <PWAInstall />
+                          {/* PWA install prompt */}
+                          <PWAInstall />
 
-                        {/* Dev tools (only in development) - 临时禁用 */}
-                        {/* <DevTools /> */}
+                          {/* Dev tools (only in development) - 临时禁用 */}
+                          {/* <DevTools /> */}
 
-                        {/* Toast notifications */}
-                        <Toaster />
-                      </SettingsDrawerProvider>
-                    </PaymentSelectorProvider>
-                  </ProductModalProvider>
-                </Suspense>
-              </AuthProvider>
-            </CurrencyProvider>
+                          {/* Toast notifications */}
+                          <Toaster />
+                        </SettingsDrawerProvider>
+                      </PaymentSelectorProvider>
+                    </ProductModalProvider>
+                  </Suspense>
+                </AuthProvider>
+              </CurrencyProvider>
+            </AppKitProvider>
           </ServiceWorkerProvider>
         </ThemeProvider>
       </body>

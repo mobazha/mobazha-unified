@@ -42,6 +42,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
+import { WalletConnectButton } from '../Wallet';
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -139,6 +140,9 @@ export const Header: React.FC = () => {
                 </Link>
               </>
             )}
+
+            {/* 钱包连接 */}
+            <WalletConnectButton size="sm" variant="outline" />
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
