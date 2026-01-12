@@ -5,10 +5,20 @@
     "rootDir": "./",
     "baseUrl": ".",
     "incremental": false,
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "include": ["services/**/*", "stores/**/*", "hooks/**/*", "types/**/*", "utils/**/*", "index.ts"],
+  "include": [
+    "services/**/*",
+    "stores/**/*",
+    "hooks/**/*",
+    "types/**/*",
+    "utils/**/*",
+    "providers/**/*",
+    "config/**/*",
+    "index.ts"
+  ],
   "exclude": ["node_modules", "dist", "__tests__"]
 }

@@ -65,7 +65,9 @@ export function useNftOtc() {
       }
 
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+        const provider = new ethers.BrowserProvider(
+          window.ethereum as unknown as ethers.Eip1193Provider
+        );
         const signer = await provider.getSigner();
         const newService = new NftOtcService(provider, signer, chainId);
         setService(newService);
@@ -336,7 +338,9 @@ export function useErc3525Otc() {
       }
 
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+        const provider = new ethers.BrowserProvider(
+          window.ethereum as unknown as ethers.Eip1193Provider
+        );
         const signer = await provider.getSigner();
         const newService = new Erc3525OtcService(provider, signer, chainId);
         setService(newService);
