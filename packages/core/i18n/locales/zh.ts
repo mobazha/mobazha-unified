@@ -1597,6 +1597,50 @@ export const zh: TranslationResource = {
     confirmRemove: '确认移除',
     confirmRemoveMessage: '确定要从白名单中移除此用户吗？',
   },
+
+  // 用户页面（店铺页面）
+  userPage: {
+    customize: '自定义',
+    createListing: '创建商品',
+    importListings: '导入商品',
+    storeWelcomeCalloutTitle: '欢迎来到您的商店！',
+    storeWelcomeCalloutBody:
+      '您的 Mobazha 商店现在已经上线了。可以从创建新商品或自定义您的页面开始。',
+    storeWelcomeCalloutBtnClose: '关闭',
+  },
+
+  // 导入商品
+  importListings: {
+    title: '导入商品',
+    subtitle: '从 ZIP 文件批量导入商品',
+    step1Title: '第一步：下载模板',
+    step1Desc: '下载 Excel 模板，填写商品数据，然后将其与图片一起保存到 ZIP 文件中。',
+    downloadTemplate: '下载模板',
+    downloadError: '下载模板失败',
+    step2Title: '第二步：上传 ZIP 文件',
+    step2Desc: '上传包含 Excel 文件和商品图片的 ZIP 文件。',
+    dropOrClick: '拖拽 ZIP 文件到此处或点击浏览',
+    maxSize: '最大文件大小：300MB',
+    fileTooLarge: '文件太大，最大支持 300MB。',
+    clearFile: '清除',
+    startImport: '开始导入',
+    importing: '导入中...',
+    uploadingProgress: '上传中... {{progress}}%',
+    resultsTitle: '导入结果',
+    total: '总计',
+    created: '创建',
+    updated: '更新',
+    failed: '失败',
+    errorDetails: '错误详情',
+    row: '行',
+    showDetails: '显示详情',
+    hideDetails: '隐藏详情',
+    createdItems: '已创建的商品',
+    updatedItems: '已更新的商品',
+    success: '成功',
+    importComplete: '导入完成',
+    error: '错误',
+  },
 };
 
 export default zh;

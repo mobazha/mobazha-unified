@@ -25,7 +25,7 @@ import {
   useAccessControl,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
-import { Settings, Camera, Package, Lock, ShieldCheck } from 'lucide-react';
+import { Settings, Camera, Package, Lock, ShieldCheck, Plus, Upload, Ban } from 'lucide-react';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 import {
@@ -80,6 +80,8 @@ export default function StorePage() {
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [isBlockedUser, setIsBlockedUser] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<UserProfile | null>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
@@ -88,6 +90,9 @@ export default function StorePage() {
   // 筛选相关状态
   const [filter, setFilter] = useState<FilterState>(defaultFilterState);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+
+  // Welcome 弹窗状态
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
   // 编辑相关状态
   const [isEditing, setIsEditing] = useState(false);
@@ -234,6 +239,38 @@ export default function StorePage() {
     checkFollowStatus();
   }, [peerId, isAuthenticated, isOwnStore]);
 
+  // 检查是否已屏蔽该用户（仅当不是自己的店铺时）
+  useEffect(() => {
+    const checkBlockStatus = async () => {
+      if (!peerId || !isAuthenticated || isOwnStore) return;
+
+      try {
+        const blocked = await socialApi.isBlocked(peerId);
+        setIsBlockedUser(blocked);
+      } catch (err) {
+        console.error('Failed to check block status:', err);
+      }
+    };
+
+    checkBlockStatus();
+  }, [peerId, isAuthenticated, isOwnStore]);
+
+  // 检查是否显示 Welcome 弹窗（仅当是自己的店铺、商品为空、且未关闭过时）
+  useEffect(() => {
+    if (isOwnStore && !productsLoading && products.length === 0) {
+      const dismissed = localStorage.getItem('dismissedStoreWelcome');
+      if (!dismissed) {
+        setShowWelcomeDialog(true);
+      }
+    }
+  }, [isOwnStore, productsLoading, products.length]);
+
+  // 关闭 Welcome 弹窗
+  const handleCloseWelcome = useCallback(() => {
+    setShowWelcomeDialog(false);
+    localStorage.setItem('dismissedStoreWelcome', 'true');
+  }, []);
+
   // 关注/取消关注处理
   const handleFollowToggle = async () => {
     if (!isAuthenticated || followLoading || isOwnStore) return;
@@ -251,6 +288,26 @@ export default function StorePage() {
       console.error('Failed to toggle follow:', err);
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  // 屏蔽/取消屏蔽处理
+  const handleBlockToggle = async () => {
+    if (!isAuthenticated || blockLoading || isOwnStore) return;
+
+    setBlockLoading(true);
+    try {
+      if (isBlockedUser) {
+        await socialApi.unblockUser(peerId);
+        setIsBlockedUser(false);
+      } else {
+        await socialApi.blockUser(peerId);
+        setIsBlockedUser(true);
+      }
+    } catch (err) {
+      console.error('Failed to toggle block:', err);
+    } finally {
+      setBlockLoading(false);
     }
   };
 
@@ -633,8 +690,24 @@ export default function StorePage() {
                             className="touch-feedback gap-1.5"
                           >
                             <Settings className="h-4 w-4" />
-                            <span>{t('settingsModal.customize')}</span>
+                            <span className="hidden sm:inline">{t('settingsModal.customize')}</span>
                           </Button>
+                          <Link href="/listing/new">
+                            <Button variant="outline" size="sm" className="touch-feedback gap-1.5">
+                              <Plus className="h-4 w-4" />
+                              <span className="hidden sm:inline">
+                                {t('userPage.createListing')}
+                              </span>
+                            </Button>
+                          </Link>
+                          <Link href="/listing/import">
+                            <Button variant="outline" size="sm" className="touch-feedback gap-1.5">
+                              <Upload className="h-4 w-4" />
+                              <span className="hidden sm:inline">
+                                {t('userPage.importListings')}
+                              </span>
+                            </Button>
+                          </Link>
                         </>
                       ) : (
                         <>
@@ -660,6 +733,24 @@ export default function StorePage() {
                             onClick={handleMessage}
                           >
                             {t('profile.message')}
+                          </Button>
+                          <Button
+                            variant={isBlockedUser ? 'destructive' : 'outline'}
+                            onClick={handleBlockToggle}
+                            disabled={blockLoading || !isAuthenticated}
+                            size="sm"
+                            className="touch-feedback"
+                            title={
+                              isBlockedUser
+                                ? t('profile.unblock') || 'Unblock'
+                                : t('profile.block') || 'Block'
+                            }
+                          >
+                            {blockLoading ? (
+                              <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                            ) : (
+                              <Ban className="h-4 w-4" />
+                            )}
                           </Button>
                         </>
                       )}
@@ -1052,6 +1143,43 @@ export default function StorePage() {
         onFilterChange={setFilter}
         categories={categories}
       />
+
+      {/* Welcome 弹窗 - 新店铺首次进入时显示 */}
+      <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {t('userPage.storeWelcomeCalloutTitle') || 'Welcome to your store!'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground">
+              {t('userPage.storeWelcomeCalloutBody') ||
+                'Your Mobazha store is now live on the network. Get started by creating some listings or customizing your page.'}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleCloseWelcome} className="flex-1">
+              {t('userPage.storeWelcomeCalloutBtnClose') || 'Close'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleCloseWelcome();
+                openSettings('page');
+              }}
+              className="flex-1"
+            >
+              {t('settingsModal.customize') || 'Customize'}
+            </Button>
+            <Link href="/listing/new" className="flex-1">
+              <Button onClick={handleCloseWelcome} className="w-full">
+                {t('userPage.createListing') || 'Create Listing'}
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

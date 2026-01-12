@@ -1624,6 +1624,51 @@ export const en: TranslationResource = {
     confirmRemove: 'Confirm Removal',
     confirmRemoveMessage: 'Are you sure you want to remove this user from the whitelist?',
   },
+
+  // User Page (Store Page)
+  userPage: {
+    customize: 'Customize',
+    createListing: 'Create Listing',
+    importListings: 'Import Listings',
+    storeWelcomeCalloutTitle: 'Welcome to your store!',
+    storeWelcomeCalloutBody:
+      'Your Mobazha store is now live on the network. Get started by creating some listings or customizing your page.',
+    storeWelcomeCalloutBtnClose: 'Close',
+  },
+
+  // Import Listings
+  importListings: {
+    title: 'Import Listings',
+    subtitle: 'Bulk import listings from a ZIP file',
+    step1Title: 'Step 1: Download Template',
+    step1Desc:
+      'Download the Excel template, fill in your listing data, and save it with the images in a ZIP file.',
+    downloadTemplate: 'Download Template',
+    downloadError: 'Failed to download template',
+    step2Title: 'Step 2: Upload ZIP File',
+    step2Desc: 'Upload a ZIP file containing your Excel file and product images.',
+    dropOrClick: 'Drop your ZIP file here or click to browse',
+    maxSize: 'Maximum file size: 300MB',
+    fileTooLarge: 'File is too large. Maximum size is 300MB.',
+    clearFile: 'Clear',
+    startImport: 'Start Import',
+    importing: 'Importing...',
+    uploadingProgress: 'Uploading... {{progress}}%',
+    resultsTitle: 'Import Results',
+    total: 'Total',
+    created: 'Created',
+    updated: 'Updated',
+    failed: 'Failed',
+    errorDetails: 'Error Details',
+    row: 'Row',
+    showDetails: 'Show Details',
+    hideDetails: 'Hide Details',
+    createdItems: 'Created Items',
+    updatedItems: 'Updated Items',
+    success: 'Success',
+    importComplete: 'Import completed successfully',
+    error: 'Error',
+  },
 };
 
 export default en;
