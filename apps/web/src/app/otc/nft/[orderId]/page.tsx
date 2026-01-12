@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { useI18n, useWallet, useChatStore } from '@mobazha/core';
+import { useI18n, useChatStore } from '@mobazha/core';
+import { useNftOtc } from '@mobazha/core/hooks/useOtc';
 import {
   ArrowLeft,
   ExternalLink,
@@ -18,7 +19,7 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react';
-import { getOtcConfig } from '@mobazha/core/config/otcConfig';
+import { getOtcConfig, DEFAULT_CHAIN_ID } from '@mobazha/core/config/otcConfig';
 
 // OTC 订单状态枚举
 enum NftOrderStatus {
@@ -27,148 +28,94 @@ enum NftOrderStatus {
   Cancelled = 2,
 }
 
-// NFT OTC 订单类型
-interface NftOrder {
-  orderId: string;
-  seller: string;
-  nftContract: string;
-  tokenId: number;
-  paymentToken: string;
-  price: number;
-  status: NftOrderStatus;
-  createdAt: number;
-  completedAt?: number;
-}
-
-// NFT 元数据
-interface NftMetadata {
-  name: string;
-  description: string;
-  image: string;
-}
-
 export default function NftOtcDetailPage() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.orderId as string;
   const { t } = useI18n();
-  const { isConnected, walletInfo, connect: connectWallet } = useWallet();
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
-  const networkConfig = getOtcConfig();
+  // 使用 NFT OTC Hook
+  const {
+    isConnected,
+    address,
+    currentNftOrder,
+    isLoadingOrder,
+    isProcessing,
+    error,
+    loadOrder,
+    executeSwap,
+    cancelOrder,
+    formatAddress,
+    clearError,
+  } = useNftOtc();
 
-  const [order, setOrder] = useState<NftOrder | null>(null);
-  const [nftMetadata, setNftMetadata] = useState<NftMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [executing, setExecuting] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const networkConfig = getOtcConfig(DEFAULT_CHAIN_ID);
+
   const [copied, setCopied] = useState(false);
 
-  // 获取订单详情
-  const fetchOrder = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // TODO: 实际从链上获取订单信息
-      // Mock 数据演示
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const mockOrder: NftOrder = {
-        orderId,
-        seller: '0xC4736E41D02faa7D735819AA9afa2ffee1Ce5931',
-        nftContract: '0x17ebC8FeE90E7556E1E12Aa42604477D6A243324',
-        tokenId: 1,
-        paymentToken: networkConfig.contracts.USDT || '0x0000000000000000000000000000000000000000', // Mock USDT address
-        price: 100,
-        status: NftOrderStatus.Active,
-        createdAt: Date.now() - 86400000,
-      };
-
-      setOrder(mockOrder);
-
-      // Mock NFT 元数据
-      setNftMetadata({
-        name: 'KOL 限量签名照 #1',
-        description: '某知名 KOL 的限量签名照，全球仅发行 100 份。持有此 NFT 可获得专属粉丝福利。',
-        image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=600&h=600&fit=crop',
-      });
-    } catch (err) {
-      console.error('Failed to fetch order:', err);
-      setError(t('otc.fetchError') || '获取订单失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [orderId, t, networkConfig.contracts.USDT]);
-
+  // 加载订单
   useEffect(() => {
-    fetchOrder();
-  }, [fetchOrder]);
+    if (orderId) {
+      loadOrder(orderId);
+    }
+  }, [orderId, loadOrder]);
+
+  // NFT 元数据（TODO: 从链上获取真实数据）
+  const nftMetadata = useMemo(() => {
+    if (!currentNftOrder) return null;
+    return {
+      name: `NFT #${currentNftOrder.tokenId}`,
+      description: '这是一个 KOL/明星的限量数字收藏品。',
+      image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=600&h=600&fit=crop',
+    };
+  }, [currentNftOrder]);
 
   // 判断当前用户是否是卖家
   const isSeller = useMemo(() => {
-    if (!order || !walletInfo?.address) return false;
-    return order.seller.toLowerCase() === walletInfo.address.toLowerCase();
-  }, [order, walletInfo?.address]);
+    if (!currentNftOrder || !address) return false;
+    return currentNftOrder.seller.toLowerCase() === address.toLowerCase();
+  }, [currentNftOrder, address]);
 
   // 判断当前用户是否可以购买
   const canBuy = useMemo(() => {
-    return isConnected && order?.status === NftOrderStatus.Active && !isSeller;
-  }, [isConnected, order?.status, isSeller]);
+    return isConnected && currentNftOrder?.status === NftOrderStatus.Active && !isSeller;
+  }, [isConnected, currentNftOrder?.status, isSeller]);
 
   // 订单状态文本
   const statusText = useMemo(() => {
-    if (!order) return '';
+    if (!currentNftOrder) return '';
     const texts = {
       [NftOrderStatus.Active]: t('otc.status.active') || '活跃',
       [NftOrderStatus.Completed]: t('otc.status.completed') || '已成交',
       [NftOrderStatus.Cancelled]: t('otc.status.cancelled') || '已取消',
     };
-    return texts[order.status];
-  }, [order, t]);
+    return texts[currentNftOrder.status];
+  }, [currentNftOrder, t]);
 
   // 执行购买
   const handleExecuteSwap = async () => {
-    if (!order || !canBuy) return;
+    if (!currentNftOrder || !canBuy) return;
 
-    setExecuting(true);
-    try {
-      // TODO: 实际调用合约执行交换
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    clearError();
+    const result = await executeSwap(orderId);
 
-      // 刷新订单状态
-      await fetchOrder();
-
+    if (result?.success) {
       window.alert(t('otc.purchaseSuccess') || '购买成功！');
-    } catch (err) {
-      console.error('Failed to execute swap:', err);
-      window.alert(t('otc.purchaseFailed') || '购买失败');
-    } finally {
-      setExecuting(false);
     }
   };
 
   // 取消订单
   const handleCancelOrder = async () => {
-    if (!order || !isSeller || order.status !== NftOrderStatus.Active) return;
+    if (!currentNftOrder || !isSeller || currentNftOrder.status !== NftOrderStatus.Active) return;
 
     if (!window.confirm(t('otc.confirmCancel') || '确定要取消此订单吗？')) return;
 
-    setCancelling(true);
-    try {
-      // TODO: 实际调用合约取消订单
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    clearError();
+    const result = await cancelOrder(orderId);
 
-      // 刷新订单状态
-      await fetchOrder();
-
+    if (result?.success) {
       window.alert(t('otc.cancelSuccess') || '订单已取消');
-    } catch (err) {
-      console.error('Failed to cancel order:', err);
-      window.alert(t('otc.cancelFailed') || '取消失败');
-    } finally {
-      setCancelling(false);
     }
   };
 
@@ -180,18 +127,13 @@ export default function NftOtcDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // 格式化地址
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
   // 打开聊天
   const handleOpenChat = () => {
     openChatDrawer();
     // TODO: 自动选择与卖家的对话
   };
 
-  if (loading) {
+  if (isLoadingOrder) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -211,7 +153,7 @@ export default function NftOtcDetailPage() {
     );
   }
 
-  if (error || !order) {
+  if (error || !currentNftOrder) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -265,11 +207,15 @@ export default function NftOtcDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="secondary">NFT</Badge>
-                <Badge variant={order.status === NftOrderStatus.Active ? 'default' : 'outline'}>
+                <Badge
+                  variant={currentNftOrder.status === NftOrderStatus.Active ? 'default' : 'outline'}
+                >
                   {statusText}
                 </Badge>
               </div>
-              <h1 className="text-2xl font-bold">{nftMetadata?.name || `NFT #${order.tokenId}`}</h1>
+              <h1 className="text-2xl font-bold">
+                {nftMetadata?.name || `NFT #${currentNftOrder.tokenId}`}
+              </h1>
               {nftMetadata?.description && (
                 <p className="text-muted-foreground mt-2">{nftMetadata.description}</p>
               )}
@@ -279,7 +225,7 @@ export default function NftOtcDetailPage() {
             <Card>
               <CardContent className="p-4">
                 <div className="text-sm text-muted-foreground mb-1">{t('otc.price') || '价格'}</div>
-                <div className="text-3xl font-bold text-primary">{order.price} USDT</div>
+                <div className="text-3xl font-bold text-primary">{currentNftOrder.price} USDT</div>
               </CardContent>
             </Card>
 
@@ -294,28 +240,28 @@ export default function NftOtcDetailPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">NFT 合约</span>
                   <a
-                    href={`${networkConfig.blockExplorerUrl}/address/${order.nftContract}`}
+                    href={`${networkConfig.blockExplorerUrl}/address/${currentNftOrder.nftContract}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary flex items-center gap-1 hover:underline"
                   >
-                    {formatAddress(order.nftContract)}
+                    {formatAddress(currentNftOrder.nftContract)}
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Token ID</span>
-                  <span className="text-sm font-medium">#{order.tokenId}</span>
+                  <span className="text-sm font-medium">#{currentNftOrder.tokenId}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">{t('otc.seller') || '卖家'}</span>
                   <a
-                    href={`${networkConfig.blockExplorerUrl}/address/${order.seller}`}
+                    href={`${networkConfig.blockExplorerUrl}/address/${currentNftOrder.seller}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary flex items-center gap-1 hover:underline"
                   >
-                    {formatAddress(order.seller)}
+                    {formatAddress(currentNftOrder.seller)}
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
@@ -328,22 +274,32 @@ export default function NftOtcDetailPage() {
               </CardContent>
             </Card>
 
+            {/* 错误提示 */}
+            {error && (
+              <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
             {/* 操作按钮 */}
             <VStack gap="sm">
-              {order.status === NftOrderStatus.Active && (
+              {currentNftOrder.status === NftOrderStatus.Active && (
                 <>
                   {!isConnected ? (
-                    <Button className="w-full" size="lg" onClick={connectWallet}>
-                      {t('wallet.connect') || '连接钱包'}
-                    </Button>
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground mb-2">请先连接钱包</p>
+                      <p className="text-sm text-muted-foreground">
+                        点击页面右上角的「连接钱包」按钮
+                      </p>
+                    </div>
                   ) : canBuy ? (
                     <Button
                       className="w-full"
                       size="lg"
                       onClick={handleExecuteSwap}
-                      disabled={executing}
+                      disabled={isProcessing}
                     >
-                      {executing ? (
+                      {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           {t('otc.purchasing') || '购买中...'}
@@ -358,9 +314,9 @@ export default function NftOtcDetailPage() {
                       size="lg"
                       variant="destructive"
                       onClick={handleCancelOrder}
-                      disabled={cancelling}
+                      disabled={isProcessing}
                     >
-                      {cancelling ? (
+                      {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           {t('otc.cancelling') || '取消中...'}
@@ -373,7 +329,7 @@ export default function NftOtcDetailPage() {
                 </>
               )}
 
-              {order.status === NftOrderStatus.Completed && (
+              {currentNftOrder.status === NftOrderStatus.Completed && (
                 <div className="text-center py-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <Check className="h-8 w-8 text-green-500 mx-auto mb-2" />
                   <p className="text-green-600 dark:text-green-400 font-medium">
@@ -382,7 +338,7 @@ export default function NftOtcDetailPage() {
                 </div>
               )}
 
-              {order.status === NftOrderStatus.Cancelled && (
+              {currentNftOrder.status === NftOrderStatus.Cancelled && (
                 <div className="text-center py-4 bg-muted rounded-lg">
                   <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground font-medium">
