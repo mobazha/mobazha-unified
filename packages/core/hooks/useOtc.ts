@@ -1,5 +1,7 @@
 /**
  * OTC 交易 Hooks
+ *
+ * 使用 AppKit provider 进行钱包交互
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -14,7 +16,6 @@ import {
 } from '../config/otcConfig';
 import type { CreateNftOrderParams, CreateErc3525OrderParams } from '../types/otc';
 import { useWallet } from './useWallet';
-import { ethers } from 'ethers';
 
 // ============================================================
 // NFT OTC Hook
@@ -47,7 +48,8 @@ export function useNftOtc() {
     resetCreateOrder,
   } = useOtcStore();
 
-  const { isConnected, getCurrentChainId, getCurrentAddress } = useWallet();
+  // 使用改造后的 useWallet (基于 AppKit)
+  const { isConnected, getCurrentChainId, getCurrentAddress, getProvider, getSigner } = useWallet();
 
   // 获取钱包地址和链 ID
   const address = getCurrentAddress();
@@ -56,22 +58,26 @@ export function useNftOtc() {
   // 服务实例状态
   const [service, setService] = useState<NftOtcService | null>(null);
 
-  // 初始化服务
+  // 初始化服务 - 使用 AppKit provider
   useEffect(() => {
     const initService = async () => {
-      if (typeof window === 'undefined' || !window.ethereum) {
+      const provider = getProvider();
+      if (!provider) {
         setService(null);
         return;
       }
 
       try {
-        const provider = new ethers.BrowserProvider(
-          window.ethereum as unknown as ethers.Eip1193Provider
-        );
-        const signer = await provider.getSigner();
+        const signer = await getSigner();
+        if (!signer) {
+          setService(null);
+          return;
+        }
+
         const newService = new NftOtcService(provider, signer, chainId);
         setService(newService);
-      } catch {
+      } catch (err) {
+        console.error('Failed to initialize NftOtcService:', err);
         setService(null);
       }
     };
@@ -81,7 +87,7 @@ export function useNftOtc() {
     } else {
       setService(null);
     }
-  }, [isConnected, chainId]);
+  }, [isConnected, chainId, getProvider, getSigner]);
 
   // 加载用户 NFTs
   const loadUserNfts = useCallback(async () => {
@@ -283,7 +289,7 @@ export function useNftOtc() {
     formatAddress:
       service?.formatAddress || ((addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`),
     getExplorerLink:
-      service?.getExplorerLink || ((txHash: string) => `https://sepolia.basescan.org/tx/${txHash}`),
+      service?.getExplorerLink || ((txHash: string) => `https://sepolia.etherscan.io/tx/${txHash}`),
   };
 }
 
@@ -320,7 +326,8 @@ export function useErc3525Otc() {
     resetCreateOrder,
   } = useOtcStore();
 
-  const { isConnected, getCurrentChainId, getCurrentAddress } = useWallet();
+  // 使用改造后的 useWallet (基于 AppKit)
+  const { isConnected, getCurrentChainId, getCurrentAddress, getProvider, getSigner } = useWallet();
 
   // 获取钱包地址和链 ID
   const address = getCurrentAddress();
@@ -329,22 +336,26 @@ export function useErc3525Otc() {
   // 服务实例状态
   const [service, setService] = useState<Erc3525OtcService | null>(null);
 
-  // 初始化服务
+  // 初始化服务 - 使用 AppKit provider
   useEffect(() => {
     const initService = async () => {
-      if (typeof window === 'undefined' || !window.ethereum) {
+      const provider = getProvider();
+      if (!provider) {
         setService(null);
         return;
       }
 
       try {
-        const provider = new ethers.BrowserProvider(
-          window.ethereum as unknown as ethers.Eip1193Provider
-        );
-        const signer = await provider.getSigner();
+        const signer = await getSigner();
+        if (!signer) {
+          setService(null);
+          return;
+        }
+
         const newService = new Erc3525OtcService(provider, signer, chainId);
         setService(newService);
-      } catch {
+      } catch (err) {
+        console.error('Failed to initialize Erc3525OtcService:', err);
         setService(null);
       }
     };
@@ -354,7 +365,7 @@ export function useErc3525Otc() {
     } else {
       setService(null);
     }
-  }, [isConnected, chainId]);
+  }, [isConnected, chainId, getProvider, getSigner]);
 
   // 加载用户持仓
   const loadUserHoldings = useCallback(async () => {
@@ -558,7 +569,7 @@ export function useErc3525Otc() {
     formatAddress:
       service?.formatAddress || ((addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`),
     getExplorerLink:
-      service?.getExplorerLink || ((txHash: string) => `https://sepolia.basescan.org/tx/${txHash}`),
+      service?.getExplorerLink || ((txHash: string) => `https://sepolia.etherscan.io/tx/${txHash}`),
     formatCurrency:
       service?.formatCurrency ||
       ((amount: number, symbol = 'USDT') => `${amount.toFixed(2)} ${symbol}`),
