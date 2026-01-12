@@ -476,6 +476,7 @@ export const es: TranslationResource = {
     loadHeader: 'Cambiar portada',
     sidebar: {
       general: 'General',
+      account: 'Cuentas vinculadas',
       page: 'Página de perfil',
       store: 'Tienda',
       accessControl: 'Control de acceso',
@@ -488,6 +489,25 @@ export const es: TranslationResource = {
       moderation: 'Moderación',
       chatEncryption: 'Cifrado de chat',
       advanced: 'Avanzado',
+    },
+    accountBinding: {
+      title: 'Cuentas vinculadas',
+      description: 'Gestiona tus métodos de inicio de sesión',
+      linked: 'Cuentas vinculadas',
+      available: 'Disponible para vincular',
+      link: 'Vincular',
+      unlink: 'Desvincular',
+      linkSuccess: 'Cuenta vinculada correctamente',
+      linkFailed: 'Error al vincular cuenta',
+      unlinkSuccess: 'Cuenta desvinculada correctamente',
+      unlinkFailed: 'Error al desvincular cuenta',
+      unlinkConfirm: 'Confirmar desvinculación',
+      unlinkConfirmDesc: '¿Seguro que quieres desvincular {{provider}}?',
+      noLinked: 'Sin cuentas vinculadas',
+      notLinked: 'No vinculado',
+      keepOne: 'Mantener al menos un método de inicio de sesión',
+      keepOneDesc:
+        'Para la seguridad de tu cuenta, debes mantener al menos un método de inicio de sesión.',
     },
     accessControl: {
       privacyDesc: 'Controla quién puede ver tu tienda',

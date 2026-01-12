@@ -18,6 +18,7 @@ import {
   Layers,
   Clock,
   ChevronRight,
+  Link2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,12 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.general',
     href: '/settings/general',
     icon: <Settings className="w-4 h-4" />,
+  },
+  {
+    id: 'account',
+    labelKey: 'settings.sidebar.account',
+    href: '/settings/account',
+    icon: <Link2 className="w-4 h-4" />,
   },
   {
     id: 'page',

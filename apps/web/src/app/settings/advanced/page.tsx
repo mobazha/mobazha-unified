@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   useToast,
 } from '@/components/ui';
-import { useI18n, useUserStore } from '@mobazha/core';
+import { useI18n, useUserStore, isHosted, startCasdoorLogin } from '@mobazha/core';
 import {
   ChevronLeft,
   ChevronRight,
@@ -138,7 +138,12 @@ export default function AdvancedSettingsPage() {
 
   const handleLogoutConfirm = () => {
     logout();
-    router.push('/');
+    // 托管模式下直接跳转 Casdoor，避免闪烁
+    if (isHosted()) {
+      startCasdoorLogin();
+    } else {
+      router.push('/');
+    }
   };
 
   const handleResync = () => {

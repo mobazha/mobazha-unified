@@ -792,6 +792,7 @@ export const zh: TranslationResource = {
     // 侧边栏导航
     sidebar: {
       general: '通用',
+      account: '账号绑定',
       page: '个人页面',
       store: '店铺',
       accessControl: '访问控制',
@@ -804,6 +805,26 @@ export const zh: TranslationResource = {
       moderation: '调解',
       chatEncryption: '聊天加密',
       advanced: '高级',
+    },
+    // 账号绑定
+    accountBinding: {
+      title: '账号绑定',
+      description: '管理已绑定的登录方式',
+      linked: '已绑定账号',
+      available: '可绑定账号',
+      link: '绑定',
+      unlink: '解绑',
+      linkSuccess: '账号绑定成功',
+      linkFailed: '账号绑定失败',
+      unlinkSuccess: '账号解绑成功',
+      unlinkFailed: '账号解绑失败',
+      unlinkConfirm: '确认解绑',
+      unlinkConfirmDesc: '确定要解绑 {{provider}} 账号吗？解绑后将无法使用该账号登录。',
+      noLinked: '暂无绑定账号',
+      notLinked: '未绑定',
+      keepOne: '至少保留一种登录方式',
+      keepOneDesc:
+        '绑定多个账号后，您可以使用任意一个登录。为确保账号安全，至少需要保留一种登录方式。',
     },
     // 访问控制
     accessControl: {

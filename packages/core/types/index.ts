@@ -199,3 +199,17 @@ export type {
 } from './access';
 
 export { ProductGroupVisibility, GROUP_COLORS } from './access';
+
+// Account binding types
+export type {
+  OAuthProvider,
+  LinkedAccount,
+  LinkedAccountsResponse,
+  LinkUrlResponse,
+  UnlinkRequest,
+  UnlinkResponse,
+  LinkCallbackResponse,
+  ProviderInfo,
+} from './account';
+
+export { SUPPORTED_PROVIDERS, getProviderInfo } from './account';

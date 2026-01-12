@@ -1,0 +1,242 @@
+/**
+ * 账号绑定服务
+ * 支持查询已绑定账号、绑定新账号、解绑账号等功能
+ */
+
+import { getHostingUrl } from '../api/config';
+import { getStoredToken } from './token';
+import type {
+  LinkedAccountsResponse,
+  LinkUrlResponse,
+  UnlinkResponse,
+  LinkCallbackResponse,
+  OAuthProvider,
+} from '../../types/account';
+
+/**
+ * 获取已绑定的账号列表
+ */
+export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
+  const baseUrl = getHostingUrl();
+  const token = getStoredToken();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await fetch(`${baseUrl}/api/account/linked`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to get linked accounts: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  if (data.status !== 'ok') {
+    throw new Error(data.msg || 'Failed to get linked accounts');
+  }
+
+  return data.data as LinkedAccountsResponse;
+}
+
+/**
+ * 获取绑定账号的 OAuth URL
+ * 用户访问此 URL 后，通过 OAuth 流程绑定新账号到当前用户
+ *
+ * @param provider 要绑定的 provider 类型
+ * @param redirectUri 绑定完成后的回调 URL
+ */
+export async function getLinkUrl(
+  provider: OAuthProvider,
+  redirectUri: string
+): Promise<LinkUrlResponse> {
+  const baseUrl = getHostingUrl();
+  const token = getStoredToken();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const params = new URLSearchParams({
+    provider,
+    redirect_uri: redirectUri,
+  });
+
+  const response = await fetch(`${baseUrl}/api/account/link-url?${params}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to get link URL: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  if (data.status !== 'ok') {
+    throw new Error(data.msg || 'Failed to get link URL');
+  }
+
+  return data.data as LinkUrlResponse;
+}
+
+/**
+ * 发起绑定账号流程
+ * 将重定向用户到 OAuth Provider 进行授权
+ *
+ * @param provider 要绑定的 provider 类型
+ * @param redirectUri 绑定完成后的回调 URL（可选，默认使用当前页面）
+ */
+export async function startLinkAccount(
+  provider: OAuthProvider,
+  redirectUri?: string
+): Promise<void> {
+  if (typeof window === 'undefined') {
+    throw new Error('startLinkAccount can only be called in browser');
+  }
+
+  const callbackUrl = redirectUri || `${window.location.origin}/settings/account?link_callback=1`;
+
+  // 保存当前状态，回调后恢复
+  sessionStorage.setItem('link_provider', provider);
+  sessionStorage.setItem('link_redirect', window.location.pathname);
+
+  const { url } = await getLinkUrl(provider, callbackUrl);
+  window.location.href = url;
+}
+
+/**
+ * 处理绑定回调
+ * 在 OAuth 回调页面调用此函数完成绑定流程
+ *
+ * @param code OAuth 授权码
+ * @param state OAuth state 参数
+ */
+export async function handleLinkCallback(
+  code: string,
+  state: string
+): Promise<LinkCallbackResponse> {
+  const baseUrl = getHostingUrl();
+  const token = getStoredToken();
+
+  if (!token) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  const params = new URLSearchParams({ code, state });
+
+  const response = await fetch(`${baseUrl}/api/account/link-callback?${params}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    return { success: false, error: `Link failed: ${errorText}` };
+  }
+
+  const data = await response.json();
+
+  if (data.status !== 'ok') {
+    return { success: false, error: data.msg || 'Link failed' };
+  }
+
+  return data.data as LinkCallbackResponse;
+}
+
+/**
+ * 解绑账号
+ *
+ * @param provider 要解绑的 provider 类型
+ */
+export async function unlinkAccount(provider: OAuthProvider): Promise<UnlinkResponse> {
+  const baseUrl = getHostingUrl();
+  const token = getStoredToken();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await fetch(`${baseUrl}/api/account/unlink`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ provider }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to unlink account: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  if (data.status !== 'ok') {
+    throw new Error(data.msg || 'Failed to unlink account');
+  }
+
+  return data.data as UnlinkResponse;
+}
+
+/**
+ * 检查是否有绑定回调参数
+ */
+export function hasLinkCallback(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  const state = params.get('state');
+  return params.has('code') && params.has('state') && state !== null && state.startsWith('link:');
+}
+
+/**
+ * 获取绑定回调参数
+ */
+export function getLinkCallbackParams(): { code: string | null; state: string | null } {
+  if (typeof window === 'undefined') {
+    return { code: null, state: null };
+  }
+  const params = new URLSearchParams(window.location.search);
+  return {
+    code: params.get('code'),
+    state: params.get('state'),
+  };
+}
+
+/**
+ * 清理 URL 中的绑定回调参数
+ */
+export function clearLinkCallbackParams(): void {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  url.searchParams.delete('code');
+  url.searchParams.delete('state');
+  url.searchParams.delete('link_callback');
+  window.history.replaceState({}, '', url.toString());
+}
+
+/**
+ * 获取绑定后应该返回的页面路径
+ */
+export function getLinkRedirectPath(): string {
+  if (typeof sessionStorage === 'undefined') return '/settings/account';
+  const path = sessionStorage.getItem('link_redirect');
+  sessionStorage.removeItem('link_redirect');
+  sessionStorage.removeItem('link_provider');
+  return path || '/settings/account';
+}

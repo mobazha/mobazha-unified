@@ -15,6 +15,7 @@ import {
   Lock,
   Wrench,
   ChevronRight,
+  Link2,
 } from 'lucide-react';
 
 interface SettingsCategoryProps {
@@ -73,6 +74,12 @@ export default function SettingsPage() {
           title={t('settings.sidebar.general')}
           description={t('settingsModal.languageDesc')}
           onClick={() => openSettings('general')}
+        />
+        <SettingsCategory
+          icon={<Link2 className="w-5 h-5" />}
+          title={t('settings.sidebar.account')}
+          description={t('settings.accountBinding.description')}
+          onClick={() => openSettings('account')}
         />
         <SettingsCategory
           icon={<User className="w-5 h-5" />}
