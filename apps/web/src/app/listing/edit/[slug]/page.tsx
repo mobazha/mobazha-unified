@@ -1,317 +1,318 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import {
+  ArrowLeft,
+  Save,
+  X,
+  Eye,
+  Tag,
+  FolderTree,
+  Gift,
+  FileText,
+  Loader2,
+  Trash2,
+} from 'lucide-react';
 import { Header, Footer } from '@/components';
-import { Container, HStack, VStack, Grid } from '@/components/layouts';
+import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton-compat';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { useListingForm, useListing, useI18n, getGatewayUrl, productsApi } from '@mobazha/core';
+import type {
+  ContractType,
+  BlockchainNetwork,
+  Image,
+  ShippingOption,
+  ListingFormData,
+} from '@mobazha/core';
 
-// Types
-type ProductType = 'physical_good' | 'digital_good' | 'service' | 'rwa_token';
-type ProductCondition = 'new' | 'used' | 'refurbished';
+import {
+  ProductTypeSelector,
+  BasicInfoSection,
+  MediaSection,
+  RwaTokenFields,
+  PhysicalGoodFields,
+} from '@/components/Listing';
 
-interface ListingFormData {
-  title: string;
-  description: string;
-  price: string;
-  currency: string;
-  productType: ProductType;
-  condition: ProductCondition;
-  category: string;
-  subcategory: string;
-  tags: string[];
-  images: string[];
-  stock: number;
-  weight: string;
-  shippingOptions: string[];
-  digitalDelivery: string;
-  tokenAddress: string;
-  blockchain: string;
+// 左侧导航标签
+type TabKey =
+  | 'general'
+  | 'photos'
+  | 'tags'
+  | 'category'
+  | 'shipping'
+  | 'variants'
+  | 'policies'
+  | 'coupons';
+
+interface TabItem {
+  key: TabKey;
+  labelKey: string;
+  icon: React.ReactNode;
+  showFor?: ContractType[];
 }
 
-// Options (same as create page)
-const productTypes: { value: ProductType; label: string; description: string }[] = [
+const tabs: TabItem[] = [
+  { key: 'general', labelKey: 'listing.tabs.general', icon: <FileText className="w-4 h-4" /> },
+  { key: 'photos', labelKey: 'listing.tabs.photos', icon: <Eye className="w-4 h-4" /> },
+  { key: 'tags', labelKey: 'listing.tabs.tags', icon: <Tag className="w-4 h-4" /> },
+  { key: 'category', labelKey: 'listing.tabs.category', icon: <FolderTree className="w-4 h-4" /> },
   {
-    value: 'physical_good',
-    label: 'Physical Good',
-    description: 'Tangible items that need shipping',
+    key: 'shipping',
+    labelKey: 'listing.tabs.shipping',
+    icon: <Gift className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD'],
   },
   {
-    value: 'digital_good',
-    label: 'Digital Good',
-    description: 'Downloadable files or digital content',
+    key: 'variants',
+    labelKey: 'listing.tabs.variants',
+    icon: <Gift className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD'],
   },
-  { value: 'service', label: 'Service', description: 'Professional services or consulting' },
   {
-    value: 'rwa_token',
-    label: 'RWA Token',
-    description: 'Real World Asset tokenized on blockchain',
+    key: 'policies',
+    labelKey: 'listing.tabs.policies',
+    icon: <FileText className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
+  },
+  {
+    key: 'coupons',
+    labelKey: 'listing.tabs.coupons',
+    icon: <Gift className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
   },
 ];
-
-const conditions: { value: ProductCondition; label: string }[] = [
-  { value: 'new', label: 'New' },
-  { value: 'used', label: 'Used' },
-  { value: 'refurbished', label: 'Refurbished' },
-];
-
-const categories = [
-  {
-    value: 'electronics',
-    label: 'Electronics',
-    subcategories: ['Phones', 'Computers', 'Audio', 'Accessories'],
-  },
-  { value: 'fashion', label: 'Fashion', subcategories: ['Men', 'Women', 'Kids', 'Accessories'] },
-  {
-    value: 'home',
-    label: 'Home & Garden',
-    subcategories: ['Furniture', 'Decor', 'Kitchen', 'Garden'],
-  },
-  {
-    value: 'art',
-    label: 'Art & Collectibles',
-    subcategories: ['Paintings', 'Sculptures', 'NFTs', 'Vintage'],
-  },
-  {
-    value: 'services',
-    label: 'Services',
-    subcategories: ['Consulting', 'Design', 'Development', 'Writing'],
-  },
-  { value: 'other', label: 'Other', subcategories: ['Miscellaneous'] },
-];
-
-const currencies = [
-  { value: 'USD', label: 'USD ($)' },
-  { value: 'BTC', label: 'BTC (₿)' },
-  { value: 'ETH', label: 'ETH (Ξ)' },
-  { value: 'USDT', label: 'USDT (₮)' },
-];
-
-const blockchains = [
-  { value: 'ethereum', label: 'Ethereum' },
-  { value: 'polygon', label: 'Polygon' },
-  { value: 'bsc', label: 'BNB Chain' },
-  { value: 'arbitrum', label: 'Arbitrum' },
-];
-
-// Mock existing listing data
-const mockListingData: Record<string, ListingFormData> = {
-  'premium-headphones': {
-    title: 'Premium Wireless Headphones with Active Noise Cancellation',
-    description:
-      'Experience crystal-clear audio with our Premium Wireless Headphones. Featuring advanced Active Noise Cancellation technology.',
-    price: '299.99',
-    currency: 'USD',
-    productType: 'physical_good',
-    condition: 'new',
-    category: 'electronics',
-    subcategory: 'Audio',
-    tags: ['headphones', 'audio', 'wireless', 'noise-cancelling'],
-    images: [
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop',
-    ],
-    stock: 15,
-    weight: '350',
-    shippingOptions: [],
-    digitalDelivery: '',
-    tokenAddress: '',
-    blockchain: 'ethereum',
-  },
-};
 
 export default function EditListingPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
+  const { t } = useI18n();
+  const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [formData, setFormData] = useState<ListingFormData | null>(null);
-  const [currentTag, setCurrentTag] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof ListingFormData, string>>>({});
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // 加载现有商品数据
+  const { listing, isLoading: isLoadingListing, error: loadError } = useListing(slug);
 
-  // Load listing data
+  // 转换 listing 数据为表单数据
+  const initialFormData = useMemo(() => {
+    if (!listing) return undefined;
+
+    return {
+      slug: listing.slug,
+      title: listing.item.title,
+      description: listing.item.description,
+      price: listing.item.price?.toString() || '',
+      pricingCurrency: listing.metadata.pricingCurrency?.code || 'USD',
+      contractType: listing.metadata.contractType,
+      condition: listing.item.condition,
+      grams: listing.item.grams,
+      blockchain: listing.item.blockchain as BlockchainNetwork,
+      tokenAddress: listing.item.tokenAddress,
+      cryptoListingCurrencyCode: listing.item.cryptoListingCurrencyCode,
+      minQuantity: listing.item.minQuantity,
+      maxQuantity: listing.item.maxQuantity,
+      acceptedCurrencies: listing.metadata.acceptedCurrencies,
+      images: listing.item.images || [],
+      introVideo: listing.item.introVideo,
+      altIntroVideoLinks: listing.item.altIntroVideoLinks,
+      tags: listing.item.tags || [],
+      categories: listing.item.categories || [],
+      shippingOptions: listing.shippingOptions || [],
+      termsAndConditions: listing.termsAndConditions || '',
+      refundPolicy: listing.refundPolicy || '',
+      nsfw: listing.item.nsfw || false,
+      processingTime: listing.item.processingTime || '',
+    } as Partial<ListingFormData>;
+  }, [listing]);
+
+  // 使用 useListingForm hook
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    updateField,
+    changeContractType,
+    addTag,
+    removeTag,
+    validate,
+    submit,
+    reset,
+  } = useListingForm(initialFormData);
+
+  // 当 listing 数据加载完成后重置表单
   useEffect(() => {
-    const loadListing = async () => {
-      setIsLoading(true);
-      try {
-        // Mock API call
-        await new Promise(resolve => setTimeout(resolve, 500));
+    if (initialFormData) {
+      reset(initialFormData);
+    }
+  }, [initialFormData, reset]);
 
-        const data = mockListingData[slug];
-        if (data) {
-          setFormData(data);
-        } else {
-          // Listing not found - redirect
-          router.push('/profile');
-        }
-      } catch {
-        console.error('Failed to load listing');
-        router.push('/profile');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // 当前激活的标签
+  const [activeTab, setActiveTab] = useState<TabKey>('general');
+  const [currentTag, setCurrentTag] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-    loadListing();
-  }, [slug, router]);
+  // Section refs for scroll navigation
+  const sectionRefs = useRef<Record<TabKey, HTMLDivElement | null>>({
+    general: null,
+    photos: null,
+    tags: null,
+    category: null,
+    shipping: null,
+    variants: null,
+    policies: null,
+    coupons: null,
+  });
 
-  // Form handlers
-  const handleChange = useCallback(
-    (field: keyof ListingFormData, value: ListingFormData[keyof ListingFormData]) => {
-      if (!formData) return;
-      setFormData(prev => (prev ? { ...prev, [field]: value } : null));
-      if (errors[field]) {
-        setErrors(prev => ({ ...prev, [field]: undefined }));
-      }
-    },
-    [formData, errors]
-  );
+  // 根据商品类型过滤显示的标签
+  const visibleTabs = useMemo(() => {
+    return tabs.filter(tab => {
+      if (!tab.showFor) return true;
+      return tab.showFor.includes(formData.contractType);
+    });
+  }, [formData.contractType]);
 
+  // 滚动到指定区域
+  const scrollToSection = useCallback((key: TabKey) => {
+    setActiveTab(key);
+    const ref = sectionRefs.current[key];
+    if (ref) {
+      ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  // 处理标签添加
   const handleAddTag = useCallback(() => {
-    if (!formData) return;
-    if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
-      handleChange('tags', [...formData.tags, currentTag.trim()]);
+    if (currentTag.trim()) {
+      addTag(currentTag.trim());
       setCurrentTag('');
     }
-  }, [currentTag, formData, handleChange]);
+  }, [currentTag, addTag]);
 
-  const handleRemoveTag = useCallback(
-    (tag: string) => {
-      if (!formData) return;
-      handleChange(
-        'tags',
-        formData.tags.filter(t => t !== tag)
-      );
+  // 处理图片变化
+  const handleImagesChange = useCallback(
+    (images: Image[]) => {
+      updateField('images', images);
     },
-    [formData, handleChange]
+    [updateField]
   );
 
-  const handleImageUpload = useCallback(() => {
-    if (!formData) return;
-    const mockImages = [
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop',
-    ];
-    const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
-    handleChange('images', [...formData.images, randomImage]);
-  }, [formData, handleChange]);
-
-  const handleRemoveImage = useCallback(
-    (index: number) => {
-      if (!formData) return;
-      handleChange(
-        'images',
-        formData.images.filter((_, i) => i !== index)
-      );
+  // 处理视频变化
+  const handleVideoChange = useCallback(
+    (video: string) => {
+      updateField('introVideo', video);
     },
-    [formData, handleChange]
+    [updateField]
   );
 
-  // Validation
-  const validateForm = useCallback((): boolean => {
-    if (!formData) return false;
+  // 处理外部视频链接变化
+  const handleAltVideoLinksChange = useCallback(
+    (links: string[]) => {
+      updateField('altIntroVideoLinks', links);
+    },
+    [updateField]
+  );
 
-    const newErrors: Partial<Record<keyof ListingFormData, string>> = {};
+  // 处理物流选项变化
+  const handleShippingOptionsChange = useCallback(
+    (options: ShippingOption[]) => {
+      updateField('shippingOptions', options);
+    },
+    [updateField]
+  );
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required';
-    }
-    if (formData.images.length === 0) {
-      newErrors.images = 'At least one image is required';
-    }
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
+  // 处理选中的物流选项变化
+  const handleSelectedShippingOptionsChange = useCallback(
+    (selected: string[]) => {
+      updateField('selectedShippingOptions', selected);
+    },
+    [updateField]
+  );
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
-
-  // Submit handler
+  // 提交表单
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (!validateForm()) {
+      if (!validate()) {
+        toast({
+          title: t('common.error') || 'Error',
+          description: t('listing.validationFailed') || 'Please fix the errors before submitting',
+          variant: 'destructive',
+        });
         return;
       }
 
-      setIsSubmitting(true);
+      const result = await submit();
 
-      try {
-        // Mock API call
-        console.info('Updating listing:', formData);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        window.alert('Listing updated successfully!');
-        router.push(`/product/${slug}`);
-      } catch {
-        window.alert('Failed to update listing. Please try again.');
-      } finally {
-        setIsSubmitting(false);
+      if ('error' in result) {
+        toast({
+          title: t('common.error') || 'Error',
+          description: result.error,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t('common.success') || 'Success',
+          description: t('listing.updateSuccess') || 'Listing updated successfully!',
+        });
+        router.push('/profile');
       }
     },
-    [formData, validateForm, router, slug]
+    [validate, submit, toast, t, router]
   );
 
-  // Delete handler
+  // 删除商品
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
-
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      window.alert('Listing deleted successfully!');
+      await productsApi.deleteListing(slug);
+      toast({
+        title: t('common.success') || 'Success',
+        description: t('listing.deleteSuccess') || 'Listing deleted successfully!',
+      });
       router.push('/profile');
     } catch {
-      window.alert('Failed to delete listing. Please try again.');
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('listing.deleteFailed') || 'Failed to delete listing',
+        variant: 'destructive',
+      });
     } finally {
       setIsDeleting(false);
-      setShowDeleteConfirm(false);
+      setShowDeleteDialog(false);
     }
-  }, [router]);
+  }, [slug, toast, t, router]);
 
-  const selectedCategory = formData ? categories.find(c => c.value === formData.category) : null;
+  // 获取图片URL用于预览
+  const getPreviewImageUrl = useCallback((image: Image) => {
+    const hash = image.small || image.medium || image.original;
+    if (!hash) return '';
+    return `${getGatewayUrl()}/ob/images/${hash}`;
+  }, []);
 
-  // Loading state
-  if (isLoading) {
+  // 加载中状态
+  if (isLoadingListing) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="py-8">
-          <Container size="lg">
-            <div className="mb-8">
-              <Skeleton variant="text" height={32} width={200} />
-              <Skeleton variant="text" height={20} width={300} className="mt-2" />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <Skeleton variant="rounded" height={300} />
-                </Card>
-                <Card>
-                  <Skeleton variant="text" height={24} width={150} className="mb-4" />
-                  <Skeleton variant="rounded" height={40} className="mb-4" />
-                  <Skeleton variant="rounded" height={120} />
-                </Card>
-              </div>
-              <div>
-                <Card>
-                  <Skeleton variant="rounded" height={200} />
-                </Card>
-              </div>
+        <main className="py-20">
+          <Container>
+            <div className="flex flex-col items-center justify-center">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              <p className="mt-4 text-muted-foreground">{t('common.loading') || 'Loading...'}</p>
             </div>
           </Container>
         </main>
@@ -320,494 +321,450 @@ export default function EditListingPage() {
     );
   }
 
-  if (!formData) {
-    return null;
+  // 加载错误
+  if (loadError || !listing) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="py-20">
+          <Container>
+            <div className="flex flex-col items-center justify-center">
+              <p className="text-destructive">
+                {loadError || t('listing.notFound') || 'Listing not found'}
+              </p>
+              <Button className="mt-4" onClick={() => router.push('/profile')}>
+                {t('common.goBack') || 'Go Back'}
+              </Button>
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="py-8">
-        <Container size="lg">
-          {/* Page Header */}
-          <HStack gap="md" align="center" className="mb-8">
-            <Link
-              href={`/product/${slug}`}
-              className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </Link>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">Edit Listing</h1>
-              <p className="text-muted-foreground">Update your product or service</p>
-            </div>
-            <Button
-              variant="outline"
-              className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              Delete
-            </Button>
-          </HStack>
-
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Images */}
-                <Card>
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Images *</h2>
-                  {errors.images && <p className="text-red-500 text-sm mb-2">{errors.images}</p>}
-                  <div className="grid grid-cols-4 gap-4">
-                    {formData.images.map((image, index) => (
-                      <div
-                        key={index}
-                        className="relative aspect-square rounded-lg overflow-hidden group"
-                      >
-                        <img src={image} alt="" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                        >
-                          ×
-                        </button>
-                        {index === 0 && (
-                          <span className="absolute bottom-2 left-2 text-xs bg-black/50 text-white px-2 py-1 rounded">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={handleImageUpload}
-                      className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-emerald-500"
-                    >
-                      <svg
-                        className="w-8 h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      <span className="text-sm">Add Image</span>
-                    </button>
-                  </div>
-                </Card>
-
-                {/* Basic Info */}
-                <Card>
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Basic Information</h2>
-                  <VStack gap="md">
-                    {/* Title */}
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.title}
-                        onChange={e => handleChange('title', e.target.value)}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          errors.title ? 'border-red-500' : 'border-border'
-                        } bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                        placeholder="Enter product title"
-                        maxLength={120}
-                      />
-                      {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={e => handleChange('description', e.target.value)}
-                        rows={6}
-                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                        placeholder="Describe your product in detail..."
-                      />
-                    </div>
-
-                    {/* Price & Currency */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          Price *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={formData.price}
-                          onChange={e => handleChange('price', e.target.value)}
-                          className={`w-full px-4 py-2 rounded-lg border ${
-                            errors.price ? 'border-red-500' : 'border-border'
-                          } bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                          placeholder="0.00"
-                        />
-                        {errors.price && (
-                          <p className="text-red-500 text-sm mt-1">{errors.price}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          Currency
-                        </label>
-                        <Select
-                          value={formData.currency}
-                          onValueChange={value => handleChange('currency', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {currencies.map(c => (
-                              <SelectItem key={c.value} value={c.value}>
-                                {c.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </VStack>
-                </Card>
-
-                {/* Product Type */}
-                <Card>
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Product Type</h2>
-                  <Grid cols={2} colsMobile={1} gap="md">
-                    {productTypes.map(type => (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => handleChange('productType', type.value)}
-                        className={`p-4 rounded-lg border-2 text-left transition-all ${
-                          formData.productType === type.value
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-border hover:border-slate-300'
-                        }`}
-                      >
-                        <p className="font-medium text-foreground">{type.label}</p>
-                        <p className="text-sm text-slate-500 mt-1">{type.description}</p>
-                      </button>
-                    ))}
-                  </Grid>
-                </Card>
-
-                {/* Physical Good Details */}
-                {formData.productType === 'physical_good' && (
-                  <Card>
-                    <h2 className="text-lg font-semibold text-foreground mb-4">
-                      Physical Good Details
-                    </h2>
-                    <VStack gap="md">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-muted-foreground mb-1">
-                            Condition
-                          </label>
-                          <Select
-                            value={formData.condition}
-                            onValueChange={value =>
-                              handleChange('condition', value as ProductCondition)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select condition" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {conditions.map(c => (
-                                <SelectItem key={c.value} value={c.value}>
-                                  {c.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-muted-foreground mb-1">
-                            Weight (grams)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={formData.weight}
-                            onChange={e => handleChange('weight', e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          Stock Quantity
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={formData.stock}
-                          onChange={e => handleChange('stock', parseInt(e.target.value) || 1)}
-                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                      </div>
-                    </VStack>
-                  </Card>
-                )}
-
-                {/* RWA Token Details */}
-                {formData.productType === 'rwa_token' && (
-                  <Card>
-                    <h2 className="text-lg font-semibold text-foreground mb-4">
-                      RWA Token Details
-                    </h2>
-                    <VStack gap="md">
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          Token Contract Address
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.tokenAddress}
-                          onChange={e => handleChange('tokenAddress', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
-                          placeholder="0x..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          Blockchain
-                        </label>
-                        <Select
-                          value={formData.blockchain}
-                          onValueChange={value => handleChange('blockchain', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select blockchain" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {blockchains.map(b => (
-                              <SelectItem key={b.value} value={b.value}>
-                                {b.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </VStack>
-                  </Card>
-                )}
-
-                {/* Tags */}
-                <Card>
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Tags</h2>
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={currentTag}
-                      onChange={e => setCurrentTag(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddTag();
-                        }
-                      }}
-                      className="flex-1 px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      placeholder="Add a tag..."
-                    />
-                    <Button type="button" onClick={handleAddTag}>
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
-                      >
-                        #{tag}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(tag)}
-                          className="w-4 h-4 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </Card>
+      <main className="py-6">
+        <Container size="xl">
+          {/* 页面头部 */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Link href="/profile" className="p-2 hover:bg-muted rounded-lg transition-colors">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {t('listing.editListing') || 'Edit Listing'}
+                </h1>
+                <p className="text-sm text-muted-foreground">{formData.title || slug}</p>
               </div>
+            </div>
 
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Category */}
-                <Card>
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Category *</h2>
-                  {errors.category && (
-                    <p className="text-red-500 text-sm mb-2">{errors.category}</p>
-                  )}
-                  <VStack gap="sm">
-                    <Select
-                      value={formData.category}
-                      onValueChange={value => {
-                        handleChange('category', value);
-                        handleChange('subcategory', '');
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(c => (
-                          <SelectItem key={c.value} value={c.value}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {selectedCategory && (
-                      <Select
-                        value={formData.subcategory}
-                        onValueChange={value => handleChange('subcategory', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select subcategory" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {selectedCategory.subcategories.map(sub => (
-                            <SelectItem key={sub} value={sub}>
-                              {sub}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </VStack>
-                </Card>
+            {/* 操作按钮 */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={isSubmitting || isDeleting}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                {t('common.delete') || 'Delete'}
+              </Button>
+              <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+                <X className="w-4 h-4 mr-1" />
+                {t('common.cancel') || 'Cancel'}
+              </Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-1" />
+                )}
+                {t('common.save') || 'Save'}
+              </Button>
+            </div>
+          </div>
 
-                {/* Preview */}
-                <Card>
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Preview</h2>
-                  <div className="rounded-lg border border-border overflow-hidden">
+          {/* 主体布局 - 与创建页面相同 */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* 左侧导航 - 桌面端 */}
+            <div className="hidden lg:block lg:col-span-2">
+              <div className="sticky top-24 space-y-1">
+                {visibleTabs.map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => scrollToSection(tab.key)}
+                    className={`
+                      w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
+                      ${
+                        activeTab === tab.key
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }
+                    `}
+                  >
+                    {tab.icon}
+                    {t(tab.labelKey) || tab.key}
+                  </button>
+                ))}
+
+                {/* 预览卡片 */}
+                <div className="mt-6 pt-6 border-t border-border">
+                  <h3 className="text-sm font-medium text-foreground mb-3">
+                    {t('listing.preview') || 'Preview'}
+                  </h3>
+                  <Card className="overflow-hidden">
                     <div className="aspect-square bg-muted">
                       {formData.images[0] ? (
                         <img
-                          src={formData.images[0]}
+                          src={getPreviewImageUrl(formData.images[0])}
                           alt=""
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400">
-                          No image
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          {t('listing.noImage') || 'No image'}
                         </div>
                       )}
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-foreground line-clamp-2">
-                        {formData.title || 'Product Title'}
-                      </h3>
-                      <p className="text-lg font-bold text-emerald-600 mt-2">
+                    <div className="p-3">
+                      <h4 className="font-medium text-foreground text-sm line-clamp-2">
+                        {formData.title || t('listing.productTitle') || 'Product Title'}
+                      </h4>
+                      <p className="text-primary font-bold mt-1">
                         {formData.price
-                          ? `${formData.currency === 'USD' ? '$' : formData.currency + ' '}${formData.price}`
+                          ? `${formData.pricingCurrency === 'USD' ? '$' : formData.pricingCurrency + ' '}${formData.price}`
                           : '$0.00'}
                       </p>
                     </div>
-                  </div>
-                </Card>
-
-                {/* Actions */}
-                <Card>
-                  <VStack gap="sm">
-                    <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-                      {isSubmitting ? 'Updating...' : 'Update Listing'}
-                    </Button>
-                    <Link href={`/product/${slug}`} className="w-full">
-                      <Button type="button" variant="outline" className="w-full">
-                        Cancel
-                      </Button>
-                    </Link>
-                  </VStack>
-                </Card>
+                  </Card>
+                </div>
               </div>
             </div>
-          </form>
+
+            {/* 主内容区域 */}
+            <div className="lg:col-span-10 space-y-6">
+              {/* 商品类型选择 */}
+              <Card
+                className="p-6"
+                ref={el => {
+                  sectionRefs.current.general = el;
+                }}
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  {t('listing.productType') || 'Product Type'}
+                </h2>
+                <ProductTypeSelector
+                  value={formData.contractType}
+                  onChange={changeContractType}
+                  disabled={isSubmitting}
+                />
+              </Card>
+
+              {/* 基础信息 - 非 RWA Token */}
+              {formData.contractType !== 'RWA_TOKEN' && (
+                <BasicInfoSection
+                  title={formData.title}
+                  description={formData.description}
+                  price={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  contractType={formData.contractType}
+                  condition={formData.condition}
+                  grams={formData.grams}
+                  nsfw={formData.nsfw}
+                  onTitleChange={v => updateField('title', v)}
+                  onDescriptionChange={v => updateField('description', v)}
+                  onPriceChange={v => updateField('price', v)}
+                  onCurrencyChange={v => updateField('pricingCurrency', v)}
+                  onConditionChange={v => updateField('condition', v)}
+                  onGramsChange={v => updateField('grams', v)}
+                  onNsfwChange={v => updateField('nsfw', v)}
+                  errors={errors}
+                />
+              )}
+
+              {/* RWA Token 专用字段 */}
+              {formData.contractType === 'RWA_TOKEN' && (
+                <>
+                  <Card className="p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.basicInfo') || 'Basic Information'}
+                    </h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.title') || 'Title'}{' '}
+                          <span className="text-destructive">*</span>
+                        </label>
+                        <Input
+                          value={formData.title}
+                          onChange={e => updateField('title', e.target.value)}
+                          placeholder={t('listing.titlePlaceholder') || 'Enter a descriptive title'}
+                          maxLength={140}
+                          className={errors.title ? 'border-destructive' : ''}
+                        />
+                        {errors.title && (
+                          <p className="text-destructive text-sm mt-1">{errors.title}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.description') || 'Description'}
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={e => updateField('description', e.target.value)}
+                          rows={4}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={
+                            t('listing.descriptionPlaceholder') || 'Describe your listing...'
+                          }
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <RwaTokenFields
+                    blockchain={formData.blockchain || 'ETH'}
+                    tokenAddress={formData.tokenAddress}
+                    cryptoListingCurrencyCode={formData.cryptoListingCurrencyCode}
+                    price={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    minQuantity={formData.minQuantity || 1}
+                    maxQuantity={formData.maxQuantity || 100}
+                    acceptedCurrencies={formData.acceptedCurrencies || ['ETHUSDT']}
+                    onBlockchainChange={v => updateField('blockchain', v)}
+                    onTokenAddressChange={v => updateField('tokenAddress', v)}
+                    onCryptoListingCurrencyCodeChange={v =>
+                      updateField('cryptoListingCurrencyCode', v)
+                    }
+                    onPriceChange={v => updateField('price', v)}
+                    onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                    onMinQuantityChange={v => updateField('minQuantity', v)}
+                    onMaxQuantityChange={v => updateField('maxQuantity', v)}
+                    onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                    errors={errors}
+                  />
+                </>
+              )}
+
+              {/* 图片/视频上传 */}
+              <div
+                ref={el => {
+                  sectionRefs.current.photos = el;
+                }}
+              >
+                <MediaSection
+                  images={formData.images}
+                  introVideo={formData.introVideo}
+                  altIntroVideoLinks={formData.altIntroVideoLinks}
+                  onImagesChange={handleImagesChange}
+                  onVideoChange={handleVideoChange}
+                  onAltVideoLinksChange={handleAltVideoLinksChange}
+                  errors={errors}
+                />
+              </div>
+
+              {/* 标签 */}
+              <Card
+                className="p-6"
+                ref={el => {
+                  sectionRefs.current.tags = el;
+                }}
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  {t('listing.tags') || 'Tags'}
+                </h2>
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    value={currentTag}
+                    onChange={e => setCurrentTag(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    placeholder={t('listing.enterTag') || 'Enter #tags...'}
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="outline" onClick={handleAddTag}>
+                    {t('common.add') || 'Add'}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                    >
+                      #{tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="w-4 h-4 rounded-full hover:bg-primary/20 flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </Card>
+
+              {/* 分类 */}
+              <Card
+                className="p-6"
+                ref={el => {
+                  sectionRefs.current.category = el;
+                }}
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  {t('listing.category') || 'Category'}
+                </h2>
+                <Input
+                  value={formData.categories[0] || ''}
+                  onChange={e => updateField('categories', e.target.value ? [e.target.value] : [])}
+                  placeholder={t('listing.enterCategory') || 'Enter a category...'}
+                />
+              </Card>
+
+              {/* 物流选项 - 仅物理商品 */}
+              {formData.contractType === 'PHYSICAL_GOOD' && (
+                <div
+                  ref={el => {
+                    sectionRefs.current.shipping = el;
+                  }}
+                >
+                  <PhysicalGoodFields
+                    shippingOptions={formData.shippingOptions}
+                    selectedShippingOptions={formData.selectedShippingOptions || []}
+                    onShippingOptionsChange={handleShippingOptionsChange}
+                    onSelectedShippingOptionsChange={handleSelectedShippingOptionsChange}
+                    errors={errors}
+                  />
+                </div>
+              )}
+
+              {/* 变体管理 - 仅物理商品 */}
+              {formData.contractType === 'PHYSICAL_GOOD' && (
+                <Card
+                  className="p-6"
+                  ref={el => {
+                    sectionRefs.current.variants = el;
+                  }}
+                >
+                  <h2 className="text-lg font-semibold text-foreground mb-4">
+                    {t('listing.variants') || 'Variants'}
+                  </h2>
+                  <Button type="button" variant="outline">
+                    {t('listing.addVariant') || 'Add Variant'}
+                  </Button>
+                </Card>
+              )}
+
+              {/* 退货政策和条款 */}
+              {formData.contractType !== 'RWA_TOKEN' &&
+                formData.contractType !== 'CRYPTOCURRENCY' && (
+                  <Card
+                    className="p-6"
+                    ref={el => {
+                      sectionRefs.current.policies = el;
+                    }}
+                  >
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.policies') || 'Return Policy & Terms'}
+                    </h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.returnPolicy') || 'Return Policy'}
+                        </label>
+                        <textarea
+                          value={formData.refundPolicy}
+                          onChange={e => updateField('refundPolicy', e.target.value)}
+                          rows={3}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={
+                            t('listing.returnPolicyPlaceholder') || 'Enter your return policy...'
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.termsAndConditions') || 'Terms and Conditions'}
+                        </label>
+                        <textarea
+                          value={formData.termsAndConditions}
+                          onChange={e => updateField('termsAndConditions', e.target.value)}
+                          rows={3}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={
+                            t('listing.termsPlaceholder') || 'Enter terms and conditions...'
+                          }
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+              {/* 优惠券 */}
+              {formData.contractType !== 'RWA_TOKEN' &&
+                formData.contractType !== 'CRYPTOCURRENCY' && (
+                  <Card
+                    className="p-6"
+                    ref={el => {
+                      sectionRefs.current.coupons = el;
+                    }}
+                  >
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.coupons') || 'Coupons'}
+                    </h2>
+                    <Button type="button" variant="outline">
+                      {t('listing.addCoupon') || 'Add Coupon'}
+                    </Button>
+                  </Card>
+                )}
+
+              {/* 底部间距 */}
+              <div className="h-20 lg:hidden" />
+            </div>
+          </div>
         </Container>
       </main>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <div className="p-6">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-6 h-6 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-foreground text-center mb-2">
-                Delete Listing?
-              </h3>
-              <p className="text-slate-500 text-center mb-6">
-                This action cannot be undone. Your listing will be permanently removed.
-              </p>
-              <HStack gap="sm">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="w-full bg-red-600 hover:bg-red-700"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </Button>
-              </HStack>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* 删除确认对话框 */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('listing.deleteConfirmTitle') || 'Delete Listing?'}</DialogTitle>
+            <DialogDescription>
+              {t('listing.deleteConfirmDesc') ||
+                'This action cannot be undone. This will permanently delete your listing.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-1" />
+              )}
+              {t('common.delete') || 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

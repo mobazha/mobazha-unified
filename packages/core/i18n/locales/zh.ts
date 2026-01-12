@@ -1641,6 +1641,170 @@ export const zh: TranslationResource = {
     importComplete: '导入完成',
     error: '错误',
   },
+
+  // 商品创建/编辑
+  listing: {
+    // 页面标题
+    createListing: '创建商品',
+    createListingDesc: '添加新商品或服务到您的店铺',
+    editListing: '编辑商品',
+
+    // 商品类型
+    productType: '商品类型',
+    types: {
+      physicalGood: '物理商品',
+      physicalGoodDesc: '需要物流配送的实物商品',
+      digitalGood: '数字商品',
+      digitalGoodDesc: '可下载的文件或数字内容',
+      service: '服务',
+      serviceDesc: '专业服务或咨询',
+      rwaToken: 'RWA 代币',
+      rwaTokenDesc: '在区块链上代币化的真实世界资产',
+    },
+
+    // 标签页
+    tabs: {
+      general: '基本信息',
+      photos: '图片',
+      tags: '标签',
+      category: '分类',
+      shipping: '物流',
+      variants: '变体',
+      policies: '政策',
+      coupons: '优惠券',
+    },
+
+    // 基本信息
+    basicInfo: '基本信息',
+    title: '标题',
+    titlePlaceholder: '输入一个描述性的标题',
+    titleHelper: '清楚地描述您要出售的商品',
+    description: '描述',
+    descriptionPlaceholder: '尽可能详细地描述您的商品...可以包含图片链接、YouTube视频等',
+    price: '价格',
+    priceHelper: '您可以使用美元、人民币、比特币等任何货币定价',
+
+    // 物理商品字段
+    condition: '成色',
+    conditionHelper: '商品的整体状况',
+    weight: '重量',
+    weightHelper: '商品重量（克）',
+    sku: 'SKU',
+    skuPlaceholder: 'SKU、零件号、ID 等',
+    skuHelper: '商品的唯一标识符',
+    nsfw: '成人内容（NSFW、18+ 等）',
+
+    // 成色选项
+    conditions: {
+      new: '全新',
+      usedExcellent: '二手 - 成色极好',
+      usedGood: '二手 - 成色良好',
+      usedPoor: '二手 - 成色一般',
+      refurbished: '翻新',
+    },
+
+    // 媒体
+    photos: '图片',
+    photosHelper: '最多可上传 30 张图片，可拖拽排序',
+    primaryPhoto: '主图',
+    add: '添加',
+    introVideo: '介绍视频',
+    externalVideoLink: '或添加外部视频链接（YouTube 等）',
+    videoTooLarge: '视频必须小于 15MB',
+    noImage: '暂无图片',
+
+    // 标签和分类
+    tags: '标签',
+    tagsHelper: '帮助买家发现您的商品',
+    tagsDesc: '添加多个标签。输入标签名称后按回车确认。',
+    enterTag: '输入标签...',
+    category: '分类',
+    categoryHelper: '用于组织您的店铺',
+    enterCategory: '输入分类...',
+
+    // 物流
+    shippingOptions: '物流选项',
+    shippingOptionsHelper: '以下是您店铺设置中的物流选项，将应用于此商品',
+    manageShippingOptions: '管理物流选项',
+    selectShippingOptions: '选择物流选项',
+    noShippingSelected: '尚未选择物流选项',
+    noShippingOptionsConfigured: '您的店铺设置中尚未配置物流选项',
+    goToSettings: '前往设置',
+    services: '个服务',
+    localPickup: '自取',
+    fixedPrice: '固定价格',
+    worldwide: '全球',
+    free: '免费',
+
+    // 变体
+    variants: '变体',
+    variantsHelper: '添加额外的尺寸、颜色、材质等',
+    addVariant: '添加变体',
+
+    // 政策
+    policies: '退货政策和条款',
+    returnPolicy: '退货政策',
+    returnPolicyPlaceholder: '输入您的退货政策...',
+    returnPolicyHelper: '如果留空，将显示"未填写退货政策"',
+    termsAndConditions: '条款和条件',
+    termsPlaceholder: '输入条款和条件...',
+    termsHelper: '如果留空，将显示"未填写条款和条件"',
+
+    // 优惠券
+    coupons: '优惠券',
+    addCoupon: '添加优惠券',
+
+    // RWA 代币
+    rwaTokenDetails: 'RWA 代币详情',
+    blockchain: '区块链',
+    blockchainHelper: '选择 RWA 代币所在的区块链网络',
+    selectRwaToken: '选择 RWA 代币',
+    searchTokens: '搜索代币',
+    enterAddress: '输入地址',
+    searchTokenPlaceholder: '按代币名称、代码或符号搜索...',
+    tokenAddressHelper: '搜索或输入地址以查找并确认 RWA 代币',
+    noTokensFound: '未找到代币',
+    search: '搜索',
+    selectedTokenInfo: '已选择的 RWA 代币信息',
+    tokenName: '代币名称',
+    tokenSymbol: '代币符号',
+    tokenType: '代币类型',
+    currentPrice: '当前价格',
+    issuer: '发行方',
+    riskLevel: '风险等级',
+    verification: '验证状态',
+    acceptedCurrencies: '收款币种',
+    acceptedCurrenciesHelper: '您将收到的交易货币（RWA 代币支持多种支付币种）',
+    addPaymentCurrency: '添加支付币种',
+    minQuantity: '最小购买数量',
+    minQuantityHelper: '买家单次订单可购买的最小数量',
+    maxQuantity: '最大购买数量',
+    maxQuantityHelper: '买家单次订单可购买的最大数量',
+
+    // RWA 代币类型
+    rwa: {
+      realEstate: '房地产代币',
+      bond: '债券代币',
+      commodity: '商品代币',
+      art: '艺术品代币',
+      carbonCredit: '碳信用代币',
+      custom: '自定义代币',
+    },
+
+    // 预览
+    preview: '预览',
+    productTitle: '商品标题',
+
+    // 操作和状态
+    validationFailed: '请修正错误后再提交',
+    createSuccess: '商品创建成功！',
+    updateSuccess: '商品更新成功！',
+    deleteSuccess: '商品删除成功！',
+    deleteFailed: '删除商品失败',
+    deleteConfirmTitle: '确定删除商品？',
+    deleteConfirmDesc: '此操作无法撤销，商品将被永久删除。',
+    notFound: '商品不存在',
+  },
 };
 
 export default zh;

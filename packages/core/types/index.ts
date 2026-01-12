@@ -45,6 +45,12 @@ export type {
   ProductRating,
   RatingIndex,
   RatingDetail,
+  // RWA Token types
+  BlockchainNetwork,
+  BlockchainInfo,
+  RwaTokenType,
+  RwaTokenInfo,
+  AcceptedCurrency,
 } from './product';
 
 // Order types

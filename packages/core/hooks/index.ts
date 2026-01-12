@@ -7,6 +7,7 @@ export * from './useConfig';
 
 // 商品相关
 export * from './useProducts';
+export * from './useListingForm';
 
 // 订单相关
 export * from './useOrders';

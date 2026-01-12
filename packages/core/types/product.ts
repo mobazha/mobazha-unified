@@ -86,7 +86,12 @@ export interface ProductMetadata {
 /**
  * 合约类型
  */
-export type ContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'CRYPTOCURRENCY';
+export type ContractType =
+  | 'PHYSICAL_GOOD'
+  | 'DIGITAL_GOOD'
+  | 'SERVICE'
+  | 'CRYPTOCURRENCY'
+  | 'RWA_TOKEN';
 
 /**
  * 列表格式
@@ -113,6 +118,16 @@ export interface ProductItem {
     code: string;
     divisibility: number;
   };
+  /** RWA Token 相关字段 */
+  blockchain?: string;
+  tokenAddress?: string;
+  tokenStandard?: string;
+  cryptoListingCurrencyCode?: string;
+  minQuantity?: number;
+  maxQuantity?: number;
+  /** 视频相关字段 */
+  introVideo?: string;
+  altIntroVideoLinks?: string[];
 }
 
 /**
@@ -262,4 +277,69 @@ export interface RatingDetail {
       };
     };
   };
+}
+
+/**
+ * 支持的区块链网络
+ */
+export type BlockchainNetwork =
+  | 'ETH'
+  | 'BSC'
+  | 'BASE'
+  | 'POLYGON'
+  | 'ARBITRUM'
+  | 'OPTIMISM'
+  | 'AVALANCHE'
+  | 'SOL';
+
+/**
+ * 区块链网络信息
+ */
+export interface BlockchainInfo {
+  code: BlockchainNetwork;
+  name: string;
+  chainId?: number;
+}
+
+/**
+ * RWA Token 类型
+ */
+export type RwaTokenType =
+  | 'REAL_ESTATE'
+  | 'BOND'
+  | 'COMMODITY'
+  | 'ART'
+  | 'CARBON_CREDIT'
+  | 'CUSTOM';
+
+/**
+ * RWA Token 信息
+ */
+export interface RwaTokenInfo {
+  code: string;
+  name: string;
+  symbol: string;
+  contractAddress: string;
+  blockchain: BlockchainNetwork;
+  tokenType: RwaTokenType;
+  currentPrice?: number;
+  issuer?: string;
+  verification?: {
+    verified: boolean;
+    verifiedBy?: string;
+  };
+  metadata?: {
+    riskLevel?: 'low' | 'medium' | 'high';
+    description?: string;
+    website?: string;
+  };
+}
+
+/**
+ * 支持的支付币种（按区块链）
+ */
+export interface AcceptedCurrency {
+  code: string;
+  name: string;
+  blockchain: BlockchainNetwork;
 }
