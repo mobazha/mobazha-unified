@@ -14,6 +14,9 @@ export * from './testAccounts';
 // 导出 OTC 配置
 export * from './otcConfig';
 
+// 导出 AppKit 配置
+export * from './appkit';
+
 export interface AppConfig {
   /** Use mock data instead of real API */
   useMockData: boolean;

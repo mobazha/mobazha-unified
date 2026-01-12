@@ -14,6 +14,18 @@ import {
 } from './types';
 import { CHAIN_CONFIG, chainIdToHex, hexToChainId, isValidChainId } from './chains';
 
+// ethereum 对象类型 (本地使用，避免全局类型冲突)
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  isCoinbaseWallet?: boolean;
+  isTrust?: boolean;
+  isTokenPocket?: boolean;
+  isBraveWallet?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, handler: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
+}
+
 // 默认配置
 const DEFAULT_CONFIG: WalletServiceConfig = {
   projectId: '', // WalletConnect Project ID - 需要用户配置
@@ -139,7 +151,7 @@ class WalletService {
       return false;
     }
 
-    const ethereum = window.ethereum;
+    const ethereum = window.ethereum as unknown as EthereumProvider;
 
     try {
       // 尝试切换链
@@ -194,32 +206,32 @@ class WalletService {
 
   // 设置提供者事件监听
   private setupProviderListeners(): void {
-    if (!this.hasEthereumProvider() || !window.ethereum) return;
+    const ethereum = this.hasEthereumProvider()
+      ? (window.ethereum as unknown as EthereumProvider)
+      : null;
+    if (!ethereum) return;
 
-    window.ethereum.on(
-      'accountsChanged',
-      this.handleAccountsChanged as (...args: unknown[]) => void
-    );
-    window.ethereum.on('chainChanged', this.handleChainChanged as (...args: unknown[]) => void);
-    window.ethereum.on('disconnect', this.handleDisconnect as (...args: unknown[]) => void);
+    ethereum.on('accountsChanged', this.handleAccountsChanged as (...args: unknown[]) => void);
+    ethereum.on('chainChanged', this.handleChainChanged as (...args: unknown[]) => void);
+    ethereum.on('disconnect', this.handleDisconnect as (...args: unknown[]) => void);
   }
 
   // 移除提供者事件监听
   private removeProviderListeners(): void {
-    if (!this.hasEthereumProvider() || !window.ethereum) return;
+    const ethereum = this.hasEthereumProvider()
+      ? (window.ethereum as unknown as EthereumProvider)
+      : null;
+    if (!ethereum) return;
 
-    window.ethereum.removeListener(
+    ethereum.removeListener(
       'accountsChanged',
       this.handleAccountsChanged as (...args: unknown[]) => void
     );
-    window.ethereum.removeListener(
+    ethereum.removeListener(
       'chainChanged',
       this.handleChainChanged as (...args: unknown[]) => void
     );
-    window.ethereum.removeListener(
-      'disconnect',
-      this.handleDisconnect as (...args: unknown[]) => void
-    );
+    ethereum.removeListener('disconnect', this.handleDisconnect as (...args: unknown[]) => void);
   }
 
   // 处理账户变更
@@ -398,20 +410,12 @@ export function resetWalletService(): void {
   }
 }
 
-// 声明全局 ethereum 对象
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      isCoinbaseWallet?: boolean;
-      isTrust?: boolean;
-      isTokenPocket?: boolean;
-      isBraveWallet?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      on: (event: string, handler: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
-    };
+// 获取 ethereum provider (类型安全)
+function getEthereumProvider(): EthereumProvider | null {
+  if (typeof window !== 'undefined' && window.ethereum) {
+    return window.ethereum as unknown as EthereumProvider;
   }
+  return null;
 }
 
-export { WalletService };
+export { WalletService, getEthereumProvider, type EthereumProvider };
