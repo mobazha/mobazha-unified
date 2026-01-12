@@ -808,6 +808,7 @@ export const en: TranslationResource = {
     // Sidebar navigation
     sidebar: {
       general: 'General',
+      account: 'Linked Accounts',
       page: 'Page',
       store: 'Store',
       accessControl: 'Access Control',
@@ -820,6 +821,27 @@ export const en: TranslationResource = {
       moderation: 'Moderation',
       chatEncryption: 'Chat Encryption',
       advanced: 'Advanced',
+    },
+    // Account binding
+    accountBinding: {
+      title: 'Linked Accounts',
+      description: 'Manage your linked login methods',
+      linked: 'Linked Accounts',
+      available: 'Available to Link',
+      link: 'Link',
+      unlink: 'Unlink',
+      linkSuccess: 'Account linked successfully',
+      linkFailed: 'Failed to link account',
+      unlinkSuccess: 'Account unlinked successfully',
+      unlinkFailed: 'Failed to unlink account',
+      unlinkConfirm: 'Confirm Unlink',
+      unlinkConfirmDesc:
+        'Are you sure you want to unlink {{provider}}? You will no longer be able to log in with this account.',
+      noLinked: 'No linked accounts',
+      notLinked: 'Not linked',
+      keepOne: 'Keep at least one login method',
+      keepOneDesc:
+        'After linking multiple accounts, you can log in with any of them. For account security, at least one login method must be kept.',
     },
     // Access Control
     accessControl: {

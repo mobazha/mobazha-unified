@@ -494,6 +494,7 @@ export interface TranslationResource {
     // 侧边栏导航
     sidebar?: {
       general: string;
+      account: string;
       page: string;
       store: string;
       accessControl: string;
@@ -513,6 +514,25 @@ export interface TranslationResource {
       userGroupsDesc: string;
       productGroupsDesc: string;
       requestsDesc: string;
+    };
+    // 账号绑定
+    accountBinding?: {
+      title: string;
+      description: string;
+      linked: string;
+      available: string;
+      link: string;
+      unlink: string;
+      linkSuccess: string;
+      linkFailed: string;
+      unlinkSuccess: string;
+      unlinkFailed: string;
+      unlinkConfirm: string;
+      unlinkConfirmDesc: string;
+      noLinked: string;
+      notLinked: string;
+      keepOne: string;
+      keepOneDesc: string;
     };
   };
 

@@ -38,6 +38,8 @@ import {
   FIAT_CURRENCIES,
   CRYPTO_CURRENCIES,
   getPopularCurrencies,
+  isHosted,
+  startCasdoorLogin,
 } from '@mobazha/core';
 import type { CurrencyInfo } from '@mobazha/core';
 import {
@@ -1866,7 +1868,12 @@ const AdvancedTabContent: React.FC = () => {
   const handleLogoutConfirm = useCallback(() => {
     logout();
     closeSettings();
-    router.push('/');
+    // 托管模式下直接跳转 Casdoor，避免闪烁
+    if (isHosted()) {
+      startCasdoorLogin();
+    } else {
+      router.push('/');
+    }
   }, [logout, closeSettings, router]);
 
   return (

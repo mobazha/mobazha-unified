@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore, getEnvConfig } from '@mobazha/core';
 import {
@@ -27,6 +27,15 @@ export default function LoginPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [localError, setLocalError] = useState('');
 
+  // 托管模式下 OAuth 失败标记：仅当 OAuth 回调失败时才显示登录表单
+  const [oauthFailed, setOauthFailed] = useState(false);
+
+  // 托管模式初始化状态：计算值，避免在 effect 中调用 setState
+  // 仅当托管模式、未认证、OAuth 未失败、无 OAuth 回调时才显示加载状态
+  const isHostedInitializing = useMemo(() => {
+    return isHosted() && !isAuthenticated && !oauthFailed && !hasOAuthCallback();
+  }, [isAuthenticated, oauthFailed]);
+
   // 获取配置
   const envConfig = getEnvConfig();
   const presetUsername = envConfig.auth.basic?.username;
@@ -43,6 +52,7 @@ export default function LoginPage() {
   useEffect(() => {
     // 如果已认证，重定向到首页
     if (isAuthenticated && !isProcessing) {
+      // 直接跳转，无需更新 loading 状态
       router.push('/');
       return;
     }
@@ -69,9 +79,11 @@ export default function LoginPage() {
           } else {
             setLocalError('登录失败，请重试');
             setIsProcessing(false);
+            setOauthFailed(true);
           }
         } else {
           setIsProcessing(false);
+          setOauthFailed(true);
         }
       };
 
@@ -85,6 +97,7 @@ export default function LoginPage() {
       // eslint-disable-next-line no-console
       console.log('🔐 Hosted mode: Redirecting to Casdoor...');
       startCasdoorLogin();
+      // 注意：跳转后页面会离开，不需要设置 isHostedInitializing
       return;
     }
   }, [isAuthenticated, isProcessing, router, loginWithOAuth]);
@@ -105,6 +118,19 @@ export default function LoginPage() {
       router.push(redirectPath);
     }
   };
+
+  // 托管模式初始化中：显示加载状态，避免闪烁显示登录表单
+  if (isHostedInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
+          <p className="text-white text-lg">正在跳转登录...</p>
+          <p className="text-slate-400 text-sm mt-2">请稍候</p>
+        </div>
+      </div>
+    );
+  }
 
   // 正在处理 OAuth 回调或跳转中
   if (isProcessing || (hasOAuthCallback() && isLoading)) {

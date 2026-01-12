@@ -50,8 +50,20 @@ import {
   getImageUrl,
   useNotificationStore,
   testNotificationSound,
+  isHosted,
+  startCasdoorLogin,
+  getLinkedAccounts,
+  unlinkAccount,
+  startLinkAccount,
+  hasLinkCallback,
+  getLinkCallbackParams,
+  handleLinkCallback,
+  clearLinkCallbackParams,
+  SUPPORTED_PROVIDERS,
 } from '@mobazha/core';
+import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
 import type { CurrencyInfo, Locale } from '@mobazha/core';
+import { ProviderIcon } from '@/components/ProviderIcon';
 import {
   X,
   Check,
@@ -83,6 +95,7 @@ import {
   Terminal,
   LogOut,
   Truck,
+  Link2,
 } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { cn } from '@/lib/utils';
@@ -145,6 +158,7 @@ const acceptedCoins = [
 type SettingsSection =
   | 'main' // 主菜单
   | 'general'
+  | 'account'
   | 'page'
   | 'store'
   | 'accessControl' // 访问控制主菜单
@@ -170,6 +184,11 @@ const settingsMenuItems: SettingsMenuItem[] = [
     id: 'general',
     labelKey: 'settings.sidebar.general',
     icon: <Settings className="w-4 h-4" />,
+  },
+  {
+    id: 'account',
+    labelKey: 'settings.sidebar.account',
+    icon: <Link2 className="w-4 h-4" />,
   },
   {
     id: 'page',
@@ -716,6 +735,283 @@ const GeneralTabContent: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+    </>
+  );
+};
+
+// Account Tab Content - 账号绑定管理
+const AccountTabContent: React.FC = () => {
+  const { t } = useI18n();
+  const { toast } = useToast();
+
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [unlinkingProvider, setUnlinkingProvider] = useState<OAuthProvider | null>(null);
+  const [linkingProvider, setLinkingProvider] = useState<OAuthProvider | null>(null);
+  const [showUnlinkDialog, setShowUnlinkDialog] = useState(false);
+  const [providerToUnlink, setProviderToUnlink] = useState<LinkedAccount | null>(null);
+
+  const loadLinkedAccounts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await getLinkedAccounts();
+      setLinkedAccounts(response.accounts);
+    } catch (err) {
+      console.error('Failed to load linked accounts:', err);
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t]);
+
+  // 处理绑定回调
+  useEffect(() => {
+    const processLinkCallback = async () => {
+      if (hasLinkCallback()) {
+        const { code, state } = getLinkCallbackParams();
+        if (code && state) {
+          try {
+            const result = await handleLinkCallback(code, state);
+            if (result.success) {
+              toast({
+                title: t('common.success'),
+                description: t('settings.accountBinding.linkSuccess'),
+              });
+              loadLinkedAccounts();
+            } else {
+              toast({
+                title: t('common.error'),
+                description: result.error || t('settings.accountBinding.linkFailed'),
+                variant: 'destructive',
+              });
+            }
+          } catch (err) {
+            toast({
+              title: t('common.error'),
+              description:
+                err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
+              variant: 'destructive',
+            });
+          } finally {
+            clearLinkCallbackParams();
+          }
+        }
+      }
+    };
+
+    processLinkCallback();
+  }, [toast, t, loadLinkedAccounts]);
+
+  useEffect(() => {
+    loadLinkedAccounts();
+  }, [loadLinkedAccounts]);
+
+  const getAvailableProviders = () => {
+    const linkedProviderIds = linkedAccounts.map(a => a.provider);
+    return SUPPORTED_PROVIDERS.filter(p => !linkedProviderIds.includes(p.id));
+  };
+
+  const getProviderInfoById = (providerId: OAuthProvider): ProviderInfo | undefined => {
+    return SUPPORTED_PROVIDERS.find(p => p.id === providerId);
+  };
+
+  const handleLink = async (provider: OAuthProvider) => {
+    try {
+      setLinkingProvider(provider);
+      await startLinkAccount(provider);
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
+        variant: 'destructive',
+      });
+      setLinkingProvider(null);
+    }
+  };
+
+  const confirmUnlink = (account: LinkedAccount) => {
+    setProviderToUnlink(account);
+    setShowUnlinkDialog(true);
+  };
+
+  const handleUnlink = async () => {
+    if (!providerToUnlink) return;
+
+    try {
+      setUnlinkingProvider(providerToUnlink.provider);
+      setShowUnlinkDialog(false);
+      await unlinkAccount(providerToUnlink.provider);
+      toast({
+        title: t('common.success'),
+        description: t('settings.accountBinding.unlinkSuccess'),
+      });
+      loadLinkedAccounts();
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: err instanceof Error ? err.message : t('settings.accountBinding.unlinkFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setUnlinkingProvider(null);
+      setProviderToUnlink(null);
+    }
+  };
+
+  const availableProviders = getAvailableProviders();
+
+  return (
+    <>
+      <div className="space-y-6">
+        {/* 错误提示 */}
+        {error && (
+          <Card className="p-4 border-destructive bg-destructive/10">
+            <p className="text-sm text-destructive">{error}</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={loadLinkedAccounts}>
+              {t('common.retry')}
+            </Button>
+          </Card>
+        )}
+
+        {/* 已绑定账号 */}
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-2">
+            {t('settings.accountBinding.linked')}
+          </h3>
+          <Card className="overflow-hidden">
+            {isLoading ? (
+              <div className="p-4 space-y-4">
+                <div className="flex items-center gap-3 animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-muted" />
+                  <div className="flex-1">
+                    <div className="h-4 w-24 bg-muted rounded mb-2" />
+                    <div className="h-3 w-32 bg-muted rounded" />
+                  </div>
+                </div>
+              </div>
+            ) : linkedAccounts.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">
+                <p className="text-sm">{t('settings.accountBinding.noLinked')}</p>
+              </div>
+            ) : (
+              linkedAccounts.map(account => (
+                <div
+                  key={`${account.provider}-${account.providerId}`}
+                  className="flex items-center justify-between p-3 border-b border-border last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <ProviderIcon provider={account.provider} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">
+                        {getProviderInfoById(account.provider)?.name || account.provider}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ID:{' '}
+                        {account.providerId.length > 20
+                          ? `${account.providerId.slice(0, 10)}...${account.providerId.slice(-6)}`
+                          : account.providerId}
+                      </p>
+                    </div>
+                  </div>
+                  {account.canUnlink && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => confirmUnlink(account)}
+                      disabled={unlinkingProvider === account.provider}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      {unlinkingProvider === account.provider
+                        ? '...'
+                        : t('settings.accountBinding.unlink')}
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </Card>
+        </div>
+
+        {/* 可绑定账号 */}
+        {availableProviders.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-2">
+              {t('settings.accountBinding.available')}
+            </h3>
+            <Card className="overflow-hidden">
+              {availableProviders.map(provider => (
+                <div
+                  key={provider.id}
+                  className="flex items-center justify-between p-3 border-b border-border last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <ProviderIcon provider={provider.id} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{provider.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('settings.accountBinding.notLinked')}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleLink(provider.id)}
+                    disabled={linkingProvider === provider.id}
+                  >
+                    <Link2 className="w-4 h-4 mr-1" />
+                    {linkingProvider === provider.id ? '...' : t('settings.accountBinding.link')}
+                  </Button>
+                </div>
+              ))}
+            </Card>
+          </div>
+        )}
+
+        {/* 提示信息 */}
+        <Card className="p-4 bg-muted/50">
+          <div className="flex items-start gap-3">
+            <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium">{t('settings.accountBinding.keepOne')}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('settings.accountBinding.keepOneDesc')}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* 解绑确认对话框 */}
+      <AlertDialog open={showUnlinkDialog} onOpenChange={setShowUnlinkDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('settings.accountBinding.unlinkConfirm')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('settings.accountBinding.unlinkConfirmDesc', {
+                provider: providerToUnlink
+                  ? (getProviderInfoById(providerToUnlink.provider)?.name ?? '')
+                  : '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnlink}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('settings.accountBinding.unlink')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
@@ -2017,7 +2313,12 @@ const AdvancedTabContent: React.FC = () => {
   const handleLogoutConfirm = useCallback(() => {
     logout();
     closeSettings();
-    router.push('/');
+    // 托管模式下直接跳转 Casdoor，避免闪烁
+    if (isHosted()) {
+      startCasdoorLogin();
+    } else {
+      router.push('/');
+    }
   }, [logout, closeSettings, router]);
 
   const handleResync = useCallback(async () => {
@@ -2261,6 +2562,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
     switch (section) {
       case 'general':
         return <GeneralTabContent />;
+      case 'account':
+        return <AccountTabContent />;
       case 'page':
         return <PageTabContent />;
       case 'store':
@@ -2415,6 +2718,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 const sectionToRoute: Record<SettingsSection, string> = {
   main: '/settings',
   general: '/settings/general',
+  account: '/settings/account',
   page: '/settings/page-profile',
   store: '/settings/store',
   accessControl: '/settings/access-control',

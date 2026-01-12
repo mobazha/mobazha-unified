@@ -68,3 +68,17 @@ export {
   getAuthHeaders,
   type StoredUser,
 } from './token';
+
+// ============ 账号绑定服务 ============
+
+export {
+  getLinkedAccounts,
+  getLinkUrl,
+  startLinkAccount,
+  handleLinkCallback,
+  unlinkAccount,
+  hasLinkCallback,
+  getLinkCallbackParams,
+  clearLinkCallbackParams,
+  getLinkRedirectPath,
+} from './accountBinding';

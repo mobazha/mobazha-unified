@@ -476,6 +476,7 @@ export const fr: TranslationResource = {
     loadHeader: 'Changer la couverture',
     sidebar: {
       general: 'Général',
+      account: 'Comptes liés',
       page: 'Page de profil',
       store: 'Boutique',
       accessControl: "Contrôle d'accès",
@@ -488,6 +489,25 @@ export const fr: TranslationResource = {
       moderation: 'Modération',
       chatEncryption: 'Chiffrement du chat',
       advanced: 'Avancé',
+    },
+    accountBinding: {
+      title: 'Comptes liés',
+      description: 'Gérez vos méthodes de connexion',
+      linked: 'Comptes liés',
+      available: 'Disponible à lier',
+      link: 'Lier',
+      unlink: 'Délier',
+      linkSuccess: 'Compte lié avec succès',
+      linkFailed: 'Échec de la liaison',
+      unlinkSuccess: 'Compte délié avec succès',
+      unlinkFailed: 'Échec de la déliaison',
+      unlinkConfirm: 'Confirmer la déliaison',
+      unlinkConfirmDesc: 'Voulez-vous vraiment délier {{provider}} ?',
+      noLinked: 'Aucun compte lié',
+      notLinked: 'Non lié',
+      keepOne: 'Conserver au moins une méthode de connexion',
+      keepOneDesc:
+        'Pour la sécurité de votre compte, au moins une méthode de connexion doit rester active.',
     },
     accessControl: {
       privacyDesc: 'Contrôlez qui peut voir votre boutique',

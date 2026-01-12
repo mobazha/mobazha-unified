@@ -76,7 +76,12 @@ export default function MePage() {
 
   const handleLogout = () => {
     logout();
-    router.push('/');
+    // 托管模式下直接跳转 Casdoor，避免闪烁
+    if (isHosted()) {
+      startCasdoorLogin();
+    } else {
+      router.push('/');
+    }
   };
 
   const handleLogin = () => {

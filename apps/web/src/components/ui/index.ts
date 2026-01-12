@@ -24,4 +24,5 @@ export * from './popover';
 export * from './accordion';
 export * from './textarea';
 export * from './table';
+export * from './skeleton';
 export * from './MobazhaLogo';
