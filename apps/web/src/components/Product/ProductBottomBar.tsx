@@ -171,7 +171,7 @@ export function ProductBottomBar({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
             onClick={handleAddToCart}
             disabled={addingToCart || stock === 0}
           >
@@ -194,7 +194,7 @@ export function ProductBottomBar({
           {/* 立即购买按钮 */}
           <Button
             size="sm"
-            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white"
+            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback"
             onClick={handleBuyNow}
             disabled={stock === 0}
           >

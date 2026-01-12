@@ -56,9 +56,7 @@ export function ConnectingModal({
           {/* 卖家信息头部 */}
           {(vendorName || vendorAvatar) && (
             <div className="flex items-center gap-2 justify-center">
-              {vendorAvatar && (
-                <Avatar src={vendorAvatar} name={vendorName} size="xs" />
-              )}
+              {vendorAvatar && <Avatar src={vendorAvatar} name={vendorName} size="xs" />}
               {vendorName && (
                 <span className="text-sm font-medium text-foreground">{vendorName}</span>
               )}
@@ -77,7 +75,7 @@ export function ConnectingModal({
                   className="ring-2 ring-background shadow-lg"
                 />
                 {!isFailed && (
-                  <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-background animate-pulse" />
+                  <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-background animate-pulse" />
                 )}
               </div>
 
@@ -87,15 +85,30 @@ export function ConnectingModal({
                   /* 连接中动画 - 流动的点 */
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span
+                        className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms' }}
+                      />
+                      <span
+                        className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms' }}
+                      />
+                      <span
+                        className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms' }}
+                      />
                     </div>
                   </div>
                 ) : (
                   /* 连接失败 - 断开的线 */
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="w-8 h-8 text-destructive"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </div>
@@ -123,9 +136,7 @@ export function ConnectingModal({
                   {t('p2p.failedToConnect')}
                 </h2>
               ) : (
-                <h2 className="text-xl font-semibold text-foreground">
-                  {t('p2p.connecting')}
-                </h2>
+                <h2 className="text-xl font-semibold text-foreground">{t('p2p.connecting')}</h2>
               )}
             </div>
 
@@ -153,9 +164,7 @@ export function ConnectingModal({
 
           {/* 社交链接 */}
           <div className="text-center pt-2">
-            <p className="text-xs text-foreground/60 mb-3">
-              {t('p2p.socialHeading')}
-            </p>
+            <p className="text-xs text-foreground/60 mb-3">{t('p2p.socialHeading')}</p>
             <div className="flex items-center justify-center gap-4">
               <a
                 href="https://twitter.com/mobazha"

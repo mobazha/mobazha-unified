@@ -117,8 +117,8 @@ export const PaymentCard = memo(function PaymentCard({
       <Card className="p-2.5 bg-muted/30">
         <div className="flex items-center gap-2.5">
           {/* 支付状态图标 - 移动端 28px */}
-          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
 
           {/* 支付信息 */}
@@ -292,8 +292,8 @@ export const AcceptedCard = memo(function AcceptedCard({
     >
       <Card className="p-2.5 bg-muted/30">
         <div className="flex items-center gap-2">
-          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">Order Accepted</p>
@@ -336,8 +336,8 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
     >
       <Card className="p-2.5 bg-muted/30">
         <div className="flex items-center gap-2">
-          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             {amount && currency && (

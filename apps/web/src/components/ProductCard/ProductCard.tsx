@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Shield, Flag, EyeOff } from 'lucide-react';
+import { Shield, Flag, EyeOff, Pencil, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -71,6 +71,12 @@ export interface ProductCardProps {
   onReport?: () => void;
   /** 屏蔽回调 */
   onBlock?: () => void;
+  /** 编辑回调 (自己的商品) */
+  onEdit?: () => void;
+  /** 克隆回调 (自己的商品) */
+  onClone?: () => void;
+  /** 删除回调 (自己的商品) */
+  onDelete?: () => void;
   /** 自定义类名 */
   className?: string;
 }
@@ -109,6 +115,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onClick,
   onReport,
   onBlock,
+  onEdit,
+  onClone,
+  onDelete,
   className,
 }) => {
   // 使用货币格式化 hook
@@ -147,8 +156,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     onBlock?.();
   };
 
+  // 处理 Edit 按钮点击
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit?.();
+  };
+
+  // 处理 Clone 按钮点击
+  const handleCloneClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClone?.();
+  };
+
+  // 处理 Delete 按钮点击
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete?.();
+  };
+
   // 是否显示操作按钮 (不是自己的商品，且提供了回调函数)
   const showActionButtons = !isOwnListing && (onReport || onBlock);
+
+  // 是否显示自己商品的操作按钮
+  const showOwnListingButtons = isOwnListing && (onEdit || onClone || onDelete);
 
   return (
     <Card
@@ -247,6 +277,54 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 title="Block this seller"
               >
                 <EyeOff className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Hover 操作按钮 - 自己商品的编辑、克隆、删除 */}
+        {showOwnListingButtons && isHovered && (
+          <div className="absolute bottom-2 left-2 z-20 flex gap-1.5 animate-in fade-in duration-150">
+            {onEdit && (
+              <button
+                onClick={handleEditClick}
+                className={cn(
+                  'w-8 h-8 rounded-md flex items-center justify-center',
+                  'bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 shadow-md',
+                  'transition-all duration-150 hover:scale-105',
+                  'text-muted-foreground hover:text-primary'
+                )}
+                title="Edit listing"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+            {onClone && (
+              <button
+                onClick={handleCloneClick}
+                className={cn(
+                  'w-8 h-8 rounded-md flex items-center justify-center',
+                  'bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 shadow-md',
+                  'transition-all duration-150 hover:scale-105',
+                  'text-muted-foreground hover:text-primary'
+                )}
+                title="Clone listing"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={handleDeleteClick}
+                className={cn(
+                  'w-8 h-8 rounded-md flex items-center justify-center',
+                  'bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 shadow-md',
+                  'transition-all duration-150 hover:scale-105',
+                  'text-muted-foreground hover:text-destructive'
+                )}
+                title="Delete listing"
+              >
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>

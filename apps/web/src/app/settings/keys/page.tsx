@@ -153,7 +153,7 @@ export default function KeyManagementPage() {
   const getStatusBadge = (status: EncryptionKey['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-emerald-100 text-emerald-800">活跃</Badge>;
+        return <Badge className="bg-primary/10 text-primary">活跃</Badge>;
       case 'expired':
         return <Badge variant="secondary">已过期</Badge>;
       case 'revoked':
@@ -162,19 +162,16 @@ export default function KeyManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Link
-            href="/settings"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-          >
+          <Link href="/settings" className="p-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">密钥管理</h1>
-            <p className="text-gray-500 dark:text-gray-400">管理端到端加密密钥</p>
+            <h1 className="text-2xl font-bold text-foreground">密钥管理</h1>
+            <p className="text-muted-foreground">管理端到端加密密钥</p>
           </div>
         </div>
 
@@ -183,7 +180,7 @@ export default function KeyManagementPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-emerald-500" />
+                <Lock className="w-5 h-5 text-primary" />
                 <div>
                   <CardTitle className="text-lg">加密设置</CardTitle>
                   <CardDescription>控制商品信息的端到端加密</CardDescription>
@@ -194,7 +191,7 @@ export default function KeyManagementPage() {
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <h4 className="font-medium">启用商品加密</h4>
-                  <p className="text-sm text-gray-500">对商品信息进行端到端加密</p>
+                  <p className="text-sm text-muted-foreground">对商品信息进行端到端加密</p>
                 </div>
                 <Switch checked={encryptionEnabled} onCheckedChange={setEncryptionEnabled} />
               </div>
@@ -203,7 +200,7 @@ export default function KeyManagementPage() {
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h4 className="font-medium">自动加密新商品</h4>
-                    <p className="text-sm text-gray-500">新创建的商品自动启用加密</p>
+                    <p className="text-sm text-muted-foreground">新创建的商品自动启用加密</p>
                   </div>
                   <Switch checked={autoEncrypt} onCheckedChange={setAutoEncrypt} />
                 </div>
@@ -226,8 +223,8 @@ export default function KeyManagementPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <Label className="text-xs text-gray-500 mb-2 block">主密钥</Label>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <Label className="text-xs text-muted-foreground mb-2 block">主密钥</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type={showMasterKey ? 'text' : 'password'}
@@ -320,11 +317,11 @@ export default function KeyManagementPage() {
                               <h4 className="font-medium">{key.name}</h4>
                               {getStatusBadge(key.status)}
                             </div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                               指纹: {key.fingerprint}
                               {key.linkedTo && ` • 关联: ${key.linkedTo}`}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground/70">
                               创建于 {new Date(key.createdAt).toLocaleDateString()}
                               {key.expiresAt &&
                                 ` • 过期时间: ${new Date(key.expiresAt).toLocaleDateString()}`}
@@ -352,7 +349,7 @@ export default function KeyManagementPage() {
               </div>
 
               {keys.filter(key => key.type !== 'master').length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <Key className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无派生密钥</p>
                   <p className="text-sm">创建产品组或授权用户时会自动生成密钥</p>

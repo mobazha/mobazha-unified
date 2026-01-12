@@ -40,7 +40,10 @@ function getImageUrl(hash?: string): string | null {
 /**
  * 格式化时间
  */
-function formatTimeAgo(timestamp: string, t: (key: string, params?: Record<string, string | number>) => string): string {
+function formatTimeAgo(
+  timestamp: string,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
   const now = new Date();
   const date = new Date(timestamp);
   const diffMs = now.getTime() - date.getTime();
@@ -70,13 +73,13 @@ function formatPrice(amount?: number, currencyCode?: string): string {
  */
 function getNotificationIcon(type: string): React.ReactNode {
   const iconClass = 'h-5 w-5';
-  
+
   switch (type) {
     case 'newOrder':
       return <ShoppingCart className={cn(iconClass, 'text-blue-500')} />;
     case 'orderFunded':
     case 'orderPaymentReceived':
-      return <CreditCard className={cn(iconClass, 'text-emerald-500')} />;
+      return <CreditCard className={cn(iconClass, 'text-primary')} />;
     case 'orderConfirmation':
       return <CheckCircle className={cn(iconClass, 'text-green-500')} />;
     case 'orderDeclined':
@@ -85,7 +88,7 @@ function getNotificationIcon(type: string): React.ReactNode {
     case 'orderFulfillment':
       return <Package className={cn(iconClass, 'text-indigo-500')} />;
     case 'orderCompletion':
-      return <CheckCircle className={cn(iconClass, 'text-emerald-600')} />;
+      return <CheckCircle className={cn(iconClass, 'text-primary')} />;
     case 'disputeOpen':
     case 'caseOpen':
     case 'disputeClose':
@@ -124,13 +127,13 @@ export function OrderNotificationCard({
 }: OrderNotificationCardProps) {
   const { t } = useI18n();
   const { data, read, timestamp, type } = notification;
-  
+
   const thumbnail = data?.thumbnail?.small || data?.thumbnail?.tiny;
   const productTitle = data?.productTitle;
   const price = data?.price;
   const buyerHandle = data?.buyerHandle;
   const buyerId = data?.buyerId;
-  
+
   const handleClick = () => {
     if (!read && onMarkAsRead) {
       onMarkAsRead(notification.id);
@@ -156,7 +159,12 @@ export function OrderNotificationCard({
       <div className="flex-1 min-w-0">
         {/* 标题行 */}
         <div className="flex items-center gap-2">
-          <span className={cn('font-medium text-sm', read ? 'text-text-secondary' : 'text-text-primary')}>
+          <span
+            className={cn(
+              'font-medium text-sm',
+              read ? 'text-text-secondary' : 'text-text-primary'
+            )}
+          >
             {buyerHandle || truncatePeerId(buyerId)}
           </span>
           <span className={cn('text-sm', read ? 'text-text-tertiary' : 'text-text-secondary')}>
@@ -184,7 +192,7 @@ export function OrderNotificationCard({
                 <p className="text-sm text-text-secondary truncate">{productTitle}</p>
               )}
               {price && (
-                <p className="text-sm font-semibold text-emerald-600">
+                <p className="text-sm font-semibold text-primary">
                   {formatPrice(price.amount, price.currencyCode)}
                 </p>
               )}
@@ -218,11 +226,11 @@ export function FollowNotificationCard({
 }: OrderNotificationCardProps) {
   const { t } = useI18n();
   const { data, read, timestamp, type } = notification;
-  
+
   const avatarHash = data?.avatarHashes?.small || data?.avatarHashes?.tiny;
   const handle = data?.buyerHandle || data?.vendorHandle;
   const peerId = data?.peerID;
-  
+
   const handleClick = () => {
     if (!read && onMarkAsRead) {
       onMarkAsRead(notification.id);
@@ -251,7 +259,8 @@ export function FollowNotificationCard({
               // 显示默认图标
               const parent = (e.target as HTMLImageElement).parentElement;
               if (parent) {
-                parent.innerHTML = '<svg class="h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                parent.innerHTML =
+                  '<svg class="h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
               }
             }}
           />
@@ -263,11 +272,10 @@ export function FollowNotificationCard({
       {/* 内容 */}
       <div className="flex-1 min-w-0">
         <p className={cn('text-sm', read ? 'text-text-secondary' : 'text-text-primary')}>
-          <span className="font-medium text-primary">
-            {handle || truncatePeerId(peerId)}
-          </span>
-          {' '}
-          {type === 'follow' ? t('notifications.social.startedFollowing') : t('notifications.social.unfollowed')}
+          <span className="font-medium text-primary">{handle || truncatePeerId(peerId)}</span>{' '}
+          {type === 'follow'
+            ? t('notifications.social.startedFollowing')
+            : t('notifications.social.unfollowed')}
         </p>
       </div>
 
@@ -296,11 +304,11 @@ export function DisputeNotificationCard({
 }: OrderNotificationCardProps) {
   const { t } = useI18n();
   const { data, read, timestamp } = notification;
-  
+
   const disputerHandle = data?.disputerHandle;
   const disputerId = data?.disputerId;
   const orderId = data?.orderId;
-  
+
   const handleClick = () => {
     if (!read && onMarkAsRead) {
       onMarkAsRead(notification.id);
@@ -312,7 +320,9 @@ export function DisputeNotificationCard({
     <div
       className={cn(
         'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all',
-        !read ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500' : 'bg-transparent hover:bg-muted/50',
+        !read
+          ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500'
+          : 'bg-transparent hover:bg-muted/50',
         className
       )}
       onClick={handleClick}
@@ -324,7 +334,9 @@ export function DisputeNotificationCard({
 
       {/* 内容 */}
       <div className="flex-1 min-w-0">
-        <p className={cn('text-sm', read ? 'text-text-secondary' : 'text-text-primary font-medium')}>
+        <p
+          className={cn('text-sm', read ? 'text-text-secondary' : 'text-text-primary font-medium')}
+        >
           {notification.message}
         </p>
         {(disputerHandle || disputerId) && (
@@ -332,11 +344,7 @@ export function DisputeNotificationCard({
             {t('common.by')} {disputerHandle || truncatePeerId(disputerId)}
           </p>
         )}
-        {orderId && (
-          <p className="text-xs text-text-tertiary">
-            Order #{orderId.slice(0, 8)}
-          </p>
-        )}
+        {orderId && <p className="text-xs text-text-tertiary">Order #{orderId.slice(0, 8)}</p>}
       </div>
 
       {/* 时间戳 */}
@@ -362,17 +370,32 @@ export function NotificationCard({
   className,
 }: NotificationCardProps) {
   const { type } = notification;
-  
+
   // 根据通知类型选择合适的卡片组件
   const isOrderNotification = [
-    'newOrder', 'orderFunded', 'orderPaymentReceived', 'orderConfirmation',
-    'orderDeclined', 'orderCancel', 'refund', 'orderFulfillment', 'orderCompletion',
+    'newOrder',
+    'orderFunded',
+    'orderPaymentReceived',
+    'orderConfirmation',
+    'orderDeclined',
+    'orderCancel',
+    'refund',
+    'orderFulfillment',
+    'orderCompletion',
     'vendorFinalizedPayment',
   ].includes(type);
-  
-  const isFollowNotification = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(type);
-  
-  const isDisputeNotification = ['disputeOpen', 'disputeClose', 'disputeAccepted', 'caseOpen', 'caseUpdate'].includes(type);
+
+  const isFollowNotification = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(
+    type
+  );
+
+  const isDisputeNotification = [
+    'disputeOpen',
+    'disputeClose',
+    'disputeAccepted',
+    'caseOpen',
+    'caseUpdate',
+  ].includes(type);
 
   if (isOrderNotification) {
     return (

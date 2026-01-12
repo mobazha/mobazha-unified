@@ -618,7 +618,7 @@ export default function OrderDetailPage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-4 text-sm touch-feedback"
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground mb-4 text-sm touch-feedback"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -659,7 +659,7 @@ export default function OrderDetailPage() {
                   <VStack gap="none">
                     <Link
                       href={`/store/${displayOrder.vendor.id}`}
-                      className="font-semibold text-foreground hover:text-emerald-600 text-sm"
+                      className="font-semibold text-foreground hover:text-primary text-sm"
                     >
                       {displayOrder.vendor.name}
                     </Link>
@@ -703,7 +703,7 @@ export default function OrderDetailPage() {
                     <VStack gap="none">
                       <Link
                         href={`/moderators/${displayOrder.moderator.id}`}
-                        className="font-semibold text-foreground hover:text-emerald-600 text-sm"
+                        className="font-semibold text-foreground hover:text-primary text-sm"
                       >
                         {displayOrder.moderator.name}
                       </Link>

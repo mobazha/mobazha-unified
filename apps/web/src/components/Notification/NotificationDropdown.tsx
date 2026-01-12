@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { 
-  Bell, 
-  Check, 
-  CheckCheck, 
-  Package, 
-  AlertTriangle, 
-  UserPlus, 
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  Package,
+  AlertTriangle,
+  UserPlus,
   Settings,
   CreditCard,
   ShoppingCart,
@@ -19,9 +19,9 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { 
-  useNotifications, 
-  useUnreadNotificationCount, 
+import {
+  useNotifications,
+  useUnreadNotificationCount,
   useI18n,
   getNotificationRoute,
 } from '@mobazha/core';
@@ -33,13 +33,13 @@ import { cn } from '@/lib/utils';
  */
 function getNotificationIcon(type: string) {
   const iconClass = 'h-4 w-4';
-  
+
   switch (type) {
     case 'newOrder':
       return <ShoppingCart className={cn(iconClass, 'text-blue-500')} />;
     case 'orderFunded':
     case 'orderPaymentReceived':
-      return <CreditCard className={cn(iconClass, 'text-emerald-500')} />;
+      return <CreditCard className={cn(iconClass, 'text-primary')} />;
     case 'orderConfirmation':
     case 'orderCompletion':
       return <CheckCircle className={cn(iconClass, 'text-green-500')} />;
@@ -65,7 +65,10 @@ function getNotificationIcon(type: string) {
 /**
  * 格式化时间
  */
-function formatTimeAgo(timestamp: string, t: (key: string, params?: Record<string, string | number>) => string): string {
+function formatTimeAgo(
+  timestamp: string,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
   const now = new Date();
   const date = new Date(timestamp);
   const diffMs = now.getTime() - date.getTime();
@@ -118,8 +121,15 @@ function NotificationItem({
 
   // 是否是订单类型
   const isOrderType = [
-    'newOrder', 'orderFunded', 'orderPaymentReceived', 'orderConfirmation',
-    'orderDeclined', 'orderCancel', 'refund', 'orderFulfillment', 'orderCompletion',
+    'newOrder',
+    'orderFunded',
+    'orderPaymentReceived',
+    'orderConfirmation',
+    'orderDeclined',
+    'orderCancel',
+    'refund',
+    'orderFulfillment',
+    'orderCompletion',
     'vendorFinalizedPayment',
   ].includes(type);
 
@@ -180,7 +190,7 @@ function NotificationItem({
             )}
             <span className="text-xs text-text-tertiary truncate">{data.productTitle}</span>
             {data.price && (
-              <span className="text-xs font-semibold text-emerald-600 flex-shrink-0">
+              <span className="text-xs font-semibold text-primary flex-shrink-0">
                 {formatPrice(data.price.amount)}
               </span>
             )}
@@ -230,16 +240,11 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const unreadCount = useUnreadNotificationCount();
-  const { 
-    apiNotifications, 
-    isLoading, 
-    markAsRead, 
-    markAllAsRead, 
-    fetchNotifications,
-  } = useNotifications({
-    autoLoad: false,
-    enableRealtime: true,
-  });
+  const { apiNotifications, isLoading, markAsRead, markAllAsRead, fetchNotifications } =
+    useNotifications({
+      autoLoad: false,
+      enableRealtime: true,
+    });
 
   // 打开时加载通知
   useEffect(() => {
@@ -248,9 +253,12 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     }
   }, [open, fetchNotifications]);
 
-  const handleMarkAsRead = useCallback(async (id: string) => {
-    await markAsRead(id);
-  }, [markAsRead]);
+  const handleMarkAsRead = useCallback(
+    async (id: string) => {
+      await markAsRead(id);
+    },
+    [markAsRead]
+  );
 
   const handleMarkAllAsRead = useCallback(async () => {
     await markAllAsRead();
@@ -279,11 +287,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="w-96 p-0"
-        sideOffset={8}
-      >
+      <PopoverContent align="end" className="w-96 p-0" sideOffset={8}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <h3 className="font-semibold text-text-primary">{t('notifications.title')}</h3>
@@ -316,7 +320,9 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
           ) : recentNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <Bell className="h-10 w-10 text-text-tertiary mb-3" />
-              <p className="text-text-secondary font-medium">{t('notifications.noNotifications')}</p>
+              <p className="text-text-secondary font-medium">
+                {t('notifications.noNotifications')}
+              </p>
               <p className="text-xs text-text-tertiary mt-1">{t('notifications.allCaughtUp')}</p>
             </div>
           ) : (

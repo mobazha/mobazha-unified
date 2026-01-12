@@ -86,7 +86,7 @@ export default function PrivacySettingsPage() {
           {/* Back Link */}
           <Link
             href="/settings"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -130,7 +130,7 @@ export default function PrivacySettingsPage() {
                           }
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600"></div>
+                        <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-border peer-checked:bg-primary"></div>
                       </label>
                     </HStack>
                   </div>
@@ -157,7 +157,7 @@ export default function PrivacySettingsPage() {
                             }
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600"></div>
+                          <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-border peer-checked:bg-primary"></div>
                         </label>
                       </HStack>
                     </div>
@@ -215,7 +215,7 @@ export default function PrivacySettingsPage() {
                                 <img
                                   src={request.avatar}
                                   alt={request.name}
-                                  className="w-10 h-10 rounded-full bg-slate-200"
+                                  className="w-10 h-10 rounded-full bg-muted"
                                 />
                                 <div>
                                   <p className="font-semibold text-foreground">{request.name}</p>
@@ -278,7 +278,7 @@ export default function PrivacySettingsPage() {
                       <span className="text-muted-foreground">User Groups</span>
                     </HStack>
                     <svg
-                      className="w-5 h-5 text-slate-400"
+                      className="w-5 h-5 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -315,7 +315,7 @@ export default function PrivacySettingsPage() {
                       <span className="text-muted-foreground">Product Groups</span>
                     </HStack>
                     <svg
-                      className="w-5 h-5 text-slate-400"
+                      className="w-5 h-5 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -332,11 +332,9 @@ export default function PrivacySettingsPage() {
               </Card>
 
               {/* Info Box */}
-              <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
-                <h3 className="font-semibold text-emerald-800 dark:text-emerald-400 mb-2">
-                  Exclusive Store Benefits
-                </h3>
-                <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-2">
+              <Card className="bg-primary/5 dark:bg-primary/10 border-primary/30">
+                <h3 className="font-semibold text-primary mb-2">Exclusive Store Benefits</h3>
+                <ul className="text-sm text-primary/80 space-y-2">
                   <li>• Control who can view your products</li>
                   <li>• Create VIP customer groups</li>
                   <li>• Offer exclusive discounts</li>

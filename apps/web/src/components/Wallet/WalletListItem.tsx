@@ -50,8 +50,8 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                 <span
                   className={`text-xs font-medium px-1.5 py-0.5 rounded ${
                     balance.change24h >= 0
-                      ? 'bg-emerald-500/20 text-emerald-600'
-                      : 'bg-red-500/20 text-red-600'
+                      ? 'bg-primary/20 text-primary'
+                      : 'bg-destructive/20 text-destructive'
                   }`}
                 >
                   {balance.change24h >= 0 ? '+' : ''}
@@ -84,7 +84,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                 e.stopPropagation();
                 onSend?.();
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
