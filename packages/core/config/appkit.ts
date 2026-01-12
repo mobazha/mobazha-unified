@@ -74,9 +74,9 @@ export const SEPOLIA_CONTRACTS = {
   BroadwaySwap: '0x505d6c446f8Ea4714F01a98166fab4Cae588EaD3',
   RevenueDistributor: '0xbA42D6399099cA751a574AdE46595b6768590a40',
 
-  // NFT OTC 相关 (待部署到 Sepolia)
-  NftOtcSwap: '', // TODO: 部署后填入
-  ExampleNFT: '', // TODO: 部署后填入
+  // NFT OTC 相关
+  NftOtcSwap: '0xaa74D3f46c77339dDD727D85D0eF3917580DC402',
+  ExampleNFT: '0x525Cc7f3eb25F71b6912468A19e6f01C0Fc2e159',
 } as const;
 
 /**

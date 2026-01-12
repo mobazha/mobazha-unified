@@ -9,7 +9,23 @@ import type { OtcConfig, DemoNft, DemoRwaAsset } from '../types/otc';
 // ============================================================
 
 export const OTC_CONFIGS: Record<number, OtcConfig> = {
-  // Base Sepolia 测试网
+  // Sepolia 测试网 (主要测试网络)
+  11155111: {
+    chainId: 11155111,
+    chainName: 'Sepolia',
+    rpcUrl: 'https://ethereum-sepolia-rpc.publicnode.com',
+    blockExplorerUrl: 'https://sepolia.etherscan.io',
+    contracts: {
+      NftOtcSwap: '0xaa74D3f46c77339dDD727D85D0eF3917580DC402',
+      ExampleNFT: '0x525Cc7f3eb25F71b6912468A19e6f01C0Fc2e159',
+      BroadwaySwap: '0x505d6c446f8Ea4714F01a98166fab4Cae588EaD3',
+      StarlightDreamsRWA: '0x991354BB4A050A77bB40E1D1ABCf06a45c14819c', // BroadwayRWA
+      USDT: '0x4399f9fbaf83A631f88615A027152257CDa98c58', // MockUSDT
+      USDC: '0x0000000000000000000000000000000000000000', // 待部署
+    },
+    telegramBotUsername: 'mobazha_test_bot',
+  },
+  // Base Sepolia 测试网 (备用)
   84532: {
     chainId: 84532,
     chainName: 'Base Sepolia',
@@ -41,10 +57,26 @@ export const OTC_CONFIGS: Record<number, OtcConfig> = {
     },
     telegramBotUsername: 'mobazha_bot',
   },
+  // Ethereum 主网 (预留)
+  1: {
+    chainId: 1,
+    chainName: 'Ethereum Mainnet',
+    rpcUrl: 'https://eth.llamarpc.com',
+    blockExplorerUrl: 'https://etherscan.io',
+    contracts: {
+      NftOtcSwap: '0x0000000000000000000000000000000000000000',
+      ExampleNFT: '0x0000000000000000000000000000000000000000',
+      BroadwaySwap: '0x0000000000000000000000000000000000000000',
+      StarlightDreamsRWA: '0x0000000000000000000000000000000000000000',
+      USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7', // Tether USD
+      USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USD Coin
+    },
+    telegramBotUsername: 'mobazha_bot',
+  },
 };
 
-// 默认链 ID (测试网)
-export const DEFAULT_CHAIN_ID = 84532;
+// 默认链 ID (Sepolia 测试网)
+export const DEFAULT_CHAIN_ID = 11155111;
 
 // ============================================================
 // 获取配置方法
@@ -132,15 +164,23 @@ export const DEMO_NFTS: DemoNft[] = [
     description: '某知名 KOL 的限量签名照，全球仅发行 100 份',
     creator: 'CryptoKOL',
     image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=400&fit=crop',
-    contractAddress: OTC_CONFIGS[84532].contracts.ExampleNFT,
+    contractAddress: OTC_CONFIGS[DEFAULT_CHAIN_ID].contracts.ExampleNFT,
   },
   {
     tokenId: 2,
+    name: '明星演唱会纪念 NFT',
+    description: '2024 演唱会独家纪念数字收藏品',
+    creator: 'StarArtist',
+    image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&h=400&fit=crop',
+    contractAddress: OTC_CONFIGS[DEFAULT_CHAIN_ID].contracts.ExampleNFT,
+  },
+  {
+    tokenId: 3,
     name: '游戏主播签名头像',
     description: '知名游戏主播专属签名头像 NFT',
     creator: 'GameStreamer',
     image: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=400&h=400&fit=crop',
-    contractAddress: OTC_CONFIGS[84532].contracts.ExampleNFT,
+    contractAddress: OTC_CONFIGS[DEFAULT_CHAIN_ID].contracts.ExampleNFT,
   },
 ];
 
@@ -186,6 +226,22 @@ export interface PaymentToken {
 }
 
 export const PAYMENT_TOKENS: Record<number, PaymentToken[]> = {
+  // Sepolia 测试网
+  11155111: [
+    {
+      symbol: 'USDT',
+      name: 'Mock USDT',
+      decimals: 6,
+      address: OTC_CONFIGS[11155111].contracts.USDT,
+    },
+    {
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      address: '0x0000000000000000000000000000000000000000', // Native ETH
+    },
+  ],
+  // Base Sepolia 测试网
   84532: [
     {
       symbol: 'USDT',
@@ -198,6 +254,27 @@ export const PAYMENT_TOKENS: Record<number, PaymentToken[]> = {
       name: 'USD Coin',
       decimals: 6,
       address: OTC_CONFIGS[84532].contracts.USDC,
+    },
+  ],
+  // Ethereum 主网
+  1: [
+    {
+      symbol: 'USDT',
+      name: 'Tether USD',
+      decimals: 6,
+      address: OTC_CONFIGS[1].contracts.USDT,
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      address: OTC_CONFIGS[1].contracts.USDC,
+    },
+    {
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      address: '0x0000000000000000000000000000000000000000', // Native ETH
     },
   ],
 };
