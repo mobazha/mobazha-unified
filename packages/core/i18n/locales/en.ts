@@ -1669,6 +1669,173 @@ export const en: TranslationResource = {
     importComplete: 'Import completed successfully',
     error: 'Error',
   },
+
+  // Listing Create/Edit
+  listing: {
+    // Page titles
+    createListing: 'Create Listing',
+    createListingDesc: 'Add a new product or service to your store',
+    editListing: 'Edit Listing',
+
+    // Product Types
+    productType: 'Product Type',
+    types: {
+      physicalGood: 'Physical Good',
+      physicalGoodDesc: 'Tangible items that need shipping',
+      digitalGood: 'Digital Good',
+      digitalGoodDesc: 'Downloadable files or digital content',
+      service: 'Service',
+      serviceDesc: 'Professional services or consulting',
+      rwaToken: 'RWA Token',
+      rwaTokenDesc: 'Real World Asset tokenized on blockchain',
+    },
+
+    // Tabs
+    tabs: {
+      general: 'General',
+      photos: 'Photos',
+      tags: 'Tags',
+      category: 'Category',
+      shipping: 'Shipping',
+      variants: 'Variants',
+      policies: 'Policies',
+      coupons: 'Coupons',
+    },
+
+    // Basic Info
+    basicInfo: 'Basic Information',
+    title: 'Title',
+    titlePlaceholder: 'Enter a descriptive title',
+    titleHelper: 'Something descriptive that clearly explains what you are selling',
+    description: 'Description',
+    descriptionPlaceholder:
+      'Describe your listing as best as you can... Include inline photos. Link to Youtube videos. etc',
+    price: 'Price',
+    priceHelper: 'Set your price in Dollars, Yuan, Bitcoin, anything',
+
+    // Physical Good Fields
+    condition: 'Condition',
+    conditionHelper: 'The overall condition of your listing',
+    weight: 'Weight',
+    weightHelper: 'Item weight in grams',
+    sku: 'SKU',
+    skuPlaceholder: 'SKU, Part Number, ID, etc',
+    skuHelper: 'A unique identifier for your listing',
+    nsfw: 'Mature Content (NSFW, adult, 18+, etc)',
+
+    // Conditions
+    conditions: {
+      new: 'New',
+      usedExcellent: 'Used - Excellent',
+      usedGood: 'Used - Good',
+      usedPoor: 'Used - Poor',
+      refurbished: 'Refurbished',
+    },
+
+    // Media
+    photos: 'Photos',
+    photosHelper: 'Include up to 30 photos. Drag to reorder.',
+    primaryPhoto: 'PRIMARY PHOTO',
+    add: 'Add',
+    introVideo: 'Introduction Video',
+    externalVideoLink: 'Or add external video link (YouTube, etc.)',
+    videoTooLarge: 'Video must be less than 15MB',
+    noImage: 'No image',
+
+    // Tags & Category
+    tags: 'Tags',
+    tagsHelper: 'For getting your listing discovered',
+    tagsDesc: 'Add many tags. Enter a tag name, press enter, repeat.',
+    enterTag: 'Enter #tags...',
+    category: 'Category',
+    categoryHelper: 'For organizing your store',
+    enterCategory: 'Enter a category...',
+
+    // Shipping
+    shippingOptions: 'Shipping Options',
+    shippingOptionsHelper:
+      'The following shipping options from your store settings will be used for this listing',
+    manageShippingOptions: 'Manage Shipping Options',
+    selectShippingOptions: 'Select Shipping Options',
+    noShippingSelected: 'No shipping options selected',
+    noShippingOptionsConfigured: 'No shipping options configured in your store settings',
+    goToSettings: 'Go to Settings',
+    services: 'service(s)',
+    localPickup: 'Local Pickup',
+    fixedPrice: 'Fixed Price',
+    worldwide: 'Worldwide',
+    free: 'Free',
+
+    // Variants
+    variants: 'Variants',
+    variantsHelper: 'Add additional sizes, colors, materials, etc',
+    addVariant: 'Add Variant',
+
+    // Policies
+    policies: 'Return Policy & Terms',
+    returnPolicy: 'Return Policy',
+    returnPolicyPlaceholder: 'Enter your return policy...',
+    returnPolicyHelper: 'If left blank, the listing will display "No return policy entered"',
+    termsAndConditions: 'Terms and Conditions',
+    termsPlaceholder: 'Enter terms and conditions...',
+    termsHelper: 'If left blank, the listing will display "No terms and conditions entered"',
+
+    // Coupons
+    coupons: 'Coupons',
+    addCoupon: 'Add Coupon',
+
+    // RWA Token
+    rwaTokenDetails: 'RWA Token Details',
+    blockchain: 'Blockchain',
+    blockchainHelper: 'Select the blockchain network where the RWA token is deployed',
+    selectRwaToken: 'Select RWA Token',
+    searchTokens: 'Search Tokens',
+    enterAddress: 'Enter Address',
+    searchTokenPlaceholder: 'Search by token name, code or symbol...',
+    tokenAddressHelper: 'Search or enter address to find and confirm RWA token',
+    noTokensFound: 'No tokens found',
+    search: 'Search',
+    selectedTokenInfo: 'Selected RWA Token Info',
+    tokenName: 'Token Name',
+    tokenSymbol: 'Token Symbol',
+    tokenType: 'Token Type',
+    currentPrice: 'Current Price',
+    issuer: 'Issuer',
+    riskLevel: 'Risk Level',
+    verification: 'Verification',
+    acceptedCurrencies: 'Receive',
+    acceptedCurrenciesHelper:
+      "The currency you'll receive for the trade (RWA Token supports multiple payment currencies)",
+    addPaymentCurrency: 'Add Payment Currency',
+    minQuantity: 'Minimum Purchase Quantity',
+    minQuantityHelper: 'Minimum quantity a buyer can purchase in a single order',
+    maxQuantity: 'Maximum Purchase Quantity',
+    maxQuantityHelper: 'Maximum quantity a buyer can purchase in a single order',
+
+    // RWA Token Types
+    rwa: {
+      realEstate: 'Real Estate Token',
+      bond: 'Bond Token',
+      commodity: 'Commodity Token',
+      art: 'Art Token',
+      carbonCredit: 'Carbon Credit Token',
+      custom: 'Custom Token',
+    },
+
+    // Preview
+    preview: 'Preview',
+    productTitle: 'Product Title',
+
+    // Actions & Status
+    validationFailed: 'Please fix the errors before submitting',
+    createSuccess: 'Listing created successfully!',
+    updateSuccess: 'Listing updated successfully!',
+    deleteSuccess: 'Listing deleted successfully!',
+    deleteFailed: 'Failed to delete listing',
+    deleteConfirmTitle: 'Delete Listing?',
+    deleteConfirmDesc: 'This action cannot be undone. This will permanently delete your listing.',
+    notFound: 'Listing not found',
+  },
 };
 
 export default en;
