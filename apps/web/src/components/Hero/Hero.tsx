@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@mobazha/core';
@@ -76,7 +77,9 @@ export const Hero: React.FC = () => {
               <div className="text-xs sm:text-sm text-white/60">{t('hero.productsListed')}</div>
             </div>
             <div>
-              <div className="text-xl sm:text-3xl font-bold text-white">🔒</div>
+              <div className="flex justify-center">
+                <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
+              </div>
               <div className="text-xs sm:text-sm text-white/60">{t('hero.privacyFirst')}</div>
             </div>
           </div>
