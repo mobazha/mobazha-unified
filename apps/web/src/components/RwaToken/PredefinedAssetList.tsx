@@ -11,6 +11,7 @@ import {
   etherscanUrls,
   shortenAddress,
   clearBalanceCache,
+  setWalletProvider,
 } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -36,7 +37,7 @@ export function PredefinedAssetList({
   const { t } = useI18n();
 
   // 钱包状态
-  const { isConnected, walletInfo } = useWallet();
+  const { isConnected, walletInfo, getProvider } = useWallet();
   const walletAddress = walletInfo?.address || null;
 
   // 获取当前类型的资产列表
@@ -45,6 +46,24 @@ export function PredefinedAssetList({
   // 余额状态
   const [balances, setBalances] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(false);
+
+  // 在钱包连接时设置 Provider
+  useEffect(() => {
+    if (isConnected && getProvider) {
+      const provider = getProvider();
+      if (provider) {
+        // 获取底层 EIP-1193 provider
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const eipProvider = (provider as any)._network?.provider;
+        if (eipProvider) {
+          setWalletProvider(eipProvider);
+          console.log('✅ PredefinedAssetList: 已设置钱包 Provider');
+        }
+      }
+    } else {
+      setWalletProvider(null);
+    }
+  }, [isConnected, getProvider]);
 
   // 加载余额 (仅在钱包连接时)
   const loadBalances = useCallback(async () => {

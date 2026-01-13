@@ -1,6 +1,7 @@
 /**
  * RWA 链上余额查询服务
  * 支持 ERC1155 和 ERC3525 代币的实时余额查询
+ * 优先使用钱包 Provider，回退到公共 RPC
  */
 
 import { ethers } from 'ethers';
@@ -11,9 +12,15 @@ import type {
   EtherscanUrls,
 } from '../../types/rwa';
 
-// Sepolia 网络配置 (使用支持 CORS 的 RPC 节点)
-const SEPOLIA_RPC = 'https://rpc.ankr.com/eth_sepolia';
-const SEPOLIA_CHAIN_ID = 11155111;
+// Sepolia 网络配置
+export const SEPOLIA_CHAIN_ID = 11155111;
+
+// 备用公共 RPC (不需要 API Key)
+const FALLBACK_RPC_URLS = [
+  'https://ethereum-sepolia-rpc.publicnode.com',
+  'https://rpc2.sepolia.org',
+  'https://sepolia.drpc.org',
+];
 
 // Etherscan URL
 const ETHERSCAN_URL = 'https://sepolia.etherscan.io';
@@ -38,17 +45,61 @@ const ERC3525_ABI = [
   'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
 ];
 
-// Provider 单例
-let provider: ethers.JsonRpcProvider | null = null;
+// Provider 实例
+let walletProvider: ethers.BrowserProvider | null = null;
+let fallbackProvider: ethers.JsonRpcProvider | null = null;
+let currentFallbackIndex = 0;
 
 /**
- * 获取 Provider
+ * 设置钱包 Provider (由外部调用，传入 AppKit 的 provider)
+ * @param provider - EIP-1193 provider 或 null
  */
-export function getProvider(): ethers.JsonRpcProvider {
-  if (!provider) {
-    provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+export function setWalletProvider(provider: unknown): void {
+  if (provider) {
+    try {
+      walletProvider = new ethers.BrowserProvider(provider as ethers.Eip1193Provider);
+      console.log('✅ 已设置钱包 Provider');
+    } catch (error) {
+      console.error('设置钱包 Provider 失败:', error);
+      walletProvider = null;
+    }
+  } else {
+    walletProvider = null;
+    console.log('⚠️ 钱包 Provider 已清除');
   }
-  return provider;
+}
+
+/**
+ * 获取备用 Provider
+ */
+function getFallbackProvider(): ethers.JsonRpcProvider {
+  if (!fallbackProvider) {
+    fallbackProvider = new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[currentFallbackIndex]);
+  }
+  return fallbackProvider;
+}
+
+/**
+ * 切换到下一个备用 RPC
+ */
+function switchToNextFallbackRpc(): ethers.JsonRpcProvider {
+  currentFallbackIndex = (currentFallbackIndex + 1) % FALLBACK_RPC_URLS.length;
+  fallbackProvider = new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[currentFallbackIndex]);
+  console.log(`🔄 切换到备用 RPC: ${FALLBACK_RPC_URLS[currentFallbackIndex]}`);
+  return fallbackProvider;
+}
+
+/**
+ * 获取 Provider (优先使用钱包 Provider)
+ */
+export function getProvider(): ethers.BrowserProvider | ethers.JsonRpcProvider {
+  // 优先使用钱包 provider
+  if (walletProvider) {
+    return walletProvider;
+  }
+
+  // 回退到公共 RPC
+  return getFallbackProvider();
 }
 
 /**
