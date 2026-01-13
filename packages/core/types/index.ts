@@ -213,3 +213,31 @@ export type {
 } from './account';
 
 export { SUPPORTED_PROVIDERS, getProviderInfo } from './account';
+
+// RWA types
+export type {
+  TokenStandard,
+  OrderStatus,
+  AssetTypeCode,
+  AssetType,
+  MembershipInfo,
+  PerformanceInfo,
+  PredefinedAsset,
+  UniversalSwapConfig,
+  CreateOrderData,
+  OrderInfo,
+  RwaTransactionResult,
+  RwaCreateOrderResult,
+  OrderValidationResult,
+  PlatformFeeInfo,
+  RwaListingData,
+  ChainConfig,
+} from './rwa';
+
+export {
+  TokenStandardEnum,
+  OrderStatusEnum,
+  SEPOLIA_CONFIG,
+  SUPPORTED_CHAINS,
+  getChainConfig,
+} from './rwa';

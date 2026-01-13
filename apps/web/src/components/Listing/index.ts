@@ -12,3 +12,22 @@ export { MediaSection } from './MediaSection';
 export { RwaTokenFields } from './RwaTokenFields';
 
 export { PhysicalGoodFields } from './PhysicalGoodFields';
+
+// 向导式创建组件
+export {
+  CreateListingWizard,
+  StepProductType,
+  StepRwaAssetSelect,
+  StepBasicInfo,
+  StepMedia,
+  StepReview,
+  defaultFormData,
+} from './wizard';
+
+export type {
+  CreateListingWizardProps,
+  WizardStepId,
+  WizardFormData,
+  StepProps,
+  WizardStep,
+} from './wizard';
