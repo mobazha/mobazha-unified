@@ -97,6 +97,20 @@ globs:
 1. **Hero 区块**的深色渐变背景（设计意图明确，如 `from-slate-900 via-emerald-900`）
 2. **登录页面**等专门的深色主题页面
 3. **星级评分**的金色 `text-amber-500`（语义明确）
+4. **品牌强调色**如 `text-emerald-300`、`bg-emerald-400` 用于 Hero 徽章等品牌元素
+
+### 深色背景区域的文字颜色
+在 Hero、登录页等深色背景区域，文字颜色应使用 `text-white` 及其透明度变体，而不是 `text-slate-*`：
+```tsx
+// ✅ 正确：深色背景区域
+<p className="text-white">主要文字</p>
+<p className="text-white/80">次要文字</p>
+<p className="text-white/60">辅助文字</p>
+
+// ❌ 错误：不要在深色背景使用 slate
+<p className="text-slate-300">次要文字</p>
+<p className="text-slate-400">辅助文字</p>
+```
 
 ### 警告/提示框的处理
 警告框可以使用 `amber` 颜色，但需要同时配置深色模式以确保对比度：

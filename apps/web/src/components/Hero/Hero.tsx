@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-lg lg:text-xl text-slate-300 mb-6 sm:mb-10 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg lg:text-xl text-white/80 mb-6 sm:mb-10 max-w-2xl mx-auto">
             {t('hero.subtitle')}
           </p>
 
@@ -69,15 +69,15 @@ export const Hero: React.FC = () => {
           <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-16 pt-6 sm:pt-8 border-t border-white/10">
             <div>
               <div className="text-xl sm:text-3xl font-bold text-white">10K+</div>
-              <div className="text-xs sm:text-sm text-slate-400">{t('hero.activeStores')}</div>
+              <div className="text-xs sm:text-sm text-white/60">{t('hero.activeStores')}</div>
             </div>
             <div>
               <div className="text-xl sm:text-3xl font-bold text-white">50K+</div>
-              <div className="text-xs sm:text-sm text-slate-400">{t('hero.productsListed')}</div>
+              <div className="text-xs sm:text-sm text-white/60">{t('hero.productsListed')}</div>
             </div>
             <div>
               <div className="text-xl sm:text-3xl font-bold text-white">🔒</div>
-              <div className="text-xs sm:text-sm text-slate-400">{t('hero.privacyFirst')}</div>
+              <div className="text-xs sm:text-sm text-white/60">{t('hero.privacyFirst')}</div>
             </div>
           </div>
         </div>
