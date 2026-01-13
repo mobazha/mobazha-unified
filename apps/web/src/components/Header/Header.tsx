@@ -40,6 +40,7 @@ import {
   LogOut,
   MessageCircle,
   Shield,
+  PieChart,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
 import { WalletConnectButton } from '../Wallet';
@@ -203,6 +204,13 @@ export const Header: React.FC = () => {
                   >
                     <ShoppingBag className="mr-2 h-4 w-4" />
                     {t('userMenu.purchases')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push('/rwa-dashboard')}
+                    className="cursor-pointer"
+                  >
+                    <PieChart className="mr-2 h-4 w-4" />
+                    RWA 资产
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
 
