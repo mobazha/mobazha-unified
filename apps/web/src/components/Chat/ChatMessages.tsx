@@ -458,7 +458,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             {/* Encryption Notice */}
             {isEncrypted && (
               <div className="text-center py-4 mb-2 animate-in fade-in duration-500">
-                <div className="inline-flex flex-col items-center gap-2 px-5 py-3 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 backdrop-blur-sm rounded-2xl border border-emerald-500/20 shadow-sm">
+                <div className="inline-flex flex-col items-center gap-2 px-5 py-3 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm rounded-2xl border border-primary/20 shadow-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                       <svg
