@@ -8,7 +8,7 @@
  * - 提供加载状态和错误处理
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWallet } from './useWallet';
 import {
   getERC1155TokensOfOwner,
@@ -92,13 +92,21 @@ export interface UseRwaAssetsReturn {
 export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsReturn {
   const {
     autoLoadPredefinedBalances = true,
-    assetTypes = ['CREATOR', 'BROADWAY'],
+    assetTypes: assetTypesProp,
     autoRefresh = true,
   } = options;
+
+  // 稳定化 assetTypes，避免每次渲染都创建新数组
+  const defaultAssetTypes = useRef<AssetTypeCode[]>(['CREATOR', 'BROADWAY']);
+  const assetTypes = assetTypesProp || defaultAssetTypes.current;
 
   // 钱包状态
   const { isConnected, walletInfo, connect, openModal } = useWallet();
   const walletAddress = walletInfo?.address || null;
+
+  // 追踪上一次的钱包地址，防止重复加载
+  const prevWalletAddressRef = useRef<string | null>(null);
+  const isInitialLoadRef = useRef(true);
 
   // 本地状态
   const [isLoading, setIsLoading] = useState(false);
@@ -107,14 +115,16 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
   const [ownedERC1155Tokens, setOwnedERC1155Tokens] = useState<OwnedERC1155Token[]>([]);
   const [ownedERC3525Tokens, setOwnedERC3525Tokens] = useState<OwnedERC3525Token[]>([]);
 
-  // 获取所有预定义资产
+  // 获取所有预定义资产 - 使用 JSON.stringify 来稳定化依赖
+  const assetTypesKey = JSON.stringify(assetTypes);
   const allPredefinedAssets = useMemo(() => {
     const assets: PredefinedAsset[] = [];
     for (const typeCode of assetTypes) {
       assets.push(...getAssetsByType(typeCode));
     }
     return assets;
-  }, [assetTypes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assetTypesKey]);
 
   // 带余额的预定义资产
   const predefinedAssetsWithBalance = useMemo(() => {
@@ -334,10 +344,18 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
 
   // 监听钱包地址变化，自动刷新
   useEffect(() => {
-    if (autoRefresh) {
+    // 只在初始加载或钱包地址变化时加载
+    const shouldLoad =
+      autoRefresh && (isInitialLoadRef.current || prevWalletAddressRef.current !== walletAddress);
+
+    if (shouldLoad) {
+      isInitialLoadRef.current = false;
+      prevWalletAddressRef.current = walletAddress;
       loadAssets();
     }
-  }, [walletAddress, autoRefresh, loadAssets]);
+    // 故意不将 loadAssets 放入依赖数组，因为我们使用 ref 来追踪状态变化
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletAddress, autoRefresh]);
 
   return {
     // 钱包状态
