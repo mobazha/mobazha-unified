@@ -1721,6 +1721,32 @@ export const en: TranslationResource = {
       rwaTokenDesc: 'Real World Asset tokenized on blockchain',
     },
 
+    // Wizard
+    wizard: {
+      steps: {
+        type: 'Product Type',
+        asset: 'Select Asset',
+        basic: 'Basic Info',
+        media: 'Media',
+        review: 'Review',
+      },
+      selectType: 'Select Product Type',
+      selectTypeDesc: 'Choose the type of product you want to sell',
+      selectAsset: 'Select Asset to Sell',
+      selectAssetDesc: 'Choose from predefined assets',
+      configureAsset: 'Configure Asset',
+      configureAssetDesc: 'Manually enter token contract address and parameters',
+      basicInfo: 'Basic Information',
+      basicInfoDesc: 'Fill in the basic product information',
+      media: 'Photos and Videos',
+      mediaDesc: 'Upload product images and videos (optional)',
+      maxImages: 'Up to 30 images',
+      videoSupport: 'YouTube/Vimeo links supported',
+      review: 'Review & Publish',
+      reviewDesc: 'Please review your listing before publishing',
+      publish: 'Publish Listing',
+    },
+
     // Tabs
     tabs: {
       general: 'General',
@@ -1842,25 +1868,6 @@ export const en: TranslationResource = {
     minQuantityHelper: 'Minimum quantity a buyer can purchase in a single order',
     maxQuantity: 'Maximum Purchase Quantity',
     maxQuantityHelper: 'Maximum quantity a buyer can purchase in a single order',
-
-    // Wizard Steps
-    wizard: {
-      selectType: 'Select Product Type',
-      selectTypeDesc: 'Choose the type of product you want to sell',
-      selectAsset: 'Select Asset',
-      selectAssetDesc: 'Choose from predefined assets',
-      configureAsset: 'Configure Asset',
-      configureAssetDesc: 'Manually enter Token contract address and parameters',
-      basicInfo: 'Basic Information',
-      basicInfoDesc: 'Fill in the basic product information',
-      media: 'Images and Videos',
-      mediaDesc: 'Upload product images and videos (optional)',
-      maxImages: 'Maximum 30 images',
-      videoSupport: 'Supports YouTube/Vimeo links',
-      review: 'Review & Publish',
-      reviewDesc: 'Please confirm the product information is correct before publishing',
-      publish: 'Publish Product',
-    },
 
     // RWA Token Types & Details
     rwa: {

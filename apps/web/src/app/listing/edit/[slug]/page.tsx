@@ -475,14 +475,12 @@ export default function EditListingPage() {
                   contractType={formData.contractType}
                   condition={formData.condition}
                   grams={formData.grams}
-                  nsfw={formData.nsfw}
                   onTitleChange={v => updateField('title', v)}
                   onDescriptionChange={v => updateField('description', v)}
                   onPriceChange={v => updateField('price', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
                   onGramsChange={v => updateField('grams', v)}
-                  onNsfwChange={v => updateField('nsfw', v)}
                   errors={errors}
                 />
               )}
