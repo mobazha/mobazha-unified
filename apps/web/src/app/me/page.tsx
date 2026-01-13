@@ -28,6 +28,7 @@ import {
   Wallet,
   ChevronRight,
   LogIn,
+  PieChart,
 } from 'lucide-react';
 
 // 功能列表项组件
@@ -185,6 +186,12 @@ export default function MePage() {
                 title={t('me.receivingAccounts')}
                 description={t('me.receivingAccountsDesc')}
                 href="/wallet"
+              />
+              <FeatureItem
+                icon={<PieChart className="w-5 h-5" />}
+                title="RWA 资产"
+                description="查看和管理您的 RWA 资产"
+                href="/rwa-dashboard"
               />
               <FeatureItem
                 icon={<Heart className="w-5 h-5" />}
