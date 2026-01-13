@@ -63,3 +63,19 @@ export { AuthGuard } from './AuthGuard';
 export { AppKitProvider } from './AppKitProvider';
 export { WalletConnectButton } from './Wallet';
 export type { WalletConnectButtonProps } from './Wallet';
+
+// RWA Token Components
+export {
+  AssetTypeSelector,
+  PredefinedAssetList,
+  SelectedAssetDetail,
+  RwaPurchaseFlow,
+  RwaFulfillFlow,
+} from './RwaToken';
+export type {
+  AssetTypeSelectorProps,
+  PredefinedAssetListProps,
+  SelectedAssetDetailProps,
+  RwaPurchaseFlowProps,
+  RwaFulfillFlowProps,
+} from './RwaToken';

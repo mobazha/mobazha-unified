@@ -14,3 +14,14 @@ export {
   getBaseRateSymbol,
   getPopularCurrencies,
 } from './currencies';
+
+// RWA 预定义资产数据
+export {
+  assetTypes,
+  predefinedAssets,
+  getAssetsByType,
+  getAssetById,
+  getAssetByContract,
+  getAssetType,
+  getAllAssetTypes,
+} from './rwaAssetTemplates';
