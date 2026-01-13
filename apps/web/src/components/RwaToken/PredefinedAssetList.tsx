@@ -22,9 +22,6 @@ export interface PredefinedAssetListProps {
   className?: string;
 }
 
-// Demo 地址
-const DEMO_OWNER_ADDRESS = '0xC4736E41D02faa7D735819AA9afa2ffee1Ce5931';
-
 /**
  * 预定义资产列表
  * 根据资产类型显示可选的预定义资产
@@ -41,7 +38,6 @@ export function PredefinedAssetList({
   // 钱包状态
   const { isConnected, walletInfo } = useWallet();
   const walletAddress = walletInfo?.address || null;
-  const ownerAddress = walletAddress || DEMO_OWNER_ADDRESS;
 
   // 获取当前类型的资产列表
   const assets = useMemo(() => getAssetsByType(assetType), [assetType]);
@@ -50,19 +46,19 @@ export function PredefinedAssetList({
   const [balances, setBalances] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(false);
 
-  // 加载余额
+  // 加载余额 (仅在钱包连接时)
   const loadBalances = useCallback(async () => {
-    if (assets.length === 0) return;
+    if (assets.length === 0 || !walletAddress) return;
     setLoading(true);
     try {
-      const result = await batchGetBalances(assets, ownerAddress);
+      const result = await batchGetBalances(assets, walletAddress);
       setBalances(result);
     } catch (error) {
       console.error('Failed to load balances:', error);
     } finally {
       setLoading(false);
     }
-  }, [assets, ownerAddress]);
+  }, [assets, walletAddress]);
 
   // 刷新余额
   const refreshBalances = useCallback(() => {
@@ -88,10 +84,10 @@ export function PredefinedAssetList({
     return null;
   }
 
-  // 获取资产余额
-  const getAssetBalance = (asset: PredefinedAsset): string => {
-    const liveBalance = balances[asset.id];
-    return liveBalance || asset.balance.toString();
+  // 获取资产余额 (仅在钱包连接时返回真实余额)
+  const getAssetBalance = (asset: PredefinedAsset): string | null => {
+    if (!isConnected) return null;
+    return balances[asset.id] || null;
   };
 
   return (
@@ -107,19 +103,21 @@ export function PredefinedAssetList({
       >
         <Wallet className="w-4 h-4" />
         {isConnected ? (
-          <span>钱包已连接: {shortenAddress(walletAddress || '')}</span>
+          <>
+            <span>钱包已连接: {shortenAddress(walletAddress || '')}</span>
+            <button
+              type="button"
+              onClick={refreshBalances}
+              disabled={loading}
+              className="ml-auto p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors"
+              title="刷新余额"
+            >
+              <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+            </button>
+          </>
         ) : (
-          <span>钱包未连接，显示 Demo 数据</span>
+          <span>请连接钱包以查看您的资产余额</span>
         )}
-        <button
-          type="button"
-          onClick={refreshBalances}
-          disabled={loading}
-          className="ml-auto p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors"
-          title="刷新余额"
-        >
-          <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
-        </button>
       </div>
 
       <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -168,9 +166,14 @@ export function PredefinedAssetList({
                     </span>
 
                     <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                      {t('listing.rwa.available') || '可售'}: {displayBalance} {asset.unit}
-                      {balances[asset.id] && (
-                        <span className="ml-1 text-green-600 dark:text-green-400">●</span>
+                      {t('listing.rwa.available') || '可售'}:{' '}
+                      {displayBalance !== null ? (
+                        <>
+                          {displayBalance} {asset.unit}
+                          <span className="ml-1 text-green-600 dark:text-green-400">●</span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">连接钱包查看</span>
                       )}
                     </span>
 
