@@ -559,12 +559,12 @@ export const de: TranslationResource = {
     titleLine1: 'Handeln Sie frei.',
     titleLine2: 'Handeln Sie sicher.',
     subtitle:
-      'Ein wirklich dezentraler Marktplatz für digitale Güter, Dienstleistungen und Krypto-OTC-Handel. Keine Vermittler. Keine Zensur.',
+      'Ein wirklich dezentraler Marktplatz für Güter, Dienstleistungen und digitale Vermögenswerte. Keine Vermittler. Keine Zensur.',
     exploreMarket: 'Markt erkunden',
     startSelling: 'Verkaufen starten',
     activeStores: 'Aktive Shops',
     productsListed: 'Gelistete Produkte',
-    platformFee: 'Plattformgebühr',
+    privacyFirst: 'Datenschutz',
   },
 
   footer: {
@@ -663,7 +663,7 @@ export const de: TranslationResource = {
     electronics: 'Elektronik',
     digitalGoods: 'Digitale Güter',
     services: 'Dienstleistungen',
-    cryptoOtc: 'Krypto OTC',
+    digitalAssets: 'Digitale Vermögenswerte',
   },
 
   searchExtended: {

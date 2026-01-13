@@ -560,12 +560,12 @@ export const fr: TranslationResource = {
     titleLine1: 'Échangez librement.',
     titleLine2: 'Échangez en sécurité.',
     subtitle:
-      'Une place de marché véritablement décentralisée pour les biens numériques, services et trading OTC crypto. Sans intermédiaires. Sans censure.',
+      'Une place de marché véritablement décentralisée pour les biens, services et actifs numériques. Sans intermédiaires. Sans censure.',
     exploreMarket: 'Explorer le Marché',
     startSelling: 'Commencer à Vendre',
     activeStores: 'Boutiques Actives',
     productsListed: 'Produits Listés',
-    platformFee: 'Frais de Plateforme',
+    privacyFirst: 'Confidentialité',
   },
 
   footer: {
@@ -664,7 +664,7 @@ export const fr: TranslationResource = {
     electronics: 'Électronique',
     digitalGoods: 'Biens Numériques',
     services: 'Services',
-    cryptoOtc: 'Crypto OTC',
+    digitalAssets: 'Actifs Numériques',
   },
 
   searchExtended: {

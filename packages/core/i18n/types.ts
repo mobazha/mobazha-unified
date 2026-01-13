@@ -587,7 +587,7 @@ export interface TranslationResource {
     startSelling: string;
     activeStores: string;
     productsListed: string;
-    platformFee: string;
+    privacyFirst: string;
   };
 
   // 页脚
@@ -710,7 +710,7 @@ export interface TranslationResource {
     electronics: string;
     digitalGoods: string;
     services: string;
-    cryptoOtc: string;
+    digitalAssets: string;
   };
 
   // 搜索扩展

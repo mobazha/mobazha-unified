@@ -559,12 +559,12 @@ export const ru: TranslationResource = {
     titleLine1: 'Торгуйте свободно.',
     titleLine2: 'Торгуйте безопасно.',
     subtitle:
-      'По-настоящему децентрализованный маркетплейс для цифровых товаров, услуг и криптовалютной OTC-торговли. Без посредников. Без цензуры.',
+      'По-настоящему децентрализованный маркетплейс для товаров, услуг и цифровых активов. Без посредников. Без цензуры.',
     exploreMarket: 'Исследовать рынок',
     startSelling: 'Начать продавать',
     activeStores: 'Активные магазины',
     productsListed: 'Товаров в каталоге',
-    platformFee: 'Комиссия платформы',
+    privacyFirst: 'Приватность',
   },
 
   footer: {
@@ -663,7 +663,7 @@ export const ru: TranslationResource = {
     electronics: 'Электроника',
     digitalGoods: 'Цифровые товары',
     services: 'Услуги',
-    cryptoOtc: 'Крипто OTC',
+    digitalAssets: 'Цифровые активы',
   },
 
   searchExtended: {

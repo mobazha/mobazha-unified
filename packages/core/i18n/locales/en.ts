@@ -990,12 +990,12 @@ export const en: TranslationResource = {
     titleLine1: 'Trade Freely.',
     titleLine2: 'Trade Securely.',
     subtitle:
-      'A truly decentralized marketplace for digital goods, services, and crypto OTC trading. No intermediaries. No censorship. Just you and your customers.',
+      'A truly decentralized marketplace for goods, services, and digital assets. No intermediaries. No censorship. Just you and your customers.',
     exploreMarket: 'Explore Market',
     startSelling: 'Start Selling',
     activeStores: 'Active Stores',
     productsListed: 'Products Listed',
-    platformFee: 'Platform Fee',
+    privacyFirst: 'Privacy First',
   },
 
   footer: {
@@ -1142,7 +1142,7 @@ export const en: TranslationResource = {
     electronics: 'Electronics',
     digitalGoods: 'Digital Goods',
     services: 'Services',
-    cryptoOtc: 'Crypto OTC',
+    digitalAssets: 'Digital Assets',
   },
 
   searchExtended: {

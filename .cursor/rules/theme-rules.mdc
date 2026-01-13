@@ -1,0 +1,162 @@
+---
+description: UI 主题适配规则 - 创建或修改 UI 组件时应用
+globs:
+  - "apps/web/src/**/*.tsx"
+  - "apps/web/src/**/*.ts"
+  - "packages/ui/**/*.tsx"
+---
+
+# UI 主题适配规则
+
+## 核心原则
+
+在 Tailwind CSS 项目中，**禁止使用硬编码颜色**，必须使用主题变量以确保浅色/深色模式自动适配。
+
+## 禁止使用的硬编码颜色
+
+以下颜色类名视为"硬编码颜色"，应替换为主题变量：
+
+### 文字颜色（禁止）
+- `text-slate-*`, `text-gray-*`, `text-zinc-*`, `text-neutral-*`, `text-stone-*`
+- `text-emerald-*`, `text-green-*`, `text-teal-*`
+- `text-blue-*`, `text-indigo-*`, `text-violet-*`, `text-purple-*`
+
+### 背景颜色（禁止）
+- `bg-slate-*`, `bg-gray-*`, `bg-zinc-*`, `bg-neutral-*`, `bg-stone-*`
+- `bg-emerald-*`, `bg-green-*`, `bg-teal-*`
+- 其他非主题色的背景
+
+### 边框颜色（禁止）
+- `border-slate-*`, `border-gray-*`, `border-emerald-*` 等
+
+## 推荐使用的主题变量
+
+### 文字颜色
+| 用途 | 推荐类名 |
+|-----|---------|
+| 主要文字 | `text-foreground` |
+| 次要/辅助文字 | `text-muted-foreground` |
+| 强调/链接/价格 | `text-primary` |
+| 禁用/淡化文字 | `text-muted-foreground/50` 或 `text-muted-foreground/70` |
+
+### 背景颜色
+| 用途 | 推荐类名 |
+|-----|---------|
+| 页面背景 | `bg-background` |
+| 卡片/容器背景 | `bg-card` |
+| 次要背景/hover | `bg-muted` |
+| 强调背景 | `bg-primary` |
+| 强调背景（浅） | `bg-primary/10` 或 `bg-primary/20` |
+
+### 边框颜色
+| 用途 | 推荐类名 |
+|-----|---------|
+| 普通边框 | `border-border` |
+| 强调边框 | `border-primary` 或 `border-primary/30` |
+| 淡化边框 | `border-muted-foreground/40` |
+
+### 交互状态
+| 用途 | 推荐类名 |
+|-----|---------|
+| 链接 hover | `hover:text-primary` |
+| 背景 hover | `hover:bg-muted` 或 `hover:bg-primary/10` |
+| 按钮主色 | `bg-primary text-primary-foreground` |
+| 按钮 hover | `hover:bg-primary/90` |
+
+### 语义颜色（可保留）
+| 用途 | 允许使用 |
+|-----|---------|
+| 错误/删除 | `text-destructive`, `bg-destructive`, `hover:text-destructive` |
+| 警告 | `text-amber-*`, `bg-amber-*`（需配合 dark: 变体确保对比度） |
+| 成功 | 使用 `text-primary` 替代 `text-green-*` |
+| 在线状态 | `bg-primary` 替代 `bg-emerald-500` |
+
+## 修复示例
+
+### ❌ 错误写法
+```tsx
+<p className="text-slate-500">描述文字</p>
+<button className="bg-emerald-500 text-white">提交</button>
+<span className="text-emerald-600">${price}</span>
+<div className="border-slate-300">卡片</div>
+<input className="border-slate-300 dark:border-slate-600" />
+```
+
+### ✅ 正确写法
+```tsx
+<p className="text-muted-foreground">描述文字</p>
+<button className="bg-primary text-primary-foreground">提交</button>
+<span className="text-primary">${price}</span>
+<div className="border-border">卡片</div>
+<input className="border-border" />
+```
+
+## 特殊情况
+
+### 允许保留的设计性颜色
+1. **Hero 区块**的深色渐变背景（设计意图明确，如 `from-slate-900 via-emerald-900`）
+2. **登录页面**等专门的深色主题页面
+3. **星级评分**的金色 `text-amber-500`（语义明确）
+
+### 警告/提示框的处理
+警告框可以使用 `amber` 颜色，但需要同时配置深色模式以确保对比度：
+```tsx
+// ✅ 正确：深色模式对比度足够
+<div className="bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700 rounded-lg p-3">
+  <p className="text-amber-800 dark:text-amber-200 font-medium">警告文字</p>
+</div>
+```
+
+### 渐变背景
+使用主题色的渐变：
+```tsx
+// ✅ 正确
+<div className="bg-gradient-to-br from-primary/10 to-primary/5">内容</div>
+
+// ❌ 错误
+<div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">内容</div>
+```
+
+## 复选框/开关组件
+```tsx
+// ✅ 正确
+className={`rounded border-2 ${
+  checked ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+}`}
+
+// ❌ 错误
+className={`rounded border-2 ${
+  checked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'
+}`}
+```
+
+## 检查方法
+
+使用以下命令检查硬编码颜色：
+```bash
+# 检查所有硬编码颜色
+grep -rE "text-slate-|bg-slate-|text-emerald-|bg-emerald-|text-gray-|bg-gray-|border-slate-|border-emerald-|border-gray-" apps/web/src/
+
+# 统计各文件的问题数量
+grep -rEc "text-slate-|bg-slate-|text-emerald-|bg-emerald-" apps/web/src/ | grep -v ":0$"
+```
+
+## 修复优先级
+
+1. **P0（必须修复）**: 核心页面
+   - 首页、商品详情、店铺页面、购物车、结账、订单
+
+2. **P1（应该修复）**: 次要页面
+   - 设置、钱包、通知、个人中心、搜索
+
+3. **P2（建议修复）**: 边缘功能
+   - 仲裁、OTC、Marketplace 管理等
+
+## Code Review 检查项
+
+- [ ] 没有使用 `text-slate-*`, `text-gray-*`, `text-emerald-*` 等硬编码文字颜色
+- [ ] 没有使用 `bg-slate-*`, `bg-gray-*`, `bg-emerald-*` 等硬编码背景颜色
+- [ ] 没有使用 `border-slate-*`, `border-emerald-*` 等硬编码边框颜色
+- [ ] 警告/提示框配置了正确的深色模式变体
+- [ ] 渐变背景使用主题变量
+- [ ] 交互状态（hover/focus）使用主题变量

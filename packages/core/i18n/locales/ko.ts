@@ -559,12 +559,12 @@ export const ko: TranslationResource = {
     titleLine1: '자유롭게 거래하세요.',
     titleLine2: '안전하게 거래하세요.',
     subtitle:
-      '디지털 상품, 서비스, 암호화폐 OTC 거래를 위한 진정한 탈중앙화 마켓플레이스. 중개자 없음. 검열 없음.',
+      '상품, 서비스, 디지털 자산을 위한 진정한 탈중앙화 마켓플레이스. 중개자 없음. 검열 없음.',
     exploreMarket: '마켓 탐색',
     startSelling: '판매 시작',
     activeStores: '활성 스토어',
     productsListed: '등록된 상품',
-    platformFee: '플랫폼 수수료',
+    privacyFirst: '프라이버시 우선',
   },
 
   footer: {
@@ -663,7 +663,7 @@ export const ko: TranslationResource = {
     electronics: '전자제품',
     digitalGoods: '디지털 상품',
     services: '서비스',
-    cryptoOtc: '암호화폐 OTC',
+    digitalAssets: '디지털 자산',
   },
 
   searchExtended: {

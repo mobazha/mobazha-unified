@@ -39,7 +39,10 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     id: item.slug,
     slug: item.slug,
     title: item.title,
-    imageUrl: item.thumbnail?.medium || item.thumbnail?.small || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
+    imageUrl:
+      item.thumbnail?.medium ||
+      item.thumbnail?.small ||
+      'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
     price: item.price?.amount || 0,
     currency: item.price?.currency?.code || 'USD',
     divisibility: item.price?.currency?.divisibility,
@@ -176,7 +179,7 @@ export default function HomePage() {
     { name: t('homeExtended.electronics'), icon: '💻', color: 'from-blue-500 to-cyan-500' },
     { name: t('homeExtended.digitalGoods'), icon: '📱', color: 'from-purple-500 to-pink-500' },
     { name: t('homeExtended.services'), icon: '🛠️', color: 'from-orange-500 to-red-500' },
-    { name: t('homeExtended.cryptoOtc'), icon: '₿', color: 'from-amber-500 to-yellow-500' },
+    { name: t('homeExtended.digitalAssets'), icon: '💎', color: 'from-amber-500 to-yellow-500' },
   ];
 
   return (

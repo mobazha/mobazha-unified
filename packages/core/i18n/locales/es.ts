@@ -560,12 +560,12 @@ export const es: TranslationResource = {
     titleLine1: 'Comercia libremente.',
     titleLine2: 'Comercia seguro.',
     subtitle:
-      'Un mercado verdaderamente descentralizado para bienes digitales, servicios y trading OTC de criptomonedas. Sin intermediarios. Sin censura.',
+      'Un mercado verdaderamente descentralizado para bienes, servicios y activos digitales. Sin intermediarios. Sin censura.',
     exploreMarket: 'Explorar Mercado',
     startSelling: 'Empezar a Vender',
     activeStores: 'Tiendas Activas',
     productsListed: 'Productos Listados',
-    platformFee: 'Comisión',
+    privacyFirst: 'Privacidad',
   },
 
   footer: {
@@ -664,7 +664,7 @@ export const es: TranslationResource = {
     electronics: 'Electrónica',
     digitalGoods: 'Bienes Digitales',
     services: 'Servicios',
-    cryptoOtc: 'Crypto OTC',
+    digitalAssets: 'Activos Digitales',
   },
 
   searchExtended: {

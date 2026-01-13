@@ -559,12 +559,12 @@ export const ja: TranslationResource = {
     titleLine1: '自由に取引。',
     titleLine2: '安全に取引。',
     subtitle:
-      'デジタル商品、サービス、暗号通貨OTC取引のための真の分散型マーケットプレイス。仲介者なし。検閲なし。',
+      '商品、サービス、デジタル資産のための真の分散型マーケットプレイス。仲介者なし。検閲なし。',
     exploreMarket: 'マーケットを探索',
     startSelling: '販売を開始',
     activeStores: 'アクティブストア',
     productsListed: '出品商品',
-    platformFee: 'プラットフォーム手数料',
+    privacyFirst: 'プライバシー優先',
   },
 
   footer: {
@@ -663,7 +663,7 @@ export const ja: TranslationResource = {
     electronics: '電子機器',
     digitalGoods: 'デジタル商品',
     services: 'サービス',
-    cryptoOtc: '暗号通貨OTC',
+    digitalAssets: 'デジタル資産',
   },
 
   searchExtended: {

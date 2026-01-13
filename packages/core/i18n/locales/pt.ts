@@ -559,12 +559,12 @@ export const pt: TranslationResource = {
     titleLine1: 'Negocie livremente.',
     titleLine2: 'Negocie com segurança.',
     subtitle:
-      'Um marketplace verdadeiramente descentralizado para bens digitais, serviços e trading OTC de criptomoedas. Sem intermediários. Sem censura.',
+      'Um marketplace verdadeiramente descentralizado para bens, serviços e ativos digitais. Sem intermediários. Sem censura.',
     exploreMarket: 'Explorar Mercado',
     startSelling: 'Começar a Vender',
     activeStores: 'Lojas Ativas',
     productsListed: 'Produtos Listados',
-    platformFee: 'Taxa da Plataforma',
+    privacyFirst: 'Privacidade',
   },
 
   footer: {
@@ -663,7 +663,7 @@ export const pt: TranslationResource = {
     electronics: 'Eletrônicos',
     digitalGoods: 'Bens Digitais',
     services: 'Serviços',
-    cryptoOtc: 'Crypto OTC',
+    digitalAssets: 'Ativos Digitais',
   },
 
   searchExtended: {
