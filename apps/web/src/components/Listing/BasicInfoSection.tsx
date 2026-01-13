@@ -21,7 +21,6 @@ interface BasicInfoSectionProps {
   condition?: ProductCondition;
   grams?: number;
   sku?: string;
-  nsfw: boolean;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onPriceChange: (value: string) => void;
@@ -29,7 +28,6 @@ interface BasicInfoSectionProps {
   onConditionChange?: (value: ProductCondition) => void;
   onGramsChange?: (value: number) => void;
   onSkuChange?: (value: string) => void;
-  onNsfwChange: (value: boolean) => void;
   errors?: {
     title?: string;
     price?: string;
@@ -66,7 +64,6 @@ export function BasicInfoSection({
   condition,
   grams,
   sku,
-  nsfw,
   onTitleChange,
   onDescriptionChange,
   onPriceChange,
@@ -74,7 +71,6 @@ export function BasicInfoSection({
   onConditionChange,
   onGramsChange,
   onSkuChange,
-  onNsfwChange,
   errors = {},
   className = '',
 }: BasicInfoSectionProps) {
@@ -247,35 +243,6 @@ export function BasicInfoSection({
               'Describe your listing as best as you can... Include inline photos. Link to Youtube videos. etc'
             }
           />
-        </div>
-
-        {/* NSFW 标记 */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-muted-foreground">
-            {t('listing.nsfw') || 'Mature Content (NSFW, adult, 18+, etc)'}
-          </label>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="nsfw"
-                checked={nsfw}
-                onChange={() => onNsfwChange(true)}
-                className="w-4 h-4 text-primary"
-              />
-              <span className="text-sm">{t('common.yes') || 'Yes'}</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="nsfw"
-                checked={!nsfw}
-                onChange={() => onNsfwChange(false)}
-                className="w-4 h-4 text-primary"
-              />
-              <span className="text-sm">{t('common.no') || 'No'}</span>
-            </label>
-          </div>
         </div>
       </div>
     </Card>

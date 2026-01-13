@@ -1692,6 +1692,32 @@ export const zh: TranslationResource = {
       rwaTokenDesc: '在区块链上代币化的真实世界资产',
     },
 
+    // 向导式创建
+    wizard: {
+      steps: {
+        type: '商品类型',
+        asset: '选择资产',
+        basic: '基本信息',
+        media: '图片视频',
+        review: '确认发布',
+      },
+      selectType: '选择商品类型',
+      selectTypeDesc: '选择您要出售的商品类型',
+      selectAsset: '选择要出售的资产',
+      selectAssetDesc: '从预定义资产中选择',
+      configureAsset: '配置资产信息',
+      configureAssetDesc: '手动输入 Token 合约地址和参数',
+      basicInfo: '基本信息',
+      basicInfoDesc: '填写商品的基本信息',
+      media: '图片和视频',
+      mediaDesc: '上传商品图片和视频（可选）',
+      maxImages: '最多 30 张图片',
+      videoSupport: '支持 YouTube/Vimeo 链接',
+      review: '确认发布',
+      reviewDesc: '请确认商品信息无误后发布',
+      publish: '发布商品',
+    },
+
     // 标签页
     tabs: {
       general: '基本信息',
@@ -1810,25 +1836,6 @@ export const zh: TranslationResource = {
     minQuantityHelper: '买家单次订单可购买的最小数量',
     maxQuantity: '最大购买数量',
     maxQuantityHelper: '买家单次订单可购买的最大数量',
-
-    // 向导步骤
-    wizard: {
-      selectType: '选择商品类型',
-      selectTypeDesc: '选择您要出售的商品类型',
-      selectAsset: '选择资产',
-      selectAssetDesc: '从预定义资产中选择',
-      configureAsset: '配置资产信息',
-      configureAssetDesc: '手动输入 Token 合约地址和参数',
-      basicInfo: '基本信息',
-      basicInfoDesc: '填写商品的基本信息',
-      media: '图片和视频',
-      mediaDesc: '上传商品图片和视频（可选）',
-      maxImages: '最多 30 张图片',
-      videoSupport: '支持 YouTube/Vimeo 链接',
-      review: '确认发布',
-      reviewDesc: '请确认商品信息无误后发布',
-      publish: '发布商品',
-    },
 
     // RWA 代币类型和详情
     rwa: {

@@ -1256,6 +1256,30 @@ export interface TranslationResource {
       rwaToken: string;
       rwaTokenDesc: string;
     };
+    wizard: {
+      steps: {
+        type: string;
+        asset: string;
+        basic: string;
+        media: string;
+        review: string;
+      };
+      selectType: string;
+      selectTypeDesc: string;
+      selectAsset: string;
+      selectAssetDesc: string;
+      configureAsset: string;
+      configureAssetDesc: string;
+      basicInfo: string;
+      basicInfoDesc: string;
+      media: string;
+      mediaDesc: string;
+      maxImages: string;
+      videoSupport: string;
+      review: string;
+      reviewDesc: string;
+      publish: string;
+    };
     tabs: {
       general: string;
       photos: string;
@@ -1353,23 +1377,6 @@ export interface TranslationResource {
     minQuantityHelper: string;
     maxQuantity: string;
     maxQuantityHelper: string;
-    wizard?: {
-      selectType: string;
-      selectTypeDesc: string;
-      selectAsset: string;
-      selectAssetDesc: string;
-      configureAsset: string;
-      configureAssetDesc: string;
-      basicInfo: string;
-      basicInfoDesc: string;
-      media: string;
-      mediaDesc: string;
-      maxImages: string;
-      videoSupport: string;
-      review: string;
-      reviewDesc: string;
-      publish: string;
-    };
     rwa: {
       realEstate: string;
       bond: string;

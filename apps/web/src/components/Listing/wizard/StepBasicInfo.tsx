@@ -207,33 +207,6 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
             placeholder={t('listing.descriptionPlaceholder') || '尽可能详细地描述您的商品...'}
           />
         </div>
-
-        {/* NSFW 标记 */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-muted-foreground">
-            {t('listing.nsfw') || '成人内容'}
-          </label>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                checked={formData.nsfw}
-                onChange={() => updateField('nsfw', true)}
-                className="w-4 h-4 text-primary"
-              />
-              <span className="text-sm">{t('common.yes') || '是'}</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                checked={!formData.nsfw}
-                onChange={() => updateField('nsfw', false)}
-                className="w-4 h-4 text-primary"
-              />
-              <span className="text-sm">{t('common.no') || '否'}</span>
-            </label>
-          </div>
-        </div>
       </Card>
 
       {/* 导航按钮 */}
