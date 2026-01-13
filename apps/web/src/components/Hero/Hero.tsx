@@ -76,8 +76,8 @@ export const Hero: React.FC = () => {
               <div className="text-xs sm:text-sm text-slate-400">{t('hero.productsListed')}</div>
             </div>
             <div>
-              <div className="text-xl sm:text-3xl font-bold text-white">0%</div>
-              <div className="text-xs sm:text-sm text-slate-400">{t('hero.platformFee')}</div>
+              <div className="text-xl sm:text-3xl font-bold text-white">🔒</div>
+              <div className="text-xs sm:text-sm text-slate-400">{t('hero.privacyFirst')}</div>
             </div>
           </div>
         </div>

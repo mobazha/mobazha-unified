@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { ChatFloatingButton } from '@/components/ChatFloatingButton';
 import { ChatDrawer } from '@/components/ChatDrawer';
 import {
   matrixClient,
@@ -98,9 +97,6 @@ export const ChatSystem: React.FC = () => {
 
   return (
     <>
-      {/* 浮动聊天按钮 */}
-      <ChatFloatingButton />
-
       {/* 聊天侧边抽屉 */}
       <ChatDrawer
         currentUserId={currentUserId}

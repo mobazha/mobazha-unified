@@ -969,12 +969,12 @@ export const zh: TranslationResource = {
     titleLine1: '自由交易。',
     titleLine2: '安全交易。',
     subtitle:
-      '一个真正去中心化的数字商品、服务和加密货币 OTC 交易市场。无中介，无审查。只有您和您的客户。',
+      '一个真正去中心化的综合交易市场，支持商品、服务和数字资产。无中介，无审查。只有您和您的客户。',
     exploreMarket: '探索市场',
     startSelling: '开始销售',
     activeStores: '活跃店铺',
     productsListed: '上架商品',
-    platformFee: '平台费用',
+    privacyFirst: '隐私保护',
   },
 
   footer: {
@@ -1120,7 +1120,7 @@ export const zh: TranslationResource = {
     electronics: '电子产品',
     digitalGoods: '数字商品',
     services: '服务',
-    cryptoOtc: '加密货币 OTC',
+    digitalAssets: '数字资产',
   },
 
   searchExtended: {
