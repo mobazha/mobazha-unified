@@ -72,6 +72,15 @@ export const zh: TranslationResource = {
     default: '默认',
     setDefault: '设为默认',
     noResults: '无结果',
+    prev: '上一步',
+    processing: '处理中...',
+    publishing: '发布中...',
+  },
+
+  validation: {
+    required: '此字段必填',
+    titleRequired: '标题必填',
+    priceRequired: '价格必填',
   },
 
   nav: {
@@ -1802,7 +1811,26 @@ export const zh: TranslationResource = {
     maxQuantity: '最大购买数量',
     maxQuantityHelper: '买家单次订单可购买的最大数量',
 
-    // RWA 代币类型
+    // 向导步骤
+    wizard: {
+      selectType: '选择商品类型',
+      selectTypeDesc: '选择您要出售的商品类型',
+      selectAsset: '选择资产',
+      selectAssetDesc: '从预定义资产中选择',
+      configureAsset: '配置资产信息',
+      configureAssetDesc: '手动输入 Token 合约地址和参数',
+      basicInfo: '基本信息',
+      basicInfoDesc: '填写商品的基本信息',
+      media: '图片和视频',
+      mediaDesc: '上传商品图片和视频（可选）',
+      maxImages: '最多 30 张图片',
+      videoSupport: '支持 YouTube/Vimeo 链接',
+      review: '确认发布',
+      reviewDesc: '请确认商品信息无误后发布',
+      publish: '发布商品',
+    },
+
+    // RWA 代币类型和详情
     rwa: {
       realEstate: '房地产代币',
       bond: '债券代币',
@@ -1810,6 +1838,42 @@ export const zh: TranslationResource = {
       art: '艺术品代币',
       carbonCredit: '碳信用代币',
       custom: '自定义代币',
+      customAsset: '自定义资产',
+      // 资产类型选择
+      selectAssetType: '选择资产类型',
+      selectAsset: '选择要出售的资产',
+      selectedAsset: '已选择资产',
+      assetTypes: {
+        creator: '创作者权益',
+        broadway: '百老汇票房',
+        custom: '自定义资产',
+      },
+      assetTypesDesc: {
+        creator: '游戏主播、科技博主等创作者社区权益份额',
+        broadway: '音乐剧、话剧等演出的票房收益份额',
+        custom: '手动输入合约地址和 Token 参数',
+      },
+      // Token 详情
+      tokenStandard: 'Token 标准',
+      selectTokenStandard: '选择 Token 标准',
+      contractAddress: '合约地址',
+      slotIdHelper: 'ERC3525 Slot ID，表示资产类别',
+      availableQty: '可出售数量',
+      available: '可售',
+      holders: '人持有',
+      dividendRate: '年化',
+      // 会员信息 (ERC1155)
+      membershipInfo: '会员信息',
+      memberLevel: '会员等级',
+      currentHolders: '当前持有',
+      exclusivePerks: '专属福利',
+      validity: '有效期',
+      // 收益信息 (ERC3525)
+      revenueInfo: '收益信息',
+      totalShares: '总份额',
+      annualRate: '年化收益',
+      settlementPeriod: '结算周期',
+      holderRights: '持有者权益',
     },
 
     // 预览
@@ -1819,12 +1883,41 @@ export const zh: TranslationResource = {
     // 操作和状态
     validationFailed: '请修正错误后再提交',
     createSuccess: '商品创建成功！',
+    createFailed: '创建商品失败',
     updateSuccess: '商品更新成功！',
     deleteSuccess: '商品删除成功！',
     deleteFailed: '删除商品失败',
     deleteConfirmTitle: '确定删除商品？',
     deleteConfirmDesc: '此操作无法撤销，商品将被永久删除。',
     notFound: '商品不存在',
+  },
+
+  // RWA 原子交换流程
+  rwa: {
+    purchase: {
+      connectWallet: '连接钱包',
+      connectDesc: '请连接钱包以授权支付代币',
+      authorize: '授权支付',
+      approving: '授权中...',
+      approvingDesc: '请在钱包中确认授权交易',
+      waitingSeller: '等待卖家发货',
+      waitingDesc: '支付已授权，等待卖家完成原子交换',
+      completed: '交易完成',
+      completedDesc: '原子交换已完成，Token 已转入您的钱包',
+      error: '操作失败',
+    },
+    fulfill: {
+      waitingBuyer: '等待买家授权',
+      waitingDesc: '买家尚未完成支付授权，请等待',
+      readyToShip: '可以发货',
+      readyDesc: '买家已授权支付，点击发货执行原子交换',
+      executeSwap: '执行原子交换',
+      executing: '执行中...',
+      executingDesc: '正在执行原子交换，请在钱包中确认交易',
+      completed: '发货完成',
+      completedDesc: '原子交换已完成，Token 已转移给买家，款项已到账',
+      error: '执行失败',
+    },
   },
 };
 
