@@ -1913,6 +1913,20 @@ export const en: TranslationResource = {
       annualRate: 'Annual Rate',
       settlementPeriod: 'Settlement Period',
       holderRights: 'Holder Rights',
+      // Wallet Status
+      walletConnected: 'Wallet Connected',
+      pleaseConnectWallet: 'Please connect wallet to view asset balance',
+      showingRealBalance: 'Showing your real asset balance',
+      connectWalletHint: 'Connect wallet to view your asset balance',
+      // Balance Display
+      liveBalance: 'Live on-chain',
+      staticBalance: 'Static data',
+      refreshBalance: 'Refresh Balance',
+      loading: 'Loading...',
+      loadFailed: 'Failed to load balance',
+      copied: 'Copied',
+      addressCopied: 'Address copied to clipboard',
+      contract: 'Contract',
     },
 
     // Preview

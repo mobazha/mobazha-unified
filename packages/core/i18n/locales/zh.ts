@@ -1881,6 +1881,20 @@ export const zh: TranslationResource = {
       annualRate: '年化收益',
       settlementPeriod: '结算周期',
       holderRights: '持有者权益',
+      // 钱包状态
+      walletConnected: '钱包已连接',
+      pleaseConnectWallet: '请连接钱包以查看资产余额',
+      showingRealBalance: '显示您的真实资产余额',
+      connectWalletHint: '连接钱包后才能查看您的资产余额',
+      // 余额显示
+      liveBalance: '链上实时',
+      staticBalance: '静态数据',
+      refreshBalance: '刷新余额',
+      loading: '加载中...',
+      loadFailed: '加载余额失败',
+      copied: '已复制',
+      addressCopied: '地址已复制到剪贴板',
+      contract: '合约',
     },
 
     // 预览
