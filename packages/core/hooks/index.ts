@@ -71,3 +71,6 @@ export * from './useAccessControl';
 export * from './useUserGroups';
 export * from './useProductGroups';
 export * from './useGroupContext';
+
+// RWA 资产相关
+export * from './useRwaAssets';

@@ -209,3 +209,79 @@ export function getChainConfig(chain: string, isTestnet = true): ChainConfig | n
   }
   return SUPPORTED_CHAINS[chain] || null;
 }
+
+// ==================== 链上资产查询类型 ====================
+
+/**
+ * 用户拥有的 ERC3525 Token
+ */
+export interface OwnedERC3525Token {
+  tokenId: string;
+  slot: string;
+  value: string;
+  contractAddress: string;
+}
+
+/**
+ * 用户拥有的 ERC1155 Token
+ */
+export interface OwnedERC1155Token {
+  contractAddress: string;
+  tokenId: string;
+  balance: string;
+}
+
+/**
+ * 用户 RWA 资产汇总
+ */
+export interface UserRwaAssets {
+  erc1155: OwnedERC1155Token[];
+  erc3525: OwnedERC3525Token[];
+}
+
+/**
+ * RWA 资产 (UI 展示用)
+ */
+export interface RwaAsset {
+  id: string;
+  name: string;
+  description?: string;
+  emoji?: string;
+  tokenStandard: TokenStandard;
+  contractAddress: string;
+  tokenId: string;
+  slotId?: string;
+  balance: string;
+  unit: string;
+  // 来源: 'predefined' | 'discovered'
+  source: 'predefined' | 'discovered';
+  // 预定义资产的附加信息
+  membership?: MembershipInfo;
+  performance?: PerformanceInfo;
+  rights?: string[];
+}
+
+/**
+ * Etherscan URL 生成器
+ */
+export interface EtherscanUrls {
+  contract: (contractAddress: string) => string;
+  address: (address: string) => string;
+  tx: (txHash: string) => string;
+  tokenHolders: (contractAddress: string) => string;
+  nft: (contractAddress: string, tokenId: string) => string;
+}
+
+/**
+ * Token 转账记录
+ */
+export interface TokenTransfer {
+  hash: string;
+  from: string;
+  to: string;
+  tokenId?: string;
+  value?: string;
+  timestamp: number;
+  blockNumber: number;
+  type: 'in' | 'out';
+}
