@@ -72,6 +72,15 @@ export const en: TranslationResource = {
     default: 'Default',
     setDefault: 'Set as Default',
     noResults: 'No results found',
+    prev: 'Previous',
+    processing: 'Processing...',
+    publishing: 'Publishing...',
+  },
+
+  validation: {
+    required: 'This field is required',
+    titleRequired: 'Title is required',
+    priceRequired: 'Price is required',
   },
 
   nav: {
@@ -1834,7 +1843,26 @@ export const en: TranslationResource = {
     maxQuantity: 'Maximum Purchase Quantity',
     maxQuantityHelper: 'Maximum quantity a buyer can purchase in a single order',
 
-    // RWA Token Types
+    // Wizard Steps
+    wizard: {
+      selectType: 'Select Product Type',
+      selectTypeDesc: 'Choose the type of product you want to sell',
+      selectAsset: 'Select Asset',
+      selectAssetDesc: 'Choose from predefined assets',
+      configureAsset: 'Configure Asset',
+      configureAssetDesc: 'Manually enter Token contract address and parameters',
+      basicInfo: 'Basic Information',
+      basicInfoDesc: 'Fill in the basic product information',
+      media: 'Images and Videos',
+      mediaDesc: 'Upload product images and videos (optional)',
+      maxImages: 'Maximum 30 images',
+      videoSupport: 'Supports YouTube/Vimeo links',
+      review: 'Review & Publish',
+      reviewDesc: 'Please confirm the product information is correct before publishing',
+      publish: 'Publish Product',
+    },
+
+    // RWA Token Types & Details
     rwa: {
       realEstate: 'Real Estate Token',
       bond: 'Bond Token',
@@ -1842,6 +1870,42 @@ export const en: TranslationResource = {
       art: 'Art Token',
       carbonCredit: 'Carbon Credit Token',
       custom: 'Custom Token',
+      customAsset: 'Custom Asset',
+      // Asset Type Selection
+      selectAssetType: 'Select Asset Type',
+      selectAsset: 'Select Asset to Sell',
+      selectedAsset: 'Selected Asset',
+      assetTypes: {
+        creator: 'Creator Rights',
+        broadway: 'Broadway Box Office',
+        custom: 'Custom Asset',
+      },
+      assetTypesDesc: {
+        creator: 'Community rights shares from game streamers, tech bloggers, etc.',
+        broadway: 'Box office revenue shares from musicals, plays, etc.',
+        custom: 'Manually enter contract address and Token parameters',
+      },
+      // Token Details
+      tokenStandard: 'Token Standard',
+      selectTokenStandard: 'Select Token Standard',
+      contractAddress: 'Contract Address',
+      slotIdHelper: 'ERC3525 Slot ID, represents asset category',
+      availableQty: 'Available Quantity',
+      available: 'Available',
+      holders: 'holders',
+      dividendRate: 'Annual Rate',
+      // Membership Info (ERC1155)
+      membershipInfo: 'Membership Info',
+      memberLevel: 'Member Level',
+      currentHolders: 'Current Holders',
+      exclusivePerks: 'Exclusive Perks',
+      validity: 'Validity',
+      // Revenue Info (ERC3525)
+      revenueInfo: 'Revenue Info',
+      totalShares: 'Total Shares',
+      annualRate: 'Annual Rate',
+      settlementPeriod: 'Settlement Period',
+      holderRights: 'Holder Rights',
     },
 
     // Preview
@@ -1851,12 +1915,41 @@ export const en: TranslationResource = {
     // Actions & Status
     validationFailed: 'Please fix the errors before submitting',
     createSuccess: 'Listing created successfully!',
+    createFailed: 'Failed to create listing',
     updateSuccess: 'Listing updated successfully!',
     deleteSuccess: 'Listing deleted successfully!',
     deleteFailed: 'Failed to delete listing',
     deleteConfirmTitle: 'Delete Listing?',
     deleteConfirmDesc: 'This action cannot be undone. This will permanently delete your listing.',
     notFound: 'Listing not found',
+  },
+
+  // RWA Atomic Swap Flows
+  rwa: {
+    purchase: {
+      connectWallet: 'Connect Wallet',
+      connectDesc: 'Please connect your wallet to authorize payment tokens',
+      authorize: 'Authorize Payment',
+      approving: 'Authorizing...',
+      approvingDesc: 'Please confirm the authorization transaction in your wallet',
+      waitingSeller: 'Waiting for Seller',
+      waitingDesc: 'Payment authorized, waiting for seller to complete atomic swap',
+      completed: 'Transaction Complete',
+      completedDesc: 'Atomic swap completed, Token has been transferred to your wallet',
+      error: 'Operation Failed',
+    },
+    fulfill: {
+      waitingBuyer: 'Waiting for Buyer Authorization',
+      waitingDesc: 'Buyer has not completed payment authorization, please wait',
+      readyToShip: 'Ready to Ship',
+      readyDesc: 'Buyer has authorized payment, click to ship and execute atomic swap',
+      executeSwap: 'Execute Atomic Swap',
+      executing: 'Executing...',
+      executingDesc: 'Executing atomic swap, please confirm the transaction in your wallet',
+      completed: 'Shipment Complete',
+      completedDesc: 'Atomic swap completed, Token transferred to buyer, payment received',
+      error: 'Execution Failed',
+    },
   },
 };
 

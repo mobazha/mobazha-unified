@@ -86,6 +86,9 @@ export interface TranslationResource {
     loadMore: string;
     noMoreData: string;
     comingSoon: string;
+    prev?: string;
+    processing?: string;
+    publishing?: string;
   };
 
   // 导航
@@ -1350,6 +1353,23 @@ export interface TranslationResource {
     minQuantityHelper: string;
     maxQuantity: string;
     maxQuantityHelper: string;
+    wizard?: {
+      selectType: string;
+      selectTypeDesc: string;
+      selectAsset: string;
+      selectAssetDesc: string;
+      configureAsset: string;
+      configureAssetDesc: string;
+      basicInfo: string;
+      basicInfoDesc: string;
+      media: string;
+      mediaDesc: string;
+      maxImages: string;
+      videoSupport: string;
+      review: string;
+      reviewDesc: string;
+      publish: string;
+    };
     rwa: {
       realEstate: string;
       bond: string;
@@ -1357,17 +1377,86 @@ export interface TranslationResource {
       art: string;
       carbonCredit: string;
       custom: string;
+      // Extended RWA fields
+      customAsset?: string;
+      selectAssetType?: string;
+      selectAsset?: string;
+      selectedAsset?: string;
+      assetTypes?: {
+        creator: string;
+        broadway: string;
+        custom: string;
+      };
+      assetTypesDesc?: {
+        creator: string;
+        broadway: string;
+        custom: string;
+      };
+      tokenStandard?: string;
+      selectTokenStandard?: string;
+      contractAddress?: string;
+      slotIdHelper?: string;
+      availableQty?: string;
+      available?: string;
+      holders?: string;
+      dividendRate?: string;
+      membershipInfo?: string;
+      memberLevel?: string;
+      currentHolders?: string;
+      exclusivePerks?: string;
+      validity?: string;
+      revenueInfo?: string;
+      totalShares?: string;
+      annualRate?: string;
+      settlementPeriod?: string;
+      holderRights?: string;
     };
     preview: string;
     productTitle: string;
     validationFailed: string;
     createSuccess: string;
+    createFailed?: string;
     updateSuccess: string;
     deleteSuccess: string;
     deleteFailed: string;
     deleteConfirmTitle: string;
     deleteConfirmDesc: string;
     notFound: string;
+  };
+
+  // Validation messages
+  validation?: {
+    required: string;
+    titleRequired: string;
+    priceRequired: string;
+  };
+
+  // RWA Atomic Swap flows
+  rwa?: {
+    purchase: {
+      connectWallet: string;
+      connectDesc: string;
+      authorize: string;
+      approving: string;
+      approvingDesc: string;
+      waitingSeller: string;
+      waitingDesc: string;
+      completed: string;
+      completedDesc: string;
+      error: string;
+    };
+    fulfill: {
+      waitingBuyer: string;
+      waitingDesc: string;
+      readyToShip: string;
+      readyDesc: string;
+      executeSwap: string;
+      executing: string;
+      executingDesc: string;
+      completed: string;
+      completedDesc: string;
+      error: string;
+    };
   };
 }
 
