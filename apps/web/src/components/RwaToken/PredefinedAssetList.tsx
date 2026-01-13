@@ -1,9 +1,17 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
-import { CheckCircle, Users, TrendingUp } from 'lucide-react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
+import { CheckCircle, Users, TrendingUp, Wallet, RefreshCw, ExternalLink } from 'lucide-react';
 import type { PredefinedAsset, AssetTypeCode } from '@mobazha/core';
-import { useI18n, getAssetsByType } from '@mobazha/core';
+import {
+  useI18n,
+  getAssetsByType,
+  useWallet,
+  batchGetBalances,
+  etherscanUrls,
+  shortenAddress,
+  clearBalanceCache,
+} from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
 export interface PredefinedAssetListProps {
@@ -13,6 +21,9 @@ export interface PredefinedAssetListProps {
   disabled?: boolean;
   className?: string;
 }
+
+// Demo 地址
+const DEMO_OWNER_ADDRESS = '0xC4736E41D02faa7D735819AA9afa2ffee1Ce5931';
 
 /**
  * 预定义资产列表
@@ -27,8 +38,42 @@ export function PredefinedAssetList({
 }: PredefinedAssetListProps) {
   const { t } = useI18n();
 
+  // 钱包状态
+  const { isConnected, walletInfo } = useWallet();
+  const walletAddress = walletInfo?.address || null;
+  const ownerAddress = walletAddress || DEMO_OWNER_ADDRESS;
+
   // 获取当前类型的资产列表
   const assets = useMemo(() => getAssetsByType(assetType), [assetType]);
+
+  // 余额状态
+  const [balances, setBalances] = useState<Record<string, string | null>>({});
+  const [loading, setLoading] = useState(false);
+
+  // 加载余额
+  const loadBalances = useCallback(async () => {
+    if (assets.length === 0) return;
+    setLoading(true);
+    try {
+      const result = await batchGetBalances(assets, ownerAddress);
+      setBalances(result);
+    } catch (error) {
+      console.error('Failed to load balances:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [assets, ownerAddress]);
+
+  // 刷新余额
+  const refreshBalances = useCallback(() => {
+    clearBalanceCache();
+    loadBalances();
+  }, [loadBalances]);
+
+  // 初始加载
+  useEffect(() => {
+    loadBalances();
+  }, [loadBalances]);
 
   const handleSelect = useCallback(
     (asset: PredefinedAsset) => {
@@ -43,8 +88,40 @@ export function PredefinedAssetList({
     return null;
   }
 
+  // 获取资产余额
+  const getAssetBalance = (asset: PredefinedAsset): string => {
+    const liveBalance = balances[asset.id];
+    return liveBalance || asset.balance.toString();
+  };
+
   return (
     <div className={cn('space-y-3', className)}>
+      {/* 钱包状态 */}
+      <div
+        className={cn(
+          'flex items-center gap-2 p-3 rounded-lg text-sm',
+          isConnected
+            ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+            : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
+        )}
+      >
+        <Wallet className="w-4 h-4" />
+        {isConnected ? (
+          <span>钱包已连接: {shortenAddress(walletAddress || '')}</span>
+        ) : (
+          <span>钱包未连接，显示 Demo 数据</span>
+        )}
+        <button
+          type="button"
+          onClick={refreshBalances}
+          disabled={loading}
+          className="ml-auto p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors"
+          title="刷新余额"
+        >
+          <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+        </button>
+      </div>
+
       <label className="block text-sm font-medium text-muted-foreground mb-2">
         {t('listing.rwa.selectAsset') || '选择要出售的资产'}
       </label>
@@ -53,6 +130,7 @@ export function PredefinedAssetList({
           const isSelected = selectedAssetId === asset.id;
           const isErc1155 = asset.tokenStandard === 'ERC1155';
           const isErc3525 = asset.tokenStandard === 'ERC3525';
+          const displayBalance = getAssetBalance(asset);
 
           return (
             <button
@@ -90,8 +168,23 @@ export function PredefinedAssetList({
                     </span>
 
                     <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                      {t('listing.rwa.available') || '可售'}: {asset.balance} {asset.unit}
+                      {t('listing.rwa.available') || '可售'}: {displayBalance} {asset.unit}
+                      {balances[asset.id] && (
+                        <span className="ml-1 text-green-600 dark:text-green-400">●</span>
+                      )}
                     </span>
+
+                    {/* Etherscan 链接 */}
+                    <a
+                      href={etherscanUrls.contract(asset.contractAddress)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Etherscan
+                    </a>
 
                     {/* ERC1155 会员信息 */}
                     {isErc1155 && asset.membership && (
