@@ -138,6 +138,16 @@ interface RealOrderData {
       amount?: number;
       method?: string;
       address?: string;
+      buyerReceiveAddress?: string;
+    };
+    // RWA 原子交换预授权消息
+    paymentAuthorized?: {
+      approvalTxHash?: string;
+      coin?: string;
+      amount?: string;
+      paymentTokenAddress?: string;
+      buyerReceiveAddress?: string;
+      universalSwapAddress?: string;
     };
     orderConfirmation?: {
       timestamp?: string;
@@ -226,10 +236,11 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
     });
   }
 
-  // 资金到账
+  // 资金到账 (支持 PaymentSent 和 PaymentAuthorized 两种消息)
   if (
     data.funded ||
     contract.paymentSent ||
+    contract.paymentAuthorized ||
     (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
   ) {
     const confirmTimestamp =
@@ -347,10 +358,13 @@ function transformCoreOrder(
   const buyerPeerID = orderOpen?.buyerID?.peerID || buyerOrder?.buyerID?.peerID || '';
   const buyerHandle = orderOpen?.buyerID?.handle || buyerOrder?.buyerID?.handle || '';
 
+  // 支持 PaymentAuthorized (RWA) 和 PaymentSent (传统) 两种消息
+  const paymentAuthorized = contract.paymentAuthorized;
   const paymentSent = contract.paymentSent;
   const buyerPayment = buyerOrder?.payment;
-  const coin = paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
+  const coin = paymentAuthorized?.coin || paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
   const amount =
+    (paymentAuthorized?.amount ? Number(paymentAuthorized.amount) : undefined) ||
     paymentSent?.amount ||
     buyerPayment?.amount ||
     orderOpen?.amount ||
