@@ -1929,6 +1929,28 @@ export const en: TranslationResource = {
       copied: 'Copied',
       addressCopied: 'Address copied to clipboard',
       contract: 'Contract',
+      // Product Detail Page - Asset Display
+      verifiedAsset: 'Verified Asset',
+      atomicSwap: 'Atomic Swap',
+      atomicSwapShort: 'Asset and payment completed simultaneously, safe and secure',
+      atomicSwapPurchase: 'Atomic Swap Purchase',
+      atomicSwapDescription:
+        'This product uses blockchain atomic swap to ensure safe asset and payment exchange:',
+      step1Title: '1. Connect Wallet & Authorize',
+      step1Desc: 'Authorize payment amount, funds remain in your wallet',
+      step2Title: '2. Wait for Seller Confirmation',
+      step2Desc: 'Seller confirms and ships after receiving order',
+      step3Title: '3. Automatic Swap Completion',
+      step3Desc: 'Asset and payment completed atomically, maximum security',
+      safetyNote: 'Security: Asset and payment completed simultaneously, no intermediary needed',
+      blockchainInfo: 'Blockchain Info',
+      network: 'Network',
+      // NFT Metadata (ERC721)
+      nftMetadata: 'NFT Info',
+      creator: 'Creator',
+      collection: 'Collection',
+      rarity: 'Rarity',
+      mintedAt: 'Minted At',
     },
 
     // Preview
