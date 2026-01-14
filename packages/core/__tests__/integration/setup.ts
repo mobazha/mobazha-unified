@@ -10,7 +10,7 @@
 
 import { beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { setApiConfig } from '../../services/api/config';
-import { useTestEnv, getEnvConfig } from '../../config/env';
+import { switchToTestEnv, getEnvConfig } from '../../config/env';
 import { clearRoleCache } from '../../testing/roleManager';
 
 // 设置超时时间（API 调用可能较慢）
@@ -38,7 +38,7 @@ export function isFetchAvailable(): boolean {
 
 beforeAll(() => {
   // 使用测试环境配置
-  useTestEnv();
+  switchToTestEnv();
 
   const env = getEnvConfig();
 

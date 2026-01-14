@@ -173,16 +173,6 @@ export function switchToLocalEnv(): void {
   currentEnv = LOCAL_ENV;
 }
 
-// 已弃用的别名（保持向后兼容，但不推荐使用）
-// 注意：这些名称以 'use' 开头会被 ESLint 误认为 React Hooks
-// 请优先使用 switchToTestEnv / switchToProdEnv / switchToLocalEnv
-/** @deprecated Use switchToTestEnv instead */
-export const useTestEnv = switchToTestEnv;
-/** @deprecated Use switchToProdEnv instead */
-export const useProdEnv = switchToProdEnv;
-/** @deprecated Use switchToLocalEnv instead */
-export const useLocalEnv = switchToLocalEnv;
-
 /**
  * 获取当前认证模式
  */
