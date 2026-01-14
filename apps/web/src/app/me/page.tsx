@@ -189,8 +189,8 @@ export default function MePage() {
               />
               <FeatureItem
                 icon={<PieChart className="w-5 h-5" />}
-                title="RWA 资产"
-                description="查看和管理您的 RWA 资产"
+                title={t('userMenu.rwaAssets')}
+                description={t('me.rwaAssetsDescription')}
                 href="/rwa-dashboard"
               />
               <FeatureItem

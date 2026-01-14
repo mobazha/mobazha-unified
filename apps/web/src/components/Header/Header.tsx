@@ -210,7 +210,7 @@ export const Header: React.FC = () => {
                     className="cursor-pointer"
                   >
                     <PieChart className="mr-2 h-4 w-4" />
-                    RWA 资产
+                    {t('userMenu.rwaAssets')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
 
