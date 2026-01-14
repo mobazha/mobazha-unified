@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { runFullHealthCheck, quickPing } from '../../testing/healthCheck';
-import { useTestEnv, getEnvConfig } from '../../config/env';
+import { switchToTestEnv, getEnvConfig } from '../../config/env';
 import { setApiConfig } from '../../services/api/config';
 import { skipIfNoIntegration } from './setup';
 
@@ -13,7 +13,7 @@ describe('API Health Check', () => {
     if (skipIfNoIntegration()) return;
 
     // 确保使用测试环境
-    useTestEnv();
+    switchToTestEnv();
     const env = getEnvConfig();
     setApiConfig({
       gatewayUrl: env.api.gateway,

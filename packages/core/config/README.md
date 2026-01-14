@@ -62,14 +62,14 @@ pnpm test:health
 ## 代码中切换环境
 
 ```typescript
-import { useTestEnv, useProdEnv, useLocalEnv } from '@mobazha/core';
+import { switchToTestEnv, switchToProdEnv, switchToLocalEnv } from '@mobazha/core';
 
 // 切换到测试环境
-useTestEnv();
+switchToTestEnv();
 
 // 切换到生产环境
-useProdEnv();
+switchToProdEnv();
 
 // 切换到本地开发环境
-useLocalEnv();
+switchToLocalEnv();
 ```
