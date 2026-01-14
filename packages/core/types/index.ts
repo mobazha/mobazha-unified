@@ -222,6 +222,7 @@ export type {
   AssetType,
   MembershipInfo,
   PerformanceInfo,
+  NftMetadata,
   PredefinedAsset,
   UniversalSwapConfig,
   CreateOrderData,

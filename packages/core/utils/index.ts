@@ -11,6 +11,9 @@ export * from './orderActions';
 // Matrix 事件文本生成
 export * from './matrixEventText';
 
+// Token 唯一标识工具
+export * from './tokenIdentifier';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

@@ -24,4 +24,6 @@ export {
   getAssetByContract,
   getAssetType,
   getAllAssetTypes,
+  findPredefinedAsset,
+  getAssetUniqueId,
 } from './rwaAssetTemplates';
