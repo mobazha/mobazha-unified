@@ -25,6 +25,7 @@ import {
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
+import { RwaAssetDetail } from '@/components/RwaToken';
 
 // HTML 实体解码
 function decodeHtmlEntities(text: string): string {
@@ -733,7 +734,9 @@ export function ProductDetail({
                     {product.metadata.contractType === 'SERVICE' && t('product.serviceType')}
                     {product.metadata.contractType === 'CRYPTOCURRENCY' &&
                       t('product.cryptocurrency')}
-                    {!['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE', 'CRYPTOCURRENCY'].includes(
+                    {product.metadata.contractType === 'RWA_TOKEN' &&
+                      (t('product.rwaToken') || 'RWA Token')}
+                    {!['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE', 'CRYPTOCURRENCY', 'RWA_TOKEN'].includes(
                       product.metadata.contractType
                     ) && product.metadata.contractType.replace('_', ' ')}
                   </span>
@@ -754,6 +757,15 @@ export function ProductDetail({
                 </div>
               )}
             </div>
+
+            {/* RWA 资产详情 - 仅对 RWA_TOKEN 类型商品显示 */}
+            {product.metadata?.contractType === 'RWA_TOKEN' && (
+              <RwaAssetDetail 
+                product={product} 
+                compact={isModal}
+                showPurchaseHint={true}
+              />
+            )}
 
             {/* Tags - 放在商品属性后面 */}
             {tags.length > 0 && (
