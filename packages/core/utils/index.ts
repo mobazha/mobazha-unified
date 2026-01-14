@@ -14,6 +14,9 @@ export * from './matrixEventText';
 // Token 唯一标识工具
 export * from './tokenIdentifier';
 
+// RWA 资产解析工具
+export * from './rwaAssetResolver';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';
