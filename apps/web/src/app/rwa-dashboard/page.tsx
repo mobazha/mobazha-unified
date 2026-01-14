@@ -40,7 +40,7 @@ interface AssetCardProps {
     contractAddress: string;
     tokenId?: string;
     slotId?: string;
-    balance?: number;
+    balance?: string;
     realtimeBalance?: string | null;
     balanceLoading?: boolean;
     unit?: string;
@@ -235,7 +235,7 @@ export default function RwaAssetDashboardPage() {
           {/* Error Message */}
           {error && (
             <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-sm text-destructive">{error.message}</p>
             </div>
           )}
 

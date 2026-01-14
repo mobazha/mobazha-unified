@@ -16,7 +16,7 @@ import {
   batchGetBalances,
   clearBalanceCache,
 } from '../services/rwa/rwaBalanceService';
-import { predefinedAssets, getAssetsByType } from '../data/rwaAssetTemplates';
+import { getAssetsByType } from '../data/rwaAssetTemplates';
 import type {
   RwaAsset,
   OwnedERC3525Token,
@@ -101,7 +101,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
   const assetTypes = assetTypesProp || defaultAssetTypes.current;
 
   // 钱包状态
-  const { isConnected, walletInfo, connect, openModal } = useWallet();
+  const { isConnected, walletInfo, openModal } = useWallet();
   const walletAddress = walletInfo?.address || null;
 
   // 追踪上一次的钱包地址，防止重复加载
@@ -324,7 +324,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
         t =>
           t.contractAddress.toLowerCase() === normalizedAddress &&
           t.tokenId === tokenId &&
-          BigInt(t.balance) > 0n
+          BigInt(t.balance) > BigInt(0)
       );
 
       if (hasERC1155) return true;
@@ -334,7 +334,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
         t =>
           t.contractAddress.toLowerCase() === normalizedAddress &&
           t.tokenId === tokenId &&
-          BigInt(t.value) > 0n
+          BigInt(t.value) > BigInt(0)
       );
 
       return hasERC3525;

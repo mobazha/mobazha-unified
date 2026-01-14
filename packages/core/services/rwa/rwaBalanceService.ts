@@ -81,13 +81,17 @@ function getFallbackProvider(): ethers.JsonRpcProvider {
 
 /**
  * 切换到下一个备用 RPC
+ * @internal 内部使用，供故障转移时调用
  */
-function switchToNextFallbackRpc(): ethers.JsonRpcProvider {
+function _switchToNextFallbackRpc(): ethers.JsonRpcProvider {
   currentFallbackIndex = (currentFallbackIndex + 1) % FALLBACK_RPC_URLS.length;
   fallbackProvider = new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[currentFallbackIndex]);
   console.log(`🔄 切换到备用 RPC: ${FALLBACK_RPC_URLS[currentFallbackIndex]}`);
   return fallbackProvider;
 }
+
+// 导出供测试使用
+export { _switchToNextFallbackRpc as switchToNextFallbackRpc };
 
 /**
  * 获取 Provider (优先使用钱包 Provider)
@@ -443,7 +447,7 @@ export function formatBalance(balance: string | null, decimals = 0): string {
     const intPart = num / divisor;
     const fracPart = num % divisor;
 
-    if (fracPart === 0n) {
+    if (fracPart === BigInt(0)) {
       return intPart.toLocaleString();
     }
 
