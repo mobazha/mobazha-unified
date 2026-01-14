@@ -836,6 +836,7 @@ export interface TranslationResource {
     createListing: string;
     sales: string;
     purchases: string;
+    rwaAssets?: string;
     settings: string;
     logout: string;
   };
@@ -1417,6 +1418,40 @@ export interface TranslationResource {
       annualRate?: string;
       settlementPeriod?: string;
       holderRights?: string;
+      walletConnected?: string;
+      pleaseConnectWallet?: string;
+      showingRealBalance?: string;
+      connectWalletHint?: string;
+      // Balance Display
+      liveBalance?: string;
+      staticBalance?: string;
+      refreshBalance?: string;
+      loading?: string;
+      loadFailed?: string;
+      copied?: string;
+      addressCopied?: string;
+      contract?: string;
+      // Product Detail Page - Asset Display
+      verifiedAsset?: string;
+      atomicSwap?: string;
+      atomicSwapShort?: string;
+      atomicSwapPurchase?: string;
+      atomicSwapDescription?: string;
+      step1Title?: string;
+      step1Desc?: string;
+      step2Title?: string;
+      step2Desc?: string;
+      step3Title?: string;
+      step3Desc?: string;
+      safetyNote?: string;
+      blockchainInfo?: string;
+      network?: string;
+      // NFT Metadata (ERC721)
+      nftMetadata?: string;
+      creator?: string;
+      collection?: string;
+      rarity?: string;
+      mintedAt?: string;
     };
     preview: string;
     productTitle: string;

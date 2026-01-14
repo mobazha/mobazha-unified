@@ -1897,6 +1897,27 @@ export const zh: TranslationResource = {
       copied: '已复制',
       addressCopied: '地址已复制到剪贴板',
       contract: '合约',
+      // 商品详情页 - 资产展示
+      verifiedAsset: '已认证资产',
+      atomicSwap: '原子交换',
+      atomicSwapShort: '资产与支付同时完成，安全无忧',
+      atomicSwapPurchase: '原子交换购买',
+      atomicSwapDescription: '此商品使用区块链原子交换交易，确保资产与支付安全交换：',
+      step1Title: '1. 连接钱包并授权',
+      step1Desc: '授权支付金额，资金暂不转出',
+      step2Title: '2. 等待卖家确认',
+      step2Desc: '卖家收到订单后确认发货',
+      step3Title: '3. 自动完成交换',
+      step3Desc: '资产与支付同时完成，原子级安全',
+      safetyNote: '安全保障: 资产与支付同时完成，无需信任中介',
+      blockchainInfo: '区块链信息',
+      network: '网络',
+      // NFT 元数据 (ERC721)
+      nftMetadata: 'NFT 信息',
+      creator: '创作者',
+      collection: '收藏系列',
+      rarity: '稀有度',
+      mintedAt: '铸造时间',
     },
 
     // 预览
