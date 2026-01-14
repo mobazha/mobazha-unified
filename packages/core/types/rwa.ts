@@ -24,7 +24,7 @@ export const OrderStatusEnum = {
 } as const;
 
 // 资产类型代码
-export type AssetTypeCode = 'CREATOR' | 'BROADWAY' | 'CUSTOM';
+export type AssetTypeCode = 'NFT' | 'CREATOR' | 'BROADWAY' | 'CUSTOM';
 
 /**
  * 资产类型定义
@@ -58,6 +58,17 @@ export interface PerformanceInfo {
 }
 
 /**
+ * NFT 元数据 (ERC721 特有)
+ */
+export interface NftMetadata {
+  creator?: string; // 创作者/明星名称
+  mintedAt?: number; // 铸造时间 (Unix 时间戳)
+  rarity?: string; // 稀有度 (Common, Rare, Epic, Legendary)
+  collection?: string; // 收藏品系列名称
+  attributes?: Record<string, string>; // 属性键值对
+}
+
+/**
  * 预定义资产
  */
 export interface PredefinedAsset {
@@ -73,6 +84,8 @@ export interface PredefinedAsset {
   tokenId: string;
   slotId?: string;
   typeName: string;
+  // ERC721 特有属性
+  nftMetadata?: NftMetadata;
   // ERC1155 特有属性
   membership?: MembershipInfo;
   // ERC3525 特有属性
@@ -166,6 +179,7 @@ export interface RwaListingData {
   tokenId: string;
   slotId?: string;
   // 预定义资产的附加信息
+  nftMetadata?: NftMetadata;
   membership?: MembershipInfo;
   performance?: PerformanceInfo;
   rights?: string[];
@@ -180,6 +194,7 @@ export interface ChainConfig {
   isTestnet: boolean;
   universalSwapAddress: string;
   mockUsdtAddress?: string;
+  mockErc721Address?: string;
   mockErc1155Address?: string;
   mockErc3525Address?: string;
 }
@@ -256,6 +271,7 @@ export interface RwaAsset {
   // 来源: 'predefined' | 'discovered'
   source: 'predefined' | 'discovered';
   // 预定义资产的附加信息
+  nftMetadata?: NftMetadata;
   membership?: MembershipInfo;
   performance?: PerformanceInfo;
   rights?: string[];

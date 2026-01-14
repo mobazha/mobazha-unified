@@ -3,12 +3,21 @@
  * 用于简化用户创建 RWA Token 商品的流程
  */
 
-import type { AssetType, AssetTypeCode, PredefinedAsset } from '../types/rwa';
+import type { AssetType, AssetTypeCode, PredefinedAsset, TokenStandard } from '../types/rwa';
+import { generateCryptoListingCurrencyCode, type TokenIdentifier } from '../utils/tokenIdentifier';
 
 /**
  * 资产类型定义
  */
 export const assetTypes: AssetType[] = [
+  {
+    code: 'NFT',
+    name: '收藏品 NFT',
+    icon: '🖼️',
+    description: '独一无二的数字收藏品、艺术品、明星纪念品等',
+    tokenStandard: 'ERC721',
+    color: '#f59e0b',
+  },
   {
     code: 'CREATOR',
     name: '创作者权益',
@@ -39,6 +48,50 @@ export const assetTypes: AssetType[] = [
  * 预定义资产列表 (Sepolia 测试网)
  */
 export const predefinedAssets: Record<AssetTypeCode, PredefinedAsset[]> = {
+  NFT: [
+    {
+      id: 'nft-celebrity-card-001',
+      name: '明星签名收藏卡 #001',
+      description: '限量版明星签名数字收藏卡，独一无二的珍藏品',
+      image: null,
+      emoji: '🌟',
+      balance: 1, // NFT 每个都是唯一的
+      unit: '个',
+      tokenStandard: 'ERC721',
+      contractAddress: '0x1234567890123456789012345678901234567890', // 示例地址
+      tokenId: '1',
+      slotId: '',
+      typeName: '数字收藏品',
+      nftMetadata: {
+        creator: '明星A',
+        mintedAt: 1704067200,
+        rarity: 'Legendary',
+        collection: '明星签名系列',
+      },
+      rights: ['独家所有权', '线下见面优先权', '社区特殊标识'],
+    },
+    {
+      id: 'nft-art-piece-001',
+      name: '数字艺术品 "星空"',
+      description: '著名数字艺术家创作的限量艺术品，具有独特的艺术价值',
+      image: null,
+      emoji: '🎨',
+      balance: 1,
+      unit: '个',
+      tokenStandard: 'ERC721',
+      contractAddress: '0x1234567890123456789012345678901234567890',
+      tokenId: '2',
+      slotId: '',
+      typeName: '数字艺术品',
+      nftMetadata: {
+        creator: '艺术家B',
+        mintedAt: 1704153600,
+        rarity: 'Epic',
+        collection: '数字艺术收藏',
+      },
+      rights: ['艺术品所有权', '展览优先权', '艺术家见面会'],
+    },
+  ],
   CREATOR: [
     {
       id: 'creator-gaming',
@@ -198,6 +251,64 @@ export function getAllAssetTypes(): AssetType[] {
   return assetTypes;
 }
 
+/**
+ * 根据 Token 标识符查找预定义资产
+ * 支持 ERC721/ERC1155/ERC3525
+ *
+ * @param identifier Token 标识信息
+ * @returns 预定义资产，未找到返回 null
+ */
+export function findPredefinedAsset(identifier: {
+  tokenAddress: string;
+  tokenStandard: TokenStandard;
+  tokenId?: string;
+  slotId?: string;
+}): PredefinedAsset | null {
+  const { tokenAddress, tokenStandard, tokenId, slotId } = identifier;
+  const normalizedAddress = tokenAddress?.toLowerCase();
+
+  for (const assets of Object.values(predefinedAssets)) {
+    for (const asset of assets) {
+      if (asset.contractAddress?.toLowerCase() !== normalizedAddress) continue;
+      if (asset.tokenStandard !== tokenStandard) continue;
+
+      // ERC721/ERC1155: contractAddress + tokenId 唯一
+      if (
+        (tokenStandard === 'ERC721' || tokenStandard === 'ERC1155') &&
+        asset.tokenId === tokenId
+      ) {
+        return asset;
+      }
+      // ERC3525: contractAddress + slotId 唯一
+      if (tokenStandard === 'ERC3525' && asset.slotId === slotId) {
+        return asset;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 从预定义资产生成唯一标识符
+ *
+ * @param asset 预定义资产
+ * @param blockchain 区块链网络
+ * @returns 唯一标识符字符串
+ */
+export function getAssetUniqueId(asset: PredefinedAsset, blockchain: string): string {
+  const identifier: TokenIdentifier = {
+    blockchain,
+    tokenAddress: asset.contractAddress,
+    tokenStandard: asset.tokenStandard,
+    tokenId: asset.tokenId,
+    slotId: asset.slotId,
+  };
+
+  // 使用下划线格式（与 cryptoListingCurrencyCode 兼容）
+  return generateCryptoListingCurrencyCode(identifier);
+}
+
 export default {
   assetTypes,
   predefinedAssets,
@@ -206,4 +317,6 @@ export default {
   getAssetByContract,
   getAssetType,
   getAllAssetTypes,
+  findPredefinedAsset,
+  getAssetUniqueId,
 };
