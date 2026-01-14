@@ -3,6 +3,8 @@
  * 用于 UniversalSwap 原子交换功能
  */
 
+import { ChainId } from '../services/payment/types';
+
 // Token 标准枚举
 export type TokenStandard = 'ERC721' | 'ERC1155' | 'ERC3525';
 
@@ -201,7 +203,7 @@ export interface ChainConfig {
 
 // Sepolia 测试网配置
 export const SEPOLIA_CONFIG: ChainConfig = {
-  chainId: 11155111,
+  chainId: ChainId.ETHEREUM_SEPOLIA,
   name: 'Sepolia',
   isTestnet: true,
   universalSwapAddress: '0x401870C8bDfFeC7561E654764720184a32aB6730',
