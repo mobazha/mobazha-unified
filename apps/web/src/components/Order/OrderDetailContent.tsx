@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui';
 import { isOrderFulfilled, type OrderAction, type UserRole as CoreUserRole } from '@mobazha/core';
-import type { Order as CoreOrder } from '@mobazha/core';
+import type { Order as CoreOrder, Product } from '@mobazha/core';
 import {
   OrderFooter,
   OrderProgressBar,
@@ -25,6 +25,7 @@ import {
   AcceptedCard,
   OrderCompleteCard,
 } from '@/components/Order';
+import { RwaAssetDetail } from '@/components/RwaToken';
 import { Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -480,6 +481,33 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     [order.status, order.dispute]
   );
 
+  // 检查是否是 RWA Token 订单，并构造 Product 对象
+  const { isRwaTokenOrder, rwaProduct } = useMemo(() => {
+    const listing = coreOrder?.contract?.vendorListings?.[0];
+    if (!listing || listing.metadata?.contractType !== 'RWA_TOKEN') {
+      return { isRwaTokenOrder: false, rwaProduct: null };
+    }
+
+    // 从 ContractListing 构造 Product 对象
+    const product: Product = {
+      slug: listing.slug,
+      vendorID: listing.vendorID,
+      metadata: {
+        version: 1,
+        contractType: 'RWA_TOKEN',
+        format: 'FIXED_PRICE',
+        expiry: '',
+        acceptedCurrencies: listing.metadata.acceptedCurrencies || [],
+        pricingCurrency: listing.metadata.pricingCurrency,
+        escrowTimeoutHours: 0,
+      },
+      item: listing.item,
+      shippingOptions: listing.shippingOptions,
+    };
+
+    return { isRwaTokenOrder: true, rwaProduct: product };
+  }, [coreOrder]);
+
   return (
     <div className={cn('flex flex-col', className)}>
       {/* Scrollable Content */}
@@ -614,6 +642,13 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             />
           )}
         </div>
+
+        {/* RWA Asset Details Section */}
+        {isRwaTokenOrder && rwaProduct && (
+          <div className="mb-4">
+            <RwaAssetDetail product={rwaProduct} showPurchaseHint={false} compact={true} />
+          </div>
+        )}
 
         {/* Order Details Section */}
         <div className="border-t border-border pt-4 mt-4">
