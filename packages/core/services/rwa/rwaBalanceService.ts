@@ -11,19 +11,24 @@ import type {
   PredefinedAsset,
   EtherscanUrls,
 } from '../../types/rwa';
+import { ChainId } from '../payment/types';
+import { getOtcConfig, DEFAULT_CHAIN_ID, OTC_CONFIGS } from '../../config/otcConfig';
 
-// Sepolia 网络配置
-export const SEPOLIA_CHAIN_ID = 11155111;
+// 导出 Sepolia Chain ID 常量以保持向后兼容
+export const SEPOLIA_CHAIN_ID = ChainId.ETHEREUM_SEPOLIA;
 
-// 备用公共 RPC (不需要 API Key)
+// 备用公共 RPC URLs (从配置中获取主 RPC，加上额外备用)
 const FALLBACK_RPC_URLS = [
-  'https://ethereum-sepolia-rpc.publicnode.com',
+  getOtcConfig(DEFAULT_CHAIN_ID).rpcUrl,
   'https://rpc2.sepolia.org',
   'https://sepolia.drpc.org',
 ];
 
-// Etherscan URL
-const ETHERSCAN_URL = 'https://sepolia.etherscan.io';
+// 获取当前网络的 Block Explorer URL
+function getBlockExplorerUrl(chainId: number = DEFAULT_CHAIN_ID): string {
+  const config = OTC_CONFIGS[chainId];
+  return config?.blockExplorerUrl || 'https://sepolia.etherscan.io';
+}
 
 // 缓存配置
 const CACHE_TTL = 30 * 1000; // 30秒缓存
@@ -399,35 +404,25 @@ export async function batchGetBalances(
 }
 
 /**
- * Etherscan URL 生成器
+ * 创建 Etherscan URL 生成器
+ * @param chainId - 链 ID，默认使用 DEFAULT_CHAIN_ID
  */
-export const etherscanUrls: EtherscanUrls = {
-  /**
-   * 合约页面 URL
-   */
-  contract: (contractAddress: string) => `${ETHERSCAN_URL}/token/${contractAddress}`,
+export function createEtherscanUrls(chainId: number = DEFAULT_CHAIN_ID): EtherscanUrls {
+  const baseUrl = getBlockExplorerUrl(chainId);
+  return {
+    contract: (contractAddress: string) => `${baseUrl}/token/${contractAddress}`,
+    address: (address: string) => `${baseUrl}/address/${address}`,
+    tx: (txHash: string) => `${baseUrl}/tx/${txHash}`,
+    tokenHolders: (contractAddress: string) => `${baseUrl}/token/${contractAddress}#balances`,
+    nft: (contractAddress: string, tokenId: string) =>
+      `${baseUrl}/nft/${contractAddress}/${tokenId}`,
+  };
+}
 
-  /**
-   * 地址页面 URL
-   */
-  address: (address: string) => `${ETHERSCAN_URL}/address/${address}`,
-
-  /**
-   * 交易详情 URL
-   */
-  tx: (txHash: string) => `${ETHERSCAN_URL}/tx/${txHash}`,
-
-  /**
-   * Token 持有者页面
-   */
-  tokenHolders: (contractAddress: string) => `${ETHERSCAN_URL}/token/${contractAddress}#balances`,
-
-  /**
-   * NFT Token 详情
-   */
-  nft: (contractAddress: string, tokenId: string) =>
-    `${ETHERSCAN_URL}/nft/${contractAddress}/${tokenId}`,
-};
+/**
+ * Etherscan URL 生成器 (使用默认链 ID)
+ */
+export const etherscanUrls: EtherscanUrls = createEtherscanUrls(DEFAULT_CHAIN_ID);
 
 /**
  * 格式化余额显示
@@ -478,7 +473,9 @@ export default {
   batchGetBalances,
   clearBalanceCache,
   etherscanUrls,
+  createEtherscanUrls,
   formatBalance,
   shortenAddress,
   SEPOLIA_CHAIN_ID,
+  DEFAULT_CHAIN_ID,
 };

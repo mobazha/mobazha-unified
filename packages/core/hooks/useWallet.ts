@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BrowserProvider, JsonRpcSigner, formatEther } from 'ethers';
 import { ChainId, WalletConnectionState, WalletInfo, WalletEvent } from '../services/payment';
 import { useAppKit } from '../providers/AppKitProvider';
+import { DEFAULT_CHAIN_ID } from '../config/otcConfig';
 
 interface UseWalletReturn {
   // 状态
@@ -102,7 +103,7 @@ export function useWallet(): UseWalletReturn {
     if (!appKitConnected || !appKitAddress) return null;
     return {
       address: appKitAddress,
-      chainId: chainId || (11155111 as ChainId), // 默认 Sepolia
+      chainId: chainId || (DEFAULT_CHAIN_ID as ChainId), // 默认 Sepolia
       balance: balance || '0',
       provider: 'AppKit',
     };
