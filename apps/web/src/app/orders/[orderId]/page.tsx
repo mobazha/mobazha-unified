@@ -148,6 +148,7 @@ interface RealOrderData {
       paymentTokenAddress?: string;
       buyerReceiveAddress?: string;
       universalSwapAddress?: string;
+      timestamp?: string;
     };
     orderConfirmation?: {
       timestamp?: string;
@@ -363,13 +364,13 @@ function transformCoreOrder(
   const paymentSent = contract.paymentSent;
   const buyerPayment = buyerOrder?.payment;
   const coin = paymentAuthorized?.coin || paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
+  // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
   const amount =
-    (paymentAuthorized?.amount ? Number(paymentAuthorized.amount) : undefined) ||
-    paymentSent?.amount ||
-    buyerPayment?.amount ||
-    orderOpen?.amount ||
-    listingData?.item?.price ||
-    0;
+    paymentAuthorized?.amount !== undefined ? Number(paymentAuthorized.amount) :
+    paymentSent?.amount !== undefined ? paymentSent.amount :
+    buyerPayment?.amount !== undefined ? buyerPayment.amount :
+    orderOpen?.amount !== undefined ? orderOpen.amount :
+    listingData?.item?.price ?? 0;
   const paymentMethod = paymentSent?.method || buyerPayment?.method || '';
   const moderatorId = paymentSent?.moderator || buyerPayment?.moderator || '';
 
@@ -460,7 +461,16 @@ function transformCoreOrder(
     moderator,
     trackingNumber: trackingInfo?.trackingNumber,
     shippingAddress: formatShippingAddress(shipping),
-    paymentTx: data.paymentAddressTransactions?.[0]?.txid,
+    // 支持 RWA 预授权和传统交易
+    paymentTx: contract.paymentAuthorized?.approvalTxHash || data.paymentAddressTransactions?.[0]?.txid,
+    // RWA 支付授权信息
+    paymentAuthorized: contract.paymentAuthorized ? {
+      amount: contract.paymentAuthorized.amount || '',
+      coin: contract.paymentAuthorized.coin || '',
+      buyerReceiveAddress: contract.paymentAuthorized.buyerReceiveAddress || '',
+      approvalTxHash: contract.paymentAuthorized.approvalTxHash || '',
+      timestamp: contract.paymentAuthorized.timestamp,
+    } : undefined,
     escrowAddress: paymentAddress,
     notes: notes,
     timeline: generateTimelineFromRealData(data),
