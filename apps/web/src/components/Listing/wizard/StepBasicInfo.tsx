@@ -194,6 +194,107 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
           </div>
         )}
 
+        {/* RWA 交易模式 */}
+        {isRwaToken && (
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              {t('listing.tradeMode') || '交易模式'}
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* 即时交易 */}
+              <div
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  formData.rwaTradeMode === 'instant'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => updateField('rwaTradeMode', 'instant')}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      formData.rwaTradeMode === 'instant' ? 'border-primary' : 'border-muted-foreground'
+                    }`}
+                  >
+                    {formData.rwaTradeMode === 'instant' && (
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <span className="font-medium">{t('listing.instantTrade') || '即时交易'}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    {t('listing.recommended') || '推荐'}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">
+                  {t('listing.instantTradeDesc') || '买家付款后自动获得 RWA 份额'}
+                </p>
+              </div>
+
+              {/* 确认交易 */}
+              <div
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  formData.rwaTradeMode === 'confirm_required'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => updateField('rwaTradeMode', 'confirm_required')}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      formData.rwaTradeMode === 'confirm_required' ? 'border-primary' : 'border-muted-foreground'
+                    }`}
+                  >
+                    {formData.rwaTradeMode === 'confirm_required' && (
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <span className="font-medium">{t('listing.confirmTrade') || '确认交易'}</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">
+                  {t('listing.confirmTradeDesc') || '买家付款后资金托管，您确认后完成交易'}
+                </p>
+              </div>
+            </div>
+
+            {/* 托管时限选择 - 仅确认交易模式 */}
+            {formData.rwaTradeMode === 'confirm_required' && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  {t('listing.escrowTimeout') || '托管时限'}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 15, label: '15' + (t('listing.min') || '分钟') },
+                    { value: 60, label: '1' + (t('listing.hour') || '小时') },
+                    { value: 360, label: '6' + (t('listing.hours') || '小时') },
+                    { value: 720, label: '12' + (t('listing.hours') || '小时') },
+                    { value: 1440, label: '1' + (t('listing.day') || '天') },
+                    { value: 4320, label: '3' + (t('listing.days') || '天') },
+                    { value: 10080, label: '7' + (t('listing.days') || '天') },
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`px-4 py-1.5 rounded-full text-sm transition-all ${
+                        formData.escrowTimeoutMinutes === option.value
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                      }`}
+                      onClick={() => updateField('escrowTimeoutMinutes', option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-sm text-amber-600 mt-2">
+                  ⚠️ {t('listing.escrowTimeoutWarning') || '超时未确认，资金将自动退还给买家'}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 描述 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">

@@ -37,6 +37,8 @@ export interface WizardFormData {
   acceptedCurrencies: string[];
   minQuantity: number;
   maxQuantity: number;
+  rwaTradeMode: 'instant' | 'confirm_required';
+  escrowTimeoutMinutes: number;
 
   // 基本信息
   title: string;
@@ -110,6 +112,8 @@ export const defaultFormData: WizardFormData = {
   acceptedCurrencies: ['ETHUSDT'],
   minQuantity: 1,
   maxQuantity: 100,
+  rwaTradeMode: 'instant',
+  escrowTimeoutMinutes: 1440,
   title: '',
   description: '',
   price: '',

@@ -92,6 +92,14 @@ export interface DisplayOrder {
   notes?: string;
   timeline: TimelineEvent[];
   userRole: 'buyer' | 'seller' | 'moderator';
+  // RWA 支付授权信息
+  paymentAuthorized?: {
+    amount: string;
+    coin: string;
+    buyerReceiveAddress: string;
+    approvalTxHash: string;
+    timestamp?: string;
+  };
   dispute?: {
     id: string;
     claim: string;
@@ -630,8 +638,62 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             />
           )}
 
-          {/* Payment Card */}
-          {order.paymentTx && (
+          {/* RWA Payment Authorized Card */}
+          {order.paymentAuthorized && (
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-700/50 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-emerald-800 dark:text-emerald-300">
+                  Payment Authorization
+                </h4>
+                <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  Authorized
+                </span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center py-1 border-b border-emerald-100 dark:border-emerald-800/50">
+                  <span className="text-emerald-700/70 dark:text-emerald-400/70">Amount</span>
+                  <span className="font-medium text-emerald-900 dark:text-emerald-200">
+                    {order.paymentAuthorized.amount} {order.paymentAuthorized.coin}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-emerald-100 dark:border-emerald-800/50">
+                  <span className="text-emerald-700/70 dark:text-emerald-400/70">Token</span>
+                  <span className="font-medium text-emerald-900 dark:text-emerald-200">
+                    {order.paymentAuthorized.coin}
+                  </span>
+                </div>
+                {order.paymentAuthorized.buyerReceiveAddress && (
+                  <div className="flex justify-between items-center py-1 border-b border-emerald-100 dark:border-emerald-800/50">
+                    <span className="text-emerald-700/70 dark:text-emerald-400/70">Buyer Address</span>
+                    <span className="font-mono text-xs text-emerald-900 dark:text-emerald-200 truncate max-w-[180px]" title={order.paymentAuthorized.buyerReceiveAddress}>
+                      {order.paymentAuthorized.buyerReceiveAddress.slice(0, 8)}...{order.paymentAuthorized.buyerReceiveAddress.slice(-6)}
+                    </span>
+                  </div>
+                )}
+                {order.paymentAuthorized.timestamp && (
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-emerald-700/70 dark:text-emerald-400/70">Time</span>
+                    <span className="text-emerald-900 dark:text-emerald-200">
+                      {new Date(order.paymentAuthorized.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {/* 买家端显示等待卖家确认的提示 */}
+              {order.userRole === 'buyer' && (
+                <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50 flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-sm">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Waiting for seller to accept the order...
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Traditional Payment Card */}
+          {order.paymentTx && !order.paymentAuthorized && (
             <PaymentCard
               amount={order.total}
               currency={order.currency}
