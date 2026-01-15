@@ -16,22 +16,46 @@ import type {
 } from '../../types/rwa';
 import { TokenStandardEnum, getChainConfig } from '../../types/rwa';
 
-// UniversalSwap 合约 ABI
-const UniversalSwapABI = [
-  // 创建订单
-  'function createOrder(uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, address buyer, bytes32 externalOrderId) external returns (uint256 orderId)',
+// 交易模式枚举
+export const TradeMode = {
+  Instant: 0, // 即时交易
+  ConfirmRequired: 1, // 需要确认
+} as const;
 
-  // 执行原子交换
+export type TradeModeType = (typeof TradeMode)[keyof typeof TradeMode];
+
+// UniversalSwap 合约 ABI - 支持即时交易和确认交易双模式
+const UniversalSwapABI = [
+  // 创建订单 (卖家调用)
+  'function createOrder(uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, address buyer, bytes32 externalOrderId, uint8 tradeMode, uint64 escrowTimeoutSeconds) external returns (uint256 orderId)',
+
+  // 买家购买入口 - 根据订单的 tradeMode 路由到不同逻辑
+  'function buy(uint256 orderId) external',
+  'function buyByExternalId(bytes32 externalOrderId) external',
+
+  // 执行原子交换 (即时交易模式)
   'function executeSwap(uint256 orderId) external',
   'function executeSwapByExternalId(bytes32 externalOrderId) external',
 
-  // 取消订单
+  // 卖家确认订单 (确认交易模式)
+  'function confirmOrder(uint256 orderId) external',
+  'function confirmOrderByExternalId(bytes32 externalOrderId) external',
+
+  // 买家取消锁定订单 (确认交易模式)
+  'function cancelByBuyer(uint256 orderId) external',
+  'function cancelByBuyerByExternalId(bytes32 externalOrderId) external',
+
+  // 买家认领超时退款
+  'function claimExpired(uint256 orderId) external',
+  'function claimExpiredByExternalId(bytes32 externalOrderId) external',
+
+  // 取消订单 (卖家)
   'function cancelOrder(uint256 orderId) external',
   'function cancelOrderByExternalId(bytes32 externalOrderId) external',
 
   // 查询函数
-  'function getOrder(uint256 orderId) external view returns (tuple(address seller, address buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId))',
-  'function getOrderByExternalId(bytes32 externalOrderId) external view returns (tuple(address seller, address buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId))',
+  'function getOrder(uint256 orderId) external view returns (tuple(address seller, address buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId, uint8 tradeMode, uint64 escrowTimeout, uint256 paymentLockedAt))',
+  'function getOrderByExternalId(bytes32 externalOrderId) external view returns (tuple(address seller, address buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId, uint8 tradeMode, uint64 escrowTimeout, uint256 paymentLockedAt))',
   'function getSellerOrders(address seller) external view returns (uint256[])',
   'function getActiveSellerOrders(address seller) external view returns (uint256[])',
   'function isOrderValid(uint256 orderId) external view returns (bool isValid, string reason)',
@@ -43,8 +67,11 @@ const UniversalSwapABI = [
   'function feeRecipient() external view returns (address)',
 
   // 事件
-  'event OrderCreated(uint256 indexed orderId, address indexed seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId)',
+  'event OrderCreated(uint256 indexed orderId, address indexed seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode)',
   'event SwapExecuted(uint256 indexed orderId, address indexed seller, address indexed buyer, uint256 amount, uint256 price, uint256 platformFeeAmount)',
+  'event PaymentLocked(uint256 indexed orderId, address indexed buyer, uint256 amount)',
+  'event PaymentCancelled(uint256 indexed orderId, address indexed buyer, uint256 amount)',
+  'event PaymentExpired(uint256 indexed orderId, address indexed buyer, uint256 amount)',
   'event OrderCancelled(uint256 indexed orderId, address indexed seller)',
 ];
 
@@ -261,7 +288,12 @@ export class UniversalSwapService {
   /**
    * 卖家: 创建订单
    */
-  async createOrder(orderData: CreateOrderData): Promise<RwaCreateOrderResult> {
+  async createOrder(
+    orderData: CreateOrderData & {
+      tradeMode?: TradeModeType;
+      escrowTimeoutSeconds?: number;
+    }
+  ): Promise<RwaCreateOrderResult> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
@@ -276,10 +308,13 @@ export class UniversalSwapService {
         price,
         buyer,
         externalOrderId,
+        tradeMode = TradeMode.Instant,
+        escrowTimeoutSeconds = 86400, // 默认 24 小时
       } = orderData;
 
       console.log('🔧 创建订单...');
       console.log('📋 订单数据:', orderData);
+      console.log('📋 交易模式:', tradeMode === TradeMode.Instant ? '即时交易' : '需要确认');
 
       const standard = this.parseTokenStandard(tokenStandard);
       const hashedExternalId = this.generateExternalOrderId(externalOrderId);
@@ -292,7 +327,9 @@ export class UniversalSwapService {
         paymentToken,
         price,
         buyer || ethers.ZeroAddress,
-        hashedExternalId
+        hashedExternalId,
+        tradeMode,
+        escrowTimeoutSeconds
       );
 
       const receipt = await tx.wait();
@@ -320,6 +357,266 @@ export class UniversalSwapService {
       };
     } catch (error) {
       console.error('❌ 创建订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 购买 (统一入口，根据订单交易模式自动处理)
+   */
+  async buy(orderId: string): Promise<RwaTransactionResult & { eventName?: string }> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 买家购买...');
+      console.log('🔢 订单ID:', orderId);
+
+      const tx = await this.contract.buy(orderId);
+      const receipt = await tx.wait();
+
+      // 解析事件判断结果
+      let eventName: string | undefined;
+      for (const log of receipt.logs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+          if (parsed) {
+            if (parsed.name === 'SwapExecuted') {
+              eventName = 'SwapExecuted';
+              break;
+            } else if (parsed.name === 'PaymentLocked') {
+              eventName = 'PaymentLocked';
+              break;
+            }
+          }
+        } catch {
+          // 忽略无法解析的日志
+        }
+      }
+
+      console.log('✅ 购买成功，事件:', eventName);
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+        eventName,
+      };
+    } catch (error) {
+      console.error('❌ 购买失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 通过外部订单ID购买
+   */
+  async buyByExternalId(externalOrderId: string): Promise<RwaTransactionResult & { eventName?: string }> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 通过外部订单ID购买...');
+      console.log('📋 外部订单ID:', externalOrderId);
+
+      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
+      const tx = await this.contract.buyByExternalId(hashedExternalId);
+      const receipt = await tx.wait();
+
+      // 解析事件判断结果
+      let eventName: string | undefined;
+      for (const log of receipt.logs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+          if (parsed) {
+            if (parsed.name === 'SwapExecuted') {
+              eventName = 'SwapExecuted';
+              break;
+            } else if (parsed.name === 'PaymentLocked') {
+              eventName = 'PaymentLocked';
+              break;
+            }
+          }
+        } catch {
+          // 忽略无法解析的日志
+        }
+      }
+
+      console.log('✅ 购买成功，事件:', eventName);
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+        eventName,
+      };
+    } catch (error) {
+      console.error('❌ 购买失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 卖家: 确认订单 (确认交易模式)
+   */
+  async confirmOrder(orderId: string): Promise<RwaTransactionResult> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 卖家确认订单...');
+      console.log('🔢 订单ID:', orderId);
+
+      const tx = await this.contract.confirmOrder(orderId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 订单确认成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 确认订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 卖家: 通过外部订单ID确认订单
+   */
+  async confirmOrderByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 通过外部订单ID确认订单...');
+      console.log('📋 外部订单ID:', externalOrderId);
+
+      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
+      const tx = await this.contract.confirmOrderByExternalId(hashedExternalId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 订单确认成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 确认订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 取消锁定订单 (确认交易模式)
+   */
+  async cancelByBuyer(orderId: string): Promise<RwaTransactionResult> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 买家取消订单...');
+      console.log('🔢 订单ID:', orderId);
+
+      const tx = await this.contract.cancelByBuyer(orderId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 订单取消成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 取消订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 通过外部订单ID取消订单
+   */
+  async cancelByBuyerByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 通过外部订单ID取消订单...');
+      console.log('📋 外部订单ID:', externalOrderId);
+
+      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
+      const tx = await this.contract.cancelByBuyerByExternalId(hashedExternalId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 订单取消成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 取消订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 认领超时退款
+   */
+  async claimExpired(orderId: string): Promise<RwaTransactionResult> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 认领超时退款...');
+      console.log('🔢 订单ID:', orderId);
+
+      const tx = await this.contract.claimExpired(orderId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 超时退款认领成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 认领超时退款失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 通过外部订单ID认领超时退款
+   */
+  async claimExpiredByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log('🔧 通过外部订单ID认领超时退款...');
+      console.log('📋 外部订单ID:', externalOrderId);
+
+      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
+      const tx = await this.contract.claimExpiredByExternalId(hashedExternalId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 超时退款认领成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 认领超时退款失败:', error);
       throw this.handleError(error);
     }
   }
@@ -638,8 +935,15 @@ export class UniversalSwapService {
    * 获取订单状态名称
    */
   private getOrderStatusName(status: number): OrderStatus {
-    const names: OrderStatus[] = ['Active', 'Completed', 'Cancelled'];
+    const names: OrderStatus[] = ['Active', 'PaymentLocked', 'Completed', 'Cancelled', 'Expired'];
     return names[status] || 'Active';
+  }
+
+  /**
+   * 获取交易模式描述
+   */
+  private getTradeModeDesc(mode: number): string {
+    return mode === TradeMode.Instant ? '即时交易' : '需要确认';
   }
 
   /**
@@ -665,6 +969,8 @@ export class UniversalSwapService {
       message = '订单不是活跃状态';
     } else if (err.message?.includes('Not seller')) {
       message = '只有卖家可以执行此操作';
+    } else if (err.message?.includes('Not buyer')) {
+      message = '只有买家可以执行此操作';
     } else if (err.message?.includes('Cannot buy own order')) {
       message = '不能购买自己的订单';
     } else if (err.message?.includes('External order ID exists')) {
@@ -677,6 +983,14 @@ export class UniversalSwapService {
       message = '份额不足';
     } else if (err.message?.includes('Seller not owner')) {
       message = '卖家不是 Token 所有者';
+    } else if (err.message?.includes('Not PaymentLocked')) {
+      message = '订单未处于资金锁定状态';
+    } else if (err.message?.includes('Not expired yet')) {
+      message = '订单尚未过期';
+    } else if (err.message?.includes('Order expired')) {
+      message = '订单已过期';
+    } else if (err.message?.includes('Invalid trade mode')) {
+      message = '无效的交易模式';
     } else {
       message = err.message || '未知错误';
     }
