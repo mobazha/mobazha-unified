@@ -1873,6 +1873,17 @@ export const en: TranslationResource = {
     maxQuantity: 'Maximum Purchase Quantity',
     maxQuantityHelper: 'Maximum quantity a buyer can purchase in a single order',
 
+    // RWA Trade Mode
+    tradeMode: 'Trade Mode',
+    instantTrade: 'Instant Trade',
+    instantTradeDesc: 'Buyer gets RWA shares immediately after payment, no manual confirmation needed',
+    confirmTrade: 'Confirm Trade',
+    confirmTradeDesc: 'Payment is escrowed, you confirm to complete the trade',
+    recommended: 'Recommended',
+    escrowTimeout: 'Escrow Timeout',
+    hours: 'hours',
+    escrowTimeoutWarning: 'If not confirmed within timeout, funds will be automatically returned to buyer',
+
     // RWA Token Types & Details
     rwa: {
       realEstate: 'Real Estate Token',
