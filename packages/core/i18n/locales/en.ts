@@ -1565,6 +1565,8 @@ export const en: TranslationResource = {
       youReceivedOrder: 'You received a new order',
       yourPaymentSent: 'Your payment was sent',
       sentPayment: 'sent payment',
+      paymentAuthorized: 'Payment has been authorized',
+      authorizedPayment: 'authorized payment',
       orderFunded: 'Order has been funded',
       orderConfirmed: 'Order confirmed',
       orderFulfilled: 'Order fulfilled',

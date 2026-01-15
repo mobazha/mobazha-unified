@@ -1105,6 +1105,8 @@ export interface TranslationResource {
       youReceivedOrder: string;
       yourPaymentSent: string;
       sentPayment: string;
+      paymentAuthorized: string;
+      authorizedPayment: string;
       orderFunded: string;
       orderConfirmed: string;
       orderFulfilled: string;

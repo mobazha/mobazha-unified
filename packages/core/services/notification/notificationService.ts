@@ -103,6 +103,13 @@ function getOrderNotificationDisplay(
         : i18n.t('notifications.order.sentPayment');
       break;
 
+    case 'paymentAuthorized':
+      name = isBuyer ? '' : buyerName;
+      text = isBuyer
+        ? i18n.t('notifications.order.paymentAuthorized', { defaultValue: 'Payment has been authorized' })
+        : i18n.t('notifications.order.authorizedPayment', { defaultValue: 'Authorized payment' });
+      break;
+
     case 'orderFunded':
       text = i18n.t('notifications.order.orderFunded');
       break;

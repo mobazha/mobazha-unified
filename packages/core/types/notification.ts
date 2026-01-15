@@ -11,6 +11,7 @@
  */
 export type OrderNotificationType =
   | 'newOrder' // 新订单
+  | 'paymentAuthorized' // RWA 支付授权
   | 'orderFunded' // 资金到账
   | 'orderPaymentReceived' // 收到付款
   | 'orderConfirmation' // 订单确认
@@ -301,6 +302,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
  */
 export const ORDER_NOTIFICATION_TYPES: OrderNotificationType[] = [
   'newOrder',
+  'paymentAuthorized',
   'orderFunded',
   'orderPaymentReceived',
   'orderConfirmation',
@@ -486,6 +488,7 @@ export function eventTypeToSoundType(eventType: NotificationEventType): SoundNot
   switch (eventType) {
     case 'newOrder':
       return 'new_order';
+    case 'paymentAuthorized':
     case 'orderPaymentReceived':
     case 'orderFunded':
       return 'payment';

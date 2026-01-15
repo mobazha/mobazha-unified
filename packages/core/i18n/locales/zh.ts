@@ -1538,6 +1538,8 @@ export const zh: TranslationResource = {
       youReceivedOrder: '您收到了一个新订单',
       yourPaymentSent: '您的付款已发送',
       sentPayment: '发送了付款',
+      paymentAuthorized: '支付已授权',
+      authorizedPayment: '授权了支付',
       orderFunded: '订单已到账',
       orderConfirmed: '订单已确认',
       orderFulfilled: '订单已发货',
