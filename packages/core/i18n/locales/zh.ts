@@ -1841,6 +1841,17 @@ export const zh: TranslationResource = {
     maxQuantity: '最大购买数量',
     maxQuantityHelper: '买家单次订单可购买的最大数量',
 
+    // RWA 交易模式
+    tradeMode: '交易模式',
+    instantTrade: '即时交易',
+    instantTradeDesc: '买家付款后自动获得 RWA 份额，无需您手动确认',
+    confirmTrade: '确认交易',
+    confirmTradeDesc: '买家付款后资金托管，您确认后完成交易',
+    recommended: '推荐',
+    escrowTimeout: '托管时限',
+    hours: '小时',
+    escrowTimeoutWarning: '超时未确认，资金将自动退还给买家',
+
     // RWA 代币类型和详情
     rwa: {
       realEstate: '房地产代币',
