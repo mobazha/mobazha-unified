@@ -16,13 +16,24 @@ export const TokenStandardEnum = {
 } as const;
 
 // 订单状态枚举
-export type OrderStatus = 'Active' | 'Completed' | 'Cancelled';
+export type OrderStatus = 'Active' | 'PaymentLocked' | 'Completed' | 'Cancelled' | 'Expired';
 
 // 订单状态枚举值 (合约中使用)
 export const OrderStatusEnum = {
   Active: 0,
-  Completed: 1,
-  Cancelled: 2,
+  PaymentLocked: 1,
+  Completed: 2,
+  Cancelled: 3,
+  Expired: 4,
+} as const;
+
+// 交易模式枚举
+export type TradeMode = 'instant' | 'confirm_required';
+
+// 交易模式枚举值 (合约中使用)
+export const TradeModeEnum = {
+  Instant: 0,
+  ConfirmRequired: 1,
 } as const;
 
 // 资产类型代码
