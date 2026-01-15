@@ -1849,7 +1849,11 @@ export const zh: TranslationResource = {
     confirmTradeDesc: '买家付款后资金托管，您确认后完成交易',
     recommended: '推荐',
     escrowTimeout: '托管时限',
+    min: '分钟',
+    hour: '小时',
     hours: '小时',
+    day: '天',
+    days: '天',
     escrowTimeoutWarning: '超时未确认，资金将自动退还给买家',
 
     // RWA 代币类型和详情
