@@ -1881,7 +1881,11 @@ export const en: TranslationResource = {
     confirmTradeDesc: 'Payment is escrowed, you confirm to complete the trade',
     recommended: 'Recommended',
     escrowTimeout: 'Escrow Timeout',
+    min: 'min',
+    hour: 'hour',
     hours: 'hours',
+    day: 'day',
+    days: 'days',
     escrowTimeoutWarning: 'If not confirmed within timeout, funds will be automatically returned to buyer',
 
     // RWA Token Types & Details
