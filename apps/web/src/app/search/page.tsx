@@ -32,6 +32,8 @@ interface DisplayProduct {
   rating: number;
   reviewCount: number;
   contractType: ProductContractType;
+  /** RWA 交易模式 */
+  rwaTradeMode?: number;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
 }
