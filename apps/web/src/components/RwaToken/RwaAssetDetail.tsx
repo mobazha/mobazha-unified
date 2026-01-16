@@ -116,7 +116,7 @@ export function RwaAssetDetail({
 
         {/* 交易模式和支付方式信息 */}
         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-4 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+          <div className="flex items-center flex-wrap gap-3 mb-2">
             <div
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold text-white text-sm',

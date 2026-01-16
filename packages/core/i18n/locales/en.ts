@@ -43,6 +43,7 @@ export const en: TranslationResource = {
     copied: 'Copied!',
     days: 'days',
     hours: 'hours',
+    minutes: 'minutes',
     share: 'Share',
     download: 'Download',
     upload: 'Upload',
