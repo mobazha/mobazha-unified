@@ -152,6 +152,7 @@ export const MoreFromStore = memo(function MoreFromStore({
               reviewCount={product.ratingCount}
               freeShipping={product.freeShipping && product.freeShipping.length > 0}
               contractType={product.contractType as ProductContractType}
+              tokenStandard={product.tokenStandard}
               rwaTradeMode={product.rwaTradeMode}
               vendorName={product.vendorName}
               vendorPeerID={product.vendorPeerID}

@@ -32,6 +32,8 @@ interface DisplayProduct {
   rating: number;
   reviewCount: number;
   contractType: ProductContractType;
+  /** 代币标准 */
+  tokenStandard?: string;
   /** RWA 交易模式 */
   rwaTradeMode?: number;
   /** 仲裁员 peerID 列表 */
@@ -78,6 +80,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,
     contractType: (item.contractType as ProductContractType) || 'PHYSICAL_GOOD',
+    tokenStandard: item.tokenStandard,
+    rwaTradeMode: item.rwaTradeMode,
     // 传递 moderators 列表
     moderators: item.moderators,
   };
@@ -352,6 +356,7 @@ function SearchPageContent() {
         rating={product.rating}
         reviewCount={product.reviewCount}
         contractType={product.contractType}
+        tokenStandard={product.tokenStandard}
         rwaTradeMode={product.rwaTradeMode}
         hasVerifiedModerator={hasVerifiedMod(product.moderators)}
         onReport={() => handleReport(product)}
