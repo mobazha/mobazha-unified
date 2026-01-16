@@ -6,7 +6,7 @@ import { Store, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { ProductCard } from '@/components/ProductCard/ProductCard';
+import { ProductCard, type ProductContractType } from '@/components/ProductCard/ProductCard';
 import { useI18n, productDataService, getImageUrl } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { cn } from '@/lib/utils';
@@ -151,9 +151,8 @@ export const MoreFromStore = memo(function MoreFromStore({
               rating={product.averageRating}
               reviewCount={product.ratingCount}
               freeShipping={product.freeShipping && product.freeShipping.length > 0}
-              contractType={
-                product.contractType as 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | undefined
-              }
+              contractType={product.contractType as ProductContractType}
+              rwaTradeMode={product.rwaTradeMode}
               vendorName={product.vendorName}
               vendorPeerID={product.vendorPeerID}
               onClick={() => onProductClick?.(product)}

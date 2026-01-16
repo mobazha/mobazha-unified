@@ -4,7 +4,12 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer, useSettingsDrawer } from '@/components';
-import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
+import {
+  ProductCard,
+  ProductCardSkeleton,
+  type ProductContractType,
+  type RwaTradeMode,
+} from '@/components/ProductCard';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -967,6 +972,8 @@ export default function StorePage() {
                         rating={product.averageRating}
                         reviewCount={product.ratingCount}
                         freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                        contractType={product.contractType as ProductContractType}
+                        rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
                         hasVerifiedModerator={hasVerifiedMod(product.moderators)}
                         isOwnListing={isOwnStore}
                         onReport={() => {
