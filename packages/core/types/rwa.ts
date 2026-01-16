@@ -217,7 +217,7 @@ export const SEPOLIA_CONFIG: ChainConfig = {
   chainId: ChainId.ETHEREUM_SEPOLIA,
   name: 'Sepolia',
   isTestnet: true,
-  universalSwapAddress: '0x16FE434E3Bb5d6D247e56EA84c4eaE0d80953A5b',
+  universalSwapAddress: '0xD72aA1FF4da09269ba90AC17fb656c7D1c4dF297',
   mockUsdtAddress: '0xbF0cCEd12A16904E8B06a90fA8F8029bB36e3f2e',
   mockErc1155Address: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
   mockErc3525Address: '0xccf9C481A2DDaC0ad5a55c3a07C5Cd04cA3d343e',

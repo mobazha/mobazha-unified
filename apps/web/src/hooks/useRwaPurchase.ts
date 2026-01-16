@@ -10,8 +10,10 @@ import {
   UniversalSwapService,
   TradeMode,
   type TradeModeType,
+  getContractAddress,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
+import { ethers } from 'ethers';
 
 /**
  * 购买步骤
@@ -192,7 +194,41 @@ export function useRwaPurchase({
     }
   }, [openModal, onError]);
 
-  // 开始购买
+  // 根据支付币种获取支付代币地址
+  const getPaymentTokenAddress = useCallback((paymentCoin: string, chainId: number): string => {
+    // 解析支付币种，如 ETHUSDT -> USDT
+    const tokenSymbol = paymentCoin.replace(/^(ETH|BSC|MATIC|CFX)/, '');
+
+    if (tokenSymbol === 'USDT') {
+      return getContractAddress('USDT', chainId);
+    } else if (tokenSymbol === 'USDC') {
+      return getContractAddress('USDC', chainId);
+    }
+
+    // ETH 原生支付
+    return ethers.ZeroAddress;
+  }, []);
+
+  // 从订单获取支付金额
+  const getPaymentAmount = useCallback((): string => {
+    if (!order) return '0';
+
+    const orderOpen = (order.contract as any)?.orderOpen;
+    const listing = orderOpen?.listings?.[0]?.listing;
+    const item = orderOpen?.items?.[0];
+
+    const price = Number(listing?.item?.price) || 0;
+    const quantity = Number(item?.quantity) || 1;
+    const pricingDivisibility = listing?.metadata?.pricingCurrency?.divisibility || 2;
+
+    // 将价格从最小单位转换为 USDT (6 位小数)
+    const usdAmount = (price * quantity) / Math.pow(10, pricingDivisibility);
+    const paymentAmount = Math.floor(usdAmount * 1e6); // USDT 有 6 位小数
+
+    return paymentAmount.toString();
+  }, [order]);
+
+  // 开始购买（新设计：买家创建订单并支付）
   const startPurchase = useCallback(async () => {
     if (!order || !swapService) {
       const error = new Error(t('rwa.purchase.serviceNotReady'));
@@ -204,20 +240,106 @@ export function useRwaPurchase({
     try {
       setState(prev => ({ ...prev, isProcessing: true, error: null }));
 
-      // 获取订单的外部 ID
+      // 获取订单的外部 ID (Mobazha orderID)
       const externalOrderId =
         (order.contract as any)?.OrderID || (order.contract as any)?.orderID || '';
 
-      // 1. 授权支付代币
+      // 获取支付信息
+      const orderOpen = (order.contract as any)?.orderOpen;
+      const listing = orderOpen?.listings?.[0]?.listing;
+      const item = orderOpen?.items?.[0];
+      const paymentCoin = orderOpen?.pricingCoin || 'ETHUSDT';
+      const chainId = getCurrentChainId() ? Number(getCurrentChainId()) : 11155111;
+      const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
+      const paymentAmount = getPaymentAmount();
+
+      // 获取卖家地址（从 listing 的 vendorID 获取，需要后端提供以太坊地址）
+      // TODO: 实际应用中需要通过 API 获取卖家的以太坊地址
+      const vendorPeerID =
+        listing?.vendorID?.peerID || orderOpen?.listings?.[0]?.vendorID?.peerID || '';
+
+      // 获取 RWA Token 信息
+      const metadata = listing?.metadata || {};
+      const tokenStandard = listing?.item?.tokenStandard || 'ERC721';
+      const tokenContract = metadata.cryptoListingAddress;
+      const tokenId = metadata.tokenId || '1';
+      const quantity = Number(item?.quantity) || 1;
+
+      // 获取交易模式参数
+      const tradeMode = isConfirmRequired ? 1 : 0;
+
+      console.log('🛒 RWA 购买参数:', {
+        externalOrderId,
+        vendorPeerID,
+        tokenStandard,
+        tokenContract,
+        tokenId,
+        quantity,
+        paymentCoin,
+        paymentTokenAddress,
+        paymentAmount,
+        tradeMode: isConfirmRequired ? '确认交易' : '即时交易',
+      });
+
+      // 检查必要信息
+      if (!tokenContract) {
+        throw new Error(t('rwa.purchase.missingTokenContract') || '无法获取 Token 合约地址');
+      }
+
+      // Step 1: 授权支付代币
       setState(prev => ({ ...prev, step: 'approving' }));
 
+      if (paymentTokenAddress !== ethers.ZeroAddress) {
+        console.log('🔧 授权支付代币...');
+        const approvalResult = await swapService.approvePaymentToken(
+          paymentTokenAddress,
+          paymentAmount
+        );
+
+        if (!approvalResult.success) {
+          throw new Error(t('rwa.purchase.approveFailed') || '支付代币授权失败');
+        }
+        console.log('✅ 授权成功');
+      }
+
+      // Step 2: 调用 createOrderByBuyer（一步完成创建订单 + 支付/锁定）
       if (isConfirmRequired) {
-        // 确认交易模式：锁定资金
         setState(prev => ({ ...prev, step: 'locking' }));
+      } else {
+        setState(prev => ({ ...prev, step: 'executing' }));
+      }
 
-        const result = await swapService.buyByExternalId(externalOrderId);
+      console.log('🔧 创建订单并支付...');
 
-        if (result.success && result.transactionHash) {
+      // 注意：这里需要卖家的以太坊地址
+      // 在实际实现中，需要通过 API 获取 vendorPeerID 对应的以太坊地址
+      // 临时方案：从 listing metadata 中获取（如果卖家在上架时设置了）
+      const sellerAddress = metadata.sellerWalletAddress || metadata.vendorWalletAddress;
+
+      if (!sellerAddress) {
+        throw new Error(t('rwa.purchase.missingSellerAddress') || '无法获取卖家钱包地址');
+      }
+
+      const result = await swapService.createOrderByBuyer({
+        seller: sellerAddress,
+        tokenStandard: tokenStandard,
+        tokenContract: tokenContract,
+        tokenId: tokenId,
+        amount: quantity.toString(),
+        paymentToken: paymentTokenAddress,
+        price: paymentAmount,
+        externalOrderId: externalOrderId, // 使用 Mobazha orderID
+        tradeMode: tradeMode as 0 | 1,
+        escrowTimeoutSeconds: escrowTimeoutSeconds,
+      });
+
+      if (result.success && result.transactionHash) {
+        console.log('✅ 购买成功');
+        console.log('   合约订单ID:', result.orderId);
+        console.log('   交易模式:', result.tradeMode);
+
+        if (result.tradeMode === 'locked') {
+          // 确认交易模式：资金锁定，等待卖家确认
           setState(prev => ({
             ...prev,
             step: 'waiting',
@@ -225,15 +347,7 @@ export function useRwaPurchase({
             isProcessing: false,
           }));
         } else {
-          throw new Error(result.message || t('rwa.purchase.lockFailed'));
-        }
-      } else {
-        // 即时交易模式：直接执行交换
-        setState(prev => ({ ...prev, step: 'executing' }));
-
-        const result = await swapService.executeSwapByExternalId(externalOrderId);
-
-        if (result.success && result.transactionHash) {
+          // 即时交易模式：交易完成
           setState(prev => ({
             ...prev,
             step: 'completed',
@@ -241,21 +355,45 @@ export function useRwaPurchase({
             isProcessing: false,
           }));
           onSuccess?.();
-        } else {
-          throw new Error(result.message || t('rwa.purchase.executeFailed'));
         }
+      } else {
+        throw new Error(result.message || t('rwa.purchase.executeFailed'));
       }
     } catch (err) {
+      console.error('❌ 购买失败:', err);
       const error = err instanceof Error ? err : new Error('Purchase failed');
+
+      // 提供更友好的错误消息
+      let errorMessage = error.message;
+      if (errorMessage.includes('Token not approved') || errorMessage.includes('Token 未授权')) {
+        errorMessage = t('rwa.purchase.sellerTokenNotApproved') || '卖家尚未授权 Token，请联系卖家';
+      } else if (
+        errorMessage.includes('Seller not owner') ||
+        errorMessage.includes('卖家不是 Token 所有者')
+      ) {
+        errorMessage = t('rwa.purchase.sellerNotOwner') || '卖家已不拥有此 Token';
+      }
+
       setState(prev => ({
         ...prev,
         step: 'error',
         isProcessing: false,
-        error: error.message,
+        error: errorMessage,
       }));
-      onError?.(error);
+      onError?.(new Error(errorMessage));
     }
-  }, [order, swapService, isConfirmRequired, onSuccess, onError, t]);
+  }, [
+    order,
+    swapService,
+    isConfirmRequired,
+    escrowTimeoutSeconds,
+    onSuccess,
+    onError,
+    t,
+    getCurrentChainId,
+    getPaymentTokenAddress,
+    getPaymentAmount,
+  ]);
 
   // 取消购买（锁定模式）
   const cancelPurchase = useCallback(async () => {
