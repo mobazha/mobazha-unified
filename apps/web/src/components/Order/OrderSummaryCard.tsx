@@ -31,7 +31,7 @@ export interface OrderSummaryCardProps {
     name: string;
     peerID: string;
   };
-  shippingAddress: OrderSummaryAddress;
+  shippingAddress?: OrderSummaryAddress;
   memo?: string;
   className?: string;
 }
@@ -103,18 +103,20 @@ export function OrderSummaryCard({
           <p className="text-sm font-medium text-foreground">{vendor.name}</p>
         </div>
 
-        {/* Shipping Address */}
-        <div className="mb-4 pb-4 border-b border-border">
-          <p className="text-xs text-muted-foreground mb-1">{t('order.shippingAddress')}</p>
-          <div className="text-sm text-foreground">
-            <p className="font-medium">{shippingAddress.name}</p>
-            <p className="text-muted-foreground">{shippingAddress.street}</p>
-            <p className="text-muted-foreground">
-              {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}
-            </p>
-            <p className="text-muted-foreground">{shippingAddress.country}</p>
+        {/* Shipping Address - 仅当有地址时显示 */}
+        {shippingAddress && (
+          <div className="mb-4 pb-4 border-b border-border">
+            <p className="text-xs text-muted-foreground mb-1">{t('order.shippingAddress')}</p>
+            <div className="text-sm text-foreground">
+              <p className="font-medium">{shippingAddress.name}</p>
+              <p className="text-muted-foreground">{shippingAddress.street}</p>
+              <p className="text-muted-foreground">
+                {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}
+              </p>
+              <p className="text-muted-foreground">{shippingAddress.country}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Memo */}
         {memo && (

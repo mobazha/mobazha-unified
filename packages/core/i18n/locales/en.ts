@@ -302,6 +302,12 @@ export const en: TranslationResource = {
     creating: 'Creating...',
     createOrderFailed: 'Failed to create order: ',
     paymentNextStep: 'You will select payment method in the next step',
+    // RWA 相关
+    rwaTransaction: 'RWA Token Transaction',
+    rwaInstantHint:
+      'This is an instant RWA swap. Your payment will be exchanged for token shares immediately after confirmation.',
+    rwaConfirmRequiredHint:
+      'This transaction requires seller confirmation. Your payment will be locked until the seller confirms.',
   },
 
   order: {
@@ -2005,14 +2011,39 @@ export const en: TranslationResource = {
     purchase: {
       connectWallet: 'Connect Wallet',
       connectDesc: 'Please connect your wallet to authorize payment tokens',
+      connectFailed: 'Failed to connect wallet',
+      serviceNotReady: 'Service not ready, please try again',
       authorize: 'Authorize Payment',
       approving: 'Authorizing...',
       approvingDesc: 'Please confirm the authorization transaction in your wallet',
-      waitingSeller: 'Waiting for Seller',
-      waitingDesc: 'Payment authorized, waiting for seller to complete atomic swap',
+      executing: 'Executing Swap...',
+      executingDesc: 'Please confirm the swap transaction in your wallet',
+      locking: 'Locking Payment...',
+      lockingDesc: 'Please confirm the lock transaction in your wallet',
+      lockPayment: 'Lock Payment',
+      lockTimeout: 'Lock Timeout',
+      lockFailed: 'Failed to lock payment',
+      cancelLock: 'Cancel Lock',
+      cancelFailed: 'Failed to cancel lock',
+      payNow: 'Pay Now',
+      instantDesc: 'Payment will be exchanged for token shares immediately',
+      waitingSeller: 'Waiting for Seller Confirmation',
+      waitingDesc: 'Your payment is locked, waiting for seller to confirm',
       completed: 'Transaction Complete',
       completedDesc: 'Atomic swap completed, Token has been transferred to your wallet',
       error: 'Operation Failed',
+      failed: 'Transaction failed',
+      executeFailed: 'Failed to execute swap',
+      viewTransaction: 'View Transaction',
+      connectedAs: 'Connected as',
+      payingFrom: 'Paying from',
+      confirm: 'Confirm',
+      confirmLock: 'Confirm Lock Payment',
+      confirmLockDesc:
+        'Your payment will be locked in the smart contract. The seller needs to confirm the order within the timeout period.',
+      confirmPurchase: 'Confirm Purchase',
+      confirmPurchaseDesc:
+        'Your payment will be exchanged for RWA token shares immediately. This action cannot be undone.',
     },
     fulfill: {
       waitingBuyer: 'Waiting for Buyer Authorization',

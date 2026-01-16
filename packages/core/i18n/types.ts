@@ -1488,14 +1488,37 @@ export interface TranslationResource {
     purchase: {
       connectWallet: string;
       connectDesc: string;
+      connectFailed?: string;
+      serviceNotReady?: string;
       authorize: string;
       approving: string;
       approvingDesc: string;
+      executing?: string;
+      executingDesc?: string;
+      locking?: string;
+      lockingDesc?: string;
+      lockPayment?: string;
+      lockTimeout?: string;
+      lockFailed?: string;
+      cancelLock?: string;
+      cancelFailed?: string;
+      payNow?: string;
+      instantDesc?: string;
       waitingSeller: string;
       waitingDesc: string;
       completed: string;
       completedDesc: string;
       error: string;
+      failed?: string;
+      executeFailed?: string;
+      viewTransaction?: string;
+      connectedAs?: string;
+      payingFrom?: string;
+      confirm?: string;
+      confirmLock?: string;
+      confirmLockDesc?: string;
+      confirmPurchase?: string;
+      confirmPurchaseDesc?: string;
     };
     fulfill: {
       waitingBuyer: string;

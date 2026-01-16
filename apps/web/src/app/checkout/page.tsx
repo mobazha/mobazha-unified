@@ -10,7 +10,14 @@ import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { productDataService, profileApi, getImageUrl, useCurrency, useI18n } from '@mobazha/core';
+import {
+  productDataService,
+  profileApi,
+  ordersApi,
+  getImageUrl,
+  useCurrency,
+  useI18n,
+} from '@mobazha/core';
 import type { Product, UserProfile } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -26,9 +33,15 @@ interface CheckoutItem {
     name: string;
     peerID: string;
   };
+  // RWA 相关字段
+  listingHash?: string;
+  contractType?: string;
+  rwaTradeMode?: number;
+  rwaEscrowTimeoutSeconds?: number;
+  cryptoListingCurrencyCode?: string;
 }
 
-// Mock data for addresses (TODO: 从 API 获取)
+// Mock data for addresses (TODO: 从用户 Profile API 获取)
 const mockAddresses: Address[] = [
   {
     id: '1',
@@ -137,6 +150,10 @@ export default function CheckoutPage() {
           const imageUrl =
             productData.item.images?.[0]?.medium || productData.item.images?.[0]?.small;
 
+          // 获取 listing hash (CID) - 使用 slug 作为 listingHash
+          const listingHash =
+            (productData as any).hash || (productData as any).cid || productData.slug || '';
+
           const item: CheckoutItem = {
             id: productData.slug,
             title: productData.item.title,
@@ -148,6 +165,12 @@ export default function CheckoutPage() {
               name: sellerPeerID?.slice(0, 8) || 'Unknown',
               peerID: sellerPeerID || '',
             },
+            // RWA 相关字段
+            listingHash,
+            contractType: productData.metadata?.contractType,
+            rwaTradeMode: productData.metadata?.rwaTradeMode,
+            rwaEscrowTimeoutSeconds: productData.metadata?.rwaEscrowTimeoutSeconds,
+            cryptoListingCurrencyCode: productData.item?.cryptoListingCurrencyCode,
           };
 
           setCheckoutItems([item]);
@@ -185,9 +208,21 @@ export default function CheckoutPage() {
 
   const total = subtotal; // 下单阶段不计算仲裁费，仲裁费在支付阶段计算
 
+  // 判断是否为 RWA 商品
+  const isRwaToken = useMemo(() => {
+    return checkoutItems.some(item => item.contractType === 'RWA_TOKEN');
+  }, [checkoutItems]);
+
+  // 获取 RWA 交易模式
+  const rwaTradeMode = useMemo(() => {
+    const rwaItem = checkoutItems.find(item => item.contractType === 'RWA_TOKEN');
+    return rwaItem?.rwaTradeMode;
+  }, [checkoutItems]);
+
   // 创建订单
   const handleCreateOrder = useCallback(async () => {
-    if (!selectedAddress) {
+    // RWA 商品不需要地址
+    if (!isRwaToken && !selectedAddress) {
       toast({
         title: t('checkout.selectAddressFirst'),
         variant: 'destructive',
@@ -206,24 +241,53 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // TODO: 调用真实的创建订单 API
-      // const orderData = {
-      //   items: checkoutItems.map(item => ({
-      //     listingHash: item.id,
-      //     quantity: item.quantity,
-      //   })),
-      //   address: mockAddresses.find(a => a.id === selectedAddress),
-      //   memo: orderNote,
-      // };
-      // const result = await orderApi.createOrder(orderData);
+      // 获取选中的地址数据
+      const addressData = mockAddresses.find(a => a.id === selectedAddress);
 
-      // Mock 订单创建
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const mockOrderID = `Qm${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      // 调用真实的创建订单 API
+      const result = await ordersApi.createOrder({
+        vendorId: checkoutItems[0].vendor.peerID,
+        items: checkoutItems.map(item => ({
+          listingHash: item.listingHash || item.id,
+          quantity: item.quantity,
+          memo: orderNote,
+        })),
+        address: addressData
+          ? {
+              name: addressData.name,
+              street: addressData.street,
+              city: addressData.city,
+              state: addressData.state,
+              postalCode: addressData.postalCode,
+              country: addressData.country,
+            }
+          : undefined,
+        memo: orderNote,
+      });
+
+      // 构建支付页面 URL，包含 RWA 相关参数
+      const paymentUrl = new URL('/payment', window.location.origin);
+      paymentUrl.searchParams.set('orderID', result.orderID);
+
+      // 传递 RWA 相关信息
+      if (isRwaToken) {
+        paymentUrl.searchParams.set('isRwaToken', 'true');
+        if (rwaTradeMode !== undefined) {
+          paymentUrl.searchParams.set('rwaTradeMode', String(rwaTradeMode));
+        }
+        const rwaItem = checkoutItems.find(item => item.contractType === 'RWA_TOKEN');
+        if (rwaItem?.rwaEscrowTimeoutSeconds) {
+          paymentUrl.searchParams.set('escrowTimeout', String(rwaItem.rwaEscrowTimeoutSeconds));
+        }
+        if (rwaItem?.cryptoListingCurrencyCode) {
+          paymentUrl.searchParams.set('tokenCode', rwaItem.cryptoListingCurrencyCode);
+        }
+      }
 
       // 创建成功，跳转到支付页面
-      router.push(`/payment?orderID=${mockOrderID}`);
+      router.push(paymentUrl.toString());
     } catch (error) {
+      console.error('Create order failed:', error);
       toast({
         title: t('checkout.createOrderFailed'),
         description: (error as Error).message,
@@ -232,7 +296,7 @@ export default function CheckoutPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedAddress, checkoutItems, router, t, toast]);
+  }, [selectedAddress, checkoutItems, orderNote, router, t, toast, isRwaToken, rwaTradeMode]);
 
   // 格式化商品价格
   const formatItemPrice = (item: CheckoutItem) => {
@@ -312,18 +376,55 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-                {/* Shipping Address */}
-                <Card>
-                  <CardContent className="p-4 sm:p-6">
-                    <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('checkout.shippingAddress')}
-                    </h2>
-                    <AddressSummary
-                      address={mockAddresses.find(a => a.id === selectedAddress)}
-                      onEdit={() => setShowAddressDrawer(true)}
-                    />
-                  </CardContent>
-                </Card>
+                {/* RWA 交易提示 */}
+                {isRwaToken && (
+                  <Card className="border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-900/10">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100">
+                            {t('checkout.rwaTransaction')}
+                          </h3>
+                          <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                            {rwaTradeMode === 1
+                              ? t('checkout.rwaConfirmRequiredHint')
+                              : t('checkout.rwaInstantHint')}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Shipping Address - 仅非 RWA 商品显示 */}
+                {!isRwaToken && (
+                  <Card>
+                    <CardContent className="p-4 sm:p-6">
+                      <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                        {t('checkout.shippingAddress')}
+                      </h2>
+                      <AddressSummary
+                        address={mockAddresses.find(a => a.id === selectedAddress)}
+                        onEdit={() => setShowAddressDrawer(true)}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Order Note */}
                 <Card>
@@ -381,12 +482,28 @@ export default function CheckoutPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground line-clamp-2">
-                                {item.title}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-foreground line-clamp-2 flex-1">
+                                  {item.title}
+                                </p>
+                                {/* RWA 徽章 */}
+                                {item.contractType === 'RWA_TOKEN' && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 flex-shrink-0">
+                                    RWA
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-muted-foreground mt-0.5">
                                 {item.vendor.name}
                               </p>
+                              {/* RWA 交易模式提示 */}
+                              {item.contractType === 'RWA_TOKEN' && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  {item.rwaTradeMode === 1
+                                    ? t('listing.rwa.confirmRequired')
+                                    : t('listing.rwa.instantTrade')}
+                                </p>
+                              )}
                               <p className="text-sm font-semibold text-primary mt-1">
                                 {renderPairedPrice(item.price, item.currency)}
                               </p>
@@ -496,7 +613,11 @@ export default function CheckoutPage() {
                       className="w-full mt-4 sm:mt-6 touch-feedback hidden sm:flex"
                       size="default"
                       onClick={handleCreateOrder}
-                      disabled={isSubmitting || !selectedAddress || checkoutItems.length === 0}
+                      disabled={
+                        isSubmitting ||
+                        (!isRwaToken && !selectedAddress) ||
+                        checkoutItems.length === 0
+                      }
                     >
                       {isSubmitting ? (
                         <HStack gap="sm" align="center" justify="center">
@@ -522,8 +643,8 @@ export default function CheckoutPage() {
                       )}
                     </Button>
 
-                    {/* Warnings */}
-                    {!selectedAddress && (
+                    {/* Warnings - 仅非 RWA 商品需要地址 */}
+                    {!isRwaToken && !selectedAddress && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
                           {t('checkout.selectAddressWarning')}
@@ -571,7 +692,7 @@ export default function CheckoutPage() {
             <Button
               size="lg"
               onClick={handleCreateOrder}
-              disabled={isSubmitting || !selectedAddress}
+              disabled={isSubmitting || (!isRwaToken && !selectedAddress)}
               className="min-w-[140px]"
             >
               {isSubmitting ? (
