@@ -411,7 +411,9 @@ export class UniversalSwapService {
   /**
    * 买家: 通过外部订单ID购买
    */
-  async buyByExternalId(externalOrderId: string): Promise<RwaTransactionResult & { eventName?: string }> {
+  async buyByExternalId(
+    externalOrderId: string
+  ): Promise<RwaTransactionResult & { eventName?: string }> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
@@ -937,13 +939,6 @@ export class UniversalSwapService {
   private getOrderStatusName(status: number): OrderStatus {
     const names: OrderStatus[] = ['Active', 'PaymentLocked', 'Completed', 'Cancelled', 'Expired'];
     return names[status] || 'Active';
-  }
-
-  /**
-   * 获取交易模式描述
-   */
-  private getTradeModeDesc(mode: number): string {
-    return mode === TradeMode.Instant ? '即时交易' : '需要确认';
   }
 
   /**

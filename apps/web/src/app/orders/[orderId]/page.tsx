@@ -140,9 +140,9 @@ interface RealOrderData {
       address?: string;
       buyerReceiveAddress?: string;
     };
-    // RWA 原子交换预授权消息
-    paymentAuthorized?: {
-      approvalTxHash?: string;
+    // RWA 原子交换支付锁定消息
+    paymentLocked?: {
+      lockTxHash?: string;
       coin?: string;
       amount?: string;
       paymentTokenAddress?: string;
@@ -241,7 +241,7 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
   if (
     data.funded ||
     contract.paymentSent ||
-    contract.paymentAuthorized ||
+    contract.paymentLocked ||
     (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
   ) {
     const confirmTimestamp =
@@ -360,17 +360,26 @@ function transformCoreOrder(
   const buyerHandle = orderOpen?.buyerID?.handle || buyerOrder?.buyerID?.handle || '';
 
   // 支持 PaymentAuthorized (RWA) 和 PaymentSent (传统) 两种消息
-  const paymentAuthorized = contract.paymentAuthorized;
+  const paymentLocked = contract.paymentLocked;
   const paymentSent = contract.paymentSent;
   const buyerPayment = buyerOrder?.payment;
-  const coin = paymentAuthorized?.coin || paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
+  const coin =
+    paymentLocked?.coin ||
+    paymentSent?.coin ||
+    buyerPayment?.coin ||
+    orderOpen?.pricingCoin ||
+    'ETH';
   // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
   const amount =
-    paymentAuthorized?.amount !== undefined ? Number(paymentAuthorized.amount) :
-    paymentSent?.amount !== undefined ? paymentSent.amount :
-    buyerPayment?.amount !== undefined ? buyerPayment.amount :
-    orderOpen?.amount !== undefined ? orderOpen.amount :
-    listingData?.item?.price ?? 0;
+    paymentLocked?.amount !== undefined
+      ? Number(paymentLocked.amount)
+      : paymentSent?.amount !== undefined
+        ? paymentSent.amount
+        : buyerPayment?.amount !== undefined
+          ? buyerPayment.amount
+          : orderOpen?.amount !== undefined
+            ? orderOpen.amount
+            : (listingData?.item?.price ?? 0);
   const paymentMethod = paymentSent?.method || buyerPayment?.method || '';
   const moderatorId = paymentSent?.moderator || buyerPayment?.moderator || '';
 
@@ -462,15 +471,17 @@ function transformCoreOrder(
     trackingNumber: trackingInfo?.trackingNumber,
     shippingAddress: formatShippingAddress(shipping),
     // 支持 RWA 预授权和传统交易
-    paymentTx: contract.paymentAuthorized?.approvalTxHash || data.paymentAddressTransactions?.[0]?.txid,
-    // RWA 支付授权信息
-    paymentAuthorized: contract.paymentAuthorized ? {
-      amount: contract.paymentAuthorized.amount || '',
-      coin: contract.paymentAuthorized.coin || '',
-      buyerReceiveAddress: contract.paymentAuthorized.buyerReceiveAddress || '',
-      approvalTxHash: contract.paymentAuthorized.approvalTxHash || '',
-      timestamp: contract.paymentAuthorized.timestamp,
-    } : undefined,
+    paymentTx: contract.paymentLocked?.lockTxHash || data.paymentAddressTransactions?.[0]?.txid,
+    // RWA 支付锁定信息
+    paymentLocked: contract.paymentLocked
+      ? {
+          amount: contract.paymentLocked.amount || '',
+          coin: contract.paymentLocked.coin || '',
+          buyerReceiveAddress: contract.paymentLocked.buyerReceiveAddress || '',
+          lockTxHash: contract.paymentLocked.lockTxHash || '',
+          timestamp: contract.paymentLocked.timestamp,
+        }
+      : undefined,
     escrowAddress: paymentAddress,
     notes: notes,
     timeline: generateTimelineFromRealData(data),

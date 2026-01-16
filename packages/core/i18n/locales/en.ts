@@ -41,6 +41,8 @@ export const en: TranslationResource = {
     clear: 'Clear',
     copy: 'Copy',
     copied: 'Copied!',
+    days: 'days',
+    hours: 'hours',
     share: 'Share',
     download: 'Download',
     upload: 'Upload',
@@ -1565,8 +1567,8 @@ export const en: TranslationResource = {
       youReceivedOrder: 'You received a new order',
       yourPaymentSent: 'Your payment was sent',
       sentPayment: 'sent payment',
-      paymentAuthorized: 'Payment has been authorized',
-      authorizedPayment: 'authorized payment',
+      paymentLocked: 'Payment has been locked',
+      lockedPayment: 'locked payment',
       orderFunded: 'Order has been funded',
       orderConfirmed: 'Order confirmed',
       orderFulfilled: 'Order fulfilled',
@@ -1876,7 +1878,8 @@ export const en: TranslationResource = {
     // RWA Trade Mode
     tradeMode: 'Trade Mode',
     instantTrade: 'Instant Trade',
-    instantTradeDesc: 'Buyer gets RWA shares immediately after payment, no manual confirmation needed',
+    instantTradeDesc:
+      'Buyer gets RWA shares immediately after payment, no manual confirmation needed',
     confirmTrade: 'Confirm Trade',
     confirmTradeDesc: 'Payment is escrowed, you confirm to complete the trade',
     recommended: 'Recommended',
@@ -1886,7 +1889,8 @@ export const en: TranslationResource = {
     hours: 'hours',
     day: 'day',
     days: 'days',
-    escrowTimeoutWarning: 'If not confirmed within timeout, funds will be automatically returned to buyer',
+    escrowTimeoutWarning:
+      'If not confirmed within timeout, funds will be automatically returned to buyer',
 
     // RWA Token Types & Details
     rwa: {
@@ -1948,6 +1952,15 @@ export const en: TranslationResource = {
       contract: 'Contract',
       // Product Detail Page - Asset Display
       verifiedAsset: 'Verified Asset',
+      // Trade Mode Hints (for buyer display)
+      instantTrade: 'Instant Trade',
+      confirmTrade: 'Confirm Trade',
+      instantTradeHint: "Payment completes instantly, you'll receive RWA shares immediately",
+      confirmTradeHint: 'Payment is escrowed, seller must confirm within timeout to complete',
+      escrowProtection:
+        "Smart contract protection: funds are returned automatically if seller doesn't confirm",
+      escrowTimeout: 'Escrow Timeout',
+      acceptedPayments: 'Accepted Payments',
       atomicSwap: 'Atomic Swap',
       atomicSwapShort: 'Asset and payment completed simultaneously, safe and secure',
       atomicSwapPurchase: 'Atomic Swap Purchase',

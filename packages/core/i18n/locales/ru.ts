@@ -895,6 +895,8 @@ export const ru: TranslationResource = {
       youReceivedOrder: 'Вы получили новый заказ',
       yourPaymentSent: 'Ваш платёж отправлен',
       sentPayment: 'отправил платёж',
+      paymentLocked: 'Платёж заблокирован',
+      lockedPayment: 'заблокировал платёж',
       orderFunded: 'Заказ оплачен',
       orderConfirmed: 'Заказ подтверждён',
       orderFulfilled: 'Заказ отправлен',

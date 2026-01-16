@@ -1105,8 +1105,8 @@ export interface TranslationResource {
       youReceivedOrder: string;
       yourPaymentSent: string;
       sentPayment: string;
-      paymentAuthorized: string;
-      authorizedPayment: string;
+      paymentLocked: string;
+      lockedPayment: string;
       orderFunded: string;
       orderConfirmed: string;
       orderFulfilled: string;
@@ -1435,6 +1435,14 @@ export interface TranslationResource {
       contract?: string;
       // Product Detail Page - Asset Display
       verifiedAsset?: string;
+      // Trade Mode Hints (for buyer display)
+      instantTrade?: string;
+      confirmTrade?: string;
+      instantTradeHint?: string;
+      confirmTradeHint?: string;
+      escrowProtection?: string;
+      escrowTimeout?: string;
+      acceptedPayments?: string;
       atomicSwap?: string;
       atomicSwapShort?: string;
       atomicSwapPurchase?: string;
