@@ -248,23 +248,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         )}
 
-        {/* 商品类型标签 */}
+        {/* 商品类型标签 + 代币标准 - 右上角 */}
         {typeConfig?.label && (
           <span
             className={cn(
-              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded z-10',
+              'absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded z-10 flex items-center gap-1',
               typeConfig.color
             )}
           >
-            {typeConfig.label}
+            <span>{typeConfig.label}</span>
+            {contractType === 'RWA_TOKEN' && tokenStandard && ['ERC721', 'ERC1155', 'ERC3525'].includes(tokenStandard) && (
+              <span className="pl-1 border-l border-white/30">{tokenStandard}</span>
+            )}
           </span>
-        )}
-
-        {/* 代币标准徽标 - 左下角 */}
-        {contractType === 'RWA_TOKEN' && tokenStandard && ['ERC721', 'ERC1155', 'ERC3525'].includes(tokenStandard) && (
-          <div className="absolute bottom-2 left-2 z-10 px-2 py-1 rounded-md bg-blue-500 text-white text-xs font-medium shadow-md">
-            {tokenStandard}
-          </div>
         )}
 
         {/* RWA 交易模式徽标 - 右下角 */}
