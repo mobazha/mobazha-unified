@@ -85,6 +85,12 @@ export interface ProductMetadata {
   coinType?: string;
   coinDivisibility?: number;
   priceModifier?: number;
+  /** RWA 交易模式: 0=即时交易, 1=需确认交易 */
+  rwaTradeMode?: number;
+  /** RWA 托管超时时间（秒） */
+  rwaEscrowTimeoutSeconds?: number;
+  /** RWA 托管超时时间（秒）- 备用字段名 */
+  escrowTimeoutSeconds?: number;
 }
 
 /**
