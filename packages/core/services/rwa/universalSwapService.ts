@@ -26,10 +26,13 @@ export type TradeModeType = (typeof TradeMode)[keyof typeof TradeMode];
 
 // UniversalSwap 合约 ABI - 支持即时交易和确认交易双模式
 const UniversalSwapABI = [
-  // 创建订单 (卖家调用)
-  'function createOrder(uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, address buyer, bytes32 externalOrderId, uint8 tradeMode, uint64 escrowTimeoutSeconds) external returns (uint256 orderId)',
+  // 卖家创建订单
+  'function createOrder(uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, address buyer, bytes32 externalOrderId, uint8 tradeMode, uint256 escrowTimeoutSeconds) external returns (uint256 orderId)',
 
-  // 买家购买入口 - 根据订单的 tradeMode 路由到不同逻辑
+  // 【新增】买家创建订单并支付（合并 createOrder + buy）
+  'function createOrderByBuyer(address seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode, uint256 escrowTimeoutSeconds) external returns (uint256 orderId)',
+
+  // 买家购买入口（用于已存在的订单）- 根据订单的 tradeMode 路由到不同逻辑
   'function buy(uint256 orderId) external',
   'function buyByExternalId(bytes32 externalOrderId) external',
 
@@ -67,9 +70,10 @@ const UniversalSwapABI = [
   'function feeRecipient() external view returns (address)',
 
   // 事件
-  'event OrderCreated(uint256 indexed orderId, address indexed seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode)',
+  'event OrderCreated(uint256 indexed orderId, address indexed seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId)',
+  'event OrderCreatedByBuyer(uint256 indexed orderId, address indexed seller, address indexed buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode)',
   'event SwapExecuted(uint256 indexed orderId, address indexed seller, address indexed buyer, uint256 amount, uint256 price, uint256 platformFeeAmount)',
-  'event PaymentLocked(uint256 indexed orderId, address indexed buyer, uint256 amount)',
+  'event PaymentLocked(uint256 indexed orderId, address indexed buyer, uint256 amount, uint256 expiresAt)',
   'event PaymentCancelled(uint256 indexed orderId, address indexed buyer, uint256 amount)',
   'event PaymentExpired(uint256 indexed orderId, address indexed buyer, uint256 amount)',
   'event OrderCancelled(uint256 indexed orderId, address indexed seller)',
@@ -362,7 +366,98 @@ export class UniversalSwapService {
   }
 
   /**
-   * 买家: 购买 (统一入口，根据订单交易模式自动处理)
+   * 【新设计】买家创建订单并支付
+   * 合并 createOrder + buy，由买家一次调用完成
+   * - 即时模式：创建订单 + 直接完成原子交换
+   * - 确认模式：创建订单 + 锁定资金等待卖家确认
+   */
+  async createOrderByBuyer(
+    orderData: CreateOrderData & {
+      seller: string;
+      tradeMode?: TradeModeType;
+      escrowTimeoutSeconds?: number;
+    }
+  ): Promise<RwaCreateOrderResult & { tradeMode?: string }> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      const {
+        seller,
+        tokenStandard,
+        tokenContract,
+        tokenId,
+        amount,
+        paymentToken,
+        price,
+        externalOrderId,
+        tradeMode = TradeMode.Instant,
+        escrowTimeoutSeconds = 86400,
+      } = orderData;
+
+      console.log('🛒 买家创建订单并支付...');
+      console.log('📍 卖家地址:', seller);
+      console.log('📋 Mobazha 订单ID:', externalOrderId);
+      console.log('📋 交易模式:', tradeMode === TradeMode.Instant ? '即时交易' : '需要确认');
+      console.log('💰 价格:', price);
+
+      const standard = this.parseTokenStandard(tokenStandard);
+      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
+
+      const tx = await this.contract.createOrderByBuyer(
+        seller,
+        standard,
+        tokenContract,
+        tokenId,
+        amount,
+        paymentToken,
+        price,
+        hashedExternalId,
+        tradeMode,
+        escrowTimeoutSeconds
+      );
+
+      const receipt = await tx.wait();
+
+      // 从事件中获取订单ID和交易模式
+      let orderId: string | undefined;
+      let resultTradeMode = 'unknown';
+
+      for (const log of receipt.logs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+          if (parsed?.name === 'OrderCreatedByBuyer') {
+            orderId = parsed.args.orderId.toString();
+          } else if (parsed?.name === 'SwapExecuted') {
+            resultTradeMode = 'instant';
+          } else if (parsed?.name === 'PaymentLocked') {
+            resultTradeMode = 'locked';
+          }
+        } catch {
+          // 忽略无法解析的日志
+        }
+      }
+
+      console.log('✅ 买家创建订单成功');
+      console.log('🔢 合约订单ID:', orderId);
+      console.log('📋 结果模式:', resultTradeMode);
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+        orderId,
+        externalOrderId,
+        tradeMode: resultTradeMode,
+      };
+    } catch (error) {
+      console.error('❌ 买家创建订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 买家: 购买（用于已存在的订单）- 统一入口，根据订单交易模式自动处理
    */
   async buy(orderId: string): Promise<RwaTransactionResult & { eventName?: string }> {
     try {

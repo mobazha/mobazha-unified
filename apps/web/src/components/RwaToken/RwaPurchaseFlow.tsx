@@ -18,7 +18,9 @@ import {
   resolveRwaAsset,
   UniversalSwapService,
   TradeMode,
+  getContractAddress,
 } from '@mobazha/core';
+import { ethers } from 'ethers';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -199,6 +201,21 @@ export function RwaPurchaseFlow({
     }
   }, [openModal, t]);
 
+  // 根据支付币种获取支付代币地址
+  const getPaymentTokenAddress = useCallback((paymentCoin: string, chainId: number): string => {
+    // 解析支付币种，如 ETHUSDT -> USDT
+    const tokenSymbol = paymentCoin.replace(/^(ETH|BSC|MATIC|CFX)/, '');
+
+    if (tokenSymbol === 'USDT') {
+      return getContractAddress('USDT', chainId);
+    } else if (tokenSymbol === 'USDC') {
+      return getContractAddress('USDC', chainId);
+    }
+
+    // ETH 原生支付
+    return ethers.ZeroAddress;
+  }, []);
+
   // 授权并执行交易
   const handleApproveAndExecute = useCallback(async () => {
     if (!swapService) {
@@ -215,51 +232,85 @@ export function RwaPurchaseFlow({
       const externalOrderId =
         (order.contract as any)?.OrderID || (order.contract as any)?.orderID || '';
 
-      // 1. 授权支付代币
-      // 这里需要从订单中获取支付代币地址和金额
-      // 暂时使用模拟逻辑，实际需要从后端获取
-      const listing = order.contract?.vendorListings?.[0];
-      const paymentCoin = order.contract?.buyerOrder?.payment?.coin || 'ETHUSDT';
+      // 获取支付信息
+      const orderOpen = (order.contract as any)?.orderOpen;
+      const paymentCoin = orderOpen?.pricingCoin || 'ETHUSDT';
+      const chainId = getCurrentChainId() ? Number(getCurrentChainId()) : 11155111;
+      const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
 
-      // 获取支付代币配置（从 cryptoListingCurrencyCode 解析链信息）
-      // TODO: 实际实现需要从配置中获取支付代币地址
+      // 计算支付金额
+      const listing = orderOpen?.listings?.[0]?.listing;
+      const item = orderOpen?.items?.[0];
+      const price = Number(listing?.item?.price) || 0;
+      const quantity = Number(item?.quantity) || 1;
+      const pricingDivisibility = listing?.metadata?.pricingCurrency?.divisibility || 2;
+      const usdAmount = (price * quantity) / Math.pow(10, pricingDivisibility);
+      const paymentAmount = Math.floor(usdAmount * 1e6).toString(); // USDT 有 6 位小数
 
+      console.log('🛒 RWA 购买参数:', {
+        externalOrderId,
+        paymentCoin,
+        paymentTokenAddress,
+        paymentAmount,
+        isConfirmRequired,
+      });
+
+      // Step 1: 授权支付代币
+      if (paymentTokenAddress !== ethers.ZeroAddress) {
+        console.log('🔧 授权支付代币...');
+        const approvalResult = await swapService.approvePaymentToken(
+          paymentTokenAddress,
+          paymentAmount
+        );
+
+        if (!approvalResult.success) {
+          throw new Error(t('rwa.purchase.approveFailed') || '支付代币授权失败');
+        }
+        console.log('✅ 授权成功');
+      }
+
+      // Step 2: 调用 buy() 执行购买
+      // buy() 会根据订单的 tradeMode 自动路由到即时交易或资金锁定
       if (isConfirmRequired) {
-        // 确认交易模式：锁定资金
         setStep('locking');
+      } else {
+        setStep('executing');
+      }
 
-        // 调用 buyByExternalId 锁定资金
-        const result = await swapService.buyByExternalId(externalOrderId);
+      console.log('🔧 执行购买...');
+      const result = await swapService.buyByExternalId(externalOrderId);
 
-        if (result.success && result.transactionHash) {
-          setTxHash(result.transactionHash);
+      if (result.success && result.transactionHash) {
+        console.log('✅ 购买成功，事件:', result.eventName);
+        setTxHash(result.transactionHash);
+
+        if (isConfirmRequired) {
+          // 确认交易模式：资金锁定，等待卖家确认
           setStep('waiting');
         } else {
-          throw new Error(result.message || t('rwa.purchase.lockFailed'));
-        }
-      } else {
-        // 即时交易模式：直接执行交换
-        setStep('executing');
-
-        // 调用 executeSwapByExternalId 执行交换
-        const result = await swapService.executeSwapByExternalId(externalOrderId);
-
-        if (result.success && result.transactionHash) {
-          setTxHash(result.transactionHash);
+          // 即时交易模式：交易完成
           setStep('completed');
           onSuccess?.();
-        } else {
-          throw new Error(result.message || t('rwa.purchase.executeFailed'));
         }
+      } else {
+        throw new Error(result.message || t('rwa.purchase.executeFailed'));
       }
     } catch (err) {
-      console.error('Purchase failed:', err);
+      console.error('❌ 购买失败:', err);
       setError(err instanceof Error ? err.message : t('rwa.purchase.failed'));
       setStep('error');
     } finally {
       setIsProcessing(false);
     }
-  }, [swapService, order, isConfirmRequired, onSuccess, t]);
+  }, [
+    swapService,
+    order,
+    isConfirmRequired,
+    onSuccess,
+    t,
+    getCurrentChainId,
+    getPaymentTokenAddress,
+  ]);
 
   // 取消锁定
   const handleCancelLock = useCallback(async () => {
