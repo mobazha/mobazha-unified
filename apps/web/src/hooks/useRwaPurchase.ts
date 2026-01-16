@@ -9,11 +9,14 @@ import {
   useI18n,
   UniversalSwapService,
   TradeMode,
-  type TradeModeType,
+  ordersApi,
+  SEPOLIA_CONFIG,
   getContractAddress,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
-import { ethers } from 'ethers';
+
+// 以太坊零地址常量
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 /**
  * 购买步骤
@@ -206,7 +209,7 @@ export function useRwaPurchase({
     }
 
     // ETH 原生支付
-    return ethers.ZeroAddress;
+    return ZERO_ADDRESS;
   }, []);
 
   // 从订单获取支付金额
@@ -289,7 +292,7 @@ export function useRwaPurchase({
       // Step 1: 授权支付代币
       setState(prev => ({ ...prev, step: 'approving' }));
 
-      if (paymentTokenAddress !== ethers.ZeroAddress) {
+      if (paymentTokenAddress !== ZERO_ADDRESS) {
         console.log('🔧 授权支付代币...');
         const approvalResult = await swapService.approvePaymentToken(
           paymentTokenAddress,
@@ -337,6 +340,33 @@ export function useRwaPurchase({
         console.log('✅ 购买成功');
         console.log('   合约订单ID:', result.orderId);
         console.log('   交易模式:', result.tradeMode);
+
+        // Step 3: 提交支付数据到后端
+        const isInstantComplete = result.tradeMode === 'completed';
+        // 获取 UniversalSwap 合约地址（目前仅支持 Sepolia）
+        const universalSwapAddress = SEPOLIA_CONFIG.universalSwapAddress;
+
+        try {
+          console.log('🔧 提交支付数据到后端...');
+          await ordersApi.submitPayment({
+            orderID: externalOrderId,
+            transactionID: result.transactionHash,
+            coin: paymentCoin,
+            amount: paymentAmount,
+            timestamp: new Date().toISOString(),
+            method: isConfirmRequired ? 4 : 3, // 4: RWA_PAYMENT_LOCKED, 3: RWA_ATOMIC_SWAP
+            paymentTokenAddress: paymentTokenAddress,
+            contractAddress: universalSwapAddress,
+            buyerReceiveAddress: walletInfo?.address || '',
+            contractOrderId: result.orderId,
+            rwaTradeMode: tradeMode,
+            rwaOrderCompleted: isInstantComplete,
+          });
+          console.log('✅ 后端状态同步成功');
+        } catch (submitErr) {
+          console.warn('⚠️ 后端状态同步失败（链上交易已完成）:', submitErr);
+          // 后端同步失败不影响链上交易结果
+        }
 
         if (result.tradeMode === 'locked') {
           // 确认交易模式：资金锁定，等待卖家确认
@@ -393,6 +423,7 @@ export function useRwaPurchase({
     getCurrentChainId,
     getPaymentTokenAddress,
     getPaymentAmount,
+    walletInfo,
   ]);
 
   // 取消购买（锁定模式）
