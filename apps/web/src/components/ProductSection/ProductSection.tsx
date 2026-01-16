@@ -30,6 +30,8 @@ interface Product {
   isDigital?: boolean;
   /** 商品合约类型 */
   contractType?: ProductContractType;
+  /** 代币标准 */
+  tokenStandard?: string;
   /** RWA 交易模式 */
   rwaTradeMode?: RwaTradeMode;
   /** 仲裁员 peerID 列表 */
@@ -150,6 +152,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       freeShipping={product.freeShipping}
                       isDigital={product.isDigital}
                       contractType={product.contractType}
+                      tokenStandard={product.tokenStandard}
                       rwaTradeMode={product.rwaTradeMode}
                       hasVerifiedModerator={hasVerifiedMod(product.moderators)}
                       isOwnListing={isOwnListing}

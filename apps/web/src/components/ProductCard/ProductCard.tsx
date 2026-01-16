@@ -31,6 +31,9 @@ export type ProductContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' |
 /** RWA 交易模式类型 */
 export type RwaTradeMode = 'instant' | 'confirm_required' | number;
 
+/** 代币标准类型 */
+export type TokenStandard = 'ERC721' | 'ERC1155' | 'ERC3525' | string;
+
 export interface ProductCardProps {
   /** 商品标题 */
   title: string;
@@ -62,6 +65,8 @@ export interface ProductCardProps {
   isDigital?: boolean;
   /** 商品合约类型 */
   contractType?: ProductContractType;
+  /** 代币标准 (ERC721/ERC1155/ERC3525) */
+  tokenStandard?: TokenStandard;
   /** RWA 交易模式 (0=instant, 1=confirm_required) */
   rwaTradeMode?: RwaTradeMode;
   /** 是否有认证的仲裁员 */
@@ -114,6 +119,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   freeShipping = false,
   isDigital = false,
   contractType,
+  tokenStandard,
   rwaTradeMode,
   hasVerifiedModerator = false,
   isOwnListing = false,
@@ -254,7 +260,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         )}
 
-        {/* RWA 交易模式徽标 */}
+        {/* 代币标准徽标 - 左下角 */}
+        {contractType === 'RWA_TOKEN' && tokenStandard && ['ERC721', 'ERC1155', 'ERC3525'].includes(tokenStandard) && (
+          <div className="absolute bottom-2 left-2 z-10 px-2 py-1 rounded-md bg-blue-500 text-white text-xs font-medium shadow-md">
+            {tokenStandard}
+          </div>
+        )}
+
+        {/* RWA 交易模式徽标 - 右下角 */}
         {contractType === 'RWA_TOKEN' && (
           <div
             className={cn(
