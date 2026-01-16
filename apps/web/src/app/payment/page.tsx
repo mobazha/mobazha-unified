@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import {
@@ -9,12 +9,14 @@ import {
   CheckoutBottomBar,
 } from '@/components/Payment';
 import { OrderSummaryCard } from '@/components/Order';
+import { RwaPurchaseFlow } from '@/components/RwaToken';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { usePaymentSelector } from '@/hooks';
-import { useWallet, useCurrency, useI18n } from '@mobazha/core';
+import { useWallet, useCurrency, useI18n, ordersApi, getImageUrl } from '@mobazha/core';
+import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
 // Types
@@ -50,6 +52,12 @@ interface OrderDetails {
     amount: string;
     currency: string;
   };
+  // RWA 相关
+  isRwaToken?: boolean;
+  rwaTradeMode?: number;
+  rwaEscrowTimeoutSeconds?: number;
+  cryptoListingCurrencyCode?: string;
+  contractType?: string;
 }
 
 /**
@@ -74,12 +82,17 @@ export default function PaymentPage() {
   const { toast } = useToast();
   const { isConnected, isConnecting, connect } = useWallet();
 
-  // 从 URL 获取订单 ID
+  // 从 URL 获取参数
   const orderID = searchParams.get('orderID');
+  const urlIsRwaToken = searchParams.get('isRwaToken') === 'true';
+  const urlRwaTradeMode = searchParams.get('rwaTradeMode');
+  const urlEscrowTimeout = searchParams.get('escrowTimeout');
+  const urlTokenCode = searchParams.get('tokenCode');
 
   // 订单数据状态
   const [isLoadingOrder, setIsLoadingOrder] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [rawOrder, setRawOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // 支付状态
@@ -124,43 +137,78 @@ export default function PaymentPage() {
       setError(null);
 
       try {
-        // TODO: 调用真实的订单详情 API
-        // const details = await orderApi.getOrderDetails(orderID);
+        // 调用真实的订单详情 API
+        const order = await ordersApi.getOrderDetails(orderID);
+        setRawOrder(order);
 
-        // Mock 订单数据
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const mockOrder: OrderDetails = {
-          orderID,
-          status: 'AWAITING_PAYMENT',
-          items: [
-            {
-              id: 'product-1',
-              title: 'Sample Product - Digital Art NFT Collection',
-              price: 99.99,
-              currency: 'USD',
-              quantity: 1,
-              image: '',
-            },
-          ],
+        // 从订单中提取商品信息
+        const contract = order?.contract;
+        const listings = contract?.vendorListings || [];
+        const orderItems = contract?.buyerOrder?.items || [];
+
+        // 判断是否为 RWA Token
+        const metadata = listings[0]?.metadata as any;
+        const contractType = metadata?.contractType;
+        const isRwa = urlIsRwaToken || contractType === 'RWA_TOKEN';
+        const rwaMode = urlRwaTradeMode ? parseInt(urlRwaTradeMode, 10) : metadata?.rwaTradeMode;
+        const escrowTimeout = urlEscrowTimeout
+          ? parseInt(urlEscrowTimeout, 10)
+          : metadata?.rwaEscrowTimeoutSeconds || metadata?.escrowTimeoutSeconds || 86400;
+        const tokenCode = urlTokenCode || (listings[0]?.item as any)?.cryptoListingCurrencyCode;
+
+        // 转换为 OrderDetails 格式
+        const items = listings.map((listing, index) => {
+          const orderItem = orderItems[index] || {};
+          const price = Number(listing.item?.price) || 0;
+          const currency = listing.metadata?.pricingCurrency?.code || 'USD';
+          const imageUrl = listing.item?.images?.[0]?.medium || listing.item?.images?.[0]?.small;
+
+          return {
+            id: listing.slug || `item-${index}`,
+            title: listing.item?.title || 'Unknown Product',
+            price,
+            currency,
+            quantity: Number(orderItem.quantity) || 1,
+            image: getImageUrl(imageUrl) || '',
+          };
+        });
+
+        // 获取地址信息
+        const shipping = contract?.buyerOrder?.shipping as any;
+
+        const orderDetailsData: OrderDetails = {
+          orderID: (contract as any)?.OrderID || (contract as any)?.orderID || orderID,
+          status: order?.state || 'AWAITING_PAYMENT',
+          items,
           vendor: {
-            name: 'Digital Art Store',
-            peerID: '12D3KooW...',
+            name:
+              listings[0]?.vendorID?.handle ||
+              listings[0]?.vendorID?.peerID?.slice(0, 8) ||
+              'Unknown',
+            peerID: listings[0]?.vendorID?.peerID || '',
           },
           shippingAddress: {
-            name: 'John Doe',
-            street: '123 Main Street, Apt 4B',
-            city: 'San Francisco',
-            state: 'CA',
-            country: 'United States',
-            postalCode: '94102',
+            name: shipping?.shipTo || shipping?.name || '',
+            street: shipping?.address || shipping?.street || '',
+            city: shipping?.city || '',
+            state: shipping?.state || '',
+            country: shipping?.country || '',
+            postalCode: shipping?.postalCode || '',
           },
-          memo: 'Please handle with care',
-          subtotal: 99.99,
-          total: 99.99,
-          currency: 'USD',
+          memo: contract?.buyerOrder?.alternateContactInfo,
+          subtotal: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          currency: items[0]?.currency || 'USD',
+          paymentAddress: contract?.buyerOrder?.payment?.address,
+          // RWA 相关
+          isRwaToken: isRwa,
+          rwaTradeMode: rwaMode,
+          rwaEscrowTimeoutSeconds: escrowTimeout,
+          cryptoListingCurrencyCode: tokenCode,
+          contractType,
         };
 
-        setOrderDetails(mockOrder);
+        setOrderDetails(orderDetailsData);
       } catch (err) {
         console.error('Failed to fetch order details:', err);
         setError(t('payment.loadOrderFailed'));
@@ -170,7 +218,7 @@ export default function PaymentPage() {
     };
 
     fetchOrderDetails();
-  }, [orderID, t]);
+  }, [orderID, t, urlIsRwaToken, urlRwaTradeMode, urlEscrowTimeout, urlTokenCode]);
 
   // 计算仲裁员费用
   const moderatorFee = React.useMemo(() => {
@@ -357,172 +405,193 @@ export default function PaymentPage() {
                   orderID={orderDetails.orderID}
                   items={orderDetails.items}
                   vendor={orderDetails.vendor}
-                  shippingAddress={orderDetails.shippingAddress}
+                  shippingAddress={
+                    orderDetails.isRwaToken ? undefined : orderDetails.shippingAddress
+                  }
                   memo={orderDetails.memo}
                 />
 
-                {/* Payment Method Selection */}
-                <Card>
-                  <CardContent className="p-4 sm:p-6">
-                    <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('payment.paymentMethod')}
-                    </h2>
-                    <PaymentMethodSummary
-                      selectedTokenId={selectedTokenId}
-                      onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
-                    />
-                  </CardContent>
-                </Card>
+                {/* RWA Token 支付流程 */}
+                {orderDetails.isRwaToken ? (
+                  <RwaPurchaseFlow
+                    order={rawOrder!}
+                    rwaTradeMode={orderDetails.rwaTradeMode}
+                    escrowTimeoutSeconds={orderDetails.rwaEscrowTimeoutSeconds}
+                    cryptoListingCurrencyCode={orderDetails.cryptoListingCurrencyCode}
+                    onSuccess={() => {
+                      toast({ title: t('payment.success') });
+                      router.push(`/orders/${orderDetails.orderID}`);
+                    }}
+                    onCancel={() => router.back()}
+                  />
+                ) : (
+                  <>
+                    {/* Payment Method Selection */}
+                    <Card>
+                      <CardContent className="p-4 sm:p-6">
+                        <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                          {t('payment.paymentMethod')}
+                        </h2>
+                        <PaymentMethodSummary
+                          selectedTokenId={selectedTokenId}
+                          onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
+                        />
+                      </CardContent>
+                    </Card>
 
-                {/* Payment Protection */}
-                <PaymentProtectionCard
-                  enabled={paymentProtectionEnabled}
-                  onEnabledChange={setPaymentProtectionEnabled}
-                  selectedModerator={paymentModerator}
-                  onChangeModerator={() => openModeratorSelector('/payment?orderID=' + orderID)}
-                  protectionDays={45}
-                />
+                    {/* Payment Protection */}
+                    <PaymentProtectionCard
+                      enabled={paymentProtectionEnabled}
+                      onEnabledChange={setPaymentProtectionEnabled}
+                      selectedModerator={paymentModerator}
+                      onChangeModerator={() => openModeratorSelector('/payment?orderID=' + orderID)}
+                      protectionDays={45}
+                    />
+                  </>
+                )}
               </div>
 
-              {/* Payment Summary */}
-              <div className="space-y-4 sm:space-y-6">
-                <Card className="sticky top-4">
-                  <CardContent className="p-4 sm:p-6">
-                    <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                      {t('payment.paymentSummary')}
-                    </h2>
+              {/* Payment Summary - 仅非 RWA 商品显示 */}
+              {!orderDetails.isRwaToken && (
+                <div className="space-y-4 sm:space-y-6">
+                  <Card className="sticky top-4">
+                    <CardContent className="p-4 sm:p-6">
+                      <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                        {t('payment.paymentSummary')}
+                      </h2>
 
-                    <VStack gap="sm" className="border-b border-border pb-3 mb-3">
-                      <HStack justify="between">
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          {t('payment.orderTotal')}
-                        </span>
-                        <span className="font-medium text-foreground text-xs sm:text-sm">
-                          {renderPairedPrice(orderDetails.total, orderDetails.currency)}
-                        </span>
-                      </HStack>
-
-                      {paymentProtectionEnabled && paymentModerator && moderatorFee > 0 && (
+                      <VStack gap="sm" className="border-b border-border pb-3 mb-3">
                         <HStack justify="between">
                           <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('payment.moderatorFee')}
+                            {t('payment.orderTotal')}
                           </span>
                           <span className="font-medium text-foreground text-xs sm:text-sm">
-                            {renderPairedPrice(moderatorFee, orderDetails.currency)}
+                            {renderPairedPrice(orderDetails.total, orderDetails.currency)}
                           </span>
                         </HStack>
-                      )}
-                    </VStack>
 
-                    <HStack justify="between" className="mb-4">
-                      <span className="text-base sm:text-lg font-semibold text-foreground">
-                        {t('payment.totalToPay')}
-                      </span>
-                      <div className="text-right">
-                        <p className="text-lg sm:text-xl font-bold text-primary">
-                          {renderPairedPrice(totalWithFee, orderDetails.currency)}
-                        </p>
-                        {selectedTokenId && (
-                          <p className="text-xs text-muted-foreground">
-                            ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
-                          </p>
+                        {paymentProtectionEnabled && paymentModerator && moderatorFee > 0 && (
+                          <HStack justify="between">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
+                              {t('payment.moderatorFee')}
+                            </span>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">
+                              {renderPairedPrice(moderatorFee, orderDetails.currency)}
+                            </span>
+                          </HStack>
                         )}
-                      </div>
-                    </HStack>
+                      </VStack>
 
-                    {/* Pay Button - Desktop */}
-                    <Button
-                      className="w-full touch-feedback hidden sm:flex"
-                      size="default"
-                      onClick={!isConnected ? connect : handlePayment}
-                      disabled={
-                        isProcessing ||
-                        isConnecting ||
-                        (isConnected &&
-                          (!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)))
-                      }
-                    >
-                      {isProcessing ? (
-                        <HStack gap="sm" align="center" justify="center">
-                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          <span>{t('payment.processing')}</span>
-                        </HStack>
-                      ) : isConnecting ? (
-                        <HStack gap="sm" align="center" justify="center">
-                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          <span>{t('payment.connecting')}</span>
-                        </HStack>
-                      ) : !isConnected ? (
-                        t('payment.connectWallet')
-                      ) : (
-                        `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
-                      )}
-                    </Button>
+                      <HStack justify="between" className="mb-4">
+                        <span className="text-base sm:text-lg font-semibold text-foreground">
+                          {t('payment.totalToPay')}
+                        </span>
+                        <div className="text-right">
+                          <p className="text-lg sm:text-xl font-bold text-primary">
+                            {renderPairedPrice(totalWithFee, orderDetails.currency)}
+                          </p>
+                          {selectedTokenId && (
+                            <p className="text-xs text-muted-foreground">
+                              ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
+                            </p>
+                          )}
+                        </div>
+                      </HStack>
 
-                    {/* Warnings */}
-                    {!selectedTokenId && (
-                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
-                        <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
-                          {t('payment.selectPaymentMethodWarning')}
-                        </p>
-                      </div>
-                    )}
-                    {paymentProtectionEnabled && !paymentModerator && (
-                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
-                        <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
-                          {t('payment.selectModeratorWarning')}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Security Note */}
-                    <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
-                      <svg
-                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      {/* Pay Button - Desktop */}
+                      <Button
+                        className="w-full touch-feedback hidden sm:flex"
+                        size="default"
+                        onClick={!isConnected ? connect : handlePayment}
+                        disabled={
+                          isProcessing ||
+                          isConnecting ||
+                          (isConnected &&
+                            (!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)))
+                        }
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
-                      <span>{t('payment.securityNote')}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                        {isProcessing ? (
+                          <HStack gap="sm" align="center" justify="center">
+                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            <span>{t('payment.processing')}</span>
+                          </HStack>
+                        ) : isConnecting ? (
+                          <HStack gap="sm" align="center" justify="center">
+                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            <span>{t('payment.connecting')}</span>
+                          </HStack>
+                        ) : !isConnected ? (
+                          t('payment.connectWallet')
+                        ) : (
+                          `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
+                        )}
+                      </Button>
+
+                      {/* Warnings */}
+                      {!selectedTokenId && (
+                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
+                          <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+                            {t('payment.selectPaymentMethodWarning')}
+                          </p>
+                        </div>
+                      )}
+                      {paymentProtectionEnabled && !paymentModerator && (
+                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
+                          <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+                            {t('payment.selectModeratorWarning')}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Security Note */}
+                      <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
+                        <svg
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                        <span>{t('payment.securityNote')}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           ) : null}
         </Container>
@@ -530,8 +599,8 @@ export default function PaymentPage() {
 
       <Footer />
 
-      {/* Mobile Bottom Bar */}
-      {orderDetails && (
+      {/* Mobile Bottom Bar - 仅非 RWA 商品显示 */}
+      {orderDetails && !orderDetails.isRwaToken && (
         <CheckoutBottomBar
           totalAmount={totalWithFee}
           currency={orderDetails.currency}
