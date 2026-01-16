@@ -51,12 +51,16 @@ export function RwaAssetDetail({
 
   // 格式化超时时间
   const formatEscrowTimeout = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    if (hours >= 24) {
-      const days = Math.floor(hours / 24);
+    if (seconds >= 86400) {
+      const days = Math.floor(seconds / 86400);
       return `${days} ${t('common.days') || '天'}`;
     }
-    return `${hours} ${t('common.hours') || '小时'}`;
+    if (seconds >= 3600) {
+      const hours = Math.floor(seconds / 3600);
+      return `${hours} ${t('common.hours') || '小时'}`;
+    }
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} ${t('common.minutes') || '分钟'}`;
   };
 
   // 非 RWA 商品不显示
