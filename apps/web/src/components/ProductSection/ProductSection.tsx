@@ -4,7 +4,12 @@ import React, { useCallback } from 'react';
 import Link from 'next/link';
 import { Container, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
+import {
+  ProductCard,
+  ProductCardSkeleton,
+  type ProductContractType,
+  type RwaTradeMode,
+} from '@/components/ProductCard';
 import { useProductModal } from '@/hooks';
 import { useUserStore, useVerifiedModerators } from '@mobazha/core';
 
@@ -23,6 +28,10 @@ interface Product {
   reviewCount?: number;
   freeShipping?: boolean;
   isDigital?: boolean;
+  /** 商品合约类型 */
+  contractType?: ProductContractType;
+  /** RWA 交易模式 */
+  rwaTradeMode?: RwaTradeMode;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
 }
@@ -140,6 +149,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       reviewCount={product.reviewCount}
                       freeShipping={product.freeShipping}
                       isDigital={product.isDigital}
+                      contractType={product.contractType}
+                      rwaTradeMode={product.rwaTradeMode}
                       hasVerifiedModerator={hasVerifiedMod(product.moderators)}
                       isOwnListing={isOwnListing}
                       onReport={() => handleReport(product)}

@@ -28,6 +28,8 @@ export interface ProductListItem {
   freeShipping?: string[];
   nsfw?: boolean;
   contractType?: ContractType;
+  /** RWA 交易模式: 0=即时, 1=需确认 */
+  rwaTradeMode?: number;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
   /** 商品分类 */

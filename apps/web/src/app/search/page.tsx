@@ -350,6 +350,7 @@ function SearchPageContent() {
         rating={product.rating}
         reviewCount={product.reviewCount}
         contractType={product.contractType}
+        rwaTradeMode={product.rwaTradeMode}
         hasVerifiedModerator={hasVerifiedMod(product.moderators)}
         onReport={() => handleReport(product)}
         onBlock={() => handleBlock(product)}
