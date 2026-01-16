@@ -662,6 +662,52 @@ export async function refundOrder(
 // ========== 支付相关 API ==========
 
 /**
+ * 提交支付数据（RWA 原子交换专用）
+ * 用于通知后端支付已完成
+ */
+export interface SubmitPaymentData {
+  orderID: string;
+  transactionID: string;
+  coin: string;
+  amount: string;
+  timestamp: string;
+  method: number; // 3: RWA_ATOMIC_SWAP, 4: RWA_PAYMENT_LOCKED
+  paymentTokenAddress?: string;
+  contractAddress?: string;
+  buyerReceiveAddress?: string;
+  approvalTxHash?: string;
+  contractOrderId?: string;
+  rwaTradeMode?: number; // 0: Instant, 1: ConfirmRequired
+  rwaOrderCompleted?: boolean;
+}
+
+/**
+ * 提交支付
+ */
+export async function submitPayment(
+  paymentData: SubmitPaymentData,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/order/payment`;
+    return post<{ success: boolean; error?: string }>(
+      url,
+      { paymentData },
+      getAuthHeaders(username, password)
+    );
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    console.log('📤 [Mock] submitPayment:', paymentData);
+    return { success: true };
+  };
+
+  return withMockFallback(realFn, mockFn, '/order/payment');
+}
+
+/**
  * 支付订单
  */
 export async function fundOrder(
@@ -905,6 +951,7 @@ export const ordersApi = {
   refundOrder,
 
   // 支付
+  submitPayment,
   fundOrder,
   getPaymentInstructions,
   getPaymentRemaining,
