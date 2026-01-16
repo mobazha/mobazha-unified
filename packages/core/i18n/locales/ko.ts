@@ -895,6 +895,8 @@ export const ko: TranslationResource = {
       youReceivedOrder: '새 주문을 받았습니다',
       yourPaymentSent: '결제가 전송되었습니다',
       sentPayment: '결제를 보냈습니다',
+      paymentLocked: '결제가 잠금 처리되었습니다',
+      lockedPayment: '결제를 잠금 처리했습니다',
       orderFunded: '주문이 입금되었습니다',
       orderConfirmed: '주문이 확인되었습니다',
       orderFulfilled: '주문이 발송되었습니다',

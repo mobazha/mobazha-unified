@@ -896,6 +896,8 @@ export const ja: TranslationResource = {
       youReceivedOrder: '新しい注文を受け取りました',
       yourPaymentSent: '支払いが送信されました',
       sentPayment: '支払いを送信しました',
+      paymentLocked: '支払いがロックされました',
+      lockedPayment: '支払いをロックしました',
       orderFunded: '注文が入金されました',
       orderConfirmed: '注文が確認されました',
       orderFulfilled: '注文が発送されました',

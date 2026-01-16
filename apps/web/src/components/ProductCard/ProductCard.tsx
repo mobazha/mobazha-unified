@@ -28,6 +28,9 @@ function decodeHtmlEntities(text: string): string {
 /** 商品合约类型 */
 export type ProductContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
 
+/** RWA 交易模式类型 */
+export type RwaTradeMode = 'instant' | 'confirm_required' | number;
+
 export interface ProductCardProps {
   /** 商品标题 */
   title: string;
@@ -59,6 +62,8 @@ export interface ProductCardProps {
   isDigital?: boolean;
   /** 商品合约类型 */
   contractType?: ProductContractType;
+  /** RWA 交易模式 (0=instant, 1=confirm_required) */
+  rwaTradeMode?: RwaTradeMode;
   /** 是否有认证的仲裁员 */
   hasVerifiedModerator?: boolean;
   /** 是否为自己的商品 (自己的商品不显示 report/block) */
@@ -109,6 +114,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   freeShipping = false,
   isDigital = false,
   contractType,
+  rwaTradeMode,
   hasVerifiedModerator = false,
   isOwnListing = false,
   compact = false,
@@ -246,6 +252,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             {typeConfig.label}
           </span>
+        )}
+
+        {/* RWA 交易模式徽标 */}
+        {contractType === 'RWA_TOKEN' && (
+          <div
+            className={cn(
+              'absolute bottom-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium shadow-md',
+              rwaTradeMode === 1 || rwaTradeMode === 'confirm_required'
+                ? 'bg-orange-500'
+                : 'bg-emerald-500'
+            )}
+          >
+            <span className="text-sm">
+              {rwaTradeMode === 1 || rwaTradeMode === 'confirm_required' ? '🔒' : '⚡'}
+            </span>
+            <span>
+              {rwaTradeMode === 1 || rwaTradeMode === 'confirm_required' ? 'Confirm' : 'Instant'}
+            </span>
+          </div>
         )}
 
         {/* Hover 操作按钮 - Report 和 Block */}

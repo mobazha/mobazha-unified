@@ -896,6 +896,8 @@ export const de: TranslationResource = {
       youReceivedOrder: 'Sie haben eine neue Bestellung erhalten',
       yourPaymentSent: 'Ihre Zahlung wurde gesendet',
       sentPayment: 'hat Zahlung gesendet',
+      paymentLocked: 'Zahlung wurde gesperrt',
+      lockedPayment: 'hat Zahlung gesperrt',
       orderFunded: 'Bestellung wurde finanziert',
       orderConfirmed: 'Bestellung bestätigt',
       orderFulfilled: 'Bestellung erfüllt',

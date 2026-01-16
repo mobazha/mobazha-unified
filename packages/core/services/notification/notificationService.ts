@@ -27,9 +27,7 @@ import { getI18n } from '../../i18n/i18n';
 /**
  * 检查是否为通知包装消息
  */
-function isNotificationWrapper(
-  message: unknown
-): message is { notification: NotificationData } {
+function isNotificationWrapper(message: unknown): message is { notification: NotificationData } {
   return (
     typeof message === 'object' &&
     message !== null &&
@@ -44,11 +42,7 @@ function isNotificationWrapper(
 function isChatMessage(
   message: unknown
 ): message is { chatMessage: { messageId: string; peerID: string; subject: string } } {
-  return (
-    typeof message === 'object' &&
-    message !== null &&
-    'chatMessage' in message
-  );
+  return typeof message === 'object' && message !== null && 'chatMessage' in message;
 }
 
 // ============ 显示文本生成 ============
@@ -103,11 +97,11 @@ function getOrderNotificationDisplay(
         : i18n.t('notifications.order.sentPayment');
       break;
 
-    case 'paymentAuthorized':
+    case 'paymentLocked':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
-        ? i18n.t('notifications.order.paymentAuthorized', { defaultValue: 'Payment has been authorized' })
-        : i18n.t('notifications.order.authorizedPayment', { defaultValue: 'Authorized payment' });
+        ? i18n.t('notifications.order.paymentLocked', { defaultValue: 'Payment has been locked' })
+        : i18n.t('notifications.order.lockedPayment', { defaultValue: 'Locked payment' });
       break;
 
     case 'orderFunded':
@@ -197,9 +191,10 @@ function getDisputeNotificationDisplay(
     case 'disputeOpen':
       name = disputerName;
       text = i18n.t('notifications.dispute.startedDispute');
-      route = buyer === disputerID
-        ? `/orders/purchases?orderID=${caseID || orderID}`
-        : `/orders/sales?orderID=${caseID || orderID}`;
+      route =
+        buyer === disputerID
+          ? `/orders/purchases?orderID=${caseID || orderID}`
+          : `/orders/sales?orderID=${caseID || orderID}`;
       break;
 
     case 'caseOpen':
@@ -224,9 +219,10 @@ function getDisputeNotificationDisplay(
     case 'disputeClose':
       name = otherPartyName;
       text = i18n.t('notifications.dispute.proposedOutcome');
-      route = buyer === otherPartyID
-        ? `/orders/purchases?orderID=${orderID}`
-        : `/orders/sales?orderID=${orderID}`;
+      route =
+        buyer === otherPartyID
+          ? `/orders/purchases?orderID=${orderID}`
+          : `/orders/sales?orderID=${orderID}`;
       break;
 
     case 'disputeAccepted':
