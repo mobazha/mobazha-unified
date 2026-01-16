@@ -509,6 +509,9 @@ export function ProductDetail({
   const estimatedDelivery = getEstimatedDelivery(product);
   const vendorPeerID = product.vendorID?.peerID;
   const acceptedCurrencies = product.metadata?.acceptedCurrencies || [];
+  const rwaTradeMode = product.metadata?.rwaTradeMode;
+  const rwaEscrowTimeoutSeconds =
+    product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
   const tags = product.item.tags || [];
   const category = product.item.categories?.[0] || '';
 
@@ -736,9 +739,14 @@ export function ProductDetail({
                       t('product.cryptocurrency')}
                     {product.metadata.contractType === 'RWA_TOKEN' &&
                       (t('product.rwaToken') || 'RWA Token')}
-                    {!['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE', 'CRYPTOCURRENCY', 'RWA_TOKEN'].includes(
-                      product.metadata.contractType
-                    ) && product.metadata.contractType.replace('_', ' ')}
+                    {![
+                      'PHYSICAL_GOOD',
+                      'DIGITAL_GOOD',
+                      'SERVICE',
+                      'CRYPTOCURRENCY',
+                      'RWA_TOKEN',
+                    ].includes(product.metadata.contractType) &&
+                      product.metadata.contractType.replace('_', ' ')}
                   </span>
                 </div>
               )}
@@ -760,10 +768,13 @@ export function ProductDetail({
 
             {/* RWA 资产详情 - 仅对 RWA_TOKEN 类型商品显示 */}
             {product.metadata?.contractType === 'RWA_TOKEN' && (
-              <RwaAssetDetail 
-                product={product} 
+              <RwaAssetDetail
+                product={product}
                 compact={isModal}
                 showPurchaseHint={true}
+                rwaTradeMode={rwaTradeMode}
+                escrowTimeoutSeconds={rwaEscrowTimeoutSeconds}
+                acceptedCurrencies={acceptedCurrencies}
               />
             )}
 
