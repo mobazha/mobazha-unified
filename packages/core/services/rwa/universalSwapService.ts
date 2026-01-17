@@ -1,6 +1,11 @@
 /**
  * UniversalSwap 服务
  * 处理与 UniversalSwap 合约的所有交互 (RWA 原子交换)
+ *
+ * 更新于 2026-01-17：适配新合约地址分离设计
+ * 支持两种交易模式：
+ * 1. Listing 模式（即时交易）：卖家挂单 -> 买家即时购买
+ * 2. Order 模式（确认交易）：买家创建订单 -> 卖家确认
  */
 
 import { ethers } from 'ethers';
@@ -18,65 +23,85 @@ import { TokenStandardEnum, getChainConfig } from '../../types/rwa';
 
 // 交易模式枚举
 export const TradeMode = {
-  Instant: 0, // 即时交易
-  ConfirmRequired: 1, // 需要确认
+  Instant: 0, // 即时交易（Listing 模式）
+  ConfirmRequired: 1, // 确认交易（Order 模式）
 } as const;
 
 export type TradeModeType = (typeof TradeMode)[keyof typeof TradeMode];
 
-// UniversalSwap 合约 ABI - 支持即时交易和确认交易双模式
+// 挂单状态枚举
+export const ListingStatus = {
+  Active: 0, // 可交易
+  SoldOut: 1, // 售罄
+  Cancelled: 2, // 已撤销
+} as const;
+
+export type ListingStatusType = (typeof ListingStatus)[keyof typeof ListingStatus];
+
+// UniversalSwap 合约 ABI - 支持 Listing（即时交易）和 Order（确认交易）双模式
 const UniversalSwapABI = [
-  // 卖家创建订单
-  'function createOrder(uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, address buyer, bytes32 externalOrderId, uint8 tradeMode, uint256 escrowTimeoutSeconds) external returns (uint256 orderId)',
+  // ============ Listing 模式（即时交易）============
+  // 卖家创建挂单（Token 锁定到合约）
+  'function createListing(address sellerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount) external returns (uint256 listingId)',
 
-  // 【新增】买家创建订单并支付（合并 createOrder + buy）
-  'function createOrderByBuyer(address seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode, uint256 escrowTimeoutSeconds) external returns (uint256 orderId)',
+  // 买家即时购买
+  'function instantBuy(uint256 listingId, bytes32 externalOrderId, address buyerIdentity, address buyerReceiveAddress, uint256 tokenAmount, address paymentToken, uint256 paymentAmount) external returns (uint256 orderId)',
 
-  // 买家购买入口（用于已存在的订单）- 根据订单的 tradeMode 路由到不同逻辑
-  'function buy(uint256 orderId) external',
-  'function buyByExternalId(bytes32 externalOrderId) external',
+  // 卖家撤销挂单
+  'function cancelListing(uint256 listingId) external',
 
-  // 执行原子交换 (即时交易模式)
-  'function executeSwap(uint256 orderId) external',
-  'function executeSwapByExternalId(bytes32 externalOrderId) external',
+  // ============ Order 模式（确认交易）============
+  // 买家创建订单并锁定资金（仅确认交易模式）
+  'function createOrderByBuyer(address seller, address buyerIdentity, address buyerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint256 escrowTimeoutSeconds) external returns (uint256 orderId)',
 
-  // 卖家确认订单 (确认交易模式)
-  'function confirmOrder(uint256 orderId) external',
-  'function confirmOrderByExternalId(bytes32 externalOrderId) external',
+  // 卖家确认订单（需传入收款地址）
+  'function confirmOrder(uint256 orderId, address sellerReceiveAddress) external',
+  'function confirmOrderByExternalId(bytes32 externalOrderId, address sellerReceiveAddress) external',
 
-  // 买家取消锁定订单 (确认交易模式)
+  // 买家取消锁定订单
   'function cancelByBuyer(uint256 orderId) external',
   'function cancelByBuyerByExternalId(bytes32 externalOrderId) external',
 
-  // 买家认领超时退款
+  // 超时退款（任何人可调用）
   'function claimExpired(uint256 orderId) external',
   'function claimExpiredByExternalId(bytes32 externalOrderId) external',
 
-  // 取消订单 (卖家)
-  'function cancelOrder(uint256 orderId) external',
-  'function cancelOrderByExternalId(bytes32 externalOrderId) external',
-
-  // 查询函数
-  'function getOrder(uint256 orderId) external view returns (tuple(address seller, address buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId, uint8 tradeMode, uint64 escrowTimeout, uint256 paymentLockedAt))',
-  'function getOrderByExternalId(bytes32 externalOrderId) external view returns (tuple(address seller, address buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId, uint8 tradeMode, uint64 escrowTimeout, uint256 paymentLockedAt))',
+  // ============ 查询函数 - Order ============
+  'function getOrder(uint256 orderId) external view returns (tuple(address seller, address buyer, address buyerPaymentAddress, address buyerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId, uint8 tradeMode, uint256 escrowTimeout, uint256 paymentLockedAt))',
+  'function getOrderByExternalId(bytes32 externalOrderId) external view returns (tuple(address seller, address buyer, address buyerPaymentAddress, address buyerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, uint8 status, uint256 createdAt, uint256 completedAt, bytes32 externalOrderId, uint8 tradeMode, uint256 escrowTimeout, uint256 paymentLockedAt))',
   'function getSellerOrders(address seller) external view returns (uint256[])',
   'function getActiveSellerOrders(address seller) external view returns (uint256[])',
   'function isOrderValid(uint256 orderId) external view returns (bool isValid, string reason)',
+  'function isOrderExpired(uint256 orderId) external view returns (bool)',
+  'function getRemainingEscrowTime(uint256 orderId) external view returns (uint256)',
+  'function getPendingConfirmOrders(address seller) external view returns (uint256[])',
   'function totalOrders() external view returns (uint256)',
   'function externalOrderMap(bytes32) external view returns (uint256)',
 
-  // 管理函数
+  // ============ 查询函数 - Listing ============
+  'function getListing(uint256 listingId) external view returns (tuple(address seller, address sellerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 totalAmount, uint256 availableAmount, uint8 status, uint256 createdAt))',
+  'function getListingAvailable(uint256 listingId) external view returns (uint256)',
+  'function getSellerListings(address seller) external view returns (uint256[])',
+  'function getActiveSellerListings(address seller) external view returns (uint256[])',
+  'function getListingOrders(uint256 listingId) external view returns (uint256[])',
+  'function totalListings() external view returns (uint256)',
+
+  // ============ 管理函数 ============
   'function platformFee() external view returns (uint256)',
   'function feeRecipient() external view returns (address)',
 
-  // 事件
-  'event OrderCreated(uint256 indexed orderId, address indexed seller, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId)',
-  'event OrderCreatedByBuyer(uint256 indexed orderId, address indexed seller, address indexed buyer, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode)',
+  // ============ 事件 ============
+  // Listing 事件
+  'event ListingCreated(uint256 indexed listingId, address indexed seller, address sellerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount)',
+  'event ListingCancelled(uint256 indexed listingId, address indexed seller, uint256 refundAmount)',
+  'event InstantBuyCompleted(uint256 indexed orderId, uint256 indexed listingId, address indexed buyer, address buyerPaymentAddress, address buyerReceiveAddress, uint256 tokenAmount, address paymentToken, uint256 paymentAmount, bytes32 externalOrderId)',
+
+  // Order 事件
+  'event OrderCreatedByBuyer(uint256 indexed orderId, address indexed seller, address indexed buyerIdentity, address buyerPaymentAddress, address buyerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode)',
   'event SwapExecuted(uint256 indexed orderId, address indexed seller, address indexed buyer, uint256 amount, uint256 price, uint256 platformFeeAmount)',
   'event PaymentLocked(uint256 indexed orderId, address indexed buyer, uint256 amount, uint256 expiresAt)',
   'event PaymentCancelled(uint256 indexed orderId, address indexed buyer, uint256 amount)',
   'event PaymentExpired(uint256 indexed orderId, address indexed buyer, uint256 amount)',
-  'event OrderCancelled(uint256 indexed orderId, address indexed seller)',
 ];
 
 // ERC20 ABI
@@ -114,6 +139,40 @@ const ERC3525ABI = [
   'function balanceOf(uint256 tokenId) external view returns (uint256)',
   'function slotOf(uint256 tokenId) external view returns (uint256)',
 ];
+
+// 挂单信息接口
+export interface ListingInfo {
+  seller: string;
+  sellerReceiveAddress: string;
+  standard: TokenStandard;
+  tokenContract: string;
+  tokenId: string;
+  totalAmount: string;
+  availableAmount: string;
+  status: 'Active' | 'SoldOut' | 'Cancelled';
+  statusCode: number;
+  createdAt: Date;
+}
+
+// 挂单创建数据
+export interface CreateListingData {
+  sellerReceiveAddress: string;
+  tokenStandard: TokenStandard;
+  tokenContract: string;
+  tokenId: string;
+  amount: string;
+}
+
+// 即时购买数据
+export interface InstantBuyData {
+  listingId: string;
+  externalOrderId: string;
+  buyerIdentity: string;
+  buyerReceiveAddress: string;
+  tokenAmount: string;
+  paymentToken: string;
+  paymentAmount: string;
+}
 
 /**
  * UniversalSwap 服务类
@@ -175,6 +234,8 @@ export class UniversalSwapService {
   generateExternalOrderId(mobazhOrderId: string): string {
     return ethers.keccak256(ethers.toUtf8Bytes(mobazhOrderId));
   }
+
+  // ============ 通用方法 ============
 
   /**
    * 买家: 授权支付代币
@@ -289,62 +350,117 @@ export class UniversalSwapService {
     }
   }
 
+  // ============ Listing 模式（即时交易）方法 ============
+
   /**
-   * 卖家: 创建订单
+   * 卖家: 创建挂单（锁定 Token 到合约）
    */
-  async createOrder(
-    orderData: CreateOrderData & {
-      tradeMode?: TradeModeType;
-      escrowTimeoutSeconds?: number;
+  async createListing(
+    listingData: CreateListingData
+  ): Promise<RwaCreateOrderResult & { listingId?: string }> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      const { sellerReceiveAddress, tokenStandard, tokenContract, tokenId, amount } = listingData;
+
+      console.log('🏷️ 创建挂单...');
+      console.log('📍 收款地址:', sellerReceiveAddress);
+      console.log('📋 Token 标准:', tokenStandard);
+      console.log('📍 Token 合约:', tokenContract);
+      console.log('🔢 Token ID:', tokenId);
+      console.log('📊 数量:', amount);
+
+      const standard = this.parseTokenStandard(tokenStandard);
+
+      const tx = await this.contract.createListing(
+        sellerReceiveAddress,
+        standard,
+        tokenContract,
+        tokenId,
+        amount
+      );
+
+      const receipt = await tx.wait();
+
+      // 从事件中获取 listingId
+      let listingId: string | undefined;
+      for (const log of receipt.logs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+          if (parsed?.name === 'ListingCreated') {
+            listingId = parsed.args.listingId.toString();
+            break;
+          }
+        } catch {
+          // 忽略无法解析的日志
+        }
+      }
+
+      console.log('✅ 挂单创建成功');
+      console.log('🔢 Listing ID:', listingId);
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+        listingId,
+      };
+    } catch (error) {
+      console.error('❌ 创建挂单失败:', error);
+      throw this.handleError(error);
     }
-  ): Promise<RwaCreateOrderResult> {
+  }
+
+  /**
+   * 买家: 即时购买（从挂单购买）
+   */
+  async instantBuy(
+    buyData: InstantBuyData
+  ): Promise<RwaCreateOrderResult & { tradeMode?: string }> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
       }
 
       const {
-        tokenStandard,
-        tokenContract,
-        tokenId,
-        amount,
-        paymentToken,
-        price,
-        buyer,
+        listingId,
         externalOrderId,
-        tradeMode = TradeMode.Instant,
-        escrowTimeoutSeconds = 86400, // 默认 24 小时
-      } = orderData;
+        buyerIdentity,
+        buyerReceiveAddress,
+        tokenAmount,
+        paymentToken,
+        paymentAmount,
+      } = buyData;
 
-      console.log('🔧 创建订单...');
-      console.log('📋 订单数据:', orderData);
-      console.log('📋 交易模式:', tradeMode === TradeMode.Instant ? '即时交易' : '需要确认');
+      console.log('🛒 即时购买...');
+      console.log('🔢 Listing ID:', listingId);
+      console.log('📋 外部订单 ID:', externalOrderId);
+      console.log('👤 买家身份:', buyerIdentity);
+      console.log('📍 接收地址:', buyerReceiveAddress);
+      console.log('📊 购买数量:', tokenAmount);
+      console.log('💰 支付金额:', paymentAmount);
 
-      const standard = this.parseTokenStandard(tokenStandard);
       const hashedExternalId = this.generateExternalOrderId(externalOrderId);
 
-      const tx = await this.contract.createOrder(
-        standard,
-        tokenContract,
-        tokenId,
-        amount,
-        paymentToken,
-        price,
-        buyer || ethers.ZeroAddress,
+      const tx = await this.contract.instantBuy(
+        listingId,
         hashedExternalId,
-        tradeMode,
-        escrowTimeoutSeconds
+        buyerIdentity,
+        buyerReceiveAddress,
+        tokenAmount,
+        paymentToken,
+        paymentAmount
       );
 
       const receipt = await tx.wait();
-      console.log('✅ 订单创建成功');
 
-      // 从事件中获取订单ID
+      // 从事件中获取 orderId
       let orderId: string | undefined;
       for (const log of receipt.logs) {
         try {
           const parsed = this.contract.interface.parseLog(log);
-          if (parsed && parsed.name === 'OrderCreated') {
+          if (parsed?.name === 'InstantBuyCompleted') {
             orderId = parsed.args.orderId.toString();
             break;
           }
@@ -353,38 +469,71 @@ export class UniversalSwapService {
         }
       }
 
+      console.log('✅ 即时购买成功');
+      console.log('🔢 订单 ID:', orderId);
+
       return {
         success: true,
         transactionHash: receipt.hash || receipt.transactionHash,
         orderId,
         externalOrderId,
+        tradeMode: 'completed', // 即时交易直接完成
       };
     } catch (error) {
-      console.error('❌ 创建订单失败:', error);
+      console.error('❌ 即时购买失败:', error);
       throw this.handleError(error);
     }
   }
 
   /**
-   * 【新设计】买家创建订单并支付
-   * 合并 createOrder + buy，由买家一次调用完成
-   * - 即时模式：创建订单 + 直接完成原子交换
-   * - 确认模式：创建订单 + 锁定资金等待卖家确认
+   * 卖家: 撤销挂单
    */
-  async createOrderByBuyer(
-    orderData: CreateOrderData & {
-      seller: string;
-      tradeMode?: TradeModeType;
-      escrowTimeoutSeconds?: number;
-    }
-  ): Promise<RwaCreateOrderResult & { tradeMode?: string }> {
+  async cancelListing(listingId: string): Promise<RwaTransactionResult> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
       }
 
+      console.log('🔧 撤销挂单...');
+      console.log('🔢 Listing ID:', listingId);
+
+      const tx = await this.contract.cancelListing(listingId);
+      const receipt = await tx.wait();
+
+      console.log('✅ 挂单撤销成功');
+
+      return {
+        success: true,
+        transactionHash: receipt.hash || receipt.transactionHash,
+      };
+    } catch (error) {
+      console.error('❌ 撤销挂单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  // ============ Order 模式（确认交易）方法 ============
+
+  /**
+   * 买家: 创建订单并锁定资金（确认交易模式）
+   */
+  async createOrderByBuyer(
+    orderData: CreateOrderData & {
+      seller: string;
+      buyerIdentity?: string;
+      buyerReceiveAddress?: string;
+      escrowTimeoutSeconds?: number;
+    }
+  ): Promise<RwaCreateOrderResult & { tradeMode?: string }> {
+    try {
+      if (!this.contract || !this.userAddress) {
+        throw new Error('服务未初始化');
+      }
+
       const {
         seller,
+        buyerIdentity,
+        buyerReceiveAddress,
         tokenStandard,
         tokenContract,
         tokenId,
@@ -392,21 +541,29 @@ export class UniversalSwapService {
         paymentToken,
         price,
         externalOrderId,
-        tradeMode = TradeMode.Instant,
         escrowTimeoutSeconds = 86400,
       } = orderData;
 
-      console.log('🛒 买家创建订单并支付...');
+      // 如果未提供 buyerIdentity，使用当前用户地址
+      const actualBuyerIdentity = buyerIdentity || this.userAddress;
+      // 如果未提供 buyerReceiveAddress，使用 buyerIdentity
+      const actualBuyerReceiveAddress = buyerReceiveAddress || actualBuyerIdentity;
+
+      console.log('🛒 买家创建订单并锁定资金...');
       console.log('📍 卖家地址:', seller);
+      console.log('👤 买家身份:', actualBuyerIdentity);
+      console.log('📍 买家接收地址:', actualBuyerReceiveAddress);
       console.log('📋 Mobazha 订单ID:', externalOrderId);
-      console.log('📋 交易模式:', tradeMode === TradeMode.Instant ? '即时交易' : '需要确认');
       console.log('💰 价格:', price);
+      console.log('⏱️ 托管超时:', escrowTimeoutSeconds, '秒');
 
       const standard = this.parseTokenStandard(tokenStandard);
       const hashedExternalId = this.generateExternalOrderId(externalOrderId);
 
       const tx = await this.contract.createOrderByBuyer(
         seller,
+        actualBuyerIdentity,
+        actualBuyerReceiveAddress,
         standard,
         tokenContract,
         tokenId,
@@ -414,23 +571,20 @@ export class UniversalSwapService {
         paymentToken,
         price,
         hashedExternalId,
-        tradeMode,
         escrowTimeoutSeconds
       );
 
       const receipt = await tx.wait();
 
-      // 从事件中获取订单ID和交易模式
+      // 从事件中获取订单ID
       let orderId: string | undefined;
-      let resultTradeMode = 'unknown';
+      let resultTradeMode = 'locked'; // Order 模式默认为资金锁定
 
       for (const log of receipt.logs) {
         try {
           const parsed = this.contract.interface.parseLog(log);
           if (parsed?.name === 'OrderCreatedByBuyer') {
             orderId = parsed.args.orderId.toString();
-          } else if (parsed?.name === 'SwapExecuted') {
-            resultTradeMode = 'instant';
           } else if (parsed?.name === 'PaymentLocked') {
             resultTradeMode = 'locked';
           }
@@ -457,106 +611,9 @@ export class UniversalSwapService {
   }
 
   /**
-   * 买家: 购买（用于已存在的订单）- 统一入口，根据订单交易模式自动处理
+   * 卖家: 确认订单（确认交易模式）
    */
-  async buy(orderId: string): Promise<RwaTransactionResult & { eventName?: string }> {
-    try {
-      if (!this.contract) {
-        throw new Error('服务未初始化');
-      }
-
-      console.log('🔧 买家购买...');
-      console.log('🔢 订单ID:', orderId);
-
-      const tx = await this.contract.buy(orderId);
-      const receipt = await tx.wait();
-
-      // 解析事件判断结果
-      let eventName: string | undefined;
-      for (const log of receipt.logs) {
-        try {
-          const parsed = this.contract.interface.parseLog(log);
-          if (parsed) {
-            if (parsed.name === 'SwapExecuted') {
-              eventName = 'SwapExecuted';
-              break;
-            } else if (parsed.name === 'PaymentLocked') {
-              eventName = 'PaymentLocked';
-              break;
-            }
-          }
-        } catch {
-          // 忽略无法解析的日志
-        }
-      }
-
-      console.log('✅ 购买成功，事件:', eventName);
-
-      return {
-        success: true,
-        transactionHash: receipt.hash || receipt.transactionHash,
-        eventName,
-      };
-    } catch (error) {
-      console.error('❌ 购买失败:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * 买家: 通过外部订单ID购买
-   */
-  async buyByExternalId(
-    externalOrderId: string
-  ): Promise<RwaTransactionResult & { eventName?: string }> {
-    try {
-      if (!this.contract) {
-        throw new Error('服务未初始化');
-      }
-
-      console.log('🔧 通过外部订单ID购买...');
-      console.log('📋 外部订单ID:', externalOrderId);
-
-      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
-      const tx = await this.contract.buyByExternalId(hashedExternalId);
-      const receipt = await tx.wait();
-
-      // 解析事件判断结果
-      let eventName: string | undefined;
-      for (const log of receipt.logs) {
-        try {
-          const parsed = this.contract.interface.parseLog(log);
-          if (parsed) {
-            if (parsed.name === 'SwapExecuted') {
-              eventName = 'SwapExecuted';
-              break;
-            } else if (parsed.name === 'PaymentLocked') {
-              eventName = 'PaymentLocked';
-              break;
-            }
-          }
-        } catch {
-          // 忽略无法解析的日志
-        }
-      }
-
-      console.log('✅ 购买成功，事件:', eventName);
-
-      return {
-        success: true,
-        transactionHash: receipt.hash || receipt.transactionHash,
-        eventName,
-      };
-    } catch (error) {
-      console.error('❌ 购买失败:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * 卖家: 确认订单 (确认交易模式)
-   */
-  async confirmOrder(orderId: string): Promise<RwaTransactionResult> {
+  async confirmOrder(orderId: string, sellerReceiveAddress: string): Promise<RwaTransactionResult> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
@@ -564,8 +621,9 @@ export class UniversalSwapService {
 
       console.log('🔧 卖家确认订单...');
       console.log('🔢 订单ID:', orderId);
+      console.log('📍 收款地址:', sellerReceiveAddress);
 
-      const tx = await this.contract.confirmOrder(orderId);
+      const tx = await this.contract.confirmOrder(orderId, sellerReceiveAddress);
       const receipt = await tx.wait();
 
       console.log('✅ 订单确认成功');
@@ -583,7 +641,10 @@ export class UniversalSwapService {
   /**
    * 卖家: 通过外部订单ID确认订单
    */
-  async confirmOrderByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
+  async confirmOrderByExternalId(
+    externalOrderId: string,
+    sellerReceiveAddress: string
+  ): Promise<RwaTransactionResult> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
@@ -591,9 +652,13 @@ export class UniversalSwapService {
 
       console.log('🔧 通过外部订单ID确认订单...');
       console.log('📋 外部订单ID:', externalOrderId);
+      console.log('📍 收款地址:', sellerReceiveAddress);
 
       const hashedExternalId = this.generateExternalOrderId(externalOrderId);
-      const tx = await this.contract.confirmOrderByExternalId(hashedExternalId);
+      const tx = await this.contract.confirmOrderByExternalId(
+        hashedExternalId,
+        sellerReceiveAddress
+      );
       const receipt = await tx.wait();
 
       console.log('✅ 订单确认成功');
@@ -664,7 +729,7 @@ export class UniversalSwapService {
   }
 
   /**
-   * 买家: 认领超时退款
+   * 认领超时退款（任何人可调用）
    */
   async claimExpired(orderId: string): Promise<RwaTransactionResult> {
     try {
@@ -691,7 +756,7 @@ export class UniversalSwapService {
   }
 
   /**
-   * 买家: 通过外部订单ID认领超时退款
+   * 通过外部订单ID认领超时退款
    */
   async claimExpiredByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
     try {
@@ -718,152 +783,7 @@ export class UniversalSwapService {
     }
   }
 
-  /**
-   * 买家/卖家: 创建订单并授权 (一站式操作)
-   */
-  async createOrderAndApprove(
-    orderData: CreateOrderData,
-    isSellerSide: boolean
-  ): Promise<RwaCreateOrderResult> {
-    try {
-      if (isSellerSide) {
-        // 卖家: 先授权 Token，再创建订单
-        await this.approveToken(
-          orderData.tokenStandard,
-          orderData.tokenContract,
-          orderData.tokenId
-        );
-      } else {
-        // 买家: 授权支付代币
-        await this.approvePaymentToken(orderData.paymentToken, orderData.price);
-      }
-
-      // 如果是卖家，创建订单
-      if (isSellerSide) {
-        return await this.createOrder(orderData);
-      }
-
-      // 买家只需要授权，返回成功
-      return {
-        success: true,
-        transactionHash: null,
-        message: '支付授权成功，等待卖家发货',
-      };
-    } catch (error) {
-      console.error('❌ 创建订单并授权失败:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * 执行原子交换
-   */
-  async executeSwap(orderId: string): Promise<RwaTransactionResult> {
-    try {
-      if (!this.contract) {
-        throw new Error('服务未初始化');
-      }
-
-      console.log('🔧 执行原子交换...');
-      console.log('🔢 订单ID:', orderId);
-
-      const tx = await this.contract.executeSwap(orderId);
-      const receipt = await tx.wait();
-
-      console.log('✅ 原子交换执行成功');
-
-      return {
-        success: true,
-        transactionHash: receipt.hash || receipt.transactionHash,
-      };
-    } catch (error) {
-      console.error('❌ 原子交换执行失败:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * 通过外部订单ID执行原子交换
-   */
-  async executeSwapByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
-    try {
-      if (!this.contract) {
-        throw new Error('服务未初始化');
-      }
-
-      console.log('🔧 通过外部订单ID执行原子交换...');
-      console.log('📋 外部订单ID:', externalOrderId);
-
-      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
-      const tx = await this.contract.executeSwapByExternalId(hashedExternalId);
-      const receipt = await tx.wait();
-
-      console.log('✅ 原子交换执行成功');
-
-      return {
-        success: true,
-        transactionHash: receipt.hash || receipt.transactionHash,
-      };
-    } catch (error) {
-      console.error('❌ 原子交换执行失败:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * 取消订单
-   */
-  async cancelOrder(orderId: string): Promise<RwaTransactionResult> {
-    try {
-      if (!this.contract) {
-        throw new Error('服务未初始化');
-      }
-
-      console.log('🔧 取消订单...');
-      console.log('🔢 订单ID:', orderId);
-
-      const tx = await this.contract.cancelOrder(orderId);
-      const receipt = await tx.wait();
-
-      console.log('✅ 订单取消成功');
-
-      return {
-        success: true,
-        transactionHash: receipt.hash || receipt.transactionHash,
-      };
-    } catch (error) {
-      console.error('❌ 取消订单失败:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * 通过外部订单ID取消订单
-   */
-  async cancelOrderByExternalId(externalOrderId: string): Promise<RwaTransactionResult> {
-    try {
-      if (!this.contract) {
-        throw new Error('服务未初始化');
-      }
-
-      console.log('🔧 通过外部订单ID取消订单...');
-      console.log('📋 外部订单ID:', externalOrderId);
-
-      const hashedExternalId = this.generateExternalOrderId(externalOrderId);
-      const tx = await this.contract.cancelOrderByExternalId(hashedExternalId);
-      const receipt = await tx.wait();
-
-      console.log('✅ 订单取消成功');
-
-      return {
-        success: true,
-        transactionHash: receipt.hash || receipt.transactionHash,
-      };
-    } catch (error) {
-      console.error('❌ 取消订单失败:', error);
-      throw this.handleError(error);
-    }
-  }
+  // ============ 查询方法 ============
 
   /**
    * 查询订单信息
@@ -901,6 +821,23 @@ export class UniversalSwapService {
   }
 
   /**
+   * 查询挂单信息
+   */
+  async getListing(listingId: string): Promise<ListingInfo> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      const listing = await this.contract.getListing(listingId);
+      return this.formatListing(listing);
+    } catch (error) {
+      console.error('❌ 查询挂单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * 检查外部订单是否存在
    */
   async checkExternalOrderExists(externalOrderId: string): Promise<boolean> {
@@ -930,6 +867,39 @@ export class UniversalSwapService {
       return { isValid, reason };
     } catch (error) {
       console.error('❌ 验证订单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 检查订单是否已过期
+   */
+  async isOrderExpired(orderId: string): Promise<boolean> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      return await this.contract.isOrderExpired(orderId);
+    } catch (error) {
+      console.error('❌ 检查订单过期状态失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 获取订单剩余托管时间（秒）
+   */
+  async getRemainingEscrowTime(orderId: string): Promise<number> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      const time = await this.contract.getRemainingEscrowTime(orderId);
+      return Number(time);
+    } catch (error) {
+      console.error('❌ 获取剩余托管时间失败:', error);
       throw this.handleError(error);
     }
   }
@@ -975,12 +945,16 @@ export class UniversalSwapService {
     return this.contract !== null;
   }
 
+  // ============ 私有方法 ============
+
   /**
    * 格式化订单数据
    */
   private formatOrder(order: {
     seller: string;
     buyer: string;
+    buyerPaymentAddress: string;
+    buyerReceiveAddress: string;
     standard: bigint;
     tokenContract: string;
     tokenId: bigint;
@@ -991,10 +965,15 @@ export class UniversalSwapService {
     createdAt: bigint;
     completedAt: bigint;
     externalOrderId: string;
+    tradeMode: bigint;
+    escrowTimeout: bigint;
+    paymentLockedAt: bigint;
   }): OrderInfo {
     return {
       seller: order.seller,
       buyer: order.buyer,
+      buyerPaymentAddress: order.buyerPaymentAddress,
+      buyerReceiveAddress: order.buyerReceiveAddress,
       standard: this.getTokenStandardName(Number(order.standard)),
       tokenContract: order.tokenContract,
       tokenId: order.tokenId.toString(),
@@ -1002,11 +981,53 @@ export class UniversalSwapService {
       paymentToken: order.paymentToken,
       price: order.price.toString(),
       status: this.getOrderStatusName(Number(order.status)),
+      statusCode: Number(order.status),
       createdAt: new Date(Number(order.createdAt) * 1000),
       completedAt:
         Number(order.completedAt) > 0 ? new Date(Number(order.completedAt) * 1000) : null,
       externalOrderId: order.externalOrderId,
+      tradeMode: this.getTradeModeDesc(Number(order.tradeMode)),
+      tradeModeCode: Number(order.tradeMode),
+      escrowTimeout: Number(order.escrowTimeout),
+      paymentLockedAt:
+        Number(order.paymentLockedAt) > 0 ? new Date(Number(order.paymentLockedAt) * 1000) : null,
     };
+  }
+
+  /**
+   * 格式化挂单数据
+   */
+  private formatListing(listing: {
+    seller: string;
+    sellerReceiveAddress: string;
+    standard: bigint;
+    tokenContract: string;
+    tokenId: bigint;
+    totalAmount: bigint;
+    availableAmount: bigint;
+    status: bigint;
+    createdAt: bigint;
+  }): ListingInfo {
+    return {
+      seller: listing.seller,
+      sellerReceiveAddress: listing.sellerReceiveAddress,
+      standard: this.getTokenStandardName(Number(listing.standard)),
+      tokenContract: listing.tokenContract,
+      tokenId: listing.tokenId.toString(),
+      totalAmount: listing.totalAmount.toString(),
+      availableAmount: listing.availableAmount.toString(),
+      status: this.getListingStatusName(Number(listing.status)),
+      statusCode: Number(listing.status),
+      createdAt: new Date(Number(listing.createdAt) * 1000),
+    };
+  }
+
+  /**
+   * 获取交易模式描述
+   */
+  private getTradeModeDesc(mode: number): string {
+    const modes = ['即时交易', '确认交易'];
+    return modes[mode] || '未知';
   }
 
   /**
@@ -1037,6 +1058,14 @@ export class UniversalSwapService {
   }
 
   /**
+   * 获取挂单状态名称
+   */
+  private getListingStatusName(status: number): 'Active' | 'SoldOut' | 'Cancelled' {
+    const names: ('Active' | 'SoldOut' | 'Cancelled')[] = ['Active', 'SoldOut', 'Cancelled'];
+    return names[status] || 'Active';
+  }
+
+  /**
    * 处理错误
    */
   private handleError(error: unknown): Error {
@@ -1055,13 +1084,19 @@ export class UniversalSwapService {
       message = '余额不足';
     } else if (err.message?.includes('Order does not exist')) {
       message = '订单不存在';
-    } else if (err.message?.includes('Order not active')) {
-      message = '订单不是活跃状态';
+    } else if (err.message?.includes('Listing does not exist')) {
+      message = '挂单不存在';
+    } else if (err.message?.includes('Listing not active')) {
+      message = '挂单不是活跃状态';
+    } else if (err.message?.includes('Insufficient available')) {
+      message = '可用数量不足';
+    } else if (err.message?.includes('Cannot buy own listing')) {
+      message = '不能购买自己的挂单';
     } else if (err.message?.includes('Not seller')) {
       message = '只有卖家可以执行此操作';
     } else if (err.message?.includes('Not buyer')) {
       message = '只有买家可以执行此操作';
-    } else if (err.message?.includes('Cannot buy own order')) {
+    } else if (err.message?.includes('Cannot buy from self')) {
       message = '不能购买自己的订单';
     } else if (err.message?.includes('External order ID exists')) {
       message = '外部订单ID已存在';
@@ -1073,14 +1108,18 @@ export class UniversalSwapService {
       message = '份额不足';
     } else if (err.message?.includes('Seller not owner')) {
       message = '卖家不是 Token 所有者';
-    } else if (err.message?.includes('Not PaymentLocked')) {
+    } else if (err.message?.includes('Not locked')) {
       message = '订单未处于资金锁定状态';
-    } else if (err.message?.includes('Not expired yet')) {
+    } else if (err.message?.includes('Not expired')) {
       message = '订单尚未过期';
     } else if (err.message?.includes('Order expired')) {
       message = '订单已过期';
-    } else if (err.message?.includes('Invalid trade mode')) {
-      message = '无效的交易模式';
+    } else if (err.message?.includes('Escrow timeout too long')) {
+      message = '托管超时时间过长（最长7天）';
+    } else if (err.message?.includes('Invalid receive address')) {
+      message = '无效的接收地址';
+    } else if (err.message?.includes('Invalid seller receive address')) {
+      message = '无效的卖家收款地址';
     } else {
       message = err.message || '未知错误';
     }

@@ -136,6 +136,8 @@ export interface CreateOrderData {
 export interface OrderInfo {
   seller: string;
   buyer: string;
+  buyerPaymentAddress?: string; // 买家付款地址（实际转账来源）
+  buyerReceiveAddress?: string; // 买家接收Token的地址
   standard: TokenStandard;
   tokenContract: string;
   tokenId: string;
@@ -143,9 +145,44 @@ export interface OrderInfo {
   paymentToken: string;
   price: string;
   status: OrderStatus;
+  statusCode?: number; // 状态枚举值
   createdAt: Date;
   completedAt: Date | null;
   externalOrderId: string;
+  tradeMode?: string; // 交易模式描述
+  tradeModeCode?: number; // 交易模式枚举值
+  escrowTimeout?: number; // 托管超时时间（秒）
+  paymentLockedAt?: Date | null; // 资金锁定时间
+}
+
+/**
+ * 挂单状态枚举
+ */
+export type ListingStatus = 'Active' | 'SoldOut' | 'Cancelled';
+
+/**
+ * 挂单状态枚举值 (合约中使用)
+ */
+export const ListingStatusEnum = {
+  Active: 0,
+  SoldOut: 1,
+  Cancelled: 2,
+} as const;
+
+/**
+ * 挂单信息 (Listing 模式)
+ */
+export interface ListingInfo {
+  seller: string;
+  sellerReceiveAddress: string;
+  standard: TokenStandard;
+  tokenContract: string;
+  tokenId: string;
+  totalAmount: string;
+  availableAmount: string;
+  status: ListingStatus;
+  statusCode: number;
+  createdAt: Date;
 }
 
 /**
@@ -217,7 +254,8 @@ export const SEPOLIA_CONFIG: ChainConfig = {
   chainId: ChainId.ETHEREUM_SEPOLIA,
   name: 'Sepolia',
   isTestnet: true,
-  universalSwapAddress: '0xD72aA1FF4da09269ba90AC17fb656c7D1c4dF297',
+  // 新合约地址 - 2026-01-17 部署
+  universalSwapAddress: '0x244f128f43D71Ffd1a3718abaDdbd0a427b474b7',
   mockUsdtAddress: '0xbF0cCEd12A16904E8B06a90fA8F8029bB36e3f2e',
   mockErc1155Address: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
   mockErc3525Address: '0xccf9C481A2DDaC0ad5a55c3a07C5Cd04cA3d343e',

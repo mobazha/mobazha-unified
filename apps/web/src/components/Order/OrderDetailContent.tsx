@@ -15,7 +15,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { isOrderFulfilled, type OrderAction, type UserRole as CoreUserRole } from '@mobazha/core';
+import {
+  isOrderFulfilled,
+  type OrderAction,
+  type UserRole as CoreUserRole,
+  useI18n,
+} from '@mobazha/core';
 import type { Order as CoreOrder, Product } from '@mobazha/core';
 import {
   OrderFooter,
@@ -99,7 +104,12 @@ export interface DisplayOrder {
     buyerReceiveAddress: string;
     lockTxHash: string;
     timestamp?: string;
+    escrowTimeoutSeconds?: number;
+    expiresAt?: string;
   };
+  // RWA 取消/退款回调
+  onRwaCancelOrder?: () => Promise<void>;
+  onRwaClaimExpired?: () => Promise<void>;
   dispute?: {
     id: string;
     claim: string;
@@ -190,7 +200,8 @@ function getProgressBarState(
       currentState = 4;
       break;
     default:
-      currentState = 1;
+      // 默认应该是 0（未支付），而不是 1（已支付）
+      currentState = 0;
   }
 
   return {
@@ -215,6 +226,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   onPay,
   className,
 }: OrderDetailContentProps) {
+  const { t } = useI18n();
+
   // 本地状态用于 UI 操作
   const [localOrder, setLocalOrder] = useState<DisplayOrder | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -639,75 +652,245 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           )}
 
           {/* RWA Payment Locked Card */}
-          {order.paymentLocked && (
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-700/50 rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-emerald-800 dark:text-emerald-300">
-                  Payment Authorization
-                </h4>
-                <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  Authorized
-                </span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center py-1 border-b border-emerald-100 dark:border-emerald-800/50">
-                  <span className="text-emerald-700/70 dark:text-emerald-400/70">Amount</span>
-                  <span className="font-medium text-emerald-900 dark:text-emerald-200">
-                    {order.paymentLocked.amount} {order.paymentLocked.coin}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-emerald-100 dark:border-emerald-800/50">
-                  <span className="text-emerald-700/70 dark:text-emerald-400/70">Token</span>
-                  <span className="font-medium text-emerald-900 dark:text-emerald-200">
-                    {order.paymentLocked.coin}
-                  </span>
-                </div>
-                {order.paymentLocked.buyerReceiveAddress && (
-                  <div className="flex justify-between items-center py-1 border-b border-emerald-100 dark:border-emerald-800/50">
-                    <span className="text-emerald-700/70 dark:text-emerald-400/70">
-                      Buyer Address
-                    </span>
-                    <span
-                      className="font-mono text-xs text-emerald-900 dark:text-emerald-200 truncate max-w-[180px]"
-                      title={order.paymentLocked.buyerReceiveAddress}
+          {order.paymentLocked &&
+            (() => {
+              // 计算是否过期
+              const isExpired = order.paymentLocked.expiresAt
+                ? new Date(order.paymentLocked.expiresAt) <= new Date()
+                : false;
+
+              return (
+                <div
+                  className={`bg-gradient-to-r ${
+                    isExpired
+                      ? 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700/50'
+                      : 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50'
+                  } border rounded-lg p-4 mb-4`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h4
+                      className={`font-semibold ${
+                        isExpired
+                          ? 'text-red-800 dark:text-red-300'
+                          : 'text-emerald-800 dark:text-emerald-300'
+                      }`}
                     >
-                      {order.paymentLocked.buyerReceiveAddress.slice(0, 8)}...
-                      {order.paymentLocked.buyerReceiveAddress.slice(-6)}
+                      {t('order.paymentLocked.title')}
+                    </h4>
+                    <span
+                      className={`${
+                        isExpired ? 'bg-red-500' : 'bg-emerald-500'
+                      } text-white text-xs font-semibold px-3 py-1 rounded-full`}
+                    >
+                      {isExpired
+                        ? t('order.paymentLocked.expired')
+                        : t('order.paymentLocked.locked')}
                     </span>
                   </div>
-                )}
-                {order.paymentLocked.timestamp && (
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-emerald-700/70 dark:text-emerald-400/70">Time</span>
-                    <span className="text-emerald-900 dark:text-emerald-200">
-                      {new Date(order.paymentLocked.timestamp).toLocaleString()}
-                    </span>
+                  <div className="space-y-2 text-sm">
+                    <div
+                      className={`flex justify-between items-center py-1 border-b ${
+                        isExpired
+                          ? 'border-red-100 dark:border-red-800/50'
+                          : 'border-emerald-100 dark:border-emerald-800/50'
+                      }`}
+                    >
+                      <span
+                        className={`${
+                          isExpired
+                            ? 'text-red-700/70 dark:text-red-400/70'
+                            : 'text-emerald-700/70 dark:text-emerald-400/70'
+                        }`}
+                      >
+                        {t('order.paymentLocked.amount')}
+                      </span>
+                      <span
+                        className={`font-medium ${
+                          isExpired
+                            ? 'text-red-900 dark:text-red-200'
+                            : 'text-emerald-900 dark:text-emerald-200'
+                        }`}
+                      >
+                        {order.paymentLocked.amount} {order.paymentLocked.coin}
+                      </span>
+                    </div>
+                    <div
+                      className={`flex justify-between items-center py-1 border-b ${
+                        isExpired
+                          ? 'border-red-100 dark:border-red-800/50'
+                          : 'border-emerald-100 dark:border-emerald-800/50'
+                      }`}
+                    >
+                      <span
+                        className={`${
+                          isExpired
+                            ? 'text-red-700/70 dark:text-red-400/70'
+                            : 'text-emerald-700/70 dark:text-emerald-400/70'
+                        }`}
+                      >
+                        {t('order.paymentLocked.token')}
+                      </span>
+                      <span
+                        className={`font-medium ${
+                          isExpired
+                            ? 'text-red-900 dark:text-red-200'
+                            : 'text-emerald-900 dark:text-emerald-200'
+                        }`}
+                      >
+                        {order.paymentLocked.coin}
+                      </span>
+                    </div>
+                    {order.paymentLocked.buyerReceiveAddress && (
+                      <div
+                        className={`flex justify-between items-center py-1 border-b ${
+                          isExpired
+                            ? 'border-red-100 dark:border-red-800/50'
+                            : 'border-emerald-100 dark:border-emerald-800/50'
+                        }`}
+                      >
+                        <span
+                          className={`${
+                            isExpired
+                              ? 'text-red-700/70 dark:text-red-400/70'
+                              : 'text-emerald-700/70 dark:text-emerald-400/70'
+                          }`}
+                        >
+                          {t('order.paymentLocked.buyerAddress')}
+                        </span>
+                        <span
+                          className={`font-mono text-xs truncate max-w-[180px] ${
+                            isExpired
+                              ? 'text-red-900 dark:text-red-200'
+                              : 'text-emerald-900 dark:text-emerald-200'
+                          }`}
+                          title={order.paymentLocked.buyerReceiveAddress}
+                        >
+                          {order.paymentLocked.buyerReceiveAddress.slice(0, 8)}...
+                          {order.paymentLocked.buyerReceiveAddress.slice(-6)}
+                        </span>
+                      </div>
+                    )}
+                    {order.paymentLocked.timestamp && (
+                      <div
+                        className={`flex justify-between items-center py-1 border-b ${
+                          isExpired
+                            ? 'border-red-100 dark:border-red-800/50'
+                            : 'border-emerald-100 dark:border-emerald-800/50'
+                        }`}
+                      >
+                        <span
+                          className={`${
+                            isExpired
+                              ? 'text-red-700/70 dark:text-red-400/70'
+                              : 'text-emerald-700/70 dark:text-emerald-400/70'
+                          }`}
+                        >
+                          {t('order.paymentLocked.lockedTime')}
+                        </span>
+                        <span
+                          className={`${
+                            isExpired
+                              ? 'text-red-900 dark:text-red-200'
+                              : 'text-emerald-900 dark:text-emerald-200'
+                          }`}
+                        >
+                          {new Date(order.paymentLocked.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {order.paymentLocked.expiresAt && (
+                      <div className="flex justify-between items-center py-1">
+                        <span
+                          className={`${
+                            isExpired
+                              ? 'text-red-700/70 dark:text-red-400/70'
+                              : 'text-emerald-700/70 dark:text-emerald-400/70'
+                          }`}
+                        >
+                          {t('order.paymentLocked.expiresAt')}
+                        </span>
+                        <span
+                          className={`${
+                            isExpired
+                              ? 'text-red-900 dark:text-red-200'
+                              : 'text-emerald-900 dark:text-emerald-200'
+                          }`}
+                        >
+                          {new Date(order.paymentLocked.expiresAt).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {/* 买家端显示等待卖家确认的提示 */}
-              {order.userRole === 'buyer' && (
-                <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50 flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-sm">
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Waiting for seller to accept the order...
+                  {/* 买家端显示提示和操作按钮 */}
+                  {order.userRole === 'buyer' && (
+                    <div
+                      className={`mt-3 pt-3 border-t ${
+                        isExpired
+                          ? 'border-red-200 dark:border-red-700/50'
+                          : 'border-emerald-200 dark:border-emerald-700/50'
+                      }`}
+                    >
+                      {isExpired ? (
+                        <>
+                          <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+                            {t('order.paymentLocked.expiredCanClaim')}
+                          </p>
+                          {displayOrder.onRwaClaimExpired && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={displayOrder.onRwaClaimExpired}
+                              className="w-full"
+                            >
+                              {t('order.paymentLocked.claimRefund')}
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-sm mb-3">
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            {t('order.paymentLocked.waitingForSeller')}
+                          </div>
+                          {displayOrder.onRwaCancelOrder && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={displayOrder.onRwaCancelOrder}
+                              className="w-full"
+                            >
+                              {t('order.paymentLocked.cancelOrder')}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {/* 卖家端显示提示 */}
+                  {order.userRole === 'seller' && !isExpired && (
+                    <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50">
+                      <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                        {t('order.paymentLocked.waitingToConfirm')}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+              );
+            })()}
 
           {/* Traditional Payment Card */}
           {order.paymentTx && !order.paymentLocked && (

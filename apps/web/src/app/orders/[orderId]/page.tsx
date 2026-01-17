@@ -132,15 +132,20 @@ interface RealOrderData {
       amount?: number;
       alternateContactInfo?: string;
     };
+    // PaymentSent 统一消息：method === 3 (RWA_LOCKED) 表示 RWA 锁定模式
     paymentSent?: {
+      transactionID?: string;
       moderator?: string;
       coin?: string;
       amount?: number;
-      method?: string;
+      method?: number | string; // 0=DIRECT, 1=CANCELABLE, 2=MODERATED, 3=RWA_LOCKED
       address?: string;
+      contractAddress?: string; // UniversalSwap 合约地址（RWA 模式）
       buyerReceiveAddress?: string;
+      paymentTokenAddress?: string;
+      timestamp?: string;
     };
-    // RWA 原子交换支付锁定消息
+    // 已废弃：保留用于兼容旧数据
     paymentLocked?: {
       lockTxHash?: string;
       coin?: string;
@@ -237,11 +242,10 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
     });
   }
 
-  // 资金到账 (支持 PaymentSent 和 PaymentAuthorized 两种消息)
+  // 资金到账 (使用 PaymentSent 统一消息)
   if (
     data.funded ||
     contract.paymentSent ||
-    contract.paymentLocked ||
     (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
   ) {
     const confirmTimestamp =
@@ -359,27 +363,21 @@ function transformCoreOrder(
   const buyerPeerID = orderOpen?.buyerID?.peerID || buyerOrder?.buyerID?.peerID || '';
   const buyerHandle = orderOpen?.buyerID?.handle || buyerOrder?.buyerID?.handle || '';
 
-  // 支持 PaymentAuthorized (RWA) 和 PaymentSent (传统) 两种消息
-  const paymentLocked = contract.paymentLocked;
+  // 支持 PaymentSent (统一消息)
   const paymentSent = contract.paymentSent;
   const buyerPayment = buyerOrder?.payment;
-  const coin =
-    paymentLocked?.coin ||
-    paymentSent?.coin ||
-    buyerPayment?.coin ||
-    orderOpen?.pricingCoin ||
-    'ETH';
+  // 判断是否为 RWA 锁定模式：method === 3 (RWA_LOCKED)
+  const isRwaLocked = paymentSent?.method === 3 || paymentSent?.method === 'RWA_LOCKED';
+  const coin = paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
   // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
   const amount =
-    paymentLocked?.amount !== undefined
-      ? Number(paymentLocked.amount)
-      : paymentSent?.amount !== undefined
-        ? paymentSent.amount
-        : buyerPayment?.amount !== undefined
-          ? buyerPayment.amount
-          : orderOpen?.amount !== undefined
-            ? orderOpen.amount
-            : (listingData?.item?.price ?? 0);
+    paymentSent?.amount !== undefined
+      ? paymentSent.amount
+      : buyerPayment?.amount !== undefined
+        ? buyerPayment.amount
+        : orderOpen?.amount !== undefined
+          ? orderOpen.amount
+          : (listingData?.item?.price ?? 0);
   const paymentMethod = paymentSent?.method || buyerPayment?.method || '';
   const moderatorId = paymentSent?.moderator || buyerPayment?.moderator || '';
 
@@ -470,18 +468,36 @@ function transformCoreOrder(
     moderator,
     trackingNumber: trackingInfo?.trackingNumber,
     shippingAddress: formatShippingAddress(shipping),
-    // 支持 RWA 预授权和传统交易
-    paymentTx: contract.paymentLocked?.lockTxHash || data.paymentAddressTransactions?.[0]?.txid,
-    // RWA 支付锁定信息
-    paymentLocked: contract.paymentLocked
-      ? {
-          amount: contract.paymentLocked.amount || '',
-          coin: contract.paymentLocked.coin || '',
-          buyerReceiveAddress: contract.paymentLocked.buyerReceiveAddress || '',
-          lockTxHash: contract.paymentLocked.lockTxHash || '',
-          timestamp: contract.paymentLocked.timestamp,
-        }
-      : undefined,
+    // 支持 RWA 锁定模式和传统交易
+    paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
+    // RWA 支付锁定信息（从 paymentSent 获取，当 method === RWA_LOCKED 时）
+    paymentLocked:
+      isRwaLocked && paymentSent
+        ? (() => {
+            // 从 listing metadata 获取 escrowTimeoutSeconds
+            const metadata = listingData?.metadata as Record<string, unknown> | undefined;
+            const escrowTimeoutSeconds = (metadata?.rwaEscrowTimeoutSeconds ||
+              metadata?.escrowTimeoutSeconds ||
+              900) as number; // 默认 15 分钟
+
+            // 计算过期时间
+            let expiresAt: string | undefined;
+            if (paymentSent.timestamp) {
+              const lockedTime = new Date(paymentSent.timestamp).getTime();
+              expiresAt = new Date(lockedTime + escrowTimeoutSeconds * 1000).toISOString();
+            }
+
+            return {
+              amount: String(paymentSent.amount || ''),
+              coin: paymentSent.coin || '',
+              buyerReceiveAddress: paymentSent.buyerReceiveAddress || '',
+              lockTxHash: paymentSent.transactionID || '',
+              timestamp: paymentSent.timestamp,
+              escrowTimeoutSeconds,
+              expiresAt,
+            };
+          })()
+        : undefined,
     escrowAddress: paymentAddress,
     notes: notes,
     timeline: generateTimelineFromRealData(data),
