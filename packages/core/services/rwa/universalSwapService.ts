@@ -992,10 +992,20 @@ export class UniversalSwapService {
   }
 
   /**
-   * 解析 Token 标准字符串为枚举值
+   * 解析 Token 标准字符串/数字为枚举值
+   * @param standard - Token 标准，支持字符串（'ERC721'）或数字（0）
    */
-  private parseTokenStandard(standard: TokenStandard): number {
-    const standardUpper = standard.toUpperCase();
+  private parseTokenStandard(standard: TokenStandard | number): number {
+    // 如果已经是数字，直接验证并返回
+    if (typeof standard === 'number') {
+      if (standard === TokenStandardEnum.ERC721) return TokenStandardEnum.ERC721;
+      if (standard === TokenStandardEnum.ERC1155) return TokenStandardEnum.ERC1155;
+      if (standard === TokenStandardEnum.ERC3525) return TokenStandardEnum.ERC3525;
+      throw new Error(`不支持的 Token 标准码: ${standard}`);
+    }
+
+    // 字符串处理
+    const standardUpper = String(standard).toUpperCase();
     if (standardUpper === 'ERC721') return TokenStandardEnum.ERC721;
     if (standardUpper === 'ERC1155') return TokenStandardEnum.ERC1155;
     if (standardUpper === 'ERC3525') return TokenStandardEnum.ERC3525;
