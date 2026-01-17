@@ -254,8 +254,8 @@ export const SEPOLIA_CONFIG: ChainConfig = {
   chainId: ChainId.ETHEREUM_SEPOLIA,
   name: 'Sepolia',
   isTestnet: true,
-  // 新合约地址 - 2026-01-17 部署
-  universalSwapAddress: '0x244f128f43D71Ffd1a3718abaDdbd0a427b474b7',
+  // 新合约地址 - 2026-01-17 部署（支持延迟 Listing + escrowTimeout 重构）
+  universalSwapAddress: '0x1e7b873501bf3bAC31e6E95f8D46CFCaD44aAc33',
   mockUsdtAddress: '0xbF0cCEd12A16904E8B06a90fA8F8029bB36e3f2e',
   mockErc1155Address: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
   mockErc3525Address: '0xccf9C481A2DDaC0ad5a55c3a07C5Cd04cA3d343e',
