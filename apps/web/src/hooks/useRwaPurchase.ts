@@ -55,6 +55,7 @@ export interface UseRwaPurchaseReturn {
   connect: () => Promise<void>;
   startPurchase: () => Promise<void>;
   cancelPurchase: () => Promise<void>;
+  claimExpired: () => Promise<void>;
   reset: () => void;
 
   // 辅助
@@ -256,10 +257,30 @@ export function useRwaPurchase({
       const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
       const paymentAmount = getPaymentAmount();
 
-      // 获取卖家地址（从 listing 的 vendorID 获取，需要后端提供以太坊地址）
-      // TODO: 实际应用中需要通过 API 获取卖家的以太坊地址
-      const vendorPeerID =
-        listing?.vendorID?.peerID || orderOpen?.listings?.[0]?.vendorID?.peerID || '';
+      // 从后端获取身份地址（buyerAddress 和 vendorAddress 是 Mobazha 系统中的链上统一身份地址）
+      const paymentInstructions = await ordersApi.getPaymentInstructions({
+        orderId: externalOrderId,
+        coin: paymentCoin,
+      });
+
+      if (paymentInstructions.error) {
+        throw new Error(paymentInstructions.error);
+      }
+
+      if (!paymentInstructions.buyerAddress) {
+        throw new Error(t('rwa.purchase.missingBuyerAddress') || '无法获取买家身份地址');
+      }
+
+      if (!paymentInstructions.vendorAddress) {
+        throw new Error(t('rwa.purchase.missingSellerAddress') || '无法获取卖家身份地址');
+      }
+
+      // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
+      const buyerIdentity = paymentInstructions.buyerAddress;
+      const sellerAddress = paymentInstructions.vendorAddress;
+
+      // 买家接收 Token 的地址（用户选择的收款账户或当前钱包）
+      const buyerReceiveAddress = walletInfo?.address || '';
 
       // 获取 RWA Token 信息
       const metadata = listing?.metadata || {};
@@ -268,12 +289,11 @@ export function useRwaPurchase({
       const tokenId = metadata.tokenId || '1';
       const quantity = Number(item?.quantity) || 1;
 
-      // 获取交易模式参数
-      const tradeMode = isConfirmRequired ? 1 : 0;
-
-      console.log('🛒 RWA 购买参数:', {
+      console.log('🛒 RWA 购买参数（确认交易模式）:', {
         externalOrderId,
-        vendorPeerID,
+        buyerIdentity,
+        sellerAddress,
+        buyerReceiveAddress,
         tokenStandard,
         tokenContract,
         tokenId,
@@ -281,7 +301,7 @@ export function useRwaPurchase({
         paymentCoin,
         paymentTokenAddress,
         paymentAmount,
-        tradeMode: isConfirmRequired ? '确认交易' : '即时交易',
+        escrowTimeoutSeconds,
       });
 
       // 检查必要信息
@@ -305,26 +325,16 @@ export function useRwaPurchase({
         console.log('✅ 授权成功');
       }
 
-      // Step 2: 调用 createOrderByBuyer（一步完成创建订单 + 支付/锁定）
-      if (isConfirmRequired) {
-        setState(prev => ({ ...prev, step: 'locking' }));
-      } else {
-        setState(prev => ({ ...prev, step: 'executing' }));
-      }
+      // Step 2: 调用 createOrderByBuyer（确认交易模式：锁定资金，等待卖家确认）
+      setState(prev => ({ ...prev, step: 'locking' }));
 
       console.log('🔧 创建订单并支付...');
 
-      // 注意：这里需要卖家的以太坊地址
-      // 在实际实现中，需要通过 API 获取 vendorPeerID 对应的以太坊地址
-      // 临时方案：从 listing metadata 中获取（如果卖家在上架时设置了）
-      const sellerAddress = metadata.sellerWalletAddress || metadata.vendorWalletAddress;
-
-      if (!sellerAddress) {
-        throw new Error(t('rwa.purchase.missingSellerAddress') || '无法获取卖家钱包地址');
-      }
-
+      // 新合约：createOrderByBuyer 仅支持确认交易模式
       const result = await swapService.createOrderByBuyer({
         seller: sellerAddress,
+        buyerIdentity: buyerIdentity, // 从后端获取的买家身份地址
+        buyerReceiveAddress: buyerReceiveAddress, // 买家 Token 接收地址（用户当前钱包）
         tokenStandard: tokenStandard,
         tokenContract: tokenContract,
         tokenId: tokenId,
@@ -332,7 +342,6 @@ export function useRwaPurchase({
         paymentToken: paymentTokenAddress,
         price: paymentAmount,
         externalOrderId: externalOrderId, // 使用 Mobazha orderID
-        tradeMode: tradeMode as 0 | 1,
         escrowTimeoutSeconds: escrowTimeoutSeconds,
       });
 
@@ -342,7 +351,7 @@ export function useRwaPurchase({
         console.log('   交易模式:', result.tradeMode);
 
         // Step 3: 提交支付数据到后端
-        const isInstantComplete = result.tradeMode === 'completed';
+        // 新合约：createOrderByBuyer 仅支持确认交易模式
         // 获取 UniversalSwap 合约地址（目前仅支持 Sepolia）
         const universalSwapAddress = SEPOLIA_CONFIG.universalSwapAddress;
 
@@ -354,13 +363,13 @@ export function useRwaPurchase({
             coin: paymentCoin,
             amount: paymentAmount,
             timestamp: new Date().toISOString(),
-            method: isConfirmRequired ? 4 : 3, // 4: RWA_PAYMENT_LOCKED, 3: RWA_ATOMIC_SWAP
+            method: 4, // RWA_PAYMENT_LOCKED（确认交易模式）
             paymentTokenAddress: paymentTokenAddress,
             contractAddress: universalSwapAddress,
-            buyerReceiveAddress: walletInfo?.address || '',
+            buyerReceiveAddress: buyerReceiveAddress,
             contractOrderId: result.orderId,
-            rwaTradeMode: tradeMode,
-            rwaOrderCompleted: isInstantComplete,
+            rwaTradeMode: 1, // ConfirmRequired
+            rwaOrderCompleted: false, // 需要卖家确认
           });
           console.log('✅ 后端状态同步成功');
         } catch (submitErr) {
@@ -368,24 +377,13 @@ export function useRwaPurchase({
           // 后端同步失败不影响链上交易结果
         }
 
-        if (result.tradeMode === 'locked') {
-          // 确认交易模式：资金锁定，等待卖家确认
-          setState(prev => ({
-            ...prev,
-            step: 'waiting',
-            txHash: result.transactionHash!,
-            isProcessing: false,
-          }));
-        } else {
-          // 即时交易模式：交易完成
-          setState(prev => ({
-            ...prev,
-            step: 'completed',
-            txHash: result.transactionHash!,
-            isProcessing: false,
-          }));
-          onSuccess?.();
-        }
+        // 确认交易模式：资金锁定，等待卖家确认
+        setState(prev => ({
+          ...prev,
+          step: 'waiting',
+          txHash: result.transactionHash!,
+          isProcessing: false,
+        }));
       } else {
         throw new Error(result.message || t('rwa.purchase.executeFailed'));
       }
@@ -438,6 +436,17 @@ export function useRwaPurchase({
       const result = await swapService.cancelByBuyerByExternalId(externalOrderId);
 
       if (result.success) {
+        // 通知后端更新订单状态
+        try {
+          const apiResult = await ordersApi.cancelOrder(
+            externalOrderId,
+            result.transactionHash || ''
+          );
+          console.log('Backend cancelOrder result:', apiResult);
+        } catch (apiErr) {
+          console.warn('Failed to notify backend:', apiErr);
+        }
+
         setState(prev => ({
           ...prev,
           step: 'idle',
@@ -449,6 +458,49 @@ export function useRwaPurchase({
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Cancel failed');
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
+        error: error.message,
+      }));
+      onError?.(error);
+    }
+  }, [order, swapService, onError, t]);
+
+  // 认领超时退款
+  const claimExpired = useCallback(async () => {
+    if (!order || !swapService) return;
+
+    try {
+      setState(prev => ({ ...prev, isProcessing: true, error: null }));
+
+      const externalOrderId =
+        (order.contract as any)?.OrderID || (order.contract as any)?.orderID || '';
+      const result = await swapService.claimExpiredByExternalId(externalOrderId);
+
+      if (result.success) {
+        // 通知后端更新订单状态
+        try {
+          const apiResult = await ordersApi.cancelOrder(
+            externalOrderId,
+            result.transactionHash || ''
+          );
+          console.log('Backend cancelOrder (claimExpired) result:', apiResult);
+        } catch (apiErr) {
+          console.warn('Failed to notify backend:', apiErr);
+        }
+
+        setState(prev => ({
+          ...prev,
+          step: 'idle',
+          isProcessing: false,
+          txHash: null,
+        }));
+      } else {
+        throw new Error(result.message || t('rwa.purchase.claimFailed'));
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Claim failed');
       setState(prev => ({
         ...prev,
         isProcessing: false,
@@ -476,6 +528,7 @@ export function useRwaPurchase({
     connect,
     startPurchase,
     cancelPurchase,
+    claimExpired,
     reset,
     isConfirmRequired,
     formattedTimeout,

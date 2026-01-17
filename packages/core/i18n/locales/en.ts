@@ -633,6 +633,22 @@ export const en: TranslationResource = {
         userRejected: 'Transaction was rejected by user.',
       },
     },
+    // RWA Payment Locked
+    paymentLocked: {
+      title: 'Payment Locked',
+      locked: 'Locked',
+      expired: 'Expired',
+      amount: 'Amount',
+      token: 'Token',
+      buyerAddress: 'Buyer Receive Address',
+      lockedTime: 'Locked Time',
+      expiresAt: 'Expires At',
+      waitingForSeller: 'Payment locked, waiting for seller to confirm...',
+      waitingToConfirm: 'Payment received, please confirm the order',
+      expiredCanClaim: 'Payment has expired, you can claim a refund',
+      cancelOrder: 'Cancel Order',
+      claimRefund: 'Claim Refund',
+    },
   },
 
   chat: {

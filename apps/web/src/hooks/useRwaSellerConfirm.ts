@@ -116,7 +116,6 @@ export function useRwaSellerConfirm({
   const getTokenInfo = useCallback(() => {
     if (!order) return null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listing =
       (order.contract as any)?.vendorListings?.[0] ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -163,11 +162,22 @@ export function useRwaSellerConfirm({
       }
       console.warn('✅ Token 授权成功');
 
-      // Step 2: 调用 confirmOrder
+      // Step 2: 调用 confirmOrder（需传入卖家收款地址）
       setState(prev => ({ ...prev, step: 'confirming' }));
-      console.warn('🔧 确认订单...');
 
-      const confirmResult = await swapService.confirmOrderByExternalId(orderId);
+      // 获取卖家收款地址（当前连接的钱包地址）
+      const sellerReceiveAddress = walletInfo?.address;
+      if (!sellerReceiveAddress) {
+        throw new Error(t('rwa.confirm.missingWalletAddress') || '无法获取钱包地址');
+      }
+
+      console.warn('🔧 确认订单...');
+      console.warn('   卖家收款地址:', sellerReceiveAddress);
+
+      const confirmResult = await swapService.confirmOrderByExternalId(
+        orderId,
+        sellerReceiveAddress // 新增：卖家收款地址
+      );
 
       if (!confirmResult.success) {
         throw new Error(t('rwa.confirm.confirmFailed') || '确认订单失败');
@@ -210,7 +220,7 @@ export function useRwaSellerConfirm({
       }));
       onError?.(error);
     }
-  }, [order, swapService, orderId, onSuccess, onError, t, getTokenInfo]);
+  }, [order, swapService, orderId, onSuccess, onError, t, getTokenInfo, walletInfo]);
 
   // 拒绝订单
   const declineOrder = useCallback(async () => {

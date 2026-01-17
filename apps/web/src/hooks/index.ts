@@ -15,3 +15,10 @@ export {
   type UseRwaPurchaseReturn,
   type UseRwaPurchaseOptions,
 } from './useRwaPurchase';
+export {
+  useRwaSellerConfirm,
+  type RwaConfirmStep,
+  type RwaConfirmState,
+  type UseRwaSellerConfirmReturn,
+  type UseRwaSellerConfirmOptions,
+} from './useRwaSellerConfirm';

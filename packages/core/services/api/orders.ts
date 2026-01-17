@@ -754,20 +754,32 @@ export async function fundOrder(
 }
 
 /**
+ * 支付指令响应类型
+ * - RWA Token 支付：返回 buyerAddress 和 vendorAddress（身份地址）
+ * - 传统支付：返回 address 和 amount
+ */
+export interface PaymentInstructionsResponse {
+  // 传统支付字段
+  address?: string;
+  amount?: number;
+  // RWA Token 支付字段（身份地址）
+  buyerAddress?: string;
+  vendorAddress?: string;
+  // 错误字段
+  error?: string;
+}
+
+/**
  * 获取支付指令
  */
 export async function getPaymentInstructions(
   requestData: { orderId: string; coin: string },
   username?: string,
   password?: string
-): Promise<{ address?: string; amount?: number; error?: string }> {
+): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/instructions/order/payment`;
-    return post<{ address?: string; amount?: number; error?: string }>(
-      url,
-      requestData,
-      getAuthHeaders(username, password)
-    );
+    return post<PaymentInstructionsResponse>(url, requestData, getAuthHeaders(username, password));
   };
 
   const mockFn = async () => {
@@ -775,6 +787,9 @@ export async function getPaymentInstructions(
     return {
       address: '0x' + Math.random().toString(16).slice(2, 42),
       amount: 0.05,
+      // Mock RWA Token 身份地址
+      buyerAddress: '0x' + Math.random().toString(16).slice(2, 42),
+      vendorAddress: '0x' + Math.random().toString(16).slice(2, 42),
     };
   };
 

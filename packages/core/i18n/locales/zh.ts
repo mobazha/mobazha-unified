@@ -618,6 +618,22 @@ export const zh: TranslationResource = {
         userRejected: '用户拒绝了交易。',
       },
     },
+    // RWA 资金锁定
+    paymentLocked: {
+      title: '资金已锁定',
+      locked: '已锁定',
+      expired: '已过期',
+      amount: '金额',
+      token: '代币',
+      buyerAddress: '买家接收地址',
+      lockedTime: '锁定时间',
+      expiresAt: '过期时间',
+      waitingForSeller: '资金已锁定，等待卖家确认...',
+      waitingToConfirm: '已收到付款，请确认订单',
+      expiredCanClaim: '付款已过期，您可以认领退款',
+      cancelOrder: '取消订单',
+      claimRefund: '认领退款',
+    },
   },
 
   chat: {
