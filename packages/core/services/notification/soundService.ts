@@ -66,6 +66,61 @@ const LANG_MAP: Record<string, string> = {
   'pt-BR': 'pt-BR',
 };
 
+/** 语音优先级配置（按质量排序） */
+const VOICE_PREFERENCES: Record<string, string[]> = {
+  'zh-CN': [
+    'Ting-Ting', // macOS/iOS 高质量女声
+    'Google 普通话（中国大陆）', // Android Chrome
+    'Microsoft Huihui', // Windows 女声
+    'Microsoft Yaoyao', // Windows 女声
+    'Lili', // 其他中文女声
+  ],
+  'zh-TW': [
+    'Mei-Jia', // macOS/iOS 台湾女声
+    'Microsoft Hanhan', // Windows
+  ],
+  'en-US': [
+    'Samantha', // macOS 女声
+    'Google US English', // Chrome
+    'Microsoft Zira', // Windows 女声
+    'Alex', // macOS 男声
+  ],
+  'ja-JP': [
+    'Kyoko', // macOS/iOS 日语女声
+    'Google 日本語', // Chrome
+    'Microsoft Haruka', // Windows
+  ],
+  'ko-KR': [
+    'Yuna', // macOS/iOS 韩语女声
+    'Google 한국의', // Chrome
+  ],
+  'es-ES': [
+    'Monica', // macOS 西班牙语女声
+    'Google español', // Chrome
+    'Microsoft Helena', // Windows
+  ],
+  'fr-FR': [
+    'Thomas', // macOS 法语
+    'Google français', // Chrome
+    'Microsoft Hortense', // Windows
+  ],
+  'de-DE': [
+    'Anna', // macOS 德语女声
+    'Google Deutsch', // Chrome
+    'Microsoft Hedda', // Windows
+  ],
+  'ru-RU': [
+    'Milena', // macOS 俄语女声
+    'Google русский', // Chrome
+    'Microsoft Irina', // Windows
+  ],
+  'pt-BR': [
+    'Luciana', // macOS 葡萄牙语女声
+    'Google português do Brasil', // Chrome
+    'Microsoft Maria', // Windows
+  ],
+};
+
 // ============ 类定义 ============
 
 /**
@@ -228,7 +283,43 @@ class SoundService {
   }
 
   /**
-   * TTS 语音播报
+   * 获取最佳可用语音
+   */
+  private getBestVoice(lang: string): SpeechSynthesisVoice | null {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return null;
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) {
+      return null;
+    }
+
+    // 获取该语言的优先语音列表
+    const preferences = VOICE_PREFERENCES[lang] || [];
+
+    // 按优先级查找语音
+    for (const prefName of preferences) {
+      const voice = voices.find(v => v.name.includes(prefName) || v.voiceURI.includes(prefName));
+      if (voice) {
+        console.log(`[SoundService] Selected voice: ${voice.name}`);
+        return voice;
+      }
+    }
+
+    // 回退：查找匹配语言的任意语音
+    const langPrefix = lang.split('-')[0];
+    const langVoice = voices.find(v => v.lang.startsWith(langPrefix));
+    if (langVoice) {
+      console.log(`[SoundService] Fallback voice: ${langVoice.name}`);
+      return langVoice;
+    }
+
+    return null;
+  }
+
+  /**
+   * TTS 语音播报（智能语音选择）
    */
   speak(text: string): boolean {
     if (typeof window === 'undefined') return false;
@@ -247,9 +338,16 @@ class SoundService {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = this.getTtsLang();
+    const lang = this.getTtsLang();
+    utterance.lang = lang;
     utterance.rate = 1.1; // 稍快的语速
     utterance.volume = settings.volume;
+
+    // 智能选择最佳语音
+    const bestVoice = this.getBestVoice(lang);
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+    }
 
     window.speechSynthesis.speak(utterance);
     return true;
