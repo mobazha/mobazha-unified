@@ -10,7 +10,6 @@
 
 import { ethers } from 'ethers';
 import type {
-  CreateOrderData,
   OrderInfo,
   RwaTransactionResult,
   RwaCreateOrderResult,

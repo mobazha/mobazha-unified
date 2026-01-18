@@ -348,7 +348,9 @@ export interface TokenTransfer {
   hash: string;
   from: string;
   to: string;
+  contractAddress?: string; // 合约地址
   tokenId?: string;
+  slotId?: string; // ERC3525 slot ID
   value?: string;
   timestamp: number;
   blockNumber: number;

@@ -277,37 +277,33 @@ export function useRwaPurchase({
 
       // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
       const buyerIdentity = paymentInstructions.buyerAddress;
-      const sellerAddress = paymentInstructions.vendorAddress;
 
       // 买家接收 Token 的地址（用户选择的收款账户或当前钱包）
       const buyerReceiveAddress = walletInfo?.address || '';
 
       // 获取 RWA Token 信息
       const metadata = listing?.metadata || {};
-      const tokenStandard = listing?.item?.tokenStandard || 'ERC721';
-      const tokenContract = metadata.cryptoListingAddress;
-      const tokenId = metadata.tokenId || '1';
       const quantity = Number(item?.quantity) || 1;
+
+      // 获取 RWA Listing ID（确认交易模式必须有 listingId）
+      const rwaListingIdRaw = metadata.rwaListingId;
+      const rwaListingId = parseInt(rwaListingIdRaw, 10);
+      if (isNaN(rwaListingId) || rwaListingId <= 0) {
+        throw new Error(
+          `商品缺少有效的 rwaListingId（当前值: ${rwaListingIdRaw}），无法创建确认交易订单。请联系卖家重新上架商品。`
+        );
+      }
 
       console.log('🛒 RWA 购买参数（确认交易模式）:', {
         externalOrderId,
+        rwaListingId,
         buyerIdentity,
-        sellerAddress,
         buyerReceiveAddress,
-        tokenStandard,
-        tokenContract,
-        tokenId,
         quantity,
         paymentCoin,
         paymentTokenAddress,
         paymentAmount,
-        escrowTimeoutSeconds,
       });
-
-      // 检查必要信息
-      if (!tokenContract) {
-        throw new Error(t('rwa.purchase.missingTokenContract') || '无法获取 Token 合约地址');
-      }
 
       // Step 1: 授权支付代币
       setState(prev => ({ ...prev, step: 'approving' }));
@@ -325,24 +321,20 @@ export function useRwaPurchase({
         console.log('✅ 授权成功');
       }
 
-      // Step 2: 调用 createOrderByBuyer（确认交易模式：锁定资金，等待卖家确认）
+      // Step 2: 调用 createOrderFromListing（确认交易模式：锁定资金，等待卖家确认）
       setState(prev => ({ ...prev, step: 'locking' }));
 
-      console.log('🔧 创建订单并支付...');
+      console.log('🔧 通过延迟 Listing 创建订单并支付...');
 
-      // 新合约：createOrderByBuyer 仅支持确认交易模式
-      const result = await swapService.createOrderByBuyer({
-        seller: sellerAddress,
+      // 新合约：createOrderFromListing 通过延迟 Listing 创建订单
+      const result = await swapService.createOrderFromListing({
+        listingId: rwaListingId.toString(),
         buyerIdentity: buyerIdentity, // 从后端获取的买家身份地址
         buyerReceiveAddress: buyerReceiveAddress, // 买家 Token 接收地址（用户当前钱包）
-        tokenStandard: tokenStandard,
-        tokenContract: tokenContract,
-        tokenId: tokenId,
-        amount: quantity.toString(),
+        tokenAmount: quantity.toString(),
         paymentToken: paymentTokenAddress,
         price: paymentAmount,
         externalOrderId: externalOrderId, // 使用 Mobazha orderID
-        escrowTimeoutSeconds: escrowTimeoutSeconds,
       });
 
       if (result.success && result.transactionHash) {

@@ -33,6 +33,8 @@ export interface UseRwaAssetsOptions {
   assetTypes?: AssetTypeCode[];
   /** 是否自动刷新 (钱包地址变化时) */
   autoRefresh?: boolean;
+  /** 指定要查询的地址 (用于演示模式，不依赖钱包连接) */
+  ownerAddress?: string;
 }
 
 export interface UseRwaAssetsReturn {
@@ -94,6 +96,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
     autoLoadPredefinedBalances = true,
     assetTypes: assetTypesProp,
     autoRefresh = true,
+    ownerAddress: ownerAddressProp,
   } = options;
 
   // 稳定化 assetTypes，避免每次渲染都创建新数组
@@ -251,24 +254,27 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
     setIsLoading(true);
     setError(null);
 
+    // 使用 ownerAddressProp 或 walletAddress 作为查询地址
+    const queryAddress = ownerAddressProp || walletAddress;
+
     try {
       // 1. 加载预定义资产的余额
       if (autoLoadPredefinedBalances && allPredefinedAssets.length > 0) {
         const assetBalances = await batchGetBalances(
           allPredefinedAssets,
-          walletAddress || undefined
+          queryAddress || undefined
         );
         setBalances(assetBalances);
       }
 
-      // 2. 如果钱包已连接，发现用户拥有的 ERC3525 资产
-      if (walletAddress) {
+      // 2. 发现用户拥有的 ERC3525 资产（使用 queryAddress）
+      if (queryAddress) {
         // 查询 ERC3525 资产
         if (SEPOLIA_CONFIG.mockErc3525Address) {
           try {
             const erc3525Tokens = await getERC3525TokensOfOwner(
               SEPOLIA_CONFIG.mockErc3525Address,
-              walletAddress
+              queryAddress
             );
             setOwnedERC3525Tokens(erc3525Tokens);
           } catch (err) {
@@ -291,7 +297,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
             if (knownTokenIds.length > 0) {
               const erc1155Tokens = await getERC1155TokensOfOwner(
                 SEPOLIA_CONFIG.mockErc1155Address,
-                walletAddress,
+                queryAddress,
                 knownTokenIds
               );
               setOwnedERC1155Tokens(erc1155Tokens);
@@ -307,7 +313,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
     } finally {
       setIsLoading(false);
     }
-  }, [walletAddress, autoLoadPredefinedBalances, allPredefinedAssets]);
+  }, [ownerAddressProp, walletAddress, autoLoadPredefinedBalances, allPredefinedAssets]);
 
   /**
    * 刷新资产
