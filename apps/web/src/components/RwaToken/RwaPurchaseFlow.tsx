@@ -19,6 +19,7 @@ import {
   UniversalSwapService,
   TradeMode,
   getContractAddress,
+  ordersApi,
 } from '@mobazha/core';
 import { ethers } from 'ethers';
 import { Button } from '@/components/ui/button';
@@ -247,44 +248,49 @@ export function RwaPurchaseFlow({
       const usdAmount = (price * quantity) / Math.pow(10, pricingDivisibility);
       const paymentAmount = Math.floor(usdAmount * 1e6).toString(); // USDT 有 6 位小数
 
-      // 获取卖家地址
-      const vendorListings = (order.contract as any)?.vendorListings;
-      const sellerAddress = vendorListings?.[0]?.vendorID?.peerID || '';
+      // 从后端获取身份地址
+      const paymentInstructions = await ordersApi.getPaymentInstructions({
+        orderId: externalOrderId,
+        coin: paymentCoin,
+      });
 
-      // 买家身份地址（使用当前钱包地址）
-      const buyerIdentity = walletInfo?.address || '';
+      if (paymentInstructions.error) {
+        throw new Error(paymentInstructions.error);
+      }
+
+      if (!paymentInstructions.buyerAddress) {
+        throw new Error(t('rwa.purchase.missingBuyerAddress') || '无法获取买家身份地址');
+      }
+
+      // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
+      const buyerIdentity = paymentInstructions.buyerAddress;
       // 买家接收 Token 的地址（使用当前钱包地址）
       const buyerReceiveAddress = walletInfo?.address || '';
 
-      // 获取 RWA Token 信息
-      const tokenStandard = listing?.item?.tokenStandard || 'ERC721';
-      const tokenContract = listing?.metadata?.cryptoListingAddress || '';
-      const tokenId = listing?.metadata?.tokenId || '1';
-      // quantity 已在上面定义，直接使用
+      // 获取 RWA Listing ID（确认交易模式必须有 listingId）
+      const rwaListingIdRaw = listing?.metadata?.rwaListingId;
+      const rwaListingId = parseInt(rwaListingIdRaw, 10);
+      if (isNaN(rwaListingId) || rwaListingId <= 0) {
+        throw new Error(
+          `商品缺少有效的 rwaListingId（当前值: ${rwaListingIdRaw}），无法创建确认交易订单。请联系卖家重新上架商品。`
+        );
+      }
 
       console.log('🛒 RWA 购买参数:', {
         externalOrderId,
+        rwaListingId,
         buyerIdentity,
-        sellerAddress,
         buyerReceiveAddress,
-        tokenStandard,
-        tokenContract,
-        tokenId,
         quantity,
         paymentCoin,
         paymentTokenAddress,
         paymentAmount,
         isConfirmRequired,
-        escrowTimeoutSeconds,
       });
 
       // 检查必要信息
-      if (!tokenContract) {
-        throw new Error(t('rwa.purchase.missingTokenContract') || '无法获取 Token 合约地址');
-      }
-
-      if (!sellerAddress) {
-        throw new Error(t('rwa.purchase.missingSellerAddress') || '无法获取卖家地址');
+      if (!buyerReceiveAddress) {
+        throw new Error(t('rwa.purchase.missingBuyerAddress') || '无法获取买家接收地址');
       }
 
       // Step 1: 授权支付代币
@@ -301,27 +307,23 @@ export function RwaPurchaseFlow({
         console.log('✅ 授权成功');
       }
 
-      // Step 2: 调用 createOrderByBuyer（确认交易模式：锁定资金，等待卖家确认）
-      // 新合约设计：createOrderByBuyer 在创建订单的同时锁定资金
+      // Step 2: 调用 createOrderFromListing（确认交易模式：锁定资金，等待卖家确认）
+      // 新合约设计：通过延迟 Listing 创建订单，escrowTimeout 从 Listing 获取
       if (isConfirmRequired) {
         setStep('locking');
       } else {
         setStep('executing');
       }
 
-      console.log('🔧 创建订单并锁定资金...');
-      const result = await swapService.createOrderByBuyer({
-        seller: sellerAddress,
+      console.log('🔧 通过延迟 Listing 创建订单并锁定资金...');
+      const result = await swapService.createOrderFromListing({
+        listingId: rwaListingId.toString(),
         buyerIdentity: buyerIdentity,
         buyerReceiveAddress: buyerReceiveAddress,
-        tokenStandard: tokenStandard,
-        tokenContract: tokenContract,
-        tokenId: tokenId,
-        amount: quantity.toString(),
+        tokenAmount: quantity.toString(),
         paymentToken: paymentTokenAddress,
         price: paymentAmount,
         externalOrderId: externalOrderId,
-        escrowTimeoutSeconds: escrowTimeoutSeconds,
       });
 
       if (result.success && result.transactionHash) {

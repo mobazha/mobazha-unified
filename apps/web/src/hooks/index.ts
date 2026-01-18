@@ -1,3 +1,5 @@
+'use client';
+
 export { ProductModalProvider, useProductModal } from './useProductModal';
 export { PaymentSelectorProvider, usePaymentSelector } from './usePaymentSelector';
 export { useModerators } from './useModerators';

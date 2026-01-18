@@ -36,6 +36,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "ethers": "^6.14.1",
     "lucide-react": "^0.562.0",
     "next": "^16.1.1",
     "react": "^19.0.0",

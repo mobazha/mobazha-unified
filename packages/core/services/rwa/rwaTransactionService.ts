@@ -1,13 +1,15 @@
 /**
  * RWA 交易历史查询服务
- * 通过 Etherscan API 获取 Token 转账历史
+ * 通过 Etherscan V2 API 获取 Token 转账历史
  */
 
 import type { TokenTransfer } from '../../types/rwa';
+import { getERC3525Slot, getERC3525Value } from './rwaBalanceService';
 
-// Etherscan API 配置
-const ETHERSCAN_API_URL = 'https://api-sepolia.etherscan.io/api';
-// 注意：生产环境需要使用有效的 API Key
+// Etherscan V2 API 配置 (统一端点，通过 chainid 区分网络)
+const ETHERSCAN_API_URL = 'https://api.etherscan.io/v2/api';
+const CHAIN_ID = 11155111; // Sepolia
+// Etherscan API Key (V2 API 必需)
 const ETHERSCAN_API_KEY = '';
 
 // 缓存配置
@@ -52,10 +54,34 @@ export function clearTransferCache(): void {
 /**
  * 获取 ERC20 Token 转账历史
  */
+/**
+ * 构建 Etherscan V2 API URL
+ */
+function buildApiUrl(params: Record<string, string>): string {
+  const url = new URL(ETHERSCAN_API_URL);
+  // V2 API 必须指定 chainid
+  url.searchParams.set('chainid', CHAIN_ID.toString());
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, value);
+    }
+  });
+  // V2 API 必须有 API Key
+  url.searchParams.set('apikey', ETHERSCAN_API_KEY);
+  return url.toString();
+}
+
+/**
+ * 延迟函数 (避免 API 速率限制)
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function getERC20TokenTransfers(
   contractAddress: string,
   address: string,
-  apiKey?: string
+  _apiKey?: string
 ): Promise<TokenTransfer[]> {
   const cacheKey = getCacheKey('erc20', contractAddress, address);
   const cached = getCachedTransfers(cacheKey);
@@ -64,15 +90,15 @@ export async function getERC20TokenTransfers(
   }
 
   try {
-    const url = new URL(ETHERSCAN_API_URL);
-    url.searchParams.set('module', 'account');
-    url.searchParams.set('action', 'tokentx');
-    url.searchParams.set('contractaddress', contractAddress);
-    url.searchParams.set('address', address);
-    url.searchParams.set('sort', 'desc');
-    url.searchParams.set('apikey', apiKey || ETHERSCAN_API_KEY);
+    const url = buildApiUrl({
+      module: 'account',
+      action: 'tokentx',
+      contractaddress: contractAddress,
+      address: address,
+      sort: 'desc',
+    });
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url);
     const data = await response.json();
 
     if (data.status !== '1' || !Array.isArray(data.result)) {
@@ -112,7 +138,7 @@ export async function getERC20TokenTransfers(
 export async function getERC1155TokenTransfers(
   contractAddress: string,
   address: string,
-  apiKey?: string
+  _apiKey?: string
 ): Promise<TokenTransfer[]> {
   const cacheKey = getCacheKey('erc1155', contractAddress, address);
   const cached = getCachedTransfers(cacheKey);
@@ -121,15 +147,15 @@ export async function getERC1155TokenTransfers(
   }
 
   try {
-    const url = new URL(ETHERSCAN_API_URL);
-    url.searchParams.set('module', 'account');
-    url.searchParams.set('action', 'token1155tx');
-    url.searchParams.set('contractaddress', contractAddress);
-    url.searchParams.set('address', address);
-    url.searchParams.set('sort', 'desc');
-    url.searchParams.set('apikey', apiKey || ETHERSCAN_API_KEY);
+    const url = buildApiUrl({
+      module: 'account',
+      action: 'token1155tx',
+      contractaddress: contractAddress,
+      address: address,
+      sort: 'desc',
+    });
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url);
     const data = await response.json();
 
     if (data.status !== '1' || !Array.isArray(data.result)) {
@@ -166,13 +192,53 @@ export async function getERC1155TokenTransfers(
 }
 
 /**
+ * 为 ERC3525 交易添加 slot 和 value 信息
+ */
+async function enrichERC3525WithSlots(
+  transfers: TokenTransfer[],
+  contractAddress: string
+): Promise<void> {
+  const tokenIds = [...new Set(transfers.map(tx => tx.tokenId).filter(Boolean))] as string[];
+
+  if (tokenIds.length === 0) return;
+
+  const tokenInfoMap = new Map<string, { slot: string; value: string }>();
+
+  for (const tokenId of tokenIds) {
+    try {
+      const slot = await getERC3525Slot(contractAddress, tokenId);
+      let value = '1';
+      try {
+        value = await getERC3525Value(contractAddress, tokenId);
+      } catch {
+        // token value 获取失败，使用默认值
+      }
+      tokenInfoMap.set(tokenId, { slot, value });
+    } catch {
+      // 可能是 token 已被销毁，忽略错误
+    }
+  }
+
+  for (const tx of transfers) {
+    if (tx.tokenId && tokenInfoMap.has(tx.tokenId)) {
+      const info = tokenInfoMap.get(tx.tokenId)!;
+      tx.slotId = info.slot;
+      // 对于铸造交易（from 为零地址），使用当前 value
+      if (tx.from === '0x0000000000000000000000000000000000000000') {
+        tx.value = info.value;
+      }
+    }
+  }
+}
+
+/**
  * 获取 ERC3525 Token 转账历史 (使用 ERC721 接口，因为 ERC3525 继承自 ERC721)
  */
 export async function getERC3525TokenTransfers(
   contractAddress: string,
   address: string,
   tokenId?: string,
-  apiKey?: string
+  _apiKey?: string
 ): Promise<TokenTransfer[]> {
   const cacheKey = getCacheKey('erc3525', contractAddress, `${address}_${tokenId || 'all'}`);
   const cached = getCachedTransfers(cacheKey);
@@ -181,15 +247,15 @@ export async function getERC3525TokenTransfers(
   }
 
   try {
-    const url = new URL(ETHERSCAN_API_URL);
-    url.searchParams.set('module', 'account');
-    url.searchParams.set('action', 'tokennfttx');
-    url.searchParams.set('contractaddress', contractAddress);
-    url.searchParams.set('address', address);
-    url.searchParams.set('sort', 'desc');
-    url.searchParams.set('apikey', apiKey || ETHERSCAN_API_KEY);
+    const url = buildApiUrl({
+      module: 'account',
+      action: 'tokennfttx',
+      contractaddress: contractAddress,
+      address: address,
+      sort: 'desc',
+    });
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url);
     const data = await response.json();
 
     if (data.status !== '1' || !Array.isArray(data.result)) {
@@ -220,6 +286,9 @@ export async function getERC3525TokenTransfers(
       transfers = transfers.filter(t => t.tokenId === tokenId);
     }
 
+    // 为 ERC3525 交易添加 slot 和 value 信息
+    await enrichERC3525WithSlots(transfers, contractAddress);
+
     setCachedTransfers(cacheKey, transfers);
     return transfers;
   } catch (error) {
@@ -242,10 +311,77 @@ export function formatTimestamp(timestamp: number): string {
   });
 }
 
+/**
+ * 资产接口（用于交易历史查询）
+ */
+interface AssetLike {
+  contractAddress: string;
+  tokenStandard: string;
+}
+
+/**
+ * 获取用户的所有 RWA 资产交易历史
+ * @param userAddress 用户地址
+ * @param assets 资产列表 [{contractAddress, tokenStandard}]
+ * @returns 合并后的交易列表（按时间排序）
+ */
+export async function getUserTransactionHistory(
+  userAddress: string,
+  assets: AssetLike[]
+): Promise<TokenTransfer[]> {
+  if (!userAddress || !assets || assets.length === 0) {
+    return [];
+  }
+
+  const allTransactions: TokenTransfer[] = [];
+
+  // 按合约地址去重
+  const uniqueContracts = new Map<string, string>();
+  assets.forEach(asset => {
+    if (!asset.contractAddress) return;
+    const key = asset.contractAddress.toLowerCase();
+    if (!uniqueContracts.has(key)) {
+      uniqueContracts.set(key, asset.tokenStandard);
+    }
+  });
+
+  // 串行获取每个合约的交易（避免速率限制）
+  for (const [contractAddress, tokenStandard] of uniqueContracts.entries()) {
+    try {
+      let transfers: TokenTransfer[];
+      if (tokenStandard === 'ERC1155') {
+        transfers = await getERC1155TokenTransfers(contractAddress, userAddress);
+      } else if (tokenStandard === 'ERC3525' || tokenStandard === 'ERC721') {
+        transfers = await getERC3525TokenTransfers(contractAddress, userAddress);
+      } else {
+        continue;
+      }
+
+      // 添加 contractAddress 到每个交易
+      transfers.forEach(tx => {
+        tx.contractAddress = contractAddress;
+      });
+
+      allTransactions.push(...transfers);
+
+      // 添加延迟避免 Etherscan API 速率限制
+      await delay(250);
+    } catch (error) {
+      console.error(`Error fetching transfers for ${contractAddress}:`, error);
+    }
+  }
+
+  // 按时间降序排序
+  allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+  return allTransactions;
+}
+
 export default {
   getERC20TokenTransfers,
   getERC1155TokenTransfers,
   getERC3525TokenTransfers,
+  getUserTransactionHistory,
   clearTransferCache,
   formatTimestamp,
 };
