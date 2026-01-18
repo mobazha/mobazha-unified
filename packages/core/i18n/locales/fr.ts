@@ -425,7 +425,7 @@ export const fr: TranslationResource = {
     reviews: 'Avis',
     verified: 'Vérifié',
     store: 'Boutique',
-    otc: 'OTC',
+    rwa: 'Actifs Numériques',
     posts: 'Publications',
     community: 'Communauté',
     viewStore: 'Voir la boutique',

@@ -25,9 +25,6 @@ export * from './currencyService';
 // 认证仲裁员服务
 export * from './verifiedModerators';
 
-// OTC 服务
-export * from './otc';
-
 // 通知服务
 export * from './notification';
 

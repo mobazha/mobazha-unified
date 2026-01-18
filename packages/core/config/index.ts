@@ -11,9 +11,6 @@ export * from './env';
 // 导出测试账号配置
 export * from './testAccounts';
 
-// 导出 OTC 配置
-export * from './otcConfig';
-
 // 导出 AppKit 配置
 export * from './appkit';
 

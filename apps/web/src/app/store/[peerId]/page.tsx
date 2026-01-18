@@ -45,7 +45,7 @@ import { Settings, Camera, Package, Lock, ShieldCheck, Plus, Upload, Ban } from 
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 import {
-  OtcTab,
+  RwaTab,
   StoreListingsToolbar,
   type FilterState,
   type CategoryItem,
@@ -64,7 +64,7 @@ const defaultStats = {
   averageRating: 0,
 };
 
-type TabType = 'about' | 'products' | 'otc' | 'reviews' | 'following' | 'followers';
+type TabType = 'about' | 'products' | 'rwa' | 'reviews' | 'following' | 'followers';
 
 export default function StorePage() {
   const params = useParams();
@@ -904,16 +904,16 @@ export default function StorePage() {
                   )}
                 </button>
 
-                {/* OTC Tab */}
+                {/* RWA 数字资产 Tab */}
                 <button
-                  onClick={() => setActiveTab('otc')}
+                  onClick={() => setActiveTab('rwa')}
                   className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                    activeTab === 'otc'
+                    activeTab === 'rwa'
                       ? 'border-primary text-primary'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {t('profile.otc') || 'OTC'}
+                  {t('profile.rwa') || '数字资产'}
                 </button>
               </HStack>
             </div>
@@ -1021,9 +1021,15 @@ export default function StorePage() {
             </Container>
           )}
 
-          {activeTab === 'otc' && (
+          {activeTab === 'rwa' && (
             <Container size="xl" className="px-4 sm:px-6">
-              <OtcTab peerId={peerId} isOwnStore={isOwnStore} />
+              <RwaTab
+                peerId={peerId}
+                isOwnStore={isOwnStore}
+                products={products}
+                storeName={store?.name}
+                storeAvatar={getImageUrl(store?.avatarHashes?.small)}
+              />
             </Container>
           )}
 

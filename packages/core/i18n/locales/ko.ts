@@ -425,7 +425,7 @@ export const ko: TranslationResource = {
     reviews: '리뷰',
     verified: '인증됨',
     store: '스토어',
-    otc: 'OTC',
+    rwa: '디지털 자산',
     posts: '게시물',
     community: '커뮤니티',
     viewStore: '스토어 보기',

@@ -12,22 +12,24 @@ import type {
   EtherscanUrls,
 } from '../../types/rwa';
 import { ChainId } from '../payment/types';
-import { getOtcConfig, DEFAULT_CHAIN_ID, OTC_CONFIGS } from '../../config/otcConfig';
+import { getCurrentChainId, BLOCK_EXPLORERS } from '../../config/appkit';
 
 // 导出 Sepolia Chain ID 常量以保持向后兼容
 export const SEPOLIA_CHAIN_ID = ChainId.ETHEREUM_SEPOLIA;
 
-// 备用公共 RPC URLs (从配置中获取主 RPC，加上额外备用)
+// 默认 Chain ID
+const DEFAULT_CHAIN_ID = getCurrentChainId();
+
+// 备用公共 RPC URLs
 const FALLBACK_RPC_URLS = [
-  getOtcConfig(DEFAULT_CHAIN_ID).rpcUrl,
+  'https://rpc.sepolia.org',
   'https://rpc2.sepolia.org',
   'https://sepolia.drpc.org',
 ];
 
 // 获取当前网络的 Block Explorer URL
 function getBlockExplorerUrl(chainId: number = DEFAULT_CHAIN_ID): string {
-  const config = OTC_CONFIGS[chainId];
-  return config?.blockExplorerUrl || 'https://sepolia.etherscan.io';
+  return BLOCK_EXPLORERS[chainId as keyof typeof BLOCK_EXPLORERS] || 'https://sepolia.etherscan.io';
 }
 
 // 缓存配置

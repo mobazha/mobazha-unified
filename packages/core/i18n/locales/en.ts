@@ -787,7 +787,7 @@ export const en: TranslationResource = {
     review: 'review',
     verified: 'Verified',
     store: 'Store',
-    otc: 'OTC',
+    rwa: 'Digital Assets',
     posts: 'Posts',
     community: 'Community',
     viewStore: 'View Store',
@@ -2025,8 +2025,21 @@ export const en: TranslationResource = {
     notFound: 'Listing not found',
   },
 
-  // RWA Atomic Swap Flows
+  // RWA Digital Assets Tab
   rwa: {
+    // Tab related
+    fetchError: 'Failed to fetch RWA products',
+    filterTokenStandard: 'Token Standard',
+    filterTradeMode: 'Trade Mode',
+    membership: 'Membership',
+    share: 'Share Token',
+    instantTrade: 'Instant Trade',
+    confirmRequired: 'Confirm Required',
+    foundItems: 'Found {{count}} items',
+    noRwaYet: 'No RWA digital assets yet',
+    noRwaInStore: 'This store has no RWA digital assets',
+    createFirstRwa: 'Create a listing with RWA Token type to start selling digital assets',
+    // Atomic swap purchase flow
     purchase: {
       connectWallet: 'Connect Wallet',
       connectDesc: 'Please connect your wallet to authorize payment tokens',

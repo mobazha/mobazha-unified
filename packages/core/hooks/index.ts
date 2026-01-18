@@ -65,9 +65,6 @@ export * from './useCurrency';
 // 认证仲裁员相关
 export * from './useVerifiedModerators';
 
-// OTC 交易相关
-export * from './useOtc';
-
 // 访问控制相关
 export * from './useAccessControl';
 export * from './useUserGroups';
