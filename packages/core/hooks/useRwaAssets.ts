@@ -134,12 +134,50 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
     }));
   }, [allPredefinedAssets, balances]);
 
+  // 按 slot 分组的 ERC3525 token 详情 (用于展示每个 token 的具体数量)
+  const erc3525TokenDetailsBySlot = useMemo(() => {
+    const bySlot: Record<string, { tokens: OwnedERC3525Token[]; totalValue: bigint }> = {};
+
+    for (const token of ownedERC3525Tokens) {
+      const slotKey = `${token.contractAddress.toLowerCase()}_${token.slot}`;
+      if (!bySlot[slotKey]) {
+        bySlot[slotKey] = { tokens: [], totalValue: BigInt(0) };
+      }
+      bySlot[slotKey].tokens.push(token);
+      bySlot[slotKey].totalValue += BigInt(token.value || 0);
+    }
+
+    return bySlot;
+  }, [ownedERC3525Tokens]);
+
   // 转换为 RwaAsset 格式
   const assets = useMemo<RwaAsset[]>(() => {
     const result: RwaAsset[] = [];
 
+    // 构建已存在资产的索引 (用于去重)
+    // ERC1155: contractAddress + tokenId
+    // ERC3525: contractAddress + slotId (同一 slot 的多个 tokenId 属于同一类资产)
+    const existingERC1155Keys = new Set<string>();
+    const existingERC3525Keys = new Set<string>();
+
     // 添加预定义资产 (带余额)
     for (const asset of predefinedAssetsWithBalance) {
+      // 对于 ERC3525，如果有链上发现的数据，使用合并后的总余额
+      let finalBalance = balances[asset.id] || asset.balance.toString();
+      let tokenDetails: OwnedERC3525Token[] | undefined;
+
+      if (asset.tokenStandard === 'ERC3525' && asset.slotId) {
+        const slotKey = `${asset.contractAddress.toLowerCase()}_${asset.slotId}`;
+        const slotData = erc3525TokenDetailsBySlot[slotKey];
+        if (slotData) {
+          finalBalance = slotData.totalValue.toString();
+          tokenDetails = slotData.tokens;
+        }
+        existingERC3525Keys.add(slotKey);
+      } else if (asset.tokenStandard === 'ERC1155') {
+        existingERC1155Keys.add(`${asset.contractAddress.toLowerCase()}_${asset.tokenId}`);
+      }
+
       result.push({
         id: asset.id,
         name: asset.name,
@@ -149,63 +187,62 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
         contractAddress: asset.contractAddress,
         tokenId: asset.tokenId,
         slotId: asset.slotId,
-        balance: balances[asset.id] || asset.balance.toString(),
+        balance: finalBalance,
         unit: asset.unit,
         source: 'predefined',
         membership: asset.membership,
         performance: asset.performance,
         rights: asset.rights,
+        tokenDetails, // ERC3525 token 详情
       });
     }
 
     // 添加发现的 ERC3525 资产 (不在预定义列表中的)
-    for (const token of ownedERC3525Tokens) {
-      const exists = result.some(
-        a =>
-          a.contractAddress.toLowerCase() === token.contractAddress.toLowerCase() &&
-          a.tokenId === token.tokenId
-      );
-
-      if (!exists) {
-        result.push({
-          id: `discovered-erc3525-${token.contractAddress}-${token.tokenId}`,
-          name: `ERC3525 Token #${token.tokenId}`,
-          description: `Slot: ${token.slot}`,
-          tokenStandard: 'ERC3525',
-          contractAddress: token.contractAddress,
-          tokenId: token.tokenId,
-          slotId: token.slot,
-          balance: token.value,
-          unit: '份',
-          source: 'discovered',
-        });
+    // 按 slot 分组处理
+    for (const [slotKey, slotData] of Object.entries(erc3525TokenDetailsBySlot)) {
+      if (existingERC3525Keys.has(slotKey)) {
+        continue; // 已在预定义资产中
       }
+
+      const firstToken = slotData.tokens[0];
+      result.push({
+        id: `discovered-erc3525-${firstToken.contractAddress}-slot-${firstToken.slot}`,
+        name: `ERC3525 Slot #${firstToken.slot}`,
+        description: `${slotData.tokens.length} 个 token`,
+        tokenStandard: 'ERC3525',
+        contractAddress: firstToken.contractAddress,
+        tokenId: firstToken.tokenId,
+        slotId: firstToken.slot,
+        balance: slotData.totalValue.toString(),
+        unit: '份',
+        source: 'discovered',
+        tokenDetails: slotData.tokens, // ERC3525 token 详情
+      });
+      existingERC3525Keys.add(slotKey);
     }
 
     // 添加发现的 ERC1155 资产 (不在预定义列表中的)
     for (const token of ownedERC1155Tokens) {
-      const exists = result.some(
-        a =>
-          a.contractAddress.toLowerCase() === token.contractAddress.toLowerCase() &&
-          a.tokenId === token.tokenId
-      );
-
-      if (!exists) {
-        result.push({
-          id: `discovered-erc1155-${token.contractAddress}-${token.tokenId}`,
-          name: `ERC1155 Token #${token.tokenId}`,
-          tokenStandard: 'ERC1155',
-          contractAddress: token.contractAddress,
-          tokenId: token.tokenId,
-          balance: token.balance,
-          unit: '份',
-          source: 'discovered',
-        });
+      const key = `${token.contractAddress.toLowerCase()}_${token.tokenId}`;
+      if (existingERC1155Keys.has(key)) {
+        continue;
       }
+
+      result.push({
+        id: `discovered-erc1155-${token.contractAddress}-${token.tokenId}`,
+        name: `ERC1155 Token #${token.tokenId}`,
+        tokenStandard: 'ERC1155',
+        contractAddress: token.contractAddress,
+        tokenId: token.tokenId,
+        balance: token.balance,
+        unit: '份',
+        source: 'discovered',
+      });
+      existingERC1155Keys.add(key);
     }
 
     return result;
-  }, [predefinedAssetsWithBalance, ownedERC3525Tokens, ownedERC1155Tokens, balances]);
+  }, [predefinedAssetsWithBalance, ownedERC1155Tokens, erc3525TokenDetailsBySlot, balances]);
 
   /**
    * 加载资产余额
