@@ -15,6 +15,7 @@ import {
   getImageUrl,
   useI18n,
   useCurrency,
+  universalSwapService,
 } from '@mobazha/core';
 import type { Product, ProductRating, UserProfile } from '@mobazha/core';
 import {
@@ -217,6 +218,11 @@ export function ProductDetail({
   const [cartSuccess, setCartSuccess] = useState(false);
   const [_isWishlist, _setIsWishlist] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [rwaChainData, setRwaChainData] = useState<{
+    totalAmount?: string;
+    availableAmount?: string;
+    status?: string;
+  } | null>(null);
   void _isWishlist; // Reserved for future wishlist feature
 
   // 存储回调函数的 ref，避免在依赖数组中引用
@@ -226,6 +232,62 @@ export function ProductDetail({
   // 用于跟踪已加载的数据，防止重复请求
   const loadedDataRef = useRef<string | null>(null);
   const loadedRatingsRef = useRef<string | null>(null);
+  const loadedRwaChainDataRef = useRef<string | null>(null);
+
+  // 加载 RWA 链上份额数据
+  useEffect(() => {
+    if (!product) return;
+
+    // 检查是否是 RWA Token 商品
+    const contractType = product.metadata?.contractType;
+    if (contractType !== 'RWA_TOKEN') return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metadata = product.metadata as any;
+    const rwaListingId = metadata?.rwaListingId;
+    if (!rwaListingId || rwaListingId === '0' || rwaListingId === 0) {
+      return;
+    }
+
+    // 防止重复加载
+    const chainDataKey = `${product.slug}-${rwaListingId}`;
+    if (loadedRwaChainDataRef.current === chainDataKey) return;
+
+    const blockchain = product.item?.blockchain || 'sepolia';
+    let isCancelled = false;
+
+    const loadChainData = async () => {
+      try {
+        // 使用只读模式初始化 - 不需要钱包连接
+        await universalSwapService.initializeReadOnly(blockchain, true);
+        const listing = await universalSwapService.getListing(rwaListingId.toString());
+
+        if (isCancelled) return;
+
+        // 如果 listing 不存在，跳过
+        if (!listing) {
+          return;
+        }
+
+        loadedRwaChainDataRef.current = chainDataKey;
+
+        setRwaChainData({
+          totalAmount: listing.totalAmount,
+          availableAmount: listing.availableAmount,
+          status: listing.status,
+        });
+      } catch (error) {
+        console.error('加载 RWA 链上份额数据失败:', error);
+        // 不影响页面显示，静默失败
+      }
+    };
+
+    loadChainData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [product]);
 
   // 获取商品数据（不包含评论，评论单独加载）
   useEffect(() => {
@@ -775,6 +837,7 @@ export function ProductDetail({
                 rwaTradeMode={rwaTradeMode}
                 escrowTimeoutSeconds={rwaEscrowTimeoutSeconds}
                 acceptedCurrencies={acceptedCurrencies}
+                chainData={rwaChainData}
               />
             )}
 

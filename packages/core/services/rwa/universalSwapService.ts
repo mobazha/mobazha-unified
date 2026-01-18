@@ -196,7 +196,7 @@ export interface InstantBuyData {
  * 处理与 UniversalSwap 合约的所有交互
  */
 export class UniversalSwapService {
-  private provider: ethers.BrowserProvider | null = null;
+  private provider: ethers.BrowserProvider | ethers.JsonRpcProvider | null = null;
   private signer: ethers.Signer | null = null;
   private contract: ethers.Contract | null = null;
   private contractAddress: string | null = null;
@@ -241,6 +241,43 @@ export class UniversalSwapService {
       return true;
     } catch (error) {
       console.error('❌ UniversalSwap 服务初始化失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 只读初始化服务（用于查询链上数据，不需要钱包连接）
+   */
+  async initializeReadOnly(chain: string, isTestnet = true): Promise<boolean> {
+    try {
+      // 获取链配置
+      const chainConfig = getChainConfig(chain, isTestnet);
+      if (!chainConfig) {
+        throw new Error(`不支持的链: ${chain}`);
+      }
+
+      this.contractAddress = chainConfig.universalSwapAddress;
+
+      // 公共 RPC 端点
+      const rpcUrls: Record<string, string> = {
+        sepolia: 'https://ethereum-sepolia-rpc.publicnode.com',
+        ethereum: 'https://eth.llamarpc.com',
+        mainnet: 'https://eth.llamarpc.com',
+      };
+
+      const rpcUrl = rpcUrls[chain] || rpcUrls.sepolia;
+
+      // 使用 JsonRpcProvider 创建只读 provider (ethers v6)
+      this.provider = new ethers.JsonRpcProvider(rpcUrl);
+      this.signer = null;
+      this.userAddress = null;
+
+      // 创建只读合约实例
+      this.contract = new ethers.Contract(this.contractAddress, UniversalSwapABI, this.provider);
+
+      return true;
+    } catch (error) {
+      console.error('❌ UniversalSwap 只读服务初始化失败:', error);
       throw error;
     }
   }
@@ -774,8 +811,9 @@ export class UniversalSwapService {
 
   /**
    * 查询挂单信息
+   * @returns 挂单信息，如果不存在返回 null
    */
-  async getListing(listingId: string): Promise<ListingInfo> {
+  async getListing(listingId: string): Promise<ListingInfo | null> {
     try {
       if (!this.contract) {
         throw new Error('服务未初始化');
@@ -784,6 +822,15 @@ export class UniversalSwapService {
       const listing = await this.contract.getListing(listingId);
       return this.formatListing(listing);
     } catch (error) {
+      // 检查是否是 "挂单不存在" 的错误（返回空数据）
+      const err = error as { code?: string; message?: string };
+      if (
+        err.code === 'BAD_DATA' ||
+        (err.message && err.message.includes('could not decode result data'))
+      ) {
+        console.warn(`⚠️ 挂单 ${listingId} 在链上不存在或已被删除`);
+        return null;
+      }
       console.error('❌ 查询挂单失败:', error);
       throw this.handleError(error);
     }

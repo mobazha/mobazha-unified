@@ -24,6 +24,12 @@ export interface RwaAssetDetailProps {
   escrowTimeoutSeconds?: number;
   /** 接受的支付币种 */
   acceptedCurrencies?: string[];
+  /** 链上份额数据 */
+  chainData?: {
+    totalAmount?: string;
+    availableAmount?: string;
+    status?: string;
+  } | null;
 }
 
 /**
@@ -39,8 +45,24 @@ export function RwaAssetDetail({
   rwaTradeMode,
   escrowTimeoutSeconds = 86400,
   acceptedCurrencies = [],
+  chainData,
 }: RwaAssetDetailProps) {
   const { t } = useI18n();
+
+  // 计算链上份额数据
+  const sharesInfo = useMemo(() => {
+    if (!chainData?.totalAmount || !chainData?.availableAmount) return null;
+    const total = Number(chainData.totalAmount);
+    const available = Number(chainData.availableAmount);
+    const sold = total - available;
+    const percentage = total > 0 ? Math.round((sold / total) * 100) : 0;
+    return {
+      total,
+      available,
+      sold,
+      percentage,
+    };
+  }, [chainData]);
 
   // 解析 RWA 资产信息
   const rwaAsset = useMemo(() => resolveRwaAsset(product), [product]);
@@ -181,6 +203,59 @@ export function RwaAssetDetail({
 
       {/* 购买流程提示 */}
       {showPurchaseHint && <AtomicSwapPurchaseHint compact={compact} />}
+
+      {/* 链上份额信息 */}
+      {sharesInfo && (
+        <Card className="p-4 bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm">📊</span>
+            <h4 className="font-semibold text-green-700 dark:text-green-400 text-sm">
+              {t('listing.rwa.sharesInfo') || '份额信息'}
+            </h4>
+            <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+              🔗 {t('listing.rwa.onChainData') || '链上数据'}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">
+                {t('listing.rwa.totalSharesOnChain') || '出售总份额'}
+              </span>
+              <span className="text-sm font-bold text-green-700 dark:text-green-400">
+                {sharesInfo.total.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">
+                {t('listing.rwa.availableShares') || '剩余份额'}
+              </span>
+              <span className="text-sm font-bold text-green-600 dark:text-green-500">
+                {sharesInfo.available.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">
+                {t('listing.rwa.soldShares') || '已售份额'}
+              </span>
+              <span className="text-sm font-bold text-amber-600 dark:text-amber-500">
+                {sharesInfo.sold.toLocaleString()}
+              </span>
+            </div>
+          </div>
+          {/* 进度条 */}
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all"
+                style={{ width: `${sharesInfo.percentage}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {t('listing.rwa.soldPercentage') || '已售'} {sharesInfo.percentage}%
+            </span>
+          </div>
+        </Card>
+      )}
 
       {/* 区块链信息 */}
       <BlockchainInfoCard
