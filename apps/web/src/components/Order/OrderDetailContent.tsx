@@ -654,175 +654,148 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           {/* RWA Payment Locked Card */}
           {order.paymentLocked &&
             (() => {
-              // 计算是否过期
-              const isExpired = order.paymentLocked.expiresAt
-                ? new Date(order.paymentLocked.expiresAt) <= new Date()
-                : false;
+              // 判断订单是否已完成（资金已释放）
+              const completedStatuses = ['shipped', 'delivered', 'completed', 'split_resolved'];
+              const isReleased = completedStatuses.includes(order.status);
+
+              // 计算是否过期（只有在资金未释放时才可能过期）
+              const isExpired =
+                !isReleased && order.paymentLocked.expiresAt
+                  ? new Date(order.paymentLocked.expiresAt) <= new Date()
+                  : false;
+
+              // 确定卡片样式类
+              const cardColorClass = isReleased
+                ? 'from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border-sky-200 dark:border-sky-700/50'
+                : isExpired
+                  ? 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700/50'
+                  : 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50';
+
+              const textColorClass = isReleased
+                ? 'text-sky-800 dark:text-sky-300'
+                : isExpired
+                  ? 'text-red-800 dark:text-red-300'
+                  : 'text-emerald-800 dark:text-emerald-300';
+
+              const badgeColorClass = isReleased
+                ? 'bg-sky-500'
+                : isExpired
+                  ? 'bg-red-500'
+                  : 'bg-emerald-500';
+
+              const statusText = isReleased
+                ? t('order.paymentLocked.released')
+                : isExpired
+                  ? t('order.paymentLocked.expired')
+                  : t('order.paymentLocked.locked');
 
               return (
-                <div
-                  className={`bg-gradient-to-r ${
-                    isExpired
-                      ? 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700/50'
-                      : 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50'
-                  } border rounded-lg p-4 mb-4`}
-                >
+                <div className={`bg-gradient-to-r ${cardColorClass} border rounded-lg p-4 mb-4`}>
                   <div className="flex items-center justify-between mb-3">
-                    <h4
-                      className={`font-semibold ${
-                        isExpired
-                          ? 'text-red-800 dark:text-red-300'
-                          : 'text-emerald-800 dark:text-emerald-300'
-                      }`}
-                    >
+                    <h4 className={`font-semibold ${textColorClass}`}>
                       {t('order.paymentLocked.title')}
                     </h4>
                     <span
-                      className={`${
-                        isExpired ? 'bg-red-500' : 'bg-emerald-500'
-                      } text-white text-xs font-semibold px-3 py-1 rounded-full`}
+                      className={`${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full`}
                     >
-                      {isExpired
-                        ? t('order.paymentLocked.expired')
-                        : t('order.paymentLocked.locked')}
+                      {statusText}
                     </span>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div
-                      className={`flex justify-between items-center py-1 border-b ${
-                        isExpired
+                    {(() => {
+                      // 行内颜色类
+                      const borderClass = isReleased
+                        ? 'border-sky-100 dark:border-sky-800/50'
+                        : isExpired
                           ? 'border-red-100 dark:border-red-800/50'
-                          : 'border-emerald-100 dark:border-emerald-800/50'
-                      }`}
-                    >
-                      <span
-                        className={`${
-                          isExpired
-                            ? 'text-red-700/70 dark:text-red-400/70'
-                            : 'text-emerald-700/70 dark:text-emerald-400/70'
-                        }`}
-                      >
-                        {t('order.paymentLocked.amount')}
-                      </span>
-                      <span
-                        className={`font-medium ${
-                          isExpired
-                            ? 'text-red-900 dark:text-red-200'
-                            : 'text-emerald-900 dark:text-emerald-200'
-                        }`}
-                      >
-                        {order.paymentLocked.amount} {order.paymentLocked.coin}
-                      </span>
-                    </div>
-                    <div
-                      className={`flex justify-between items-center py-1 border-b ${
-                        isExpired
-                          ? 'border-red-100 dark:border-red-800/50'
-                          : 'border-emerald-100 dark:border-emerald-800/50'
-                      }`}
-                    >
-                      <span
-                        className={`${
-                          isExpired
-                            ? 'text-red-700/70 dark:text-red-400/70'
-                            : 'text-emerald-700/70 dark:text-emerald-400/70'
-                        }`}
-                      >
-                        {t('order.paymentLocked.token')}
-                      </span>
-                      <span
-                        className={`font-medium ${
-                          isExpired
-                            ? 'text-red-900 dark:text-red-200'
-                            : 'text-emerald-900 dark:text-emerald-200'
-                        }`}
-                      >
-                        {order.paymentLocked.coin}
-                      </span>
-                    </div>
-                    {order.paymentLocked.buyerReceiveAddress && (
-                      <div
-                        className={`flex justify-between items-center py-1 border-b ${
-                          isExpired
-                            ? 'border-red-100 dark:border-red-800/50'
-                            : 'border-emerald-100 dark:border-emerald-800/50'
-                        }`}
-                      >
-                        <span
-                          className={`${
-                            isExpired
-                              ? 'text-red-700/70 dark:text-red-400/70'
-                              : 'text-emerald-700/70 dark:text-emerald-400/70'
-                          }`}
-                        >
-                          {t('order.paymentLocked.buyerAddress')}
-                        </span>
-                        <span
-                          className={`font-mono text-xs truncate max-w-[180px] ${
-                            isExpired
-                              ? 'text-red-900 dark:text-red-200'
-                              : 'text-emerald-900 dark:text-emerald-200'
-                          }`}
-                          title={order.paymentLocked.buyerReceiveAddress}
-                        >
-                          {order.paymentLocked.buyerReceiveAddress.slice(0, 8)}...
-                          {order.paymentLocked.buyerReceiveAddress.slice(-6)}
-                        </span>
-                      </div>
-                    )}
-                    {order.paymentLocked.timestamp && (
-                      <div
-                        className={`flex justify-between items-center py-1 border-b ${
-                          isExpired
-                            ? 'border-red-100 dark:border-red-800/50'
-                            : 'border-emerald-100 dark:border-emerald-800/50'
-                        }`}
-                      >
-                        <span
-                          className={`${
-                            isExpired
-                              ? 'text-red-700/70 dark:text-red-400/70'
-                              : 'text-emerald-700/70 dark:text-emerald-400/70'
-                          }`}
-                        >
-                          {t('order.paymentLocked.lockedTime')}
-                        </span>
-                        <span
-                          className={`${
-                            isExpired
-                              ? 'text-red-900 dark:text-red-200'
-                              : 'text-emerald-900 dark:text-emerald-200'
-                          }`}
-                        >
-                          {new Date(order.paymentLocked.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {order.paymentLocked.expiresAt && (
-                      <div className="flex justify-between items-center py-1">
-                        <span
-                          className={`${
-                            isExpired
-                              ? 'text-red-700/70 dark:text-red-400/70'
-                              : 'text-emerald-700/70 dark:text-emerald-400/70'
-                          }`}
-                        >
-                          {t('order.paymentLocked.expiresAt')}
-                        </span>
-                        <span
-                          className={`${
-                            isExpired
-                              ? 'text-red-900 dark:text-red-200'
-                              : 'text-emerald-900 dark:text-emerald-200'
-                          }`}
-                        >
-                          {new Date(order.paymentLocked.expiresAt).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
+                          : 'border-emerald-100 dark:border-emerald-800/50';
+                      const labelClass = isReleased
+                        ? 'text-sky-700/70 dark:text-sky-400/70'
+                        : isExpired
+                          ? 'text-red-700/70 dark:text-red-400/70'
+                          : 'text-emerald-700/70 dark:text-emerald-400/70';
+                      const valueClass = isReleased
+                        ? 'text-sky-900 dark:text-sky-200'
+                        : isExpired
+                          ? 'text-red-900 dark:text-red-200'
+                          : 'text-emerald-900 dark:text-emerald-200';
+
+                      return (
+                        <>
+                          <div
+                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                          >
+                            <span className={labelClass}>{t('order.paymentLocked.amount')}</span>
+                            <span className={`font-medium ${valueClass}`}>
+                              {order.paymentLocked.amount} {order.paymentLocked.coin}
+                            </span>
+                          </div>
+                          {/* 购买数量 */}
+                          {order.items?.[0]?.quantity && (
+                            <div
+                              className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                            >
+                              <span className={labelClass}>
+                                {t('order.paymentLocked.purchaseQuantity')}
+                              </span>
+                              <span className={`font-medium ${valueClass}`}>
+                                {order.items[0].quantity}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                          >
+                            <span className={labelClass}>{t('order.paymentLocked.token')}</span>
+                            <span className={`font-medium ${valueClass}`}>
+                              {order.paymentLocked.coin}
+                            </span>
+                          </div>
+                          {order.paymentLocked.buyerReceiveAddress && (
+                            <div
+                              className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                            >
+                              <span className={labelClass}>
+                                {t('order.paymentLocked.buyerAddress')}
+                              </span>
+                              <span
+                                className={`font-mono text-xs truncate max-w-[180px] ${valueClass}`}
+                                title={order.paymentLocked.buyerReceiveAddress}
+                              >
+                                {order.paymentLocked.buyerReceiveAddress.slice(0, 8)}...
+                                {order.paymentLocked.buyerReceiveAddress.slice(-6)}
+                              </span>
+                            </div>
+                          )}
+                          {order.paymentLocked.timestamp && (
+                            <div
+                              className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                            >
+                              <span className={labelClass}>
+                                {t('order.paymentLocked.lockedTime')}
+                              </span>
+                              <span className={valueClass}>
+                                {new Date(order.paymentLocked.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                          {/* 过期时间 - 只在资金未释放时显示 */}
+                          {order.paymentLocked.expiresAt && !isReleased && (
+                            <div className="flex justify-between items-center py-1">
+                              <span className={labelClass}>
+                                {t('order.paymentLocked.expiresAt')}
+                              </span>
+                              <span className={valueClass}>
+                                {new Date(order.paymentLocked.expiresAt).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   {/* 买家端显示提示和操作按钮 */}
-                  {order.userRole === 'buyer' && (
+                  {order.userRole === 'buyer' && !isReleased && (
                     <div
                       className={`mt-3 pt-3 border-t ${
                         isExpired
@@ -880,8 +853,16 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       )}
                     </div>
                   )}
+                  {/* 资金已释放提示 */}
+                  {isReleased && (
+                    <div className="mt-3 pt-3 border-t border-sky-200 dark:border-sky-700/50">
+                      <p className="text-sm text-sky-700 dark:text-sky-400">
+                        {t('order.paymentLocked.fundsReleasedToSeller')}
+                      </p>
+                    </div>
+                  )}
                   {/* 卖家端显示提示 */}
-                  {order.userRole === 'seller' && !isExpired && (
+                  {order.userRole === 'seller' && !isExpired && !isReleased && (
                     <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50">
                       <p className="text-sm text-emerald-700 dark:text-emerald-400">
                         {t('order.paymentLocked.waitingToConfirm')}
