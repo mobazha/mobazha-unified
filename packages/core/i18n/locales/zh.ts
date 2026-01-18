@@ -769,7 +769,7 @@ export const zh: TranslationResource = {
     review: '条评价',
     verified: '已验证',
     store: '店铺',
-    otc: 'OTC',
+    rwa: '数字资产',
     posts: '动态',
     community: '社区',
     viewStore: '访问店铺',
@@ -1987,8 +1987,21 @@ export const zh: TranslationResource = {
     notFound: '商品不存在',
   },
 
-  // RWA 原子交换流程
+  // RWA 数字资产 Tab
   rwa: {
+    // Tab 相关
+    fetchError: '获取 RWA 商品失败',
+    filterTokenStandard: '代币标准',
+    filterTradeMode: '交易模式',
+    membership: '会员权益',
+    share: '份额代币',
+    instantTrade: '即时交易',
+    confirmRequired: '需确认',
+    foundItems: '找到 {{count}} 件商品',
+    noRwaYet: '还没有 RWA 数字资产商品',
+    noRwaInStore: '该店铺暂无 RWA 数字资产商品',
+    createFirstRwa: '创建商品时选择 RWA Token 类型，开始销售数字资产',
+    // 原子交换购买流程
     purchase: {
       connectWallet: '连接钱包',
       connectDesc: '请连接钱包以授权支付代币',

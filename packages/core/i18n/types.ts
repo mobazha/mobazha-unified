@@ -444,7 +444,7 @@ export interface TranslationResource {
     reviews: string;
     verified: string;
     store: string;
-    otc: string;
+    rwa: string;
     posts: string;
     community: string;
     viewStore: string;
@@ -1483,8 +1483,21 @@ export interface TranslationResource {
     priceRequired: string;
   };
 
-  // RWA Atomic Swap flows
+  // RWA Digital Assets Tab & Atomic Swap flows
   rwa?: {
+    // Tab related
+    fetchError?: string;
+    filterTokenStandard?: string;
+    filterTradeMode?: string;
+    membership?: string;
+    share?: string;
+    instantTrade?: string;
+    confirmRequired?: string;
+    foundItems?: string;
+    noRwaYet?: string;
+    noRwaInStore?: string;
+    createFirstRwa?: string;
+    // Purchase flow
     purchase: {
       connectWallet: string;
       connectDesc: string;

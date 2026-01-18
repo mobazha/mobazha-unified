@@ -425,7 +425,7 @@ export const ja: TranslationResource = {
     reviews: 'レビュー',
     verified: '認証済み',
     store: 'ストア',
-    otc: 'OTC',
+    rwa: 'デジタル資産',
     posts: '投稿',
     community: 'コミュニティ',
     viewStore: 'ストアを見る',

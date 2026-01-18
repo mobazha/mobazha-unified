@@ -10,7 +10,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BrowserProvider, JsonRpcSigner, formatEther } from 'ethers';
 import { ChainId, WalletConnectionState, WalletInfo, WalletEvent } from '../services/payment';
 import { useAppKit } from '../providers/AppKitProvider';
-import { DEFAULT_CHAIN_ID } from '../config/otcConfig';
+import { getCurrentChainId } from '../config/appkit';
+
+// Default chain ID from appkit config
+const DEFAULT_CHAIN_ID = getCurrentChainId();
 
 interface UseWalletReturn {
   // 状态

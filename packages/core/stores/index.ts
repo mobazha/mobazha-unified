@@ -20,9 +20,6 @@ export * from './currencyStore';
 // 聊天状态
 export * from './chatStore';
 
-// OTC 状态
-export * from './otcStore';
-
 // 通知状态
 export * from './notificationStore';
 

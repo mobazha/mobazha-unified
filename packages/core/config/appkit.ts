@@ -103,7 +103,6 @@ export function getAppKitContracts() {
 
 /**
  * 获取指定 AppKit 合约地址
- * 注意: OTC 相关合约地址使用 otcConfig.ts 中的 getContractAddress
  */
 export function getAppKitContractAddress(contractName: keyof typeof SEPOLIA_CONTRACTS): string {
   const contracts = getAppKitContracts();
@@ -111,6 +110,33 @@ export function getAppKitContractAddress(contractName: keyof typeof SEPOLIA_CONT
   if (!address) {
     throw new Error(`Contract ${contractName} not deployed on current network`);
   }
+  return address;
+}
+
+/**
+ * 根据 Token 符号获取合约地址
+ * @param tokenSymbol - Token 符号 (USDT, USDC 等)
+ * @param chainId - 可选的链 ID (当前未使用，预留多链支持)
+ */
+export function getContractAddress(tokenSymbol: string, chainId?: number): string {
+  const contracts = getAppKitContracts();
+
+  // Token 符号到合约名称的映射
+  const tokenContractMap: Record<string, keyof typeof SEPOLIA_CONTRACTS> = {
+    USDT: 'MockUSDT',
+    USDC: 'MockUSDT', // 测试环境使用相同的 Mock 合约
+  };
+
+  const contractName = tokenContractMap[tokenSymbol.toUpperCase()];
+  if (!contractName) {
+    throw new Error(`Unknown token symbol: ${tokenSymbol}`);
+  }
+
+  const address = contracts[contractName];
+  if (!address) {
+    throw new Error(`Contract for ${tokenSymbol} not deployed on current network`);
+  }
+
   return address;
 }
 

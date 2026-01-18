@@ -119,9 +119,6 @@ export {
   EXCHANGE_RATE_REFRESH_INTERVAL,
 } from './currency';
 
-// OTC types
-export * from './otc';
-
 // Notification types
 export type {
   OrderNotificationType,

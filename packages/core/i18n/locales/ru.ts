@@ -425,7 +425,7 @@ export const ru: TranslationResource = {
     reviews: 'Отзывы',
     verified: 'Подтверждён',
     store: 'Магазин',
-    otc: 'OTC',
+    rwa: 'Цифровые активы',
     posts: 'Публикации',
     community: 'Сообщество',
     viewStore: 'Просмотр магазина',

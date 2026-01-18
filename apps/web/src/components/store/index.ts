@@ -4,8 +4,8 @@
  * 用于 Profile 和 Store 页面的共享组件
  */
 
-// OTC 标签页
-export { OtcTab } from './OtcTab';
+// RWA 数字资产标签页
+export { RwaTab } from './RwaTab';
 
 // 商品筛选组件
 export {
