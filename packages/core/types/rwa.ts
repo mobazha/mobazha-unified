@@ -326,6 +326,8 @@ export interface RwaAsset {
   membership?: MembershipInfo;
   performance?: PerformanceInfo;
   rights?: string[];
+  // ERC3525 token 详情 (同一 slot 下可能有多个 token)
+  tokenDetails?: OwnedERC3525Token[];
 }
 
 /**
