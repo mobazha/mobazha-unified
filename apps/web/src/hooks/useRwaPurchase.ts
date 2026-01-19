@@ -285,16 +285,19 @@ export function useRwaPurchase({
       const metadata = listing?.metadata || {};
       const quantity = Number(item?.quantity) || 1;
 
-      // 获取 RWA Listing ID（确认交易模式必须有 listingId）
+      // 获取 RWA Listing ID（即时和确认交易模式都需要 listingId）
       const rwaListingIdRaw = metadata.rwaListingId;
       const rwaListingId = parseInt(rwaListingIdRaw, 10);
       if (isNaN(rwaListingId) || rwaListingId <= 0) {
         throw new Error(
-          `商品缺少有效的 rwaListingId（当前值: ${rwaListingIdRaw}），无法创建确认交易订单。请联系卖家重新上架商品。`
+          `商品缺少有效的 rwaListingId（当前值: ${rwaListingIdRaw}），无法购买。请联系卖家重新上架商品。`
         );
       }
 
-      console.log('🛒 RWA 购买参数（确认交易模式）:', {
+      // 获取交易模式
+      const isInstantMode = rwaTradeMode === TradeMode.Instant;
+
+      console.log(`🛒 RWA 购买参数（${isInstantMode ? '即时交易' : '确认交易'}模式）:`, {
         externalOrderId,
         rwaListingId,
         buyerIdentity,
@@ -303,6 +306,7 @@ export function useRwaPurchase({
         paymentCoin,
         paymentTokenAddress,
         paymentAmount,
+        isInstantMode,
       });
 
       // Step 1: 授权支付代币
@@ -321,63 +325,112 @@ export function useRwaPurchase({
         console.log('✅ 授权成功');
       }
 
-      // Step 2: 调用 createOrderFromListing（确认交易模式：锁定资金，等待卖家确认）
-      setState(prev => ({ ...prev, step: 'locking' }));
+      // 获取 UniversalSwap 合约地址
+      const universalSwapAddress = SEPOLIA_CONFIG.universalSwapAddress;
 
-      console.log('🔧 通过延迟 Listing 创建订单并支付...');
+      if (isInstantMode) {
+        // ========== 即时交易模式：使用 instantBuy ==========
+        setState(prev => ({ ...prev, step: 'executing' }));
+        console.log('⚡ 执行即时购买（instantBuy）...');
 
-      // 新合约：createOrderFromListing 通过延迟 Listing 创建订单
-      const result = await swapService.createOrderFromListing({
-        listingId: rwaListingId.toString(),
-        buyerIdentity: buyerIdentity, // 从后端获取的买家身份地址
-        buyerReceiveAddress: buyerReceiveAddress, // 买家 Token 接收地址（用户当前钱包）
-        tokenAmount: quantity.toString(),
-        paymentToken: paymentTokenAddress,
-        price: paymentAmount,
-        externalOrderId: externalOrderId, // 使用 Mobazha orderID
-      });
+        const result = await swapService.instantBuy({
+          listingId: rwaListingId.toString(),
+          externalOrderId: externalOrderId,
+          buyerIdentity: buyerIdentity,
+          buyerReceiveAddress: buyerReceiveAddress,
+          tokenAmount: quantity.toString(),
+          paymentToken: paymentTokenAddress,
+          paymentAmount: paymentAmount,
+        });
 
-      if (result.success && result.transactionHash) {
-        console.log('✅ 购买成功');
-        console.log('   合约订单ID:', result.orderId);
-        console.log('   交易模式:', result.tradeMode);
+        if (result.success && result.transactionHash) {
+          console.log('✅ 即时购买成功，原子交换已完成');
+          console.log('   合约订单ID:', result.orderId);
 
-        // Step 3: 提交支付数据到后端
-        // 新合约：createOrderByBuyer 仅支持确认交易模式
-        // 获取 UniversalSwap 合约地址（目前仅支持 Sepolia）
-        const universalSwapAddress = SEPOLIA_CONFIG.universalSwapAddress;
+          // 提交支付数据到后端
+          try {
+            console.log('🔧 提交支付数据到后端...');
+            await ordersApi.submitPayment({
+              orderID: externalOrderId,
+              transactionID: result.transactionHash,
+              coin: paymentCoin,
+              amount: paymentAmount,
+              timestamp: new Date().toISOString(),
+              method: 5, // RWA_INSTANT_BUY（即时交易模式）
+              paymentTokenAddress: paymentTokenAddress,
+              contractAddress: universalSwapAddress,
+              buyerReceiveAddress: buyerReceiveAddress,
+              contractOrderId: result.orderId,
+              rwaTradeMode: 0, // Instant
+              rwaOrderCompleted: true, // 链上交易已完成
+            });
+            console.log('✅ 后端状态同步成功');
+          } catch (submitErr) {
+            console.warn('⚠️ 后端状态同步失败（链上交易已完成）:', submitErr);
+          }
 
-        try {
-          console.log('🔧 提交支付数据到后端...');
-          await ordersApi.submitPayment({
-            orderID: externalOrderId,
-            transactionID: result.transactionHash,
-            coin: paymentCoin,
-            amount: paymentAmount,
-            timestamp: new Date().toISOString(),
-            method: 4, // RWA_PAYMENT_LOCKED（确认交易模式）
-            paymentTokenAddress: paymentTokenAddress,
-            contractAddress: universalSwapAddress,
-            buyerReceiveAddress: buyerReceiveAddress,
-            contractOrderId: result.orderId,
-            rwaTradeMode: 1, // ConfirmRequired
-            rwaOrderCompleted: false, // 需要卖家确认
-          });
-          console.log('✅ 后端状态同步成功');
-        } catch (submitErr) {
-          console.warn('⚠️ 后端状态同步失败（链上交易已完成）:', submitErr);
-          // 后端同步失败不影响链上交易结果
+          // 即时交易模式：交易已完成
+          setState(prev => ({
+            ...prev,
+            step: 'completed',
+            txHash: result.transactionHash!,
+            isProcessing: false,
+          }));
+        } else {
+          throw new Error(result.message || t('rwa.purchase.executeFailed'));
         }
-
-        // 确认交易模式：资金锁定，等待卖家确认
-        setState(prev => ({
-          ...prev,
-          step: 'waiting',
-          txHash: result.transactionHash!,
-          isProcessing: false,
-        }));
       } else {
-        throw new Error(result.message || t('rwa.purchase.executeFailed'));
+        // ========== 确认交易模式：使用 createOrderFromListing ==========
+        setState(prev => ({ ...prev, step: 'locking' }));
+        console.log('🔒 通过延迟 Listing 创建订单并支付...');
+
+        const result = await swapService.createOrderFromListing({
+          listingId: rwaListingId.toString(),
+          buyerIdentity: buyerIdentity,
+          buyerReceiveAddress: buyerReceiveAddress,
+          tokenAmount: quantity.toString(),
+          paymentToken: paymentTokenAddress,
+          price: paymentAmount,
+          externalOrderId: externalOrderId,
+        });
+
+        if (result.success && result.transactionHash) {
+          console.log('✅ 订单创建成功，资金已锁定');
+          console.log('   合约订单ID:', result.orderId);
+          console.log('   交易模式:', result.tradeMode);
+
+          // 提交支付数据到后端
+          try {
+            console.log('🔧 提交支付数据到后端...');
+            await ordersApi.submitPayment({
+              orderID: externalOrderId,
+              transactionID: result.transactionHash,
+              coin: paymentCoin,
+              amount: paymentAmount,
+              timestamp: new Date().toISOString(),
+              method: 4, // RWA_PAYMENT_LOCKED（确认交易模式）
+              paymentTokenAddress: paymentTokenAddress,
+              contractAddress: universalSwapAddress,
+              buyerReceiveAddress: buyerReceiveAddress,
+              contractOrderId: result.orderId,
+              rwaTradeMode: 1, // ConfirmRequired
+              rwaOrderCompleted: false, // 需要卖家确认
+            });
+            console.log('✅ 后端状态同步成功');
+          } catch (submitErr) {
+            console.warn('⚠️ 后端状态同步失败（链上交易已完成）:', submitErr);
+          }
+
+          // 确认交易模式：资金锁定，等待卖家确认
+          setState(prev => ({
+            ...prev,
+            step: 'waiting',
+            txHash: result.transactionHash!,
+            isProcessing: false,
+          }));
+        } else {
+          throw new Error(result.message || t('rwa.purchase.executeFailed'));
+        }
       }
     } catch (err) {
       console.error('❌ 购买失败:', err);
