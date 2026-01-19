@@ -337,17 +337,20 @@ export default function StorePage() {
   };
 
   // 筛选后的商品列表
-  // 从商品数据中提取分类列表
+  // 从非 RWA 商品数据中提取分类列表
   const categories = useMemo((): CategoryItem[] => {
     const categoryMap = new Map<string, number>();
 
-    products.forEach(product => {
-      if (product.categories && product.categories.length > 0) {
-        product.categories.forEach(cat => {
-          categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
-        });
-      }
-    });
+    // 只统计非 RWA 商品的分类
+    products
+      .filter(product => product.contractType?.toUpperCase() !== 'RWA_TOKEN')
+      .forEach(product => {
+        if (product.categories && product.categories.length > 0) {
+          product.categories.forEach(cat => {
+            categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
+          });
+        }
+      });
 
     return Array.from(categoryMap.entries())
       .map(([value, count]) => ({
@@ -358,9 +361,10 @@ export default function StorePage() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [products]);
 
-  // 筛选后的商品列表
+  // 筛选后的商品列表（排除 RWA 商品，RWA 商品显示在数字资产 Tab）
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    // 首先过滤掉 RWA 商品
+    let result = products.filter(product => product.contractType?.toUpperCase() !== 'RWA_TOKEN');
 
     // 搜索过滤（仅按标题搜索）
     if (filter.search.trim()) {
@@ -375,7 +379,7 @@ export default function StorePage() {
       );
     }
 
-    // 类型过滤
+    // 类型过滤（RWA_TOKEN 已被排除，所以这里的 rwa_token 选项实际上不会匹配任何商品）
     if (filter.type !== 'all') {
       result = result.filter(product => {
         const contractType = product.contractType?.toLowerCase();
@@ -386,8 +390,6 @@ export default function StorePage() {
             return contractType === 'digital_good';
           case 'service':
             return contractType === 'service';
-          case 'rwa_token':
-            return contractType === 'rwa_token';
           default:
             return true;
         }
@@ -582,7 +584,22 @@ export default function StorePage() {
 
   // 获取店铺的统计数据 - 使用实际的 products.length 来保持一致性
   const stats = store?.stats || defaultStats;
-  const actualListingCount = products.length;
+
+  // 分别计算普通商品和 RWA 商品数量
+  const { storeListingCount, rwaListingCount } = useMemo(() => {
+    let storeCount = 0;
+    let rwaCount = 0;
+
+    products.forEach(product => {
+      if (product.contractType?.toUpperCase() === 'RWA_TOKEN') {
+        rwaCount++;
+      } else {
+        storeCount++;
+      }
+    });
+
+    return { storeListingCount: storeCount, rwaListingCount: rwaCount };
+  }, [products]);
 
   if (isLoading) {
     return (
@@ -887,7 +904,7 @@ export default function StorePage() {
                   {t('profile.about')}
                 </button>
 
-                {/* 商品 Tab - 带数量 */}
+                {/* 商品 Tab - 带数量（不包含 RWA 商品） */}
                 <button
                   onClick={() => setActiveTab('products')}
                   className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
@@ -897,14 +914,14 @@ export default function StorePage() {
                   }`}
                 >
                   {t('profile.listings')}
-                  {actualListingCount > 0 && (
+                  {storeListingCount > 0 && (
                     <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                      {actualListingCount}
+                      {storeListingCount}
                     </span>
                   )}
                 </button>
 
-                {/* RWA 数字资产 Tab */}
+                {/* RWA 数字资产 Tab - 带数量 */}
                 <button
                   onClick={() => setActiveTab('rwa')}
                   className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
@@ -914,6 +931,9 @@ export default function StorePage() {
                   }`}
                 >
                   {t('profile.rwa') || '数字资产'}
+                  {rwaListingCount > 0 && (
+                    <span className="ml-1.5 text-xs sm:text-sm opacity-70">{rwaListingCount}</span>
+                  )}
                 </button>
               </HStack>
             </div>
@@ -925,11 +945,11 @@ export default function StorePage() {
           {activeTab === 'products' && (
             <Container size="xl" className="px-4 sm:px-6 space-y-4">
               {/* 筛选工具栏 */}
-              {!productsLoading && products.length > 0 && (
+              {!productsLoading && storeListingCount > 0 && (
                 <StoreListingsToolbar
                   filter={filter}
                   onFilterChange={setFilter}
-                  totalCount={products.length}
+                  totalCount={storeListingCount}
                   filteredCount={filteredProducts.length}
                   categories={categories}
                   onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
@@ -995,7 +1015,7 @@ export default function StorePage() {
                     </Link>
                   ))}
                 </Grid>
-              ) : products.length > 0 ? (
+              ) : storeListingCount > 0 ? (
                 // 有商品但筛选后为空
                 <div className="text-center py-12">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -1007,7 +1027,7 @@ export default function StorePage() {
                   <p className="text-sm text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
                 </div>
               ) : (
-                // 店铺本身没有商品
+                // 店铺本身没有普通商品（但可能有 RWA 商品）
                 <div className="text-center py-12">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                     <Package className="w-8 h-8 text-muted-foreground" />
