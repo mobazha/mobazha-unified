@@ -336,11 +336,29 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
 interface TransactionItemProps {
   tx: TokenTransfer;
   getAssetName: (contractAddress: string, tokenId?: string, slotId?: string) => string;
+  currentUserAddress?: string;
 }
 
-const TransactionItem: React.FC<TransactionItemProps> = ({ tx, getAssetName }) => {
+const TransactionItem: React.FC<TransactionItemProps> = ({
+  tx,
+  getAssetName,
+  currentUserAddress,
+}) => {
   const typeText = getTransactionTypeText(tx.type, tx.from);
   const typeColor = getTransactionTypeColor(tx.type, tx.from);
+
+  // 判断是否为用户发起但转给他人的交易
+  const isUserInitiatedToOther =
+    tx.initiatedBy &&
+    currentUserAddress &&
+    tx.initiatedBy.toLowerCase() === currentUserAddress.toLowerCase() &&
+    tx.to?.toLowerCase() !== currentUserAddress.toLowerCase();
+
+  // 格式化 value 来源
+  const valueSourceText =
+    tx.valueSources && tx.valueSources.length > 0
+      ? `${tx.valueSources.map(s => `#${s.fromTokenId}`).join(', ')} → #${tx.tokenId}`
+      : null;
 
   return (
     <a
@@ -357,13 +375,29 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ tx, getAssetName }) =
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-xs px-2 py-0.5 rounded ${typeColor}`}>{typeText}</span>
+          {/* 用户发起但转给他人的交易显示标识 */}
+          {isUserInitiatedToOther && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">
+              发起
+            </span>
+          )}
           <span className="font-medium text-sm">{tx.value || '1'} 份</span>
+          {/* 显示对方的 Token ID */}
+          {tx.tokenId && tx.to !== '0x0000000000000000000000000000000000000000' && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-500 font-mono">
+              #{tx.tokenId}
+            </span>
+          )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
           {getAssetName(tx.contractAddress || '', tx.tokenId, tx.slotId)}
         </p>
+        {/* 显示 ERC3525 value 来源 */}
+        {valueSourceText && (
+          <p className="text-xs text-muted-foreground/70 italic mt-0.5">{valueSourceText}</p>
+        )}
       </div>
       <div className="text-right">
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -737,7 +771,12 @@ export default function RwaAssetDashboardPage() {
               ) : filteredTransactions.length > 0 ? (
                 <div className="bg-card rounded-xl border divide-y divide-border">
                   {filteredTransactions.slice(0, 5).map(tx => (
-                    <TransactionItem key={tx.hash} tx={tx} getAssetName={getAssetName} />
+                    <TransactionItem
+                      key={tx.hash}
+                      tx={tx}
+                      getAssetName={getAssetName}
+                      currentUserAddress={walletInfo?.address}
+                    />
                   ))}
                 </div>
               ) : (

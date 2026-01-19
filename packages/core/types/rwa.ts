@@ -342,6 +342,14 @@ export interface EtherscanUrls {
 }
 
 /**
+ * Value 来源信息 (ERC3525)
+ */
+export interface ValueSource {
+  fromTokenId: string;
+  value: string;
+}
+
+/**
  * Token 转账记录
  */
 export interface TokenTransfer {
@@ -355,4 +363,6 @@ export interface TokenTransfer {
   timestamp: number;
   blockNumber: number;
   type: 'in' | 'out';
+  valueSources?: ValueSource[]; // ERC3525 value 来源详情
+  initiatedBy?: string; // 交易发起者地址
 }

@@ -3,7 +3,7 @@
  * 通过 Etherscan V2 API 获取 Token 转账历史
  */
 
-import type { TokenTransfer } from '../../types/rwa';
+import type { TokenTransfer, ValueSource } from '../../types/rwa';
 import { getERC3525Slot, getERC3525Value } from './rwaBalanceService';
 
 // Etherscan V2 API 配置 (统一端点，通过 chainid 区分网络)
@@ -320,6 +320,188 @@ interface AssetLike {
 }
 
 /**
+ * 获取用户发起的与 RWA 合约相关的交易 (通过市场合约购买/铸造)
+ * @param userAddress 用户地址
+ * @param rwaContractAddresses RWA 合约地址列表
+ * @returns 交易列表
+ */
+export async function getUserInitiatedRwaTransactions(
+  userAddress: string,
+  rwaContractAddresses: string[]
+): Promise<TokenTransfer[]> {
+  if (!userAddress || !rwaContractAddresses || rwaContractAddresses.length === 0) {
+    return [];
+  }
+
+  const cacheKey = getCacheKey('user_initiated', userAddress, 'all');
+  const cached = getCachedTransfers(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const url = buildApiUrl({
+      module: 'account',
+      action: 'txlist',
+      address: userAddress,
+      page: '1',
+      offset: '100',
+      sort: 'desc',
+    });
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== '1' || !Array.isArray(data.result)) {
+      return [];
+    }
+
+    // 已知的市场/托管合约地址
+    const marketContracts = ['0x1e7b873501bf3bac31e6e95f8d46cfcad44aac33'];
+
+    const rwaAddressSet = new Set(rwaContractAddresses.map(a => a.toLowerCase()));
+    const marketAddressSet = new Set(marketContracts);
+
+    const relevantTxs = data.result.filter((tx: { to?: string }) => {
+      const toAddress = tx.to?.toLowerCase();
+      return rwaAddressSet.has(toAddress || '') || marketAddressSet.has(toAddress || '');
+    });
+
+    if (relevantTxs.length === 0) {
+      setCachedTransfers(cacheKey, []);
+      return [];
+    }
+
+    const transactions: TokenTransfer[] = [];
+
+    for (const tx of relevantTxs) {
+      const txTimestamp = parseInt(tx.timeStamp as string, 10) * 1000;
+      const tokenTransfers = await parseTransactionLogs(
+        tx.hash as string,
+        rwaContractAddresses,
+        userAddress,
+        txTimestamp
+      );
+      transactions.push(...tokenTransfers);
+      await delay(200);
+    }
+
+    setCachedTransfers(cacheKey, transactions);
+    return transactions;
+  } catch (error) {
+    console.error('Error fetching user initiated transactions:', error);
+    return [];
+  }
+}
+
+/**
+ * 解析交易日志，提取 ERC3525 Transfer 事件
+ */
+async function parseTransactionLogs(
+  txHash: string,
+  rwaContractAddresses: string[],
+  userAddress: string,
+  txTimestamp: number
+): Promise<TokenTransfer[]> {
+  try {
+    const url = buildApiUrl({
+      module: 'proxy',
+      action: 'eth_getTransactionReceipt',
+      txhash: txHash,
+    });
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.result || !data.result.logs) {
+      return [];
+    }
+
+    const rwaAddressSet = new Set(rwaContractAddresses.map(a => a.toLowerCase()));
+    const transfers: TokenTransfer[] = [];
+
+    const transferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+    const transferValueEventSig =
+      '0x0b2aac84f3ec956911fd78eae5311062972ff949f38412e8da39069d9f068cc6';
+    const slotChangedEventSig =
+      '0xe4f48c240d3b994948aa54f3e2f5fca59263dfe1d52b6e4cf39a5d249b5ccb65';
+
+    const receipt = data.result;
+    const blockNumber = parseInt(receipt.blockNumber, 16);
+
+    // 收集 SlotChanged 事件
+    const slotMap = new Map<string, string>();
+    for (const log of receipt.logs) {
+      if (log.topics[0] === slotChangedEventSig && rwaAddressSet.has(log.address.toLowerCase())) {
+        const tokenId = parseInt(log.topics[1], 16).toString();
+        const newSlot = parseInt(log.topics[3], 16).toString();
+        slotMap.set(tokenId, newSlot);
+      }
+    }
+
+    // 收集 TransferValue 事件
+    const valueMap = new Map<string, { totalValue: bigint; sources: ValueSource[] }>();
+    for (const log of receipt.logs) {
+      if (log.topics[0] === transferValueEventSig && rwaAddressSet.has(log.address.toLowerCase())) {
+        const fromTokenId = parseInt(log.topics[1], 16).toString();
+        const toTokenId = parseInt(log.topics[2], 16).toString();
+        const value = parseInt(log.data, 16);
+
+        if (value > 0) {
+          const existing = valueMap.get(toTokenId) || { totalValue: BigInt(0), sources: [] };
+          existing.totalValue += BigInt(value);
+          existing.sources.push({ fromTokenId, value: value.toString() });
+          valueMap.set(toTokenId, existing);
+        }
+      }
+    }
+
+    // 处理 Transfer 事件
+    for (const log of receipt.logs) {
+      if (log.topics[0] !== transferEventSig) continue;
+      if (!rwaAddressSet.has(log.address.toLowerCase())) continue;
+      if (log.topics.length < 4) continue;
+
+      const from = '0x' + log.topics[1].slice(26);
+      const to = '0x' + log.topics[2].slice(26);
+      const tokenId = parseInt(log.topics[3], 16).toString();
+
+      let type: 'in' | 'out' = 'in';
+      if (from === '0x0000000000000000000000000000000000000000') {
+        type = 'in'; // mint
+      } else if (to === '0x0000000000000000000000000000000000000000') {
+        type = 'out'; // burn
+      }
+
+      const slotId = slotMap.get(tokenId);
+      const valueInfo = valueMap.get(tokenId);
+      const tokenValue = valueInfo?.totalValue?.toString() || '1';
+      const valueSources = valueInfo?.sources || [];
+
+      transfers.push({
+        hash: txHash,
+        blockNumber,
+        timestamp: txTimestamp || Date.now(),
+        from,
+        to,
+        tokenId,
+        value: tokenValue,
+        type,
+        contractAddress: log.address,
+        slotId,
+        valueSources,
+        initiatedBy: userAddress,
+      });
+    }
+
+    return transfers;
+  } catch (error) {
+    console.error('Error parsing transaction logs:', error);
+    return [];
+  }
+}
+
+/**
  * 获取用户的所有 RWA 资产交易历史
  * @param userAddress 用户地址
  * @param assets 资产列表 [{contractAddress, tokenStandard}]
@@ -371,6 +553,27 @@ export async function getUserTransactionHistory(
     }
   }
 
+  // 获取用户发起的交易 (通过市场合约购买/铸造的交易)
+  try {
+    const rwaContractAddresses = [...uniqueContracts.keys()];
+    const userInitiatedTxs = await getUserInitiatedRwaTransactions(
+      userAddress,
+      rwaContractAddresses
+    );
+
+    // 合并交易，去重
+    const existingKeys = new Set(allTransactions.map(tx => `${tx.hash}_${tx.tokenId}`));
+    for (const tx of userInitiatedTxs) {
+      const key = `${tx.hash}_${tx.tokenId}`;
+      if (!existingKeys.has(key)) {
+        allTransactions.push(tx);
+        existingKeys.add(key);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching user initiated transactions:', error);
+  }
+
   // 按时间降序排序
   allTransactions.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -382,6 +585,7 @@ export default {
   getERC1155TokenTransfers,
   getERC3525TokenTransfers,
   getUserTransactionHistory,
+  getUserInitiatedRwaTransactions,
   clearTransferCache,
   formatTimestamp,
 };
