@@ -81,6 +81,7 @@ const UniversalSwapABI = [
   // ============ 查询函数 - Listing ============
   'function getListing(uint256 listingId) external view returns (tuple(address seller, address sellerReceiveAddress, address sellerTokenAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 totalAmount, uint256 availableAmount, uint8 status, uint256 createdAt, bool isDeferred, uint256 escrowTimeout))',
   'function getListingAvailable(uint256 listingId) external view returns (uint256)',
+  'function isListingValid(uint256 listingId) external view returns (bool isValid, string memory reason)',
   'function getSellerListings(address seller) external view returns (uint256[])',
   'function getActiveSellerListings(address seller) external view returns (uint256[])',
   'function getListingOrders(uint256 listingId) external view returns (uint256[])',
@@ -94,10 +95,10 @@ const UniversalSwapABI = [
   // Listing 事件
   'event ListingCreated(uint256 indexed listingId, address indexed seller, address sellerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount)',
   'event ListingCancelled(uint256 indexed listingId, address indexed seller, uint256 refundAmount)',
-  'event InstantBuyCompleted(uint256 indexed orderId, uint256 indexed listingId, address indexed buyer, address buyerPaymentAddress, address buyerReceiveAddress, uint256 tokenAmount, address paymentToken, uint256 paymentAmount, bytes32 externalOrderId)',
+  'event InstantBuyCompleted(uint256 indexed orderId, uint256 indexed listingId, address indexed buyer, address buyerPaymentAddress, address buyerReceiveAddress, uint256 tokenAmount, address paymentToken, uint256 paymentAmount, bytes32 externalOrderId, address sellerReceiveAddress, address feeRecipient)',
 
-  // Order 事件
-  'event OrderCreatedFromListing(uint256 indexed orderId, uint256 indexed listingId, address indexed buyerIdentity, address buyerPaymentAddress, address buyerReceiveAddress, uint256 tokenAmount, address paymentToken, uint256 price, bytes32 externalOrderId)',
+  // Order 事件 (合约中名为 OrderCreatedByBuyer)
+  'event OrderCreatedByBuyer(uint256 indexed orderId, address indexed seller, address indexed buyerIdentity, address buyerPaymentAddress, address buyerReceiveAddress, uint8 standard, address tokenContract, uint256 tokenId, uint256 amount, address paymentToken, uint256 price, bytes32 externalOrderId, uint8 tradeMode, address sellerReceiveAddress, address feeRecipient)',
   'event SwapExecuted(uint256 indexed orderId, address indexed seller, address indexed buyer, uint256 amount, uint256 price, uint256 platformFeeAmount)',
   'event PaymentLocked(uint256 indexed orderId, address indexed buyer, uint256 amount, uint256 expiresAt)',
   'event PaymentCancelled(uint256 indexed orderId, address indexed buyer, uint256 amount)',
@@ -524,13 +525,17 @@ export class UniversalSwapService {
 
       const receipt = await tx.wait();
 
-      // 从事件中获取 orderId
+      // 从事件中获取 orderId, sellerReceiveAddress, feeRecipient
       let orderId: string | undefined;
+      let sellerReceiveAddress: string | undefined;
+      let eventFeeRecipient: string | undefined;
       for (const log of receipt.logs) {
         try {
           const parsed = this.contract.interface.parseLog(log);
           if (parsed?.name === 'InstantBuyCompleted') {
             orderId = parsed.args.orderId.toString();
+            sellerReceiveAddress = parsed.args.sellerReceiveAddress;
+            eventFeeRecipient = parsed.args.feeRecipient;
             break;
           }
         } catch {
@@ -540,6 +545,8 @@ export class UniversalSwapService {
 
       console.log('✅ 即时购买成功');
       console.log('🔢 订单 ID:', orderId);
+      console.log('   卖家收款地址:', sellerReceiveAddress);
+      console.log('   平台手续费地址:', eventFeeRecipient);
 
       return {
         success: true,
@@ -547,6 +554,8 @@ export class UniversalSwapService {
         orderId,
         externalOrderId,
         tradeMode: 'completed', // 即时交易直接完成
+        sellerReceiveAddress, // 卖家收款地址
+        feeRecipient: eventFeeRecipient, // 平台手续费接收地址
       };
     } catch (error) {
       console.error('❌ 即时购买失败:', error);
@@ -832,6 +841,25 @@ export class UniversalSwapService {
         return null;
       }
       console.error('❌ 查询挂单失败:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 验证挂单是否有效（卖家仍拥有 Token 并已授权）
+   * @returns { isValid: boolean, reason: string }
+   */
+  async isListingValid(listingId: string): Promise<{ isValid: boolean; reason: string }> {
+    try {
+      if (!this.contract) {
+        throw new Error('服务未初始化');
+      }
+
+      console.log(`🔍 验证挂单有效性: listingId=${listingId}`);
+      const [isValid, reason] = await this.contract.isListingValid(listingId);
+      return { isValid, reason };
+    } catch (error) {
+      console.error('❌ 验证挂单有效性失败:', error);
       throw this.handleError(error);
     }
   }

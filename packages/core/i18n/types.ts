@@ -1447,12 +1447,18 @@ export interface TranslationResource {
       atomicSwapShort?: string;
       atomicSwapPurchase?: string;
       atomicSwapDescription?: string;
+      instantSwap?: string;
+      instantSwapShort?: string;
+      instantSwapPurchase?: string;
+      instantSwapDescription?: string;
       step1Title?: string;
       step1Desc?: string;
       step2Title?: string;
       step2Desc?: string;
       step3Title?: string;
       step3Desc?: string;
+      instantStep2Title?: string;
+      instantStep2Desc?: string;
       safetyNote?: string;
       blockchainInfo?: string;
       network?: string;
