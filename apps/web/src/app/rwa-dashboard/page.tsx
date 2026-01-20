@@ -28,7 +28,9 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownLeft,
+  TrendingUp,
 } from 'lucide-react';
+import { PriceHistoryChart } from '@/components/charts';
 
 // Etherscan URL helper
 const getEtherscanUrl = (address: string, type: 'address' | 'tx' | 'token' = 'address') => {
@@ -793,6 +795,78 @@ export default function RwaAssetDashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Selected Asset Detail with Price History */}
+          {!isLoading &&
+            selectedAssetFilter &&
+            (() => {
+              // Parse filter key to find selected asset
+              const parts = selectedAssetFilter.split(':');
+              const filterContract = parts[0];
+              const filterType = parts.length > 1 ? parts[1] : null;
+              const filterId = parts.length > 2 ? parts[2] : null;
+
+              const selectedAsset = assets.find(a => {
+                if (a.contractAddress?.toLowerCase() !== filterContract) return false;
+                if (filterType === 'slot') return a.slotId === filterId;
+                if (filterType === 'token') return a.tokenId === filterId;
+                return true;
+              });
+
+              if (!selectedAsset) return null;
+
+              return (
+                <div className="bg-card rounded-xl border overflow-hidden">
+                  {/* Header */}
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
+                        {selectedAsset.emoji || '📦'}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm">{selectedAsset.name}</h3>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span
+                            className={`text-xs px-1.5 py-0.5 rounded ${
+                              selectedAsset.tokenStandard === 'ERC1155'
+                                ? 'bg-indigo-500/10 text-indigo-500'
+                                : 'bg-pink-500/10 text-pink-500'
+                            }`}
+                          >
+                            {selectedAsset.tokenStandard}
+                          </span>
+                          {selectedAsset.slotId && (
+                            <span className="text-xs text-muted-foreground">
+                              Slot #{selectedAsset.slotId}
+                            </span>
+                          )}
+                          {selectedAsset.tokenId && (
+                            <span className="text-xs text-muted-foreground">
+                              Token #{selectedAsset.tokenId}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={clearFilter}
+                      className="p-1.5 hover:bg-muted rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+
+                  {/* Price History Chart */}
+                  <div className="p-4">
+                    <PriceHistoryChart
+                      contractAddress={selectedAsset.contractAddress}
+                      tokenId={selectedAsset.tokenId}
+                      slotId={selectedAsset.slotId}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
 
           {/* Recent Transactions */}
           {!isLoading && isConnected && (

@@ -5,3 +5,4 @@
 export * from './universalSwapService';
 export * from './rwaBalanceService';
 export * from './rwaTransactionService';
+export * from './rwaPriceService';

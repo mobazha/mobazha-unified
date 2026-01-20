@@ -1584,6 +1584,19 @@ export interface TranslationResource {
     initiated: string;
     noAssets: string;
     noAssetsHint: string;
+    // Price history
+    priceHistory: string;
+    lastPrice: string;
+    highPrice: string;
+    lowPrice: string;
+    avgPrice: string;
+    noData: string;
+    priceHistoryNotAvailable: string;
+    timeRange: {
+      '1W': string;
+      '1M': string;
+      ALL: string;
+    };
   };
 }
 
