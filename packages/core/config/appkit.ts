@@ -118,7 +118,7 @@ export function getAppKitContractAddress(contractName: keyof typeof SEPOLIA_CONT
  * @param tokenSymbol - Token 符号 (USDT, USDC 等)
  * @param chainId - 可选的链 ID (当前未使用，预留多链支持)
  */
-export function getContractAddress(tokenSymbol: string, chainId?: number): string {
+export function getContractAddress(tokenSymbol: string, _chainId?: number): string {
   const contracts = getAppKitContracts();
 
   // Token 符号到合约名称的映射
