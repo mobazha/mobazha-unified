@@ -97,7 +97,9 @@ export interface DisplayOrder {
   notes?: string;
   timeline: TimelineEvent[];
   userRole: 'buyer' | 'seller' | 'moderator';
-  // RWA 支付锁定信息
+  // RWA 即时交易标识（链上已完成，无需等待）
+  isRwaInstant?: boolean;
+  // RWA 支付锁定信息（仅用于托管模式）
   paymentLocked?: {
     amount: string;
     coin: string;

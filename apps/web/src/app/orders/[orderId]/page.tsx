@@ -132,13 +132,14 @@ interface RealOrderData {
       amount?: number;
       alternateContactInfo?: string;
     };
-    // PaymentSent 统一消息：method === 3 (RWA_LOCKED) 表示 RWA 锁定模式
+    // PaymentSent 统一消息：method 表示支付模式
+    // 0=DIRECT, 1=CANCELABLE, 2=MODERATED, 3=RWA_ESCROW（托管）, 4=RWA_INSTANT（即时）
     paymentSent?: {
       transactionID?: string;
       moderator?: string;
       coin?: string;
       amount?: number;
-      method?: number | string; // 0=DIRECT, 1=CANCELABLE, 2=MODERATED, 3=RWA_LOCKED
+      method?: number | string;
       address?: string;
       contractAddress?: string; // UniversalSwap 合约地址（RWA 模式）
       buyerReceiveAddress?: string;
@@ -366,8 +367,13 @@ function transformCoreOrder(
   // 支持 PaymentSent (统一消息)
   const paymentSent = contract.paymentSent;
   const buyerPayment = buyerOrder?.payment;
-  // 判断是否为 RWA 锁定模式：method === 3 (RWA_LOCKED)
-  const isRwaLocked = paymentSent?.method === 3 || paymentSent?.method === 'RWA_LOCKED';
+  // 判断是否为 RWA 托管模式：method === 3 (RWA_ESCROW)
+  const isRwaEscrow =
+    paymentSent?.method === 3 ||
+    paymentSent?.method === 'RWA_ESCROW' ||
+    paymentSent?.method === 'RWA_LOCKED';
+  // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
+  const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
   const coin = paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
   // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
   const amount =
@@ -468,11 +474,13 @@ function transformCoreOrder(
     moderator,
     trackingNumber: trackingInfo?.trackingNumber,
     shippingAddress: formatShippingAddress(shipping),
-    // 支持 RWA 锁定模式和传统交易
+    // 支持 RWA 模式和传统交易
     paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
-    // RWA 支付锁定信息（从 paymentSent 获取，当 method === RWA_LOCKED 时）
+    // RWA 即时交易标识（即时交易已在链上完成，无需等待）
+    isRwaInstant: isRwaInstant,
+    // RWA 支付锁定信息（从 paymentSent 获取，仅用于托管模式）
     paymentLocked:
-      isRwaLocked && paymentSent
+      isRwaEscrow && paymentSent
         ? (() => {
             // 从 listing metadata 获取 escrowTimeoutSeconds
             const metadata = listingData?.metadata as Record<string, unknown> | undefined;

@@ -356,7 +356,7 @@ export function useRwaPurchase({
               coin: paymentCoin,
               amount: paymentAmount,
               timestamp: new Date().toISOString(),
-              method: 5, // RWA_INSTANT_BUY（即时交易模式）
+              method: 4, // RWA_INSTANT（即时交易模式）
               paymentTokenAddress: paymentTokenAddress,
               contractAddress: universalSwapAddress,
               buyerReceiveAddress: buyerReceiveAddress,
@@ -408,7 +408,7 @@ export function useRwaPurchase({
               coin: paymentCoin,
               amount: paymentAmount,
               timestamp: new Date().toISOString(),
-              method: 4, // RWA_PAYMENT_LOCKED（确认交易模式）
+              method: 3, // RWA_ESCROW（确认交易模式）
               paymentTokenAddress: paymentTokenAddress,
               contractAddress: universalSwapAddress,
               buyerReceiveAddress: buyerReceiveAddress,
