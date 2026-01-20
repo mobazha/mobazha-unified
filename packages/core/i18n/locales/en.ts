@@ -2097,6 +2097,45 @@ export const en: TranslationResource = {
       error: 'Execution Failed',
     },
   },
+
+  // RWA Dashboard
+  rwaDashboard: {
+    title: 'RWA Asset Dashboard',
+    // Wallet status
+    walletNotConnected: 'Wallet Not Connected',
+    connectWalletHint: 'Please connect wallet to view your RWA assets',
+    connectWallet: 'Connect Wallet',
+    walletConnected: 'Wallet Connected',
+    // Statistics
+    totalAssets: 'Total Assets',
+    assetTypes: 'Asset Types',
+    // Asset list
+    heldAssets: 'Held Assets',
+    assetTypesCount: '{count} asset types',
+    shares: 'shares',
+    erc3525Contract: 'ERC3525 Contract',
+    unknownAsset: 'Unknown Asset',
+    // Transactions
+    recentTransactions: 'Recent Transactions',
+    filtered: 'Filtered',
+    viewAll: 'View All →',
+    collapse: 'Collapse ↑',
+    loadingMore: 'Loading more...',
+    noTransactions: 'No transaction history',
+    noTransactionsFiltered: 'No transaction history for this asset',
+    // Transaction types
+    txType: {
+      transferIn: 'In',
+      transferOut: 'Out',
+      mint: 'Mint',
+      burn: 'Burn',
+      unknown: 'Unknown',
+    },
+    initiated: 'Initiated',
+    // Empty state
+    noAssets: 'No RWA Assets',
+    noAssetsHint: "You don't have any RWA assets yet, you can get them by purchasing",
+  },
 };
 
 export default en;
