@@ -127,7 +127,11 @@ export const CHAIN_CONFIG: Record<ChainId, ChainInfo> = {
       symbol: 'ETH',
       decimals: 18,
     },
-    rpcUrls: ['https://rpc.sepolia.org', 'https://ethereum-sepolia.publicnode.com'],
+    rpcUrls: [
+      'https://ethereum-sepolia-rpc.publicnode.com',
+      'https://eth-sepolia.public.blastapi.io',
+      'https://sepolia.drpc.org',
+    ],
     blockExplorerUrls: ['https://sepolia.etherscan.io'],
     iconUrl: '/chains/ethereum.svg',
     isTestnet: true,
