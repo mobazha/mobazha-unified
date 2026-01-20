@@ -1552,6 +1552,39 @@ export interface TranslationResource {
       error: string;
     };
   };
+
+  // RWA Dashboard
+  rwaDashboard?: {
+    title: string;
+    walletNotConnected: string;
+    connectWalletHint: string;
+    connectWallet: string;
+    walletConnected: string;
+    totalAssets: string;
+    assetTypes: string;
+    heldAssets: string;
+    assetTypesCount: string;
+    shares: string;
+    erc3525Contract: string;
+    unknownAsset: string;
+    recentTransactions: string;
+    filtered: string;
+    viewAll: string;
+    collapse: string;
+    loadingMore: string;
+    noTransactions: string;
+    noTransactionsFiltered: string;
+    txType: {
+      transferIn: string;
+      transferOut: string;
+      mint: string;
+      burn: string;
+      unknown: string;
+    };
+    initiated: string;
+    noAssets: string;
+    noAssetsHint: string;
+  };
 }
 
 // i18n 上下文类型

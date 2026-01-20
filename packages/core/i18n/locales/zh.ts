@@ -2056,6 +2056,45 @@ export const zh: TranslationResource = {
       error: '执行失败',
     },
   },
+
+  // RWA 资产仪表盘
+  rwaDashboard: {
+    title: 'RWA 资产仪表盘',
+    // 钱包状态
+    walletNotConnected: '钱包未连接',
+    connectWalletHint: '请连接钱包以查看您的 RWA 资产',
+    connectWallet: '连接钱包',
+    walletConnected: '钱包已连接',
+    // 统计
+    totalAssets: '资产总数',
+    assetTypes: '资产类型',
+    // 资产列表
+    heldAssets: '持有资产',
+    assetTypesCount: '{count} 种资产',
+    shares: '份',
+    erc3525Contract: 'ERC3525 合约',
+    unknownAsset: '未知资产',
+    // 交易
+    recentTransactions: '最近交易',
+    filtered: '已筛选',
+    viewAll: '查看全部 →',
+    collapse: '收起 ↑',
+    loadingMore: '加载更多...',
+    noTransactions: '暂无交易记录',
+    noTransactionsFiltered: '该资产暂无交易记录',
+    // 交易类型
+    txType: {
+      transferIn: '转入',
+      transferOut: '转出',
+      mint: '铸造',
+      burn: '销毁',
+      unknown: '未知',
+    },
+    initiated: '发起',
+    // 空状态
+    noAssets: '暂无 RWA 资产',
+    noAssetsHint: '您当前没有任何 RWA 资产，可以通过购买获取',
+  },
 };
 
 export default zh;

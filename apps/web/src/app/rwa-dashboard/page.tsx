@@ -58,12 +58,12 @@ interface AssetGroup {
   totalValue: number;
 }
 
-// Transaction type helpers
-const getTransactionTypeText = (type: string, from: string): string => {
-  if (from === '0x0000000000000000000000000000000000000000') return '铸造';
-  if (type === 'in') return '转入';
-  if (type === 'out') return '转出';
-  return '未知';
+// Transaction type helpers - text is passed in from component with i18n
+const getTransactionTypeKey = (type: string, from: string): string => {
+  if (from === '0x0000000000000000000000000000000000000000') return 'mint';
+  if (type === 'in') return 'transferIn';
+  if (type === 'out') return 'transferOut';
+  return 'unknown';
 };
 
 const getTransactionTypeColor = (type: string, from: string): string => {
@@ -173,6 +173,7 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
   onAssetClick,
   getAssetFilterKey,
 }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const handleCopyAddress = async (e: React.MouseEvent) => {
@@ -207,7 +208,9 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
               <span className="text-lg font-bold text-primary">
                 {formatBalance(displayBalance)}
               </span>
-              <span className="text-xs text-muted-foreground">{asset.unit || '份'}</span>
+              <span className="text-xs text-muted-foreground">
+                {asset.unit || t('rwaDashboard.shares')}
+              </span>
             </div>
 
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -278,7 +281,9 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
         <span className="text-xl">📦</span>
         <div className="flex-1 text-left">
           <p className="font-semibold text-sm">{group.contractName}</p>
-          <p className="text-xs text-muted-foreground">{group.assets.length} 种资产</p>
+          <p className="text-xs text-muted-foreground">
+            {t('rwaDashboard.assetTypesCount', { count: group.assets.length })}
+          </p>
         </div>
         <span
           className={`px-2 py-0.5 rounded-full text-xs ${
@@ -290,7 +295,7 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
           {group.tokenStandard}
         </span>
         <span className="font-semibold text-sm text-primary">
-          {formatBalance(group.totalBalance)} 份
+          {formatBalance(group.totalBalance)} {t('rwaDashboard.shares')}
         </span>
       </button>
 
@@ -344,7 +349,9 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
   getAssetName,
   currentUserAddress,
 }) => {
-  const typeText = getTransactionTypeText(tx.type, tx.from);
+  const { t } = useI18n();
+  const typeKey = getTransactionTypeKey(tx.type, tx.from);
+  const typeText = t(`rwaDashboard.txType.${typeKey}`);
   const typeColor = getTransactionTypeColor(tx.type, tx.from);
 
   // 判断是否为用户发起但转给他人的交易
@@ -380,10 +387,12 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
           {/* 用户发起但转给他人的交易显示标识 */}
           {isUserInitiatedToOther && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">
-              发起
+              {t('rwaDashboard.initiated')}
             </span>
           )}
-          <span className="font-medium text-sm">{tx.value || '1'} 份</span>
+          <span className="font-medium text-sm">
+            {tx.value || '1'} {t('rwaDashboard.shares')}
+          </span>
           {/* 显示对方的 Token ID */}
           {tx.tokenId && tx.to !== '0x0000000000000000000000000000000000000000' && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-500 font-mono">
@@ -428,6 +437,11 @@ export default function RwaAssetDashboardPage() {
   const [transactions, setTransactions] = useState<TokenTransfer[]>([]);
   const [txLoading, setTxLoading] = useState(false);
 
+  // Transaction list expansion state
+  const [isTransactionsExpanded, setIsTransactionsExpanded] = useState(false);
+  const [txDisplayLimit, setTxDisplayLimit] = useState(5);
+  const TX_LOAD_BATCH_SIZE = 20;
+
   // Generate asset filter key: ERC3525 uses contractAddress:slot:slotId, ERC1155 uses contractAddress:token:tokenId
   const getAssetFilterKey = useCallback((asset: RwaAsset): string => {
     const addr = asset.contractAddress?.toLowerCase() || '';
@@ -447,7 +461,7 @@ export default function RwaAssetDashboardPage() {
     const getDisplayName = (asset: RwaAsset): string => {
       if (asset.name) {
         if (asset.tokenStandard === 'ERC3525') {
-          return 'ERC3525 合约';
+          return t('rwaDashboard.erc3525Contract');
         }
         return asset.name;
       }
@@ -482,7 +496,7 @@ export default function RwaAssetDashboardPage() {
       }
       return a.contractName.localeCompare(b.contractName);
     });
-  }, [assets]);
+  }, [assets, t]);
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
@@ -569,6 +583,50 @@ export default function RwaAssetDashboardPage() {
     setSelectedAssetFilter('');
   }, []);
 
+  // Toggle transactions expand state
+  const toggleTransactionsExpand = useCallback(() => {
+    setIsTransactionsExpanded(prev => {
+      if (prev) {
+        // Collapse: reset display limit
+        setTxDisplayLimit(5);
+      } else {
+        // Expand: show more
+        setTxDisplayLimit(20);
+      }
+      return !prev;
+    });
+  }, []);
+
+  // Load more transactions on scroll
+  const loadMoreTransactions = useCallback(() => {
+    if (!isTransactionsExpanded) return;
+    if (txDisplayLimit < filteredTransactions.length) {
+      setTxDisplayLimit(prev => prev + TX_LOAD_BATCH_SIZE);
+    }
+  }, [isTransactionsExpanded, txDisplayLimit, filteredTransactions.length]);
+
+  // Handle scroll event for infinite loading
+  const handleTransactionsScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      if (!isTransactionsExpanded) return;
+      const el = e.currentTarget;
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
+        loadMoreTransactions();
+      }
+    },
+    [isTransactionsExpanded, loadMoreTransactions]
+  );
+
+  // Displayed transactions with limit
+  const displayedTransactions = useMemo(() => {
+    return filteredTransactions.slice(0, txDisplayLimit);
+  }, [filteredTransactions, txDisplayLimit]);
+
+  // Check if there are more transactions to load
+  const hasMoreTransactions = useMemo(() => {
+    return txDisplayLimit < filteredTransactions.length;
+  }, [txDisplayLimit, filteredTransactions.length]);
+
   // Get asset name from contract and tokenId/slotId
   const getAssetName = useCallback(
     (contractAddress: string, tokenId?: string, slotId?: string): string => {
@@ -593,9 +651,9 @@ export default function RwaAssetDashboardPage() {
         return asset.name;
       }
 
-      return tokenId ? `Token #${tokenId}` : '未知资产';
+      return tokenId ? `Token #${tokenId}` : t('rwaDashboard.unknownAsset');
     },
-    [assets]
+    [assets, t]
   );
 
   // Statistics
@@ -612,7 +670,7 @@ export default function RwaAssetDashboardPage() {
           <Link href="/me" className="p-1 -ml-1 mr-2 hover:bg-muted rounded-lg transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <span className="text-base font-semibold flex-1">RWA 资产仪表盘</span>
+          <span className="text-base font-semibold flex-1">{t('rwaDashboard.title')}</span>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing || isLoading}
@@ -633,13 +691,13 @@ export default function RwaAssetDashboardPage() {
                   <Wallet className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm">钱包未连接</h3>
+                  <h3 className="font-semibold text-sm">{t('rwaDashboard.walletNotConnected')}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    请连接钱包以查看您的 RWA 资产
+                    {t('rwaDashboard.connectWalletHint')}
                   </p>
                 </div>
                 <Button size="sm" onClick={handleConnectWallet}>
-                  连接钱包
+                  {t('rwaDashboard.connectWallet')}
                 </Button>
               </div>
             </div>
@@ -650,7 +708,7 @@ export default function RwaAssetDashboardPage() {
                   <Wallet className="w-5 h-5 text-green-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm">钱包已连接</h3>
+                  <h3 className="font-semibold text-sm">{t('rwaDashboard.walletConnected')}</h3>
                   <p className="text-xs text-muted-foreground font-mono truncate">
                     {walletInfo?.address}
                   </p>
@@ -672,14 +730,14 @@ export default function RwaAssetDashboardPage() {
             <div className="bg-card rounded-xl p-4 border">
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
                 <PieChart className="w-4 h-4" />
-                <span className="text-xs">资产总数</span>
+                <span className="text-xs">{t('rwaDashboard.totalAssets')}</span>
               </div>
               <p className="text-2xl font-bold">{isLoading ? '--' : assets.length}</p>
             </div>
             <div className="bg-card rounded-xl p-4 border">
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
                 <Activity className="w-4 h-4" />
-                <span className="text-xs">资产类型</span>
+                <span className="text-xs">{t('rwaDashboard.assetTypes')}</span>
               </div>
               <p className="text-2xl font-bold">
                 {isLoading
@@ -717,7 +775,9 @@ export default function RwaAssetDashboardPage() {
           {/* Assets by Contract Group */}
           {!isLoading && groupedAssets.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-muted-foreground mb-3">持有资产</h2>
+              <h2 className="text-sm font-semibold text-muted-foreground mb-3">
+                {t('rwaDashboard.heldAssets')}
+              </h2>
               <div className="space-y-3">
                 {groupedAssets.map(group => (
                   <ContractGroup
@@ -739,10 +799,12 @@ export default function RwaAssetDashboardPage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold text-muted-foreground">最近交易</h2>
+                  <h2 className="text-sm font-semibold text-muted-foreground">
+                    {t('rwaDashboard.recentTransactions')}
+                  </h2>
                   {selectedAssetFilter && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
-                      已筛选
+                      {t('rwaDashboard.filtered')}
                       <button
                         onClick={clearFilter}
                         className="hover:bg-primary/20 rounded-full p-0.5"
@@ -752,6 +814,16 @@ export default function RwaAssetDashboardPage() {
                     </span>
                   )}
                 </div>
+                {filteredTransactions.length > 5 && (
+                  <button
+                    onClick={toggleTransactionsExpand}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {isTransactionsExpanded
+                      ? t('rwaDashboard.collapse')
+                      : t('rwaDashboard.viewAll')}
+                  </button>
+                )}
               </div>
 
               {txLoading ? (
@@ -769,8 +841,13 @@ export default function RwaAssetDashboardPage() {
                   </div>
                 </div>
               ) : filteredTransactions.length > 0 ? (
-                <div className="bg-card rounded-xl border divide-y divide-border">
-                  {filteredTransactions.slice(0, 5).map(tx => (
+                <div
+                  className={`bg-card rounded-xl border divide-y divide-border ${
+                    isTransactionsExpanded ? 'max-h-[500px] overflow-y-auto' : ''
+                  }`}
+                  onScroll={handleTransactionsScroll}
+                >
+                  {displayedTransactions.map(tx => (
                     <TransactionItem
                       key={tx.hash}
                       tx={tx}
@@ -778,12 +855,20 @@ export default function RwaAssetDashboardPage() {
                       currentUserAddress={walletInfo?.address}
                     />
                   ))}
+                  {isTransactionsExpanded && hasMoreTransactions && (
+                    <div className="flex items-center justify-center gap-2 py-3 text-muted-foreground">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span className="text-xs">{t('rwaDashboard.loadingMore')}</span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-card rounded-xl p-8 border text-center">
                   <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {selectedAssetFilter ? '该资产暂无交易记录' : '暂无交易记录'}
+                    {selectedAssetFilter
+                      ? t('rwaDashboard.noTransactionsFiltered')
+                      : t('rwaDashboard.noTransactions')}
                   </p>
                 </div>
               )}
@@ -796,10 +881,8 @@ export default function RwaAssetDashboardPage() {
               <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
                 <PieChart className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold mb-2">暂无 RWA 资产</h3>
-              <p className="text-sm text-muted-foreground">
-                您当前没有任何 RWA 资产，可以通过购买获取
-              </p>
+              <h3 className="font-semibold mb-2">{t('rwaDashboard.noAssets')}</h3>
+              <p className="text-sm text-muted-foreground">{t('rwaDashboard.noAssetsHint')}</p>
             </div>
           )}
         </VStack>
