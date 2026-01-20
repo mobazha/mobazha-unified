@@ -2070,7 +2070,7 @@ export const zh: TranslationResource = {
     assetTypes: '资产类型',
     // 资产列表
     heldAssets: '持有资产',
-    assetTypesCount: '{count} 种资产',
+    assetTypesCount: '{{count}} 种资产',
     shares: '份',
     erc3525Contract: 'ERC3525 合约',
     unknownAsset: '未知资产',
@@ -2094,6 +2094,20 @@ export const zh: TranslationResource = {
     // 空状态
     noAssets: '暂无 RWA 资产',
     noAssetsHint: '您当前没有任何 RWA 资产，可以通过购买获取',
+    // 价格历史
+    priceHistory: '价格走势',
+    lastPrice: '最新价格',
+    highPrice: '最高',
+    lowPrice: '最低',
+    avgPrice: '均价',
+    noData: '暂无数据',
+    priceHistoryNotAvailable: '价格历史仅在网页端可用',
+    // 时间范围
+    timeRange: {
+      '1W': '1周',
+      '1M': '1月',
+      ALL: '全部',
+    },
   },
 };
 

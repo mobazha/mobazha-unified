@@ -366,3 +366,45 @@ export interface TokenTransfer {
   valueSources?: ValueSource[]; // ERC3525 value 来源详情
   initiatedBy?: string; // 交易发起者地址
 }
+
+// ==================== 价格历史类型 ====================
+
+/**
+ * 时间范围枚举
+ */
+export type TimeRange = '1W' | '1M' | 'ALL';
+
+/**
+ * 价格数据点
+ */
+export interface PricePoint {
+  timestamp: number; // Unix 毫秒时间戳
+  price: string; // 成交价格（支付代币单位）
+  volume?: string; // 成交量
+  txHash?: string; // 交易哈希
+}
+
+/**
+ * 价格历史响应
+ */
+export interface PriceHistory {
+  contractAddress: string;
+  tokenId?: string;
+  slotId?: string;
+  points: PricePoint[];
+  currency: string; // 支付代币符号，如 USDT
+  // 统计数据
+  stats?: PriceStats;
+}
+
+/**
+ * 价格统计数据
+ */
+export interface PriceStats {
+  lastPrice: string; // 最新价格
+  highPrice: string; // 最高价
+  lowPrice: string; // 最低价
+  avgPrice: string; // 平均价格
+  priceChange: string; // 价格变化（百分比）
+  totalVolume: string; // 总成交量
+}

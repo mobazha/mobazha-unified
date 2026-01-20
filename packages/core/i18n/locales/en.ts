@@ -2111,7 +2111,7 @@ export const en: TranslationResource = {
     assetTypes: 'Asset Types',
     // Asset list
     heldAssets: 'Held Assets',
-    assetTypesCount: '{count} asset types',
+    assetTypesCount: '{{count}} asset types',
     shares: 'shares',
     erc3525Contract: 'ERC3525 Contract',
     unknownAsset: 'Unknown Asset',
@@ -2135,6 +2135,20 @@ export const en: TranslationResource = {
     // Empty state
     noAssets: 'No RWA Assets',
     noAssetsHint: "You don't have any RWA assets yet, you can get them by purchasing",
+    // Price history
+    priceHistory: 'Price History',
+    lastPrice: 'Last Price',
+    highPrice: 'High',
+    lowPrice: 'Low',
+    avgPrice: 'Average',
+    noData: 'No data available',
+    priceHistoryNotAvailable: 'Price history is only available on web',
+    // Time range
+    timeRange: {
+      '1W': '1W',
+      '1M': '1M',
+      ALL: 'ALL',
+    },
   },
 };
 
