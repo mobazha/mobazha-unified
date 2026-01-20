@@ -20,11 +20,14 @@ export const SEPOLIA_CHAIN_ID = ChainId.ETHEREUM_SEPOLIA;
 // 默认 Chain ID
 const DEFAULT_CHAIN_ID = getCurrentChainId();
 
-// 备用公共 RPC URLs
+// 备用公共 RPC URLs（需支持 CORS，且不需要 API Key）
+// 注意：Ankr 现在需要 API Key，已移除
+// 优先使用与桌面端/移动端一致的节点顺序
 const FALLBACK_RPC_URLS = [
-  'https://rpc.sepolia.org',
-  'https://rpc2.sepolia.org',
-  'https://sepolia.drpc.org',
+  'https://ethereum-sepolia-rpc.publicnode.com', // Publicnode - 支持 CORS，无需 API Key
+  'https://eth-sepolia.public.blastapi.io', // Blast - 支持 CORS
+  'https://sepolia.drpc.org', // DRPC - 支持 CORS
+  'https://1rpc.io/sepolia', // 1RPC - 支持 CORS
 ];
 
 // 获取当前网络的 Block Explorer URL
