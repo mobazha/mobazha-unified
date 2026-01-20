@@ -200,6 +200,8 @@ export interface RwaTransactionResult {
 export interface RwaCreateOrderResult extends RwaTransactionResult {
   orderId?: string;
   externalOrderId?: string;
+  sellerReceiveAddress?: string;
+  feeRecipient?: string;
 }
 
 /**
