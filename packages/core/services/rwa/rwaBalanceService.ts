@@ -36,7 +36,7 @@ function getBlockExplorerUrl(chainId: number = DEFAULT_CHAIN_ID): string {
 }
 
 // 缓存配置
-const CACHE_TTL = 30 * 1000; // 30秒缓存
+const CACHE_TTL = 120 * 1000; // 120秒（2分钟）缓存，减少重复链上查询
 const balanceCache = new Map<string, { balance: string; timestamp: number }>();
 
 // ERC1155 ABI (只包含需要的方法)
@@ -268,6 +268,7 @@ export async function getERC3525Slot(contractAddress: string, tokenId: string): 
 
 /**
  * 查询用户拥有的所有 ERC3525 Token
+ * 优化版本：使用 Promise.all 并行查询，显著减少等待时间
  * @param contractAddress - 合约地址
  * @param ownerAddress - 持有者地址
  * @returns 用户拥有的所有 ERC3525 token 列表
@@ -288,23 +289,52 @@ export async function getERC3525TokensOfOwner(
       return [];
     }
 
+    // 2. 并行获取所有 tokenId
+    const tokenIdPromises = Array.from({ length: count }, (_, i) =>
+      contract.tokenOfOwnerByIndex(ownerAddress, i).catch((err: Error) => {
+        console.error(`Error fetching tokenId at index ${i}:`, err);
+        return null;
+      })
+    );
+    const tokenIds = await Promise.all(tokenIdPromises);
+
+    // 过滤掉失败的查询
+    const validTokenIds = tokenIds.filter((id): id is NonNullable<typeof id> => id !== null);
+
+    if (validTokenIds.length === 0) {
+      return [];
+    }
+
+    // 3. 并行获取所有 token 的 slot 和 value
+    const [slots, values] = await Promise.all([
+      Promise.all(
+        validTokenIds.map(tokenId =>
+          contract.slotOf(tokenId).catch((err: Error) => {
+            console.error(`Error fetching slot for token ${tokenId}:`, err);
+            return null;
+          })
+        )
+      ),
+      Promise.all(
+        validTokenIds.map(tokenId =>
+          contract['balanceOf(uint256)'](tokenId).catch((err: Error) => {
+            console.error(`Error fetching value for token ${tokenId}:`, err);
+            return null;
+          })
+        )
+      ),
+    ]);
+
+    // 4. 组合结果
     const tokens: OwnedERC3525Token[] = [];
-
-    // 2. 遍历获取每个 token 的信息
-    for (let i = 0; i < count; i++) {
-      try {
-        const tokenId = await contract.tokenOfOwnerByIndex(ownerAddress, i);
-        const slot = await contract.slotOf(tokenId);
-        const value = await contract['balanceOf(uint256)'](tokenId);
-
+    for (let i = 0; i < validTokenIds.length; i++) {
+      if (slots[i] !== null && values[i] !== null) {
         tokens.push({
-          tokenId: tokenId.toString(),
-          slot: slot.toString(),
-          value: value.toString(),
+          tokenId: validTokenIds[i].toString(),
+          slot: slots[i].toString(),
+          value: values[i].toString(),
           contractAddress,
         });
-      } catch (error) {
-        console.error(`Error fetching ERC3525 token at index ${i}:`, error);
       }
     }
 
