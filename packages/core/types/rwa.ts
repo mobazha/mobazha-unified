@@ -37,7 +37,7 @@ export const TradeModeEnum = {
 } as const;
 
 // 资产类型代码
-export type AssetTypeCode = 'NFT' | 'CREATOR' | 'BROADWAY' | 'CUSTOM';
+export type AssetTypeCode = 'NFT' | 'CREATOR' | 'BROADWAY' | 'KPOP' | 'CUSTOM';
 
 /**
  * 资产类型定义

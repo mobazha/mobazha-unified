@@ -1,6 +1,6 @@
 /**
  * RWA 资产解析工具
- * 
+ *
  * 从商品数据解析并匹配 RWA 资产信息
  * 用于商品详情页展示 RWA 资产特有的会员/收益/权益等信息
  */
@@ -15,7 +15,7 @@ import type {
   AssetTypeCode,
 } from '../types/rwa';
 import { parseCryptoListingCurrencyCode, type TokenIdentifier } from './tokenIdentifier';
-import { findPredefinedAsset, getAssetType } from '../data/rwaAssetTemplates';
+import { findPredefinedAssetWithType, getAssetType } from '../data/rwaAssetTemplates';
 
 /**
  * 解析后的 RWA 资产信息
@@ -27,27 +27,27 @@ export interface ResolvedRwaAsset {
   description: string;
   emoji: string;
   typeName: string;
-  
+
   // Token 标识
   tokenStandard: TokenStandard;
   blockchain: string;
   contractAddress: string;
   tokenId?: string;
   slotId?: string;
-  
+
   // 数据来源
   source: 'predefined' | 'custom';
   assetTypeCode?: AssetTypeCode;
-  
+
   // ERC721 特有
   nftMetadata?: NftMetadata;
-  
+
   // ERC1155 特有
   membership?: MembershipInfo;
-  
+
   // ERC3525 特有
   performance?: PerformanceInfo;
-  
+
   // 权益列表
   rights?: string[];
 }
@@ -57,7 +57,7 @@ export { etherscanUrls, formatBalance, shortenAddress } from '../services/rwa/rw
 
 /**
  * 检查商品是否为 RWA Token 类型
- * 
+ *
  * @param product 商品数据
  * @returns 是否为 RWA Token
  */
@@ -68,13 +68,13 @@ export function isRwaTokenProduct(product: Product | null | undefined): boolean 
 
 /**
  * 从商品数据解析 Token 标识信息
- * 
+ *
  * @param product 商品数据
  * @returns Token 标识信息，解析失败返回 null
  */
 export function parseProductTokenIdentifier(product: Product): TokenIdentifier | null {
   const { item } = product;
-  
+
   // 优先从 cryptoListingCurrencyCode 解析 (新格式)
   if (item.cryptoListingCurrencyCode) {
     const parsed = parseCryptoListingCurrencyCode(item.cryptoListingCurrencyCode);
@@ -82,7 +82,7 @@ export function parseProductTokenIdentifier(product: Product): TokenIdentifier |
       return parsed;
     }
   }
-  
+
   // 回退到 tokenAddress + tokenStandard 字段
   if (item.tokenAddress && item.tokenStandard) {
     const tokenStandard = item.tokenStandard as TokenStandard;
@@ -95,13 +95,13 @@ export function parseProductTokenIdentifier(product: Product): TokenIdentifier |
       };
     }
   }
-  
+
   return null;
 }
 
 /**
  * 从商品数据解析并匹配 RWA 资产
- * 
+ *
  * @param product 商品数据
  * @returns 解析后的 RWA 资产信息，非 RWA 商品或解析失败返回 null
  */
@@ -109,27 +109,31 @@ export function resolveRwaAsset(product: Product | null | undefined): ResolvedRw
   if (!product || !isRwaTokenProduct(product)) {
     return null;
   }
-  
+
   const tokenIdentifier = parseProductTokenIdentifier(product);
-  
+
   // 如果无法解析 Token 标识，尝试从商品标题和描述构建基本信息
   if (!tokenIdentifier) {
     // 无法确定具体的 RWA 资产，返回基本信息
     return createBasicRwaAsset(product);
   }
-  
-  // 尝试匹配预定义资产
-  const predefinedAsset = findPredefinedAsset({
+
+  // 尝试匹配预定义资产及其类型（支持 KPOP 等新类型）
+  const assetWithType = findPredefinedAssetWithType({
     tokenAddress: tokenIdentifier.tokenAddress,
     tokenStandard: tokenIdentifier.tokenStandard as TokenStandard,
     tokenId: tokenIdentifier.tokenId,
     slotId: tokenIdentifier.slotId,
   });
-  
-  if (predefinedAsset) {
-    return createFromPredefinedAsset(predefinedAsset, tokenIdentifier);
+
+  if (assetWithType) {
+    return createFromPredefinedAsset(
+      assetWithType.asset,
+      tokenIdentifier,
+      assetWithType.assetTypeCode
+    );
   }
-  
+
   // 未匹配到预定义资产，构建自定义资产信息
   return createCustomRwaAsset(product, tokenIdentifier);
 }
@@ -139,26 +143,28 @@ export function resolveRwaAsset(product: Product | null | undefined): ResolvedRw
  */
 function createFromPredefinedAsset(
   asset: PredefinedAsset,
-  identifier: TokenIdentifier
+  identifier: TokenIdentifier,
+  assetTypeCode?: AssetTypeCode
 ): ResolvedRwaAsset {
-  const assetType = getAssetTypeCodeFromStandard(asset.tokenStandard);
-  
+  // 使用传入的 assetTypeCode，或回退到基于 tokenStandard 的推断
+  const finalAssetTypeCode = assetTypeCode || getAssetTypeCodeFromStandard(asset.tokenStandard);
+
   return {
     id: asset.id,
     name: asset.name,
     description: asset.description,
     emoji: asset.emoji,
     typeName: asset.typeName,
-    
+
     tokenStandard: asset.tokenStandard,
     blockchain: identifier.blockchain,
     contractAddress: asset.contractAddress,
     tokenId: asset.tokenId,
     slotId: asset.slotId,
-    
+
     source: 'predefined',
-    assetTypeCode: assetType,
-    
+    assetTypeCode: finalAssetTypeCode,
+
     nftMetadata: asset.nftMetadata,
     membership: asset.membership,
     performance: asset.performance,
@@ -169,30 +175,44 @@ function createFromPredefinedAsset(
 /**
  * 创建自定义 RWA 资产信息
  */
-function createCustomRwaAsset(
-  product: Product,
-  identifier: TokenIdentifier
-): ResolvedRwaAsset {
+function createCustomRwaAsset(product: Product, identifier: TokenIdentifier): ResolvedRwaAsset {
   const { tokenStandard, tokenAddress, blockchain, tokenId, slotId } = identifier;
-  const assetType = getAssetTypeCodeFromStandard(tokenStandard as TokenStandard);
-  const assetTypeInfo = getAssetType(assetType);
-  
+
+  // 尝试通过合约地址和 tokenId/slotId 查找预定义资产类型（支持 KPOP 等新类型）
+  const assetWithType = findPredefinedAssetWithType({
+    tokenAddress,
+    tokenStandard: tokenStandard as TokenStandard,
+    tokenId,
+    slotId,
+  });
+
+  // 如果找到预定义资产类型，使用其类型信息；否则回退到 tokenStandard 映射
+  let assetTypeCode: AssetTypeCode;
+  let assetTypeInfo;
+  if (assetWithType) {
+    assetTypeCode = assetWithType.assetTypeCode;
+    assetTypeInfo = getAssetType(assetTypeCode);
+  } else {
+    assetTypeCode = getAssetTypeCodeFromStandard(tokenStandard as TokenStandard);
+    assetTypeInfo = getAssetType(assetTypeCode);
+  }
+
   return {
     id: `custom-${tokenAddress}-${tokenId || slotId || ''}`,
     name: product.item.title,
     description: product.item.description,
     emoji: assetTypeInfo?.icon || '🔗',
-    typeName: getTokenStandardDisplayName(tokenStandard as TokenStandard),
-    
+    typeName: assetTypeInfo?.name || getTokenStandardDisplayName(tokenStandard as TokenStandard),
+
     tokenStandard: tokenStandard as TokenStandard,
     blockchain,
     contractAddress: tokenAddress,
     tokenId,
     slotId,
-    
+
     source: 'custom',
-    assetTypeCode: assetType,
-    
+    assetTypeCode,
+
     // 自定义资产没有预定义的会员/收益信息
     rights: [],
   };
@@ -208,11 +228,11 @@ function createBasicRwaAsset(product: Product): ResolvedRwaAsset {
     description: product.item.description,
     emoji: '🔗',
     typeName: 'RWA Token',
-    
+
     tokenStandard: 'ERC1155', // 默认
     blockchain: product.item.blockchain?.toLowerCase() || 'sepolia',
     contractAddress: product.item.tokenAddress || '',
-    
+
     source: 'custom',
     rights: [],
   };
@@ -265,4 +285,3 @@ export function getTokenStandardColor(standard: TokenStandard): string {
       return '#64748b'; // 灰色
   }
 }
-
