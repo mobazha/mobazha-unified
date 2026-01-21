@@ -1,0 +1,50 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="kpopGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333ea"/>
+      <stop offset="100%" style="stop-color:#ec4899"/>
+    </linearGradient>
+    <linearGradient id="cardGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#fdf4ff"/>
+    </linearGradient>
+    <linearGradient id="photoGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5d0fe"/>
+      <stop offset="100%" style="stop-color:#e879f9"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="90" fill="url(#kpopGrad1)"/>
+  
+  <g transform="translate(50, 30)">
+    <rect x="0" y="0" width="80" height="110" rx="8" fill="url(#cardGrad1)" stroke="#d946ef" stroke-width="2"/>
+    <rect x="8" y="8" width="64" height="70" rx="4" fill="url(#photoGrad1)"/>
+    
+    <circle cx="40" cy="35" r="20" fill="#fae8ff"/>
+    <circle cx="40" cy="30" r="12" fill="#f0abfc"/>
+    <path d="M25 55 Q40 45 55 55 L55 70 L25 70 Z" fill="#e879f9"/>
+    
+    <path d="M60 15 L62 20 L68 20 L63 24 L65 30 L60 26 L55 30 L57 24 L52 20 L58 20 Z" fill="#fbbf24"/>
+    
+    <text x="40" y="92" text-anchor="middle" font-size="10" fill="#9333ea" font-family="Georgia, serif" font-style="italic">Jimin</text>
+    <path d="M15 98 Q28 94 40 98 T65 96" stroke="#c026d3" stroke-width="1.5" fill="none"/>
+  </g>
+  
+  <g transform="translate(140, 25)">
+    <rect x="0" y="0" width="32" height="20" rx="4" fill="#fbbf24"/>
+    <text x="16" y="14" text-anchor="middle" font-size="10" fill="#78350f" font-family="Arial, sans-serif" font-weight="bold">LA</text>
+  </g>
+  
+  <g transform="translate(18, 25)">
+    <rect x="0" y="0" width="32" height="20" rx="4" fill="#ec4899"/>
+    <text x="16" y="14" text-anchor="middle" font-size="8" fill="white" font-family="Arial, sans-serif" font-weight="bold">PTD</text>
+  </g>
+  
+  <g transform="translate(25, 145)">
+    <path d="M12 3 C12 1, 15 -1, 18 2 C21 -1, 24 1, 24 3 C24 8, 18 13, 18 13 C18 13, 12 8, 12 3 Z" fill="#ec4899"/>
+  </g>
+  <g transform="translate(155, 145)">
+    <path d="M12 3 C12 1, 15 -1, 18 2 C21 -1, 24 1, 24 3 C24 8, 18 13, 18 13 C18 13, 12 8, 12 3 Z" fill="#ec4899"/>
+  </g>
+  
+  <text x="100" y="178" text-anchor="middle" font-size="11" fill="white" font-family="Arial, sans-serif" font-weight="bold">PTD LA - JIMIN</text>
+</svg>
