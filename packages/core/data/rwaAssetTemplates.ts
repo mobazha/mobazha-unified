@@ -35,6 +35,14 @@ export const assetTypes: AssetType[] = [
     color: '#ec4899',
   },
   {
+    code: 'KPOP',
+    name: 'K-pop 收藏品',
+    icon: '💜',
+    description: 'K-pop 小卡、会员卡、演唱会纪念品等数字收藏',
+    tokenStandard: 'ERC1155',
+    color: '#9333ea',
+  },
+  {
     code: 'CUSTOM',
     name: '自定义资产',
     icon: '⚙️',
@@ -199,6 +207,92 @@ export const predefinedAssets: Record<AssetTypeCode, PredefinedAsset[]> = {
       rights: ['票房收益分红', '首演门票优先购', '剧组探班资格', '收藏版节目册'],
     },
   ],
+  KPOP: [
+    {
+      id: 'kpop-ptd-jimin',
+      name: 'PTD LA - Jimin 限定小卡',
+      description: 'Permission to Dance LA 演唱会官方限定小卡 - Jimin，区块链认证的稀有收藏品',
+      image: null,
+      emoji: '💜',
+      balance: 1000,
+      unit: '张',
+      tokenStandard: 'ERC1155',
+      contractAddress: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
+      tokenId: '1001',
+      slotId: '',
+      typeName: '演唱会小卡',
+      membership: {
+        level: '限定收藏',
+        holderCount: 1000,
+        exclusivePerks: 3,
+        validityType: '永久有效',
+      },
+      rights: ['链上所有权认证', '二级市场自由交易', '粉丝社区身份标识'],
+    },
+    {
+      id: 'kpop-ytc-v',
+      name: 'YTC Busan - V 限定小卡',
+      description: 'Yet to Come 釜山演唱会官方限定小卡 - V (金泰亨)，稀有度更高的珍藏版',
+      image: null,
+      emoji: '💜',
+      balance: 500,
+      unit: '张',
+      tokenStandard: 'ERC1155',
+      contractAddress: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
+      tokenId: '1002',
+      slotId: '',
+      typeName: '演唱会小卡',
+      membership: {
+        level: '稀有收藏',
+        holderCount: 500,
+        exclusivePerks: 3,
+        validityType: '永久有效',
+      },
+      rights: ['链上所有权认证', '二级市场自由交易', '粉丝社区身份标识'],
+    },
+    {
+      id: 'kpop-mots-set',
+      name: 'MOTS Tour 全员小卡套装',
+      description: 'Map of the Soul 世界巡演限定小卡套装（7张全员），因疫情取消部分场次更加珍贵',
+      image: null,
+      emoji: '💜',
+      balance: 300,
+      unit: '套',
+      tokenStandard: 'ERC1155',
+      contractAddress: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
+      tokenId: '1003',
+      slotId: '',
+      typeName: '限定套装',
+      membership: {
+        level: '传奇收藏',
+        holderCount: 300,
+        exclusivePerks: 4,
+        validityType: '永久有效',
+      },
+      rights: ['链上所有权认证', '完整套装溢价', '二级市场自由交易', '粉丝社区 VIP 标识'],
+    },
+    {
+      id: 'kpop-army-membership-2024',
+      name: 'ARMY 会员卡 2024',
+      description: 'ARMY 官方会员卡 2024 年度版，持有即享会员专属权益',
+      image: null,
+      emoji: '💜',
+      balance: 10000,
+      unit: '张',
+      tokenStandard: 'ERC1155',
+      contractAddress: '0xC7345EA65FD12cC3CaD8F9991cFA46C13c0B1DF8',
+      tokenId: '3001',
+      slotId: '',
+      typeName: '会员卡',
+      membership: {
+        level: '年度会员',
+        holderCount: 10000,
+        exclusivePerks: 4,
+        validityType: '2024.01.01 - 2024.12.31',
+      },
+      rights: ['演唱会门票优先购买', '专属周边折扣', '会员限定内容访问', '粉丝活动优先参与'],
+    },
+  ],
   CUSTOM: [],
 };
 
@@ -290,6 +384,43 @@ export function findPredefinedAsset(identifier: {
 }
 
 /**
+ * 根据 Token 标识符查找预定义资产及其所属类型
+ *
+ * @param identifier Token 标识信息
+ * @returns 资产和类型代码
+ */
+export function findPredefinedAssetWithType(identifier: {
+  tokenAddress: string;
+  tokenStandard: TokenStandard;
+  tokenId?: string;
+  slotId?: string;
+}): { asset: PredefinedAsset; assetTypeCode: AssetTypeCode } | null {
+  const { tokenAddress, tokenStandard, tokenId, slotId } = identifier;
+  const normalizedAddress = tokenAddress?.toLowerCase();
+
+  for (const [typeCode, assets] of Object.entries(predefinedAssets)) {
+    for (const asset of assets) {
+      if (asset.contractAddress?.toLowerCase() !== normalizedAddress) continue;
+      if (asset.tokenStandard !== tokenStandard) continue;
+
+      // ERC721/ERC1155: contractAddress + tokenId 唯一
+      if (
+        (tokenStandard === 'ERC721' || tokenStandard === 'ERC1155') &&
+        asset.tokenId === tokenId
+      ) {
+        return { asset, assetTypeCode: typeCode as AssetTypeCode };
+      }
+      // ERC3525: contractAddress + slotId 唯一
+      if (tokenStandard === 'ERC3525' && asset.slotId === slotId) {
+        return { asset, assetTypeCode: typeCode as AssetTypeCode };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * 从预定义资产生成唯一标识符
  *
  * @param asset 预定义资产
@@ -318,5 +449,6 @@ export default {
   getAssetType,
   getAllAssetTypes,
   findPredefinedAsset,
+  findPredefinedAssetWithType,
   getAssetUniqueId,
 };
