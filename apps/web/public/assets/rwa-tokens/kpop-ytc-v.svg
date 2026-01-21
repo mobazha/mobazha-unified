@@ -1,0 +1,50 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="kpopGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="cardGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#f0fdfa"/>
+    </linearGradient>
+    <linearGradient id="photoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a5f3fc"/>
+      <stop offset="100%" style="stop-color:#c4b5fd"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="90" fill="url(#kpopGrad2)"/>
+  
+  <g transform="translate(50, 30)">
+    <rect x="0" y="0" width="80" height="110" rx="8" fill="url(#cardGrad2)" stroke="#7c3aed" stroke-width="2"/>
+    <rect x="8" y="8" width="64" height="70" rx="4" fill="url(#photoGrad2)"/>
+    
+    <circle cx="40" cy="35" r="20" fill="#e0e7ff"/>
+    <circle cx="40" cy="30" r="12" fill="#a5b4fc"/>
+    <path d="M25 55 Q40 45 55 55 L55 70 L25 70 Z" fill="#818cf8"/>
+    
+    <path d="M12 20 L18 32 L24 20" stroke="#06b6d4" stroke-width="3" fill="none" stroke-linecap="round"/>
+    
+    <text x="40" y="92" text-anchor="middle" font-size="16" fill="#7c3aed" font-family="Georgia, serif" font-style="italic" font-weight="bold">V</text>
+    <path d="M20 100 Q30 96 40 100 T60 98" stroke="#06b6d4" stroke-width="1.5" fill="none"/>
+  </g>
+  
+  <g transform="translate(130, 25)">
+    <rect x="0" y="0" width="48" height="20" rx="4" fill="#06b6d4"/>
+    <text x="24" y="14" text-anchor="middle" font-size="9" fill="white" font-family="Arial, sans-serif" font-weight="bold">BUSAN</text>
+  </g>
+  
+  <g transform="translate(18, 25)">
+    <rect x="0" y="0" width="32" height="20" rx="4" fill="#7c3aed"/>
+    <text x="16" y="14" text-anchor="middle" font-size="8" fill="white" font-family="Arial, sans-serif" font-weight="bold">YTC</text>
+  </g>
+  
+  <g transform="translate(20, 140)">
+    <path d="M15 0 L18 10 L28 10 L20 16 L23 26 L15 20 L7 26 L10 16 L2 10 L12 10 Z" fill="#fbbf24"/>
+  </g>
+  <g transform="translate(150, 140)">
+    <path d="M15 0 L18 10 L28 10 L20 16 L23 26 L15 20 L7 26 L10 16 L2 10 L12 10 Z" fill="#fbbf24"/>
+  </g>
+  
+  <text x="100" y="178" text-anchor="middle" font-size="11" fill="white" font-family="Arial, sans-serif" font-weight="bold">YTC BUSAN - V</text>
+</svg>
