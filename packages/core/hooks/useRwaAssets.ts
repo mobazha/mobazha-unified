@@ -100,7 +100,7 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
   } = options;
 
   // 稳定化 assetTypes，避免每次渲染都创建新数组
-  const defaultAssetTypes = useRef<AssetTypeCode[]>(['CREATOR', 'BROADWAY']);
+  const defaultAssetTypes = useRef<AssetTypeCode[]>(['CREATOR', 'BROADWAY', 'STARLIGHT', 'KPOP']);
   const assetTypes = assetTypesProp || defaultAssetTypes.current;
 
   // 钱包状态
@@ -258,55 +258,87 @@ export function useRwaAssets(options: UseRwaAssetsOptions = {}): UseRwaAssetsRet
     const queryAddress = ownerAddressProp || walletAddress;
 
     try {
-      // 1. 加载预定义资产的余额
-      if (autoLoadPredefinedBalances && allPredefinedAssets.length > 0) {
-        const assetBalances = await batchGetBalances(
-          allPredefinedAssets,
-          queryAddress || undefined
-        );
-        setBalances(assetBalances);
+      // 收集所有 ERC3525 合约地址（从预定义资产和配置中）
+      const erc3525ContractAddresses = new Set<string>();
+      if (SEPOLIA_CONFIG.mockErc3525Address) {
+        erc3525ContractAddresses.add(SEPOLIA_CONFIG.mockErc3525Address.toLowerCase());
       }
+      allPredefinedAssets
+        .filter(a => a.tokenStandard === 'ERC3525')
+        .forEach(a => erc3525ContractAddresses.add(a.contractAddress.toLowerCase()));
 
-      // 2. 发现用户拥有的 ERC3525 资产（使用 queryAddress）
-      if (queryAddress) {
-        // 查询 ERC3525 资产
-        if (SEPOLIA_CONFIG.mockErc3525Address) {
-          try {
-            const erc3525Tokens = await getERC3525TokensOfOwner(
-              SEPOLIA_CONFIG.mockErc3525Address,
-              queryAddress
-            );
-            setOwnedERC3525Tokens(erc3525Tokens);
-          } catch (err) {
-            console.error('Failed to load ERC3525 tokens:', err);
-          }
-        }
+      // 收集所有 ERC1155 合约地址
+      const erc1155ContractAddresses = new Set<string>();
+      if (SEPOLIA_CONFIG.mockErc1155Address) {
+        erc1155ContractAddresses.add(SEPOLIA_CONFIG.mockErc1155Address.toLowerCase());
+      }
+      allPredefinedAssets
+        .filter(a => a.tokenStandard === 'ERC1155')
+        .forEach(a => erc1155ContractAddresses.add(a.contractAddress.toLowerCase()));
 
-        // 查询 ERC1155 资产 (基于预定义的 tokenId)
-        if (SEPOLIA_CONFIG.mockErc1155Address) {
-          try {
+      // 构建并行查询任务
+      const tasks: Promise<unknown>[] = [];
+
+      // 1. 加载预定义资产的余额
+      const balancesTask =
+        autoLoadPredefinedBalances && allPredefinedAssets.length > 0
+          ? batchGetBalances(allPredefinedAssets, queryAddress || undefined)
+          : Promise.resolve({} as Record<string, string | null>);
+      tasks.push(balancesTask);
+
+      // 2. 并行查询所有 ERC3525 合约的资产
+      const erc3525Tasks = queryAddress
+        ? [...erc3525ContractAddresses].map(contractAddr =>
+            getERC3525TokensOfOwner(contractAddr, queryAddress).catch(err => {
+              console.error(`Failed to load ERC3525 tokens from ${contractAddr}:`, err);
+              return [] as OwnedERC3525Token[];
+            })
+          )
+        : [];
+      const erc3525CombinedTask = Promise.all(erc3525Tasks);
+      tasks.push(erc3525CombinedTask);
+
+      // 3. 并行查询所有 ERC1155 合约的资产
+      const erc1155Tasks = queryAddress
+        ? [...erc1155ContractAddresses].map(contractAddr => {
             const knownTokenIds = allPredefinedAssets
               .filter(
                 a =>
-                  a.tokenStandard === 'ERC1155' &&
-                  a.contractAddress.toLowerCase() ===
-                    SEPOLIA_CONFIG.mockErc1155Address?.toLowerCase()
+                  a.tokenStandard === 'ERC1155' && a.contractAddress.toLowerCase() === contractAddr
               )
               .map(a => a.tokenId);
 
             if (knownTokenIds.length > 0) {
-              const erc1155Tokens = await getERC1155TokensOfOwner(
-                SEPOLIA_CONFIG.mockErc1155Address,
-                queryAddress,
-                knownTokenIds
+              return getERC1155TokensOfOwner(contractAddr, queryAddress, knownTokenIds).catch(
+                err => {
+                  console.error(`Failed to load ERC1155 tokens from ${contractAddr}:`, err);
+                  return [] as OwnedERC1155Token[];
+                }
               );
-              setOwnedERC1155Tokens(erc1155Tokens);
             }
-          } catch (err) {
-            console.error('Failed to load ERC1155 tokens:', err);
-          }
-        }
-      }
+            return Promise.resolve([] as OwnedERC1155Token[]);
+          })
+        : [];
+      const erc1155CombinedTask = Promise.all(erc1155Tasks);
+      tasks.push(erc1155CombinedTask);
+
+      // 并行执行所有任务
+      const [assetBalances, erc3525Results, erc1155Results] = (await Promise.all(tasks)) as [
+        Record<string, string | null>,
+        OwnedERC3525Token[][],
+        OwnedERC1155Token[][],
+      ];
+
+      // 设置余额
+      setBalances(assetBalances);
+
+      // 合并 ERC3525 tokens
+      const allErc3525Tokens = erc3525Results.flat();
+      setOwnedERC3525Tokens(allErc3525Tokens);
+
+      // 合并 ERC1155 tokens
+      const allErc1155Tokens = erc1155Results.flat();
+      setOwnedERC1155Tokens(allErc1155Tokens);
     } catch (err) {
       console.error('Failed to load assets:', err);
       setError(err instanceof Error ? err : new Error('加载资产失败'));

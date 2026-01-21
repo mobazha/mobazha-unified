@@ -13,7 +13,7 @@ const CHAIN_ID = 11155111; // Sepolia
 const ETHERSCAN_API_KEY = '';
 
 // 缓存配置
-const CACHE_TTL = 60 * 1000; // 60秒缓存
+const CACHE_TTL = 180 * 1000; // 180秒（3分钟）缓存，减少重复 API 调用
 const transferCache = new Map<string, { transfers: TokenTransfer[]; timestamp: number }>();
 
 /**
@@ -76,6 +76,39 @@ function buildApiUrl(params: Record<string, string>): string {
  */
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * 带指数退避重试的请求包装器
+ * @param fn - 要执行的异步函数
+ * @param maxRetries - 最大重试次数
+ * @param baseDelay - 基础延迟时间 (ms)
+ */
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, baseDelay = 100): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      // 检查是否是速率限制错误
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isRateLimit =
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('429') ||
+        (error as { status?: number })?.status === 429;
+      if (isRateLimit && i < maxRetries - 1) {
+        // 指数退避：100ms, 200ms, 400ms...
+        const delayMs = baseDelay * Math.pow(2, i);
+        console.log(`[TxService] Rate limited, retrying in ${delayMs}ms...`);
+        await delay(delayMs);
+      } else if (i < maxRetries - 1) {
+        // 其他错误，短暂延迟后重试
+        await delay(baseDelay);
+      }
+    }
+  }
+  throw lastError;
 }
 
 export async function getERC20TokenTransfers(
@@ -503,6 +536,7 @@ async function parseTransactionLogs(
 
 /**
  * 获取用户的所有 RWA 资产交易历史
+ * 优化版本：并行查询多个合约，使用指数退避重试
  * @param userAddress 用户地址
  * @param assets 资产列表 [{contractAddress, tokenStandard}]
  * @returns 合并后的交易列表（按时间排序）
@@ -515,8 +549,6 @@ export async function getUserTransactionHistory(
     return [];
   }
 
-  const allTransactions: TokenTransfer[] = [];
-
   // 按合约地址去重
   const uniqueContracts = new Map<string, string>();
   assets.forEach(asset => {
@@ -527,51 +559,58 @@ export async function getUserTransactionHistory(
     }
   });
 
-  // 串行获取每个合约的交易（避免速率限制）
-  for (const [contractAddress, tokenStandard] of uniqueContracts.entries()) {
-    try {
-      let transfers: TokenTransfer[];
-      if (tokenStandard === 'ERC1155') {
-        transfers = await getERC1155TokenTransfers(contractAddress, userAddress);
-      } else if (tokenStandard === 'ERC3525' || tokenStandard === 'ERC721') {
-        transfers = await getERC3525TokenTransfers(contractAddress, userAddress);
-      } else {
-        continue;
-      }
+  const contractEntries = [...uniqueContracts.entries()];
+  const rwaContractAddresses = [...uniqueContracts.keys()];
 
-      // 添加 contractAddress 到每个交易
-      transfers.forEach(tx => {
-        tx.contractAddress = contractAddress;
-      });
+  // 并行执行：合约交易查询 + 用户发起交易查询
+  const [contractResults, userInitiatedTxs] = await Promise.all([
+    // 1. 并行获取每个合约的交易历史
+    Promise.all(
+      contractEntries.map(async ([contractAddress, tokenStandard]) => {
+        try {
+          let transfers: TokenTransfer[];
+          if (tokenStandard === 'ERC1155') {
+            transfers = await withRetry(() =>
+              getERC1155TokenTransfers(contractAddress, userAddress)
+            );
+          } else if (tokenStandard === 'ERC3525' || tokenStandard === 'ERC721') {
+            transfers = await withRetry(() =>
+              getERC3525TokenTransfers(contractAddress, userAddress)
+            );
+          } else {
+            return [];
+          }
 
-      allTransactions.push(...transfers);
+          // 添加 contractAddress 到每个交易
+          transfers.forEach(tx => {
+            tx.contractAddress = contractAddress;
+          });
 
-      // 添加延迟避免 Etherscan API 速率限制
-      await delay(250);
-    } catch (error) {
-      console.error(`Error fetching transfers for ${contractAddress}:`, error);
+          return transfers;
+        } catch (error) {
+          console.error(`Error fetching transfers for ${contractAddress}:`, error);
+          return [];
+        }
+      })
+    ),
+    // 2. 获取用户发起的交易
+    getUserInitiatedRwaTransactions(userAddress, rwaContractAddresses).catch(error => {
+      console.error('Error fetching user initiated transactions:', error);
+      return [] as TokenTransfer[];
+    }),
+  ]);
+
+  // 合并所有合约的交易
+  const allTransactions = contractResults.flat();
+
+  // 合并用户发起的交易，去重
+  const existingKeys = new Set(allTransactions.map(tx => `${tx.hash}_${tx.tokenId}`));
+  for (const tx of userInitiatedTxs) {
+    const key = `${tx.hash}_${tx.tokenId}`;
+    if (!existingKeys.has(key)) {
+      allTransactions.push(tx);
+      existingKeys.add(key);
     }
-  }
-
-  // 获取用户发起的交易 (通过市场合约购买/铸造的交易)
-  try {
-    const rwaContractAddresses = [...uniqueContracts.keys()];
-    const userInitiatedTxs = await getUserInitiatedRwaTransactions(
-      userAddress,
-      rwaContractAddresses
-    );
-
-    // 合并交易，去重
-    const existingKeys = new Set(allTransactions.map(tx => `${tx.hash}_${tx.tokenId}`));
-    for (const tx of userInitiatedTxs) {
-      const key = `${tx.hash}_${tx.tokenId}`;
-      if (!existingKeys.has(key)) {
-        allTransactions.push(tx);
-        existingKeys.add(key);
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching user initiated transactions:', error);
   }
 
   // 按时间降序排序
