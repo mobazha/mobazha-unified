@@ -39,7 +39,9 @@ function convertProductToFormData(product: Product): Partial<WizardFormData> {
     slotId: '',
     cryptoListingCurrencyCode: item.cryptoListingCurrencyCode || '',
     acceptedCurrencies:
-      metadata.acceptedCurrencies?.map(c => (typeof c === 'string' ? c : c.code)) || [],
+      cleanMetadata.acceptedCurrencies?.map((c: string | { code: string }) =>
+        typeof c === 'string' ? c : c.code
+      ) || [],
     minQuantity: item.minQuantity || 1,
     maxQuantity: item.maxQuantity || 100,
     rwaTradeMode: cleanMetadata.rwaTradeMode === 1 ? 'confirm_required' : 'instant',
