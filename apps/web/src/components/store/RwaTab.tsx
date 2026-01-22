@@ -119,9 +119,11 @@ export const RwaTab: React.FC<RwaTabProps> = ({
       result = result.filter(product => {
         const tradeMode = product.rwaTradeMode;
         if (tradeModeFilter === 'instant') {
-          return tradeMode === 'instant' || tradeMode === 0;
+          // rwaTradeMode: 0 = instant, 'instant' (兼容旧数据)
+          return tradeMode === 0 || (tradeMode as unknown) === 'instant';
         } else {
-          return tradeMode === 'confirm_required' || tradeMode === 1;
+          // rwaTradeMode: 1 = confirm_required, 'confirm_required' (兼容旧数据)
+          return tradeMode === 1 || (tradeMode as unknown) === 'confirm_required';
         }
       });
     }
