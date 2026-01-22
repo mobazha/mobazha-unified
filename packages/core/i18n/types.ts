@@ -1575,6 +1575,7 @@ export interface TranslationResource {
     noTransactions: string;
     noTransactionsFiltered: string;
     txType: {
+      label: string;
       transferIn: string;
       transferOut: string;
       mint: string;
@@ -1582,6 +1583,17 @@ export interface TranslationResource {
       unknown: string;
     };
     initiated: string;
+    // Desktop table headers
+    asset: string;
+    amount: string;
+    time: string;
+    txHash: string;
+    // Desktop statistics
+    totalBalance: string;
+    todayTransactions: string;
+    // Desktop placeholder
+    selectAsset: string;
+    selectAssetHint: string;
     noAssets: string;
     noAssetsHint: string;
     // Price history
