@@ -37,7 +37,15 @@ function getCachedTransfers(key: string): TokenTransfer[] | null {
 /**
  * 设置缓存
  */
+/**
+ * 设置缓存
+ * 注意：空结果不缓存，以便新交易能更快显示
+ */
 function setCachedTransfers(key: string, transfers: TokenTransfer[]): void {
+  // 如果结果为空数组，不缓存，这样下次查询可以获取最新结果
+  if (transfers.length === 0) {
+    return;
+  }
   transferCache.set(key, {
     transfers,
     timestamp: Date.now(),
@@ -291,43 +299,236 @@ export async function getERC3525TokenTransfers(
     const response = await fetch(url);
     const data = await response.json();
 
-    if (data.status !== '1' || !Array.isArray(data.result)) {
-      return [];
+    let transfers: TokenTransfer[] = [];
+
+    if (data.status === '1' && Array.isArray(data.result)) {
+      transfers = data.result.map(
+        (tx: {
+          hash: string;
+          from: string;
+          to: string;
+          tokenID: string;
+          timeStamp: string;
+          blockNumber: string;
+        }) => ({
+          hash: tx.hash,
+          from: tx.from,
+          to: tx.to,
+          tokenId: tx.tokenID,
+          timestamp: parseInt(tx.timeStamp, 10) * 1000,
+          blockNumber: parseInt(tx.blockNumber, 10),
+          type: tx.to.toLowerCase() === address.toLowerCase() ? 'in' : 'out',
+        })
+      );
+
+      // 为 ERC3525 交易添加 slot 和 value 信息
+      await enrichERC3525WithSlots(transfers, contractAddress);
     }
 
-    let transfers: TokenTransfer[] = data.result.map(
-      (tx: {
-        hash: string;
-        from: string;
-        to: string;
-        tokenID: string;
-        timeStamp: string;
-        blockNumber: string;
-      }) => ({
-        hash: tx.hash,
-        from: tx.from,
-        to: tx.to,
-        tokenId: tx.tokenID,
-        timestamp: parseInt(tx.timeStamp, 10) * 1000,
-        blockNumber: parseInt(tx.blockNumber, 10),
-        type: tx.to.toLowerCase() === address.toLowerCase() ? 'in' : 'out',
-      })
-    );
+    // 额外查询 ERC3525 TransferValue 事件 (部分份额转移)
+    // 这些事件不会出现在 tokennfttx API 中
+    try {
+      const valueTransfers = await getERC3525ValueTransfers(contractAddress, address);
+      // 合并并去重
+      const existingHashes = new Set(transfers.map(tx => `${tx.hash}_${tx.tokenId}`));
+      for (const vt of valueTransfers) {
+        const key = `${vt.hash}_${vt.tokenId}`;
+        if (!existingHashes.has(key)) {
+          transfers.push(vt);
+          existingHashes.add(key);
+        }
+      }
+      // 按时间重新排序
+      transfers.sort((a, b) => b.timestamp - a.timestamp);
+    } catch (err) {
+      console.warn('[TxService] Error fetching ERC3525 value transfers:', err);
+    }
 
     // 如果指定了 tokenId，则过滤
     if (tokenId) {
       transfers = transfers.filter(t => t.tokenId === tokenId);
     }
 
-    // 为 ERC3525 交易添加 slot 和 value 信息
-    await enrichERC3525WithSlots(transfers, contractAddress);
-
-    setCachedTransfers(cacheKey, transfers);
+    if (transfers.length > 0) {
+      setCachedTransfers(cacheKey, transfers);
+    }
     return transfers;
   } catch (error) {
     console.error('Error fetching ERC3525 transfers:', error);
     return [];
   }
+}
+
+/**
+ * 获取 ERC3525 TransferValue 事件 (部分份额转移)
+ * 这些事件通过 eth_getLogs 查询，因为 tokennfttx 不包含它们
+ */
+async function getERC3525ValueTransfers(
+  contractAddress: string,
+  userAddress: string
+): Promise<TokenTransfer[]> {
+  const cacheKey = getCacheKey('erc3525value', contractAddress, userAddress);
+  const cached = getCachedTransfers(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    // ERC3525 TransferValue 事件签名
+    // TransferValue(uint256 indexed _fromTokenId, uint256 indexed _toTokenId, uint256 _value)
+    const transferValueTopic = '0x0b2aac84f3ec956911fd78eae5311062972ff949f38412e8da39069d9f068cc6';
+
+    const url = buildApiUrl({
+      module: 'logs',
+      action: 'getLogs',
+      address: contractAddress,
+      topic0: transferValueTopic,
+      fromBlock: '0',
+      toBlock: 'latest',
+      page: '1',
+      offset: '100',
+    });
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== '1' || !Array.isArray(data.result)) {
+      return [];
+    }
+
+    const transfers: TokenTransfer[] = [];
+
+    for (const log of data.result as {
+      topics: string[];
+      data: string;
+      transactionHash: string;
+      blockNumber: string;
+      timeStamp: string;
+    }[]) {
+      if (log.topics.length < 3) continue;
+
+      const fromTokenId = parseInt(log.topics[1], 16).toString();
+      const toTokenId = parseInt(log.topics[2], 16).toString();
+      const value = parseInt(log.data, 16);
+
+      // 跳过无效数据：value 为 0 或两个 tokenId 都为 0
+      if (value === 0) continue;
+      if (fromTokenId === '0' && toTokenId === '0') continue;
+
+      const txHash = log.transactionHash;
+      const blockNumber = parseInt(log.blockNumber, 16);
+      const timestamp = parseInt(log.timeStamp, 16) * 1000 || Date.now();
+
+      // 查询 slot 信息，优先使用非零的 tokenId
+      let slotId: string | undefined;
+      const validFromTokenId = fromTokenId !== '0' ? fromTokenId : null;
+      const validToTokenId = toTokenId !== '0' ? toTokenId : null;
+
+      try {
+        if (validFromTokenId) {
+          slotId = await getERC3525Slot(contractAddress, validFromTokenId);
+        } else if (validToTokenId) {
+          slotId = await getERC3525Slot(contractAddress, validToTokenId);
+        } else {
+          continue;
+        }
+      } catch {
+        // 如果第一个失败，尝试另一个
+        if (validToTokenId && validFromTokenId) {
+          try {
+            slotId = await getERC3525Slot(contractAddress, validToTokenId);
+          } catch {
+            continue;
+          }
+        } else {
+          continue;
+        }
+      }
+
+      transfers.push({
+        hash: txHash,
+        blockNumber,
+        timestamp,
+        from: '',
+        to: '',
+        tokenId: fromTokenId,
+        value: value.toString(),
+        type: 'out',
+        slotId,
+        // 额外信息用于后续过滤
+        toTokenId,
+        isValueTransfer: true,
+      } as TokenTransfer);
+    }
+
+    // 获取用户历史上持有过的所有 tokenIds
+    const userTokenIds = await getUserERC3525TokenIds(contractAddress, userAddress);
+
+    // 过滤出与用户相关的交易
+    const userTransfers = transfers.filter(tx => {
+      const isFrom = userTokenIds.has(tx.tokenId || '');
+      const isTo = userTokenIds.has((tx as { toTokenId?: string }).toTokenId || '');
+
+      if (isFrom) {
+        tx.type = 'out';
+        tx.from = userAddress;
+      } else if (isTo) {
+        tx.type = 'in';
+        tx.to = userAddress;
+      }
+
+      return isFrom || isTo;
+    });
+
+    if (userTransfers.length > 0) {
+      setCachedTransfers(cacheKey, userTransfers);
+    }
+
+    return userTransfers;
+  } catch (error) {
+    console.error('[TxService] Error fetching ERC3525 value transfers:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取用户历史上持有过的所有 ERC3525 tokenIds
+ */
+async function getUserERC3525TokenIds(
+  contractAddress: string,
+  userAddress: string
+): Promise<Set<string>> {
+  const tokenIds = new Set<string>();
+
+  try {
+    const url = buildApiUrl({
+      module: 'account',
+      action: 'tokennfttx',
+      contractaddress: contractAddress,
+      address: userAddress,
+      page: '1',
+      offset: '1000',
+      sort: 'asc',
+    });
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === '1' && Array.isArray(data.result)) {
+      for (const tx of data.result as { from?: string; to?: string; tokenID: string }[]) {
+        if (tx.to?.toLowerCase() === userAddress.toLowerCase()) {
+          tokenIds.add(tx.tokenID);
+        }
+        if (tx.from?.toLowerCase() === userAddress.toLowerCase()) {
+          tokenIds.add(tx.tokenID);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[TxService] Error fetching user token IDs:', error);
+  }
+
+  return tokenIds;
 }
 
 /**

@@ -37,7 +37,7 @@ export const TradeModeEnum = {
 } as const;
 
 // 资产类型代码
-export type AssetTypeCode = 'NFT' | 'CREATOR' | 'BROADWAY' | 'KPOP' | 'CUSTOM';
+export type AssetTypeCode = 'NFT' | 'CREATOR' | 'BROADWAY' | 'STARLIGHT' | 'KPOP' | 'CUSTOM';
 
 /**
  * 资产类型定义
@@ -94,6 +94,7 @@ export interface PredefinedAsset {
   unit: string;
   tokenStandard: TokenStandard;
   contractAddress: string;
+  contractName?: string;
   tokenId: string;
   slotId?: string;
   typeName: string;
@@ -367,6 +368,8 @@ export interface TokenTransfer {
   type: 'in' | 'out';
   valueSources?: ValueSource[]; // ERC3525 value 来源详情
   initiatedBy?: string; // 交易发起者地址
+  toTokenId?: string; // ERC3525 TransferValue 事件中的目标 tokenId
+  isValueTransfer?: boolean; // 是否是 ERC3525 部分份额转移
 }
 
 // ==================== 价格历史类型 ====================
