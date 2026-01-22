@@ -2,6 +2,9 @@
 const nextConfig = {
   transpilePackages: ['@mobazha/ui', '@mobazha/core'],
 
+  // 将 @reown/appkit 相关包标记为外部包，避免 SSR 时模块评估错误
+  serverExternalPackages: ['@reown/appkit', '@reown/appkit-adapter-ethers', 'viem'],
+
   // 禁用开发指示器（左下角的 "N" 图标）
   devIndicators: false,
 

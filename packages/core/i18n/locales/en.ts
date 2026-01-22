@@ -2125,6 +2125,7 @@ export const en: TranslationResource = {
     noTransactionsFiltered: 'No transaction history for this asset',
     // Transaction types
     txType: {
+      label: 'Type',
       transferIn: 'In',
       transferOut: 'Out',
       mint: 'Mint',
@@ -2132,6 +2133,17 @@ export const en: TranslationResource = {
       unknown: 'Unknown',
     },
     initiated: 'Initiated',
+    // Desktop table headers
+    asset: 'Asset',
+    amount: 'Amount',
+    time: 'Time',
+    txHash: 'Tx Hash',
+    // Desktop statistics
+    totalBalance: 'Total Balance',
+    todayTransactions: 'Today Tx',
+    // Desktop placeholder
+    selectAsset: 'Select an Asset',
+    selectAssetHint: 'Click an asset on the left to view details and price history',
     // Empty state
     noAssets: 'No RWA Assets',
     noAssetsHint: "You don't have any RWA assets yet, you can get them by purchasing",

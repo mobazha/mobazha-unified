@@ -2084,6 +2084,7 @@ export const zh: TranslationResource = {
     noTransactionsFiltered: '该资产暂无交易记录',
     // 交易类型
     txType: {
+      label: '类型',
       transferIn: '转入',
       transferOut: '转出',
       mint: '铸造',
@@ -2091,6 +2092,17 @@ export const zh: TranslationResource = {
       unknown: '未知',
     },
     initiated: '发起',
+    // 桌面端表格表头
+    asset: '资产',
+    amount: '数量',
+    time: '时间',
+    txHash: '交易哈希',
+    // 桌面端统计
+    totalBalance: '总余额',
+    todayTransactions: '今日交易',
+    // 桌面端占位
+    selectAsset: '选择资产',
+    selectAssetHint: '点击左侧资产查看详情和价格历史',
     // 空状态
     noAssets: '暂无 RWA 资产',
     noAssetsHint: '您当前没有任何 RWA 资产，可以通过购买获取',

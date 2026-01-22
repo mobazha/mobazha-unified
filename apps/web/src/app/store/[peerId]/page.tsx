@@ -337,13 +337,18 @@ export default function StorePage() {
   };
 
   // 筛选后的商品列表
+  // 判断商品是否为 RWA 商品（仅检查 contractType）
+  const isRwaProduct = useCallback((product: ProductListItem) => {
+    return product.contractType?.toUpperCase() === 'RWA_TOKEN';
+  }, []);
+
   // 从非 RWA 商品数据中提取分类列表
   const categories = useMemo((): CategoryItem[] => {
     const categoryMap = new Map<string, number>();
 
     // 只统计非 RWA 商品的分类
     products
-      .filter(product => product.contractType?.toUpperCase() !== 'RWA_TOKEN')
+      .filter(product => !isRwaProduct(product))
       .forEach(product => {
         if (product.categories && product.categories.length > 0) {
           product.categories.forEach(cat => {
@@ -359,12 +364,12 @@ export default function StorePage() {
         count,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [products]);
+  }, [products, isRwaProduct]);
 
   // 筛选后的商品列表（排除 RWA 商品，RWA 商品显示在数字资产 Tab）
   const filteredProducts = useMemo(() => {
     // 首先过滤掉 RWA 商品
-    let result = products.filter(product => product.contractType?.toUpperCase() !== 'RWA_TOKEN');
+    let result = products.filter(product => !isRwaProduct(product));
 
     // 搜索过滤（仅按标题搜索）
     if (filter.search.trim()) {
@@ -421,7 +426,7 @@ export default function StorePage() {
     }
 
     return result;
-  }, [products, filter]);
+  }, [products, filter, isRwaProduct]);
 
   // 编辑表单变更处理
   const handleEditChange = useCallback((field: string, value: string) => {
@@ -585,13 +590,13 @@ export default function StorePage() {
   // 获取店铺的统计数据 - 使用实际的 products.length 来保持一致性
   const stats = store?.stats || defaultStats;
 
-  // 分别计算普通商品和 RWA 商品数量
+  // 分别计算普通商品和 RWA 商品数量（使用统一的 isRwaProduct 辅助函数）
   const { storeListingCount, rwaListingCount } = useMemo(() => {
     let storeCount = 0;
     let rwaCount = 0;
 
     products.forEach(product => {
-      if (product.contractType?.toUpperCase() === 'RWA_TOKEN') {
+      if (isRwaProduct(product)) {
         rwaCount++;
       } else {
         storeCount++;
@@ -599,7 +604,7 @@ export default function StorePage() {
     });
 
     return { storeListingCount: storeCount, rwaListingCount: rwaCount };
-  }, [products]);
+  }, [products, isRwaProduct]);
 
   if (isLoading) {
     return (

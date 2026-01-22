@@ -308,32 +308,47 @@ export function CreateListingWizard({
 
             return (
               <React.Fragment key={step.id}>
-                {/* 步骤圆点 */}
-                <button
-                  type="button"
-                  onClick={() => goToStep(index)}
-                  disabled={index > currentStepIndex}
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all',
-                    isActive
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : isCompleted
-                        ? 'border-primary bg-primary/10 text-primary cursor-pointer'
-                        : 'border-muted bg-muted text-muted-foreground cursor-not-allowed'
-                  )}
-                >
-                  {isCompleted ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <span className="text-sm font-medium">{index + 1}</span>
-                  )}
-                </button>
+                {/* 步骤圆点和名称 */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(index)}
+                    disabled={index > currentStepIndex}
+                    className={cn(
+                      'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all',
+                      isActive
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : isCompleted
+                          ? 'border-primary bg-primary/10 text-primary cursor-pointer'
+                          : 'border-muted bg-muted text-muted-foreground cursor-not-allowed'
+                    )}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      <span className="text-sm font-medium">{index + 1}</span>
+                    )}
+                  </button>
+                  {/* 步骤名称 */}
+                  <p
+                    className={cn(
+                      'mt-2 text-xs text-center whitespace-nowrap',
+                      isActive
+                        ? 'text-primary font-medium'
+                        : isCompleted
+                          ? 'text-primary'
+                          : 'text-muted-foreground'
+                    )}
+                  >
+                    {t(step.titleKey || '') || step.title}
+                  </p>
+                </div>
 
                 {/* 连接线 */}
                 {index < visibleSteps.length - 1 && (
                   <div
                     className={cn(
-                      'w-16 h-0.5 mx-2',
+                      'w-12 lg:w-16 h-0.5 mx-1 lg:mx-2 mb-6',
                       index < currentStepIndex ? 'bg-primary' : 'bg-muted'
                     )}
                   />
@@ -341,13 +356,6 @@ export function CreateListingWizard({
               </React.Fragment>
             );
           })}
-        </div>
-
-        {/* 步骤名称 */}
-        <div className="flex justify-center mt-3">
-          <p className="text-sm text-muted-foreground">
-            {t(currentStep?.titleKey || '') || currentStep?.title}
-          </p>
         </div>
       </div>
 
