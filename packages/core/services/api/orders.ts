@@ -313,9 +313,11 @@ export async function getOrderDetails(
 
 /**
  * 创建订单请求数据（用于两阶段购买流程）
+ *
+ * 注意：后端 API 不需要 vendorId，它从 listingHash 中解析卖家信息
  */
 export interface CreateOrderData {
-  vendorId: string;
+  vendorId?: string; // 可选，仅用于前端内部逻辑，不会发送到后端
   items: Array<{
     listingHash: string;
     quantity: number;
@@ -330,16 +332,18 @@ export interface CreateOrderData {
     memo?: string;
     coupons?: string[];
   }>;
+  // 地址信息（仅物理商品需要）
   address?: {
-    name: string;
-    street: string;
+    name: string; // 收件人姓名 -> shipTo
+    street: string; // 地址行 -> address
     city: string;
     state: string;
     postalCode: string;
-    country: string;
+    country: string; // -> countryCode
     addressNotes?: string;
   };
-  memo?: string;
+  pricingCoin?: string; // 定价币种
+  moderator?: string; // 仲裁人 ID
 }
 
 /**
@@ -403,25 +407,43 @@ export async function createOrder(
   // Real/Auto 模式：调用真实 API，失败直接抛出错误（不回退到 mock）
   const url = `${getGatewayUrl()}/order/purchase`;
 
-  // 转换数据格式以匹配后端 API
-  // 1. quantity 需要是字符串类型
-  // 2. address 对象需要转换为扁平字段（address, city, state, shipTo, countryCode, postalCode, addressNotes）
-  const { address, ...restData } = data;
+  // 转换数据格式以匹配后端 API (models.Purchase)
+  // 后端期望的格式：
+  // - 没有 vendorId（从 listingHash 解析）
+  // - 地址是扁平字段：address, city, state, shipTo, countryCode, postalCode, addressNotes
+  // - quantity 是字符串类型
+  // - 有 pricingCoin 和 moderator 字段
+  const { address, vendorId: _vendorId, ...restData } = data;
+  void _vendorId; // vendorId 不发送到后端
+
   const apiData: Record<string, unknown> = {
-    ...restData,
     items: data.items.map(item => ({
-      ...item,
+      listingHash: item.listingHash,
       quantity: String(item.quantity),
+      ...(item.options && item.options.length > 0 ? { options: item.options } : {}),
+      ...(item.shipping ? { shipping: item.shipping } : {}),
+      ...(item.memo ? { memo: item.memo } : {}),
+      ...(item.coupons && item.coupons.length > 0 ? { coupons: item.coupons } : {}),
     })),
   };
 
-  // 如果有地址，转换为扁平字段格式
+  // 添加 pricingCoin（如果有）
+  if (restData.pricingCoin) {
+    apiData.pricingCoin = restData.pricingCoin;
+  }
+
+  // 添加 moderator（如果有）
+  if (restData.moderator) {
+    apiData.moderator = restData.moderator;
+  }
+
+  // 如果有地址，转换为扁平字段格式（仅物理商品）
   if (address) {
-    apiData.address = address.street; // 后端期望 address 是地址行字符串
+    apiData.address = address.street; // 地址行字符串
     apiData.city = address.city;
     apiData.state = address.state;
     apiData.shipTo = address.name; // 收件人姓名
-    apiData.countryCode = address.country; // 后端使用 countryCode
+    apiData.countryCode = address.country; // 国家代码
     apiData.postalCode = address.postalCode;
     if (address.addressNotes) {
       apiData.addressNotes = address.addressNotes;

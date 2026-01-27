@@ -89,6 +89,16 @@ export default function PaymentPage() {
   const urlEscrowTimeout = searchParams.get('escrowTimeout');
   const urlTokenCode = searchParams.get('tokenCode');
 
+  // 从 URL 获取订单信息（由 checkout 页面传递）
+  const urlAmount = searchParams.get('amount');
+  const urlCurrency = searchParams.get('currency');
+  const urlTitle = searchParams.get('title');
+  const urlVendorName = searchParams.get('vendorName');
+  const urlVendorPeerID = searchParams.get('vendorPeerID');
+  const urlQuantity = searchParams.get('quantity');
+  const urlContractType = searchParams.get('contractType');
+  const urlImage = searchParams.get('image');
+
   // 订单数据状态
   const [isLoadingOrder, setIsLoadingOrder] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -146,9 +156,9 @@ export default function PaymentPage() {
         const listings = contract?.vendorListings || [];
         const orderItems = contract?.buyerOrder?.items || [];
 
-        // 判断是否为 RWA Token
+        // 判断是否为 RWA Token（优先使用 URL 参数）
         const metadata = listings[0]?.metadata as any;
-        const contractType = metadata?.contractType;
+        const contractType = urlContractType || metadata?.contractType;
         const isRwa = urlIsRwaToken || contractType === 'RWA_TOKEN';
         const rwaMode = urlRwaTradeMode ? parseInt(urlRwaTradeMode, 10) : metadata?.rwaTradeMode;
         const escrowTimeout = urlEscrowTimeout
@@ -157,7 +167,8 @@ export default function PaymentPage() {
         const tokenCode = urlTokenCode || (listings[0]?.item as any)?.cryptoListingCurrencyCode;
 
         // 转换为 OrderDetails 格式
-        const items = listings.map((listing, index) => {
+        // 注意：订单详情 API 返回的 listing.item.price 已经是转换后的值（不是最小单位）
+        let items = listings.map((listing, index) => {
           const orderItem = orderItems[index] || {};
           const price = Number(listing.item?.price) || 0;
           const currency = listing.metadata?.pricingCurrency?.code || 'USD';
@@ -173,8 +184,29 @@ export default function PaymentPage() {
           };
         });
 
+        // 如果 API 返回的数据为空，使用 URL 参数中的信息
+        if (items.length === 0 && urlTitle && urlAmount) {
+          const priceNum = parseFloat(urlAmount);
+          const quantityNum = parseInt(urlQuantity || '1', 10);
+          items = [
+            {
+              id: 'item-from-url',
+              title: urlTitle,
+              price: priceNum / quantityNum, // 单价
+              currency: urlCurrency || 'USD',
+              quantity: quantityNum,
+              image: urlImage || '',
+            },
+          ];
+        }
+
         // 获取地址信息
         const shipping = contract?.buyerOrder?.shipping as any;
+
+        // 计算总价（优先使用 URL 参数中的金额）
+        const totalFromUrl = urlAmount ? parseFloat(urlAmount) : 0;
+        const calculatedTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const finalTotal = totalFromUrl > 0 ? totalFromUrl : calculatedTotal;
 
         const orderDetailsData: OrderDetails = {
           orderID: (contract as any)?.OrderID || (contract as any)?.orderID || orderID,
@@ -184,8 +216,9 @@ export default function PaymentPage() {
             name:
               listings[0]?.vendorID?.handle ||
               listings[0]?.vendorID?.peerID?.slice(0, 8) ||
+              urlVendorName ||
               'Unknown',
-            peerID: listings[0]?.vendorID?.peerID || '',
+            peerID: listings[0]?.vendorID?.peerID || urlVendorPeerID || '',
           },
           shippingAddress: {
             name: shipping?.shipTo || shipping?.name || '',
@@ -196,9 +229,9 @@ export default function PaymentPage() {
             postalCode: shipping?.postalCode || '',
           },
           memo: contract?.buyerOrder?.alternateContactInfo,
-          subtotal: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-          total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-          currency: items[0]?.currency || 'USD',
+          subtotal: finalTotal,
+          total: finalTotal,
+          currency: items[0]?.currency || urlCurrency || 'USD',
           paymentAddress: contract?.buyerOrder?.payment?.address,
           // RWA 相关
           isRwaToken: isRwa,
@@ -211,14 +244,73 @@ export default function PaymentPage() {
         setOrderDetails(orderDetailsData);
       } catch (err) {
         console.error('Failed to fetch order details:', err);
-        setError(t('payment.loadOrderFailed'));
+
+        // API 调用失败时，尝试使用 URL 参数构建订单详情
+        if (urlTitle && urlAmount) {
+          const priceNum = parseFloat(urlAmount);
+          const quantityNum = parseInt(urlQuantity || '1', 10);
+
+          const fallbackOrderDetails: OrderDetails = {
+            orderID,
+            status: 'AWAITING_PAYMENT',
+            items: [
+              {
+                id: 'item-from-url',
+                title: urlTitle,
+                price: priceNum / quantityNum,
+                currency: urlCurrency || 'USD',
+                quantity: quantityNum,
+                image: urlImage || '',
+              },
+            ],
+            vendor: {
+              name: urlVendorName || 'Unknown',
+              peerID: urlVendorPeerID || '',
+            },
+            shippingAddress: {
+              name: '',
+              street: '',
+              city: '',
+              state: '',
+              country: '',
+              postalCode: '',
+            },
+            subtotal: priceNum,
+            total: priceNum,
+            currency: urlCurrency || 'USD',
+            isRwaToken: urlIsRwaToken,
+            rwaTradeMode: urlRwaTradeMode ? parseInt(urlRwaTradeMode, 10) : undefined,
+            rwaEscrowTimeoutSeconds: urlEscrowTimeout ? parseInt(urlEscrowTimeout, 10) : undefined,
+            cryptoListingCurrencyCode: urlTokenCode || undefined,
+            contractType: urlContractType || undefined,
+          };
+
+          setOrderDetails(fallbackOrderDetails);
+        } else {
+          setError(t('payment.loadOrderFailed'));
+        }
       } finally {
         setIsLoadingOrder(false);
       }
     };
 
     fetchOrderDetails();
-  }, [orderID, t, urlIsRwaToken, urlRwaTradeMode, urlEscrowTimeout, urlTokenCode]);
+  }, [
+    orderID,
+    t,
+    urlIsRwaToken,
+    urlRwaTradeMode,
+    urlEscrowTimeout,
+    urlTokenCode,
+    urlAmount,
+    urlCurrency,
+    urlTitle,
+    urlVendorName,
+    urlVendorPeerID,
+    urlQuantity,
+    urlContractType,
+    urlImage,
+  ]);
 
   // 计算仲裁员费用
   const moderatorFee = React.useMemo(() => {
@@ -406,7 +498,11 @@ export default function PaymentPage() {
                   items={orderDetails.items}
                   vendor={orderDetails.vendor}
                   shippingAddress={
-                    orderDetails.isRwaToken ? undefined : orderDetails.shippingAddress
+                    // 只有物理商品才显示收货地址
+                    orderDetails.contractType === 'PHYSICAL_GOOD' &&
+                    orderDetails.shippingAddress?.street
+                      ? orderDetails.shippingAddress
+                      : undefined
                   }
                   memo={orderDetails.memo}
                 />
@@ -466,7 +562,9 @@ export default function PaymentPage() {
                             {t('payment.orderTotal')}
                           </span>
                           <span className="font-medium text-foreground text-xs sm:text-sm">
-                            {renderPairedPrice(orderDetails.total, orderDetails.currency)}
+                            {renderPairedPrice(orderDetails.total, orderDetails.currency, {
+                              isMinimalUnit: false,
+                            })}
                           </span>
                         </HStack>
 
@@ -476,7 +574,9 @@ export default function PaymentPage() {
                               {t('payment.moderatorFee')}
                             </span>
                             <span className="font-medium text-foreground text-xs sm:text-sm">
-                              {renderPairedPrice(moderatorFee, orderDetails.currency)}
+                              {renderPairedPrice(moderatorFee, orderDetails.currency, {
+                                isMinimalUnit: false,
+                              })}
                             </span>
                           </HStack>
                         )}
@@ -488,7 +588,9 @@ export default function PaymentPage() {
                         </span>
                         <div className="text-right">
                           <p className="text-lg sm:text-xl font-bold text-primary">
-                            {renderPairedPrice(totalWithFee, orderDetails.currency)}
+                            {renderPairedPrice(totalWithFee, orderDetails.currency, {
+                              isMinimalUnit: false,
+                            })}
                           </p>
                           {selectedTokenId && (
                             <p className="text-xs text-muted-foreground">
