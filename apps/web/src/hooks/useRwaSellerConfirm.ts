@@ -192,7 +192,7 @@ export function useRwaSellerConfirm({
 
       try {
         await ordersApi.confirmOrder({
-          orderId: orderId,
+          orderID: orderId,
           reject: false,
         });
         console.warn('✅ 后端状态同步成功');
@@ -234,7 +234,7 @@ export function useRwaSellerConfirm({
 
       // 调用后端拒绝订单
       await ordersApi.confirmOrder({
-        orderId: orderId,
+        orderID: orderId,
         reject: true,
       });
 

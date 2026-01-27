@@ -194,24 +194,24 @@ export const orderDataService = {
   /**
    * 确认订单（卖家）
    */
-  async confirmOrder(orderId: string, reject = false, note?: string) {
+  async confirmOrder(orderID: string, reject = false) {
     if (isMockMode()) {
-      return mockServices.orders.confirmOrder(orderId);
+      return mockServices.orders.confirmOrder(orderID);
     }
-    return await ordersApi.confirmOrder({ orderId, reject, note });
+    return await ordersApi.confirmOrder({ orderID, reject });
   },
 
   /**
    * 发货（卖家）
    */
   async fulfillOrder(params: {
-    orderId: string;
+    orderID: string;
     physicalDelivery?: { shipper: string; trackingNumber: string }[];
     digitalDelivery?: { url?: string; password?: string };
     note?: string;
   }) {
     if (isMockMode()) {
-      return mockServices.orders.fulfillOrder(params.orderId);
+      return mockServices.orders.fulfillOrder(params.orderID);
     }
     return await ordersApi.fulfillOrder(params);
   },
@@ -220,7 +220,8 @@ export const orderDataService = {
    * 完成订单（买家）
    */
   async completeOrder(params: {
-    orderId: string;
+    orderID: string;
+    txID?: string;
     ratings?: Array<{
       slug: string;
       overall: number;
@@ -229,11 +230,11 @@ export const orderDataService = {
       deliverySpeed?: number;
       customerService?: number;
       review?: string;
-      anonymous?: boolean;
     }>;
+    anonymous?: boolean;
   }) {
     if (isMockMode()) {
-      return mockServices.orders.completeOrder(params.orderId);
+      return mockServices.orders.completeOrder(params.orderID);
     }
     return await ordersApi.completeOrder(params);
   },
@@ -241,21 +242,21 @@ export const orderDataService = {
   /**
    * 取消订单
    */
-  async cancelOrder(orderId: string, transactionId?: string) {
+  async cancelOrder(orderID: string, transactionID?: string) {
     if (isMockMode()) {
-      return mockServices.orders.cancelOrder(orderId);
+      return mockServices.orders.cancelOrder(orderID);
     }
-    return await ordersApi.cancelOrder(orderId, transactionId);
+    return await ordersApi.cancelOrder({ orderID, transactionID });
   },
 
   /**
    * 退款订单
    */
-  async refundOrder(orderId: string, transactionId?: string) {
+  async refundOrder(orderID: string, transactionID?: string) {
     if (isMockMode()) {
-      return mockServices.orders.refundOrder(orderId);
+      return mockServices.orders.refundOrder(orderID);
     }
-    return await ordersApi.refundOrder(orderId, transactionId);
+    return await ordersApi.refundOrder({ orderID, transactionID });
   },
 
   /**

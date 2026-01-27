@@ -483,10 +483,10 @@ export function useRwaPurchase({
       if (result.success) {
         // 通知后端更新订单状态
         try {
-          const apiResult = await ordersApi.cancelOrder(
-            externalOrderId,
-            result.transactionHash || ''
-          );
+          const apiResult = await ordersApi.cancelOrder({
+            orderID: externalOrderId,
+            transactionID: result.transactionHash || '',
+          });
           console.log('Backend cancelOrder result:', apiResult);
         } catch (apiErr) {
           console.warn('Failed to notify backend:', apiErr);
@@ -526,10 +526,10 @@ export function useRwaPurchase({
       if (result.success) {
         // 通知后端更新订单状态
         try {
-          const apiResult = await ordersApi.cancelOrder(
-            externalOrderId,
-            result.transactionHash || ''
-          );
+          const apiResult = await ordersApi.cancelOrder({
+            orderID: externalOrderId,
+            transactionID: result.transactionHash || '',
+          });
           console.log('Backend cancelOrder (claimExpired) result:', apiResult);
         } catch (apiErr) {
           console.warn('Failed to notify backend:', apiErr);

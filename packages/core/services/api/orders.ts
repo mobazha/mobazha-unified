@@ -552,25 +552,29 @@ export async function getCheckoutBreakdown(
 
 /**
  * 确认订单（卖家）
+ * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
 export async function confirmOrder(
-  payload: { orderId: string; reject?: boolean; note?: string },
+  payload: {
+    orderID: string;
+    reject?: boolean;
+    transactionID?: string;
+    payoutAddress?: string;
+  },
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/confirm`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      payload,
-      getAuthHeaders(username, password)
-    );
+    // 后端成功时返回 {}，HTTP 200 即表示成功
+    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    return { success: true };
   };
 
   const mockFn = async () => {
     await mockDelay();
     // Mock: 更新订单状态
-    const order = mockOrders.find(o => o.orderID === payload.orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
       order.state = payload.reject ? 'DECLINED' : 'AWAITING_FULFILLMENT';
     }
@@ -582,29 +586,30 @@ export async function confirmOrder(
 
 /**
  * 发货（卖家）
+ * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
 export async function fulfillOrder(
-  fulfillObj: {
-    orderId: string;
+  payload: {
+    orderID: string;
     physicalDelivery?: { shipper: string; trackingNumber: string }[];
     digitalDelivery?: { url?: string; password?: string };
     note?: string;
+    itemIndex?: number;
+    receivingAccountID?: number;
   },
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/fulfill`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      fulfillObj,
-      getAuthHeaders(username, password)
-    );
+    // 后端成功时返回 {}，HTTP 200 即表示成功
+    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    return { success: true };
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderID === fulfillObj.orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
       order.state = 'FULFILLED';
     }
@@ -616,10 +621,12 @@ export async function fulfillOrder(
 
 /**
  * 完成订单（买家）
+ * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
 export async function completeOrder(
   payload: {
-    orderId: string;
+    orderID: string;
+    txID?: string;
     ratings?: Array<{
       slug: string;
       overall: number;
@@ -628,24 +635,22 @@ export async function completeOrder(
       deliverySpeed?: number;
       customerService?: number;
       review?: string;
-      anonymous?: boolean;
     }>;
+    anonymous?: boolean;
   },
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/complete`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      payload,
-      getAuthHeaders(username, password)
-    );
+    // 后端成功时返回 {}，HTTP 200 即表示成功
+    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    return { success: true };
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderID === payload.orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
       order.state = 'COMPLETED';
     }
@@ -657,25 +662,23 @@ export async function completeOrder(
 
 /**
  * 取消订单
+ * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
 export async function cancelOrder(
-  orderId: string,
-  transactionId = '',
+  payload: { orderID: string; transactionID?: string },
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/cancel`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId, transactionID: transactionId },
-      getAuthHeaders(username, password)
-    );
+    // 后端成功时返回 {}，HTTP 200 即表示成功
+    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    return { success: true };
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderID === orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
       order.state = 'CANCELED';
     }
@@ -687,25 +690,23 @@ export async function cancelOrder(
 
 /**
  * 退款订单
+ * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
 export async function refundOrder(
-  orderId: string,
-  transactionId = '',
+  payload: { orderID: string; transactionID?: string },
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/order/refund`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId, transactionID: transactionId },
-      getAuthHeaders(username, password)
-    );
+    // 后端成功时返回 {}，HTTP 200 即表示成功
+    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    return { success: true };
   };
 
   const mockFn = async () => {
     await mockDelay();
-    const order = mockOrders.find(o => o.orderID === orderId);
+    const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
       order.state = 'REFUNDED';
     }
