@@ -73,22 +73,39 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
 
         setAccounts(activeAccounts);
 
-        // 如果有账户且没有默认选择，选择第一个
-        if (activeAccounts.length > 0 && !selectedAccountId) {
-          const firstAccount = activeAccounts[0];
-          setSelectedAccountId(firstAccount.id);
-          onAccountChange?.(firstAccount);
-        }
+        // 检查当前选中的账户是否在新的账户列表中
+        // 如果不在，重置为第一个账户或清空
+        setSelectedAccountId(prevId => {
+          const isCurrentSelectionValid =
+            prevId !== undefined && activeAccounts.some(acc => acc.id === prevId);
+
+          if (isCurrentSelectionValid) {
+            // 当前选择仍然有效，保持不变
+            return prevId;
+          } else if (activeAccounts.length > 0) {
+            // 选择第一个账户
+            const firstAccount = activeAccounts[0];
+            onAccountChange?.(firstAccount);
+            return firstAccount.id;
+          } else {
+            // 没有可用账户
+            onAccountChange?.(null);
+            return undefined;
+          }
+        });
       } catch (error) {
         console.error('Failed to load receiving accounts:', error);
         setAccounts([]);
+        setSelectedAccountId(undefined);
+        onAccountChange?.(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadAccounts();
-  }, [blockchain, onAccountChange, selectedAccountId]);
+    // 注意：不将 selectedAccountId 放入依赖数组，避免循环更新
+  }, [blockchain, onAccountChange]);
 
   // 处理账户选择变化
   const handleChange = useCallback(
