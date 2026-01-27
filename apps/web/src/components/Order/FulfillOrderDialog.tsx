@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,17 +11,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n, ordersApi, walletApi } from '@mobazha/core';
+import { useI18n, ordersApi, CONTRACT_TYPES, type ContractType } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
+import { ReceivingAccountSelector } from './ReceivingAccountSelector';
 
 export interface FulfillOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orderId: string;
-  paymentCoin?: string; // 订单支付币种，用于筛选收款账户
+  /** 合约类型，用于判断是否显示收款账户选择器 */
+  contractType?: string;
+  /** 区块链类型，用于筛选收款账户 */
+  blockchain?: string;
   onSuccess?: () => void;
 }
+
+/**
+ * 判断是否需要显示收款账户选择器
+ * 参考桌面端逻辑：只有 RWA_TOKEN 类型订单需要选择收款账户
+ */
+const shouldShowReceivingAccountSelector = (contractType?: string): boolean => {
+  return contractType === CONTRACT_TYPES.RWA_TOKEN;
+};
 
 /**
  * 发货对话框组件
@@ -31,7 +43,8 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   open,
   onOpenChange,
   orderId,
-  paymentCoin,
+  contractType,
+  blockchain,
   onSuccess,
 }) => {
   const { t } = useI18n();
@@ -43,44 +56,18 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     note: '',
   });
 
-  // 收款账户相关状态
-  const [receivingAccounts, setReceivingAccounts] = useState<ReceivingAccount[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<number | undefined>(undefined);
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+  // 收款账户相关
+  const selectedAccountRef = useRef<ReceivingAccount | null>(null);
+  const showReceivingAccountSelector = shouldShowReceivingAccountSelector(contractType);
 
-  // 加载收款账户列表
-  useEffect(() => {
-    if (open) {
-      loadReceivingAccounts();
-    }
-  }, [open]);
-
-  const loadReceivingAccounts = async () => {
-    setIsLoadingAccounts(true);
-    try {
-      const accounts = await walletApi.getReceivingAccounts();
-      // 只显示激活的账户
-      const activeAccounts = accounts.filter(acc => acc.isActive);
-      setReceivingAccounts(activeAccounts);
-      // 如果有账户，默认选择第一个
-      if (activeAccounts.length > 0) {
-        setSelectedAccountId(activeAccounts[0].id);
-      }
-    } catch (error) {
-      console.error('Failed to load receiving accounts:', error);
-    } finally {
-      setIsLoadingAccounts(false);
-    }
-  };
-
-  // 格式化地址显示
-  const formatAddress = (address: string) => {
-    if (address.length <= 16) return address;
-    return `${address.slice(0, 8)}...${address.slice(-6)}`;
-  };
+  // 处理收款账户选择变化
+  const handleAccountChange = useCallback((account: ReceivingAccount | null) => {
+    selectedAccountRef.current = account;
+  }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!trackingInfo.trackingNumber.trim()) {
+    // 普通物流订单需要验证快递单号
+    if (contractType !== CONTRACT_TYPES.RWA_TOKEN && !trackingInfo.trackingNumber.trim()) {
       toast({
         title: t('order.actions.error'),
         description: t('order.fulfill.trackingRequired'),
@@ -89,8 +76,8 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
       return;
     }
 
-    // 检查是否选择了收款账户
-    if (receivingAccounts.length > 0 && !selectedAccountId) {
+    // RWA_TOKEN 订单需要验证收款账户
+    if (showReceivingAccountSelector && !selectedAccountRef.current) {
       toast({
         title: t('order.actions.error'),
         description: t('order.fulfill.receivingAccountRequired'),
@@ -101,15 +88,25 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
 
     setIsLoading(true);
     try {
-      const result = await ordersApi.fulfillOrder({
+      const payload: Parameters<typeof ordersApi.fulfillOrder>[0] = {
         orderID: orderId,
-        physicalDelivery: {
+        note: trackingInfo.note || '',
+      };
+
+      // 根据合约类型设置不同的发货信息
+      if (contractType !== CONTRACT_TYPES.RWA_TOKEN) {
+        payload.physicalDelivery = {
           shipper: trackingInfo.shipper || '',
           trackingNumber: trackingInfo.trackingNumber,
-        },
-        note: trackingInfo.note || '',
-        receivingAccountID: selectedAccountId,
-      });
+        };
+      }
+
+      // 如果需要收款账户，添加到请求中
+      if (showReceivingAccountSelector && selectedAccountRef.current) {
+        payload.receivingAccountID = selectedAccountRef.current.id;
+      }
+
+      const result = await ordersApi.fulfillOrder(payload);
 
       if (result.success) {
         toast({
@@ -117,6 +114,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
           description: t('order.actions.fulfillSuccessDesc'),
         });
         setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
+        selectedAccountRef.current = null;
         onOpenChange(false);
         // 延迟刷新以确保后端状态已更新
         setTimeout(() => {
@@ -136,9 +134,9 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     }
   }, [
     orderId,
+    contractType,
     trackingInfo,
-    selectedAccountId,
-    receivingAccounts.length,
+    showReceivingAccountSelector,
     onOpenChange,
     onSuccess,
     t,
@@ -150,7 +148,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
       if (!newOpen) {
         // 关闭时重置表单
         setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
-        setSelectedAccountId(undefined);
+        selectedAccountRef.current = null;
       }
       onOpenChange(newOpen);
     },
@@ -168,69 +166,50 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         </AlertDialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* 收款账户选择器 */}
-          {receivingAccounts.length > 0 && (
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">
-                {t('order.fulfill.receivingAccount')} *
-              </label>
-              <select
-                value={selectedAccountId || ''}
-                onChange={e =>
-                  setSelectedAccountId(e.target.value ? Number(e.target.value) : undefined)
-                }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                disabled={isLoading || isLoadingAccounts}
-              >
-                <option value="">{t('order.fulfill.selectReceivingAccount')}</option>
-                {receivingAccounts.map(account => (
-                  <option key={account.id} value={account.id}>
-                    {account.name} ({account.chainType}) - {formatAddress(account.address)}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('order.fulfill.receivingAccountHint')}
-              </p>
-            </div>
+          {/* 收款账户选择器 - 只在 RWA_TOKEN 类型订单显示 */}
+          {showReceivingAccountSelector && (
+            <ReceivingAccountSelector
+              blockchain={blockchain}
+              onAccountChange={handleAccountChange}
+              disabled={isLoading}
+              required
+            />
           )}
 
-          {/* 如果没有收款账户，显示提示 */}
-          {!isLoadingAccounts && receivingAccounts.length === 0 && (
-            <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                {t('order.fulfill.noReceivingAccount')}
-              </p>
-            </div>
+          {/* 普通订单的物流信息表单 */}
+          {contractType !== CONTRACT_TYPES.RWA_TOKEN && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  {t('order.fulfill.carrier')}
+                </label>
+                <input
+                  type="text"
+                  value={trackingInfo.shipper}
+                  onChange={e => setTrackingInfo(prev => ({ ...prev, shipper: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder={t('order.fulfill.carrierPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  {t('order.fulfill.trackingNumber')} *
+                </label>
+                <input
+                  type="text"
+                  value={trackingInfo.trackingNumber}
+                  onChange={e =>
+                    setTrackingInfo(prev => ({ ...prev, trackingNumber: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder={t('order.fulfill.trackingPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+            </>
           )}
-
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">
-              {t('order.fulfill.carrier')}
-            </label>
-            <input
-              type="text"
-              value={trackingInfo.shipper}
-              onChange={e => setTrackingInfo(prev => ({ ...prev, shipper: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              placeholder={t('order.fulfill.carrierPlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">
-              {t('order.fulfill.trackingNumber')} *
-            </label>
-            <input
-              type="text"
-              value={trackingInfo.trackingNumber}
-              onChange={e => setTrackingInfo(prev => ({ ...prev, trackingNumber: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              placeholder={t('order.fulfill.trackingPlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">

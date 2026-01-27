@@ -96,14 +96,20 @@ export interface ProductMetadata {
 }
 
 /**
+ * 合约类型常量
+ */
+export const CONTRACT_TYPES = {
+  PHYSICAL_GOOD: 'PHYSICAL_GOOD',
+  DIGITAL_GOOD: 'DIGITAL_GOOD',
+  SERVICE: 'SERVICE',
+  CRYPTOCURRENCY: 'CRYPTOCURRENCY',
+  RWA_TOKEN: 'RWA_TOKEN',
+} as const;
+
+/**
  * 合约类型
  */
-export type ContractType =
-  | 'PHYSICAL_GOOD'
-  | 'DIGITAL_GOOD'
-  | 'SERVICE'
-  | 'CRYPTOCURRENCY'
-  | 'RWA_TOKEN';
+export type ContractType = (typeof CONTRACT_TYPES)[keyof typeof CONTRACT_TYPES];
 
 /**
  * 列表格式
