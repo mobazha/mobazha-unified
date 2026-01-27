@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:vite": "vite",
     "build": "next build",
+    "build:vite": "vite build",
     "start": "next start",
+    "preview:vite": "vite preview",
     "lint": "echo 'Lint passed (skipping strict rules)' && exit 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -41,6 +44,7 @@
     "next": "^16.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.13.0",
     "recharts": "^3.6.0",
     "tailwind-merge": "^2.6.0"
   },
@@ -53,12 +57,13 @@
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint-config-next": "^16.1.1",
     "jsdom": "^26.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
+    "vite": "^7.3.1",
     "vitest": "^3.0.2"
   }
 }
