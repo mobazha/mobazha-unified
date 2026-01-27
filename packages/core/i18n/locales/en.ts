@@ -442,6 +442,53 @@ export const en: TranslationResource = {
       refund: 'Refund',
       claim: 'Claim Payment',
       acceptPayout: 'Accept Payout',
+      // Success messages
+      acceptSuccess: 'Order Accepted',
+      acceptSuccessDesc: 'You have accepted the order. Please fulfill it as soon as possible.',
+      declineSuccess: 'Order Declined',
+      declineSuccessDesc: 'You have declined the order. The buyer has been notified.',
+      cancelSuccess: 'Order Cancelled',
+      cancelSuccessDesc: 'The order has been cancelled successfully.',
+      refundSuccess: 'Refund Processed',
+      refundSuccessDesc: 'The refund has been processed. Funds will be returned to the buyer.',
+      claimSuccess: 'Payment Claimed',
+      claimSuccessDesc: 'You have successfully claimed the payment.',
+      acceptPayoutSuccess: 'Payout Accepted',
+      acceptPayoutSuccessDesc: 'You have accepted the dispute resolution payout.',
+      reviewComingSoon: 'Review feature is coming soon.',
+      error: 'Error',
+    },
+    // Order action dialogs
+    dialogs: {
+      acceptOrder: {
+        title: 'Accept Order',
+        description:
+          'Are you sure you want to accept this order? Once accepted, you will be expected to fulfill it.',
+      },
+      declineOrder: {
+        title: 'Decline Order',
+        description:
+          'Are you sure you want to decline this order? The buyer will be notified and any payment will be refunded.',
+      },
+      cancelOrder: {
+        title: 'Cancel Order',
+        description: 'Are you sure you want to cancel this order? This action cannot be undone.',
+      },
+      refundOrder: {
+        title: 'Refund Order',
+        description:
+          'Are you sure you want to refund this order? The funds will be returned to the buyer. This action cannot be undone.',
+      },
+      claimPayment: {
+        title: 'Claim Payment',
+        description:
+          'The order has timed out. Are you sure you want to claim the payment? The funds will be released to you.',
+      },
+      acceptPayout: {
+        title: 'Accept Payout',
+        description:
+          "Are you sure you want to accept the dispute resolution? The funds will be distributed according to the moderator's decision.",
+      },
     },
     // Fulfill modal
     fulfill: {
@@ -1135,8 +1182,34 @@ export const en: TranslationResource = {
     connecting: 'Connecting...',
     processing: 'Processing...',
     success: 'Payment successful!',
-    failed: 'Payment failed: ',
+    failed: 'Payment failed',
     securityNote: 'Secure payment with multi-sig escrow protection',
+    // Transaction related
+    connectWalletFirst: 'Please connect your wallet first',
+    noPaymentAddress: 'No payment address available',
+    noPaymentInstructions: 'Failed to get payment instructions',
+    externalWalletRequired: 'External Wallet Required',
+    pleaseUseExternalWallet: 'Please use an external wallet (BTC/LTC) to complete this payment',
+    invalidAmount: 'Invalid payment amount',
+    signerNotAvailable: 'Wallet signer not available',
+    providerNotAvailable: 'Wallet provider not available',
+    // ERC20 Approval
+    approvalRequired: 'Token Approval Required',
+    pleaseApproveToken: 'Please approve the token spending in your wallet',
+    approvalSent: 'Approval Transaction Sent',
+    waitingForApproval: 'Waiting for approval confirmation...',
+    approvalFailed: 'Token approval failed',
+    approvalSuccess: 'Token Approved',
+    proceedingWithPayment: 'Proceeding with payment...',
+    // Transaction
+    confirmInWallet: 'Confirm in Wallet',
+    pleaseConfirmTransaction: 'Please confirm the transaction in your wallet',
+    transactionSent: 'Transaction Sent',
+    txHash: 'Transaction Hash',
+    transactionFailed: 'Transaction failed',
+    paymentComplete: 'Your payment has been processed successfully',
+    cancelled: 'Payment Cancelled',
+    userCancelledTransaction: 'Transaction was cancelled by user',
     // Moderator selector
     searchModerators: 'Search moderators...',
     loadingModerators: 'Loading moderators...',

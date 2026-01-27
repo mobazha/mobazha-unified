@@ -260,6 +260,15 @@ async function getStoreModerators(): Promise<string[]> {
  * 批量获取 profile 信息
  * POST /v1/ob/fetchprofiles
  */
+/**
+ * fetchprofiles API 返回的数据结构
+ */
+interface FetchProfilesResponse {
+  id: string;
+  peerID: string;
+  profile: BackendProfile;
+}
+
 async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
   if (peerIDs.length === 0) {
     return [];
@@ -278,8 +287,25 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
     return [];
   }
 
-  const profiles = await response.json();
-  return Array.isArray(profiles) ? profiles : [];
+  const data = await response.json();
+
+  // API 返回的是 { id, peerID, profile } 的数组，需要提取 profile 字段
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data
+    .map((item: FetchProfilesResponse) => {
+      if (item.profile) {
+        // 确保 peerID 存在
+        return {
+          ...item.profile,
+          peerID: item.profile.peerID || item.peerID,
+        };
+      }
+      return null;
+    })
+    .filter((p): p is BackendProfile => p !== null);
 }
 
 /**
@@ -309,8 +335,9 @@ export async function getModerators(
   // 步骤 2: 批量获取 profile 信息
   const profiles = await fetchProfiles(moderatorPeerIDs);
 
-  // 过滤出真正的仲裁员（有 moderatorInfo 的）
-  const moderatorProfiles = profiles.filter(p => p.moderator && p.moderatorInfo);
+  // 既然这些 peerID 来自 storeModerators，我们就显示所有成功获取的 profile
+  // 即使没有 moderatorInfo，也显示（可能是用户还没设置调解员信息）
+  const moderatorProfiles = profiles.filter(p => p && p.peerID);
 
   // 转换格式
   let moderators = moderatorProfiles.map(convertProfileToModerator);

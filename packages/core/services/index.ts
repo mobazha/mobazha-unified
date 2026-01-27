@@ -33,3 +33,6 @@ export * from './groupContext';
 
 // RWA 服务
 export * from './rwa';
+
+// 交易服务
+export * from './transaction';

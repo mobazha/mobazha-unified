@@ -23,7 +23,7 @@ import {
   type LoginCredentials,
 } from '../services/auth';
 import { connectWebSocket, disconnectWebSocket } from '../services/websocket';
-import { disableMockData, enableMockData } from '../config';
+import { disableMockData } from '../config';
 
 interface UserState {
   // 状态
@@ -379,7 +379,9 @@ export const useUserStore = create<UserState>()(
           disableMockData();
           console.log('🔄 Restored session, switched to real API mode');
 
-          set({ isLoading: true, token });
+          // 先设置为认证状态（token 有效且未过期）
+          // 这样即使后续 API 请求失败（如网络问题），用户仍保持登录
+          set({ isLoading: true, token, isAuthenticated: true });
 
           try {
             // 尝试获取用户资料验证 Token 有效性
@@ -399,26 +401,25 @@ export const useUserStore = create<UserState>()(
               return true;
             }
 
-            // Token 无效
-            clearAuth();
-            enableMockData(); // 恢复 mock 模式
+            // API 返回空但没有抛出错误，可能是服务器问题
+            // 保持登录状态，稍后可以重试
+            console.warn('⚠️ Failed to fetch profile, but keeping session');
             set({
-              isAuthenticated: false,
-              token: null,
               isLoading: false,
               isSessionRestored: true,
             });
-            return false;
-          } catch {
-            clearAuth();
-            enableMockData(); // 恢复 mock 模式
+            return true;
+          } catch (error) {
+            // 网络错误时不清除认证，保持当前登录状态
+            // 这样 HMR 或临时网络问题不会导致用户被登出
+            console.warn('⚠️ Network error during session restore, keeping session:', error);
             set({
-              isAuthenticated: false,
-              token: null,
               isLoading: false,
               isSessionRestored: true,
             });
-            return false;
+            // 仍然尝试连接 WebSocket
+            connectWebSocket();
+            return true;
           }
         },
 
@@ -553,6 +554,7 @@ export const useUserStore = create<UserState>()(
           profile: state.profile,
           isAuthenticated: state.isAuthenticated,
           authMode: state.authMode,
+          token: state.token, // 添加 token 持久化，避免 HMR 后丢失
         }),
       }
     ),
