@@ -1,0 +1,38 @@
+---
+description: 提醒同步 Vite 路由配置 - 创建或移动页面时应用
+globs: apps/web/src/app/**/page.tsx
+alwaysApply: false
+---
+
+# Vite 路由同步提醒
+
+当在 `apps/web/src/app/` 目录下创建、删除或移动页面时，需要同步更新 Vite 路由配置。
+
+## 创建新页面时
+
+在 `src/routes.tsx` 添加对应路由：
+
+```typescript
+// 示例：创建 app/example/page.tsx 后
+{ path: '/example', element: lazyPage(() => import('./app/example/page')) },
+
+// 动态路由：创建 app/example/[id]/page.tsx 后
+{ path: '/example/:id', element: lazyPage(() => import('./app/example/[id]/page')) },
+```
+
+## 路径转换规则
+
+| Next.js 路径 | React Router 路径 |
+|-------------|------------------|
+| `app/foo/page.tsx` | `/foo` |
+| `app/foo/[id]/page.tsx` | `/foo/:id` |
+| `app/foo/[...slug]/page.tsx` | `/foo/*` |
+| `app/foo/bar/page.tsx` | `/foo/bar` |
+
+## 删除页面时
+
+从 `src/routes.tsx` 移除对应路由条目。
+
+## 位置
+
+路由配置文件：`apps/web/src/routes.tsx`

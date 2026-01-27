@@ -1,0 +1,117 @@
+---
+description: Vite/Next.js 双模式开发兼容规则 - 开发 apps/web 时应用
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Vite/Next.js 双模式兼容开发
+
+本项目支持两种开发模式：
+- **Vite 模式**：`pnpm dev:vite` - 秒级启动，用于快速开发
+- **Next.js 模式**：`pnpm dev` - 完整功能，用于生产验证
+
+## 兼容性原则
+
+### 1. 路由导航
+
+使用 `next/navigation` 的 hooks，兼容层会自动处理：
+
+```typescript
+// ✅ 正确 - 两种模式都支持
+import { useRouter, useParams, useSearchParams, usePathname } from 'next/navigation';
+
+const router = useRouter();
+router.push('/orders');
+router.replace('/cart');
+router.back();
+```
+
+### 2. 链接组件
+
+使用 `next/link`，兼容层会自动转换：
+
+```typescript
+// ✅ 正确
+import Link from 'next/link';
+<Link href="/product/abc">查看商品</Link>
+
+// ❌ 避免直接使用 react-router-dom
+import { Link } from 'react-router-dom';  // 不要这样做
+```
+
+### 3. 图片组件
+
+优先使用普通 `img` 标签或自定义组件，避免依赖 Next.js 图片优化：
+
+```typescript
+// ✅ 推荐 - 两种模式都兼容
+<img src={imageUrl} alt="product" loading="lazy" />
+
+// ⚠️ 可用但 Vite 下无优化
+import Image from 'next/image';
+<Image src={imageUrl} alt="product" width={200} height={200} />
+```
+
+### 4. 动态路由参数
+
+Next.js 用 `[param]`，React Router 用 `:param`，编写代码时使用 Next.js 风格：
+
+```typescript
+// 文件路径: app/orders/[orderId]/page.tsx
+// Vite 会自动映射到 /orders/:orderId
+
+export default function OrderPage() {
+  const { orderId } = useParams();  // 两种模式都能获取
+  // ...
+}
+```
+
+### 5. 'use client' 指令
+
+保留 `'use client'` 指令，Vite 会忽略它，Next.js 需要它：
+
+```typescript
+'use client';  // ✅ 保留，不影响 Vite
+
+import { useState } from 'react';
+// ...
+```
+
+### 6. 服务端功能
+
+以下 Next.js 功能在 Vite 模式下不可用，仅用于生产环境：
+
+- `metadata` 导出（SEO）
+- `generateStaticParams`（静态生成）
+- Server Actions
+- Route Handlers (`app/api/`)
+
+```typescript
+// ✅ 可以写，Vite 下会被忽略
+export const metadata = {
+  title: 'My Page',
+};
+```
+
+## 添加新页面
+
+1. 在 `app/` 目录创建 Next.js 风格的页面
+2. 在 `src/routes.tsx` 添加对应的 Vite 路由映射
+
+```typescript
+// routes.tsx 示例
+{ path: '/new-page', element: lazyPage(() => import('./app/new-page/page')) },
+{ path: '/new-page/:id', element: lazyPage(() => import('./app/new-page/[id]/page')) },
+```
+
+## 快速参考
+
+| 功能 | 使用方式 | Vite | Next.js |
+|------|---------|------|---------|
+| 路由跳转 | `useRouter().push()` | ✅ | ✅ |
+| 路由参数 | `useParams()` | ✅ | ✅ |
+| 查询参数 | `useSearchParams()` | ✅ | ✅ |
+| 链接 | `<Link href="...">` | ✅ | ✅ |
+| 图片 | `<img>` 或 `<Image>` | ✅ | ✅ |
+| SSR/SSG | - | ❌ | ✅ |
+| API Routes | `/api/*` 代理 | ✅ | ✅ |

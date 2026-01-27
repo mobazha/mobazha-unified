@@ -5,6 +5,7 @@
   "description": "Mobazha unified React Web platform",
   "scripts": {
     "dev": "turbo dev",
+    "dev:vite": "pnpm --filter @mobazha/web dev:vite",
     "build": "turbo build",
     "lint": "turbo lint",
     "lint:fix": "turbo lint -- --fix",
