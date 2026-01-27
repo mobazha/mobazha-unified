@@ -85,3 +85,10 @@ export * from './utils';
 
 // Modals
 export * from './modals';
+
+// Dialogs
+export { FulfillOrderDialog } from './FulfillOrderDialog';
+export type { FulfillOrderDialogProps } from './FulfillOrderDialog';
+
+export { OrderConfirmDialog } from './OrderConfirmDialog';
+export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDialog';

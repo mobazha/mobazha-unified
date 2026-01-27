@@ -328,6 +328,28 @@ export const en: TranslationResource = {
     cancelled: 'Cancelled',
     refunded: 'Refunded',
     disputed: 'Disputed',
+    // Progress bar stages
+    stages: {
+      paid: 'Paid',
+      accepted: 'Accepted',
+      fulfilled: 'Fulfilled',
+      complete: 'Complete',
+      disputed: 'Disputed',
+      decided: 'Decided',
+      resolved: 'Resolved',
+      declined: 'Declined',
+    },
+    // Order detail labels
+    shipTo: 'Ship to',
+    shippingOption: 'Shipping Option',
+    shippingService: 'Shipping Service',
+    memo: 'Memo',
+    additionalContact: 'Additional Contact Information',
+    coupons: 'Coupons',
+    unknownItem: 'Unknown Item',
+    orderAccepted: 'Order Accepted',
+    acceptedDescSeller: "You received the order and can fulfill it whenever you're ready.",
+    acceptedDescBuyer: 'Order accepted by seller.',
     purchases: 'Purchases',
     sales: 'Sales',
     myPurchases: 'My Purchases',
@@ -378,6 +400,7 @@ export const en: TranslationResource = {
     buyer: 'Buyer',
     moderator: 'Moderator',
     viewStore: 'View Store',
+    moderatorFeePercent: '{{fee}}% fee',
     // Address and payment
     shippingAddress: 'Shipping Address',
     trackingNumber: 'Tracking Number',
@@ -385,6 +408,10 @@ export const en: TranslationResource = {
     paymentTransaction: 'Payment Transaction',
     escrowAddress: 'Escrow Address',
     orderNotes: 'Order Notes',
+    // Payment card
+    paid: 'Paid',
+    fundsInEscrow: 'Funds held in escrow until order completion.',
+    directPaymentDesc: 'Direct payment - funds sent directly to seller.',
     // Dispute
     disputeOpen: 'Dispute Open',
     initiatedBy: 'Initiated by {{party}}',
@@ -455,6 +482,8 @@ export const en: TranslationResource = {
       claimSuccessDesc: 'You have successfully claimed the payment.',
       acceptPayoutSuccess: 'Payout Accepted',
       acceptPayoutSuccessDesc: 'You have accepted the dispute resolution payout.',
+      fulfillSuccess: 'Order Shipped',
+      fulfillSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
       reviewComingSoon: 'Review feature is coming soon.',
       error: 'Error',
     },
@@ -488,6 +517,11 @@ export const en: TranslationResource = {
         title: 'Accept Payout',
         description:
           "Are you sure you want to accept the dispute resolution? The funds will be distributed according to the moderator's decision.",
+      },
+      fulfillOrder: {
+        title: 'Ship Order',
+        description:
+          'Enter the shipping information for this order. The buyer will be notified once you confirm.',
       },
     },
     // Fulfill modal

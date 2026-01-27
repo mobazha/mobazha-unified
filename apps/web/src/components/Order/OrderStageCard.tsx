@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Check, Package, CheckCircle } from 'lucide-react';
+import { useI18n } from '@mobazha/core';
 
 export interface OrderStageCardProps {
   /** 阶段标题 */
@@ -23,12 +24,25 @@ export interface OrderStageCardProps {
 }
 
 /**
- * 格式化日期时间
+ * 格式化日期时间（根据 locale 自动选择格式）
  */
-function formatDateTime(dateString: string): string {
+function formatDateTime(dateString: string, locale: string = 'en'): string {
   try {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    // 根据语言选择合适的 locale（支持所有 i18n 语言）
+    const localeMap: Record<string, string> = {
+      en: 'en-US',
+      zh: 'zh-CN',
+      de: 'de-DE',
+      es: 'es-ES',
+      fr: 'fr-FR',
+      ja: 'ja-JP',
+      ko: 'ko-KR',
+      pt: 'pt-BR',
+      ru: 'ru-RU',
+    };
+    const dateLocale = localeMap[locale] || localeMap.en;
+    return date.toLocaleDateString(dateLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -58,6 +72,8 @@ export const OrderStageCard = memo(function OrderStageCard({
   className,
   showDivider = true,
 }: OrderStageCardProps) {
+  const { locale } = useI18n();
+
   return (
     <div className={cn('relative', className)}>
       {/* 分隔线 */}
@@ -71,7 +87,7 @@ export const OrderStageCard = memo(function OrderStageCard({
         </div>
         {timestamp && (
           <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
-            {formatDateTime(timestamp)}
+            {formatDateTime(timestamp, locale)}
           </span>
         )}
       </div>
@@ -96,6 +112,8 @@ export interface PaymentCardProps {
   timestamp?: string;
   blockchainUrl?: string;
   description?: string;
+  /** 卡片标题，默认 "Paid" */
+  title?: string;
   className?: string;
 }
 
@@ -104,12 +122,15 @@ export const PaymentCard = memo(function PaymentCard({
   currency,
   timestamp,
   description,
+  title,
   className,
   showDivider = true,
 }: PaymentCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+
   return (
     <OrderStageCard
-      title="Order Complete"
+      title={title || t('order.paid')}
       timestamp={timestamp}
       className={className}
       showDivider={showDivider}
@@ -126,9 +147,7 @@ export const PaymentCard = memo(function PaymentCard({
             <p className="text-sm sm:text-base font-semibold text-foreground">
               {amount} {currency}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {description || 'Funds released to seller'}
-            </p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           </div>
         </div>
       </Card>
@@ -235,9 +254,11 @@ export const FulfillmentCard = memo(function FulfillmentCard({
   className,
   showDivider = true,
 }: FulfillmentCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+
   return (
     <OrderStageCard
-      title="Fulfilled"
+      title={t('order.stages.fulfilled')}
       timestamp={timestamp}
       icon={<Package className="w-4 h-4" />}
       className={className}
@@ -249,11 +270,16 @@ export const FulfillmentCard = memo(function FulfillmentCard({
             <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">Package shipped</p>
-            {shipper && <p className="text-xs text-muted-foreground">Carrier: {shipper}</p>}
+            <p className="text-sm font-medium text-foreground">{t('order.packageShipped')}</p>
+            {shipper && (
+              <p className="text-xs text-muted-foreground">
+                {t('order.fulfillment.carrier')}: {shipper}
+              </p>
+            )}
             {trackingNumber && (
               <p className="text-xs text-muted-foreground">
-                Tracking: <span className="font-mono text-primary">{trackingNumber}</span>
+                {t('order.fulfillment.trackingNumber')}:{' '}
+                <span className="font-mono text-primary">{trackingNumber}</span>
               </p>
             )}
             {note && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{note}</p>}
@@ -281,9 +307,11 @@ export const AcceptedCard = memo(function AcceptedCard({
   className,
   showDivider = true,
 }: AcceptedCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+
   return (
     <OrderStageCard
-      title="Accepted"
+      title={t('order.stages.accepted')}
       timestamp={timestamp}
       icon={<CheckCircle className="w-4 h-4" />}
       actions={actions}
@@ -296,10 +324,8 @@ export const AcceptedCard = memo(function AcceptedCard({
             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">Order Accepted</p>
-            <p className="text-xs text-muted-foreground">
-              {description || "You received the order and can fulfill it whenever you're ready."}
-            </p>
+            <p className="text-sm font-medium text-foreground">{t('order.orderAccepted')}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           </div>
         </div>
       </Card>
@@ -327,9 +353,11 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   className,
   showDivider = true,
 }: OrderCompleteCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+
   return (
     <OrderStageCard
-      title="Order Complete"
+      title={t('order.stages.complete')}
       timestamp={timestamp}
       className={className}
       showDivider={showDivider}
@@ -346,7 +374,7 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              {description || 'Funds released to seller'}
+              {description || t('order.fundsReleased')}
             </p>
           </div>
         </div>

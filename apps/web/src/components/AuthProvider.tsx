@@ -55,6 +55,8 @@ export function AuthProvider({
           clearOAuthParams();
 
           if (success) {
+            // OAuth 登录成功，标记会话已恢复，防止后续不必要的 restoreSession 调用
+            hasRestoredSession.current = true;
             // 获取登录前的页面路径
             const redirectPath = getLoginRedirectPath();
             router.push(redirectPath);

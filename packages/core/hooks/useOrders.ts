@@ -437,7 +437,7 @@ export function useOrderActions() {
   const fulfillOrder = useCallback(
     async (params: {
       orderID: string;
-      physicalDelivery?: { shipper: string; trackingNumber: string }[];
+      physicalDelivery?: { shipper: string; trackingNumber: string };
       digitalDelivery?: { url?: string; password?: string };
       note?: string;
     }) => {

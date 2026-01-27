@@ -591,7 +591,7 @@ export async function confirmOrder(
 export async function fulfillOrder(
   payload: {
     orderID: string;
-    physicalDelivery?: { shipper: string; trackingNumber: string }[];
+    physicalDelivery?: { shipper: string; trackingNumber: string };
     digitalDelivery?: { url?: string; password?: string };
     note?: string;
     itemIndex?: number;
