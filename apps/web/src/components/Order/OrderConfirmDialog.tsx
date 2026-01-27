@@ -14,7 +14,6 @@ import {
 import { useI18n } from '@mobazha/core';
 
 export type OrderConfirmType =
-  | 'accept'
   | 'decline'
   | 'cancel'
   | 'refund'
@@ -53,11 +52,6 @@ export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
       isDestructive?: boolean;
     }
   > = {
-    accept: {
-      titleKey: 'order.dialogs.acceptOrder.title',
-      descriptionKey: 'order.dialogs.acceptOrder.description',
-      confirmKey: 'order.actions.accept',
-    },
     decline: {
       titleKey: 'order.dialogs.declineOrder.title',
       descriptionKey: 'order.dialogs.declineOrder.description',

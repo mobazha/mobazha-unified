@@ -543,6 +543,12 @@ export const en: TranslationResource = {
           'Are you sure you want to confirm receipt of this order? This will release the funds to the seller and mark the order as complete.',
       },
     },
+    // Accept modal
+    accept: {
+      title: 'Accept Order',
+      description: 'Select the receiving account where you want to receive payment for this order.',
+      receivingAccountRequired: 'Please select a receiving account',
+    },
     // Fulfill modal
     fulfill: {
       shipOrder: 'Ship Order',
@@ -592,13 +598,6 @@ export const en: TranslationResource = {
       confirmText:
         'Are you sure you want to open a dispute? The moderator will be notified and will step in to help resolve the issue.',
       confirm: 'Open Dispute',
-    },
-    // Accept order modal
-    accept: {
-      title: 'Accept or Decline Order',
-      description: 'Review this order and decide whether to accept or decline it.',
-      accept: 'Accept Order',
-      decline: 'Decline Order',
     },
     // Refund modal
     refund: {
