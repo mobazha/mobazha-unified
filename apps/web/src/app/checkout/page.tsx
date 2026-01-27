@@ -213,6 +213,14 @@ export default function CheckoutPage() {
     return checkoutItems.some(item => item.contractType === 'RWA_TOKEN');
   }, [checkoutItems]);
 
+  // 判断是否需要收货地址（只有物理商品需要）
+  const needsShippingAddress = useMemo(() => {
+    // 如果没有商品，默认需要地址
+    if (checkoutItems.length === 0) return true;
+    // 只有物理商品需要收货地址
+    return checkoutItems.every(item => item.contractType === 'PHYSICAL_GOOD');
+  }, [checkoutItems]);
+
   // 获取 RWA 交易模式
   const rwaTradeMode = useMemo(() => {
     const rwaItem = checkoutItems.find(item => item.contractType === 'RWA_TOKEN');
@@ -221,8 +229,8 @@ export default function CheckoutPage() {
 
   // 创建订单
   const handleCreateOrder = useCallback(async () => {
-    // RWA 商品不需要地址
-    if (!isRwaToken && !selectedAddress) {
+    // 只有物理商品需要地址
+    if (needsShippingAddress && !selectedAddress) {
       toast({
         title: t('checkout.selectAddressFirst'),
         variant: 'destructive',
@@ -296,7 +304,17 @@ export default function CheckoutPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedAddress, checkoutItems, orderNote, router, t, toast, isRwaToken, rwaTradeMode]);
+  }, [
+    selectedAddress,
+    checkoutItems,
+    orderNote,
+    router,
+    t,
+    toast,
+    isRwaToken,
+    rwaTradeMode,
+    needsShippingAddress,
+  ]);
 
   // 格式化商品价格
   const formatItemPrice = (item: CheckoutItem) => {
@@ -411,8 +429,8 @@ export default function CheckoutPage() {
                   </Card>
                 )}
 
-                {/* Shipping Address - 仅非 RWA 商品显示 */}
-                {!isRwaToken && (
+                {/* Shipping Address - 仅物理商品显示 */}
+                {needsShippingAddress && (
                   <Card>
                     <CardContent className="p-4 sm:p-6">
                       <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
@@ -587,14 +605,17 @@ export default function CheckoutPage() {
                         </span>
                       </HStack>
 
-                      <HStack justify="between">
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          {t('checkout.shipping')}
-                        </span>
-                        <span className="font-medium text-primary text-xs sm:text-sm">
-                          {t('checkout.free')}
-                        </span>
-                      </HStack>
+                      {/* 运费 - 仅物理商品显示 */}
+                      {needsShippingAddress && (
+                        <HStack justify="between">
+                          <span className="text-xs sm:text-sm text-muted-foreground">
+                            {t('checkout.shipping')}
+                          </span>
+                          <span className="font-medium text-primary text-xs sm:text-sm">
+                            {t('checkout.free')}
+                          </span>
+                        </HStack>
+                      )}
 
                       <div className="border-t border-border pt-2 sm:pt-3">
                         <HStack justify="between">
@@ -615,7 +636,7 @@ export default function CheckoutPage() {
                       onClick={handleCreateOrder}
                       disabled={
                         isSubmitting ||
-                        (!isRwaToken && !selectedAddress) ||
+                        (needsShippingAddress && !selectedAddress) ||
                         checkoutItems.length === 0
                       }
                     >
@@ -643,8 +664,8 @@ export default function CheckoutPage() {
                       )}
                     </Button>
 
-                    {/* Warnings - 仅非 RWA 商品需要地址 */}
-                    {!isRwaToken && !selectedAddress && (
+                    {/* Warnings - 仅物理商品需要地址 */}
+                    {needsShippingAddress && !selectedAddress && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
                           {t('checkout.selectAddressWarning')}
@@ -692,7 +713,7 @@ export default function CheckoutPage() {
             <Button
               size="lg"
               onClick={handleCreateOrder}
-              disabled={isSubmitting || (!isRwaToken && !selectedAddress)}
+              disabled={isSubmitting || (needsShippingAddress && !selectedAddress)}
               className="min-w-[140px]"
             >
               {isSubmitting ? (
