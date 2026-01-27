@@ -259,6 +259,36 @@ export async function validateAddress(
   }
 }
 
+// ========== 收款账户管理 ==========
+
+/**
+ * 收款账户信息
+ */
+export interface ReceivingAccount {
+  id: number;
+  name: string;
+  chainType: string; // ethereum, solana, stripe 等
+  address: string;
+  activeTokens: string[];
+  inactiveTokens: string[];
+  source?: string;
+  isActive: boolean;
+  status?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 获取所有收款账户列表
+ */
+export async function getReceivingAccounts(
+  username?: string,
+  password?: string
+): Promise<ReceivingAccount[]> {
+  const url = `${getGatewayUrl()}/wallet/receivingaccountlist`;
+  return safeRequest<ReceivingAccount[]>(url, { headers: getAuthHeaders(username, password) }, []);
+}
+
 // ========== 导出 API 对象 ==========
 
 /**
@@ -276,6 +306,9 @@ export const walletApi = {
   setReceivingAddress,
   removeReceivingAddress,
   validateAddress,
+
+  // 收款账户
+  getReceivingAccounts,
 
   // 交易
   getTransactions,
