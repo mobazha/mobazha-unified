@@ -519,7 +519,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
   // 检查是否是 RWA Token 订单，并构造 Product 对象
   const { isRwaTokenOrder, rwaProduct } = useMemo(() => {
-    const listing = coreOrder?.contract?.vendorListings?.[0];
+    const listing = coreOrder?.contract?.orderOpen?.listings?.[0]?.listing;
     if (!listing || listing.metadata?.contractType !== 'RWA_TOKEN') {
       return { isRwaTokenOrder: false, rwaProduct: null };
     }
@@ -1118,10 +1118,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           timestamp={order.createdAt}
           isModerated={!!order.moderator}
           isFulfilled={coreOrder ? isOrderFulfilled(coreOrder) : false}
-          paymentMethod={coreOrder?.contract?.buyerOrder?.payment?.method}
+          paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
           totalAmount={order.total}
           currency={order.currency}
-          paymentCoin={coreOrder?.contract?.buyerOrder?.payment?.coin}
+          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
           onAction={handleOrderAction}
         />
       )}

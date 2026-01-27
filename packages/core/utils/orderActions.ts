@@ -227,10 +227,9 @@ export function getOrderStatusInfo(state: OrderState): { label: string; descript
  * 检查订单是否已发货
  */
 export function isOrderFulfilled(orderDetails: {
-  contract?: { orderFulfillments?: unknown[]; vendorOrderFulfillment?: unknown[] };
+  contract?: { orderFulfillments?: unknown[] };
 }): boolean {
-  const fulfillments =
-    orderDetails?.contract?.orderFulfillments || orderDetails?.contract?.vendorOrderFulfillment;
+  const fulfillments = orderDetails?.contract?.orderFulfillments;
   return Array.isArray(fulfillments) && fulfillments.length > 0;
 }
 

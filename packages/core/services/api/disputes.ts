@@ -22,25 +22,27 @@ export interface DisputeCase {
   state: DisputeState;
   timestamp: string;
   buyerContract: {
-    buyerOrder: {
-      payment: {
-        coin: string;
-        amount: number;
-      };
-    };
-    vendorListings: Array<{
-      listing: {
-        item: {
-          title: string;
-          images: Array<{ medium: string }>;
+    orderOpen: {
+      pricingCoin: string;
+      amount: number;
+      listings: Array<{
+        listing: {
+          item: {
+            title: string;
+            images: Array<{ medium: string }>;
+          };
+          slug: string;
         };
-        slug: string;
-      };
-      vendorID: {
-        peerID: string;
-        handle: string;
-      };
-    }>;
+        vendorID: {
+          peerID: string;
+          handle: string;
+        };
+      }>;
+    };
+    paymentSent?: {
+      coin: string;
+      amount: number;
+    };
   };
   claim: string;
   resolution?: {
@@ -138,29 +140,32 @@ export async function getCaseDetails(
       state: caseItem.state,
       timestamp: caseItem.timestamp,
       buyerContract: {
-        buyerOrder: {
-          payment: {
-            coin: caseItem.coin,
-            amount: caseItem.total,
-          },
-        },
-        vendorListings: [
-          {
-            listing: {
-              item: {
-                title: caseItem.title,
-                images: [{ medium: caseItem.thumbnail }],
+        orderOpen: {
+          pricingCoin: caseItem.coin,
+          amount: caseItem.total,
+          listings: [
+            {
+              listing: {
+                item: {
+                  title: caseItem.title,
+                  images: [{ medium: caseItem.thumbnail }],
+                },
+                slug: 'product-slug',
               },
-              slug: 'product-slug',
+              vendorID: {
+                peerID: caseItem.vendorPeerID,
+                handle: caseItem.vendorHandle,
+              },
             },
-            vendorID: {
-              peerID: caseItem.vendorPeerID,
-              handle: caseItem.vendorHandle,
-            },
-          },
-        ],
+          ],
+        },
+        paymentSent: {
+          coin: caseItem.coin,
+          amount: caseItem.total,
+        },
       },
-      claim: 'Item not as described. The product arrived damaged and differs significantly from the listing photos.',
+      claim:
+        'Item not as described. The product arrived damaged and differs significantly from the listing photos.',
       buyerOpened: caseItem.buyerOpened,
       read: caseItem.read,
       unreadChatMessages: 2,
@@ -284,4 +289,3 @@ export const disputesApi = {
   releaseEscrowAfterTimeout,
   getReleaseFundsInstructions,
 };
-

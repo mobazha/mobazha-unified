@@ -247,53 +247,58 @@ export async function getOrderDetails(
     // 构建完整的订单详情（符合 Order 接口）
     const mockOrder: Order = {
       contract: {
-        vendorListings: [
-          {
-            slug: orderItem.slug,
-            vendorID: {
-              peerID: orderItem.vendorID,
-              handle: orderItem.vendorHandle,
-            },
-            metadata: {
-              contractType: 'PHYSICAL_GOOD',
-              format: 'FIXED_PRICE',
-              acceptedCurrencies: ['ETH', 'BTC'],
-              pricingCurrency: { code: 'USD', divisibility: 2 },
-            },
-            item: {
-              title: orderItem.title,
-              description: 'Mock product description',
-              price: orderItem.total.amount,
-              images: [orderItem.thumbnail],
-              categories: [],
-              tags: [],
-              grams: 0,
-              condition: 'NEW',
-              skus: [],
-              processingTime: '1-3 days',
-              nsfw: false,
-            },
-          },
-        ],
-        buyerOrder: {
-          refundAddress: '0x' + Math.random().toString(16).slice(2, 42),
-          refundFee: 0,
+        orderOpen: {
           buyerID: {
             peerID: orderItem.buyerID,
           },
           timestamp: orderItem.timestamp,
+          pricingCoin: orderItem.paymentCoin,
+          amount: orderItem.total.amount,
           items: [
             {
               listingHash: 'Qm' + Math.random().toString(36).slice(2, 48),
               quantity: orderItem.quantity,
             },
           ],
-          payment: {
-            method: orderItem.moderated ? 'MODERATED' : 'DIRECT',
-            amount: orderItem.total.amount,
-            coin: orderItem.paymentCoin,
-          },
-          version: 1,
+          listings: [
+            {
+              vendorID: {
+                peerID: orderItem.vendorID,
+                handle: orderItem.vendorHandle,
+              },
+              listing: {
+                slug: orderItem.slug,
+                vendorID: {
+                  peerID: orderItem.vendorID,
+                  handle: orderItem.vendorHandle,
+                },
+                metadata: {
+                  contractType: 'PHYSICAL_GOOD',
+                  format: 'FIXED_PRICE',
+                  acceptedCurrencies: ['ETH', 'BTC'],
+                  pricingCurrency: { code: 'USD', divisibility: 2 },
+                },
+                item: {
+                  title: orderItem.title,
+                  description: 'Mock product description',
+                  price: orderItem.total.amount,
+                  images: [orderItem.thumbnail],
+                  categories: [],
+                  tags: [],
+                  grams: 0,
+                  condition: 'NEW',
+                  skus: [],
+                  processingTime: '1-3 days',
+                  nsfw: false,
+                },
+              },
+            },
+          ],
+        },
+        paymentSent: {
+          method: orderItem.moderated ? 'MODERATED' : 'DIRECT',
+          amount: orderItem.total.amount,
+          coin: orderItem.paymentCoin,
         },
       },
       state: orderItem.state,
@@ -765,7 +770,6 @@ export async function submitPayment(
 
   const mockFn = async () => {
     await mockDelay();
-    console.log('📤 [Mock] submitPayment:', paymentData);
     return { success: true };
   };
 
