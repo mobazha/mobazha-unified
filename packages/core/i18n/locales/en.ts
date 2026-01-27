@@ -1137,6 +1137,11 @@ export const en: TranslationResource = {
     success: 'Payment successful!',
     failed: 'Payment failed: ',
     securityNote: 'Secure payment with multi-sig escrow protection',
+    // Moderator selector
+    searchModerators: 'Search moderators...',
+    loadingModerators: 'Loading moderators...',
+    noModeratorsFound: 'No moderators found',
+    noModeratorsAvailable: 'No moderators available',
   },
 
   filter: {

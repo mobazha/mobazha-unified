@@ -21,6 +21,8 @@ interface UseModeratorsResult {
 
 /**
  * Hook 用于获取仲裁员列表
+ *
+ * 调用后端 API: GET /v1/ob/moderators?include=profile
  */
 export function useModerators(options: UseModeratorsOptions = {}): UseModeratorsResult {
   const { autoFetch = true, limit = 10, verified } = options;
@@ -50,6 +52,8 @@ export function useModerators(options: UseModeratorsOptions = {}): UseModerators
         name: mod.name,
         handle: mod.handle,
         avatar: mod.avatar,
+        avatarHashes: mod.avatarHashes,
+        location: mod.location,
         shortDescription: mod.shortDescription,
         description: mod.description,
         languages: mod.languages,
@@ -82,10 +86,10 @@ export function useModerators(options: UseModeratorsOptions = {}): UseModerators
       console.error('Failed to fetch moderators:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch moderators'));
 
-      // 使用 mock 数据作为 fallback
-      setModerators(MOCK_MODERATORS);
+      // 错误时显示空列表，不使用 mock 数据
+      setModerators([]);
       setHasMore(false);
-      setTotal(MOCK_MODERATORS.length);
+      setTotal(0);
     } finally {
       setIsLoading(false);
     }
@@ -106,74 +110,5 @@ export function useModerators(options: UseModeratorsOptions = {}): UseModerators
     total,
   };
 }
-
-// Mock 仲裁员数据（API 不可用时的 fallback）
-const MOCK_MODERATORS: Moderator[] = [
-  {
-    id: 'mod1',
-    peerID: 'QmMod1',
-    name: 'TrustGuard',
-    handle: 'trustguard',
-    description:
-      'Professional dispute resolution with 5+ years experience. Fast response within 24 hours.',
-    languages: ['en', 'es'],
-    verified: true,
-    verifiedMod: true,
-    fee: {
-      percentage: 1,
-      feeType: 'percentage',
-    },
-    stats: {
-      rating: 4.9,
-      ratingCount: 128,
-      disputesHandled: 156,
-      averageResolutionTime: 48,
-      successRate: 98,
-    },
-  },
-  {
-    id: 'mod2',
-    peerID: 'QmMod2',
-    name: 'SafeTrade',
-    handle: 'safetrade',
-    description: 'Multilingual moderator. Specializing in crypto and digital goods disputes.',
-    languages: ['en', 'de', 'fr'],
-    verified: true,
-    verifiedMod: true,
-    fee: {
-      percentage: 0.5,
-      fixedFee: { amount: '5', currency: 'USD' },
-      feeType: 'fixed_plus_percentage',
-    },
-    stats: {
-      rating: 4.7,
-      ratingCount: 89,
-      disputesHandled: 112,
-      averageResolutionTime: 36,
-      successRate: 95,
-    },
-  },
-  {
-    id: 'mod3',
-    peerID: 'QmMod3',
-    name: 'FairDeal',
-    handle: 'fairdeal',
-    description: 'Asia-Pacific based moderator with 24/7 availability.',
-    languages: ['en', 'zh', 'ja'],
-    verified: false,
-    verifiedMod: false,
-    fee: {
-      fixedFee: { amount: '10', currency: 'USD' },
-      feeType: 'fixed',
-    },
-    stats: {
-      rating: 4.5,
-      ratingCount: 45,
-      disputesHandled: 67,
-      averageResolutionTime: 24,
-      successRate: 92,
-    },
-  },
-];
 
 export default useModerators;

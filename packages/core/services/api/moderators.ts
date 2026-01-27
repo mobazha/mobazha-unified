@@ -1,8 +1,12 @@
 /**
  * Moderators API Service
  * 仲裁员 API 服务
+ *
+ * 后端 API：GET /v1/ob/moderators?include=profile
+ * 返回 Profile[] 数组，每个 Profile 包含 moderatorInfo 字段
  */
 
+import { getGatewayUrl, getAuthHeaders } from './config';
 import { apiClient } from './client';
 
 // Types
@@ -12,6 +16,14 @@ export interface Moderator {
   name: string;
   handle?: string;
   avatar?: string;
+  avatarHashes?: {
+    tiny?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    original?: string;
+  };
+  location?: string;
   shortDescription?: string;
   description?: string;
   languages: string[];
@@ -43,6 +55,49 @@ export interface Moderator {
   };
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * 后端返回的 Profile 结构
+ */
+interface BackendProfile {
+  peerID: string;
+  name: string;
+  handle?: string;
+  location?: string;
+  about?: string;
+  shortDescription?: string;
+  moderator: boolean;
+  moderatorInfo?: {
+    description?: string;
+    termsAndConditions?: string;
+    languages?: string[];
+    acceptedCurrencies?: string[];
+    fee: {
+      fixedFee?: {
+        amount: string | number;
+        currencyCode: string;
+      };
+      percentage: number;
+      feeType: string; // "FIXED" | "PERCENTAGE" | "FIXED_PLUS_PERCENTAGE"
+    };
+  };
+  avatarHashes?: {
+    tiny?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    original?: string;
+  };
+  stats?: {
+    averageRating?: number;
+    ratingCount?: number;
+  };
+  contactInfo?: {
+    website?: string;
+    email?: string;
+    social?: { type: string; username: string }[];
+  };
 }
 
 export interface ModeratorListParams {
@@ -106,30 +161,159 @@ export interface Dispute {
   expiresAt: string;
 }
 
+/**
+ * 将后端的 feeType 字符串转换为前端格式
+ */
+function convertFeeType(backendFeeType: string): 'percentage' | 'fixed' | 'fixed_plus_percentage' {
+  switch (backendFeeType?.toUpperCase()) {
+    case 'FIXED':
+      return 'fixed';
+    case 'PERCENTAGE':
+      return 'percentage';
+    case 'FIXED_PLUS_PERCENTAGE':
+      return 'fixed_plus_percentage';
+    default:
+      return 'percentage';
+  }
+}
+
+/**
+ * 将后端的 Profile 转换为前端的 Moderator
+ */
+function convertProfileToModerator(profile: BackendProfile): Moderator {
+  const modInfo = profile.moderatorInfo;
+  const fee = modInfo?.fee;
+
+  return {
+    id: profile.peerID,
+    peerID: profile.peerID,
+    name: profile.name || profile.handle || profile.peerID.slice(0, 8),
+    handle: profile.handle,
+    avatar: profile.avatarHashes?.medium || profile.avatarHashes?.small,
+    avatarHashes: profile.avatarHashes,
+    location: profile.location,
+    shortDescription: profile.shortDescription,
+    description: modInfo?.description || profile.about,
+    languages: modInfo?.languages || [],
+    fee: {
+      percentage: fee?.percentage || 0,
+      feeType: convertFeeType(fee?.feeType || 'PERCENTAGE'),
+      fixedFee: fee?.fixedFee
+        ? {
+            amount: Number(fee.fixedFee.amount) || 0,
+            currency: fee.fixedFee.currencyCode || 'USD',
+          }
+        : undefined,
+    },
+    termsAndConditions: modInfo?.termsAndConditions,
+    acceptedCurrencies: modInfo?.acceptedCurrencies || [],
+    verified: false, // 后端没有直接返回，需要从 verifiedMods 列表判断
+    stats: {
+      rating: profile.stats?.averageRating || 0,
+      ratingCount: profile.stats?.ratingCount || 0,
+      disputesHandled: 0, // 后端未提供
+      averageResolutionTime: 0, // 后端未提供
+      successRate: 0, // 后端未提供
+    },
+    contactInfo: profile.contactInfo
+      ? {
+          email: profile.contactInfo.email,
+          website: profile.contactInfo.website,
+          social: profile.contactInfo.social?.reduce(
+            (acc, s) => {
+              if (s.type === 'twitter') acc.twitter = s.username;
+              if (s.type === 'telegram') acc.telegram = s.username;
+              return acc;
+            },
+            {} as { twitter?: string; telegram?: string }
+          ),
+        }
+      : undefined,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
 // API Functions
 
 /**
  * 获取仲裁员列表
+ *
+ * 调用后端 API: GET /v1/ob/moderators?include=profile
+ * 返回 Profile[] 数组，需要转换为 Moderator[] 格式
  */
 export async function getModerators(
   params: ModeratorListParams = {}
 ): Promise<ModeratorListResponse> {
-  const queryParams = new URLSearchParams();
+  // 调用后端真实 API: /ob/moderators?include=profile
+  const url = `${getGatewayUrl()}/ob/moderators?include=profile`;
 
-  if (params.page) queryParams.set('page', params.page.toString());
-  if (params.limit) queryParams.set('limit', params.limit.toString());
-  if (params.sortBy) queryParams.set('sortBy', params.sortBy);
-  if (params.sortOrder) queryParams.set('sortOrder', params.sortOrder);
-  if (params.verified !== undefined) queryParams.set('verified', params.verified.toString());
-  if (params.language) queryParams.set('language', params.language);
-  if (params.currency) queryParams.set('currency', params.currency);
-  if (params.maxFee) queryParams.set('maxFee', params.maxFee.toString());
-  if (params.search) queryParams.set('search', params.search);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
 
-  const query = queryParams.toString();
-  const url = `/api/v1/moderators${query ? `?${query}` : ''}`;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch moderators: ${response.statusText}`);
+  }
 
-  return apiClient.get<ModeratorListResponse>(url);
+  const profiles: BackendProfile[] = await response.json();
+
+  // 过滤出真正的仲裁员（有 moderatorInfo 的）
+  const moderatorProfiles = profiles.filter(p => p.moderator && p.moderatorInfo);
+
+  // 转换格式
+  let moderators = moderatorProfiles.map(convertProfileToModerator);
+
+  // 前端过滤（后端 API 不支持这些参数）
+  if (params.language) {
+    moderators = moderators.filter(m => m.languages.includes(params.language!));
+  }
+  if (params.currency) {
+    moderators = moderators.filter(m => m.acceptedCurrencies.includes(params.currency!));
+  }
+  if (params.search) {
+    const searchLower = params.search.toLowerCase();
+    moderators = moderators.filter(
+      m =>
+        m.name.toLowerCase().includes(searchLower) ||
+        m.handle?.toLowerCase().includes(searchLower) ||
+        m.description?.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // 排序
+  if (params.sortBy) {
+    moderators.sort((a, b) => {
+      let comparison = 0;
+      switch (params.sortBy) {
+        case 'rating':
+          comparison = b.stats.rating - a.stats.rating;
+          break;
+        case 'fee':
+          comparison = a.fee.percentage - b.fee.percentage;
+          break;
+        default:
+          comparison = 0;
+      }
+      return params.sortOrder === 'asc' ? -comparison : comparison;
+    });
+  }
+
+  // 分页
+  const limit = params.limit || 20;
+  const page = params.page || 1;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedModerators = moderators.slice(startIndex, endIndex);
+
+  return {
+    moderators: paginatedModerators,
+    total: moderators.length,
+    page,
+    limit,
+    hasMore: endIndex < moderators.length,
+  };
 }
 
 /**
