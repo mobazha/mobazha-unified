@@ -242,18 +242,23 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
 async function getStoreModerators(): Promise<string[]> {
   const url = `${getGatewayUrl()}/ob/preferences`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
 
-  if (!response.ok) {
-    console.warn('Failed to fetch preferences:', response.statusText);
+    if (!response?.ok) {
+      console.warn('Failed to fetch preferences:', response?.statusText);
+      return [];
+    }
+
+    const preferences = await response.json();
+    return preferences.storeModerators || [];
+  } catch (error) {
+    console.warn('Error fetching store moderators:', error);
     return [];
   }
-
-  const preferences = await response.json();
-  return preferences.storeModerators || [];
 }
 
 /**
@@ -276,36 +281,41 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
 
   const url = `${getGatewayUrl()}/ob/fetchprofiles`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(peerIDs),
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(peerIDs),
+    });
 
-  if (!response.ok) {
-    console.warn('Failed to fetch profiles:', response.statusText);
+    if (!response?.ok) {
+      console.warn('Failed to fetch profiles:', response?.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+
+    // API 返回的是 { id, peerID, profile } 的数组，需要提取 profile 字段
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data
+      .map((item: FetchProfilesResponse) => {
+        if (item.profile) {
+          // 确保 peerID 存在
+          return {
+            ...item.profile,
+            peerID: item.profile.peerID || item.peerID,
+          };
+        }
+        return null;
+      })
+      .filter((p): p is BackendProfile => p !== null);
+  } catch (error) {
+    console.warn('Error fetching profiles:', error);
     return [];
   }
-
-  const data = await response.json();
-
-  // API 返回的是 { id, peerID, profile } 的数组，需要提取 profile 字段
-  if (!Array.isArray(data)) {
-    return [];
-  }
-
-  return data
-    .map((item: FetchProfilesResponse) => {
-      if (item.profile) {
-        // 确保 peerID 存在
-        return {
-          ...item.profile,
-          peerID: item.profile.peerID || item.peerID,
-        };
-      }
-      return null;
-    })
-    .filter((p): p is BackendProfile => p !== null);
 }
 
 /**
