@@ -563,6 +563,11 @@ export const zh: TranslationResource = {
       transactions: '交易记录',
       confirmed: '已确认',
       confirmations: '确认数',
+      // 仲裁员选择
+      searchModerators: '搜索仲裁员...',
+      loadingModerators: '加载仲裁员中...',
+      noModeratorsFound: '未找到匹配的仲裁员',
+      noModeratorsAvailable: '暂无可用的仲裁员',
     },
     // 地址展示
     address: {

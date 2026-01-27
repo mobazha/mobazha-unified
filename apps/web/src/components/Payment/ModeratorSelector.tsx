@@ -8,54 +8,6 @@ import { ModeratorSelectorProps, Moderator } from './types';
 import { ModeratorCard } from './ModeratorCard';
 import { Input } from '@/components/ui/input';
 
-// 默认 mock 仲裁员数据（当没有提供列表且 API 不可用时使用）
-const DEFAULT_MOCK_MODERATORS: Moderator[] = [
-  {
-    id: 'mod1',
-    peerID: 'QmMod1',
-    name: 'TrustGuard',
-    handle: 'trustguard',
-    location: 'United States',
-    verifiedMod: true,
-    fee: {
-      percentage: 1,
-      feeType: 'percentage',
-    },
-    description:
-      'Professional dispute resolution with 5+ years experience. Fast response within 24 hours.',
-    languages: ['en', 'es'],
-  },
-  {
-    id: 'mod2',
-    peerID: 'QmMod2',
-    name: 'SafeTrade',
-    handle: 'safetrade',
-    location: 'Germany',
-    verifiedMod: true,
-    fee: {
-      percentage: 0.5,
-      fixedFee: { amount: '5', currency: 'USD' },
-      feeType: 'percentage_plus_fixed',
-    },
-    description: 'Multilingual moderator. Specializing in crypto and digital goods disputes.',
-    languages: ['en', 'de', 'fr'],
-  },
-  {
-    id: 'mod3',
-    peerID: 'QmMod3',
-    name: 'FairDeal',
-    handle: 'fairdeal',
-    location: 'Singapore',
-    verifiedMod: false,
-    fee: {
-      fixedFee: { amount: '10', currency: 'USD' },
-      feeType: 'fixed',
-    },
-    description: 'Asia-Pacific based moderator with 24/7 availability.',
-    languages: ['en', 'zh', 'ja'],
-  },
-];
-
 export const ModeratorSelector: React.FC<ModeratorSelectorProps> = ({
   selectedModerator,
   onSelect,
@@ -67,8 +19,8 @@ export const ModeratorSelector: React.FC<ModeratorSelectorProps> = ({
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 使用提供的列表或默认 Mock 数据
-  const moderators = moderatorList || DEFAULT_MOCK_MODERATORS;
+  // 使用提供的列表（不再有默认 mock 数据）
+  const moderators = moderatorList || [];
 
   // 搜索过滤
   const filteredModerators = useMemo(() => {
