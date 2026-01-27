@@ -97,6 +97,12 @@ export default function StorePage() {
 
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
+
+  // 当 peerId 变化时重置 activeTab 为默认值
+  // 这样从关注列表点击另一个店铺时，不会停留在关注 tab
+  useEffect(() => {
+    setActiveTab('products');
+  }, [peerId]);
   const [followLoading, setFollowLoading] = useState(false);
   const [isBlockedUser, setIsBlockedUser] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
@@ -948,7 +954,7 @@ export default function StorePage() {
         {/* Tab Content */}
         <div className="py-2 sm:py-4">
           {activeTab === 'products' && (
-            <Container size="xl" className="px-4 sm:px-6 space-y-4">
+            <Container size="xl" className="space-y-4">
               {/* 筛选工具栏 */}
               {!productsLoading && storeListingCount > 0 && (
                 <StoreListingsToolbar
@@ -963,13 +969,13 @@ export default function StorePage() {
 
               {/* Products Grid */}
               {productsLoading ? (
-                <Grid cols={4} colsMobile={2} gap="md">
+                <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <ProductCardSkeleton key={i} />
                   ))}
                 </Grid>
               ) : filteredProducts.length > 0 ? (
-                <Grid cols={4} colsMobile={2} gap="md">
+                <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
                   {filteredProducts.map((product, index) => (
                     <Link
                       key={`${product.slug}-${index}`}
@@ -1047,7 +1053,7 @@ export default function StorePage() {
           )}
 
           {activeTab === 'rwa' && (
-            <Container size="xl" className="px-4 sm:px-6">
+            <Container size="xl">
               <RwaTab
                 peerId={peerId}
                 isOwnStore={isOwnStore}
