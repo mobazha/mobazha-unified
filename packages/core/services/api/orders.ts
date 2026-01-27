@@ -402,14 +402,32 @@ export async function createOrder(
 
   // Real/Auto 模式：调用真实 API，失败直接抛出错误（不回退到 mock）
   const url = `${getGatewayUrl()}/order/purchase`;
-  // 后端 API 期望 quantity 为字符串类型，需要转换
-  const apiData = {
-    ...data,
+
+  // 转换数据格式以匹配后端 API
+  // 1. quantity 需要是字符串类型
+  // 2. address 对象需要转换为扁平字段（address, city, state, shipTo, countryCode, postalCode, addressNotes）
+  const { address, ...restData } = data;
+  const apiData: Record<string, unknown> = {
+    ...restData,
     items: data.items.map(item => ({
       ...item,
       quantity: String(item.quantity),
     })),
   };
+
+  // 如果有地址，转换为扁平字段格式
+  if (address) {
+    apiData.address = address.street; // 后端期望 address 是地址行字符串
+    apiData.city = address.city;
+    apiData.state = address.state;
+    apiData.shipTo = address.name; // 收件人姓名
+    apiData.countryCode = address.country; // 后端使用 countryCode
+    apiData.postalCode = address.postalCode;
+    if (address.addressNotes) {
+      apiData.addressNotes = address.addressNotes;
+    }
+  }
+
   return post<CreateOrderResult>(url, apiData, getAuthHeaders(username, password));
 }
 
