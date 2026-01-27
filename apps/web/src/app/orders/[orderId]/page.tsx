@@ -27,7 +27,6 @@ import {
   useI18n,
   isOrderFulfilled,
   ordersApi,
-  getTokenDecimals,
   formatTokenAmount,
   type OrderAction,
   type UserRole as CoreUserRole,
@@ -195,55 +194,9 @@ interface RealOrderData {
     disputeOpen?: {
       timestamp?: string;
     };
-    disputeResolution?: {
+    disputeClose?: {
       timestamp?: string;
-      resolution?: string;
-    };
-    // 兼容旧格式
-    vendorListings?: Array<{
-      slug?: string;
-      vendorID?: { peerID?: string; handle?: string };
-      metadata?: { contractType?: string; pricingCurrency?: { divisibility?: number } };
-      item?: {
-        title?: string;
-        images?: Array<{ tiny?: string; small?: string; medium?: string }>;
-        price?: number;
-      };
-    }>;
-    buyerOrder?: {
-      timestamp?: string;
-      buyerID?: { peerID?: string; handle?: string };
-      items?: Array<{ quantity?: number; memo?: string }>;
-      shipping?: {
-        name?: string;
-        company?: string;
-        addressLineOne?: string;
-        addressLineTwo?: string;
-        city?: string;
-        state?: string;
-        postalCode?: string;
-        country?: string;
-      };
-      payment?: {
-        moderator?: string;
-        coin?: string;
-        amount?: number;
-        method?: string;
-        address?: string;
-      };
-      alternateContactInfo?: string;
-    };
-    vendorOrderConfirmation?: {
-      timestamp?: string;
-      paymentAddress?: string;
-    };
-    vendorOrderFulfillment?: Array<{
-      timestamp?: string;
-      physicalDelivery?: Array<{ shipper?: string; trackingNumber?: string }>;
-      note?: string;
-    }>;
-    buyerOrderCompletion?: {
-      timestamp?: string;
+      verdict?: string;
     };
   };
 }
@@ -254,8 +207,7 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
   const contract = data.contract;
 
   const orderOpen = contract.orderOpen;
-  const buyerOrder = contract.buyerOrder;
-  const orderTimestamp = orderOpen?.timestamp || buyerOrder?.timestamp;
+  const orderTimestamp = orderOpen?.timestamp;
 
   // 订单创建
   if (orderTimestamp) {
@@ -273,11 +225,7 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
     contract.paymentSent ||
     (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
   ) {
-    const confirmTimestamp =
-      contract.orderConfirmation?.timestamp ||
-      contract.vendorOrderConfirmation?.timestamp ||
-      orderTimestamp ||
-      '';
+    const confirmTimestamp = contract.orderConfirmation?.timestamp || orderTimestamp || '';
     timeline.push({
       status: 'paid',
       timestamp: confirmTimestamp,
@@ -287,7 +235,7 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
   }
 
   // 卖家确认
-  const orderConfirmation = contract.orderConfirmation || contract.vendorOrderConfirmation;
+  const orderConfirmation = contract.orderConfirmation;
   if (orderConfirmation) {
     timeline.push({
       status: 'processing',
@@ -298,7 +246,7 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
   }
 
   // 发货
-  const fulfillments = contract.orderFulfillments || contract.vendorOrderFulfillment;
+  const fulfillments = contract.orderFulfillments;
   if (fulfillments?.length) {
     const fulfillment = fulfillments[0];
     const trackingInfo = fulfillment.physicalDelivery?.[0];
@@ -313,7 +261,7 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
   }
 
   // 完成
-  const orderComplete = contract.orderComplete || contract.buyerOrderCompletion;
+  const orderComplete = contract.orderComplete;
   if (orderComplete) {
     timeline.push({
       status: 'completed',
@@ -333,12 +281,12 @@ function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
     });
   }
 
-  // 争议解决
-  if (contract.disputeResolution) {
+  // 争议关闭
+  if (contract.disputeClose) {
     timeline.push({
       status: 'resolved',
-      timestamp: contract.disputeResolution.timestamp || '',
-      description: `Dispute resolved: ${contract.disputeResolution.resolution || 'N/A'}`,
+      timestamp: contract.disputeClose.timestamp || '',
+      description: `Dispute closed: ${contract.disputeClose.verdict || 'N/A'}`,
       actor: 'moderator',
     });
   }
@@ -359,7 +307,6 @@ function transformCoreOrder(
   const contract = data.contract;
 
   const orderOpen = contract.orderOpen;
-  const buyerOrder = contract.buyerOrder;
 
   type ListingType = NonNullable<
     NonNullable<RealOrderData['contract']['orderOpen']>['listings']
@@ -373,24 +320,13 @@ function transformCoreOrder(
     listingData = firstListing.listing;
     vendorPeerID = firstListing.listing?.vendorID?.peerID || firstListing.vendorID?.peerID || '';
     vendorHandle = firstListing.listing?.vendorID?.handle || '';
-  } else if (contract.vendorListings?.length) {
-    const firstListing = contract.vendorListings[0];
-    listingData = {
-      slug: firstListing.slug,
-      metadata: firstListing.metadata,
-      item: firstListing.item,
-      vendorID: firstListing.vendorID,
-    };
-    vendorPeerID = firstListing.vendorID?.peerID || '';
-    vendorHandle = firstListing.vendorID?.handle || '';
   }
 
-  const buyerPeerID = orderOpen?.buyerID?.peerID || buyerOrder?.buyerID?.peerID || '';
-  const buyerHandle = orderOpen?.buyerID?.handle || buyerOrder?.buyerID?.handle || '';
+  const buyerPeerID = orderOpen?.buyerID?.peerID || '';
+  const buyerHandle = orderOpen?.buyerID?.handle || '';
 
   // 支持 PaymentSent (统一消息)
   const paymentSent = contract.paymentSent;
-  const buyerPayment = buyerOrder?.payment;
   // 判断是否为 RWA 托管模式：method === 3 (RWA_ESCROW)
   const isRwaEscrow =
     paymentSent?.method === 3 ||
@@ -398,33 +334,27 @@ function transformCoreOrder(
     paymentSent?.method === 'RWA_LOCKED';
   // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
-  const coin = paymentSent?.coin || buyerPayment?.coin || orderOpen?.pricingCoin || 'ETH';
+  const coin = paymentSent?.coin || orderOpen?.pricingCoin || 'ETH';
   // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
   const amount =
     paymentSent?.amount !== undefined
       ? paymentSent.amount
-      : buyerPayment?.amount !== undefined
-        ? buyerPayment.amount
-        : orderOpen?.amount !== undefined
-          ? orderOpen.amount
-          : (listingData?.item?.price ?? 0);
-  const paymentMethod = paymentSent?.method || buyerPayment?.method || '';
-  const moderatorId = paymentSent?.moderator || buyerPayment?.moderator || '';
+      : orderOpen?.amount !== undefined
+        ? orderOpen.amount
+        : (listingData?.item?.price ?? 0);
+  const paymentMethod = paymentSent?.method || '';
+  const moderatorId = paymentSent?.moderator || '';
 
   const divisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
-  const timestamp = orderOpen?.timestamp || buyerOrder?.timestamp || '';
-  const fulfillments = contract.orderFulfillments || contract.vendorOrderFulfillment;
+  const timestamp = orderOpen?.timestamp || '';
+  const fulfillments = contract.orderFulfillments;
   const trackingInfo = fulfillments?.[0]?.physicalDelivery?.[0];
-  const shipping = orderOpen?.shipping || buyerOrder?.shipping;
+  const shipping = orderOpen?.shipping;
 
-  const paymentAddress =
-    paymentSent?.address ||
-    buyerPayment?.address ||
-    contract.orderConfirmation?.paymentAddress ||
-    contract.vendorOrderConfirmation?.paymentAddress;
+  const paymentAddress = paymentSent?.address || contract.orderConfirmation?.paymentAddress;
 
-  const notes = orderOpen?.alternateContactInfo || buyerOrder?.alternateContactInfo;
-  const orderOpenItems = orderOpen?.items || buyerOrder?.items || [];
+  const notes = orderOpen?.alternateContactInfo;
+  const orderOpenItems = orderOpen?.items || [];
 
   let userRole: DisplayOrder['userRole'] = 'buyer';
   if (currentUserPeerID) {
@@ -994,10 +924,10 @@ export default function OrderDetailPage() {
         timestamp={displayOrder.createdAt}
         isModerated={!!displayOrder.moderator}
         isFulfilled={coreOrder ? isOrderFulfilled(coreOrder) : false}
-        paymentMethod={coreOrder?.contract?.buyerOrder?.payment?.method}
+        paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
         totalAmount={displayOrder.total}
         currency={displayOrder.currency}
-        paymentCoin={coreOrder?.contract?.buyerOrder?.payment?.coin}
+        paymentCoin={coreOrder?.contract?.paymentSent?.coin}
         onAction={handleOrderAction}
       />
 

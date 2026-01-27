@@ -67,17 +67,229 @@ export interface Order {
 }
 
 /**
- * 订单合约
+ * 订单合约 - 对应后端 Contract protobuf
  */
 export interface OrderContract {
-  vendorListings: ContractListing[];
-  buyerOrder: BuyerOrder;
-  vendorOrderConfirmation?: VendorOrderConfirmation;
-  vendorOrderFulfillment?: VendorOrderFulfillment[];
-  buyerOrderCompletion?: BuyerOrderCompletion;
-  disputeResolution?: DisputeResolution;
-  signatures?: ContractSignature[];
+  // 订单基本信息
+  orderOpen?: OrderOpen;
+  orderReject?: OrderReject;
+  orderCancel?: OrderCancel;
+  orderConfirmation?: OrderConfirmation;
+  orderComplete?: OrderComplete;
+  orderFulfillments?: OrderFulfillment[];
+
+  // 支付相关
+  paymentSent?: PaymentSent;
+  paymentFinalized?: PaymentFinalized;
+  paymentLocked?: PaymentLocked;
+
+  // 退款
+  refunds?: Refund[];
+
+  // 争议相关
+  disputeOpen?: DisputeOpen;
+  disputeClose?: DisputeClose;
+  disputeUpdate?: DisputeUpdate;
+  disputeAccept?: DisputeAccept;
+
+  // 交易记录
+  transactions?: ContractTransaction[];
+
+  // 错误信息
   errors?: string[];
+}
+
+/**
+ * 订单拒绝
+ */
+export interface OrderReject {
+  type?: 'USER_REJECT' | 'VALIDATION_ERROR';
+  reason?: string;
+  timestamp?: string;
+  transactionID?: string;
+}
+
+/**
+ * 订单取消
+ */
+export interface OrderCancel {
+  transactionID?: string;
+  timestamp?: string;
+}
+
+/**
+ * 订单确认 - 对应后端 OrderConfirmation
+ */
+export interface OrderConfirmation {
+  transactionID?: string;
+  timestamp?: string;
+  payoutAddress?: string;
+  paymentAddress?: string; // 兼容字段
+}
+
+/**
+ * 订单完成 - 对应后端 OrderComplete
+ */
+export interface OrderComplete {
+  timestamp?: string;
+  ratings?: OrderRating[];
+  payoutSigs?: { inputIndex: number; signature: string }[];
+}
+
+/**
+ * 订单履行 - 对应后端 OrderFulfillment
+ */
+export interface OrderFulfillment {
+  timestamp?: string;
+  fulfillments?: FulfilledItem[];
+  releaseInfo?: EscrowRelease; // 仲裁订单的托管释放
+}
+
+/**
+ * 履行项 - 对应后端 FulfilledItem
+ */
+export interface FulfilledItem {
+  itemIndex?: number;
+  note?: string;
+  physicalDelivery?: PhysicalDelivery;
+  digitalDelivery?: DigitalDelivery;
+  cryptocurrencyDelivery?: CryptocurrencyDelivery;
+}
+
+/**
+ * 加密货币发货 - 用于 RWA Token 等
+ */
+export interface CryptocurrencyDelivery {
+  transactionID?: string;
+}
+
+/**
+ * 支付发送 - 对应后端 PaymentSent
+ */
+export interface PaymentSent {
+  transactionID?: string;
+  chaincode?: string;
+  method?: PaymentMethod | number;
+  contractAddress?: string;
+  payerAddress?: string;
+  moderator?: string;
+  moderatorAddress?: string;
+  amount?: number | string;
+  coin?: string;
+  toAddress?: string;
+  address?: string; // 兼容字段
+  script?: string;
+  escrowReleaseFee?: string;
+  escrowTimeoutHours?: number;
+  platformAmount?: string;
+  platformAddr?: string;
+  refundAddress?: string;
+  paymentMethod?: {
+    type?: string;
+    brand?: string;
+    last4?: string;
+  };
+  timestamp?: string;
+  paymentTokenAddress?: string;
+  buyerReceiveAddress?: string;
+}
+
+/**
+ * 支付方法
+ */
+export type PaymentMethod = 'DIRECT' | 'CANCELABLE' | 'MODERATED' | 'RWA_ESCROW' | 'RWA_INSTANT';
+
+/**
+ * 支付确认
+ */
+export interface PaymentFinalized {
+  timestamp?: string;
+}
+
+/**
+ * RWA 资金锁定
+ */
+export interface PaymentLocked {
+  transactionHash?: string;
+  amount?: string;
+  coin?: string;
+  paymentTokenAddress?: string;
+  buyerReceiveAddress?: string;
+  universalSwapAddress?: string;
+  timestamp?: string;
+}
+
+/**
+ * 退款
+ */
+export interface Refund {
+  transactionID?: string;
+  releaseInfo?: EscrowRelease;
+  amount?: string;
+  timestamp?: string;
+}
+
+/**
+ * 托管释放
+ */
+export interface EscrowRelease {
+  escrowSignatures?: { inputIndex: number; signature: string }[];
+  outpoints?: { fromID: string; value: string }[];
+  toAddress?: string;
+  toAmount?: string;
+}
+
+/**
+ * 争议开启
+ */
+export interface DisputeOpen {
+  timestamp?: string;
+  claim?: string;
+}
+
+/**
+ * 争议关闭
+ */
+export interface DisputeClose {
+  verdict?: string;
+  releaseInfo?: {
+    buyerAddress?: string;
+    buyerAmount?: string;
+    vendorAddress?: string;
+    vendorAmount?: string;
+    moderatorAddress?: string;
+    moderatorAmount?: string;
+    transactionFee?: string;
+  };
+  timestamp?: string;
+}
+
+/**
+ * 争议更新
+ */
+export interface DisputeUpdate {
+  timestamp?: string;
+  payoutAddress?: string;
+}
+
+/**
+ * 争议接受
+ */
+export interface DisputeAccept {
+  timestamp?: string;
+  closedBy?: string;
+  txid?: string;
+}
+
+/**
+ * 合约交易记录
+ */
+export interface ContractTransaction {
+  txid?: string;
+  fromID?: string;
+  value?: string;
+  height?: number;
+  timestamp?: string;
 }
 
 /**
@@ -101,13 +313,14 @@ export interface ContractListing {
 }
 
 /**
- * 买家订单
+ * 订单开放数据 - 对应后端 OrderOpen protobuf
+ * 包含订单的基本信息：买家、商品、配送、支付币种等
  */
-export interface BuyerOrder {
-  refundAddress: string;
-  refundFee: number;
+export interface OrderOpen {
+  // 配送相关
   shipping?: Address;
-  buyerID: {
+  // 买家信息
+  buyerID?: {
     peerID: string;
     handle?: string;
     pubkeys?: {
@@ -115,12 +328,23 @@ export interface BuyerOrder {
       bitcoin: string;
     };
   };
-  timestamp: string;
-  items: OrderItem[];
-  payment: OrderPayment;
+  // 时间戳
+  timestamp?: string;
+  // 订单商品项
+  items?: OrderItem[];
+  // 评分密钥
   ratingKeys?: string[];
+  // 备用联系信息
   alternateContactInfo?: string;
-  version: number;
+  // 定价币种
+  pricingCoin?: string;
+  // 金额
+  amount?: number;
+  // 商品列表（包含签名）
+  listings?: Array<{
+    vendorID?: { peerID?: string; handle?: string };
+    listing?: ContractListing;
+  }>;
 }
 
 /**
@@ -154,25 +378,6 @@ export interface OrderShippingOption {
 }
 
 /**
- * 订单支付信息
- */
-export interface OrderPayment {
-  method: PaymentMethod;
-  moderator?: string;
-  amount: number;
-  chaincode?: string;
-  address?: string;
-  redeemScript?: string;
-  moderatorKey?: string;
-  coin: CryptoType;
-}
-
-/**
- * 支付方式
- */
-export type PaymentMethod = 'ADDRESS_REQUEST' | 'DIRECT' | 'MODERATED';
-
-/**
  * 支付交易
  */
 export interface PaymentTransaction {
@@ -184,38 +389,17 @@ export interface PaymentTransaction {
 }
 
 /**
- * 卖家订单确认
- */
-export interface VendorOrderConfirmation {
-  timestamp: string;
-  paymentAddress: string;
-  requestedAmount: number;
-  ratingSignatures?: RatingSignature[];
-}
-
-/**
  * 评分签名
  */
 export interface RatingSignature {
-  metadata: {
+  slug?: string;
+  ratingKey?: string;
+  vendorSignature?: string;
+  metadata?: {
     listingSlug: string;
     ratingKey: string;
   };
-  signature: string;
-}
-
-/**
- * 卖家发货
- */
-export interface VendorOrderFulfillment {
-  orderId: string;
-  slug: string;
-  timestamp: string;
-  physicalDelivery?: PhysicalDelivery[];
-  digitalDelivery?: DigitalDelivery;
-  payout?: FulfillmentPayout;
-  ratingSignatures?: RatingSignature[];
-  note?: string;
+  signature?: string;
 }
 
 /**
@@ -235,25 +419,6 @@ export interface DigitalDelivery {
 }
 
 /**
- * 发货支付
- */
-export interface FulfillmentPayout {
-  sigs: { inputIndex: number; signature: string }[];
-  payoutAddress: string;
-  payoutFeePerByte: number;
-}
-
-/**
- * 买家完成订单
- */
-export interface BuyerOrderCompletion {
-  orderId: string;
-  timestamp: string;
-  ratings?: OrderRating[];
-  payoutSigs?: { inputIndex: number; signature: string }[];
-}
-
-/**
  * 订单评分
  */
 export interface OrderRating {
@@ -265,30 +430,6 @@ export interface OrderRating {
   customerService?: number;
   review?: string;
   anonymous?: boolean;
-}
-
-/**
- * 争议解决
- */
-export interface DisputeResolution {
-  timestamp: string;
-  orderId: string;
-  proposedBy: string;
-  resolution: string;
-  payout: {
-    buyerOutput?: { address: string; amount: number };
-    vendorOutput?: { address: string; amount: number };
-    moderatorOutput?: { address: string; amount: number };
-  };
-  moderatorRatingSigs?: RatingSignature[];
-}
-
-/**
- * 合约签名
- */
-export interface ContractSignature {
-  section: string;
-  signatureBytes: string;
 }
 
 /**

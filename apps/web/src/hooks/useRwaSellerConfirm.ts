@@ -116,10 +116,8 @@ export function useRwaSellerConfirm({
   const getTokenInfo = useCallback(() => {
     if (!order) return null;
 
-    const listing =
-      (order.contract as any)?.vendorListings?.[0] ||
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (order.contract as any)?.orderOpen?.listings?.[0]?.listing;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listing = order.contract?.orderOpen?.listings?.[0]?.listing as any;
 
     if (!listing) return null;
 

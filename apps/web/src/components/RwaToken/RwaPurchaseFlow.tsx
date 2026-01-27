@@ -132,7 +132,7 @@ export function RwaPurchaseFlow({
   const resolvedAsset = useMemo(() => {
     if (propAsset) return propAsset;
     // 从订单中解析
-    const listing = order.contract?.vendorListings?.[0];
+    const listing = order.contract?.orderOpen?.listings?.[0]?.listing;
     if (listing) {
       return resolveRwaAsset({
         item: listing.item,
@@ -144,9 +144,10 @@ export function RwaPurchaseFlow({
 
   // 获取订单金额
   const orderAmount = useMemo(() => {
-    const listing = order.contract?.vendorListings?.[0];
-    const item = order.contract?.buyerOrder?.items?.[0];
-    const price = Number(listing?.item?.price) || 0;
+    const orderOpen = order.contract?.orderOpen;
+    const listing = orderOpen?.listings?.[0]?.listing;
+    const item = orderOpen?.items?.[0];
+    const price = Number(listing?.item?.price) || Number(orderOpen?.amount) || 0;
     const quantity = Number(item?.quantity) || 1;
     return price * quantity;
   }, [order]);
