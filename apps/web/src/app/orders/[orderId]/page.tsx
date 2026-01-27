@@ -19,6 +19,8 @@ import {
   ordersApi,
   formatTokenAmount,
   onWebSocketMessage,
+  useWallet,
+  getTransactionService,
   type OrderAction,
   type UserRole as CoreUserRole,
   type WebSocketMessage,
@@ -473,6 +475,9 @@ export default function OrderDetailPage() {
   const { toast } = useToast();
   const orderId = params.orderId as string;
 
+  // 钱包连接 hook
+  const { isConnected: walletConnected, walletInfo, getSigner, openModal } = useWallet();
+
   // 获取当前用户信息
   const currentUser = useUserStore(state => state.profile);
   const currentUserPeerID = currentUser?.peerID || null;
@@ -570,6 +575,115 @@ export default function OrderDetailPage() {
           successTitle = t('order.actions.acceptPayoutSuccess');
           successDesc = t('order.actions.acceptPayoutSuccessDesc');
           break;
+        case 'complete': {
+          // 完成订单（买家确认收货）
+          // 参考桌面端和移动端实现，需要先检查是否需要链上交易
+
+          // 获取订单中的商品列表
+          const orderData = coreOrder as RealOrderData | null;
+          const listings = orderData?.contract?.orderOpen?.listings || [];
+
+          // 为每个商品创建默认评分（5星）
+          // 后续可以扩展为让用户填写评分表单
+          const ratings = listings.map(listingItem => ({
+            slug: listingItem.listing?.slug || '',
+            overall: 5,
+            quality: 5,
+            description: 5,
+            deliverySpeed: 5,
+            customerService: 5,
+            review: '',
+          }));
+
+          let txID: string | undefined;
+
+          // 获取当前用户钱包地址
+          // 注意：必须先连接钱包获取地址，否则 instructions API 会返回包含零地址的数据
+          let initiatorAddress = walletInfo?.address || '';
+
+          // 如果钱包未连接，先提示用户连接钱包
+          if (!walletConnected || !walletInfo || !initiatorAddress) {
+            toast({
+              title: t('order.actions.walletRequired'),
+              description: t('order.actions.pleaseConnectWallet'),
+            });
+            // 打开钱包连接弹窗
+            await openModal({ view: 'Connect' });
+            // 检查连接后的钱包信息（需要用户重新点击确认收货按钮）
+            throw new Error(t('order.actions.walletConnectionCancelled'));
+          }
+
+          // 确保有钱包地址（此时 walletInfo 一定不为 null）
+          initiatorAddress = walletInfo.address;
+
+          // 1. 先调用 instructions API 检查是否需要链上交易
+          const instructionsResponse = await ordersApi.getCompleteInstructions({
+            orderID: orderId,
+            initiatorAddress,
+          });
+
+          if (instructionsResponse.hasInstructions && instructionsResponse.instructions) {
+            // 需要链上交易
+            // 获取 signer 并初始化交易服务
+            const signer = await getSigner();
+            if (!signer) {
+              throw new Error(t('order.actions.walletSignerError'));
+            }
+
+            const transactionService = getTransactionService();
+            const initResult = await transactionService.initializeWithSigner(signer);
+            if (!initResult) {
+              throw new Error(t('order.actions.transactionServiceError'));
+            }
+
+            // 执行链上交易
+            // instructions 格式: { to: string, data: string, value?: string }
+            const instructions = instructionsResponse.instructions as {
+              to: string;
+              data: string;
+              value?: string;
+            };
+
+            // 验证 instructions 数据
+            if (!instructions.to || !instructions.data) {
+              console.error('Invalid instructions data:', instructions);
+              throw new Error(t('order.actions.invalidInstructions'));
+            }
+
+            toast({
+              title: t('order.actions.signingTransaction'),
+              description: t('order.actions.pleaseConfirmInWallet'),
+            });
+
+            const txResult = await transactionService.executeTransaction({
+              to: instructions.to,
+              data: instructions.data,
+              value: instructions.value || '0',
+            });
+
+            if (!txResult.success || !txResult.transactionHash) {
+              // 检查是否是零地址错误
+              const errorMsg = txResult.error || '';
+              if (errorMsg.includes('zero address')) {
+                throw new Error(t('order.actions.zeroAddressError'));
+              }
+              throw new Error(errorMsg || t('order.actions.transactionFailed'));
+            }
+
+            txID = txResult.transactionHash;
+          }
+
+          // 2. 调用 completeOrder API
+          result = await ordersApi.completeOrder({
+            orderID: orderId,
+            txID,
+            ratings,
+            anonymous: false,
+          });
+          successTitle = t('order.actions.completeSuccess');
+          successDesc = t('order.actions.completeSuccessDesc');
+          break;
+        }
         default:
           return;
       }
@@ -592,7 +706,18 @@ export default function OrderDetailPage() {
     } finally {
       setIsActionLoading(false);
     }
-  }, [confirmDialog, orderId, refetch, t, toast]);
+  }, [
+    confirmDialog,
+    coreOrder,
+    getSigner,
+    openModal,
+    orderId,
+    refetch,
+    t,
+    toast,
+    walletConnected,
+    walletInfo,
+  ]);
 
   // 统一处理订单操作（用于 OrderFooter）
   const handleOrderAction = useCallback(
@@ -608,7 +733,7 @@ export default function OrderDetailPage() {
           // 将在 OrderDetailContent 中处理
           break;
         case 'Complete':
-          // 将在 OrderDetailContent 中处理
+          setConfirmDialog('complete');
           break;
         case 'WriteReview':
           toast({

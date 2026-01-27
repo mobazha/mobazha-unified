@@ -661,6 +661,55 @@ export async function completeOrder(
 }
 
 /**
+ * 完成订单的链上交易指令响应类型
+ */
+export interface CompleteInstructionsResponse {
+  /** 支付链类型（如 ETHEREUM, SOLANA 等） */
+  paymentChain?: string;
+  /** 是否需要链上交易 */
+  hasInstructions: boolean;
+  /** 链上交易指令（EVM 或 Solana 格式） */
+  instructions?: unknown;
+}
+
+/**
+ * 获取完成订单的链上交易指令
+ * 用于 EVM/Solana 等需要钱包签名的支付方式
+ *
+ * @param params.orderID - 订单 ID
+ * @param params.initiatorAddress - 发起者钱包地址
+ * @returns 指令响应，包含是否需要链上交易以及交易指令
+ */
+export async function getCompleteInstructions(
+  params: {
+    orderID: string;
+    initiatorAddress: string;
+  },
+  username?: string,
+  password?: string
+): Promise<CompleteInstructionsResponse> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/instructions/order/complete`;
+    const response = await post<CompleteInstructionsResponse>(
+      url,
+      params,
+      getAuthHeaders(username, password)
+    );
+    return response;
+  };
+
+  const mockFn = async (): Promise<CompleteInstructionsResponse> => {
+    await mockDelay();
+    // Mock: 默认不需要链上交易
+    return {
+      hasInstructions: false,
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/instructions/order/complete');
+}
+
+/**
  * 取消订单
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
@@ -1132,6 +1181,7 @@ export const ordersApi = {
   confirmOrder,
   fulfillOrder,
   completeOrder,
+  getCompleteInstructions,
   cancelOrder,
   refundOrder,
 

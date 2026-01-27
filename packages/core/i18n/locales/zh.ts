@@ -477,6 +477,18 @@ export const zh: TranslationResource = {
       acceptPayoutSuccessDesc: '您已接受争议裁决结果。',
       fulfillSuccess: '已发货',
       fulfillSuccessDesc: '订单已标记为已发货，买家将收到通知。',
+      completeSuccess: '订单已完成',
+      completeSuccessDesc: '订单已完成，资金已释放给卖家。',
+      walletRequired: '需要连接钱包',
+      pleaseConnectWallet: '请连接钱包以完成此订单。',
+      walletConnectionCancelled: '钱包连接已取消。',
+      walletSignerError: '获取钱包签名器失败，请重新连接钱包。',
+      transactionServiceError: '初始化交易服务失败。',
+      signingTransaction: '正在签名交易',
+      pleaseConfirmInWallet: '请在钱包中确认交易。',
+      transactionFailed: '交易失败，请重试。',
+      invalidInstructions: '从服务器收到无效的交易指令，请联系客服。',
+      zeroAddressError: '此订单的支付配置不完整（零地址）。卖家可能需要更新支付设置并重新发货。',
       reviewComingSoon: '评价功能即将上线。',
       error: '错误',
     },
@@ -510,6 +522,10 @@ export const zh: TranslationResource = {
         title: '发货',
         description: '请输入此订单的物流信息，确认后买家将收到通知。',
       },
+      completeOrder: {
+        title: '确认收货',
+        description: '确定要确认收货吗？确认后资金将释放给卖家，订单将标记为完成。',
+      },
     },
     // 发货模态框
     fulfill: {
@@ -536,6 +552,12 @@ export const zh: TranslationResource = {
       note: '备注',
       notePlaceholder: '给买家留言...',
       confirm: '确认发货',
+      // 收款账户
+      receivingAccount: '收款账户',
+      selectReceivingAccount: '选择收款账户',
+      receivingAccountHint: '选择您希望接收付款的地址',
+      receivingAccountRequired: '请选择收款账户',
+      noReceivingAccount: '未配置收款账户，请在设置中添加收款账户以接收付款。',
     },
     // 申诉模态框
     dispute: {

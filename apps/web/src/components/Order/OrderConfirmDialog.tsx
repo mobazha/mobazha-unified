@@ -19,7 +19,8 @@ export type OrderConfirmType =
   | 'cancel'
   | 'refund'
   | 'claim'
-  | 'acceptPayout';
+  | 'acceptPayout'
+  | 'complete';
 
 export interface OrderConfirmDialogProps {
   open: boolean;
@@ -83,6 +84,11 @@ export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
       titleKey: 'order.dialogs.acceptPayout.title',
       descriptionKey: 'order.dialogs.acceptPayout.description',
       confirmKey: 'order.actions.acceptPayout',
+    },
+    complete: {
+      titleKey: 'order.dialogs.completeOrder.title',
+      descriptionKey: 'order.dialogs.completeOrder.description',
+      confirmKey: 'order.actions.complete',
     },
   };
 

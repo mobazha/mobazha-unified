@@ -484,6 +484,20 @@ export const en: TranslationResource = {
       acceptPayoutSuccessDesc: 'You have accepted the dispute resolution payout.',
       fulfillSuccess: 'Order Shipped',
       fulfillSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
+      completeSuccess: 'Order Completed',
+      completeSuccessDesc: 'The order has been completed. Funds have been released to the seller.',
+      walletRequired: 'Wallet Required',
+      pleaseConnectWallet: 'Please connect your wallet to complete this order.',
+      walletConnectionCancelled: 'Wallet connection was cancelled.',
+      walletSignerError: 'Failed to get wallet signer. Please reconnect your wallet.',
+      transactionServiceError: 'Failed to initialize transaction service.',
+      signingTransaction: 'Signing Transaction',
+      pleaseConfirmInWallet: 'Please confirm the transaction in your wallet.',
+      transactionFailed: 'Transaction failed. Please try again.',
+      invalidInstructions:
+        'Invalid transaction instructions received from server. Please contact support.',
+      zeroAddressError:
+        'This order has incomplete payment configuration (zero address). The vendor may need to update their payment settings and re-ship the order.',
       reviewComingSoon: 'Review feature is coming soon.',
       error: 'Error',
     },
@@ -523,6 +537,11 @@ export const en: TranslationResource = {
         description:
           'Enter the shipping information for this order. The buyer will be notified once you confirm.',
       },
+      completeOrder: {
+        title: 'Confirm Receipt',
+        description:
+          'Are you sure you want to confirm receipt of this order? This will release the funds to the seller and mark the order as complete.',
+      },
     },
     // Fulfill modal
     fulfill: {
@@ -549,6 +568,13 @@ export const en: TranslationResource = {
       note: 'Note',
       notePlaceholder: 'Add a note for the buyer...',
       confirm: 'Confirm Fulfillment',
+      // Receiving account
+      receivingAccount: 'Receiving Account',
+      selectReceivingAccount: 'Select receiving account',
+      receivingAccountHint: 'Select the address where you want to receive payment',
+      receivingAccountRequired: 'Please select a receiving account',
+      noReceivingAccount:
+        'No receiving accounts configured. Please add one in Settings to receive payments.',
     },
     // Dispute modal
     dispute: {

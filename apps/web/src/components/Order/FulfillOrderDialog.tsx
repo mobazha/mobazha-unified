@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,13 +11,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n, ordersApi } from '@mobazha/core';
+import { useI18n, ordersApi, walletApi } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
+import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 
 export interface FulfillOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orderId: string;
+  paymentCoin?: string; // 订单支付币种，用于筛选收款账户
   onSuccess?: () => void;
 }
 
@@ -29,6 +31,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   open,
   onOpenChange,
   orderId,
+  paymentCoin,
   onSuccess,
 }) => {
   const { t } = useI18n();
@@ -40,11 +43,57 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     note: '',
   });
 
+  // 收款账户相关状态
+  const [receivingAccounts, setReceivingAccounts] = useState<ReceivingAccount[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | undefined>(undefined);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+
+  // 加载收款账户列表
+  useEffect(() => {
+    if (open) {
+      loadReceivingAccounts();
+    }
+  }, [open]);
+
+  const loadReceivingAccounts = async () => {
+    setIsLoadingAccounts(true);
+    try {
+      const accounts = await walletApi.getReceivingAccounts();
+      // 只显示激活的账户
+      const activeAccounts = accounts.filter(acc => acc.isActive);
+      setReceivingAccounts(activeAccounts);
+      // 如果有账户，默认选择第一个
+      if (activeAccounts.length > 0) {
+        setSelectedAccountId(activeAccounts[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load receiving accounts:', error);
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  };
+
+  // 格式化地址显示
+  const formatAddress = (address: string) => {
+    if (address.length <= 16) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
+
   const handleSubmit = useCallback(async () => {
     if (!trackingInfo.trackingNumber.trim()) {
       toast({
         title: t('order.actions.error'),
         description: t('order.fulfill.trackingRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // 检查是否选择了收款账户
+    if (receivingAccounts.length > 0 && !selectedAccountId) {
+      toast({
+        title: t('order.actions.error'),
+        description: t('order.fulfill.receivingAccountRequired'),
         variant: 'destructive',
       });
       return;
@@ -59,6 +108,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
           trackingNumber: trackingInfo.trackingNumber,
         },
         note: trackingInfo.note || '',
+        receivingAccountID: selectedAccountId,
       });
 
       if (result.success) {
@@ -84,13 +134,23 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [orderId, trackingInfo, onOpenChange, onSuccess, t, toast]);
+  }, [
+    orderId,
+    trackingInfo,
+    selectedAccountId,
+    receivingAccounts.length,
+    onOpenChange,
+    onSuccess,
+    t,
+    toast,
+  ]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
       if (!newOpen) {
         // 关闭时重置表单
         setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
+        setSelectedAccountId(undefined);
       }
       onOpenChange(newOpen);
     },
@@ -108,6 +168,42 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         </AlertDialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* 收款账户选择器 */}
+          {receivingAccounts.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                {t('order.fulfill.receivingAccount')} *
+              </label>
+              <select
+                value={selectedAccountId || ''}
+                onChange={e =>
+                  setSelectedAccountId(e.target.value ? Number(e.target.value) : undefined)
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                disabled={isLoading || isLoadingAccounts}
+              >
+                <option value="">{t('order.fulfill.selectReceivingAccount')}</option>
+                {receivingAccounts.map(account => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} ({account.chainType}) - {formatAddress(account.address)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('order.fulfill.receivingAccountHint')}
+              </p>
+            </div>
+          )}
+
+          {/* 如果没有收款账户，显示提示 */}
+          {!isLoadingAccounts && receivingAccounts.length === 0 && (
+            <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                {t('order.fulfill.noReceivingAccount')}
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
               {t('order.fulfill.carrier')}
