@@ -413,12 +413,12 @@ export function useOrderActions() {
   /**
    * 确认订单（卖家）
    */
-  const confirmOrder = useCallback(async (orderId: string, reject = false, note?: string) => {
+  const confirmOrder = useCallback(async (orderID: string, reject = false) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await ordersApi.confirmOrder({ orderId, reject, note });
+      const result = await ordersApi.confirmOrder({ orderID, reject });
       if (!result.success) {
         throw new Error(result.error || '操作失败');
       }
@@ -436,7 +436,7 @@ export function useOrderActions() {
    */
   const fulfillOrder = useCallback(
     async (params: {
-      orderId: string;
+      orderID: string;
       physicalDelivery?: { shipper: string; trackingNumber: string }[];
       digitalDelivery?: { url?: string; password?: string };
       note?: string;
@@ -465,7 +465,8 @@ export function useOrderActions() {
    */
   const completeOrder = useCallback(
     async (params: {
-      orderId: string;
+      orderID: string;
+      txID?: string;
       ratings?: Array<{
         slug: string;
         overall: number;
@@ -474,8 +475,8 @@ export function useOrderActions() {
         deliverySpeed?: number;
         customerService?: number;
         review?: string;
-        anonymous?: boolean;
       }>;
+      anonymous?: boolean;
     }) => {
       setIsLoading(true);
       setError(null);
@@ -499,12 +500,12 @@ export function useOrderActions() {
   /**
    * 取消订单
    */
-  const cancelOrder = useCallback(async (orderId: string, transactionId?: string) => {
+  const cancelOrder = useCallback(async (orderID: string, transactionID?: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await ordersApi.cancelOrder(orderId, transactionId);
+      const result = await ordersApi.cancelOrder({ orderID, transactionID });
       if (!result.success) {
         throw new Error(result.error || '操作失败');
       }
@@ -520,12 +521,12 @@ export function useOrderActions() {
   /**
    * 退款订单
    */
-  const refundOrder = useCallback(async (orderId: string, transactionId?: string) => {
+  const refundOrder = useCallback(async (orderID: string, transactionID?: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await ordersApi.refundOrder(orderId, transactionId);
+      const result = await ordersApi.refundOrder({ orderID, transactionID });
       if (!result.success) {
         throw new Error(result.error || '操作失败');
       }

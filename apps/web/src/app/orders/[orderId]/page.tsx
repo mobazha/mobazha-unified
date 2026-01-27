@@ -514,7 +514,7 @@ export default function OrderDetailPage() {
     setIsActionLoading(true);
     try {
       const result = await ordersApi.confirmOrder({
-        orderId: orderId,
+        orderID: orderId,
         reject: false,
       });
       if (result.success) {
@@ -543,7 +543,7 @@ export default function OrderDetailPage() {
     setIsActionLoading(true);
     try {
       const result = await ordersApi.confirmOrder({
-        orderId: orderId,
+        orderID: orderId,
         reject: true,
       });
       if (result.success) {
@@ -571,7 +571,7 @@ export default function OrderDetailPage() {
     setShowCancelDialog(false);
     setIsActionLoading(true);
     try {
-      const result = await ordersApi.cancelOrder(orderId);
+      const result = await ordersApi.cancelOrder({ orderID: orderId });
       if (result.success) {
         toast({
           title: t('order.actions.cancelSuccess'),
@@ -597,7 +597,7 @@ export default function OrderDetailPage() {
     setShowRefundDialog(false);
     setIsActionLoading(true);
     try {
-      const result = await ordersApi.refundOrder(orderId);
+      const result = await ordersApi.refundOrder({ orderID: orderId });
       if (result.success) {
         toast({
           title: t('order.actions.refundSuccess'),

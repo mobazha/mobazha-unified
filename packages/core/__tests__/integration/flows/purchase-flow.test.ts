@@ -169,7 +169,7 @@ describe('Purchase Flow E2E Tests', () => {
       }
 
       try {
-        const result = await ordersApi.confirmOrder({ orderId });
+        const result = await ordersApi.confirmOrder({ orderID: orderId });
         expect(result.success).toBe(true);
         console.log(`✅ Order confirmed: ${orderId}`);
       } catch (error) {
@@ -185,7 +185,7 @@ describe('Purchase Flow E2E Tests', () => {
 
       try {
         const result = await ordersApi.fulfillOrder({
-          orderId,
+          orderID: orderId,
           physicalDelivery: [
             {
               shipper: 'TestShipper',
