@@ -206,7 +206,7 @@ export const orderDataService = {
    */
   async fulfillOrder(params: {
     orderID: string;
-    physicalDelivery?: { shipper: string; trackingNumber: string }[];
+    physicalDelivery?: { shipper: string; trackingNumber: string };
     digitalDelivery?: { url?: string; password?: string };
     note?: string;
   }) {
@@ -287,12 +287,23 @@ export const orderDataService = {
 
   /**
    * 获取支付指令
+   * @param params.orderId 订单 ID
+   * @param params.coin 支付币种
+   * @param params.amount 支付金额（最小单位，可选）
+   * @param params.payerAddress 付款人地址（可选）
+   * @param params.moderator 仲裁人 peerID（可选）
    */
-  async getPaymentInstructions(orderId: string, coin: string) {
+  async getPaymentInstructions(params: {
+    orderId: string;
+    coin: string;
+    amount?: number;
+    payerAddress?: string;
+    moderator?: string;
+  }) {
     if (isMockMode()) {
-      return mockServices.orders.getPaymentInstructions(orderId, coin);
+      return mockServices.orders.getPaymentInstructions(params.orderId, params.coin);
     }
-    return await ordersApi.getPaymentInstructions({ orderId, coin });
+    return await ordersApi.getPaymentInstructions(params);
   },
 };
 

@@ -170,13 +170,16 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       );
     }
 
+    // 危险操作按钮使用主题感知的 destructive-foreground 颜色
+    const isDanger = config.variant === 'danger';
+
     return (
       <Button
         key={action}
         variant={variantMap[config.variant] || 'outline'}
         size="sm"
         onClick={() => onAction(action)}
-        className="whitespace-nowrap px-4"
+        className={`whitespace-nowrap px-4 ${isDanger ? 'text-destructive-foreground' : ''}`}
       >
         {getActionLabel(action)}
       </Button>

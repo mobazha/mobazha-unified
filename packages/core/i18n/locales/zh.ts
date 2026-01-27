@@ -325,6 +325,28 @@ export const zh: TranslationResource = {
     cancelled: '已取消',
     refunded: '已退款',
     disputed: '申诉中',
+    // 进度条阶段
+    stages: {
+      paid: '已付款',
+      accepted: '已接受',
+      fulfilled: '已发货',
+      complete: '完成',
+      disputed: '申诉中',
+      decided: '已裁决',
+      resolved: '已解决',
+      declined: '已拒绝',
+    },
+    // 订单详情标签
+    shipTo: '收货地址',
+    shippingOption: '配送方式',
+    shippingService: '配送服务',
+    memo: '备注',
+    additionalContact: '其他联系方式',
+    coupons: '优惠券',
+    unknownItem: '未知商品',
+    orderAccepted: '订单已接受',
+    acceptedDescSeller: '您已收到订单，可以准备发货了。',
+    acceptedDescBuyer: '卖家已接受订单。',
     purchases: '我买的',
     sales: '我卖的',
     myPurchases: '我的购买',
@@ -375,6 +397,7 @@ export const zh: TranslationResource = {
     buyer: '买家',
     moderator: '仲裁员',
     viewStore: '查看店铺',
+    moderatorFeePercent: '{{fee}}% 费率',
     // 地址和支付
     shippingAddress: '收货地址',
     trackingNumber: '物流单号',
@@ -382,6 +405,10 @@ export const zh: TranslationResource = {
     paymentTransaction: '支付交易',
     escrowAddress: '托管地址',
     orderNotes: '订单备注',
+    // 支付卡片
+    paid: '已付款',
+    fundsInEscrow: '资金托管中，直到订单完成。',
+    directPaymentDesc: '直接付款 - 资金直接发送给卖家。',
     // 申诉
     disputeOpen: '申诉进行中',
     initiatedBy: '发起方：{{party}}',
@@ -448,6 +475,8 @@ export const zh: TranslationResource = {
       claimSuccessDesc: '您已成功领取资金。',
       acceptPayoutSuccess: '裁决已接受',
       acceptPayoutSuccessDesc: '您已接受争议裁决结果。',
+      fulfillSuccess: '已发货',
+      fulfillSuccessDesc: '订单已标记为已发货，买家将收到通知。',
       reviewComingSoon: '评价功能即将上线。',
       error: '错误',
     },
@@ -476,6 +505,10 @@ export const zh: TranslationResource = {
       acceptPayout: {
         title: '接受裁决',
         description: '确定要接受争议裁决结果吗？资金将按仲裁员的决定进行分配。',
+      },
+      fulfillOrder: {
+        title: '发货',
+        description: '请输入此订单的物流信息，确认后买家将收到通知。',
       },
     },
     // 发货模态框

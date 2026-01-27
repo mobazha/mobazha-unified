@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { VStack, HStack } from '@/components/layouts';
+import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -148,6 +148,8 @@ export interface OrderDetailContentProps {
 
 // ============ Utility Functions ============
 
+type TranslateFn = (key: string) => string;
+
 /**
  * 根据订单状态计算进度条配置
  * 参考桌面端 Summary.vue 中的 progressBarState 计算逻辑
@@ -161,6 +163,7 @@ export interface OrderDetailContentProps {
  */
 function getProgressBarState(
   status: DisplayOrder['status'],
+  t: TranslateFn,
   hasDispute?: boolean,
   hasDisputeResolution?: boolean
 ): { states: string[]; currentState: number; disputeState: number } {
@@ -170,7 +173,12 @@ function getProgressBarState(
     (hasDispute && !['completed', 'refunded', 'cancelled'].includes(status))
   ) {
     return {
-      states: ['Disputed', 'Decided', 'Resolved', 'Complete'],
+      states: [
+        t('order.stages.disputed'),
+        t('order.stages.decided'),
+        t('order.stages.resolved'),
+        t('order.stages.complete'),
+      ],
       currentState: status === 'disputed' ? 1 : hasDisputeResolution ? 3 : 2,
       disputeState: 1,
     };
@@ -179,16 +187,25 @@ function getProgressBarState(
   // 取消/退款流程
   if (['cancelled', 'refunded'].includes(status)) {
     const endState =
-      status === 'cancelled' ? 'Cancelled' : status === 'refunded' ? 'Refunded' : 'Declined';
+      status === 'cancelled'
+        ? t('order.cancelled')
+        : status === 'refunded'
+          ? t('order.refunded')
+          : t('order.stages.declined');
     return {
-      states: ['Paid', endState],
+      states: [t('order.stages.paid'), endState],
       currentState: 2,
       disputeState: 0,
     };
   }
 
   // 正常流程：Paid → Accepted → Fulfilled → Complete
-  const normalStates = ['Paid', 'Accepted', 'Fulfilled', 'Complete'];
+  const normalStates = [
+    t('order.stages.paid'),
+    t('order.stages.accepted'),
+    t('order.stages.fulfilled'),
+    t('order.stages.complete'),
+  ];
   let currentState = 0;
 
   switch (status) {
@@ -247,9 +264,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   const [localOrder, setLocalOrder] = useState<DisplayOrder | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
-  const [showShipModal, setShowShipModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
-  const [trackingInfo, setTrackingInfo] = useState({ carrier: '', trackingNumber: '' });
   const [showRefundDialog, setShowRefundDialog] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState<'buyer' | 'seller' | 'split' | null>(
     null
@@ -327,41 +342,6 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       setIsActionLoading(false);
     }
   }, [disputeReason, order, refetch, onOrderUpdate]);
-
-  const handleShipOrder = useCallback(async () => {
-    if (!trackingInfo.trackingNumber.trim()) {
-      window.alert('Please provide tracking information');
-      return;
-    }
-    setIsActionLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const updated = {
-        ...order,
-        status: 'shipped' as const,
-        trackingNumber: trackingInfo.trackingNumber,
-        timeline: [
-          ...order.timeline,
-          {
-            status: 'shipped',
-            timestamp: new Date().toISOString(),
-            description: `Package shipped - ${trackingInfo.carrier}: ${trackingInfo.trackingNumber}`,
-            actor: 'seller' as const,
-          },
-        ],
-      };
-      setLocalOrder(updated);
-      onOrderUpdate?.(updated);
-      setShowShipModal(false);
-      setTrackingInfo({ carrier: '', trackingNumber: '' });
-      window.alert('Order marked as shipped!');
-      refetch?.();
-    } catch (error) {
-      window.alert('Failed to update shipping: ' + (error as Error).message);
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [trackingInfo, order, refetch, onOrderUpdate]);
 
   const handleRefundConfirm = useCallback(async () => {
     setShowRefundDialog(false);
@@ -479,7 +459,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           window.alert('Decline order flow coming soon');
           break;
         case 'Fulfill':
-          setShowShipModal(true);
+          // 发货操作由页面级组件处理
+          window.alert('Fulfill action should be handled by parent component');
           break;
         case 'Refund':
           setShowRefundDialog(true);
@@ -503,7 +484,6 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     order.userRole === 'buyer' &&
     ['paid', 'processing', 'shipped', 'delivered'].includes(order.status) &&
     !order.dispute;
-  const canShipOrder = order.userRole === 'seller' && ['paid', 'processing'].includes(order.status);
   const canRefund =
     order.userRole === 'seller' && ['paid', 'processing', 'shipped'].includes(order.status);
   const canResolveDispute = order.userRole === 'moderator' && order.status === 'disputed';
@@ -513,8 +493,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   // ============ Progress Bar State ============
 
   const progressState = useMemo(
-    () => getProgressBarState(order.status, !!order.dispute, order.dispute?.status === 'resolved'),
-    [order.status, order.dispute]
+    () =>
+      getProgressBarState(order.status, t, !!order.dispute, order.dispute?.status === 'resolved'),
+    [order.status, order.dispute, t]
   );
 
   // 检查是否是 RWA Token 订单，并构造 Product 对象
@@ -648,20 +629,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               timestamp={order.timeline.find(e => e.status === 'processing')?.timestamp}
               description={
                 order.userRole === 'seller'
-                  ? "You received the order and can fulfill it whenever you're ready."
-                  : 'Order accepted by seller.'
+                  ? t('order.acceptedDescSeller')
+                  : t('order.acceptedDescBuyer')
               }
-              actions={
-                canShipOrder ? (
-                  <Button
-                    size="sm"
-                    onClick={() => setShowShipModal(true)}
-                    className="touch-feedback"
-                  >
-                    Fulfill Order
-                  </Button>
-                ) : undefined
-              }
+              // 发货按钮由页面级 OrderFooter 组件处理
               showDivider={true}
             />
           )}
@@ -895,7 +866,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               currency={order.currency}
               txHash={order.paymentTx}
               timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
-              description="Direct payment - funds sent directly to seller."
+              title={t('order.paid')}
+              description={
+                order.moderator ? t('order.fundsInEscrow') : t('order.directPaymentDesc')
+              }
               showDivider={true}
             />
           )}
@@ -910,7 +884,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
         {/* Order Details Section */}
         <div className="border-t border-border pt-4 mt-4">
-          <h3 className="text-sm sm:text-base font-semibold text-foreground mb-4">Order Details</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-foreground mb-4">
+            {t('order.details')}
+          </h3>
 
           {/* Product Info */}
           <div className="flex gap-3 sm:gap-4 mb-4 p-3 sm:p-4 bg-muted/30 rounded-lg">
@@ -925,15 +901,15 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             )}
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-foreground text-sm sm:text-base truncate">
-                {order.items[0]?.title || 'Unknown Item'}
+                {order.items[0]?.title || t('order.unknownItem')}
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs sm:text-sm">
                 <div>
-                  <span className="text-muted-foreground">Coupons</span>
-                  <p className="text-foreground">n/a</p>
+                  <span className="text-muted-foreground">{t('order.coupons')}</span>
+                  <p className="text-foreground">{t('common.none')}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Quantity</span>
+                  <span className="text-muted-foreground">{t('order.quantity')}</span>
                   <p className="text-foreground">{order.items[0]?.quantity || 1}</p>
                 </div>
               </div>
@@ -943,42 +919,42 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           {/* Order Info Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm">
             <div>
-              <span className="text-muted-foreground block mb-1">Ship to</span>
+              <span className="text-muted-foreground block mb-1">{t('order.shipTo')}</span>
               <p className="text-foreground whitespace-pre-line line-clamp-2">
-                {order.shippingAddress || 'n/a'}
+                {order.shippingAddress || t('common.none')}
               </p>
             </div>
             <div>
-              <span className="text-muted-foreground block mb-1">Moderator</span>
-              <p className="text-foreground">{order.moderator?.name || 'n/a'}</p>
+              <span className="text-muted-foreground block mb-1">{t('order.moderator')}</span>
+              <p className="text-foreground">{order.moderator?.name || t('common.none')}</p>
             </div>
             <div>
-              <span className="text-muted-foreground block mb-1">Total</span>
+              <span className="text-muted-foreground block mb-1">{t('order.total')}</span>
               <p className="text-foreground font-semibold">
                 {order.total} {order.currency}
               </p>
             </div>
             <div>
-              <span className="text-muted-foreground block mb-1">Shipping Option</span>
-              <p className="text-foreground">n/a</p>
+              <span className="text-muted-foreground block mb-1">{t('order.shippingOption')}</span>
+              <p className="text-foreground">{t('common.none')}</p>
             </div>
             <div>
-              <span className="text-muted-foreground block mb-1">Shipping Service</span>
-              <p className="text-foreground">n/a</p>
+              <span className="text-muted-foreground block mb-1">{t('order.shippingService')}</span>
+              <p className="text-foreground">{t('common.none')}</p>
             </div>
           </div>
 
           {/* Memo and Contact Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-border text-xs sm:text-sm">
             <div>
-              <span className="text-muted-foreground block mb-1">Memo</span>
-              <p className="text-foreground">{order.notes || 'n/a'}</p>
+              <span className="text-muted-foreground block mb-1">{t('order.memo')}</span>
+              <p className="text-foreground">{order.notes || t('common.none')}</p>
             </div>
             <div>
               <span className="text-muted-foreground block mb-1">
-                Additional Contact Information
+                {t('order.additionalContact')}
               </span>
-              <p className="text-foreground">n/a</p>
+              <p className="text-foreground">{t('common.none')}</p>
             </div>
           </div>
         </div>
@@ -1020,16 +996,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               </Button>
             )}
 
-            {canShipOrder && (
-              <Button
-                size="sm"
-                onClick={() => setShowShipModal(true)}
-                disabled={isLoading}
-                className="touch-feedback"
-              >
-                Fulfill Order
-              </Button>
-            )}
+            {/* 发货按钮由页面级组件处理 */}
 
             {canRefund && (
               <Button
@@ -1050,7 +1017,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-border">
             {/* Seller Info */}
             <div className="p-3 bg-muted/30 rounded-lg">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Seller</h4>
+              <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                {t('order.seller')}
+              </h4>
               <HStack gap="sm" align="center">
                 <Avatar
                   src={order.vendor.avatar}
@@ -1069,7 +1038,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             {/* Buyer Info */}
             {order.buyer && (
               <div className="p-3 bg-muted/30 rounded-lg">
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Buyer</h4>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                  {t('order.buyer')}
+                </h4>
                 <HStack gap="sm" align="center">
                   <Avatar
                     src={order.buyer.avatar}
@@ -1089,7 +1060,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             {/* Moderator Info */}
             {order.moderator && (
               <div className="p-3 bg-muted/30 rounded-lg">
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Moderator</h4>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                  {t('order.moderator')}
+                </h4>
                 <HStack gap="sm" align="center">
                   <Avatar
                     src={order.moderator.avatar}
@@ -1101,7 +1074,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     <p className="font-medium text-foreground text-sm truncate">
                       {order.moderator.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">{order.moderator.fee}% fee</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('order.moderatorFeePercent', { fee: order.moderator.fee })}
+                    </p>
                   </div>
                 </HStack>
               </div>
@@ -1148,51 +1123,6 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               </Button>
               <Button size="sm" onClick={handleOpenDispute} disabled={isLoading}>
                 {isLoading ? 'Submitting...' : 'Submit Dispute'}
-              </Button>
-            </HStack>
-          </Card>
-        </div>
-      )}
-
-      {/* Ship Order Modal */}
-      {showShipModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-3 sm:p-4">
-          <Card className="w-full max-w-md p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">Ship Order</h2>
-            <VStack gap="sm">
-              <div>
-                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-                  Carrier
-                </label>
-                <input
-                  type="text"
-                  value={trackingInfo.carrier}
-                  onChange={e => setTrackingInfo(prev => ({ ...prev, carrier: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                  placeholder="e.g., UPS, FedEx, DHL"
-                />
-              </div>
-              <div>
-                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-                  Tracking Number *
-                </label>
-                <input
-                  type="text"
-                  value={trackingInfo.trackingNumber}
-                  onChange={e =>
-                    setTrackingInfo(prev => ({ ...prev, trackingNumber: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                  placeholder="Enter tracking number"
-                />
-              </div>
-            </VStack>
-            <HStack justify="end" gap="sm" className="mt-4">
-              <Button variant="ghost" size="sm" onClick={() => setShowShipModal(false)}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleShipOrder} disabled={isLoading}>
-                {isLoading ? 'Updating...' : 'Confirm Shipment'}
               </Button>
             </HStack>
           </Card>

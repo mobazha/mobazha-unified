@@ -231,12 +231,12 @@ export default function CheckoutPage() {
     return checkoutItems.some(item => item.contractType === 'RWA_TOKEN');
   }, [checkoutItems]);
 
-  // 判断是否需要收货地址（只有物理商品需要）
+  // 判断是否需要收货地址（只要有物理商品就需要）
   const needsShippingAddress = useMemo(() => {
-    // 如果没有商品，默认需要地址
-    if (checkoutItems.length === 0) return true;
-    // 只有物理商品需要收货地址
-    return checkoutItems.every(item => item.contractType === 'PHYSICAL_GOOD');
+    // 如果没有商品，不需要地址
+    if (checkoutItems.length === 0) return false;
+    // 只要有任何物理商品就需要收货地址
+    return checkoutItems.some(item => item.contractType === 'PHYSICAL_GOOD');
   }, [checkoutItems]);
 
   // 获取 RWA 交易模式

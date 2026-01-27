@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
@@ -9,16 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui';
 import { useToast } from '@/components/ui/use-toast';
 import {
   useOrder,
@@ -28,17 +18,22 @@ import {
   isOrderFulfilled,
   ordersApi,
   formatTokenAmount,
+  onWebSocketMessage,
   type OrderAction,
   type UserRole as CoreUserRole,
+  type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order as CoreOrder, OrderState } from '@mobazha/core';
 import {
   OrderDetailContent,
   OrderFooter,
+  FulfillOrderDialog,
+  OrderConfirmDialog,
   type DisplayOrder,
   type OrderItem,
   type Moderator,
   type TimelineEvent,
+  type OrderConfirmType,
 } from '@/components/Order';
 
 // ============ Utility Functions ============
@@ -492,13 +487,10 @@ export default function OrderDetailPage() {
 
   // 订单操作状态
   const [isActionLoading, setIsActionLoading] = useState(false);
-  // 确认对话框状态
-  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
-  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showRefundDialog, setShowRefundDialog] = useState(false);
-  const [showClaimDialog, setShowClaimDialog] = useState(false);
-  const [showAcceptPayoutDialog, setShowAcceptPayoutDialog] = useState(false);
+  // 通用确认对话框状态
+  const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
+  // 发货对话框状态
+  const [showFulfillDialog, setShowFulfillDialog] = useState(false);
 
   // 转换订单数据
   const displayOrder = useMemo(() => {
@@ -506,132 +498,90 @@ export default function OrderDetailPage() {
     return transformCoreOrder(coreOrder, currentUserPeerID);
   }, [coreOrder, currentUserPeerID]);
 
+  // ============ WebSocket 订单实时更新监听 ============
+  // 参考移动端和桌面端实现，监听 WebSocket 消息，当收到与当前订单相关的通知时自动刷新
+  useEffect(() => {
+    // 订阅 WebSocket 消息
+    const unsubscribe = onWebSocketMessage((message: WebSocketMessage) => {
+      // 检查消息是否包含通知
+      const data = message.data as { notification?: { orderID?: string } } | undefined;
+      const notification = data?.notification;
+
+      if (notification?.orderID) {
+        // 当收到匹配当前订单的通知时，自动刷新订单数据
+        if (notification.orderID === orderId) {
+          // 延迟刷新以确保后端状态已更新
+          setTimeout(() => {
+            refetch();
+          }, 500);
+        }
+      }
+    });
+
+    // 清理：组件卸载时取消订阅
+    return () => {
+      unsubscribe();
+    };
+  }, [orderId, refetch]);
+
   // ============ 订单操作处理函数 ============
 
-  // 接受订单（卖家）
-  const handleAcceptOrder = useCallback(async () => {
-    setShowAcceptDialog(false);
-    setIsActionLoading(true);
-    try {
-      const result = await ordersApi.confirmOrder({
-        orderID: orderId,
-        reject: false,
-      });
-      if (result.success) {
-        toast({
-          title: t('order.actions.acceptSuccess'),
-          description: t('order.actions.acceptSuccessDesc'),
-        });
-        refetch();
-      } else {
-        throw new Error(result.error || 'Failed to accept order');
-      }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [orderId, refetch, t, toast]);
+  // 通用确认对话框处理
+  const handleConfirmAction = useCallback(async () => {
+    if (!confirmDialog) return;
 
-  // 拒绝订单（卖家）
-  const handleDeclineOrder = useCallback(async () => {
-    setShowDeclineDialog(false);
+    const actionType = confirmDialog;
+    setConfirmDialog(null);
     setIsActionLoading(true);
-    try {
-      const result = await ordersApi.confirmOrder({
-        orderID: orderId,
-        reject: true,
-      });
-      if (result.success) {
-        toast({
-          title: t('order.actions.declineSuccess'),
-          description: t('order.actions.declineSuccessDesc'),
-        });
-        refetch();
-      } else {
-        throw new Error(result.error || 'Failed to decline order');
-      }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [orderId, refetch, t, toast]);
 
-  // 取消订单
-  const handleCancelOrder = useCallback(async () => {
-    setShowCancelDialog(false);
-    setIsActionLoading(true);
     try {
-      const result = await ordersApi.cancelOrder({ orderID: orderId });
-      if (result.success) {
-        toast({
-          title: t('order.actions.cancelSuccess'),
-          description: t('order.actions.cancelSuccessDesc'),
-        });
-        refetch();
-      } else {
-        throw new Error(result.error || 'Failed to cancel order');
-      }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [orderId, refetch, t, toast]);
+      let result: { success: boolean; error?: string };
+      let successTitle: string;
+      let successDesc: string;
 
-  // 退款订单（卖家）
-  const handleRefundOrder = useCallback(async () => {
-    setShowRefundDialog(false);
-    setIsActionLoading(true);
-    try {
-      const result = await ordersApi.refundOrder({ orderID: orderId });
-      if (result.success) {
-        toast({
-          title: t('order.actions.refundSuccess'),
-          description: t('order.actions.refundSuccessDesc'),
-        });
-        refetch();
-      } else {
-        throw new Error(result.error || 'Failed to refund order');
+      switch (actionType) {
+        case 'accept':
+          result = await ordersApi.confirmOrder({ orderID: orderId, reject: false });
+          successTitle = t('order.actions.acceptSuccess');
+          successDesc = t('order.actions.acceptSuccessDesc');
+          break;
+        case 'decline':
+          result = await ordersApi.confirmOrder({ orderID: orderId, reject: true });
+          successTitle = t('order.actions.declineSuccess');
+          successDesc = t('order.actions.declineSuccessDesc');
+          break;
+        case 'cancel':
+          result = await ordersApi.cancelOrder({ orderID: orderId });
+          successTitle = t('order.actions.cancelSuccess');
+          successDesc = t('order.actions.cancelSuccessDesc');
+          break;
+        case 'refund':
+          result = await ordersApi.refundOrder({ orderID: orderId });
+          successTitle = t('order.actions.refundSuccess');
+          successDesc = t('order.actions.refundSuccessDesc');
+          break;
+        case 'claim':
+          result = await ordersApi.claimPayment(orderId);
+          successTitle = t('order.actions.claimSuccess');
+          successDesc = t('order.actions.claimSuccessDesc');
+          break;
+        case 'acceptPayout':
+          result = await ordersApi.acceptDispute(orderId);
+          successTitle = t('order.actions.acceptPayoutSuccess');
+          successDesc = t('order.actions.acceptPayoutSuccessDesc');
+          break;
+        default:
+          return;
       }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [orderId, refetch, t, toast]);
 
-  // 认领过期资金（卖家）
-  const handleClaimPayment = useCallback(async () => {
-    setShowClaimDialog(false);
-    setIsActionLoading(true);
-    try {
-      const result = await ordersApi.claimPayment(orderId);
       if (result.success) {
-        toast({
-          title: t('order.actions.claimSuccess'),
-          description: t('order.actions.claimSuccessDesc'),
-        });
-        refetch();
+        toast({ title: successTitle, description: successDesc });
+        // 延迟刷新以确保后端状态已更新
+        setTimeout(() => {
+          refetch();
+        }, 500);
       } else {
-        throw new Error(result.error || 'Failed to claim payment');
+        throw new Error(result.error || `Failed to ${actionType} order`);
       }
     } catch (error) {
       toast({
@@ -642,44 +592,17 @@ export default function OrderDetailPage() {
     } finally {
       setIsActionLoading(false);
     }
-  }, [orderId, refetch, t, toast]);
-
-  // 接受争议裁决
-  const handleAcceptPayout = useCallback(async () => {
-    setShowAcceptPayoutDialog(false);
-    setIsActionLoading(true);
-    try {
-      const result = await ordersApi.acceptDispute(orderId);
-      if (result.success) {
-        toast({
-          title: t('order.actions.acceptPayoutSuccess'),
-          description: t('order.actions.acceptPayoutSuccessDesc'),
-        });
-        refetch();
-      } else {
-        throw new Error(result.error || 'Failed to accept payout');
-      }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [orderId, refetch, t, toast]);
+  }, [confirmDialog, orderId, refetch, t, toast]);
 
   // 统一处理订单操作（用于 OrderFooter）
   const handleOrderAction = useCallback(
     (action: OrderAction) => {
       switch (action) {
         case 'Pay':
-          // 跳转到支付页面
           router.push(`/payment?orderID=${orderId}`);
           break;
         case 'Cancel':
-          setShowCancelDialog(true);
+          setConfirmDialog('cancel');
           break;
         case 'Dispute':
           // 将在 OrderDetailContent 中处理
@@ -694,22 +617,22 @@ export default function OrderDetailPage() {
           });
           break;
         case 'Accept':
-          setShowAcceptDialog(true);
+          setConfirmDialog('accept');
           break;
         case 'Decline':
-          setShowDeclineDialog(true);
+          setConfirmDialog('decline');
           break;
         case 'Fulfill':
-          // 将在 OrderDetailContent 中处理
+          setShowFulfillDialog(true);
           break;
         case 'Refund':
-          setShowRefundDialog(true);
+          setConfirmDialog('refund');
           break;
         case 'Claim':
-          setShowClaimDialog(true);
+          setConfirmDialog('claim');
           break;
         case 'AcceptPayout':
-          setShowAcceptPayoutDialog(true);
+          setConfirmDialog('acceptPayout');
           break;
       }
     },
@@ -843,7 +766,9 @@ export default function OrderDetailPage() {
             <div className="grid grid-cols-3 gap-6">
               {/* Seller Info */}
               <Card className="p-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Seller</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                  {t('order.seller')}
+                </h3>
                 <HStack gap="sm" align="center">
                   <Avatar
                     src={displayOrder.vendor.avatar}
@@ -858,7 +783,7 @@ export default function OrderDetailPage() {
                     >
                       {displayOrder.vendor.name}
                     </Link>
-                    <span className="text-xs text-muted-foreground">View Store</span>
+                    <span className="text-xs text-muted-foreground">{t('order.viewStore')}</span>
                   </VStack>
                 </HStack>
               </Card>
@@ -866,7 +791,9 @@ export default function OrderDetailPage() {
               {/* Buyer Info */}
               {displayOrder.buyer && (
                 <Card className="p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Buyer</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    {t('order.buyer')}
+                  </h3>
                   <HStack gap="sm" align="center">
                     <Avatar
                       src={displayOrder.buyer.avatar}
@@ -878,7 +805,7 @@ export default function OrderDetailPage() {
                       <span className="font-semibold text-foreground text-sm">
                         {displayOrder.buyer.name}
                       </span>
-                      <span className="text-xs text-muted-foreground">Buyer</span>
+                      <span className="text-xs text-muted-foreground">{t('order.buyer')}</span>
                     </VStack>
                   </HStack>
                 </Card>
@@ -887,7 +814,9 @@ export default function OrderDetailPage() {
               {/* Moderator Info */}
               {displayOrder.moderator && (
                 <Card className="p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Moderator</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    {t('order.moderator')}
+                  </h3>
                   <HStack gap="sm" align="center">
                     <Avatar
                       src={displayOrder.moderator.avatar}
@@ -903,7 +832,7 @@ export default function OrderDetailPage() {
                         {displayOrder.moderator.name}
                       </Link>
                       <span className="text-xs text-muted-foreground">
-                        {displayOrder.moderator.fee}% fee
+                        {t('order.moderatorFeePercent', { fee: displayOrder.moderator.fee })}
                       </span>
                     </VStack>
                   </HStack>
@@ -931,123 +860,26 @@ export default function OrderDetailPage() {
         onAction={handleOrderAction}
       />
 
-      {/* ============ 订单操作确认对话框 ============ */}
+      {/* ============ 订单操作对话框 ============ */}
 
-      {/* 接受订单对话框 */}
-      <AlertDialog open={showAcceptDialog} onOpenChange={setShowAcceptDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.dialogs.acceptOrder.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('order.dialogs.acceptOrder.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAcceptOrder} disabled={isActionLoading}>
-              {isActionLoading ? t('common.processing') : t('order.actions.accept')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* 通用确认对话框 */}
+      {confirmDialog && (
+        <OrderConfirmDialog
+          open={!!confirmDialog}
+          onOpenChange={open => !open && setConfirmDialog(null)}
+          type={confirmDialog}
+          onConfirm={handleConfirmAction}
+          isLoading={isActionLoading}
+        />
+      )}
 
-      {/* 拒绝订单对话框 */}
-      <AlertDialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.dialogs.declineOrder.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('order.dialogs.declineOrder.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeclineOrder}
-              disabled={isActionLoading}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isActionLoading ? t('common.processing') : t('order.actions.decline')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* 取消订单对话框 */}
-      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.dialogs.cancelOrder.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('order.dialogs.cancelOrder.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCancelOrder}
-              disabled={isActionLoading}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isActionLoading ? t('common.processing') : t('order.actions.cancel')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* 退款订单对话框 */}
-      <AlertDialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.dialogs.refundOrder.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('order.dialogs.refundOrder.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRefundOrder} disabled={isActionLoading}>
-              {isActionLoading ? t('common.processing') : t('order.actions.refund')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* 认领过期资金对话框 */}
-      <AlertDialog open={showClaimDialog} onOpenChange={setShowClaimDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.dialogs.claimPayment.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('order.dialogs.claimPayment.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClaimPayment} disabled={isActionLoading}>
-              {isActionLoading ? t('common.processing') : t('order.actions.claim')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* 接受争议裁决对话框 */}
-      <AlertDialog open={showAcceptPayoutDialog} onOpenChange={setShowAcceptPayoutDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.dialogs.acceptPayout.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('order.dialogs.acceptPayout.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAcceptPayout} disabled={isActionLoading}>
-              {isActionLoading ? t('common.processing') : t('order.actions.acceptPayout')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* 发货对话框 */}
+      <FulfillOrderDialog
+        open={showFulfillDialog}
+        onOpenChange={setShowFulfillDialog}
+        orderId={orderId}
+        onSuccess={refetch}
+      />
 
       <Footer />
     </div>
