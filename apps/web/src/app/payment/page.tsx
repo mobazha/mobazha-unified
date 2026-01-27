@@ -161,60 +161,33 @@ export default function PaymentPage() {
         setRawOrder(order);
 
         // 从订单中提取商品信息
-        // 注意：API 返回两种可能的结构：
-        // 1. 旧结构: contract.vendorListings, contract.buyerOrder
-        // 2. 新结构: contract.orderOpen.listings, contract.orderOpen.items
+        // 使用 orderOpen 结构（与桌面端一致）
         const contract = order?.contract as any;
         const orderOpen = contract?.orderOpen;
 
-        // 优先使用 orderOpen 结构（新 API），回退到旧结构
-        let rawListings: any[] = [];
-        let orderItems: any[] = [];
-        let orderAmount = 0;
-        let pricingCurrency = 'USD';
-        let pricingDivisibility = 2;
-        let shippingInfo: any = null;
-        let vendorInfo: any = null;
-        let paymentAddress = '';
-        let memo = '';
-
-        if (orderOpen) {
-          // 新结构：orderOpen 包含 listings（每个元素是 {cid, listing, signature}）和 items
-          rawListings = orderOpen.listings || [];
-          orderItems = orderOpen.items || [];
-          orderAmount = Number(orderOpen.amount) || 0;
-          shippingInfo = orderOpen.shipping;
-          memo = orderOpen.alternateContactInfo || '';
-
-          // 从第一个 listing 提取定价信息
-          const firstListingData = rawListings[0]?.listing;
-          if (firstListingData?.metadata?.pricingCurrency) {
-            pricingCurrency = firstListingData.metadata.pricingCurrency.code || 'USD';
-            pricingDivisibility = firstListingData.metadata.pricingCurrency.divisibility || 2;
-          }
-          vendorInfo = firstListingData?.vendorID;
-        } else {
-          // 旧结构
-          rawListings = contract?.vendorListings || [];
-          orderItems = contract?.buyerOrder?.items || [];
-          shippingInfo = contract?.buyerOrder?.shipping;
-          memo = contract?.buyerOrder?.alternateContactInfo || '';
-          paymentAddress = contract?.buyerOrder?.payment?.address || '';
-
-          // 从第一个 listing 提取定价信息
-          if (rawListings[0]?.metadata?.pricingCurrency) {
-            pricingCurrency = rawListings[0].metadata.pricingCurrency.code || 'USD';
-            pricingDivisibility = rawListings[0].metadata.pricingCurrency.divisibility || 2;
-          }
-          vendorInfo = rawListings[0]?.vendorID;
+        if (!orderOpen) {
+          throw new Error('Invalid order data: orderOpen not found');
         }
 
-        // 统一处理 listings（兼容新旧结构）
-        const normalizedListings = rawListings.map((item: any) => {
-          // 新结构: { cid, listing: {...}, signature }
-          // 旧结构: 直接是 listing 对象
-          return item.listing || item;
-        });
+        // orderOpen 包含 listings（每个元素是 {cid, listing, signature}）和 items
+        const rawListings: any[] = orderOpen.listings || [];
+        const orderItems: any[] = orderOpen.items || [];
+        const orderAmount = Number(orderOpen.amount) || 0;
+        const shippingInfo = orderOpen.shipping;
+        const memo = orderOpen.alternateContactInfo || '';
+
+        // 从第一个 listing 提取定价信息
+        const firstListingData = rawListings[0]?.listing;
+        let pricingCurrency = 'USD';
+        let pricingDivisibility = 2;
+        if (firstListingData?.metadata?.pricingCurrency) {
+          pricingCurrency = firstListingData.metadata.pricingCurrency.code || 'USD';
+          pricingDivisibility = firstListingData.metadata.pricingCurrency.divisibility || 2;
+        }
+        const vendorInfo = firstListingData?.vendorID;
+
+        // 处理 listings（每个元素是 {cid, listing, signature}）
+        const normalizedListings = rawListings.map((item: any) => item.listing || item);
 
         // 判断是否为 RWA Token（优先使用 URL 参数）
         const metadata = normalizedListings[0]?.metadata as any;
@@ -298,7 +271,6 @@ export default function PaymentPage() {
           subtotal: finalTotal,
           total: finalTotal,
           currency: items[0]?.currency || urlCurrency || pricingCurrency,
-          paymentAddress,
           // RWA 相关
           isRwaToken: isRwa,
           rwaTradeMode: rwaMode,
@@ -406,17 +378,21 @@ export default function PaymentPage() {
   const nativeSymbol = 'ETH'; // TODO: 根据选择的支付方式确定
 
   // 获取支付信息（支付地址和金额）
+  // 与桌面端一致：使用 orderConfirmation.paymentAddress 或 paymentSent.address
   const paymentInfo = useMemo(() => {
     if (!rawOrder) return null;
 
-    const contract = rawOrder.contract;
-    const payment = contract?.buyerOrder?.payment;
-    const vendorConfirmation = contract?.vendorOrderConfirmation;
+    const contract = rawOrder.contract as any;
+    const orderConfirmation = contract?.orderConfirmation;
+    const paymentSent = contract?.paymentSent;
 
-    // 优先使用卖家确认的支付地址和金额
-    const paymentAddress = vendorConfirmation?.paymentAddress || payment?.address;
-    const paymentAmount = vendorConfirmation?.requestedAmount || payment?.amount;
-    const paymentCoin = payment?.coin || selectedTokenId || 'ETH';
+    // 支付地址：优先使用卖家确认的地址，回退到已发送的支付地址
+    const paymentAddress = orderConfirmation?.paymentAddress || paymentSent?.address;
+    // 支付金额：使用卖家确认的金额
+    const paymentAmount = orderConfirmation?.requestedAmount;
+    // 支付币种：从 paymentSent 或 orderOpen 获取
+    const paymentCoin =
+      paymentSent?.coin || contract?.orderOpen?.pricingCoin || selectedTokenId || 'ETH';
 
     return {
       address: paymentAddress,
