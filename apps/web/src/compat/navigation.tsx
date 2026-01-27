@@ -10,6 +10,29 @@ import {
 } from 'react-router-dom';
 
 /**
+ * 从 URL 中提取路径部分（pathname + search + hash）
+ * 用于处理完整 URL，React Router 只需要相对路径
+ *
+ * @example
+ * extractPath('http://localhost:3000/payment?orderID=123') => '/payment?orderID=123'
+ * extractPath('/payment?orderID=123') => '/payment?orderID=123'
+ */
+function extractPath(url: string): string {
+  // 检测是否是完整 URL（包含协议）
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname + urlObj.search + urlObj.hash;
+    } catch {
+      // URL 解析失败，返回原始值
+      return url;
+    }
+  }
+  // 已经是相对路径，直接返回
+  return url;
+}
+
+/**
  * useRouter 兼容层
  * 模拟 Next.js 的 useRouter hook
  *
@@ -27,13 +50,15 @@ export function useRouter() {
   // 请使用 usePathname() hook。
   return {
     push: (url: string, options?: { scroll?: boolean }) => {
-      navigate(url);
+      // 从完整 URL 中提取路径，React Router 只接受相对路径
+      navigate(extractPath(url));
       if (options?.scroll !== false) {
         window.scrollTo(0, 0);
       }
     },
     replace: (url: string, options?: { scroll?: boolean }) => {
-      navigate(url, { replace: true });
+      // 从完整 URL 中提取路径，React Router 只接受相对路径
+      navigate(extractPath(url), { replace: true });
       if (options?.scroll !== false) {
         window.scrollTo(0, 0);
       }
