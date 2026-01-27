@@ -25,6 +25,7 @@ export type {
 } from './user';
 
 // Product types
+export { CONTRACT_TYPES } from './product';
 export type {
   ProductListItem,
   Product,

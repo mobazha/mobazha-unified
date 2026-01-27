@@ -132,6 +132,7 @@ interface RealOrderData {
             title?: string;
             images?: Array<{ tiny?: string; small?: string; medium?: string }>;
             price?: number;
+            blockchain?: string;
           };
           vendorID?: { peerID?: string; handle?: string };
           shippingOptions?: Array<{ regions?: string[] }>;
@@ -1003,6 +1004,14 @@ export default function OrderDetailPage() {
         open={showFulfillDialog}
         onOpenChange={setShowFulfillDialog}
         orderId={orderId}
+        contractType={
+          (coreOrder as RealOrderData)?.contract?.orderOpen?.listings?.[0]?.listing?.metadata
+            ?.contractType
+        }
+        blockchain={
+          (coreOrder as RealOrderData)?.contract?.orderOpen?.listings?.[0]?.listing?.item
+            ?.blockchain as string | undefined
+        }
         onSuccess={refetch}
       />
 
