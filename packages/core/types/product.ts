@@ -28,6 +28,8 @@ export interface ProductListItem {
   freeShipping?: string[];
   nsfw?: boolean;
   contractType?: ContractType;
+  /** IPFS CID - 用于购买时的 listingHash */
+  cid?: string;
   /** 代币标准: ERC721/ERC1155/ERC3525 */
   tokenStandard?: string;
   /** RWA 交易模式: 0=即时, 1=需确认 */

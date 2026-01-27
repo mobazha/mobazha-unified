@@ -91,7 +91,9 @@ export function OrderSummaryCard({
                 </p>
               </div>
               <p className="font-medium text-foreground text-sm">
-                {renderPairedPrice(item.price * item.quantity, item.currency)}
+                {renderPairedPrice(item.price * item.quantity, item.currency, {
+                  isMinimalUnit: false,
+                })}
               </p>
             </HStack>
           ))}
@@ -103,17 +105,25 @@ export function OrderSummaryCard({
           <p className="text-sm font-medium text-foreground">{vendor.name}</p>
         </div>
 
-        {/* Shipping Address - 仅当有地址时显示 */}
-        {shippingAddress && (
+        {/* Shipping Address - 仅当有实际地址内容时显示 */}
+        {shippingAddress && shippingAddress.street && (
           <div className="mb-4 pb-4 border-b border-border">
             <p className="text-xs text-muted-foreground mb-1">{t('order.shippingAddress')}</p>
             <div className="text-sm text-foreground">
-              <p className="font-medium">{shippingAddress.name}</p>
-              <p className="text-muted-foreground">{shippingAddress.street}</p>
-              <p className="text-muted-foreground">
-                {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}
-              </p>
-              <p className="text-muted-foreground">{shippingAddress.country}</p>
+              {shippingAddress.name && <p className="font-medium">{shippingAddress.name}</p>}
+              {shippingAddress.street && (
+                <p className="text-muted-foreground">{shippingAddress.street}</p>
+              )}
+              {(shippingAddress.city || shippingAddress.state || shippingAddress.postalCode) && (
+                <p className="text-muted-foreground">
+                  {[shippingAddress.city, shippingAddress.state, shippingAddress.postalCode]
+                    .filter(Boolean)
+                    .join(', ')}
+                </p>
+              )}
+              {shippingAddress.country && (
+                <p className="text-muted-foreground">{shippingAddress.country}</p>
+              )}
             </div>
           </div>
         )}

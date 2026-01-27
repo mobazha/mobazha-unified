@@ -14,6 +14,7 @@ import {
   productDataService,
   profileApi,
   ordersApi,
+  productsApi,
   getImageUrl,
   useCurrency,
   useI18n,
@@ -145,14 +146,31 @@ export default function CheckoutPage() {
           }
 
           // 转换为 CheckoutItem 格式
+          // 注意：productDataService.getProduct() 返回的 price 已经是转换后的值（不是最小单位）
           const price = Number(productData.item.price) || 0;
           const currency = productData.metadata?.pricingCurrency?.code || 'USD';
           const imageUrl =
             productData.item.images?.[0]?.medium || productData.item.images?.[0]?.small;
 
-          // 获取 listing hash (CID) - 使用 slug 作为 listingHash
-          const listingHash =
-            (productData as any).hash || (productData as any).cid || productData.slug || '';
+          // 获取 listing hash (CID) - 通过 listingindex API 获取
+          // listing 详情 API 不返回 CID，需要从 listingindex 中查找
+          let listingHash = '';
+          try {
+            const listingIndex = await productsApi.getStoreListingIndex(sellerPeerID || '');
+            const listingMeta = listingIndex.find(l => l.slug === productSlug);
+            listingHash = listingMeta?.cid || '';
+          } catch (e) {
+            console.error('Failed to get listing CID from listingindex:', e);
+          }
+
+          // 如果仍然没有 CID，尝试从 productData 中获取（某些 API 可能返回）
+          if (!listingHash) {
+            listingHash = (productData as any).hash || (productData as any).cid || '';
+          }
+
+          if (!listingHash) {
+            console.warn('No listing hash (CID) found for product:', productSlug);
+          }
 
           const item: CheckoutItem = {
             id: productData.slug,
@@ -249,17 +267,19 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // 获取选中的地址数据
-      const addressData = mockAddresses.find(a => a.id === selectedAddress);
+      // 获取选中的地址数据（仅物理商品需要）
+      const addressData = needsShippingAddress
+        ? mockAddresses.find(a => a.id === selectedAddress)
+        : undefined;
 
       // 调用真实的创建订单 API
       const result = await ordersApi.createOrder({
-        vendorId: checkoutItems[0].vendor.peerID,
         items: checkoutItems.map(item => ({
           listingHash: item.listingHash || item.id,
           quantity: item.quantity,
-          memo: orderNote,
+          memo: orderNote || undefined, // 订单备注放在 items 里
         })),
+        // 只有物理商品才发送地址
         address: addressData
           ? {
               name: addressData.name,
@@ -270,12 +290,35 @@ export default function CheckoutPage() {
               country: addressData.country,
             }
           : undefined,
-        memo: orderNote,
+        // 定价币种
+        pricingCoin: checkoutItems[0]?.currency || 'USD',
       });
 
-      // 构建支付页面 URL，包含 RWA 相关参数
+      // 构建支付页面 URL，包含订单和 RWA 相关参数
       const paymentUrl = new URL('/payment', window.location.origin);
       paymentUrl.searchParams.set('orderID', result.orderID);
+
+      // 传递订单金额信息（从 createOrder 返回的数据）
+      if (result.amount) {
+        // amount.amount 是以最小单位表示的金额（如 1500 = $15.00）
+        const divisibility = result.amount.currency?.divisibility ?? 2;
+        const totalAmount = Number(result.amount.amount) / Math.pow(10, divisibility);
+        paymentUrl.searchParams.set('amount', String(totalAmount));
+        paymentUrl.searchParams.set('currency', result.amount.currency?.code || 'USD');
+      }
+
+      // 传递商品和卖家信息
+      if (checkoutItems.length > 0) {
+        const firstItem = checkoutItems[0];
+        paymentUrl.searchParams.set('title', firstItem.title);
+        paymentUrl.searchParams.set('vendorName', firstItem.vendor.name);
+        paymentUrl.searchParams.set('vendorPeerID', firstItem.vendor.peerID);
+        paymentUrl.searchParams.set('quantity', String(firstItem.quantity));
+        paymentUrl.searchParams.set('contractType', firstItem.contractType || 'SERVICE');
+        if (firstItem.image) {
+          paymentUrl.searchParams.set('image', firstItem.image);
+        }
+      }
 
       // 传递 RWA 相关信息
       if (isRwaToken) {
