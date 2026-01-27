@@ -237,16 +237,10 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
 // API Functions
 
 /**
- * 获取仲裁员列表
- *
- * 调用后端 API: GET /v1/ob/moderators?include=profile
- * 返回 Profile[] 数组，需要转换为 Moderator[] 格式
+ * 获取用户偏好设置中的 storeModerators 列表
  */
-export async function getModerators(
-  params: ModeratorListParams = {}
-): Promise<ModeratorListResponse> {
-  // 调用后端真实 API: /ob/moderators?include=profile
-  const url = `${getGatewayUrl()}/ob/moderators?include=profile`;
+async function getStoreModerators(): Promise<string[]> {
+  const url = `${getGatewayUrl()}/ob/preferences`;
 
   const response = await fetch(url, {
     method: 'GET',
@@ -254,10 +248,66 @@ export async function getModerators(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch moderators: ${response.statusText}`);
+    console.warn('Failed to fetch preferences:', response.statusText);
+    return [];
   }
 
-  const profiles: BackendProfile[] = await response.json();
+  const preferences = await response.json();
+  return preferences.storeModerators || [];
+}
+
+/**
+ * 批量获取 profile 信息
+ * POST /v1/ob/fetchprofiles
+ */
+async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
+  if (peerIDs.length === 0) {
+    return [];
+  }
+
+  const url = `${getGatewayUrl()}/ob/fetchprofiles`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(peerIDs),
+  });
+
+  if (!response.ok) {
+    console.warn('Failed to fetch profiles:', response.statusText);
+    return [];
+  }
+
+  const profiles = await response.json();
+  return Array.isArray(profiles) ? profiles : [];
+}
+
+/**
+ * 获取仲裁员列表
+ *
+ * 实现逻辑（参考桌面端）：
+ * 1. 从 GET /v1/ob/preferences 获取 storeModerators 列表（peerID 数组）
+ * 2. 用 POST /v1/ob/fetchprofiles 批量获取这些 peerID 的 profile 信息
+ * 3. 转换为前端 Moderator 格式
+ */
+export async function getModerators(
+  params: ModeratorListParams = {}
+): Promise<ModeratorListResponse> {
+  // 步骤 1: 获取 storeModerators 列表
+  const moderatorPeerIDs = await getStoreModerators();
+
+  if (moderatorPeerIDs.length === 0) {
+    return {
+      moderators: [],
+      total: 0,
+      page: 1,
+      limit: params.limit || 20,
+      hasMore: false,
+    };
+  }
+
+  // 步骤 2: 批量获取 profile 信息
+  const profiles = await fetchProfiles(moderatorPeerIDs);
 
   // 过滤出真正的仲裁员（有 moderatorInfo 的）
   const moderatorProfiles = profiles.filter(p => p.moderator && p.moderatorInfo);
