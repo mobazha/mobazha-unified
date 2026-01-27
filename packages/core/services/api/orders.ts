@@ -5,7 +5,7 @@
 import type { Order, OrderListItem } from '../../types';
 import { get, post, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
-import { withMockFallback, mockDelay } from './mode';
+import { withMockFallback, mockDelay, getApiMode } from './mode';
 
 // ========== 订单类型定义 ==========
 
@@ -372,18 +372,19 @@ export interface PaymentInstructionsResult {
 /**
  * 创建订单（不含支付）
  * 用于两阶段购买流程：先创建订单，后选择支付方式并支付
+ *
+ * 注意：此函数不使用 mock fallback，失败时直接抛出错误
+ * 因为创建订单是关键操作，不应该静默使用假数据
  */
 export async function createOrder(
   data: CreateOrderData,
   username?: string,
   password?: string
 ): Promise<CreateOrderResult> {
-  const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/purchase`;
-    return post<CreateOrderResult>(url, data, getAuthHeaders(username, password));
-  };
+  const mode = getApiMode();
 
-  const mockFn = async () => {
+  // Mock 模式使用 mock 数据（仅用于开发测试）
+  if (mode === 'mock') {
     await mockDelay();
     const newOrderId = 'Qm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     return {
@@ -397,9 +398,19 @@ export async function createOrder(
         },
       },
     };
-  };
+  }
 
-  return withMockFallback(realFn, mockFn, '/order/purchase');
+  // Real/Auto 模式：调用真实 API，失败直接抛出错误（不回退到 mock）
+  const url = `${getGatewayUrl()}/order/purchase`;
+  // 后端 API 期望 quantity 为字符串类型，需要转换
+  const apiData = {
+    ...data,
+    items: data.items.map(item => ({
+      ...item,
+      quantity: String(item.quantity),
+    })),
+  };
+  return post<CreateOrderResult>(url, apiData, getAuthHeaders(username, password));
 }
 
 /**
