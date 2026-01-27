@@ -5,18 +5,23 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   // 定义全局变量，兼容 Next.js 环境变量
+  // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
+  // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined
   define: {
-    // 定义 process.env 对象，防止未定义错误
-    'process.env': JSON.stringify({
-      NODE_ENV: process.env.NODE_ENV || 'development',
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '',
-      NEXT_PUBLIC_MATRIX_HOMESERVER:
-        process.env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org',
-      NEXT_PUBLIC_MATRIX_ENABLED: process.env.NEXT_PUBLIC_MATRIX_ENABLED || 'false',
-      NEXT_PUBLIC_USE_MOCK_DATA: process.env.NEXT_PUBLIC_USE_MOCK_DATA || 'false',
-      NEXT_PUBLIC_API_BASE_URL:
-        process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org',
-    }),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(process.env.NEXT_PUBLIC_API_URL || ''),
+    'process.env.NEXT_PUBLIC_MATRIX_HOMESERVER': JSON.stringify(
+      process.env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org'
+    ),
+    'process.env.NEXT_PUBLIC_MATRIX_ENABLED': JSON.stringify(
+      process.env.NEXT_PUBLIC_MATRIX_ENABLED || 'false'
+    ),
+    'process.env.NEXT_PUBLIC_USE_MOCK_DATA': JSON.stringify(
+      process.env.NEXT_PUBLIC_USE_MOCK_DATA || 'false'
+    ),
+    'process.env.NEXT_PUBLIC_API_BASE_URL': JSON.stringify(
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org'
+    ),
   },
   resolve: {
     alias: [

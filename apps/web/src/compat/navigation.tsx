@@ -12,11 +12,19 @@ import {
 /**
  * useRouter 兼容层
  * 模拟 Next.js 的 useRouter hook
+ *
+ * 注意：Next.js App Router 的 useRouter() 不包含 pathname 属性，
+ * 应使用 usePathname() 获取当前路径。这里通过 getter 提供 pathname
+ * 以保持向后兼容，但推荐使用 usePathname()。
  */
 export function useRouter() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 使用 getter 确保 pathname 始终返回最新值
+  // 注意：由于 JavaScript 对象的限制，如果用户缓存了返回的对象，
+  // getter 会引用创建时的 location 对象。对于完全响应式的 pathname，
+  // 请使用 usePathname() hook。
   return {
     push: (url: string, options?: { scroll?: boolean }) => {
       navigate(url);
@@ -36,8 +44,11 @@ export function useRouter() {
     prefetch: (_url: string) => {
       // Vite 不支持 prefetch，忽略
     },
-    // 兼容 pathname 属性
-    pathname: location.pathname,
+    // 使用 getter 提供动态 pathname 访问
+    // 推荐使用 usePathname() 以获得更好的响应式行为
+    get pathname() {
+      return location.pathname;
+    },
   };
 }
 
