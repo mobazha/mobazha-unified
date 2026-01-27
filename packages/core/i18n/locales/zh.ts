@@ -435,6 +435,48 @@ export const zh: TranslationResource = {
       refund: '退款',
       claim: '领取资金',
       acceptPayout: '接受裁决',
+      // 成功消息
+      acceptSuccess: '订单已接受',
+      acceptSuccessDesc: '您已接受订单，请尽快完成发货。',
+      declineSuccess: '订单已拒绝',
+      declineSuccessDesc: '您已拒绝订单，买家将收到通知。',
+      cancelSuccess: '订单已取消',
+      cancelSuccessDesc: '订单已成功取消。',
+      refundSuccess: '退款已处理',
+      refundSuccessDesc: '退款已处理，资金将返还给买家。',
+      claimSuccess: '资金已领取',
+      claimSuccessDesc: '您已成功领取资金。',
+      acceptPayoutSuccess: '裁决已接受',
+      acceptPayoutSuccessDesc: '您已接受争议裁决结果。',
+      reviewComingSoon: '评价功能即将上线。',
+      error: '错误',
+    },
+    // 订单操作确认对话框
+    dialogs: {
+      acceptOrder: {
+        title: '接受订单',
+        description: '确定要接受此订单吗？接受后，您需要按时完成发货。',
+      },
+      declineOrder: {
+        title: '拒绝订单',
+        description: '确定要拒绝此订单吗？买家将收到通知，已支付的款项将被退还。',
+      },
+      cancelOrder: {
+        title: '取消订单',
+        description: '确定要取消此订单吗？此操作无法撤销。',
+      },
+      refundOrder: {
+        title: '退款订单',
+        description: '确定要退款此订单吗？资金将返还给买家，此操作无法撤销。',
+      },
+      claimPayment: {
+        title: '领取资金',
+        description: '订单已超时，确定要领取资金吗？资金将释放给您。',
+      },
+      acceptPayout: {
+        title: '接受裁决',
+        description: '确定要接受争议裁决结果吗？资金将按仲裁员的决定进行分配。',
+      },
     },
     // 发货模态框
     fulfill: {
@@ -1116,8 +1158,34 @@ export const zh: TranslationResource = {
     connecting: '连接中...',
     processing: '处理中...',
     success: '支付成功！',
-    failed: '支付失败：',
+    failed: '支付失败',
     securityNote: '通过多签托管保护的安全支付',
+    // 交易相关
+    connectWalletFirst: '请先连接钱包',
+    noPaymentAddress: '无可用的支付地址',
+    noPaymentInstructions: '获取支付指令失败',
+    externalWalletRequired: '需要外部钱包',
+    pleaseUseExternalWallet: '请使用外部钱包（BTC/LTC）完成此支付',
+    invalidAmount: '支付金额无效',
+    signerNotAvailable: '钱包签名器不可用',
+    providerNotAvailable: '钱包提供者不可用',
+    // ERC20 授权
+    approvalRequired: '需要代币授权',
+    pleaseApproveToken: '请在钱包中授权代币支出',
+    approvalSent: '授权交易已发送',
+    waitingForApproval: '等待授权确认...',
+    approvalFailed: '代币授权失败',
+    approvalSuccess: '代币已授权',
+    proceedingWithPayment: '正在处理支付...',
+    // 交易
+    confirmInWallet: '请在钱包中确认',
+    pleaseConfirmTransaction: '请在您的钱包中确认交易',
+    transactionSent: '交易已发送',
+    txHash: '交易哈希',
+    transactionFailed: '交易失败',
+    paymentComplete: '您的支付已成功处理',
+    cancelled: '支付已取消',
+    userCancelledTransaction: '用户取消了交易',
   },
 
   filter: {

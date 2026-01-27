@@ -214,8 +214,8 @@ export function useRwaPurchase({
   }, []);
 
   // 从订单获取支付金额
-  const getPaymentAmount = useCallback((): string => {
-    if (!order) return '0';
+  const getPaymentAmount = useCallback((): number => {
+    if (!order) return 0;
 
     const orderOpen = (order.contract as any)?.orderOpen;
     const listing = orderOpen?.listings?.[0]?.listing;
@@ -229,7 +229,7 @@ export function useRwaPurchase({
     const usdAmount = (price * quantity) / Math.pow(10, pricingDivisibility);
     const paymentAmount = Math.floor(usdAmount * 1e6); // USDT 有 6 位小数
 
-    return paymentAmount.toString();
+    return paymentAmount; // 返回数字类型，后端期望 uint64
   }, [order]);
 
   // 开始购买（新设计：买家创建订单并支付）
@@ -316,7 +316,7 @@ export function useRwaPurchase({
         console.log('🔧 授权支付代币...');
         const approvalResult = await swapService.approvePaymentToken(
           paymentTokenAddress,
-          paymentAmount
+          paymentAmount.toString() // swapService 需要字符串
         );
 
         if (!approvalResult.success) {
@@ -340,7 +340,7 @@ export function useRwaPurchase({
           buyerReceiveAddress: buyerReceiveAddress,
           tokenAmount: quantity.toString(),
           paymentToken: paymentTokenAddress,
-          paymentAmount: paymentAmount,
+          paymentAmount: paymentAmount.toString(), // swapService 需要字符串
         });
 
         if (result.success && result.transactionHash) {
@@ -390,7 +390,7 @@ export function useRwaPurchase({
           buyerReceiveAddress: buyerReceiveAddress,
           tokenAmount: quantity.toString(),
           paymentToken: paymentTokenAddress,
-          price: paymentAmount,
+          price: paymentAmount.toString(), // swapService 需要字符串
           externalOrderId: externalOrderId,
         });
 

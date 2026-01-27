@@ -3,6 +3,7 @@
 import React, { useState, useCallback, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from './useMediaQuery';
+import { useModerators } from './useModerators';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
 /**
@@ -42,6 +43,9 @@ const PaymentSelectorContext = createContext<PaymentSelectorContextValue | null>
 export function PaymentSelectorProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // 获取调解员列表
+  const { moderators, isLoading: isLoadingModerators } = useModerators({ autoFetch: true });
 
   // 使用初始状态函数从 sessionStorage 恢复状态
   const [state, setState] = useState<PaymentSelectorState>(() => {
@@ -200,6 +204,8 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
             onClose={closeModeratorDrawer}
             selectedModerator={state.selectedModerator}
             onSelectModerator={handleModeratorSelect}
+            moderatorList={moderators}
+            isLoadingModerators={isLoadingModerators}
           />
         </>
       )}

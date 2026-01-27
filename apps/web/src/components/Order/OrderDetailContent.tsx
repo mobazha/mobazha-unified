@@ -150,6 +150,14 @@ export interface OrderDetailContentProps {
 
 /**
  * 根据订单状态计算进度条配置
+ * 参考桌面端 Summary.vue 中的 progressBarState 计算逻辑
+ *
+ * 状态映射（与桌面端一致）：
+ * - awaiting_payment: currentState = 0 (未支付)
+ * - pending/paid: currentState = 1 (已支付，等待确认)
+ * - processing: currentState = 2 (已接受)
+ * - shipped/delivered: currentState = 3 (已发货)
+ * - completed: currentState = 4 (完成)
  */
 function getProgressBarState(
   status: DisplayOrder['status'],
@@ -184,25 +192,30 @@ function getProgressBarState(
   let currentState = 0;
 
   switch (status) {
-    case 'pending':
     case 'awaiting_payment':
+      // 真正的未支付状态
       currentState = 0;
       break;
+    case 'pending':
     case 'paid':
+      // 已支付，等待确认（参考桌面端：PENDING 状态 currentState = 1）
       currentState = 1;
       break;
     case 'processing':
+      // 已接受（参考桌面端：AWAITING_FULFILLMENT 状态 currentState = 2）
       currentState = 2;
       break;
     case 'shipped':
     case 'delivered':
+      // 已发货（参考桌面端：FULFILLED 状态 currentState = 3）
       currentState = 3;
       break;
     case 'completed':
+      // 完成（参考桌面端：COMPLETED 状态 currentState = 4）
       currentState = 4;
       break;
     default:
-      // 默认应该是 0（未支付），而不是 1（已支付）
+      // 默认为未支付
       currentState = 0;
   }
 

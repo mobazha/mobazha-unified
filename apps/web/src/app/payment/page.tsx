@@ -15,7 +15,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { usePaymentSelector } from '@/hooks';
-import { useWallet, useCurrency, useI18n, ordersApi, getImageUrl } from '@mobazha/core';
+import {
+  useWallet,
+  useCurrency,
+  useI18n,
+  ordersApi,
+  getImageUrl,
+  getTransactionService,
+} from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -58,6 +65,8 @@ interface OrderDetails {
   rwaEscrowTimeoutSeconds?: number;
   cryptoListingCurrencyCode?: string;
   contractType?: string;
+  // 原始订单金额（最小单位，用于传统订单支付）
+  rawOrderAmount?: number;
 }
 
 /**
@@ -80,7 +89,7 @@ export default function PaymentPage() {
   const { renderPairedPrice } = useCurrency();
   const { t } = useI18n();
   const { toast } = useToast();
-  const { isConnected, isConnecting, connect } = useWallet();
+  const { isConnected, isConnecting, connect, getSigner } = useWallet();
 
   // 从 URL 获取参数
   const orderID = searchParams.get('orderID');
@@ -152,26 +161,81 @@ export default function PaymentPage() {
         setRawOrder(order);
 
         // 从订单中提取商品信息
-        const contract = order?.contract;
-        const listings = contract?.vendorListings || [];
-        const orderItems = contract?.buyerOrder?.items || [];
+        // 注意：API 返回两种可能的结构：
+        // 1. 旧结构: contract.vendorListings, contract.buyerOrder
+        // 2. 新结构: contract.orderOpen.listings, contract.orderOpen.items
+        const contract = order?.contract as any;
+        const orderOpen = contract?.orderOpen;
+
+        // 优先使用 orderOpen 结构（新 API），回退到旧结构
+        let rawListings: any[] = [];
+        let orderItems: any[] = [];
+        let orderAmount = 0;
+        let pricingCurrency = 'USD';
+        let pricingDivisibility = 2;
+        let shippingInfo: any = null;
+        let vendorInfo: any = null;
+        let paymentAddress = '';
+        let memo = '';
+
+        if (orderOpen) {
+          // 新结构：orderOpen 包含 listings（每个元素是 {cid, listing, signature}）和 items
+          rawListings = orderOpen.listings || [];
+          orderItems = orderOpen.items || [];
+          orderAmount = Number(orderOpen.amount) || 0;
+          shippingInfo = orderOpen.shipping;
+          memo = orderOpen.alternateContactInfo || '';
+
+          // 从第一个 listing 提取定价信息
+          const firstListingData = rawListings[0]?.listing;
+          if (firstListingData?.metadata?.pricingCurrency) {
+            pricingCurrency = firstListingData.metadata.pricingCurrency.code || 'USD';
+            pricingDivisibility = firstListingData.metadata.pricingCurrency.divisibility || 2;
+          }
+          vendorInfo = firstListingData?.vendorID;
+        } else {
+          // 旧结构
+          rawListings = contract?.vendorListings || [];
+          orderItems = contract?.buyerOrder?.items || [];
+          shippingInfo = contract?.buyerOrder?.shipping;
+          memo = contract?.buyerOrder?.alternateContactInfo || '';
+          paymentAddress = contract?.buyerOrder?.payment?.address || '';
+
+          // 从第一个 listing 提取定价信息
+          if (rawListings[0]?.metadata?.pricingCurrency) {
+            pricingCurrency = rawListings[0].metadata.pricingCurrency.code || 'USD';
+            pricingDivisibility = rawListings[0].metadata.pricingCurrency.divisibility || 2;
+          }
+          vendorInfo = rawListings[0]?.vendorID;
+        }
+
+        // 统一处理 listings（兼容新旧结构）
+        const normalizedListings = rawListings.map((item: any) => {
+          // 新结构: { cid, listing: {...}, signature }
+          // 旧结构: 直接是 listing 对象
+          return item.listing || item;
+        });
 
         // 判断是否为 RWA Token（优先使用 URL 参数）
-        const metadata = listings[0]?.metadata as any;
+        const metadata = normalizedListings[0]?.metadata as any;
         const contractType = urlContractType || metadata?.contractType;
         const isRwa = urlIsRwaToken || contractType === 'RWA_TOKEN';
         const rwaMode = urlRwaTradeMode ? parseInt(urlRwaTradeMode, 10) : metadata?.rwaTradeMode;
         const escrowTimeout = urlEscrowTimeout
           ? parseInt(urlEscrowTimeout, 10)
           : metadata?.rwaEscrowTimeoutSeconds || metadata?.escrowTimeoutSeconds || 86400;
-        const tokenCode = urlTokenCode || (listings[0]?.item as any)?.cryptoListingCurrencyCode;
+        const tokenCode =
+          urlTokenCode || (normalizedListings[0]?.item as any)?.cryptoListingCurrencyCode;
 
         // 转换为 OrderDetails 格式
-        // 注意：订单详情 API 返回的 listing.item.price 已经是转换后的值（不是最小单位）
-        let items = listings.map((listing, index) => {
+        let items = normalizedListings.map((listing: any, index: number) => {
           const orderItem = orderItems[index] || {};
-          const price = Number(listing.item?.price) || 0;
-          const currency = listing.metadata?.pricingCurrency?.code || 'USD';
+          // 价格在最小单位中，需要根据 divisibility 转换
+          const rawPrice = Number(listing.item?.price) || 0;
+          const divisibility =
+            listing.metadata?.pricingCurrency?.divisibility || pricingDivisibility;
+          const price = rawPrice / Math.pow(10, divisibility);
+          const currency = listing.metadata?.pricingCurrency?.code || pricingCurrency;
           const imageUrl = listing.item?.images?.[0]?.medium || listing.item?.images?.[0]?.small;
 
           return {
@@ -179,7 +243,7 @@ export default function PaymentPage() {
             title: listing.item?.title || 'Unknown Product',
             price,
             currency,
-            quantity: Number(orderItem.quantity) || 1,
+            quantity: Number(orderItem.quantity) || Number(orderItem.quantity64) || 1,
             image: getImageUrl(imageUrl) || '',
           };
         });
@@ -200,45 +264,49 @@ export default function PaymentPage() {
           ];
         }
 
-        // 获取地址信息
-        const shipping = contract?.buyerOrder?.shipping as any;
-
-        // 计算总价（优先使用 URL 参数中的金额）
+        // 计算总价
+        // 优先级：1. URL 参数  2. orderOpen.amount（转换后）  3. 计算值
         const totalFromUrl = urlAmount ? parseFloat(urlAmount) : 0;
+        const totalFromOrderOpen =
+          orderAmount > 0 ? orderAmount / Math.pow(10, pricingDivisibility) : 0;
         const calculatedTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const finalTotal = totalFromUrl > 0 ? totalFromUrl : calculatedTotal;
+        const finalTotal =
+          totalFromUrl > 0
+            ? totalFromUrl
+            : totalFromOrderOpen > 0
+              ? totalFromOrderOpen
+              : calculatedTotal;
 
         const orderDetailsData: OrderDetails = {
-          orderID: (contract as any)?.OrderID || (contract as any)?.orderID || orderID,
+          orderID: contract?.OrderID || contract?.orderID || orderID,
           status: order?.state || 'AWAITING_PAYMENT',
           items,
           vendor: {
             name:
-              listings[0]?.vendorID?.handle ||
-              listings[0]?.vendorID?.peerID?.slice(0, 8) ||
-              urlVendorName ||
-              'Unknown',
-            peerID: listings[0]?.vendorID?.peerID || urlVendorPeerID || '',
+              vendorInfo?.handle || vendorInfo?.peerID?.slice(0, 8) || urlVendorName || 'Unknown',
+            peerID: vendorInfo?.peerID || urlVendorPeerID || '',
           },
           shippingAddress: {
-            name: shipping?.shipTo || shipping?.name || '',
-            street: shipping?.address || shipping?.street || '',
-            city: shipping?.city || '',
-            state: shipping?.state || '',
-            country: shipping?.country || '',
-            postalCode: shipping?.postalCode || '',
+            name: shippingInfo?.shipTo || shippingInfo?.name || '',
+            street: shippingInfo?.address || shippingInfo?.street || '',
+            city: shippingInfo?.city || '',
+            state: shippingInfo?.state || '',
+            country: shippingInfo?.country || '',
+            postalCode: shippingInfo?.postalCode || '',
           },
-          memo: contract?.buyerOrder?.alternateContactInfo,
+          memo,
           subtotal: finalTotal,
           total: finalTotal,
-          currency: items[0]?.currency || urlCurrency || 'USD',
-          paymentAddress: contract?.buyerOrder?.payment?.address,
+          currency: items[0]?.currency || urlCurrency || pricingCurrency,
+          paymentAddress,
           // RWA 相关
           isRwaToken: isRwa,
           rwaTradeMode: rwaMode,
           rwaEscrowTimeoutSeconds: escrowTimeout,
           cryptoListingCurrencyCode: tokenCode,
           contractType,
+          // 保存原始订单金额（用于传统订单支付）
+          rawOrderAmount: orderAmount,
         };
 
         setOrderDetails(orderDetailsData);
@@ -337,6 +405,40 @@ export default function PaymentPage() {
   const cryptoAmount = totalWithFee / exchangeRate;
   const nativeSymbol = 'ETH'; // TODO: 根据选择的支付方式确定
 
+  // 获取支付信息（支付地址和金额）
+  const paymentInfo = useMemo(() => {
+    if (!rawOrder) return null;
+
+    const contract = rawOrder.contract;
+    const payment = contract?.buyerOrder?.payment;
+    const vendorConfirmation = contract?.vendorOrderConfirmation;
+
+    // 优先使用卖家确认的支付地址和金额
+    const paymentAddress = vendorConfirmation?.paymentAddress || payment?.address;
+    const paymentAmount = vendorConfirmation?.requestedAmount || payment?.amount;
+    const paymentCoin = payment?.coin || selectedTokenId || 'ETH';
+
+    return {
+      address: paymentAddress,
+      amount: paymentAmount,
+      coin: paymentCoin,
+    };
+  }, [rawOrder, selectedTokenId]);
+
+  // 获取代币精度（用于支付计算）
+  const getTokenDecimals = useCallback((coin: string): number => {
+    const upperCoin = (coin || '').toUpperCase();
+    // 主流稳定币精度映射
+    if (upperCoin.includes('USDT') || upperCoin.includes('USDC')) {
+      return 6;
+    }
+    if (upperCoin.includes('DAI')) {
+      return 18;
+    }
+    // ETH 和其他原生代币默认 18 位
+    return 18;
+  }, []);
+
   // 执行支付
   const handlePayment = useCallback(async () => {
     if (!orderDetails) {
@@ -363,45 +465,192 @@ export default function PaymentPage() {
       return;
     }
 
+    if (!isConnected) {
+      toast({
+        title: t('payment.connectWalletFirst'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // TODO: 调用真实的支付 API
-      // 1. 获取支付指令
-      // const instructions = await orderApi.getPaymentInstructions(orderID, selectedTokenId);
+      // 1. 计算支付金额（需要传给后端 API）
+      // 获取支付代币精度
+      const getPaymentTokenDivisibility = (coin: string): number => {
+        const upperCoin = (coin || '').toUpperCase();
+        if (upperCoin.includes('USDT') || upperCoin.includes('USDC')) return 6;
+        if (upperCoin.includes('DAI')) return 18;
+        if (upperCoin.includes('ETH')) return 18;
+        if (upperCoin.includes('BTC')) return 8;
+        return 6; // 默认 6
+      };
 
-      // 2. 执行支付交易
-      // await walletService.sendTransaction({
-      //   to: instructions.paymentAddress,
-      //   value: instructions.amount,
-      // });
+      let paymentAmountForApi = 0;
+      if (orderDetails) {
+        const isRwaToken = orderDetails.isRwaToken;
+        if (isRwaToken) {
+          // RWA Token 订单：从 fiat 金额计算稳定币金额
+          const totalInFiat = orderDetails.total;
+          const paymentTokenDivisibility = getPaymentTokenDivisibility(selectedTokenId);
+          paymentAmountForApi = Math.round(totalInFiat * Math.pow(10, paymentTokenDivisibility));
+        } else {
+          // 传统订单：使用 rawOrderAmount 并转换精度
+          const rawAmount = orderDetails.rawOrderAmount || 0;
+          const pricingDivisibility = 2; // USD 精度
+          const paymentTokenDivisibility = getPaymentTokenDivisibility(selectedTokenId);
+          const multiplier = Math.pow(10, paymentTokenDivisibility - pricingDivisibility);
+          paymentAmountForApi = Math.round(rawAmount * multiplier);
+        }
+      }
 
-      // 3. 提交支付确认
-      // await orderApi.fundOrder({
-      //   orderID,
-      //   coinType: selectedTokenId,
-      //   address: instructions.paymentAddress,
-      //   amount: instructions.amount,
-      // });
+      // 2. 获取钱包地址
+      const signer = await getSigner();
+      const payerAddress = signer ? await signer.getAddress() : undefined;
 
-      // Mock 支付
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 3. 获取支付指令（传入金额、付款地址和仲裁人）
+      // 如果启用了支付保护且选择了仲裁人，传入仲裁人 peerID
+      const moderatorPeerID =
+        paymentProtectionEnabled && paymentModerator?.peerID ? paymentModerator.peerID : undefined;
 
-      // 支付成功，跳转到订单详情
+      const response = await ordersApi.getPaymentInstructions({
+        orderId: orderID!,
+        coin: selectedTokenId,
+        amount: paymentAmountForApi,
+        payerAddress: payerAddress,
+        moderator: moderatorPeerID,
+      });
+
+      // 4. 检查是否为外部钱包支付（UTXO 链如 BTC/LTC）
+      if (response.paymentType === 'external_wallet') {
+        // TODO: 显示外部钱包支付模态框
+        toast({
+          title: t('payment.externalWalletRequired'),
+          description: t('payment.pleaseUseExternalWallet'),
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // 5. 验证必要的支付数据
+      if (!response.instructions) {
+        throw new Error(t('payment.noPaymentInstructions'));
+      }
+
+      const { to, data, value } = response.instructions;
+
+      if (!to) {
+        throw new Error(t('payment.noPaymentAddress'));
+      }
+
+      // 6. 验证 signer（已在前面获取）
+      if (!signer) {
+        throw new Error(t('payment.signerNotAvailable'));
+      }
+
+      // 7. 初始化交易服务
+      const transactionService = getTransactionService();
+      const initResult = await transactionService.initializeWithSigner(signer);
+      if (!initResult) {
+        throw new Error(t('payment.providerNotAvailable'));
+      }
+
+      // 8. 使用交易服务执行支付（包含 ERC20 授权和交易执行）
+      const { paymentData } = response;
+      const paymentTokenAddress = paymentData?.paymentTokenAddress;
+      const contractAddress = paymentData?.contractAddress || to;
+
+      // 使用已计算的支付金额（paymentAmountForApi）
+      const paymentAmount = paymentAmountForApi;
+
+      toast({
+        title: t('payment.confirmInWallet'),
+        description: t('payment.pleaseConfirmTransaction'),
+      });
+
+      // 执行合约支付（自动处理 ERC20 授权）
+      const txResult = await transactionService.executeContractPayment(
+        paymentTokenAddress,
+        contractAddress,
+        paymentAmount?.toString() || '0',
+        { to, data, value: value || '0' }
+      );
+
+      if (!txResult.success) {
+        throw new Error(txResult.error || t('payment.transactionFailed'));
+      }
+
+      const txHash = txResult.transactionHash!;
+
+      toast({
+        title: t('payment.transactionSent'),
+        description: `${t('payment.txHash')}: ${txHash.slice(0, 10)}...`,
+      });
+
+      // 7. 通知后端支付完成（使用 /v1/order/payment API）
+      // 与移动端保持一致：直接使用后端返回的 paymentData，只添加 transactionID 和 timestamp
+      try {
+        const { paymentData: pd } = response;
+        if (pd) {
+          // 后端返回的 paymentData 已包含 toAddress、orderID、coin、amount、method 等所有必要字段
+          const submitData = {
+            ...pd,
+            transactionID: txHash,
+            timestamp: new Date().toISOString(),
+          };
+          await ordersApi.submitPayment(submitData);
+        } else {
+          // 如果后端没有返回 paymentData，跳过提交
+        }
+      } catch {
+        // 即使后端返回错误，交易已经发出，仍然算成功
+      }
+
+      // 8. 支付成功，跳转到订单详情
       toast({
         title: t('payment.success'),
+        description: t('payment.paymentComplete'),
       });
+
       router.push(`/orders/${orderDetails.orderID}`);
     } catch (error) {
-      toast({
-        title: t('payment.failed'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
+      console.error('[Payment] Payment failed:', error);
+
+      // 用户取消交易的情况
+      const errorMessage = (error as Error).message || '';
+      if (
+        errorMessage.includes('rejected') ||
+        errorMessage.includes('denied') ||
+        errorMessage.includes('cancelled')
+      ) {
+        toast({
+          title: t('payment.cancelled'),
+          description: t('payment.userCancelledTransaction'),
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t('payment.failed'),
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsProcessing(false);
     }
-  }, [orderDetails, selectedTokenId, paymentProtectionEnabled, paymentModerator, router, t, toast]);
+  }, [
+    orderDetails,
+    orderID,
+    selectedTokenId,
+    paymentProtectionEnabled,
+    paymentModerator,
+    isConnected,
+    getSigner,
+    router,
+    t,
+    toast,
+  ]);
 
   // Error state
   if (error && !isLoadingOrder) {

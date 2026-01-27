@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, useRef, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUserStore, useMatrixInit } from '@mobazha/core';
 import {
@@ -30,6 +30,9 @@ export function AuthProvider({
   const { isAuthenticated, restoreSession, loginWithOAuth, isLoading } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+
+  // HMR 保护：使用 ref 避免热更新导致的重复执行
+  const hasRestoredSession = useRef(false);
 
   // 初始化 Matrix（在用户登录后自动连接）
   useMatrixInit({
@@ -66,9 +69,17 @@ export function AuthProvider({
   }, [loginWithOAuth, router, isProcessingOAuth]);
 
   // 恢复会话（仅在没有 OAuth 回调时）
+  // 使用 ref 防止 HMR 导致的重复执行
   useEffect(() => {
     const initAuth = async () => {
+      // HMR 保护：如果已经恢复过会话，跳过
+      if (hasRestoredSession.current) {
+        setIsInitialized(true);
+        return;
+      }
+
       if (!hasOAuthCallback() && !isProcessingOAuth) {
+        hasRestoredSession.current = true;
         // 尝试恢复会话
         await restoreSession();
         setIsInitialized(true);

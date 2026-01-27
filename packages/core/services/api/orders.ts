@@ -713,23 +713,37 @@ export async function refundOrder(
 // ========== 支付相关 API ==========
 
 /**
- * 提交支付数据（RWA 原子交换专用）
+ * 提交支付数据
  * 用于通知后端支付已完成
+ *
+ * 注意：推荐直接使用后端 getPaymentInstructions 返回的 paymentData，
+ * 只添加 transactionID 和 timestamp 字段（与移动端保持一致）
  */
 export interface SubmitPaymentData {
   orderID: string;
   transactionID: string;
   coin: string;
-  amount: string;
+  amount: number; // 必须是数字类型（后端期望 uint64）
   timestamp: string;
-  method: number; // 3: RWA_ATOMIC_SWAP, 4: RWA_PAYMENT_LOCKED
+  method: number; // 1: DIRECT, 2: MODERATED, 3: RWA_ATOMIC_SWAP, 4: RWA_INSTANT
+  // 支付目标地址（托管合约地址）- 后端验证必需
+  toAddress?: string;
+  // 支付者地址
+  payerAddress?: string; // 付款人钱包地址
+  // 仲裁相关
+  moderator?: string; // 仲裁人 peerID
+  moderatorAddress?: string; // 仲裁人钱包地址
+  // 合约相关
   paymentTokenAddress?: string;
   contractAddress?: string;
+  // RWA 相关
   buyerReceiveAddress?: string;
   approvalTxHash?: string;
   contractOrderId?: string;
   rwaTradeMode?: number; // 0: Instant, 1: ConfirmRequired
   rwaOrderCompleted?: boolean;
+  // 允许其他后端返回的字段
+  [key: string]: unknown;
 }
 
 /**
@@ -806,14 +820,43 @@ export async function fundOrder(
 
 /**
  * 支付指令响应类型
- * - RWA Token 支付：返回 buyerAddress 和 vendorAddress（身份地址）
- * - 传统支付：返回 address 和 amount
+ *
+ * 后端返回的完整数据结构，用于 EVM 链的智能合约支付
  */
 export interface PaymentInstructionsResponse {
-  // 传统支付字段
+  // 交易指令（合约调用）
+  instructions?: {
+    to: string; // 合约地址
+    data: string; // 合约调用数据（ABI 编码）
+    value: string; // ETH 值（通常为 "0"）
+  };
+  // 支付数据（元数据）
+  paymentData?: {
+    orderID: string;
+    transactionID?: string;
+    coin: string;
+    method: number;
+    contractAddress: string; // 托管合约地址
+    payerAddress?: string;
+    moderator?: string;
+    moderatorAddress?: string;
+    amount: number; // 支付金额（最小单位）
+    fromID?: string;
+    toAddress?: string;
+    toID?: string;
+    script?: string;
+    unlockHours?: number;
+    paymentTokenAddress?: string; // ERC20 代币地址
+    timestamp?: string;
+  };
+  // 托管账户地址
+  escrowAccount?: string;
+  // 外部钱包支付（UTXO 链）
+  paymentType?: string;
+  paymentAddress?: string;
+  // 兼容旧字段
   address?: string;
   amount?: number;
-  // RWA Token 支付字段（身份地址）
   buyerAddress?: string;
   vendorAddress?: string;
   // 错误字段
@@ -822,25 +865,66 @@ export interface PaymentInstructionsResponse {
 
 /**
  * 获取支付指令
+ *
+ * 注意：后端 API 期望的参数名是 orderID 和 coinType（大写）
+ * 为了与前端代码风格保持一致，这里接受 orderId 和 coin，
+ * 然后在内部转换为后端期望的格式
  */
 export async function getPaymentInstructions(
-  requestData: { orderId: string; coin: string },
+  requestData: {
+    orderId: string;
+    coin: string;
+    amount?: number; // 支付金额（最小单位）
+    payerAddress?: string; // 付款人地址
+    moderator?: string; // 仲裁人 peerID
+  },
   username?: string,
   password?: string
 ): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/instructions/order/payment`;
-    return post<PaymentInstructionsResponse>(url, requestData, getAuthHeaders(username, password));
+    // 转换为后端期望的参数名
+    const backendRequestData: Record<string, unknown> = {
+      orderID: requestData.orderId,
+      coinType: requestData.coin,
+    };
+    // 添加可选参数
+    if (requestData.amount !== undefined) {
+      backendRequestData.amount = requestData.amount;
+    }
+    if (requestData.payerAddress) {
+      backendRequestData.payerAddress = requestData.payerAddress;
+    }
+    if (requestData.moderator) {
+      backendRequestData.moderator = requestData.moderator;
+    }
+    return post<PaymentInstructionsResponse>(
+      url,
+      backendRequestData,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
     await mockDelay();
+    const mockContractAddress = '0x' + Math.random().toString(16).slice(2, 42);
+    const mockEscrowAccount = '0x' + Math.random().toString(16).slice(2, 66);
     return {
-      address: '0x' + Math.random().toString(16).slice(2, 42),
-      amount: 0.05,
-      // Mock RWA Token 身份地址
-      buyerAddress: '0x' + Math.random().toString(16).slice(2, 42),
-      vendorAddress: '0x' + Math.random().toString(16).slice(2, 42),
+      instructions: {
+        to: mockContractAddress,
+        data: '0x57bced76' + '0'.repeat(256), // Mock contract call data
+        value: '0',
+      },
+      paymentData: {
+        orderID: requestData.orderId,
+        coin: requestData.coin,
+        method: 1,
+        contractAddress: mockContractAddress,
+        amount: 1500, // Mock amount in minimal units
+        unlockHours: 720,
+        paymentTokenAddress: '0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
+      },
+      escrowAccount: mockEscrowAccount,
     };
   };
 
@@ -935,6 +1019,36 @@ export async function acceptDispute(
   return withMockFallback(realFn, mockFn, '/dispute/release');
 }
 
+/**
+ * 认领过期资金（卖家）
+ * 当订单超时后，卖家可以认领资金
+ */
+export async function claimPayment(
+  orderId: string,
+  username?: string,
+  password?: string
+): Promise<{ success: boolean; error?: string }> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/ob/releaseAfterTimeout`;
+    return post<{ success: boolean; error?: string }>(
+      url,
+      { orderID: orderId },
+      getAuthHeaders(username, password)
+    );
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    const order = mockOrders.find(o => o.orderID === orderId);
+    if (order) {
+      order.state = 'PAYMENT_FINALIZED';
+    }
+    return { success: true };
+  };
+
+  return withMockFallback(realFn, mockFn, '/ob/releaseAfterTimeout');
+}
+
 // ========== 其他 API ==========
 
 /**
@@ -1025,6 +1139,7 @@ export const ordersApi = {
   // 争议
   openDispute,
   acceptDispute,
+  claimPayment,
 
   // 其他
   resendOrderMessage,
