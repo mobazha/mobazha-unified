@@ -108,7 +108,6 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, baseDelay = 10
       if (isRateLimit && i < maxRetries - 1) {
         // 指数退避：100ms, 200ms, 400ms...
         const delayMs = baseDelay * Math.pow(2, i);
-        console.log(`[TxService] Rate limited, retrying in ${delayMs}ms...`);
         await delay(delayMs);
       } else if (i < maxRetries - 1) {
         // 其他错误，短暂延迟后重试
@@ -168,7 +167,7 @@ export async function getERC20TokenTransfers(
     setCachedTransfers(cacheKey, transfers);
     return transfers;
   } catch (error) {
-    console.error('Error fetching ERC20 transfers:', error);
+    // 忽略错误，返回空数组
     return [];
   }
 }
@@ -227,7 +226,7 @@ export async function getERC1155TokenTransfers(
     setCachedTransfers(cacheKey, transfers);
     return transfers;
   } catch (error) {
-    console.error('Error fetching ERC1155 transfers:', error);
+    // 忽略错误，返回空数组
     return [];
   }
 }
@@ -341,7 +340,7 @@ export async function getERC3525TokenTransfers(
       // 按时间重新排序
       transfers.sort((a, b) => b.timestamp - a.timestamp);
     } catch (err) {
-      console.warn('[TxService] Error fetching ERC3525 value transfers:', err);
+      // 忽略 TransferValue 查询错误
     }
 
     // 如果指定了 tokenId，则过滤
@@ -354,7 +353,7 @@ export async function getERC3525TokenTransfers(
     }
     return transfers;
   } catch (error) {
-    console.error('Error fetching ERC3525 transfers:', error);
+    // 忽略错误，返回空数组
     return [];
   }
 }
@@ -486,7 +485,7 @@ async function getERC3525ValueTransfers(
 
     return userTransfers;
   } catch (error) {
-    console.error('[TxService] Error fetching ERC3525 value transfers:', error);
+    // 忽略错误，返回空数组
     return [];
   }
 }
@@ -525,7 +524,7 @@ async function getUserERC3525TokenIds(
       }
     }
   } catch (error) {
-    console.warn('[TxService] Error fetching user token IDs:', error);
+    // 忽略错误
   }
 
   return tokenIds;
@@ -623,7 +622,7 @@ export async function getUserInitiatedRwaTransactions(
     setCachedTransfers(cacheKey, transactions);
     return transactions;
   } catch (error) {
-    console.error('Error fetching user initiated transactions:', error);
+    // 忽略错误，返回空数组
     return [];
   }
 }
@@ -730,7 +729,7 @@ async function parseTransactionLogs(
 
     return transfers;
   } catch (error) {
-    console.error('Error parsing transaction logs:', error);
+    // 忽略错误，返回空数组
     return [];
   }
 }
@@ -789,16 +788,15 @@ export async function getUserTransactionHistory(
 
           return transfers;
         } catch (error) {
-          console.error(`Error fetching transfers for ${contractAddress}:`, error);
+          // 忽略错误，返回空数组
           return [];
         }
       })
     ),
     // 2. 获取用户发起的交易
-    getUserInitiatedRwaTransactions(userAddress, rwaContractAddresses).catch(error => {
-      console.error('Error fetching user initiated transactions:', error);
-      return [] as TokenTransfer[];
-    }),
+    getUserInitiatedRwaTransactions(userAddress, rwaContractAddresses).catch(
+      () => [] as TokenTransfer[]
+    ),
   ]);
 
   // 合并所有合约的交易
