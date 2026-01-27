@@ -527,6 +527,12 @@ export const zh: TranslationResource = {
         description: '确定要确认收货吗？确认后资金将释放给卖家，订单将标记为完成。',
       },
     },
+    // 接受订单模态框
+    accept: {
+      title: '接受订单',
+      description: '请选择您希望接收此订单付款的收款账户。',
+      receivingAccountRequired: '请选择收款账户',
+    },
     // 发货模态框
     fulfill: {
       shipOrder: '发货',
@@ -571,13 +577,6 @@ export const zh: TranslationResource = {
       confirmTitle: '确认申诉',
       confirmText: '确定要发起申诉吗？仲裁员将收到通知并介入帮助解决问题。',
       confirm: '发起申诉',
-    },
-    // 接受订单模态框
-    accept: {
-      title: '接受或拒绝订单',
-      description: '审核此订单，决定是否接受或拒绝。',
-      accept: '接受订单',
-      decline: '拒绝订单',
     },
     // 退款模态框
     refund: {

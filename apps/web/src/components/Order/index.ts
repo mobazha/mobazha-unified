@@ -87,6 +87,8 @@ export * from './utils';
 export * from './modals';
 
 // Dialogs
+export { AcceptOrderDialog } from './AcceptOrderDialog';
+export type { AcceptOrderDialogProps } from './AcceptOrderDialog';
 export { FulfillOrderDialog } from './FulfillOrderDialog';
 export type { FulfillOrderDialogProps } from './FulfillOrderDialog';
 

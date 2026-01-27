@@ -29,6 +29,7 @@ import type { Order as CoreOrder, OrderState } from '@mobazha/core';
 import {
   OrderDetailContent,
   OrderFooter,
+  AcceptOrderDialog,
   FulfillOrderDialog,
   OrderConfirmDialog,
   type DisplayOrder,
@@ -495,6 +496,8 @@ export default function OrderDetailPage() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   // 通用确认对话框状态
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
+  // 接受订单对话框状态
+  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   // 发货对话框状态
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
 
@@ -546,11 +549,6 @@ export default function OrderDetailPage() {
       let successDesc: string;
 
       switch (actionType) {
-        case 'accept':
-          result = await ordersApi.confirmOrder({ orderID: orderId, reject: false });
-          successTitle = t('order.actions.acceptSuccess');
-          successDesc = t('order.actions.acceptSuccessDesc');
-          break;
         case 'decline':
           result = await ordersApi.confirmOrder({ orderID: orderId, reject: true });
           successTitle = t('order.actions.declineSuccess');
@@ -743,7 +741,8 @@ export default function OrderDetailPage() {
           });
           break;
         case 'Accept':
-          setConfirmDialog('accept');
+          // 接受订单需要选择收款账户，使用专门的对话框
+          setShowAcceptDialog(true);
           break;
         case 'Decline':
           setConfirmDialog('decline');
@@ -998,6 +997,18 @@ export default function OrderDetailPage() {
           isLoading={isActionLoading}
         />
       )}
+
+      {/* 接受订单对话框 */}
+      <AcceptOrderDialog
+        open={showAcceptDialog}
+        onOpenChange={setShowAcceptDialog}
+        orderId={orderId}
+        blockchain={
+          (coreOrder as RealOrderData)?.contract?.orderOpen?.listings?.[0]?.listing?.item
+            ?.blockchain as string | undefined
+        }
+        onSuccess={refetch}
+      />
 
       {/* 发货对话框 */}
       <FulfillOrderDialog
