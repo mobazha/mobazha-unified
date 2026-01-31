@@ -20,6 +20,9 @@ export interface AddressDrawerProps {
   selectedAddressId?: string;
   onSelect: (addressId: string) => void;
   onAddNew?: () => void;
+  onEdit?: (address: Address) => void;
+  onDelete?: (addressId: string) => void;
+  onSetDefault?: (addressId: string) => void;
   isLoading?: boolean;
   className?: string;
 }
@@ -36,6 +39,9 @@ export const AddressDrawer: React.FC<AddressDrawerProps> = ({
   selectedAddressId,
   onSelect,
   onAddNew,
+  onEdit,
+  onDelete,
+  onSetDefault,
   isLoading = false,
   className,
 }) => {
@@ -50,8 +56,10 @@ export const AddressDrawer: React.FC<AddressDrawerProps> = ({
     <Sheet open={isOpen} onOpenChange={open => !open && onClose()}>
       <SheetContent side="right" className={cn('w-full sm:max-w-md', className)}>
         <SheetHeader>
-          <SheetTitle>{t('checkout.selectAddress')}</SheetTitle>
-          <SheetDescription>{t('checkout.selectAddressDesc')}</SheetDescription>
+          <SheetTitle>{t('checkout.selectAddress') || 'Select Shipping Address'}</SheetTitle>
+          <SheetDescription>
+            {t('checkout.selectAddressDesc') || 'Choose where to deliver your order'}
+          </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
@@ -60,6 +68,9 @@ export const AddressDrawer: React.FC<AddressDrawerProps> = ({
             selectedAddressId={selectedAddressId}
             onSelect={handleSelect}
             onAddNew={onAddNew}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onSetDefault={onSetDefault}
             isLoading={isLoading}
           />
         </div>

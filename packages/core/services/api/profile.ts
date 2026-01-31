@@ -75,13 +75,14 @@ export async function setAcceptedCoins(
 }
 
 /**
- * 获取用户设置
+ * 获取用户设置/偏好
+ * 后端 API 路径: /v1/ob/preferences
  */
 export async function getSettings(
   username?: string,
   password?: string
 ): Promise<UserSettings | null> {
-  const url = `${getGatewayUrl()}/ob/settings`;
+  const url = `${getGatewayUrl()}/ob/preferences`;
   try {
     return await get<UserSettings>(url, getAuthHeaders(username, password));
   } catch {
@@ -90,14 +91,15 @@ export async function getSettings(
 }
 
 /**
- * 更新用户设置
+ * 更新用户设置/偏好
+ * 后端 API 路径: /v1/ob/preferences
  */
 export async function setSettings(
   settings: Partial<UserSettings>,
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/settings`;
+  const url = `${getGatewayUrl()}/ob/preferences`;
   return put(url, settings, getAuthHeaders(username, password));
 }
 

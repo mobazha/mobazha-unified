@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { AddressSummary, AddressDrawer } from '@/components/Address';
+import { AddressSummary, AddressDrawer, AddressFormModal } from '@/components/Address';
 import type { Address } from '@/components/Address';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,26 @@ import {
   getImageUrl,
   useCurrency,
   useI18n,
+  useShippingAddresses,
 } from '@mobazha/core';
-import type { Product, UserProfile } from '@mobazha/core';
+import type { Product, UserProfile, DisplayAddress } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
 // Types
+interface ShippingService {
+  name: string;
+  price: number;
+  estimatedDelivery: string;
+  additionalItemPrice?: number;
+}
+
+interface ShippingOption {
+  name: string;
+  type: 'LOCAL_PICKUP' | 'FIXED_PRICE';
+  regions: string[];
+  services: ShippingService[];
+}
+
 interface CheckoutItem {
   id: string;
   title: string;
@@ -40,33 +55,41 @@ interface CheckoutItem {
   rwaTradeMode?: number;
   rwaEscrowTimeoutSeconds?: number;
   cryptoListingCurrencyCode?: string;
+  // 运费选项（物理商品）
+  shippingOptions?: ShippingOption[];
 }
 
-// Mock data for addresses (TODO: 从用户 Profile API 获取)
-const mockAddresses: Address[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    street: '123 Main Street, Apt 4B',
-    city: 'San Francisco',
-    state: 'CA',
-    country: 'United States',
-    postalCode: '94102',
-    phone: '+1 (555) 123-4567',
-    isDefault: true,
-  },
-  {
-    id: '2',
-    name: 'John Doe',
-    street: '456 Oak Avenue',
-    city: 'Los Angeles',
-    state: 'CA',
-    country: 'United States',
-    postalCode: '90001',
-    phone: '+1 (555) 987-6543',
-    isDefault: false,
-  },
-];
+/**
+ * 将 DisplayAddress (API 格式) 转换为前端展示用的 Address 格式
+ */
+function toFrontendAddress(addr: DisplayAddress): Address {
+  return {
+    id: addr.id,
+    name: addr.name,
+    street: addr.addressLineOne + (addr.addressLineTwo ? `, ${addr.addressLineTwo}` : ''),
+    city: addr.city,
+    state: addr.state,
+    postalCode: addr.postalCode,
+    country: addr.country,
+    phone: addr.phone || '',
+    isDefault: addr.isDefault,
+  };
+}
+
+/**
+ * 将 DisplayAddress 转换为订单 API 使用的地址格式
+ */
+function toOrderAddress(addr: DisplayAddress) {
+  return {
+    name: addr.name, // shipTo
+    street: addr.addressLineOne + (addr.addressLineTwo ? `, ${addr.addressLineTwo}` : ''),
+    city: addr.city,
+    state: addr.state,
+    postalCode: addr.postalCode,
+    country: addr.country,
+    addressNotes: addr.addressNotes,
+  };
+}
 
 /**
  * Checkout Page - 下单阶段
@@ -106,13 +129,41 @@ export default function CheckoutPage() {
     );
   }, []);
 
+  // 地址管理 - 使用真实数据
+  const {
+    addresses: apiAddresses,
+    defaultAddress,
+    isLoading: isLoadingAddresses,
+    isSaving: isSavingAddress,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress,
+  } = useShippingAddresses();
+
+  // 将 API 地址转换为前端格式
+  const addresses = useMemo(() => apiAddresses.map(toFrontendAddress), [apiAddresses]);
+
   // 地址和订单状态
-  const [selectedAddress, setSelectedAddress] = useState<string>(
-    mockAddresses.find(a => a.isDefault)?.id || ''
-  );
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [showAddressDrawer, setShowAddressDrawer] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<DisplayAddress | null>(null);
   const [orderNote, setOrderNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 当地址加载完成后，自动选择默认地址
+  useEffect(() => {
+    if (!selectedAddress && defaultAddress) {
+      setSelectedAddress(defaultAddress.id);
+    }
+  }, [selectedAddress, defaultAddress]);
+
+  // 运费选项状态（物理商品用）
+  // key: itemId, value: { optionName, serviceName }
+  const [selectedShipping, setSelectedShipping] = useState<
+    Record<string, { optionName: string; serviceName: string }>
+  >({});
 
   // 从 URL 参数获取商品数据
   useEffect(() => {
@@ -189,9 +240,29 @@ export default function CheckoutPage() {
             rwaTradeMode: productData.metadata?.rwaTradeMode,
             rwaEscrowTimeoutSeconds: productData.metadata?.rwaEscrowTimeoutSeconds,
             cryptoListingCurrencyCode: productData.item?.cryptoListingCurrencyCode,
+            // 运费选项（物理商品）
+            shippingOptions: productData.shippingOptions,
           };
 
           setCheckoutItems([item]);
+
+          // 如果是物理商品且有运费选项，自动选择第一个
+          if (
+            productData.metadata?.contractType === 'PHYSICAL_GOOD' &&
+            productData.shippingOptions &&
+            productData.shippingOptions.length > 0
+          ) {
+            const firstOption = productData.shippingOptions[0];
+            const firstService = firstOption.services?.[0];
+            if (firstOption && firstService) {
+              setSelectedShipping({
+                [productData.slug]: {
+                  optionName: firstOption.name,
+                  serviceName: firstService.name,
+                },
+              });
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to fetch product for checkout:', err);
@@ -245,12 +316,33 @@ export default function CheckoutPage() {
     return rwaItem?.rwaTradeMode;
   }, [checkoutItems]);
 
+  // 检查物理商品是否都选择了运费选项
+  const hasAllShippingSelected = useMemo(() => {
+    return checkoutItems.every(item => {
+      // 非物理商品不需要运费选项
+      if (item.contractType !== 'PHYSICAL_GOOD') return true;
+      // 物理商品必须有运费选项并且已选择
+      if (!item.shippingOptions || item.shippingOptions.length === 0) return true; // 没有运费选项的商品跳过
+      const selection = selectedShipping[item.id];
+      return selection && selection.optionName && selection.serviceName;
+    });
+  }, [checkoutItems, selectedShipping]);
+
   // 创建订单
   const handleCreateOrder = useCallback(async () => {
     // 只有物理商品需要地址
     if (needsShippingAddress && !selectedAddress) {
       toast({
         title: t('checkout.selectAddressFirst'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // 检查运费选项
+    if (!hasAllShippingSelected) {
+      toast({
+        title: t('checkout.selectShippingFirst') || 'Please select shipping option',
         variant: 'destructive',
       });
       return;
@@ -268,17 +360,37 @@ export default function CheckoutPage() {
 
     try {
       // 获取选中的地址数据（仅物理商品需要）
-      const addressData = needsShippingAddress
-        ? mockAddresses.find(a => a.id === selectedAddress)
-        : undefined;
+      const selectedApiAddress = apiAddresses.find(a => a.id === selectedAddress);
+      const addressData =
+        needsShippingAddress && selectedApiAddress ? toOrderAddress(selectedApiAddress) : undefined;
 
       // 调用真实的创建订单 API
       const result = await ordersApi.createOrder({
-        items: checkoutItems.map(item => ({
-          listingHash: item.listingHash || item.id,
-          quantity: item.quantity,
-          memo: orderNote || undefined, // 订单备注放在 items 里
-        })),
+        items: checkoutItems.map(item => {
+          const itemData: {
+            listingHash: string;
+            quantity: number;
+            memo?: string;
+            shipping?: { name: string; service: string };
+          } = {
+            listingHash: item.listingHash || item.id,
+            quantity: item.quantity,
+            memo: orderNote || undefined, // 订单备注放在 items 里
+          };
+
+          // 物理商品需要添加运费选项
+          if (item.contractType === 'PHYSICAL_GOOD') {
+            const shippingSelection = selectedShipping[item.id];
+            if (shippingSelection) {
+              itemData.shipping = {
+                name: shippingSelection.optionName,
+                service: shippingSelection.serviceName,
+              };
+            }
+          }
+
+          return itemData;
+        }),
         // 只有物理商品才发送地址
         address: addressData
           ? {
@@ -357,6 +469,9 @@ export default function CheckoutPage() {
     isRwaToken,
     rwaTradeMode,
     needsShippingAddress,
+    selectedShipping,
+    hasAllShippingSelected,
+    apiAddresses,
   ]);
 
   // 格式化商品价格
@@ -480,9 +595,90 @@ export default function CheckoutPage() {
                         {t('checkout.shippingAddress')}
                       </h2>
                       <AddressSummary
-                        address={mockAddresses.find(a => a.id === selectedAddress)}
+                        address={addresses.find(a => a.id === selectedAddress)}
                         onEdit={() => setShowAddressDrawer(true)}
                       />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Shipping Option - 仅物理商品且有运费选项时显示 */}
+                {checkoutItems.some(
+                  item =>
+                    item.contractType === 'PHYSICAL_GOOD' &&
+                    item.shippingOptions &&
+                    item.shippingOptions.length > 0
+                ) && (
+                  <Card>
+                    <CardContent className="p-4 sm:p-6">
+                      <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                        {t('checkout.shippingMethod') || 'Shipping Method'}
+                      </h2>
+                      <VStack gap="md">
+                        {checkoutItems
+                          .filter(
+                            item =>
+                              item.contractType === 'PHYSICAL_GOOD' &&
+                              item.shippingOptions &&
+                              item.shippingOptions.length > 0
+                          )
+                          .map(item => (
+                            <div key={item.id} className="space-y-2">
+                              {item.shippingOptions!.map(option => (
+                                <div key={option.name} className="space-y-1.5">
+                                  {option.services.map(service => {
+                                    const isSelected =
+                                      selectedShipping[item.id]?.optionName === option.name &&
+                                      selectedShipping[item.id]?.serviceName === service.name;
+                                    return (
+                                      <label
+                                        key={`${option.name}-${service.name}`}
+                                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                                          isSelected
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-primary/50'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <input
+                                            type="radio"
+                                            name={`shipping-${item.id}`}
+                                            checked={isSelected}
+                                            onChange={() => {
+                                              setSelectedShipping(prev => ({
+                                                ...prev,
+                                                [item.id]: {
+                                                  optionName: option.name,
+                                                  serviceName: service.name,
+                                                },
+                                              }));
+                                            }}
+                                            className="w-4 h-4 text-primary"
+                                          />
+                                          <div>
+                                            <p className="text-sm font-medium text-foreground">
+                                              {option.name} - {service.name}
+                                            </p>
+                                            {service.estimatedDelivery && (
+                                              <p className="text-xs text-muted-foreground">
+                                                {service.estimatedDelivery}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <span className="text-sm font-semibold text-foreground">
+                                          {service.price === 0
+                                            ? t('checkout.free') || 'Free'
+                                            : renderPairedPrice(service.price, item.currency)}
+                                        </span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                      </VStack>
                     </CardContent>
                   </Card>
                 )}
@@ -680,6 +876,7 @@ export default function CheckoutPage() {
                       disabled={
                         isSubmitting ||
                         (needsShippingAddress && !selectedAddress) ||
+                        !hasAllShippingSelected ||
                         checkoutItems.length === 0
                       }
                     >
@@ -756,7 +953,11 @@ export default function CheckoutPage() {
             <Button
               size="lg"
               onClick={handleCreateOrder}
-              disabled={isSubmitting || (needsShippingAddress && !selectedAddress)}
+              disabled={
+                isSubmitting ||
+                (needsShippingAddress && !selectedAddress) ||
+                !hasAllShippingSelected
+              }
               className="min-w-[140px]"
             >
               {isSubmitting ? (
@@ -790,9 +991,74 @@ export default function CheckoutPage() {
       <AddressDrawer
         isOpen={showAddressDrawer}
         onClose={() => setShowAddressDrawer(false)}
-        addresses={mockAddresses}
+        addresses={addresses}
         selectedAddressId={selectedAddress}
         onSelect={setSelectedAddress}
+        onAddNew={() => {
+          setEditingAddress(null);
+          setShowAddressForm(true);
+        }}
+        onEdit={addr => {
+          // 找到对应的 API 地址
+          const apiAddr = apiAddresses.find(a => a.id === addr.id);
+          if (apiAddr) {
+            setEditingAddress(apiAddr);
+            setShowAddressForm(true);
+          }
+        }}
+        onDelete={async addressId => {
+          const success = await deleteAddress(addressId);
+          if (success) {
+            toast({
+              title: t('address.deleted') || 'Address deleted',
+            });
+            // 如果删除的是当前选中的地址，清除选择
+            if (selectedAddress === addressId) {
+              setSelectedAddress(defaultAddress?.id || '');
+            }
+          }
+        }}
+        onSetDefault={async addressId => {
+          const success = await setDefaultAddress(addressId);
+          if (success) {
+            toast({
+              title: t('address.setAsDefault') || 'Address set as default',
+            });
+          }
+        }}
+        isLoading={isLoadingAddresses}
+      />
+
+      {/* 地址编辑表单 */}
+      <AddressFormModal
+        isOpen={showAddressForm}
+        onClose={() => {
+          setShowAddressForm(false);
+          setEditingAddress(null);
+        }}
+        address={editingAddress}
+        isSaving={isSavingAddress}
+        onSave={async address => {
+          let success: boolean;
+          if (editingAddress) {
+            // 编辑现有地址
+            success = await updateAddress(editingAddress.id, address);
+          } else {
+            // 添加新地址
+            success = await addAddress(address);
+          }
+
+          if (success) {
+            toast({
+              title: editingAddress
+                ? t('address.updated') || 'Address updated'
+                : t('address.added') || 'Address added',
+            });
+            setShowAddressForm(false);
+            setEditingAddress(null);
+          }
+          return success;
+        }}
       />
     </div>
   );

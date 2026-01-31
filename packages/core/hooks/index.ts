@@ -77,3 +77,8 @@ export * from './useRwaAssets';
 
 // 订单操作相关
 export * from './useOrderAction';
+
+// 地址管理相关
+export * from './useShippingAddresses';
+export type { DisplayAddress, DisplayAddressUI } from './useShippingAddresses';
+export { toDisplayAddressUI } from './useShippingAddresses';

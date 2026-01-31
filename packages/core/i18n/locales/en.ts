@@ -292,8 +292,10 @@ export const en: TranslationResource = {
     quantity: 'Qty',
     subtotal: 'Subtotal',
     shipping: 'Shipping',
+    shippingMethod: 'Shipping Method',
     free: 'Free',
     selectAddressFirst: 'Please select a shipping address',
+    selectShippingFirst: 'Please select a shipping method',
     selectAddressWarning: 'Please select a shipping address',
     noItems: 'No items to checkout',
     addItemsFirst: 'Please add items to your cart first',
@@ -308,6 +310,42 @@ export const en: TranslationResource = {
       'This is an instant RWA swap. Your payment will be exchanged for token shares immediately after confirmation.',
     rwaConfirmRequiredHint:
       'This transaction requires seller confirmation. Your payment will be locked until the seller confirms.',
+  },
+
+  // 地址管理
+  address: {
+    title: 'Shipping Addresses',
+    addAddress: 'Add Address',
+    editAddress: 'Edit Address',
+    deleteAddress: 'Delete Address',
+    setDefault: 'Set as Default',
+    setAsDefault: 'Address set as default',
+    deleted: 'Address deleted',
+    added: 'Address added',
+    updated: 'Address updated',
+    // 表单字段
+    name: 'Recipient Name',
+    namePlaceholder: 'Enter recipient name',
+    nameRequired: 'Name is required',
+    company: 'Company (Optional)',
+    companyPlaceholder: 'Enter company name',
+    addressLineOne: 'Address Line 1',
+    addressLinePlaceholder: 'Street address, P.O. box',
+    addressRequired: 'Address is required',
+    addressLineTwo: 'Address Line 2 (Optional)',
+    addressLineTwoPlaceholder: 'Apartment, suite, unit, building, floor',
+    city: 'City',
+    cityPlaceholder: 'Enter city',
+    cityRequired: 'City is required',
+    state: 'State / Province',
+    statePlaceholder: 'Enter state',
+    postalCode: 'Postal Code',
+    postalCodePlaceholder: 'Enter postal code',
+    country: 'Country',
+    countryPlaceholder: 'Enter country',
+    countryRequired: 'Country is required',
+    addressNotes: 'Delivery Notes (Optional)',
+    addressNotesPlaceholder: 'Special delivery instructions...',
   },
 
   order: {
@@ -1437,15 +1475,6 @@ export const en: TranslationResource = {
     // Addresses
     addAddress: 'Add Address',
     noAddresses: 'No addresses saved yet',
-  },
-
-  // Address form fields
-  address: {
-    street: 'Street',
-    city: 'City',
-    state: 'State/Province',
-    postalCode: 'Postal Code',
-    country: 'Country',
   },
 
   userMenu: {

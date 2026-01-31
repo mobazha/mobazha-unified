@@ -246,6 +246,41 @@ export interface TranslationResource {
     paymentConfirmed: string;
   };
 
+  // 地址管理
+  address: TranslationSection & {
+    title: string;
+    addAddress: string;
+    editAddress: string;
+    deleteAddress: string;
+    setDefault: string;
+    setAsDefault: string;
+    deleted: string;
+    added: string;
+    updated: string;
+    name: string;
+    namePlaceholder: string;
+    nameRequired: string;
+    company: string;
+    companyPlaceholder: string;
+    addressLineOne: string;
+    addressLinePlaceholder: string;
+    addressRequired: string;
+    addressLineTwo: string;
+    addressLineTwoPlaceholder: string;
+    city: string;
+    cityPlaceholder: string;
+    cityRequired: string;
+    state: string;
+    statePlaceholder: string;
+    postalCode: string;
+    postalCodePlaceholder: string;
+    country: string;
+    countryPlaceholder: string;
+    countryRequired: string;
+    addressNotes: string;
+    addressNotesPlaceholder: string;
+  };
+
   // 订单
   order: TranslationSection & {
     title: string;
@@ -818,15 +853,6 @@ export interface TranslationResource {
     // Addresses
     addAddress: string;
     noAddresses: string;
-  };
-
-  // Address form fields
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
   };
 
   // 用户菜单
