@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n, ordersApi } from '@mobazha/core';
+import { useI18n, ordersApi, useOrderAction } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 import { ReceivingAccountSelector } from './ReceivingAccountSelector';
@@ -22,12 +22,19 @@ export interface AcceptOrderDialogProps {
   orderId: string;
   /** 区块链类型，用于筛选收款账户 */
   blockchain?: string;
+  /** 支付币种，用于判断是否需要钱包签名 */
+  paymentCoin?: string;
   onSuccess?: () => void;
 }
 
 /**
  * 接受订单对话框组件
  * 卖家接受订单时需要选择收款账户
+ *
+ * 使用统一的 useOrderAction hook 处理订单操作：
+ * - UTXO 链（BTC/LTC/BCH/ZEC）：直接调用 API
+ * - EVM/Solana 链：先获取 instructions，如需要则执行链上交易
+ *
  * 参考移动端 AcceptOrderModal.js 和桌面端 Payments.vue
  */
 export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
@@ -35,11 +42,12 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
   onOpenChange,
   orderId,
   blockchain,
+  paymentCoin,
   onSuccess,
 }) => {
   const { t } = useI18n();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { execute, isLoading } = useOrderAction();
 
   // 收款账户相关
   const selectedAccountRef = useRef<ReceivingAccount | null>(null);
@@ -60,42 +68,51 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const result = await ordersApi.confirmOrder({
-        orderID: orderId,
-        reject: false,
-        payoutAddress: selectedAccountRef.current.address,
-      });
+    const payoutAddress = selectedAccountRef.current.address;
 
-      if (result.success) {
-        toast({
-          title: t('order.actions.acceptSuccess'),
-          description: t('order.actions.acceptSuccessDesc'),
-        });
-        selectedAccountRef.current = null;
-        onOpenChange(false);
-        // 延迟刷新以确保后端状态已更新
-        setTimeout(() => {
-          onSuccess?.();
-        }, 500);
-      } else {
-        toast({
-          title: t('order.actions.error'),
-          description: result.error || t('order.actions.acceptFailed'),
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: error instanceof Error ? error.message : t('order.actions.acceptFailed'),
-        variant: 'destructive',
+    try {
+      await execute({
+        paymentCoin,
+        // 获取确认订单的链上交易指令（EVM/Solana 链需要）
+        getInstructions: initiatorAddress =>
+          ordersApi.getConfirmInstructions({
+            orderID: orderId,
+            reject: false,
+            initiatorAddress,
+            payoutAddress,
+          }),
+        // 执行确认订单的 API 调用
+        executeAction: txID =>
+          ordersApi.confirmOrder({
+            orderID: orderId,
+            reject: false,
+            payoutAddress,
+            transactionID: txID,
+          }),
+        onSuccess: () => {
+          toast({
+            title: t('order.actions.acceptSuccess'),
+            description: t('order.actions.acceptSuccessDesc'),
+          });
+          selectedAccountRef.current = null;
+          onOpenChange(false);
+          // 延迟刷新以确保后端状态已更新
+          setTimeout(() => {
+            onSuccess?.();
+          }, 500);
+        },
+        onError: error => {
+          toast({
+            title: t('order.actions.error'),
+            description: error.message || t('order.actions.acceptFailed'),
+            variant: 'destructive',
+          });
+        },
       });
-    } finally {
-      setIsLoading(false);
+    } catch {
+      // Error is already handled in onError callback
     }
-  }, [orderId, onOpenChange, onSuccess, t, toast]);
+  }, [orderId, paymentCoin, onOpenChange, onSuccess, t, toast, execute]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {

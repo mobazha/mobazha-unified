@@ -8,9 +8,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { Order, OrderDetailModal, OrderTable, OrderListCompact } from '@/components/Order';
-import { useI18n, usePurchases, useSales, getImageUrl, useChatStore } from '@mobazha/core';
+import {
+  useI18n,
+  usePurchases,
+  useSales,
+  getImageUrl,
+  useChatStore,
+  ordersApi,
+  useOrderAction,
+} from '@mobazha/core';
 import type { OrderListItem } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useToast } from '@/components/ui/use-toast';
 
 type OrderStatus =
   | 'all'
@@ -110,6 +119,8 @@ function transformOrderListItem(item: OrderListItem): Order {
     id: orderId,
     orderId: orderId,
     status: mapOrderState(item.state || 'PENDING'),
+    rawState: item.state || 'PENDING', // 保留原始状态用于判断操作按钮
+    paymentCoin: item.paymentCoin, // 保留支付币种用于判断是否需要链上交易
     items: [
       {
         id: orderId,
@@ -141,8 +152,10 @@ function OrdersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
+  const { toast } = useToast();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
@@ -173,6 +186,7 @@ function OrdersPageContent() {
     error: salesError,
     hasMore: salesHasMore,
     loadMore: loadMoreSales,
+    refetch: refetchSales,
   } = useSales();
 
   // 根据当前选中的 tab 获取对应数据
@@ -205,15 +219,18 @@ function OrdersPageContent() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // 处理查看订单详情 - 桌面端打开 Modal，移动端跳转页面
+  // 跳转时带上 type 参数，用于订单详情页判断用户角色
   const handleViewDetails = useCallback(
     (orderId: string) => {
       if (isDesktop) {
         setSelectedOrderId(orderId);
       } else {
-        router.push(`/orders/${orderId}`);
+        // 带上 type 参数：sale 或 purchase
+        const type = orderType === 'sales' ? 'sale' : 'purchase';
+        router.push(`/orders/${orderId}?type=${type}`);
       }
     },
-    [isDesktop, router]
+    [isDesktop, router, orderType]
   );
 
   // 关闭 Modal
@@ -226,6 +243,105 @@ function OrdersPageContent() {
     // TODO: 后续可以添加逻辑来自动选择或创建与该用户的聊天房间
     openChatDrawer();
   };
+
+  // 使用统一的订单操作 hook
+  const { execute: executeOrderAction, isLoading: isOrderActionLoading } = useOrderAction();
+
+  // 接受订单
+  // 使用统一的 useOrderAction hook 处理订单操作
+  // - UTXO 链（BTC/LTC/BCH/ZEC）：直接调用 API
+  // - EVM/Solana 链：先获取 instructions，如需要则执行链上交易
+  const handleAccept = useCallback(
+    async (orderId: string, paymentCoin?: string) => {
+      if (isProcessing || isOrderActionLoading) return;
+
+      setIsProcessing(true);
+      try {
+        await executeOrderAction({
+          paymentCoin,
+          getInstructions: initiatorAddress =>
+            ordersApi.getConfirmInstructions({
+              orderID: orderId,
+              reject: false,
+              initiatorAddress,
+            }),
+          executeAction: txID =>
+            ordersApi.confirmOrder({
+              orderID: orderId,
+              reject: false,
+              transactionID: txID,
+            }),
+          onSuccess: () => {
+            toast({
+              title: t('order.dialogs.acceptOrder.title'),
+              description: t('common.success'),
+            });
+            refetchSales();
+          },
+          onError: error => {
+            toast({
+              title: t('common.error'),
+              description: error.message || t('common.unknownError'),
+              variant: 'destructive',
+            });
+          },
+        });
+      } catch {
+        // Error already handled by onError callback
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [isProcessing, isOrderActionLoading, executeOrderAction, t, toast, refetchSales]
+  );
+
+  // 拒绝订单
+  // 使用统一的 useOrderAction hook 处理订单操作
+  // - UTXO 链（BTC/LTC/BCH/ZEC）：直接调用 API
+  // - EVM/Solana 链：先获取 instructions，如需要则执行链上交易退款
+  const handleReject = useCallback(
+    async (orderId: string, paymentCoin?: string) => {
+      if (isProcessing || isOrderActionLoading) return;
+
+      setIsProcessing(true);
+      try {
+        await executeOrderAction({
+          paymentCoin,
+          getInstructions: initiatorAddress =>
+            ordersApi.getConfirmInstructions({
+              orderID: orderId,
+              reject: true,
+              initiatorAddress,
+            }),
+          executeAction: txID =>
+            ordersApi.confirmOrder({
+              orderID: orderId,
+              reject: true,
+              transactionID: txID,
+            }),
+          onSuccess: () => {
+            toast({
+              title: t('order.dialogs.declineOrder.title'),
+              description: t('common.success'),
+            });
+            refetchSales();
+          },
+          onError: error => {
+            toast({
+              title: t('common.error'),
+              description: error.message || t('common.unknownError'),
+              variant: 'destructive',
+            });
+          },
+        });
+      } catch {
+        // Error already handled by onError callback
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [isProcessing, isOrderActionLoading, executeOrderAction, t, toast, refetchSales]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -407,6 +523,8 @@ function OrdersPageContent() {
                   type={orderType === 'purchases' ? 'purchase' : 'sale'}
                   onViewDetails={handleViewDetails}
                   onContact={handleContact}
+                  onAccept={handleAccept}
+                  onReject={handleReject}
                 />
               ) : (
                 /* 移动端：紧凑列表视图 */
@@ -506,6 +624,7 @@ function OrdersPageContent() {
         orderId={selectedOrderId}
         open={!!selectedOrderId}
         onClose={handleCloseModal}
+        viewingContext={orderType === 'sales' ? 'sale' : 'purchase'}
         onOrderUpdate={() => {
           // 订单更新后可能需要刷新列表
           // 可以在这里添加刷新逻辑

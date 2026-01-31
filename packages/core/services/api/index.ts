@@ -33,6 +33,7 @@ export * as productsApi from './products';
 
 // 订单 API
 export * as ordersApi from './orders';
+export type { OrderInstructionsResponse } from './orders';
 
 // 用户/店铺 API
 export * as profileApi from './profile';
@@ -57,16 +58,13 @@ export * as cartApi from './cart';
 
 // 通知 API
 export * as notificationsApi from './notifications';
-export type { 
-  Notification, 
-  NotificationFilter, 
+export type {
+  Notification,
+  NotificationFilter,
   NotificationsResult,
   NotificationType,
 } from './notifications';
-export { 
-  getNotificationRoute,
-  NOTIFICATION_FILTER_TYPES,
-} from './notifications';
+export { getNotificationRoute, NOTIFICATION_FILTER_TYPES } from './notifications';
 
 // 争议/仲裁 API
 export * as disputesApi from './disputes';

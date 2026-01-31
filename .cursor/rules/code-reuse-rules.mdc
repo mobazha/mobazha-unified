@@ -1,0 +1,318 @@
+---
+description: 代码复用与架构一致性规则 - 确保跨平台统一客户端的代码质量
+alwaysApply: true
+---
+
+# 代码复用与架构一致性规则
+
+## 核心原则
+
+**Mobazha Unified 是统一客户端**，采用响应式设计支持桌面端和移动端。为确保代码一致性和可维护性，必须遵循以下原则：
+
+1. **单一数据源 (Single Source of Truth)** - 相同逻辑只存在一处
+2. **分层架构** - 业务逻辑与 UI 分离
+3. **复用优先** - 使用 `@mobazha/core` 中的共享代码
+
+---
+
+## 架构分层
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    apps/web                          │
+│  ┌───────────────────────────────────────────────┐  │
+│  │           UI 组件层 (只负责展示)               │  │
+│  │  - 接收处理好的数据，渲染 UI                   │  │
+│  │  - 不包含业务逻辑、数据转换                    │  │
+│  │  - 通过 props 接收数据，通过回调触发操作       │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+                          ↑ 使用
+                          │
+┌─────────────────────────────────────────────────────┐
+│                   @mobazha/core                      │
+│  ┌───────────────────────────────────────────────┐  │
+│  │                 hooks 层                       │  │
+│  │  - useOrderDetail() → DisplayOrder            │  │
+│  │  - useOrderAction() → 执行订单操作            │  │
+│  │  - useProductDetail() → DisplayProduct        │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │             utils/transforms 层               │  │
+│  │  - transformCoreOrder()                       │  │
+│  │  - mapOrderState()                            │  │
+│  │  - generateTimeline()                         │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │                 types 层                      │  │
+│  │  - Order (API 响应类型)                       │  │
+│  │  - DisplayOrder (UI 展示类型)                 │  │
+│  │  - OrderState, UserRole 等枚举               │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │               services 层                     │  │
+│  │  - ordersApi.getOrder()                       │  │
+│  │  - ordersApi.confirmOrder()                   │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## 严格禁止 ❌
+
+### 1. 禁止在 `apps/` 中定义业务类型
+
+```tsx
+// ❌ 错误：在组件文件中定义接口
+// apps/web/src/components/Order/OrderDetailModal.tsx
+interface RealOrderData {
+  state: string;
+  contract: { ... };
+}
+
+interface DisplayOrder {
+  id: string;
+  status: string;
+  // ...
+}
+
+// ✅ 正确：从 core 包导入
+import type { Order, DisplayOrder } from '@mobazha/core';
+```
+
+### 2. 禁止在 `apps/` 中定义转换函数
+
+```tsx
+// ❌ 错误：在多个组件中重复定义转换函数
+// apps/web/src/app/orders/[orderId]/page.tsx
+function transformCoreOrder(coreOrder, currentUserPeerID) { ... }
+
+// apps/web/src/components/Order/OrderDetailModal.tsx  
+function transformCoreOrder(coreOrder, currentUserPeerID) { ... }  // 重复！
+
+// ✅ 正确：在 core 包中定义一次，到处使用
+// packages/core/utils/transforms/orderTransform.ts
+export function transformCoreOrder(options: TransformOrderOptions): DisplayOrder { ... }
+
+// 使用
+import { transformCoreOrder } from '@mobazha/core';
+```
+
+### 3. 禁止在 UI 组件中直接调用 API
+
+```tsx
+// ❌ 错误：组件直接调用 API
+function OrderDetailModal({ orderId }) {
+  const [order, setOrder] = useState(null);
+  
+  useEffect(() => {
+    ordersApi.getOrder(orderId).then(setOrder);  // 直接调用 API
+  }, [orderId]);
+}
+
+// ✅ 正确：通过 hook 获取数据
+function OrderDetailModal({ orderId }) {
+  const { displayOrder, isLoading, error } = useOrderDetail(orderId);
+}
+```
+
+### 4. 禁止业务逻辑在多处实现
+
+```tsx
+// ❌ 错误：用户角色判断逻辑在多处实现
+// 文件 A
+let userRole = 'buyer';
+if (currentUserPeerID === vendorPeerID) userRole = 'seller';
+
+// 文件 B（不一致的实现）
+let userRole = 'buyer';
+if (currentUserPeerID === vendorPeerID) userRole = 'seller';
+else if (typeFromUrl === 'sale') userRole = 'seller';  // 额外逻辑
+
+// ✅ 正确：在 core 包中统一实现
+// packages/core/utils/orderUtils.ts
+export function determineUserRole(options: {
+  currentUserPeerID: string | null;
+  vendorPeerID: string;
+  buyerPeerID: string;
+  viewingContext?: 'sale' | 'purchase';
+}): UserRole { ... }
+```
+
+---
+
+## 必须遵循 ✅
+
+### 1. 类型定义位置
+
+| 类型类别 | 定义位置 | 示例 |
+|---------|---------|------|
+| API 响应类型 | `packages/core/types/` | `Order`, `Product` |
+| UI 展示类型 | `packages/core/types/` | `DisplayOrder`, `DisplayProduct` |
+| 组件 Props | 组件文件内 | `OrderCardProps` |
+| 工具函数参数 | `packages/core/types/` | `TransformOrderOptions` |
+
+### 2. 函数定义位置
+
+| 函数类别 | 定义位置 | 示例 |
+|---------|---------|------|
+| 数据转换 | `packages/core/utils/transforms/` | `transformCoreOrder` |
+| 状态映射 | `packages/core/utils/` | `mapOrderState`, `getOrderActions` |
+| API 调用 | `packages/core/services/api/` | `ordersApi.getOrder` |
+| 业务逻辑 | `packages/core/hooks/` | `useOrderAction` |
+
+### 3. Hook 封装数据获取 + 转换
+
+```tsx
+// packages/core/hooks/useOrderDetail.ts
+export function useOrderDetail(
+  orderId: string,
+  viewingContext?: 'sale' | 'purchase'
+) {
+  const { order: coreOrder, isLoading, error, refetch } = useOrder(orderId);
+  const currentUser = useUserStore(state => state.profile);
+  
+  const displayOrder = useMemo(() => {
+    if (!coreOrder) return null;
+    return transformCoreOrder({
+      coreOrder,
+      currentUserPeerID: currentUser?.peerID || null,
+      viewingContext,
+    });
+  }, [coreOrder, currentUser?.peerID, viewingContext]);
+
+  return { displayOrder, coreOrder, isLoading, error, refetch };
+}
+```
+
+### 4. 上下文传递
+
+当同一数据在不同场景（如订单列表 vs 订单详情）显示时，必须传递上下文：
+
+```tsx
+// 订单列表页 - 知道是 sales 还是 purchases
+<OrderDetailModal 
+  orderId={selectedOrderId}
+  viewingContext={orderType === 'sales' ? 'sale' : 'purchase'}
+/>
+
+// OrderDetailModal 使用上下文
+const { displayOrder } = useOrderDetail(orderId, viewingContext);
+```
+
+---
+
+## 目录结构规范
+
+```
+packages/core/
+├── types/
+│   ├── order.ts              # API 类型：Order, OrderState, OrderContract
+│   ├── orderDisplay.ts       # UI 类型：DisplayOrder, OrderItem, TimelineEvent
+│   ├── product.ts            # API 类型
+│   ├── productDisplay.ts     # UI 类型
+│   └── index.ts              # 统一导出
+├── utils/
+│   ├── transforms/           # 转换函数目录
+│   │   ├── orderTransform.ts
+│   │   ├── productTransform.ts
+│   │   └── index.ts
+│   ├── orderActions.ts       # 订单操作逻辑
+│   └── index.ts
+├── hooks/
+│   ├── useOrderDetail.ts     # 封装 数据获取 + 转换
+│   ├── useOrderAction.ts     # 封装 订单操作
+│   ├── useProductDetail.ts
+│   └── index.ts
+└── services/
+    └── api/
+        ├── orders.ts
+        └── products.ts
+
+apps/web/src/
+├── app/                      # 页面（使用 hooks，不包含业务逻辑）
+├── components/               # UI 组件（纯展示）
+└── lib/                      # 工具函数（仅 UI 相关，如 cn()）
+```
+
+---
+
+## 检查清单
+
+### 创建新功能时
+
+- [ ] 类型是否定义在 `@mobazha/core/types/`？
+- [ ] 转换函数是否在 `@mobazha/core/utils/transforms/`？
+- [ ] 是否创建了封装 hook（如 `useXxxDetail`）？
+- [ ] UI 组件是否只接收处理好的数据？
+
+### 代码审查时
+
+- [ ] `apps/` 中是否有 `interface` 定义（Props 除外）？→ 移到 core
+- [ ] `apps/` 中是否有 `function transform` 或 `function map`？→ 移到 core
+- [ ] 是否有相同逻辑在多处实现？→ 合并到 core
+- [ ] 组件是否直接调用 `xxxApi.`？→ 改用 hooks
+
+### 修复 Bug 时
+
+- [ ] 修复是否只需要在一处进行？
+- [ ] 如果需要在多处修改相同逻辑，说明存在重复代码，先重构
+
+---
+
+## 示例：订单详情重构
+
+### 重构前（问题代码）
+
+```
+apps/web/src/
+├── app/orders/[orderId]/page.tsx
+│   └── function transformCoreOrder() { ... }  // 重复
+│   └── interface RealOrderData { ... }        // 重复
+│   └── interface DisplayOrder { ... }         // 重复
+├── components/Order/
+│   ├── OrderDetailModal.tsx
+│   │   └── function transformCoreOrder() { ... }  // 重复！
+│   │   └── interface RealOrderData { ... }        // 重复！
+│   │   └── interface DisplayOrder { ... }         // 重复！
+│   └── OrderDetailContent.tsx
+│       └── interface DisplayOrder { ... }         // 又重复！
+```
+
+### 重构后（正确结构）
+
+```
+packages/core/
+├── types/
+│   └── orderDisplay.ts
+│       └── export interface DisplayOrder { ... }  // 定义一次
+├── utils/transforms/
+│   └── orderTransform.ts
+│       └── export function transformCoreOrder() { ... }  // 定义一次
+└── hooks/
+    └── useOrderDetail.ts
+        └── export function useOrderDetail() { ... }  // 封装
+
+apps/web/src/
+├── app/orders/[orderId]/page.tsx
+│   └── const { displayOrder } = useOrderDetail(orderId, viewingContext);
+└── components/Order/
+    ├── OrderDetailModal.tsx
+    │   └── const { displayOrder } = useOrderDetail(orderId, viewingContext);
+    └── OrderDetailContent.tsx
+        └── 接收 displayOrder props，纯展示
+```
+
+---
+
+## 违反规则的后果
+
+1. **代码审查不通过** - PR 必须修复重复代码才能合并
+2. **Bug 修复困难** - 相同 bug 需要在多处修复
+3. **行为不一致** - 桌面端和移动端表现不同
+4. **维护成本增加** - 修改一处逻辑需要全局搜索
+
+---
+
+**记住**：如果你发现自己在复制粘贴代码，停下来思考是否应该将其提取到 `@mobazha/core` 中。

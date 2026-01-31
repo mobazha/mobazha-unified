@@ -661,7 +661,25 @@ export async function completeOrder(
 }
 
 /**
+ * 通用订单指令响应类型
+ * 用于所有需要获取链上交易指令的操作（confirm/reject/cancel/refund/complete）
+ */
+export interface OrderInstructionsResponse {
+  /** 支付链类型（如 ETHEREUM, SOLANA, BTC 等） */
+  paymentChain?: string;
+  /** 是否需要链上交易 */
+  hasInstructions: boolean;
+  /** 链上交易指令（EVM 或 Solana 格式） */
+  instructions?: {
+    to: string;
+    data: string;
+    value?: string;
+  };
+}
+
+/**
  * 完成订单的链上交易指令响应类型
+ * @deprecated 请使用 OrderInstructionsResponse
  */
 export interface CompleteInstructionsResponse {
   /** 支付链类型（如 ETHEREUM, SOLANA 等） */
@@ -687,10 +705,10 @@ export async function getCompleteInstructions(
   },
   username?: string,
   password?: string
-): Promise<CompleteInstructionsResponse> {
+): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
     const url = `${getGatewayUrl()}/instructions/order/complete`;
-    const response = await post<CompleteInstructionsResponse>(
+    const response = await post<OrderInstructionsResponse>(
       url,
       params,
       getAuthHeaders(username, password)
@@ -698,7 +716,7 @@ export async function getCompleteInstructions(
     return response;
   };
 
-  const mockFn = async (): Promise<CompleteInstructionsResponse> => {
+  const mockFn = async (): Promise<OrderInstructionsResponse> => {
     await mockDelay();
     // Mock: 默认不需要链上交易
     return {
@@ -707,6 +725,121 @@ export async function getCompleteInstructions(
   };
 
   return withMockFallback(realFn, mockFn, '/instructions/order/complete');
+}
+
+/**
+ * 获取确认/拒绝订单的链上交易指令
+ * 用于 EVM/Solana 等需要钱包签名的支付方式
+ *
+ * @param params.orderID - 订单 ID
+ * @param params.reject - 是否拒绝订单（false=接受，true=拒绝）
+ * @param params.initiatorAddress - 发起者钱包地址
+ * @param params.payoutAddress - 卖家收款地址（接受订单时使用）
+ * @returns 指令响应，包含是否需要链上交易以及交易指令
+ */
+export async function getConfirmInstructions(
+  params: {
+    orderID: string;
+    reject: boolean;
+    initiatorAddress: string;
+    payoutAddress?: string;
+  },
+  username?: string,
+  password?: string
+): Promise<OrderInstructionsResponse> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/instructions/order/confirm`;
+    const response = await post<OrderInstructionsResponse>(
+      url,
+      params,
+      getAuthHeaders(username, password)
+    );
+    return response;
+  };
+
+  const mockFn = async (): Promise<OrderInstructionsResponse> => {
+    await mockDelay();
+    // Mock: 默认不需要链上交易（UTXO 链或其他不需要 instructions 的情况）
+    return {
+      hasInstructions: false,
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/instructions/order/confirm');
+}
+
+/**
+ * 获取取消订单的链上交易指令
+ * 用于 EVM/Solana 等需要钱包签名的支付方式
+ *
+ * @param params.orderID - 订单 ID
+ * @param params.initiatorAddress - 发起者钱包地址
+ * @returns 指令响应，包含是否需要链上交易以及交易指令
+ */
+export async function getCancelInstructions(
+  params: {
+    orderID: string;
+    initiatorAddress: string;
+  },
+  username?: string,
+  password?: string
+): Promise<OrderInstructionsResponse> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/instructions/order/cancel`;
+    const response = await post<OrderInstructionsResponse>(
+      url,
+      params,
+      getAuthHeaders(username, password)
+    );
+    return response;
+  };
+
+  const mockFn = async (): Promise<OrderInstructionsResponse> => {
+    await mockDelay();
+    // Mock: 默认不需要链上交易
+    return {
+      hasInstructions: false,
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/instructions/order/cancel');
+}
+
+/**
+ * 获取退款订单的链上交易指令
+ * 用于 EVM/Solana 等需要钱包签名的支付方式
+ *
+ * @param params.orderID - 订单 ID
+ * @param params.initiatorAddress - 发起者钱包地址
+ * @returns 指令响应，包含是否需要链上交易以及交易指令
+ */
+export async function getRefundInstructions(
+  params: {
+    orderID: string;
+    initiatorAddress: string;
+  },
+  username?: string,
+  password?: string
+): Promise<OrderInstructionsResponse> {
+  const realFn = async () => {
+    const url = `${getGatewayUrl()}/instructions/order/refund`;
+    const response = await post<OrderInstructionsResponse>(
+      url,
+      params,
+      getAuthHeaders(username, password)
+    );
+    return response;
+  };
+
+  const mockFn = async (): Promise<OrderInstructionsResponse> => {
+    await mockDelay();
+    // Mock: 默认不需要链上交易
+    return {
+      hasInstructions: false,
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/instructions/order/refund');
 }
 
 /**
@@ -1181,9 +1314,14 @@ export const ordersApi = {
   confirmOrder,
   fulfillOrder,
   completeOrder,
-  getCompleteInstructions,
   cancelOrder,
   refundOrder,
+
+  // 操作指令（用于获取链上交易指令）
+  getConfirmInstructions,
+  getCancelInstructions,
+  getRefundInstructions,
+  getCompleteInstructions,
 
   // 支付
   submitPayment,
