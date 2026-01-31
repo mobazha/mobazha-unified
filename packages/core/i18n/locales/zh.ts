@@ -291,8 +291,10 @@ export const zh: TranslationResource = {
     quantity: '数量',
     subtotal: '小计',
     shipping: '运费',
+    shippingMethod: '配送方式',
     free: '免费',
     selectAddressFirst: '请先选择收货地址',
+    selectShippingFirst: '请选择配送方式',
     selectAddressWarning: '请选择收货地址',
     noItems: '暂无商品',
     addItemsFirst: '请先添加商品到购物车',
@@ -305,6 +307,42 @@ export const zh: TranslationResource = {
     rwaTransaction: 'RWA 代币交易',
     rwaInstantHint: '这是即时 RWA 交换。确认后，您的付款将立即兑换为代币份额。',
     rwaConfirmRequiredHint: '此交易需要卖家确认。您的付款将被锁定，直到卖家确认交易。',
+  },
+
+  // 地址管理
+  address: {
+    title: '收货地址',
+    addAddress: '添加地址',
+    editAddress: '编辑地址',
+    deleteAddress: '删除地址',
+    setDefault: '设为默认',
+    setAsDefault: '已设为默认地址',
+    deleted: '地址已删除',
+    added: '地址已添加',
+    updated: '地址已更新',
+    // 表单字段
+    name: '收件人姓名',
+    namePlaceholder: '请输入收件人姓名',
+    nameRequired: '请输入收件人姓名',
+    company: '公司（可选）',
+    companyPlaceholder: '请输入公司名称',
+    addressLineOne: '详细地址',
+    addressLinePlaceholder: '街道地址、门牌号',
+    addressRequired: '请输入详细地址',
+    addressLineTwo: '补充地址（可选）',
+    addressLineTwoPlaceholder: '公寓、单元、楼层等',
+    city: '城市',
+    cityPlaceholder: '请输入城市',
+    cityRequired: '请输入城市',
+    state: '省/州',
+    statePlaceholder: '请输入省/州',
+    postalCode: '邮政编码',
+    postalCodePlaceholder: '请输入邮政编码',
+    country: '国家/地区',
+    countryPlaceholder: '请输入国家/地区',
+    countryRequired: '请输入国家/地区',
+    addressNotes: '配送备注（可选）',
+    addressNotesPlaceholder: '特殊配送要求...',
   },
 
   order: {
@@ -1400,15 +1438,6 @@ export const zh: TranslationResource = {
     // Addresses
     addAddress: '添加地址',
     noAddresses: '暂无保存的地址',
-  },
-
-  // Address form fields
-  address: {
-    street: '街道',
-    city: '城市',
-    state: '省/州',
-    postalCode: '邮政编码',
-    country: '国家',
   },
 
   userMenu: {

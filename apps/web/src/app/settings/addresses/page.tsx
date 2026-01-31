@@ -1,91 +1,97 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, useToast } from '@/components/ui';
-import { useI18n } from '@mobazha/core';
-import { ChevronLeft, Plus, MapPin, Edit2, Trash2 } from 'lucide-react';
-
-interface Address {
-  id: string;
-  name: string;
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  isDefault: boolean;
-}
-
-// TODO: 集成真实 API - 替换 mock 数据，使用后端地址管理 API
-const mockAddresses: Address[] = [
-  {
-    id: '1',
-    name: 'Home',
-    street: '123 Main Street',
-    city: 'San Francisco',
-    state: 'CA',
-    postalCode: '94102',
-    country: 'United States',
-    isDefault: true,
-  },
-  {
-    id: '2',
-    name: 'Office',
-    street: '456 Market Street',
-    city: 'San Francisco',
-    state: 'CA',
-    postalCode: '94103',
-    country: 'United States',
-    isDefault: false,
-  },
-];
+import { useToast } from '@/components/ui';
+import { useI18n, useShippingAddresses, toDisplayAddressUI } from '@mobazha/core';
+import type { Address as ApiAddress, DisplayAddress, DisplayAddressUI } from '@mobazha/core';
+import { ChevronLeft, Plus, MapPin, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { AddressFormModal } from '@/components/Address';
 
 export default function AddressesSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const [addresses, setAddresses] = useState<Address[]>(mockAddresses);
+
+  // 使用真实的地址管理 hook
+  const {
+    addresses: apiAddresses,
+    isLoading,
+    isSaving,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress,
+  } = useShippingAddresses();
+
+  // 将 API 地址转换为 UI 格式
+  const addresses = useMemo(() => apiAddresses.map(toDisplayAddressUI), [apiAddresses]);
+
+  // 模态框状态
   const [showAddModal, setShowAddModal] = useState(false);
-  const [_editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [editingAddress, setEditingAddress] = useState<DisplayAddress | null>(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    street: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: '',
-  });
+  // 添加地址
+  const handleAddAddress = useCallback(
+    async (address: ApiAddress) => {
+      const success = await addAddress(address);
+      if (success) {
+        toast({ title: t('address.added') || 'Address added' });
+        setShowAddModal(false);
+      }
+      return success;
+    },
+    [addAddress, toast, t]
+  );
 
-  const handleAddAddress = () => {
-    const newAddress: Address = {
-      id: Date.now().toString(),
-      ...formData,
-      isDefault: addresses.length === 0,
-    };
-    setAddresses([...addresses, newAddress]);
-    setShowAddModal(false);
-    setFormData({ name: '', street: '', city: '', state: '', postalCode: '', country: '' });
-    toast({ title: t('common.success'), description: 'Address added' });
-  };
+  // 更新地址
+  const handleUpdateAddress = useCallback(
+    async (address: ApiAddress) => {
+      if (!editingAddress) return false;
+      const success = await updateAddress(editingAddress.id, address);
+      if (success) {
+        toast({ title: t('address.updated') || 'Address updated' });
+        setEditingAddress(null);
+      }
+      return success;
+    },
+    [editingAddress, updateAddress, toast, t]
+  );
 
-  const handleDeleteAddress = (id: string) => {
-    setAddresses(addresses.filter(a => a.id !== id));
-    toast({ title: t('common.success'), description: 'Address deleted' });
-  };
+  // 删除地址
+  const handleDeleteAddress = useCallback(
+    async (id: string) => {
+      const success = await deleteAddress(id);
+      if (success) {
+        toast({ title: t('address.deleted') || 'Address deleted' });
+      }
+    },
+    [deleteAddress, toast, t]
+  );
 
-  const handleSetDefault = (id: string) => {
-    setAddresses(
-      addresses.map(a => ({
-        ...a,
-        isDefault: a.id === id,
-      }))
-    );
-  };
+  // 设为默认地址
+  const handleSetDefault = useCallback(
+    async (id: string) => {
+      const success = await setDefaultAddress(id);
+      if (success) {
+        toast({ title: t('address.setAsDefault') || 'Address set as default' });
+      }
+    },
+    [setDefaultAddress, toast, t]
+  );
+
+  // 打开编辑模态框
+  const handleEdit = useCallback(
+    (uiAddress: DisplayAddressUI) => {
+      // 找到对应的 API 地址
+      const apiAddr = apiAddresses.find(a => a.id === uiAddress.id);
+      if (apiAddr) {
+        setEditingAddress(apiAddr);
+      }
+    },
+    [apiAddresses]
+  );
 
   return (
     <div>
@@ -101,20 +107,27 @@ export default function AddressesSettingsPage() {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold">{t('settings.sidebar.addresses')}</h1>
-        <Button size="sm" onClick={() => setShowAddModal(true)}>
+        <h1 className="text-lg font-semibold">{t('settings.sidebar.addresses') || 'Addresses'}</h1>
+        <Button size="sm" onClick={() => setShowAddModal(true)} disabled={isSaving}>
           <Plus className="w-4 h-4 mr-2" />
-          {t('common.add')}
+          {t('address.addAddress') || 'Add Address'}
         </Button>
       </div>
 
-      {addresses.length === 0 ? (
+      {isLoading ? (
+        <Card className="p-8 text-center">
+          <Loader2 className="w-8 h-8 mx-auto text-muted-foreground animate-spin mb-4" />
+          <p className="text-muted-foreground">{t('common.loading') || 'Loading...'}</p>
+        </Card>
+      ) : addresses.length === 0 ? (
         <Card className="p-8 text-center">
           <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">{t('settingsExtended.noAddresses')}</p>
+          <p className="text-muted-foreground">
+            {t('settingsExtended.noAddresses') || 'No addresses saved yet'}
+          </p>
           <Button className="mt-4" onClick={() => setShowAddModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            {t('settingsExtended.addAddress')}
+            {t('address.addAddress') || 'Add Address'}
           </Button>
         </Card>
       ) : (
@@ -128,27 +141,47 @@ export default function AddressesSettingsPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">{address.name}</p>
+                      <p className="font-medium">
+                        {address.name || t('address.noName') || 'No Name'}
+                      </p>
                       {address.isDefault && (
                         <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                          {t('common.default')}
+                          {t('common.default') || 'Default'}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{address.street}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {address.city}, {address.state} {address.postalCode}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{address.country}</p>
+                    {address.street && (
+                      <p className="text-sm text-muted-foreground mt-1">{address.street}</p>
+                    )}
+                    {(address.city || address.state || address.postalCode) && (
+                      <p className="text-sm text-muted-foreground">
+                        {[address.city, address.state, address.postalCode]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
+                    {address.country && (
+                      <p className="text-sm text-muted-foreground">{address.country}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {!address.isDefault && (
-                    <Button variant="ghost" size="sm" onClick={() => handleSetDefault(address.id)}>
-                      {t('common.setDefault')}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSetDefault(address.id)}
+                      disabled={isSaving}
+                    >
+                      {t('address.setDefault') || 'Set as default'}
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" onClick={() => setEditingAddress(address)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(address)}
+                    disabled={isSaving}
+                  >
                     <Edit2 className="w-4 h-4" />
                   </Button>
                   <Button
@@ -156,6 +189,7 @@ export default function AddressesSettingsPage() {
                     size="icon"
                     className="text-destructive hover:text-destructive"
                     onClick={() => handleDeleteAddress(address.id)}
+                    disabled={isSaving}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -167,66 +201,21 @@ export default function AddressesSettingsPage() {
       )}
 
       {/* Add Address Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('settingsExtended.addAddress')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>{t('common.name')}</Label>
-              <Input
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Home, Office, etc."
-              />
-            </div>
-            <div>
-              <Label>{t('address.street')}</Label>
-              <Input
-                value={formData.street}
-                onChange={e => setFormData({ ...formData, street: e.target.value })}
-                placeholder="123 Main Street"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>{t('address.city')}</Label>
-                <Input
-                  value={formData.city}
-                  onChange={e => setFormData({ ...formData, city: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>{t('address.state')}</Label>
-                <Input
-                  value={formData.state}
-                  onChange={e => setFormData({ ...formData, state: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>{t('address.postalCode')}</Label>
-                <Input
-                  value={formData.postalCode}
-                  onChange={e => setFormData({ ...formData, postalCode: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>{t('address.country')}</Label>
-                <Input
-                  value={formData.country}
-                  onChange={e => setFormData({ ...formData, country: e.target.value })}
-                />
-              </div>
-            </div>
-            <Button className="w-full" onClick={handleAddAddress}>
-              {t('common.save')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AddressFormModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleAddAddress}
+        isSaving={isSaving}
+      />
+
+      {/* Edit Address Modal */}
+      <AddressFormModal
+        isOpen={!!editingAddress}
+        onClose={() => setEditingAddress(null)}
+        onSave={handleUpdateAddress}
+        address={editingAddress}
+        isSaving={isSaving}
+      />
     </div>
   );
 }

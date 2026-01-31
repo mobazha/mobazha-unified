@@ -60,7 +60,11 @@ import {
   handleLinkCallback,
   clearLinkCallbackParams,
   SUPPORTED_PROVIDERS,
+  useShippingAddresses,
+  toDisplayAddressUI,
 } from '@mobazha/core';
+import type { Address as ApiAddress, DisplayAddress, DisplayAddressUI } from '@mobazha/core';
+import { AddressFormModal } from '@/components/Address';
 import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
 import type { CurrencyInfo, Locale } from '@mobazha/core';
 import { ProviderIcon } from '@/components/ProviderIcon';
@@ -1459,304 +1463,204 @@ const StoreTabContent: React.FC = () => {
   );
 };
 
-// Shipping Address Interface
-interface ShippingAddress {
-  id: string;
-  name: string;
-  company?: string;
-  street: string;
-  apartment?: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  deliveryNotes?: string;
-  isDefault?: boolean;
-}
-
-// Addresses Content
-// TODO: 集成真实 API - 替换 mock 数据
-// 参考: mobazha-desktop/frontend/src/views/modals/settings/Addresses.vue
-// API: PUT /ob/preferences 更新 shippingAddresses 数组
-const mockAddresses: ShippingAddress[] = [
-  {
-    id: '1',
-    name: 'Home',
-    company: '',
-    street: '123 Main Street',
-    apartment: '',
-    city: 'San Francisco',
-    state: 'CA',
-    postalCode: '94102',
-    country: 'US',
-    deliveryNotes: '',
-    isDefault: true,
-  },
-  {
-    id: '2',
-    name: 'Office',
-    company: 'Acme Inc.',
-    street: '456 Market Street',
-    apartment: 'Suite 500',
-    city: 'San Francisco',
-    state: 'CA',
-    postalCode: '94103',
-    country: 'US',
-    deliveryNotes: 'Leave at reception',
-    isDefault: false,
-  },
-];
-
+// Addresses Content - 使用 useShippingAddresses hook 和 AddressFormModal
 const AddressesContent: React.FC = () => {
   const { t } = useI18n();
   const { toast } = useToast();
 
-  const [addresses, setAddresses] = useState<ShippingAddress[]>(mockAddresses);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [_editingId, setEditingId] = useState<string | null>(null);
-  const [newAddress, setNewAddress] = useState<Partial<ShippingAddress>>({
-    name: '',
-    company: '',
-    street: '',
-    apartment: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'US',
-    deliveryNotes: '',
-  });
+  // 使用真实的地址管理 hook
+  const {
+    addresses: apiAddresses,
+    isLoading,
+    isSaving,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress,
+  } = useShippingAddresses();
 
-  const handleDeleteAddress = (id: string) => {
-    setAddresses(addresses.filter(a => a.id !== id));
-    toast({
-      title: t('common.success'),
-      description: t('settingsModal.addressDeleted'),
-    });
-  };
+  // 将 API 地址转换为 UI 格式
+  const addresses = useMemo(() => apiAddresses.map(toDisplayAddressUI), [apiAddresses]);
 
-  const handleAddAddress = () => {
-    if (!newAddress.name || !newAddress.street || !newAddress.city || !newAddress.country) {
-      toast({
-        title: t('common.error'),
-        description: t('settingsModal.fillRequired'),
-        variant: 'destructive',
-      });
-      return;
-    }
+  // 模态框状态
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<DisplayAddress | null>(null);
 
-    const address: ShippingAddress = {
-      id: Date.now().toString(),
-      name: newAddress.name!,
-      company: newAddress.company,
-      street: newAddress.street!,
-      apartment: newAddress.apartment,
-      city: newAddress.city!,
-      state: newAddress.state || '',
-      postalCode: newAddress.postalCode || '',
-      country: newAddress.country!,
-      deliveryNotes: newAddress.deliveryNotes,
-    };
+  // 添加地址
+  const handleAddAddress = useCallback(
+    async (address: ApiAddress) => {
+      const success = await addAddress(address);
+      if (success) {
+        toast({ title: t('address.added') || 'Address added' });
+        setShowAddModal(false);
+      }
+      return success;
+    },
+    [addAddress, toast, t]
+  );
 
-    setAddresses([...addresses, address]);
-    setNewAddress({
-      name: '',
-      company: '',
-      street: '',
-      apartment: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: 'US',
-      deliveryNotes: '',
-    });
+  // 更新地址
+  const handleUpdateAddress = useCallback(
+    async (address: ApiAddress) => {
+      if (!editingAddress) return false;
+      const success = await updateAddress(editingAddress.id, address);
+      if (success) {
+        toast({ title: t('address.updated') || 'Address updated' });
+        setEditingAddress(null);
+      }
+      return success;
+    },
+    [editingAddress, updateAddress, toast, t]
+  );
 
-    toast({
-      title: t('common.success'),
-      description: t('settingsModal.addressAdded'),
-    });
-  };
+  // 删除地址
+  const handleDeleteAddress = useCallback(
+    async (id: string) => {
+      const success = await deleteAddress(id);
+      if (success) {
+        toast({ title: t('address.deleted') || 'Address deleted' });
+      }
+    },
+    [deleteAddress, toast, t]
+  );
 
-  const handleSetDefault = (id: string) => {
-    setAddresses(
-      addresses.map(a => ({
-        ...a,
-        isDefault: a.id === id,
-      }))
-    );
-    toast({
-      title: t('common.success'),
-      description: t('settingsModal.defaultAddressSet'),
-    });
-  };
+  // 设为默认地址
+  const handleSetDefault = useCallback(
+    async (id: string) => {
+      const success = await setDefaultAddress(id);
+      if (success) {
+        toast({ title: t('address.setAsDefault') || 'Address set as default' });
+      }
+    },
+    [setDefaultAddress, toast, t]
+  );
+
+  // 打开编辑模态框
+  const handleEdit = useCallback(
+    (uiAddress: DisplayAddressUI) => {
+      const apiAddr = apiAddresses.find(a => a.id === uiAddress.id);
+      if (apiAddr) {
+        setEditingAddress(apiAddr);
+      }
+    },
+    [apiAddresses]
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{t('settingsModal.addressesDescription')}</p>
-        <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('settingsModal.addAddress')}
-        </Button>
-      </div>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{t('settingsModal.addressesDescription')}</p>
+          <Button size="sm" onClick={() => setShowAddModal(true)} disabled={isSaving}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('address.addAddress') || 'Add Address'}
+          </Button>
+        </div>
 
-      {/* Existing Addresses */}
-      {addresses.length > 0 ? (
-        <div className="space-y-3">
-          {addresses.map(address => (
-            <Card key={address.id} className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold">{address.name}</p>
-                      {address.isDefault && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {t('settingsModal.default')}
-                        </span>
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-muted-foreground">{t('common.loading') || 'Loading...'}</p>
+          </div>
+        ) : addresses.length > 0 ? (
+          <div className="space-y-3">
+            {addresses.map(address => (
+              <Card key={address.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">
+                          {address.name || t('address.noName') || 'No Name'}
+                        </p>
+                        {address.isDefault && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            {t('common.default') || 'Default'}
+                          </span>
+                        )}
+                      </div>
+                      {address.street && (
+                        <p className="text-sm text-muted-foreground">{address.street}</p>
+                      )}
+                      {(address.city || address.state || address.postalCode) && (
+                        <p className="text-sm text-muted-foreground">
+                          {[address.city, address.state, address.postalCode]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </p>
+                      )}
+                      {address.country && (
+                        <p className="text-sm text-muted-foreground">{address.country}</p>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{address.street}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {address.city}, {address.state} {address.postalCode}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {countries.find(c => c.code === address.country)?.name}
-                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!address.isDefault && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSetDefault(address.id)}
+                        disabled={isSaving}
+                      >
+                        {t('address.setDefault') || 'Set as default'}
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(address)}
+                      disabled={isSaving}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteAddress(address.id)}
+                      disabled={isSaving}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {!address.isDefault && (
-                    <Button variant="ghost" size="sm" onClick={() => handleSetDefault(address.id)}>
-                      {t('settingsModal.setDefault')}
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="icon" onClick={() => setEditingId(address.id)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDeleteAddress(address.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <MapPin className="w-12 h-12 text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">{t('settingsModal.noAddresses')}</p>
-        </div>
-      )}
-
-      {/* New Address Form */}
-      {showAddForm && (
-        <Card className="p-4 space-y-4">
-          <h3 className="font-semibold">{t('settingsModal.newAddress')}</h3>
-
-          <FormField label={t('profile.name')} required>
-            <Input
-              value={newAddress.name}
-              onChange={e => setNewAddress({ ...newAddress, name: e.target.value })}
-              placeholder={t('settingsModal.recipientName')}
-            />
-          </FormField>
-
-          <FormField label={t('settingsModal.company')}>
-            <Input
-              value={newAddress.company}
-              onChange={e => setNewAddress({ ...newAddress, company: e.target.value })}
-              placeholder={t('settingsModal.optional')}
-            />
-          </FormField>
-
-          <FormField label={t('settingsModal.street')}>
-            <Input
-              value={newAddress.street}
-              onChange={e => setNewAddress({ ...newAddress, street: e.target.value })}
-              placeholder="427 N Greenfield Road"
-            />
-          </FormField>
-
-          <FormField label={t('settingsModal.apartment')}>
-            <Input
-              value={newAddress.apartment}
-              onChange={e => setNewAddress({ ...newAddress, apartment: e.target.value })}
-              placeholder={t('settingsModal.optional')}
-            />
-          </FormField>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={t('settingsModal.city')}>
-              <Input
-                value={newAddress.city}
-                onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
-                placeholder="Chicago"
-              />
-            </FormField>
-
-            <FormField label={t('settingsModal.state')}>
-              <Input
-                value={newAddress.state}
-                onChange={e => setNewAddress({ ...newAddress, state: e.target.value })}
-                placeholder="IL"
-              />
-            </FormField>
+              </Card>
+            ))}
           </div>
-
-          <FormField label={t('settingsModal.postalCode')}>
-            <Input
-              value={newAddress.postalCode}
-              onChange={e => setNewAddress({ ...newAddress, postalCode: e.target.value })}
-              placeholder="60654"
-            />
-          </FormField>
-
-          <FormField label={t('settingsExtended.country')} required>
-            <Select
-              value={newAddress.country}
-              onValueChange={v => setNewAddress({ ...newAddress, country: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {countries.map(c => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-
-          <FormField label={t('settingsModal.deliveryNotes')}>
-            <Input
-              value={newAddress.deliveryNotes}
-              onChange={e => setNewAddress({ ...newAddress, deliveryNotes: e.target.value })}
-              placeholder={t('settingsModal.deliveryNotesPlaceholder')}
-            />
-          </FormField>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={handleAddAddress} className="flex-1">
-              {t('settingsModal.addAddress')}
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <MapPin className="w-12 h-12 text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">{t('settingsModal.noAddresses')}</p>
+            <Button className="mt-4" onClick={() => setShowAddModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              {t('address.addAddress') || 'Add Address'}
             </Button>
           </div>
-        </Card>
-      )}
-    </div>
+        )}
+      </div>
+
+      {/* Add Address Modal */}
+      <AddressFormModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleAddAddress}
+        isSaving={isSaving}
+      />
+
+      {/* Edit Address Modal */}
+      <AddressFormModal
+        isOpen={!!editingAddress}
+        onClose={() => setEditingAddress(null)}
+        onSave={handleUpdateAddress}
+        address={editingAddress}
+        isSaving={isSaving}
+      />
+    </>
   );
 };
 
