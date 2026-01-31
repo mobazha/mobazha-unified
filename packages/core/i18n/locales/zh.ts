@@ -338,6 +338,17 @@ export const zh: TranslationResource = {
       resolved: '已解决',
       declined: '已拒绝',
     },
+    // 时间线事件描述
+    timeline: {
+      orderPlaced: '订单已提交',
+      paymentConfirmed: '支付已确认',
+      vendorConfirmed: '卖家已确认订单',
+      packageShipped: '包裹已发出',
+      packageShippedWithTracking: '包裹已发出 - {{shipper}}: {{trackingNumber}}',
+      orderCompleted: '订单完成 - 款项已释放给卖家',
+      disputeOpened: '纠纷已发起',
+      disputeClosed: '纠纷已关闭: {{verdict}}',
+    },
     // 订单详情标签
     shipTo: '收货地址',
     shippingOption: '配送方式',

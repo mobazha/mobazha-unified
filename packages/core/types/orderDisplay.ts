@@ -41,7 +41,12 @@ export interface DisplayModerator {
 export interface DisplayTimelineEvent {
   status: string;
   timestamp: string;
+  /** 描述文本（默认英文，可被 UI 层覆盖） */
   description: string;
+  /** i18n 翻译键（用于 UI 层翻译） */
+  descriptionKey?: string;
+  /** 描述参数（用于插值，如 shipper、trackingNumber） */
+  descriptionParams?: Record<string, string>;
   actor?: 'buyer' | 'seller' | 'moderator' | 'system';
 }
 

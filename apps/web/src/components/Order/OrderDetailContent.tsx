@@ -20,6 +20,16 @@ import {
   type OrderAction,
   type UserRole as CoreUserRole,
   useI18n,
+  // 从 @mobazha/core 导入订单展示类型
+  type DisplayOrder as CoreDisplayOrder,
+  type DisplayOrderItem,
+  type DisplayOrderParticipant,
+  type DisplayModerator,
+  type DisplayTimelineEvent,
+  type DisplayDispute,
+  type DisplayPaymentLocked,
+  type DisplayOrderStatus,
+  type DisplayUserRole,
 } from '@mobazha/core';
 import type { Order as CoreOrder, Product } from '@mobazha/core';
 import {
@@ -35,91 +45,20 @@ import { Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ============ Types ============
+// 从 @mobazha/core 重新导出基础类型，保持向后兼容
+export type OrderItem = DisplayOrderItem;
+export type OrderVendor = DisplayOrderParticipant;
+export type Moderator = DisplayModerator;
+export type TimelineEvent = DisplayTimelineEvent;
 
-export interface OrderItem {
-  id: string;
-  title: string;
-  image: string;
-  quantity: number;
-  price: string;
-  currency: string;
-}
-
-export interface OrderVendor {
-  id: string;
-  name: string;
-  avatar: string;
-  peerID?: string;
-}
-
-export interface Moderator {
-  id: string;
-  name: string;
-  avatar: string;
-  fee: number;
-}
-
-export interface TimelineEvent {
-  status: string;
-  timestamp: string;
-  description: string;
-  actor?: 'buyer' | 'seller' | 'moderator' | 'system';
-}
-
-export interface DisplayOrder {
-  id: string;
-  orderId: string;
-  status:
-    | 'pending'
-    | 'awaiting_payment'
-    | 'paid'
-    | 'processing'
-    | 'shipped'
-    | 'delivered'
-    | 'completed'
-    | 'disputed'
-    | 'refunded'
-    | 'cancelled'
-    | 'split_resolved';
-  items: OrderItem[];
-  total: string;
-  currency: string;
-  createdAt: string;
-  vendor: OrderVendor;
-  buyer?: OrderVendor;
-  moderator?: Moderator;
-  trackingNumber?: string;
-  shippingAddress: string;
-  paymentTx?: string;
-  escrowTx?: string;
-  escrowAddress?: string;
-  chainId?: number;
-  notes?: string;
-  timeline: TimelineEvent[];
-  userRole: 'buyer' | 'seller' | 'moderator';
-  // RWA 即时交易标识（链上已完成，无需等待）
-  isRwaInstant?: boolean;
-  // RWA 支付锁定信息（仅用于托管模式）
-  paymentLocked?: {
-    amount: string;
-    coin: string;
-    buyerReceiveAddress: string;
-    lockTxHash: string;
-    timestamp?: string;
-    escrowTimeoutSeconds?: number;
-    expiresAt?: string;
-  };
-  // RWA 取消/退款回调
+/**
+ * UI 组件使用的 DisplayOrder 类型
+ * 继承自 @mobazha/core 的 CoreDisplayOrder，添加 UI 特有的回调函数
+ */
+export interface DisplayOrder extends CoreDisplayOrder {
+  // RWA 取消/退款回调（UI 特有）
   onRwaCancelOrder?: () => Promise<void>;
   onRwaClaimExpired?: () => Promise<void>;
-  dispute?: {
-    id: string;
-    claim: string;
-    response?: string;
-    status: 'open' | 'in_progress' | 'resolved';
-    initiator: 'buyer' | 'seller';
-    resolution?: 'buyer' | 'seller' | 'split';
-  };
 }
 
 export interface OrderDetailContentProps {

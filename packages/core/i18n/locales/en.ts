@@ -341,6 +341,17 @@ export const en: TranslationResource = {
       resolved: 'Resolved',
       declined: 'Declined',
     },
+    // Timeline event descriptions
+    timeline: {
+      orderPlaced: 'Order placed',
+      paymentConfirmed: 'Payment confirmed',
+      vendorConfirmed: 'Vendor confirmed order',
+      packageShipped: 'Package shipped',
+      packageShippedWithTracking: 'Package shipped - {{shipper}}: {{trackingNumber}}',
+      orderCompleted: 'Order completed - Funds released to seller',
+      disputeOpened: 'Dispute opened',
+      disputeClosed: 'Dispute closed: {{verdict}}',
+    },
     // Order detail labels
     shipTo: 'Ship to',
     shippingOption: 'Shipping Option',
