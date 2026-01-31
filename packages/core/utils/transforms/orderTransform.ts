@@ -189,6 +189,7 @@ function formatShippingAddress(shipping?: {
 
 /**
  * 根据实际订单数据生成时间线
+ * 返回的 descriptionKey 用于 UI 层 i18n 翻译
  */
 function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent[] {
   const timeline: DisplayTimelineEvent[] = [];
@@ -203,6 +204,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
       status: 'created',
       timestamp: orderTimestamp,
       description: 'Order placed',
+      descriptionKey: 'order.timeline.orderPlaced',
       actor: 'buyer',
     });
   }
@@ -218,6 +220,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
       status: 'paid',
       timestamp: confirmTimestamp,
       description: 'Payment confirmed',
+      descriptionKey: 'order.timeline.paymentConfirmed',
       actor: 'system',
     });
   }
@@ -229,6 +232,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
       status: 'processing',
       timestamp: orderConfirmation.timestamp || '',
       description: 'Vendor confirmed order',
+      descriptionKey: 'order.timeline.vendorConfirmed',
       actor: 'seller',
     });
   }
@@ -238,14 +242,27 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   if (fulfillments?.length) {
     const fulfillment = fulfillments[0];
     const trackingInfo = fulfillment.physicalDelivery?.[0];
-    timeline.push({
-      status: 'shipped',
-      timestamp: fulfillment.timestamp || '',
-      description: trackingInfo
-        ? `Package shipped - ${trackingInfo.shipper}: ${trackingInfo.trackingNumber}`
-        : 'Package shipped',
-      actor: 'seller',
-    });
+    if (trackingInfo) {
+      timeline.push({
+        status: 'shipped',
+        timestamp: fulfillment.timestamp || '',
+        description: `Package shipped - ${trackingInfo.shipper}: ${trackingInfo.trackingNumber}`,
+        descriptionKey: 'order.timeline.packageShippedWithTracking',
+        descriptionParams: {
+          shipper: trackingInfo.shipper || '',
+          trackingNumber: trackingInfo.trackingNumber || '',
+        },
+        actor: 'seller',
+      });
+    } else {
+      timeline.push({
+        status: 'shipped',
+        timestamp: fulfillment.timestamp || '',
+        description: 'Package shipped',
+        descriptionKey: 'order.timeline.packageShipped',
+        actor: 'seller',
+      });
+    }
   }
 
   // 完成
@@ -255,6 +272,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
       status: 'completed',
       timestamp: orderComplete.timestamp || '',
       description: 'Order completed - Funds released to seller',
+      descriptionKey: 'order.timeline.orderCompleted',
       actor: 'buyer',
     });
   }
@@ -265,6 +283,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
       status: 'disputed',
       timestamp: contract.disputeOpen.timestamp || '',
       description: 'Dispute opened',
+      descriptionKey: 'order.timeline.disputeOpened',
       actor: 'buyer',
     });
   }
@@ -275,6 +294,10 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
       status: 'resolved',
       timestamp: contract.disputeClose.timestamp || '',
       description: `Dispute closed: ${contract.disputeClose.verdict || 'N/A'}`,
+      descriptionKey: 'order.timeline.disputeClosed',
+      descriptionParams: {
+        verdict: contract.disputeClose.verdict || 'N/A',
+      },
       actor: 'moderator',
     });
   }
