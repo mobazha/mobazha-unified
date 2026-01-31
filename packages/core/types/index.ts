@@ -54,7 +54,7 @@ export type {
   AcceptedCurrency,
 } from './product';
 
-// Order types
+// Order types (API)
 export type {
   OrderState,
   OrderRole,
@@ -96,6 +96,20 @@ export type {
   Cart,
   CartItem,
 } from './order';
+
+// Order Display types (UI)
+export type {
+  DisplayOrder,
+  DisplayOrderItem,
+  DisplayOrderParticipant,
+  DisplayModerator,
+  DisplayTimelineEvent,
+  DisplayDispute,
+  DisplayPaymentLocked,
+  DisplayOrderStatus,
+  DisplayUserRole,
+  TransformOrderOptions,
+} from './orderDisplay';
 
 // Wallet types
 export type {

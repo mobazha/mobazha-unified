@@ -23,15 +23,39 @@ alwaysApply: false
 
 | 维度 | 权重 | 检查点 |
 |------|------|--------|
-| 代码质量 | 25% | 命名、结构、可读性、DRY |
-| React 最佳实践 | 20% | Hooks、性能、组件设计 |
+| **架构一致性** | 20% | 代码复用、分层架构、类型定义位置 |
+| 代码质量 | 20% | 命名、结构、可读性、DRY |
+| React 最佳实践 | 15% | Hooks、性能、组件设计 |
 | TypeScript | 15% | 类型安全、泛型使用、避免 any |
-| 迁移一致性 | 15% | 与原 RN 功能对齐 |
+| 迁移一致性 | 10% | 与原 RN 功能对齐 |
 | 响应式设计和间距 | 10% | 断点、布局适配、内边距、元素间距 |
-| 错误处理 | 10% | try-catch、用户反馈 |
+| 错误处理 | 5% | try-catch、用户反馈 |
 | 测试覆盖 | 5% | 单元测试完整性 |
 
 ### 3. 常见问题检查
+
+#### 架构一致性（重要！详见 [code-reuse-rules.mdc](./code-reuse-rules.mdc)）
+
+```typescript
+// ❌ 在 apps/ 中定义业务类型（Props 除外）
+// apps/web/src/components/Order/OrderDetailModal.tsx
+interface DisplayOrder { ... }  // 应在 @mobazha/core/types/
+interface RealOrderData { ... } // 应在 @mobazha/core/types/
+
+// ❌ 在 apps/ 中定义转换函数
+function transformCoreOrder() { ... }  // 应在 @mobazha/core/utils/
+
+// ❌ 组件直接调用 API
+const order = await ordersApi.getOrder(id);  // 应使用 hooks
+
+// ❌ 相同逻辑在多处实现
+// 文件 A: if (peerID === vendorID) role = 'seller';
+// 文件 B: if (peerID === vendorID) role = 'seller'; // 重复！
+
+// ✅ 正确做法
+import { DisplayOrder, transformCoreOrder } from '@mobazha/core';
+const { displayOrder } = useOrderDetail(orderId, viewingContext);
+```
 
 #### React/Hooks
 ```typescript
@@ -97,14 +121,22 @@ width: 375 // 应该用百分比或响应式值
 </div>
 ```
 
-### 4. 迁移一致性检查
+### 4. 架构一致性检查（必须）
+
+- [ ] `apps/` 中没有业务类型定义（`interface`/`type`，Props 除外）
+- [ ] `apps/` 中没有 `transform*` 或 `map*` 函数
+- [ ] 组件不直接调用 `xxxApi.*`，而是使用 hooks
+- [ ] 相同逻辑没有在多处重复实现
+- [ ] 上下文（如 `viewingContext`）正确传递
+
+### 5. 迁移一致性检查
 
 - [ ] 功能与原 RN 实现一致
 - [ ] API 调用参数相同
 - [ ] 状态管理逻辑相同
 - [ ] 错误处理方式相同
 
-### 5. UI 间距检查
+### 6. UI 间距检查
 
 - [ ] 卡片组件有足够内边距 (至少 `p-4`)
 - [ ] 图标和文字之间有适当间距 (`gap-2`)
@@ -112,7 +144,7 @@ width: 375 // 应该用百分比或响应式值
 - [ ] 列表项有适当的上下/左右间距
 - [ ] 内容不紧贴卡片边界
 
-### 6. 输出 Review 报告
+### 7. 输出 Review 报告
 
 ```markdown
 ## Code Review 报告

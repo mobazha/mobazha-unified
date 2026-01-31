@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useCallback, useState, useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -11,461 +11,44 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  useOrder,
-  getImageUrl,
+  useOrderDetail,
   useUserStore,
   useI18n,
   isOrderFulfilled,
   ordersApi,
-  formatTokenAmount,
   onWebSocketMessage,
-  useWallet,
-  getTransactionService,
+  useOrderAction,
   type OrderAction,
   type UserRole as CoreUserRole,
   type WebSocketMessage,
+  type DisplayOrder,
+  type Order,
 } from '@mobazha/core';
-import type { Order as CoreOrder, OrderState } from '@mobazha/core';
 import {
   OrderDetailContent,
   OrderFooter,
   AcceptOrderDialog,
   FulfillOrderDialog,
   OrderConfirmDialog,
-  type DisplayOrder,
-  type OrderItem,
-  type Moderator,
-  type TimelineEvent,
   type OrderConfirmType,
 } from '@/components/Order';
 
-// ============ Utility Functions ============
-
-// 将后端订单状态映射到 UI 状态
-// 参考桌面端逻辑：PENDING 表示已支付等待确认，AWAITING_PAYMENT 才是未支付
-function mapOrderState(state: OrderState): DisplayOrder['status'] {
-  const stateMap: Record<string, DisplayOrder['status']> = {
-    // PENDING 表示订单已创建且已支付，等待卖家确认（参考桌面端）
-    PENDING: 'paid',
-    AWAITING_PAYMENT: 'awaiting_payment',
-    AWAITING_PICKUP: 'processing',
-    AWAITING_FULFILLMENT: 'processing',
-    PARTIALLY_FULFILLED: 'processing',
-    FULFILLED: 'shipped',
-    COMPLETED: 'completed',
-    CANCELED: 'cancelled',
-    DECLINED: 'cancelled',
-    REFUNDED: 'refunded',
-    DISPUTED: 'disputed',
-    DECIDED: 'disputed',
-    RESOLVED: 'completed',
-    // PAYMENT_FINALIZED: 托管已释放（超时后），等待买家评价后变成 COMPLETE
-    // 参考移动端/桌面端，此状态表示交易已完成，与 COMPLETED 同级
-    PAYMENT_FINALIZED: 'completed',
-    PROCESSING_ERROR: 'awaiting_payment',
-  };
-  return stateMap[state] || 'awaiting_payment';
-}
-
-// 格式化价格金额（使用统一的 token 配置）
-function formatPriceAmount(amount: number, divisibility: number = 2, coin?: string): string {
-  // 如果提供了 coin，使用统一配置中的 decimals
-  if (coin) {
-    return formatTokenAmount(amount, coin);
-  }
-  // 否则使用传入的 divisibility
-  const normalAmount = amount / Math.pow(10, divisibility);
-  const displayDecimals = divisibility >= 6 ? 2 : Math.min(divisibility, 8);
-  return normalAmount.toFixed(displayDecimals);
-}
-
-// 从图片对象获取 URL
-function getThumbnailUrl(
-  image:
-    | { tiny?: string; small?: string; medium?: string; large?: string; original?: string }
-    | undefined
-): string {
-  if (!image) return '';
-  const hash = image.medium || image.small || image.tiny || image.large || image.original || '';
-  return getImageUrl(hash) || '';
-}
-
-// 格式化地址
-function formatShippingAddress(shipping?: {
-  name?: string;
-  company?: string;
-  addressLineOne?: string;
-  addressLineTwo?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-}): string {
-  if (!shipping) return 'No shipping address';
-  const parts = [
-    shipping.name,
-    shipping.company,
-    shipping.addressLineOne,
-    shipping.addressLineTwo,
-    [shipping.city, shipping.state, shipping.postalCode].filter(Boolean).join(', '),
-    shipping.country,
-  ].filter(Boolean);
-  return parts.join('\n') || 'No shipping address';
-}
-
-// 后端实际返回的订单数据结构
-interface RealOrderData {
-  state: string;
-  funded?: boolean;
-  read?: boolean;
-  unreadChatMessages?: number;
-  paymentAddressTransactions?: { txid: string; value: number; confirmations: number }[];
-  contract: {
+// 用于类型安全地访问订单合约数据的接口
+interface OrderContractData {
+  contract?: {
     orderOpen?: {
-      timestamp?: string;
-      buyerID?: { peerID?: string; handle?: string };
       listings?: Array<{
-        vendorID?: { peerID?: string };
         listing?: {
           slug?: string;
-          metadata?: { contractType?: string; pricingCurrency?: { divisibility?: number } };
-          item?: {
-            title?: string;
-            images?: Array<{ tiny?: string; small?: string; medium?: string }>;
-            price?: number;
-            blockchain?: string;
-          };
-          vendorID?: { peerID?: string; handle?: string };
-          shippingOptions?: Array<{ regions?: string[] }>;
+          metadata?: { contractType?: string };
+          item?: { blockchain?: string };
         };
       }>;
-      items?: Array<{ quantity?: number; memo?: string }>;
-      shipping?: {
-        name?: string;
-        company?: string;
-        addressLineOne?: string;
-        addressLineTwo?: string;
-        city?: string;
-        state?: string;
-        postalCode?: string;
-        country?: string;
-      };
-      pricingCoin?: string;
-      amount?: number;
-      alternateContactInfo?: string;
     };
-    // PaymentSent 统一消息：method 表示支付模式
-    // 0=DIRECT, 1=CANCELABLE, 2=MODERATED, 3=RWA_ESCROW（托管）, 4=RWA_INSTANT（即时）
     paymentSent?: {
-      transactionID?: string;
-      moderator?: string;
       coin?: string;
-      amount?: number;
-      method?: number | string;
-      address?: string;
-      contractAddress?: string; // UniversalSwap 合约地址（RWA 模式）
-      buyerReceiveAddress?: string;
-      paymentTokenAddress?: string;
-      timestamp?: string;
-    };
-    // 已废弃：保留用于兼容旧数据
-    paymentLocked?: {
-      lockTxHash?: string;
-      coin?: string;
-      amount?: string;
-      paymentTokenAddress?: string;
-      buyerReceiveAddress?: string;
-      universalSwapAddress?: string;
-      timestamp?: string;
-    };
-    orderConfirmation?: {
-      timestamp?: string;
-      paymentAddress?: string;
-    };
-    orderFulfillments?: Array<{
-      timestamp?: string;
-      physicalDelivery?: Array<{ shipper?: string; trackingNumber?: string }>;
-      note?: string;
-    }>;
-    orderComplete?: {
-      timestamp?: string;
-    };
-    disputeOpen?: {
-      timestamp?: string;
-    };
-    disputeClose?: {
-      timestamp?: string;
-      verdict?: string;
     };
   };
-}
-
-// 根据实际订单数据生成时间线
-function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
-  const timeline: TimelineEvent[] = [];
-  const contract = data.contract;
-
-  const orderOpen = contract.orderOpen;
-  const orderTimestamp = orderOpen?.timestamp;
-
-  // 订单创建
-  if (orderTimestamp) {
-    timeline.push({
-      status: 'created',
-      timestamp: orderTimestamp,
-      description: 'Order placed',
-      actor: 'buyer',
-    });
-  }
-
-  // 资金到账 (使用 PaymentSent 统一消息)
-  if (
-    data.funded ||
-    contract.paymentSent ||
-    (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
-  ) {
-    const confirmTimestamp = contract.orderConfirmation?.timestamp || orderTimestamp || '';
-    timeline.push({
-      status: 'paid',
-      timestamp: confirmTimestamp,
-      description: 'Payment confirmed',
-      actor: 'system',
-    });
-  }
-
-  // 卖家确认
-  const orderConfirmation = contract.orderConfirmation;
-  if (orderConfirmation) {
-    timeline.push({
-      status: 'processing',
-      timestamp: orderConfirmation.timestamp || '',
-      description: 'Vendor confirmed order',
-      actor: 'seller',
-    });
-  }
-
-  // 发货
-  const fulfillments = contract.orderFulfillments;
-  if (fulfillments?.length) {
-    const fulfillment = fulfillments[0];
-    const trackingInfo = fulfillment.physicalDelivery?.[0];
-    timeline.push({
-      status: 'shipped',
-      timestamp: fulfillment.timestamp || '',
-      description: trackingInfo
-        ? `Package shipped - ${trackingInfo.shipper}: ${trackingInfo.trackingNumber}`
-        : 'Package shipped',
-      actor: 'seller',
-    });
-  }
-
-  // 完成
-  const orderComplete = contract.orderComplete;
-  if (orderComplete) {
-    timeline.push({
-      status: 'completed',
-      timestamp: orderComplete.timestamp || '',
-      description: 'Order completed - Funds released to seller',
-      actor: 'buyer',
-    });
-  }
-
-  // 争议
-  if (contract.disputeOpen) {
-    timeline.push({
-      status: 'disputed',
-      timestamp: contract.disputeOpen.timestamp || '',
-      description: 'Dispute opened',
-      actor: 'buyer',
-    });
-  }
-
-  // 争议关闭
-  if (contract.disputeClose) {
-    timeline.push({
-      status: 'resolved',
-      timestamp: contract.disputeClose.timestamp || '',
-      description: `Dispute closed: ${contract.disputeClose.verdict || 'N/A'}`,
-      actor: 'moderator',
-    });
-  }
-
-  return timeline;
-}
-
-// 将 CoreOrder 转换为本地 Order 格式
-function transformCoreOrder(
-  coreOrder: CoreOrder | RealOrderData | null,
-  currentUserPeerID: string | null
-): DisplayOrder | null {
-  if (!coreOrder || !coreOrder.contract) {
-    return null;
-  }
-
-  const data = coreOrder as RealOrderData;
-  const contract = data.contract;
-
-  const orderOpen = contract.orderOpen;
-
-  type ListingType = NonNullable<
-    NonNullable<RealOrderData['contract']['orderOpen']>['listings']
-  >[0]['listing'];
-  let listingData: ListingType | undefined;
-  let vendorPeerID = '';
-  let vendorHandle = '';
-
-  if (orderOpen?.listings?.length) {
-    const firstListing = orderOpen.listings[0];
-    listingData = firstListing.listing;
-    vendorPeerID = firstListing.listing?.vendorID?.peerID || firstListing.vendorID?.peerID || '';
-    vendorHandle = firstListing.listing?.vendorID?.handle || '';
-  }
-
-  const buyerPeerID = orderOpen?.buyerID?.peerID || '';
-  const buyerHandle = orderOpen?.buyerID?.handle || '';
-
-  // 支持 PaymentSent (统一消息)
-  const paymentSent = contract.paymentSent;
-  // 判断是否为 RWA 托管模式：method === 3 (RWA_ESCROW)
-  const isRwaEscrow =
-    paymentSent?.method === 3 ||
-    paymentSent?.method === 'RWA_ESCROW' ||
-    paymentSent?.method === 'RWA_LOCKED';
-  // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
-  const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
-  const coin = paymentSent?.coin || orderOpen?.pricingCoin || 'ETH';
-  // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
-  const amount =
-    paymentSent?.amount !== undefined
-      ? paymentSent.amount
-      : orderOpen?.amount !== undefined
-        ? orderOpen.amount
-        : (listingData?.item?.price ?? 0);
-  const paymentMethod = paymentSent?.method || '';
-  const moderatorId = paymentSent?.moderator || '';
-
-  const divisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
-  const timestamp = orderOpen?.timestamp || '';
-  const fulfillments = contract.orderFulfillments;
-  const trackingInfo = fulfillments?.[0]?.physicalDelivery?.[0];
-  const shipping = orderOpen?.shipping;
-
-  const paymentAddress = paymentSent?.address || contract.orderConfirmation?.paymentAddress;
-
-  const notes = orderOpen?.alternateContactInfo;
-  const orderOpenItems = orderOpen?.items || [];
-
-  let userRole: DisplayOrder['userRole'] = 'buyer';
-  if (currentUserPeerID) {
-    if (currentUserPeerID === vendorPeerID) {
-      userRole = 'seller';
-    } else if (currentUserPeerID === buyerPeerID) {
-      userRole = 'buyer';
-    } else if (moderatorId === currentUserPeerID) {
-      userRole = 'moderator';
-    }
-  }
-
-  const itemImages = listingData?.item?.images || [];
-  const itemImageUrl = itemImages.length > 0 ? getThumbnailUrl(itemImages[0]) : '';
-
-  const orderId = listingData?.slug || '';
-  const itemTitle = listingData?.item?.title || 'Unknown Item';
-  const itemPrice = listingData?.item?.price || 0;
-
-  const orderItems: OrderItem[] =
-    orderOpenItems.length > 0
-      ? orderOpenItems.map((item, index) => ({
-          id: `item-${index}`,
-          title: itemTitle,
-          image: itemImageUrl,
-          quantity: item.quantity || 1,
-          price: formatPriceAmount(itemPrice, divisibility, coin),
-          currency: coin,
-        }))
-      : [
-          {
-            id: 'item-0',
-            title: itemTitle,
-            image: itemImageUrl,
-            quantity: 1,
-            price: formatPriceAmount(itemPrice, divisibility, coin),
-            currency: coin,
-          },
-        ];
-
-  const moderator: Moderator | undefined =
-    paymentMethod === 'MODERATED' && moderatorId
-      ? {
-          id: moderatorId,
-          name: moderatorId.slice(0, 12) + '...',
-          avatar: '',
-          fee: 1,
-        }
-      : undefined;
-
-  const result: DisplayOrder = {
-    id: orderId,
-    orderId: orderId,
-    status: mapOrderState(data.state as OrderState),
-    items: orderItems,
-    total: formatPriceAmount(amount, divisibility, coin),
-    currency: coin,
-    createdAt: timestamp,
-    vendor: {
-      id: vendorPeerID,
-      name: vendorHandle || (vendorPeerID ? vendorPeerID.slice(0, 12) + '...' : 'Unknown'),
-      avatar: '',
-      peerID: vendorPeerID,
-    },
-    buyer: {
-      id: buyerPeerID,
-      name: buyerHandle || (buyerPeerID ? buyerPeerID.slice(0, 12) + '...' : 'Unknown'),
-      avatar: '',
-      peerID: buyerPeerID,
-    },
-    moderator,
-    trackingNumber: trackingInfo?.trackingNumber,
-    shippingAddress: formatShippingAddress(shipping),
-    // 支持 RWA 模式和传统交易
-    paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
-    // RWA 即时交易标识（即时交易已在链上完成，无需等待）
-    isRwaInstant: isRwaInstant,
-    // RWA 支付锁定信息（从 paymentSent 获取，仅用于托管模式）
-    paymentLocked:
-      isRwaEscrow && paymentSent
-        ? (() => {
-            // 从 listing metadata 获取 escrowTimeoutSeconds
-            const metadata = listingData?.metadata as Record<string, unknown> | undefined;
-            const escrowTimeoutSeconds = (metadata?.rwaEscrowTimeoutSeconds ||
-              metadata?.escrowTimeoutSeconds ||
-              900) as number; // 默认 15 分钟
-
-            // 计算过期时间
-            let expiresAt: string | undefined;
-            if (paymentSent.timestamp) {
-              const lockedTime = new Date(paymentSent.timestamp).getTime();
-              expiresAt = new Date(lockedTime + escrowTimeoutSeconds * 1000).toISOString();
-            }
-
-            return {
-              amount: String(paymentSent.amount || ''),
-              coin: paymentSent.coin || '',
-              buyerReceiveAddress: paymentSent.buyerReceiveAddress || '',
-              lockTxHash: paymentSent.transactionID || '',
-              timestamp: paymentSent.timestamp,
-              escrowTimeoutSeconds,
-              expiresAt,
-            };
-          })()
-        : undefined,
-    escrowAddress: paymentAddress,
-    notes: notes,
-    timeline: generateTimelineFromRealData(data),
-    userRole,
-  };
-
-  return result;
 }
 
 // ============ Main Component ============
@@ -473,24 +56,27 @@ function transformCoreOrder(
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const { toast } = useToast();
   const orderId = params.orderId as string;
+  // 从 URL 参数获取订单类型（sale 或 purchase），用于后备判断用户角色
+  const typeFromUrl = searchParams.get('type');
+  const viewingContext =
+    typeFromUrl === 'sale' ? 'sale' : typeFromUrl === 'purchase' ? 'purchase' : undefined;
 
-  // 钱包连接 hook
-  const { isConnected: walletConnected, walletInfo, getSigner, openModal } = useWallet();
-
-  // 获取当前用户信息
-  const currentUser = useUserStore(state => state.profile);
-  const currentUserPeerID = currentUser?.peerID || null;
-
-  // 使用 hook 获取订单数据
+  // 使用统一的 useOrderDetail hook 获取和转换订单数据
   const {
-    order: coreOrder,
+    displayOrder,
+    coreOrder,
     isLoading: orderLoading,
     error: orderError,
     refetch,
-  } = useOrder(orderId);
+  } = useOrderDetail(orderId, viewingContext);
+
+  // 获取当前用户信息（用于传递给 OrderDetailContent）
+  const currentUser = useUserStore(state => state.profile);
+  const currentUserPeerID = currentUser?.peerID || null;
 
   // 订单操作状态
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -500,12 +86,6 @@ export default function OrderDetailPage() {
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   // 发货对话框状态
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
-
-  // 转换订单数据
-  const displayOrder = useMemo(() => {
-    if (!coreOrder) return null;
-    return transformCoreOrder(coreOrder, currentUserPeerID);
-  }, [coreOrder, currentUserPeerID]);
 
   // ============ WebSocket 订单实时更新监听 ============
   // 参考移动端和桌面端实现，监听 WebSocket 消息，当收到与当前订单相关的通知时自动刷新
@@ -535,7 +115,17 @@ export default function OrderDetailPage() {
 
   // ============ 订单操作处理函数 ============
 
+  // 使用统一的订单操作 hook
+  const { execute: executeOrderAction } = useOrderAction();
+
+  // 获取支付币种 - 从 displayOrder 或 coreOrder 获取
+  const paymentCoin =
+    displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
+
   // 通用确认对话框处理
+  // 使用统一的 useOrderAction hook 处理所有订单操作
+  // - UTXO 链（BTC/LTC/BCH/ZEC）：直接调用 API
+  // - EVM/Solana 链：先获取 instructions，如需要则执行链上交易
   const handleConfirmAction = useCallback(async () => {
     if (!confirmDialog) return;
 
@@ -543,48 +133,119 @@ export default function OrderDetailPage() {
     setConfirmDialog(null);
     setIsActionLoading(true);
 
-    try {
-      let result: { success: boolean; error?: string };
-      let successTitle: string;
-      let successDesc: string;
+    // 成功回调
+    const onSuccess = (title: string, desc: string) => {
+      toast({ title, description: desc });
+      setTimeout(() => {
+        refetch();
+      }, 500);
+    };
 
+    // 错误回调
+    const onError = (error: Error) => {
+      toast({
+        title: t('order.actions.error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    };
+
+    try {
       switch (actionType) {
         case 'decline':
-          result = await ordersApi.confirmOrder({ orderID: orderId, reject: true });
-          successTitle = t('order.actions.declineSuccess');
-          successDesc = t('order.actions.declineSuccessDesc');
+          // 拒绝订单：EVM/Solana 链可能需要链上交易退款
+          await executeOrderAction({
+            paymentCoin,
+            getInstructions: initiatorAddress =>
+              ordersApi.getConfirmInstructions({
+                orderID: orderId,
+                reject: true,
+                initiatorAddress,
+              }),
+            executeAction: txID =>
+              ordersApi.confirmOrder({
+                orderID: orderId,
+                reject: true,
+                transactionID: txID,
+              }),
+            onSuccess: () =>
+              onSuccess(t('order.actions.declineSuccess'), t('order.actions.declineSuccessDesc')),
+            onError,
+          });
           break;
-        case 'cancel':
-          result = await ordersApi.cancelOrder({ orderID: orderId });
-          successTitle = t('order.actions.cancelSuccess');
-          successDesc = t('order.actions.cancelSuccessDesc');
-          break;
-        case 'refund':
-          result = await ordersApi.refundOrder({ orderID: orderId });
-          successTitle = t('order.actions.refundSuccess');
-          successDesc = t('order.actions.refundSuccessDesc');
-          break;
-        case 'claim':
-          result = await ordersApi.claimPayment(orderId);
-          successTitle = t('order.actions.claimSuccess');
-          successDesc = t('order.actions.claimSuccessDesc');
-          break;
-        case 'acceptPayout':
-          result = await ordersApi.acceptDispute(orderId);
-          successTitle = t('order.actions.acceptPayoutSuccess');
-          successDesc = t('order.actions.acceptPayoutSuccessDesc');
-          break;
-        case 'complete': {
-          // 完成订单（买家确认收货）
-          // 参考桌面端和移动端实现，需要先检查是否需要链上交易
 
-          // 获取订单中的商品列表
-          const orderData = coreOrder as RealOrderData | null;
+        case 'cancel':
+          // 取消订单：EVM/Solana 链可能需要链上交易退款
+          await executeOrderAction({
+            paymentCoin,
+            getInstructions: initiatorAddress =>
+              ordersApi.getCancelInstructions({
+                orderID: orderId,
+                initiatorAddress,
+              }),
+            executeAction: txID =>
+              ordersApi.cancelOrder({
+                orderID: orderId,
+                transactionID: txID,
+              }),
+            onSuccess: () =>
+              onSuccess(t('order.actions.cancelSuccess'), t('order.actions.cancelSuccessDesc')),
+            onError,
+          });
+          break;
+
+        case 'refund':
+          // 退款订单：EVM/Solana 链可能需要链上交易
+          await executeOrderAction({
+            paymentCoin,
+            getInstructions: initiatorAddress =>
+              ordersApi.getRefundInstructions({
+                orderID: orderId,
+                initiatorAddress,
+              }),
+            executeAction: txID =>
+              ordersApi.refundOrder({
+                orderID: orderId,
+                transactionID: txID,
+              }),
+            onSuccess: () =>
+              onSuccess(t('order.actions.refundSuccess'), t('order.actions.refundSuccessDesc')),
+            onError,
+          });
+          break;
+
+        case 'claim':
+          // 认领过期资金：不需要链上交易指令（后端直接处理）
+          await executeOrderAction({
+            paymentCoin,
+            executeAction: () => ordersApi.claimPayment(orderId),
+            onSuccess: () =>
+              onSuccess(t('order.actions.claimSuccess'), t('order.actions.claimSuccessDesc')),
+            onError,
+          });
+          break;
+
+        case 'acceptPayout':
+          // 接受争议裁决：不需要链上交易指令（后端直接处理）
+          await executeOrderAction({
+            paymentCoin,
+            executeAction: () => ordersApi.acceptDispute(orderId),
+            onSuccess: () =>
+              onSuccess(
+                t('order.actions.acceptPayoutSuccess'),
+                t('order.actions.acceptPayoutSuccessDesc')
+              ),
+            onError,
+          });
+          break;
+
+        case 'complete': {
+          // 完成订单（买家确认收货）：EVM/Solana 链可能需要链上交易
+          const orderData = coreOrder as OrderContractData | null;
           const listings = orderData?.contract?.orderOpen?.listings || [];
 
           // 为每个商品创建默认评分（5星）
-          // 后续可以扩展为让用户填写评分表单
-          const ratings = listings.map(listingItem => ({
+          const ratings = listings.map((listingItem: { listing?: { slug?: string } }) => ({
             slug: listingItem.listing?.slug || '',
             overall: 5,
             quality: 5,
@@ -594,129 +255,36 @@ export default function OrderDetailPage() {
             review: '',
           }));
 
-          let txID: string | undefined;
-
-          // 获取当前用户钱包地址
-          // 注意：必须先连接钱包获取地址，否则 instructions API 会返回包含零地址的数据
-          let initiatorAddress = walletInfo?.address || '';
-
-          // 如果钱包未连接，先提示用户连接钱包
-          if (!walletConnected || !walletInfo || !initiatorAddress) {
-            toast({
-              title: t('order.actions.walletRequired'),
-              description: t('order.actions.pleaseConnectWallet'),
-            });
-            // 打开钱包连接弹窗
-            await openModal({ view: 'Connect' });
-            // 检查连接后的钱包信息（需要用户重新点击确认收货按钮）
-            throw new Error(t('order.actions.walletConnectionCancelled'));
-          }
-
-          // 确保有钱包地址（此时 walletInfo 一定不为 null）
-          initiatorAddress = walletInfo.address;
-
-          // 1. 先调用 instructions API 检查是否需要链上交易
-          const instructionsResponse = await ordersApi.getCompleteInstructions({
-            orderID: orderId,
-            initiatorAddress,
+          await executeOrderAction({
+            paymentCoin,
+            getInstructions: initiatorAddress =>
+              ordersApi.getCompleteInstructions({
+                orderID: orderId,
+                initiatorAddress,
+              }),
+            executeAction: txID =>
+              ordersApi.completeOrder({
+                orderID: orderId,
+                txID,
+                ratings,
+                anonymous: false,
+              }),
+            onSuccess: () =>
+              onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc')),
+            onError,
           });
-
-          if (instructionsResponse.hasInstructions && instructionsResponse.instructions) {
-            // 需要链上交易
-            // 获取 signer 并初始化交易服务
-            const signer = await getSigner();
-            if (!signer) {
-              throw new Error(t('order.actions.walletSignerError'));
-            }
-
-            const transactionService = getTransactionService();
-            const initResult = await transactionService.initializeWithSigner(signer);
-            if (!initResult) {
-              throw new Error(t('order.actions.transactionServiceError'));
-            }
-
-            // 执行链上交易
-            // instructions 格式: { to: string, data: string, value?: string }
-            const instructions = instructionsResponse.instructions as {
-              to: string;
-              data: string;
-              value?: string;
-            };
-
-            // 验证 instructions 数据
-            if (!instructions.to || !instructions.data) {
-              console.error('Invalid instructions data:', instructions);
-              throw new Error(t('order.actions.invalidInstructions'));
-            }
-
-            toast({
-              title: t('order.actions.signingTransaction'),
-              description: t('order.actions.pleaseConfirmInWallet'),
-            });
-
-            const txResult = await transactionService.executeTransaction({
-              to: instructions.to,
-              data: instructions.data,
-              value: instructions.value || '0',
-            });
-
-            if (!txResult.success || !txResult.transactionHash) {
-              // 检查是否是零地址错误
-              const errorMsg = txResult.error || '';
-              if (errorMsg.includes('zero address')) {
-                throw new Error(t('order.actions.zeroAddressError'));
-              }
-              throw new Error(errorMsg || t('order.actions.transactionFailed'));
-            }
-
-            txID = txResult.transactionHash;
-          }
-
-          // 2. 调用 completeOrder API
-          result = await ordersApi.completeOrder({
-            orderID: orderId,
-            txID,
-            ratings,
-            anonymous: false,
-          });
-          successTitle = t('order.actions.completeSuccess');
-          successDesc = t('order.actions.completeSuccessDesc');
           break;
         }
+
         default:
           return;
       }
-
-      if (result.success) {
-        toast({ title: successTitle, description: successDesc });
-        // 延迟刷新以确保后端状态已更新
-        setTimeout(() => {
-          refetch();
-        }, 500);
-      } else {
-        throw new Error(result.error || `Failed to ${actionType} order`);
-      }
-    } catch (error) {
-      toast({
-        title: t('order.actions.error'),
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
+    } catch {
+      // Error already handled by onError callback
     } finally {
       setIsActionLoading(false);
     }
-  }, [
-    confirmDialog,
-    coreOrder,
-    getSigner,
-    openModal,
-    orderId,
-    refetch,
-    t,
-    toast,
-    walletConnected,
-    walletInfo,
-  ]);
+  }, [confirmDialog, coreOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]);
 
   // 统一处理订单操作（用于 OrderFooter）
   const handleOrderAction = useCallback(
@@ -1004,9 +572,10 @@ export default function OrderDetailPage() {
         onOpenChange={setShowAcceptDialog}
         orderId={orderId}
         blockchain={
-          (coreOrder as RealOrderData)?.contract?.orderOpen?.listings?.[0]?.listing?.item
+          (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing?.item
             ?.blockchain as string | undefined
         }
+        paymentCoin={(coreOrder as OrderContractData)?.contract?.paymentSent?.coin}
         onSuccess={refetch}
       />
 
@@ -1016,11 +585,11 @@ export default function OrderDetailPage() {
         onOpenChange={setShowFulfillDialog}
         orderId={orderId}
         contractType={
-          (coreOrder as RealOrderData)?.contract?.orderOpen?.listings?.[0]?.listing?.metadata
+          (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing?.metadata
             ?.contractType
         }
         blockchain={
-          (coreOrder as RealOrderData)?.contract?.orderOpen?.listings?.[0]?.listing?.item
+          (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing?.item
             ?.blockchain as string | undefined
         }
         onSuccess={refetch}

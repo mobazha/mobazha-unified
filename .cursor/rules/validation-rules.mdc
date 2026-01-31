@@ -65,6 +65,25 @@ pnpm validate:quick
 pnpm validate
 ```
 
+## 代码架构检查
+
+### 5. 代码复用检查（新功能/重构时）
+
+在添加新功能或重构代码时，检查是否遵循 [code-reuse-rules.mdc](./code-reuse-rules.mdc)：
+
+```bash
+# 检查 apps/ 中是否有不该存在的类型定义（Props 除外）
+rg "^(export )?(interface|type) " apps/web/src --include "*.tsx" --include "*.ts" | grep -v "Props"
+
+# 检查是否有重复的转换函数
+rg "function transform|function map" apps/web/src
+
+# 检查组件是否直接调用 API
+rg "Api\." apps/web/src/components
+```
+
+如果发现问题，应将相关代码移到 `packages/core/` 中。
+
 ## AI 助手验证要求
 
 在完成代码修改后，AI 助手应：
@@ -72,4 +91,8 @@ pnpm validate
 1. 运行 TypeScript 检查确认无类型错误
 2. 运行 lint 检查确认代码风格
 3. 如果修改了 `packages/core`，重新构建该包
-4. 提交前确认所有验证通过
+4. **检查代码架构一致性**（参考 code-reuse-rules.mdc）：
+   - 类型定义是否在 `@mobazha/core/types/`？
+   - 转换函数是否在 `@mobazha/core/utils/`？
+   - 是否有重复代码需要合并？
+5. 提交前确认所有验证通过

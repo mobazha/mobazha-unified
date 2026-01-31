@@ -1,21 +1,14 @@
 'use client';
 
-import React, { memo, useCallback, useMemo, useEffect } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { cn } from '@/lib/utils';
-import { useOrder, getImageUrl, useUserStore, useI18n } from '@mobazha/core';
-import type { Order as CoreOrder, OrderState } from '@mobazha/core';
-import {
-  OrderDetailContent,
-  type DisplayOrder,
-  type OrderItem,
-  type Moderator,
-  type TimelineEvent,
-} from './OrderDetailContent';
-import { X } from 'lucide-react';
+import { useOrderDetail, useUserStore, useI18n } from '@mobazha/core';
+import type { DisplayOrder } from '@mobazha/core';
+import { OrderDetailContent } from './OrderDetailContent';
 
 // ============ Types ============
 
@@ -28,363 +21,9 @@ export interface OrderDetailModalProps {
   onClose: () => void;
   /** 订单更新后回调 */
   onOrderUpdate?: () => void;
+  /** 查看上下文：从哪个视角查看（用于后备角色判断） */
+  viewingContext?: 'sale' | 'purchase';
   className?: string;
-}
-
-// ============ Utility Functions ============
-
-// 将后端订单状态映射到 UI 状态
-function mapOrderState(state: OrderState): DisplayOrder['status'] {
-  const stateMap: Record<string, DisplayOrder['status']> = {
-    PENDING: 'pending',
-    AWAITING_PAYMENT: 'awaiting_payment',
-    AWAITING_PICKUP: 'processing',
-    AWAITING_FULFILLMENT: 'processing',
-    PARTIALLY_FULFILLED: 'processing',
-    FULFILLED: 'shipped',
-    COMPLETED: 'completed',
-    CANCELED: 'cancelled',
-    DECLINED: 'cancelled',
-    REFUNDED: 'refunded',
-    DISPUTED: 'disputed',
-    DECIDED: 'disputed',
-    RESOLVED: 'completed',
-    PAYMENT_FINALIZED: 'completed',
-    PROCESSING_ERROR: 'pending',
-  };
-  return stateMap[state] || 'pending';
-}
-
-// 格式化价格金额
-function formatPriceAmount(amount: number, divisibility: number = 2): string {
-  const normalAmount = amount / Math.pow(10, divisibility);
-  return normalAmount.toFixed(divisibility);
-}
-
-// 从图片对象获取 URL
-function getThumbnailUrl(
-  image:
-    | { tiny?: string; small?: string; medium?: string; large?: string; original?: string }
-    | undefined
-): string {
-  if (!image) return '';
-  const hash = image.medium || image.small || image.tiny || image.large || image.original || '';
-  return getImageUrl(hash) || '';
-}
-
-// 格式化地址
-function formatShippingAddress(shipping?: {
-  name?: string;
-  company?: string;
-  addressLineOne?: string;
-  addressLineTwo?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-}): string {
-  if (!shipping) return 'No shipping address';
-  const parts = [
-    shipping.name,
-    shipping.company,
-    shipping.addressLineOne,
-    shipping.addressLineTwo,
-    [shipping.city, shipping.state, shipping.postalCode].filter(Boolean).join(', '),
-    shipping.country,
-  ].filter(Boolean);
-  return parts.join('\n') || 'No shipping address';
-}
-
-// 后端实际返回的订单数据结构
-interface RealOrderData {
-  state: string;
-  funded?: boolean;
-  read?: boolean;
-  unreadChatMessages?: number;
-  paymentAddressTransactions?: { txid: string; value: number; confirmations: number }[];
-  contract: {
-    orderOpen?: {
-      timestamp?: string;
-      buyerID?: { peerID?: string; handle?: string };
-      listings?: Array<{
-        vendorID?: { peerID?: string };
-        listing?: {
-          slug?: string;
-          metadata?: { contractType?: string; pricingCurrency?: { divisibility?: number } };
-          item?: {
-            title?: string;
-            images?: Array<{ tiny?: string; small?: string; medium?: string }>;
-            price?: number;
-          };
-          vendorID?: { peerID?: string; handle?: string };
-          shippingOptions?: Array<{ regions?: string[] }>;
-        };
-      }>;
-      items?: Array<{ quantity?: number; memo?: string }>;
-      shipping?: {
-        name?: string;
-        company?: string;
-        addressLineOne?: string;
-        addressLineTwo?: string;
-        city?: string;
-        state?: string;
-        postalCode?: string;
-        country?: string;
-      };
-      pricingCoin?: string;
-      amount?: number;
-      alternateContactInfo?: string;
-    };
-    paymentSent?: {
-      moderator?: string;
-      coin?: string;
-      amount?: number;
-      method?: string;
-      address?: string;
-    };
-    orderConfirmation?: {
-      timestamp?: string;
-      paymentAddress?: string;
-    };
-    orderFulfillments?: Array<{
-      timestamp?: string;
-      physicalDelivery?: Array<{ shipper?: string; trackingNumber?: string }>;
-      note?: string;
-    }>;
-    orderComplete?: {
-      timestamp?: string;
-    };
-    disputeOpen?: {
-      timestamp?: string;
-    };
-    disputeClose?: {
-      timestamp?: string;
-      verdict?: string;
-    };
-  };
-}
-
-// 根据实际订单数据生成时间线
-function generateTimelineFromRealData(data: RealOrderData): TimelineEvent[] {
-  const timeline: TimelineEvent[] = [];
-  const contract = data.contract;
-
-  const orderOpen = contract.orderOpen;
-  const orderTimestamp = orderOpen?.timestamp;
-
-  // 订单创建
-  if (orderTimestamp) {
-    timeline.push({
-      status: 'created',
-      timestamp: orderTimestamp,
-      description: 'Order placed',
-      actor: 'buyer',
-    });
-  }
-
-  // 资金到账
-  if (
-    data.funded ||
-    contract.paymentSent ||
-    (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
-  ) {
-    const confirmTimestamp = contract.orderConfirmation?.timestamp || orderTimestamp || '';
-    timeline.push({
-      status: 'paid',
-      timestamp: confirmTimestamp,
-      description: 'Payment confirmed',
-      actor: 'system',
-    });
-  }
-
-  // 卖家确认
-  const orderConfirmation = contract.orderConfirmation;
-  if (orderConfirmation) {
-    timeline.push({
-      status: 'processing',
-      timestamp: orderConfirmation.timestamp || '',
-      description: 'Vendor confirmed order',
-      actor: 'seller',
-    });
-  }
-
-  // 发货
-  const fulfillments = contract.orderFulfillments;
-  if (fulfillments?.length) {
-    const fulfillment = fulfillments[0];
-    const trackingInfo = fulfillment.physicalDelivery?.[0];
-    timeline.push({
-      status: 'shipped',
-      timestamp: fulfillment.timestamp || '',
-      description: trackingInfo
-        ? `Package shipped - ${trackingInfo.shipper}: ${trackingInfo.trackingNumber}`
-        : 'Package shipped',
-      actor: 'seller',
-    });
-  }
-
-  // 完成
-  const orderComplete = contract.orderComplete;
-  if (orderComplete) {
-    timeline.push({
-      status: 'completed',
-      timestamp: orderComplete.timestamp || '',
-      description: 'Order completed - Funds released to seller',
-      actor: 'buyer',
-    });
-  }
-
-  // 争议
-  if (contract.disputeOpen) {
-    timeline.push({
-      status: 'disputed',
-      timestamp: contract.disputeOpen.timestamp || '',
-      description: 'Dispute opened',
-      actor: 'buyer',
-    });
-  }
-
-  // 争议关闭
-  if (contract.disputeClose) {
-    timeline.push({
-      status: 'resolved',
-      timestamp: contract.disputeClose.timestamp || '',
-      description: `Dispute closed: ${contract.disputeClose.verdict || 'N/A'}`,
-      actor: 'moderator',
-    });
-  }
-
-  return timeline;
-}
-
-// 将 CoreOrder 转换为本地 Order 格式
-function transformCoreOrder(
-  coreOrder: CoreOrder | RealOrderData | null,
-  currentUserPeerID: string | null
-): DisplayOrder | null {
-  if (!coreOrder || !coreOrder.contract) {
-    return null;
-  }
-
-  const data = coreOrder as RealOrderData;
-  const contract = data.contract;
-
-  const orderOpen = contract.orderOpen;
-
-  type ListingType = NonNullable<
-    NonNullable<RealOrderData['contract']['orderOpen']>['listings']
-  >[0]['listing'];
-  let listingData: ListingType | undefined;
-  let vendorPeerID = '';
-  let vendorHandle = '';
-
-  if (orderOpen?.listings?.length) {
-    const firstListing = orderOpen.listings[0];
-    listingData = firstListing.listing;
-    vendorPeerID = firstListing.listing?.vendorID?.peerID || firstListing.vendorID?.peerID || '';
-    vendorHandle = firstListing.listing?.vendorID?.handle || '';
-  }
-
-  const buyerPeerID = orderOpen?.buyerID?.peerID || '';
-  const buyerHandle = orderOpen?.buyerID?.handle || '';
-
-  const paymentSent = contract.paymentSent;
-  const coin = paymentSent?.coin || orderOpen?.pricingCoin || 'ETH';
-  const amount = paymentSent?.amount || orderOpen?.amount || listingData?.item?.price || 0;
-  const paymentMethod = paymentSent?.method || '';
-  const moderatorId = paymentSent?.moderator || '';
-
-  const divisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
-  const timestamp = orderOpen?.timestamp || '';
-  const fulfillments = contract.orderFulfillments;
-  const trackingInfo = fulfillments?.[0]?.physicalDelivery?.[0];
-  const shipping = orderOpen?.shipping;
-
-  const paymentAddress = paymentSent?.address || contract.orderConfirmation?.paymentAddress;
-
-  const notes = orderOpen?.alternateContactInfo;
-  const orderOpenItems = orderOpen?.items || [];
-
-  let userRole: DisplayOrder['userRole'] = 'buyer';
-  if (currentUserPeerID) {
-    if (currentUserPeerID === vendorPeerID) {
-      userRole = 'seller';
-    } else if (currentUserPeerID === buyerPeerID) {
-      userRole = 'buyer';
-    } else if (moderatorId === currentUserPeerID) {
-      userRole = 'moderator';
-    }
-  }
-
-  const itemImages = listingData?.item?.images || [];
-  const itemImageUrl = itemImages.length > 0 ? getThumbnailUrl(itemImages[0]) : '';
-
-  const orderId = listingData?.slug || '';
-  const itemTitle = listingData?.item?.title || 'Unknown Item';
-  const itemPrice = listingData?.item?.price || 0;
-
-  const orderItems: OrderItem[] =
-    orderOpenItems.length > 0
-      ? orderOpenItems.map((item, index) => ({
-          id: `item-${index}`,
-          title: itemTitle,
-          image: itemImageUrl,
-          quantity: item.quantity || 1,
-          price: formatPriceAmount(itemPrice, divisibility),
-          currency: coin,
-        }))
-      : [
-          {
-            id: 'item-0',
-            title: itemTitle,
-            image: itemImageUrl,
-            quantity: 1,
-            price: formatPriceAmount(itemPrice, divisibility),
-            currency: coin,
-          },
-        ];
-
-  const moderator: Moderator | undefined =
-    paymentMethod === 'MODERATED' && moderatorId
-      ? {
-          id: moderatorId,
-          name: moderatorId.slice(0, 12) + '...',
-          avatar: '',
-          fee: 1,
-        }
-      : undefined;
-
-  const result: DisplayOrder = {
-    id: orderId,
-    orderId: orderId,
-    status: mapOrderState(data.state as OrderState),
-    items: orderItems,
-    total: formatPriceAmount(amount, divisibility),
-    currency: coin,
-    createdAt: timestamp,
-    vendor: {
-      id: vendorPeerID,
-      name: vendorHandle || (vendorPeerID ? vendorPeerID.slice(0, 12) + '...' : 'Unknown'),
-      avatar: '',
-      peerID: vendorPeerID,
-    },
-    buyer: {
-      id: buyerPeerID,
-      name: buyerHandle || (buyerPeerID ? buyerPeerID.slice(0, 12) + '...' : 'Unknown'),
-      avatar: '',
-      peerID: buyerPeerID,
-    },
-    moderator,
-    trackingNumber: trackingInfo?.trackingNumber,
-    shippingAddress: formatShippingAddress(shipping),
-    paymentTx: data.paymentAddressTransactions?.[0]?.txid,
-    escrowAddress: paymentAddress,
-    notes: notes,
-    timeline: generateTimelineFromRealData(data),
-    userRole,
-  };
-
-  return result;
 }
 
 // ============ Loading Skeleton ============
@@ -459,28 +98,24 @@ export const OrderDetailModal = memo(function OrderDetailModal({
   open,
   onClose,
   onOrderUpdate,
+  viewingContext,
   className,
 }: OrderDetailModalProps) {
   const { t } = useI18n();
   const router = useRouter();
 
-  // 获取当前用户信息
+  // 获取当前用户信息（用于传递给 OrderDetailContent）
   const currentUser = useUserStore(state => state.profile);
   const currentUserPeerID = currentUser?.peerID || null;
 
-  // 使用 hook 获取订单数据
+  // 使用统一的 useOrderDetail hook 获取和转换订单数据
   const {
-    order: coreOrder,
+    displayOrder,
+    coreOrder,
     isLoading: orderLoading,
     error: orderError,
     refetch,
-  } = useOrder(orderId || '');
-
-  // 转换订单数据
-  const displayOrder = useMemo(() => {
-    if (!coreOrder) return null;
-    return transformCoreOrder(coreOrder, currentUserPeerID);
-  }, [coreOrder, currentUserPeerID]);
+  } = useOrderDetail(orderId || '', viewingContext);
 
   // 处理订单更新
   const handleOrderUpdate = useCallback(() => {
@@ -509,6 +144,12 @@ export const OrderDetailModal = memo(function OrderDetailModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
+  // 将 DisplayOrder 转换为 OrderDetailContent 需要的格式
+  // 注意：OrderDetailContent 期望的 DisplayOrder 类型与 core 包的类型相同
+  const contentDisplayOrder = displayOrder as
+    | Parameters<typeof OrderDetailContent>[0]['displayOrder']
+    | null;
+
   return (
     <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
       <DialogContent
@@ -516,15 +157,9 @@ export const OrderDetailModal = memo(function OrderDetailModal({
       >
         {/* Header */}
         <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-base sm:text-lg font-semibold">
-              {t('order.orderDetails')}
-            </DialogTitle>
-            <Button variant="ghost" size="icon" onClick={onClose} className="w-8 h-8">
-              <X className="w-4 h-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
+          <DialogTitle className="text-base sm:text-lg font-semibold">
+            {t('order.orderDetails')}
+          </DialogTitle>
         </DialogHeader>
 
         {/* Content */}
@@ -533,9 +168,9 @@ export const OrderDetailModal = memo(function OrderDetailModal({
 
           {orderError && <OrderDetailError error={orderError} onRetry={refetch} />}
 
-          {!orderLoading && !orderError && displayOrder && (
+          {!orderLoading && !orderError && contentDisplayOrder && (
             <OrderDetailContent
-              displayOrder={displayOrder}
+              displayOrder={contentDisplayOrder}
               coreOrder={coreOrder}
               currentUserPeerID={currentUserPeerID}
               inModal={true}

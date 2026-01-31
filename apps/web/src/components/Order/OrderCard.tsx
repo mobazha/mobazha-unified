@@ -28,6 +28,10 @@ export interface Order {
     | 'disputed'
     | 'completed'
     | 'cancelled';
+  /** 原始订单状态（用于判断是否显示特定操作按钮） */
+  rawState?: string;
+  /** 支付币种（用于判断是否需要链上交易） */
+  paymentCoin?: string;
   items: OrderItem[];
   total: string;
   currency: string;

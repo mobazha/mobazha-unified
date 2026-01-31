@@ -94,6 +94,13 @@ pnpm validate
 
 完成迁移后，更新 `docs/migrations/status.md`。
 
+## 相关规则
+
+- **[code-reuse-rules.mdc](./code-reuse-rules.mdc)** - 代码复用与架构一致性规则（必读）
+- **[component-rules.mdc](./component-rules.mdc)** - 组件开发规则
+- **[mobile-ux-rules.mdc](./mobile-ux-rules.mdc)** - 移动端用户体验规则
+- **[desktop-ux-rules.mdc](./desktop-ux-rules.mdc)** - 桌面端用户体验规则
+
 ---
 
 **注意**: 此规则会随项目进展动态调整。

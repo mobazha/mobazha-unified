@@ -235,21 +235,111 @@ export function getSupportedChains(): PaymentChainConfig[] {
 }
 
 /**
+ * UTXO 链列表
+ * 这些链不需要前端钱包签名，后端自动处理多签交易
+ */
+export const UTXO_CHAINS = ['BTC', 'LTC', 'BCH', 'ZEC'] as const;
+
+/**
+ * 根据代币 ID 或链 ID 获取链类型
+ * 支持输入：
+ * - 链 ID: 'ETH', 'BTC', 'SOL'
+ * - 代币 ID: 'ETHUSDT', 'SOLUSDC', 'BTC'
+ *
+ * @param coinOrChain 代币 ID 或链 ID
+ * @returns 链 ID（大写），如 'ETH', 'BTC'；无法识别时返回空字符串
+ */
+export function getChainFromCoin(coinOrChain?: string): string {
+  if (!coinOrChain) return '';
+
+  const upper = coinOrChain.toUpperCase();
+
+  // 首先尝试从代币配置中获取
+  const token = getTokenById(upper);
+  if (token) {
+    return token.chain.toUpperCase();
+  }
+
+  // 如果是直接的链 ID
+  const chainConfig = CHAINS.find(c => c.id.toUpperCase() === upper);
+  if (chainConfig) {
+    return upper;
+  }
+
+  // 无法识别的代币/链，打印警告并返回空字符串
+  console.warn(`[getChainFromCoin] Unknown coin/chain: ${coinOrChain}`);
+  return '';
+}
+
+/**
  * 判断是否为 UTXO 链（BTC, LTC, BCH, ZEC）
  * UTXO 链不需要前端钱包签名，后端自动处理
+ *
+ * 支持输入：
+ * - 链 ID: 'BTC', 'LTC'
+ * - 代币 ID: 'BTC' (也是链 ID)
+ *
+ * @param coinOrChain 代币 ID 或链 ID
+ * @returns 是否为 UTXO 链
  */
-export function isUTXOChain(chainOrCoin: string): boolean {
-  const UTXO_CHAINS = ['BTC', 'LTC', 'BCH', 'ZEC'];
-  const upper = chainOrCoin.toUpperCase();
-  return UTXO_CHAINS.includes(upper);
+export function isUTXOChain(coinOrChain?: string): boolean {
+  if (!coinOrChain) return false;
+
+  const chain = getChainFromCoin(coinOrChain);
+  return UTXO_CHAINS.includes(chain as (typeof UTXO_CHAINS)[number]);
 }
 
 /**
  * 判断是否为 EVM 链
+ * EVM 链需要前端钱包签名
+ *
+ * 支持输入：
+ * - 链 ID: 'ETH', 'BSC'
+ * - 代币 ID: 'ETHUSDT', 'BSCUSDT'
+ *
+ * @param coinOrChain 代币 ID 或链 ID
+ * @returns 是否为 EVM 链
  */
-export function isEVMChain(chainId: string): boolean {
-  const chain = getChainById(chainId);
-  return chain?.evmChainId !== undefined;
+export function isEVMChain(coinOrChain?: string): boolean {
+  if (!coinOrChain) return false;
+
+  const chain = getChainFromCoin(coinOrChain);
+  const chainConfig = CHAINS.find(c => c.id.toUpperCase() === chain);
+
+  return chainConfig?.evmChainId !== undefined;
+}
+
+/**
+ * 判断是否为 Solana 链
+ *
+ * @param coinOrChain 代币 ID 或链 ID
+ * @returns 是否为 Solana 链
+ */
+export function isSolanaChain(coinOrChain?: string): boolean {
+  if (!coinOrChain) return false;
+
+  const chain = getChainFromCoin(coinOrChain);
+  return chain === 'SOL';
+}
+
+/**
+ * 判断订单操作是否需要前端钱包签名
+ * - UTXO 链：不需要（后端处理）
+ * - EVM/Solana 链：需要
+ *
+ * @param coinOrChain 代币 ID 或链 ID
+ * @returns 是否需要钱包签名
+ */
+export function requiresWalletSignature(coinOrChain?: string): boolean {
+  if (!coinOrChain) return false;
+
+  // UTXO 链不需要前端签名
+  if (isUTXOChain(coinOrChain)) {
+    return false;
+  }
+
+  // EVM 和 Solana 链需要签名
+  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain);
 }
 
 /**

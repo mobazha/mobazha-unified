@@ -28,9 +28,9 @@ export interface OrderTableProps {
   /** 联系对方回调 */
   onContact?: (peerId: string) => void;
   /** 接受订单回调 */
-  onAccept?: (orderId: string) => void;
+  onAccept?: (orderId: string, paymentCoin?: string) => void;
   /** 拒绝订单回调 */
-  onReject?: (orderId: string) => void;
+  onReject?: (orderId: string, paymentCoin?: string) => void;
   className?: string;
 }
 
@@ -98,10 +98,12 @@ export const OrderTable = memo(function OrderTable({
   const { t } = useI18n();
 
   // 判断是否需要显示操作按钮
+  // 只有原始状态为 PENDING（已付款等待确认）的销售订单才显示 Accept/Reject
+  // AWAITING_PAYMENT（等待付款）状态不应显示这些按钮
   const shouldShowActions = useCallback(
-    (status: string) => {
-      // 销售订单且状态为 pending 时显示 Accept/Reject
-      return type === 'sale' && status === 'pending';
+    (rawState?: string) => {
+      // 销售订单且原始状态为 PENDING（已付款待确认）时显示 Accept/Reject
+      return type === 'sale' && rawState === 'PENDING';
     },
     [type]
   );
@@ -139,7 +141,7 @@ export const OrderTable = memo(function OrderTable({
               label: order.status,
               variant: 'secondary' as const,
             };
-            const showActions = shouldShowActions(order.status);
+            const showActions = shouldShowActions(order.rawState);
 
             return (
               <TableRow
@@ -210,14 +212,18 @@ export const OrderTable = memo(function OrderTable({
                           size="sm"
                           variant="outline"
                           className="h-7 px-2 text-xs"
-                          onClick={e => handleButtonClick(e, () => onReject?.(order.id))}
+                          onClick={e =>
+                            handleButtonClick(e, () => onReject?.(order.id, order.paymentCoin))
+                          }
                         >
                           Reject
                         </Button>
                         <Button
                           size="sm"
                           className="h-7 px-3 text-xs bg-primary hover:bg-primary/90"
-                          onClick={e => handleButtonClick(e, () => onAccept?.(order.id))}
+                          onClick={e =>
+                            handleButtonClick(e, () => onAccept?.(order.id, order.paymentCoin))
+                          }
                         >
                           Accept
                         </Button>

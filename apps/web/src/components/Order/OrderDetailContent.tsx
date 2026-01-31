@@ -531,7 +531,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       <div className={cn('flex-1 overflow-y-auto', inModal ? 'px-4 sm:px-6 py-4' : '')}>
         {/* Title Row */}
         <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-base sm:text-lg font-semibold text-muted-foreground">Order #:</h1>
+          <h1 className="text-base sm:text-lg font-semibold text-muted-foreground">
+            {t('order.orderIdLabel')}
+          </h1>
           <span className="text-base sm:text-lg font-semibold text-foreground truncate max-w-[200px] sm:max-w-[400px]">
             {order.orderId}
           </span>
@@ -542,7 +544,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             className="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1 touch-feedback"
           >
             <Copy className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Copy</span>
+            <span className="hidden sm:inline">{t('common.copy')}</span>
           </button>
         </div>
 
@@ -971,7 +973,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              Message
+              {t('order.message')}
             </Button>
 
             {canConfirmReceipt && (
@@ -981,7 +983,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 disabled={isLoading}
                 className="touch-feedback"
               >
-                {isLoading ? 'Processing...' : 'Complete Order'}
+                {isLoading ? t('common.processing') : t('order.actions.complete')}
               </Button>
             )}
 
@@ -992,7 +994,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 className="border-red-500 text-red-500 hover:bg-red-50 touch-feedback"
                 onClick={() => setShowDisputeModal(true)}
               >
-                Open Dispute
+                {t('order.openDispute')}
               </Button>
             )}
 
@@ -1006,7 +1008,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 disabled={isLoading}
                 className="touch-feedback"
               >
-                Refund Order
+                {t('order.refundOrder')}
               </Button>
             )}
           </div>
