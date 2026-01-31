@@ -26,10 +26,6 @@ import {
   type DisplayOrderParticipant,
   type DisplayModerator,
   type DisplayTimelineEvent,
-  type DisplayDispute,
-  type DisplayPaymentLocked,
-  type DisplayOrderStatus,
-  type DisplayUserRole,
 } from '@mobazha/core';
 import type { Order as CoreOrder, Product } from '@mobazha/core';
 import {
