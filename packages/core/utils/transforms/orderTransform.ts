@@ -29,6 +29,7 @@ interface RealOrderData {
   unreadChatMessages?: number;
   paymentAddressTransactions?: { txid: string; value: number; confirmations: number }[];
   contract: {
+    OrderID?: string;
     orderOpen?: {
       timestamp?: string;
       buyerID?: { peerID?: string; handle?: string };
@@ -396,14 +397,6 @@ export function transformCoreOrder(
     paymentSent?.method === 'RWA_LOCKED';
   // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
-  const coin = paymentSent?.coin || orderOpen?.pricingCoin || 'ETH';
-  // 使用显式的 !== undefined 检查，避免 "0" 被当作 falsy 值处理
-  const amount =
-    paymentSent?.amount !== undefined
-      ? paymentSent.amount
-      : orderOpen?.amount !== undefined
-        ? orderOpen.amount
-        : (listingData?.item?.price ?? 0);
   const paymentMethod = paymentSent?.method || '';
   const moderatorId = paymentSent?.moderator || '';
 
@@ -430,9 +423,19 @@ export function transformCoreOrder(
   const itemImages = listingData?.item?.images || [];
   const itemImageUrl = itemImages.length > 0 ? getThumbnailUrl(itemImages[0]) : '';
 
-  const orderId = listingData?.slug || '';
+  // 从 contract.OrderID 获取完整订单 ID，而非商品 slug
+  const fullOrderId = contract.OrderID || '';
+  const listingSlug = listingData?.slug || '';
   const itemTitle = listingData?.item?.title || 'Unknown Item';
   const itemPrice = listingData?.item?.price || 0;
+
+  // 原始定价信息（从 orderOpen 获取）
+  const pricingCoin = orderOpen?.pricingCoin || 'USD';
+  const pricingAmount = orderOpen?.amount !== undefined ? orderOpen.amount : itemPrice;
+
+  // 实际支付信息（从 paymentSent 获取）
+  const paymentCoin = paymentSent?.coin || pricingCoin;
+  const paymentAmount = paymentSent?.amount;
 
   const orderItems: DisplayOrderItem[] =
     orderOpenItems.length > 0
@@ -441,8 +444,8 @@ export function transformCoreOrder(
           title: itemTitle,
           image: itemImageUrl,
           quantity: item.quantity || 1,
-          price: formatPriceAmount(itemPrice, divisibility, coin),
-          currency: coin,
+          price: formatPriceAmount(itemPrice, divisibility, pricingCoin),
+          currency: pricingCoin,
         }))
       : [
           {
@@ -450,8 +453,8 @@ export function transformCoreOrder(
             title: itemTitle,
             image: itemImageUrl,
             quantity: 1,
-            price: formatPriceAmount(itemPrice, divisibility, coin),
-            currency: coin,
+            price: formatPriceAmount(itemPrice, divisibility, pricingCoin),
+            currency: pricingCoin,
           },
         ];
 
@@ -494,14 +497,32 @@ export function transformCoreOrder(
     };
   }
 
+  // 格式化原始定价金额（法币，如 USD）
+  const formattedPricingAmount = formatPriceAmount(pricingAmount, divisibility);
+
+  // 格式化实际支付金额（加密货币，如 ETH）
+  // 如果有 paymentSent，使用它的金额；否则使用原始定价金额
+  const formattedPaymentAmount =
+    paymentAmount !== undefined
+      ? formatPriceAmount(paymentAmount, divisibility, paymentCoin)
+      : formattedPricingAmount;
+
   const result: DisplayOrder = {
-    id: orderId,
-    orderId: orderId,
+    id: fullOrderId,
+    orderId: fullOrderId,
+    slug: listingSlug,
     status: mapOrderState(data.state as OrderState),
     items: orderItems,
-    total: formatPriceAmount(amount, divisibility, coin),
-    currency: coin,
-    paymentCoin: coin,
+    // total 显示实际支付的加密货币金额
+    total: formattedPaymentAmount,
+    // currency 是支付币种（加密货币）
+    currency: paymentCoin,
+    // 原始定价信息（法币）
+    pricingAmount: formattedPricingAmount,
+    pricingCurrency: pricingCoin,
+    // 支付币种和金额
+    paymentCoin: paymentCoin,
+    paymentAmount: formattedPaymentAmount,
     createdAt: timestamp,
     vendor: {
       id: vendorPeerID,

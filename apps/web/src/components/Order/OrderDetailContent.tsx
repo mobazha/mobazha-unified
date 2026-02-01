@@ -801,6 +801,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             <PaymentCard
               amount={order.total}
               currency={order.currency}
+              pricingAmount={order.pricingAmount}
+              pricingCurrency={order.pricingCurrency}
               txHash={order.paymentTx}
               timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
               title={t('order.paid')}
@@ -867,9 +869,25 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             </div>
             <div>
               <span className="text-muted-foreground block mb-1">{t('order.total')}</span>
-              <p className="text-foreground font-semibold">
-                {order.total} {order.currency}
-              </p>
+              {/* 如果有原始定价且与支付币种不同，显示两种金额 */}
+              {order.pricingAmount &&
+              order.pricingCurrency &&
+              order.pricingCurrency !== order.currency ? (
+                <>
+                  <p className="text-foreground font-semibold">
+                    {order.pricingCurrency === 'USD' ? '$' : ''}
+                    {order.pricingAmount}{' '}
+                    {order.pricingCurrency !== 'USD' ? order.pricingCurrency : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ≈ {order.total} {order.currency}
+                  </p>
+                </>
+              ) : (
+                <p className="text-foreground font-semibold">
+                  {order.total} {order.currency}
+                </p>
+              )}
             </div>
             <div>
               <span className="text-muted-foreground block mb-1">{t('order.shippingOption')}</span>
