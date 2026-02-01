@@ -51,6 +51,7 @@ import {
   type CategoryItem,
   defaultFilterState,
   FilterSheet,
+  FilterSidebar,
   StoreReviewsTab,
   FollowTab,
 } from '@/components/store';
@@ -870,20 +871,24 @@ export default function StorePage() {
               </div>
 
               {/* 统计数据：关注中 / 粉丝 - 点击可查看列表 */}
-              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border text-sm">
+              <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
                 <button
                   onClick={() => setActiveTab('following')}
-                  className="flex items-baseline gap-1 hover:opacity-80 transition-opacity"
+                  className="flex items-baseline gap-1 hover:text-primary transition-colors"
                 >
                   <span className="font-semibold text-foreground">{stats.followingCount}</span>
-                  <span className="text-muted-foreground">{t('profile.following')}</span>
+                  <span className="text-muted-foreground hover:text-primary">
+                    {t('profile.following')}
+                  </span>
                 </button>
                 <button
                   onClick={() => setActiveTab('followers')}
-                  className="flex items-baseline gap-1 hover:opacity-80 transition-opacity"
+                  className="flex items-baseline gap-1 hover:text-primary transition-colors"
                 >
                   <span className="font-semibold text-foreground">{stats.followerCount}</span>
-                  <span className="text-muted-foreground">{t('profile.followers')}</span>
+                  <span className="text-muted-foreground hover:text-primary">
+                    {t('profile.followers')}
+                  </span>
                 </button>
               </div>
 
@@ -954,113 +959,124 @@ export default function StorePage() {
         {/* Tab Content */}
         <div className="py-2 sm:py-4">
           {activeTab === 'products' && (
-            <Container size="xl" className="space-y-4">
-              {/* 筛选工具栏 */}
-              {!productsLoading && storeListingCount > 0 && (
-                <StoreListingsToolbar
-                  filter={filter}
-                  onFilterChange={setFilter}
-                  totalCount={storeListingCount}
-                  filteredCount={filteredProducts.length}
-                  categories={categories}
-                  onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
-                />
-              )}
+            <Container size="xl">
+              {/* 桌面端：左侧边栏 + 右侧内容 */}
+              <div className="flex gap-6">
+                {/* 左侧筛选边栏 - 仅桌面端显示 */}
+                {!productsLoading && storeListingCount > 0 && (
+                  <FilterSidebar
+                    filter={filter}
+                    onFilterChange={setFilter}
+                    categories={categories}
+                    className="hidden lg:block"
+                  />
+                )}
 
-              {/* Products Grid */}
-              {productsLoading ? (
-                <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <ProductCardSkeleton key={i} />
-                  ))}
-                </Grid>
-              ) : filteredProducts.length > 0 ? (
-                <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
-                  {filteredProducts.map((product, index) => (
-                    <Link
-                      key={`${product.slug}-${index}`}
-                      href={`/product/${product.slug}?peerID=${peerId}`}
-                      onClick={e => {
-                        // 桌面端使用弹框
-                        if (!isMobile) {
-                          e.preventDefault();
-                          openProduct(product.slug, peerId);
-                        }
-                      }}
-                    >
-                      <ProductCard
-                        title={product.title}
-                        imageUrl={getImageUrl(product.thumbnail?.medium)}
-                        price={Number(product.price?.amount || 0)}
-                        currency={product.price?.currency?.code || 'USD'}
-                        divisibility={product.price?.currency?.divisibility}
-                        // 店主浏览自己店铺时不显示店名和头像
-                        vendorName={isOwnStore ? undefined : store?.name}
-                        vendorAvatar={
-                          isOwnStore ? undefined : getImageUrl(store?.avatarHashes?.small)
-                        }
-                        vendorPeerID={peerId}
-                        rating={product.averageRating}
-                        reviewCount={product.ratingCount}
-                        freeShipping={product.freeShipping && product.freeShipping.length > 0}
-                        contractType={product.contractType as ProductContractType}
-                        tokenStandard={product.tokenStandard}
-                        rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                        hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                        isOwnListing={isOwnStore}
-                        onReport={() => {
-                          /* TODO: 打开举报对话框 */
-                        }}
-                        onBlock={() => {
-                          /* TODO: 实现屏蔽卖家功能 */
-                        }}
-                        // 自己商品的快捷操作
-                        onEdit={isOwnStore ? () => handleEditListing(product.slug) : undefined}
-                        onClone={isOwnStore ? () => handleCloneListing(product.slug) : undefined}
-                        onDelete={
-                          isOwnStore
-                            ? () => handleOpenDeleteDialog(product.slug, product.title)
-                            : undefined
-                        }
-                      />
-                    </Link>
-                  ))}
-                </Grid>
-              ) : storeListingCount > 0 ? (
-                // 有商品但筛选后为空
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                    <Package className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-base font-medium text-foreground mb-2">
-                    {t('empty.noProductsFound')}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
+                {/* 右侧主内容区 */}
+                <div className="flex-1 min-w-0 space-y-4">
+                  {/* 顶部工具栏：搜索 + 数量 + 排序 */}
+                  {!productsLoading && storeListingCount > 0 && (
+                    <StoreListingsToolbar
+                      filter={filter}
+                      onFilterChange={setFilter}
+                      totalCount={storeListingCount}
+                      filteredCount={filteredProducts.length}
+                      categories={categories}
+                      onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
+                      compact
+                    />
+                  )}
+
+                  {/* Products Grid */}
+                  {productsLoading ? (
+                    <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <ProductCardSkeleton key={i} />
+                      ))}
+                    </Grid>
+                  ) : filteredProducts.length > 0 ? (
+                    <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+                      {filteredProducts.map((product, index) => (
+                        <Link
+                          key={`${product.slug}-${index}`}
+                          href={`/product/${product.slug}?peerID=${peerId}`}
+                          onClick={e => {
+                            // 桌面端使用弹框
+                            if (!isMobile) {
+                              e.preventDefault();
+                              openProduct(product.slug, peerId);
+                            }
+                          }}
+                        >
+                          <ProductCard
+                            title={product.title}
+                            imageUrl={getImageUrl(product.thumbnail?.medium)}
+                            price={Number(product.price?.amount || 0)}
+                            currency={product.price?.currency?.code || 'USD'}
+                            divisibility={product.price?.currency?.divisibility}
+                            // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                            vendorPeerID={peerId}
+                            rating={product.averageRating}
+                            reviewCount={product.ratingCount}
+                            freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                            contractType={product.contractType as ProductContractType}
+                            tokenStandard={product.tokenStandard}
+                            rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                            hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                            isOwnListing={isOwnStore}
+                            onReport={() => {
+                              /* TODO: 打开举报对话框 */
+                            }}
+                            onBlock={() => {
+                              /* TODO: 实现屏蔽卖家功能 */
+                            }}
+                            // 自己商品的快捷操作
+                            onEdit={isOwnStore ? () => handleEditListing(product.slug) : undefined}
+                            onClone={
+                              isOwnStore ? () => handleCloneListing(product.slug) : undefined
+                            }
+                            onDelete={
+                              isOwnStore
+                                ? () => handleOpenDeleteDialog(product.slug, product.title)
+                                : undefined
+                            }
+                          />
+                        </Link>
+                      ))}
+                    </Grid>
+                  ) : storeListingCount > 0 ? (
+                    // 有商品但筛选后为空
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                        <Package className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-base font-medium text-foreground mb-2">
+                        {t('empty.noProductsFound')}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('empty.tryAdjustingFilters')}
+                      </p>
+                    </div>
+                  ) : (
+                    // 店铺本身没有普通商品（但可能有 RWA 商品）
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                        <Package className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-base font-medium text-foreground mb-2">
+                        {t('empty.noProductsFound')}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                // 店铺本身没有普通商品（但可能有 RWA 商品）
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                    <Package className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-base font-medium text-foreground mb-2">
-                    {t('empty.noProductsFound')}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
-                </div>
-              )}
+              </div>
             </Container>
           )}
 
           {activeTab === 'rwa' && (
             <Container size="xl">
-              <RwaTab
-                peerId={peerId}
-                isOwnStore={isOwnStore}
-                products={products}
-                storeName={store?.name}
-                storeAvatar={getImageUrl(store?.avatarHashes?.small)}
-              />
+              <RwaTab peerId={peerId} isOwnStore={isOwnStore} products={products} />
             </Container>
           )}
 

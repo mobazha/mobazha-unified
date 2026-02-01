@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import {
   Select,
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Grid, HStack } from '@/components/layouts';
+import { Grid } from '@/components/layouts';
 import {
   ProductCard,
   ProductCardSkeleton,
@@ -20,34 +20,28 @@ import {
 } from '@/components/ProductCard';
 import { useI18n, productDataService, getImageUrl, useVerifiedModerators } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
-import { Package, Coins } from 'lucide-react';
+import { Package, Coins, Search, X } from 'lucide-react';
 import { useProductModal } from '@/hooks';
+import { RwaFilterSidebar, type RwaFilterState, defaultRwaFilterState } from './RwaFilterSidebar';
 
 interface RwaTabProps {
   peerId: string;
   isOwnStore: boolean;
   /** Optional: products can be passed from parent to avoid refetching */
   products?: ProductListItem[];
-  /** Store info for vendor display */
-  storeName?: string;
-  storeAvatar?: string;
 }
 
-// 代币标准筛选类型
-type TokenStandardFilter = 'all' | 'ERC721' | 'ERC1155' | 'ERC3525';
-
-// 交易模式筛选类型
-type TradeModeFilter = 'all' | 'instant' | 'confirm_required';
-
-// 排序选项
-type SortOption = 'newest' | 'price-asc' | 'price-desc';
+// 排序选项配置
+const sortOptions = [
+  { value: 'newest', labelKey: 'search.newest' },
+  { value: 'price-asc', labelKey: 'search.priceLowHigh' },
+  { value: 'price-desc', labelKey: 'search.priceHighLow' },
+] as const;
 
 export const RwaTab: React.FC<RwaTabProps> = ({
   peerId,
   isOwnStore,
   products: externalProducts,
-  storeName,
-  storeAvatar,
 }) => {
   const { t } = useI18n();
   const { hasVerifiedMod } = useVerifiedModerators();
@@ -57,10 +51,8 @@ export const RwaTab: React.FC<RwaTabProps> = ({
   const [loading, setLoading] = useState(!externalProducts);
   const [error, setError] = useState<string | null>(null);
 
-  // 筛选状态
-  const [tokenStandardFilter, setTokenStandardFilter] = useState<TokenStandardFilter>('all');
-  const [tradeModeFilter, setTradeModeFilter] = useState<TradeModeFilter>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  // 统一筛选状态
+  const [filter, setFilter] = useState<RwaFilterState>(defaultRwaFilterState);
 
   // 获取商品列表（仅当没有外部传入商品时）
   const fetchProducts = useCallback(async () => {
@@ -107,18 +99,24 @@ export const RwaTab: React.FC<RwaTabProps> = ({
   const filteredProducts = useMemo(() => {
     let result = [...rwaProducts];
 
+    // 搜索过滤
+    if (filter.search.trim()) {
+      const searchLower = filter.search.toLowerCase();
+      result = result.filter(product => product.title?.toLowerCase().includes(searchLower));
+    }
+
     // 代币标准筛选
-    if (tokenStandardFilter !== 'all') {
+    if (filter.tokenStandard !== 'all') {
       result = result.filter(
-        product => product.tokenStandard?.toUpperCase() === tokenStandardFilter
+        product => product.tokenStandard?.toUpperCase() === filter.tokenStandard
       );
     }
 
     // 交易模式筛选
-    if (tradeModeFilter !== 'all') {
+    if (filter.tradeMode !== 'all') {
       result = result.filter(product => {
         const tradeMode = product.rwaTradeMode;
-        if (tradeModeFilter === 'instant') {
+        if (filter.tradeMode === 'instant') {
           // rwaTradeMode: 0 = instant, 'instant' (兼容旧数据)
           return tradeMode === 0 || (tradeMode as unknown) === 'instant';
         } else {
@@ -129,7 +127,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
     }
 
     // 排序
-    switch (sortBy) {
+    switch (filter.sortBy) {
       case 'price-asc':
         result.sort((a, b) => (Number(a.price?.amount) || 0) - (Number(b.price?.amount) || 0));
         break;
@@ -143,7 +141,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
     }
 
     return result;
-  }, [rwaProducts, tokenStandardFilter, tradeModeFilter, sortBy]);
+  }, [rwaProducts, filter]);
 
   // 各代币标准的商品数量统计
   const tokenStandardCounts = useMemo(() => {
@@ -157,192 +155,185 @@ export const RwaTab: React.FC<RwaTabProps> = ({
     return counts;
   }, [rwaProducts]);
 
+  // 更新筛选状态的辅助函数
+  const updateFilter = (updates: Partial<RwaFilterState>) => {
+    setFilter(prev => ({ ...prev, ...updates }));
+  };
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <Skeleton variant="text" className="h-6 w-32" />
-          <Skeleton variant="rounded" className="h-9 w-32" />
+      <div className="flex gap-6">
+        {/* 左侧筛选栏骨架 */}
+        <div className="hidden lg:block w-56 shrink-0 space-y-4">
+          <Skeleton variant="text" className="h-5 w-20" />
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} variant="text" className="h-6 w-full" />
+            ))}
+          </div>
         </div>
-        <Grid cols={4} colsMobile={2} gap="md">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
-        </Grid>
+        {/* 右侧内容区骨架 */}
+        <div className="flex-1 space-y-4">
+          <div className="flex items-center gap-4">
+            <Skeleton variant="rounded" className="h-9 flex-1 max-w-sm" />
+            <Skeleton variant="rounded" className="h-9 w-32" />
+          </div>
+          <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </Grid>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* 头部筛选栏 */}
+    <div className="flex gap-6">
+      {/* 左侧筛选边栏 - 仅桌面端显示 */}
       {rwaProducts.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3 justify-between">
-          <HStack gap="sm" className="flex-wrap">
-            {/* 代币标准筛选 */}
-            <Select
-              value={tokenStandardFilter}
-              onValueChange={(value: TokenStandardFilter) => setTokenStandardFilter(value)}
-            >
-              <SelectTrigger className="w-[140px] h-8">
-                <SelectValue placeholder={t('rwa.filterTokenStandard') || '代币标准'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('filter.allTypes') || '全部'} ({rwaProducts.length})
-                </SelectItem>
-                <SelectItem value="ERC721">
-                  <span className="flex items-center gap-2">
-                    <Badge className="bg-purple-500 text-white text-xs px-1.5">ERC721</Badge>
-                    NFT ({tokenStandardCounts.ERC721})
-                  </span>
-                </SelectItem>
-                <SelectItem value="ERC1155">
-                  <span className="flex items-center gap-2">
-                    <Badge className="bg-blue-500 text-white text-xs px-1.5">ERC1155</Badge>
-                    {t('rwa.membership') || '会员权益'} ({tokenStandardCounts.ERC1155})
-                  </span>
-                </SelectItem>
-                <SelectItem value="ERC3525">
-                  <span className="flex items-center gap-2">
-                    <Badge className="bg-green-500 text-white text-xs px-1.5">ERC3525</Badge>
-                    {t('rwa.share') || '份额代币'} ({tokenStandardCounts.ERC3525})
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* 交易模式筛选 */}
-            <Select
-              value={tradeModeFilter}
-              onValueChange={(value: TradeModeFilter) => setTradeModeFilter(value)}
-            >
-              <SelectTrigger className="w-[130px] h-8">
-                <SelectValue placeholder={t('rwa.filterTradeMode') || '交易模式'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filter.allTypes') || '全部'}</SelectItem>
-                <SelectItem value="instant">
-                  <span className="flex items-center gap-1">
-                    <span>⚡</span>
-                    {t('rwa.instantTrade') || '即时交易'}
-                  </span>
-                </SelectItem>
-                <SelectItem value="confirm_required">
-                  <span className="flex items-center gap-1">
-                    <span>🔒</span>
-                    {t('rwa.confirmRequired') || '需确认'}
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* 排序 */}
-            <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-              <SelectTrigger className="w-[130px] h-8">
-                <SelectValue placeholder={t('search.sortBy') || '排序'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">{t('search.newest') || '最新上架'}</SelectItem>
-                <SelectItem value="price-asc">
-                  {t('search.priceLowHigh') || '价格从低到高'}
-                </SelectItem>
-                <SelectItem value="price-desc">
-                  {t('search.priceHighLow') || '价格从高到低'}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* 结果数量 */}
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {t('rwa.foundItems', { count: filteredProducts.length }) ||
-                `找到 ${filteredProducts.length} 件商品`}
-            </span>
-          </HStack>
-        </div>
+        <RwaFilterSidebar
+          filter={filter}
+          onFilterChange={setFilter}
+          tokenStandardCounts={tokenStandardCounts}
+          className="hidden lg:block"
+        />
       )}
 
-      {/* 错误提示 */}
-      {error && (
-        <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
-          {error}
-          <button className="ml-2 underline hover:no-underline" onClick={fetchProducts}>
-            {t('common.retry') || '重试'}
-          </button>
-        </div>
-      )}
-
-      {/* 空状态 - 没有 RWA 商品 */}
-      {rwaProducts.length === 0 && !error && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-            <Coins className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            {isOwnStore
-              ? t('rwa.noRwaYet') || '还没有 RWA 数字资产商品'
-              : t('rwa.noRwaInStore') || '该店铺暂无 RWA 数字资产商品'}
-          </h3>
-          {isOwnStore && (
-            <p className="text-muted-foreground text-sm mb-4">
-              {t('rwa.createFirstRwa') || '创建商品时选择 RWA Token 类型，开始销售数字资产'}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* 空状态 - 筛选后无结果 */}
-      {rwaProducts.length > 0 && filteredProducts.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-            <Package className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-base font-medium text-foreground mb-2">
-            {t('empty.noProductsFound') || '未找到匹配的商品'}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t('empty.tryAdjustingFilters') || '尝试调整筛选条件'}
-          </p>
-        </div>
-      )}
-
-      {/* RWA 商品列表 */}
-      {filteredProducts.length > 0 && (
-        <Grid cols={4} colsMobile={2} gap="md">
-          {filteredProducts.map((product, index) => (
-            <Link
-              key={`${product.slug}-${index}`}
-              href={`/product/${product.slug}?peerID=${peerId}`}
-              onClick={e => {
-                // 桌面端使用弹框
-                if (!isMobile) {
-                  e.preventDefault();
-                  openProduct(product.slug, peerId);
-                }
-              }}
-            >
-              <ProductCard
-                title={product.title}
-                imageUrl={getImageUrl(product.thumbnail?.medium)}
-                price={Number(product.price?.amount || 0)}
-                currency={product.price?.currency?.code || 'USD'}
-                divisibility={product.price?.currency?.divisibility}
-                vendorName={isOwnStore ? undefined : storeName}
-                vendorAvatar={isOwnStore ? undefined : storeAvatar}
-                vendorPeerID={peerId}
-                rating={product.averageRating}
-                reviewCount={product.ratingCount}
-                freeShipping={product.freeShipping && product.freeShipping.length > 0}
-                contractType={product.contractType as ProductContractType}
-                tokenStandard={product.tokenStandard}
-                rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                isOwnListing={isOwnStore}
+      {/* 右侧主内容区 */}
+      <div className="flex-1 min-w-0 space-y-4">
+        {/* 顶部工具栏：搜索 + 数量 + 排序 */}
+        {rwaProducts.length > 0 && (
+          <div className="flex items-center gap-4">
+            {/* 搜索框 */}
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('filter.searchRwa') || '搜索数字资产...'}
+                value={filter.search}
+                onChange={e => updateFilter({ search: e.target.value })}
+                className="pl-9 h-9"
               />
-            </Link>
-          ))}
-        </Grid>
-      )}
+              {filter.search && (
+                <button
+                  onClick={() => updateFilter({ search: '' })}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* 商品数量 */}
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {filteredProducts.length} {t('filter.resultsFound') || '件商品'}
+            </span>
+
+            {/* 排序下拉 */}
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {t('search.sortBy') || '排序方式'}
+              </span>
+              <Select
+                value={filter.sortBy}
+                onValueChange={(value: RwaFilterState['sortBy']) => updateFilter({ sortBy: value })}
+              >
+                <SelectTrigger className="w-[120px] h-9">
+                  <SelectValue placeholder={t('search.sortBy')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {t(option.labelKey)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
+        {/* 错误提示 */}
+        {error && (
+          <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
+            {error}
+            <button className="ml-2 underline hover:no-underline" onClick={fetchProducts}>
+              {t('common.retry') || '重试'}
+            </button>
+          </div>
+        )}
+
+        {/* 空状态 - 没有 RWA 商品 */}
+        {rwaProducts.length === 0 && !error && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <Coins className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {isOwnStore
+                ? t('rwa.noRwaYet') || '还没有 RWA 数字资产商品'
+                : t('rwa.noRwaInStore') || '该店铺暂无 RWA 数字资产商品'}
+            </h3>
+            {isOwnStore && (
+              <p className="text-muted-foreground text-sm mb-4">
+                {t('rwa.createFirstRwa') || '创建商品时选择 RWA Token 类型，开始销售数字资产'}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 空状态 - 筛选后无结果 */}
+        {rwaProducts.length > 0 && filteredProducts.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <Package className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-medium text-foreground mb-2">
+              {t('empty.noProductsFound') || '未找到匹配的商品'}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t('empty.tryAdjustingFilters') || '尝试调整筛选条件'}
+            </p>
+          </div>
+        )}
+
+        {/* RWA 商品列表 */}
+        {filteredProducts.length > 0 && (
+          <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+            {filteredProducts.map((product, index) => (
+              <Link
+                key={`${product.slug}-${index}`}
+                href={`/product/${product.slug}?peerID=${peerId}`}
+                onClick={e => {
+                  // 桌面端使用弹框
+                  if (!isMobile) {
+                    e.preventDefault();
+                    openProduct(product.slug, peerId);
+                  }
+                }}
+              >
+                <ProductCard
+                  title={product.title}
+                  imageUrl={getImageUrl(product.thumbnail?.medium)}
+                  price={Number(product.price?.amount || 0)}
+                  currency={product.price?.currency?.code || 'USD'}
+                  divisibility={product.price?.currency?.divisibility}
+                  // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                  vendorPeerID={peerId}
+                  rating={product.averageRating}
+                  reviewCount={product.ratingCount}
+                  freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                  contractType={product.contractType as ProductContractType}
+                  tokenStandard={product.tokenStandard}
+                  rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                  hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                  isOwnListing={isOwnStore}
+                />
+              </Link>
+            ))}
+          </Grid>
+        )}
+      </div>
     </div>
   );
 };

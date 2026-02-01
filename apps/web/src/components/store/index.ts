@@ -18,6 +18,16 @@ export {
 } from './StoreListingsToolbar';
 
 export { FilterSheet } from './FilterSheet';
+export { FilterSidebar } from './FilterSidebar';
+
+// RWA 筛选组件
+export {
+  RwaFilterSidebar,
+  type RwaFilterState,
+  type TokenStandardFilter,
+  type TradeModeFilter,
+  defaultRwaFilterState,
+} from './RwaFilterSidebar';
 
 // 评价组件
 export { ReviewCard } from './ReviewCard';

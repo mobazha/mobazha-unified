@@ -1444,12 +1444,21 @@ export const en: TranslationResource = {
     digitalGoods: 'Digital Goods',
     services: 'Services',
     rwaTokens: 'RWA Tokens',
+    rwaToken: 'RWA Token',
     // Store filters
     searchInStore: 'Search store products...',
     freeShippingOnly: 'Free shipping only',
+    freeShipping: 'Free Shipping',
     clearFilters: 'Clear Filters',
     resetFilters: 'Reset',
     productType: 'Product Type',
+    // Sidebar filters
+    shipping: 'Shipping',
+    shipTo: 'Ship to:',
+    anyCountry: '(Any Country)',
+    resultsFound: 'items',
+    // RWA filter
+    searchRwa: 'Search digital assets...',
   },
 
   empty: {

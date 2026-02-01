@@ -1409,12 +1409,21 @@ export const zh: TranslationResource = {
     digitalGoods: '数字商品',
     services: '服务',
     rwaTokens: 'RWA 代币',
+    rwaToken: 'RWA代币',
     // 店铺筛选
     searchInStore: '搜索店铺商品...',
     freeShippingOnly: '仅显示免运费',
+    freeShipping: '免运费',
     clearFilters: '清除筛选',
     resetFilters: '重置',
     productType: '商品类型',
+    // 左侧边栏筛选
+    shipping: '快递',
+    shipTo: '发往:',
+    anyCountry: '(任何国家)',
+    resultsFound: '件商品',
+    // RWA 筛选
+    searchRwa: '搜索数字资产...',
   },
 
   empty: {
