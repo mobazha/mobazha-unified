@@ -20,24 +20,10 @@ import {
   useI18n,
   useShippingAddresses,
 } from '@mobazha/core';
-import type { Product, UserProfile, DisplayAddress } from '@mobazha/core';
+import type { Product, UserProfile, DisplayAddress, ShippingOption } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
 // Types
-interface ShippingService {
-  name: string;
-  price: number;
-  estimatedDelivery: string;
-  additionalItemPrice?: number;
-}
-
-interface ShippingOption {
-  name: string;
-  type: 'LOCAL_PICKUP' | 'FIXED_PRICE';
-  regions: string[];
-  services: ShippingService[];
-}
-
 interface CheckoutItem {
   id: string;
   title: string;
@@ -92,6 +78,46 @@ function toOrderAddress(addr: DisplayAddress) {
 }
 
 /**
+ * 获取运费价格
+ * API 返回的实际字段是 firstFreight，但某些情况下可能使用 price
+ */
+function getShippingPrice(service: ShippingOption['services'][0], option?: ShippingOption): number {
+  // 本地自提免运费
+  if (option?.type === 'LOCAL_PICKUP') {
+    return 0;
+  }
+
+  // 优先使用 firstFreight（API 实际返回的字段）
+  if (service.firstFreight !== undefined && service.firstFreight !== null) {
+    return service.firstFreight;
+  }
+
+  // 兼容 price 字段
+  if (service.price !== undefined && service.price !== null) {
+    return service.price;
+  }
+
+  return 0;
+}
+
+/**
+ * 获取续件费
+ */
+function getAdditionalItemPrice(service: ShippingOption['services'][0]): number {
+  // 优先使用 renewalUnitPrice
+  if (service.renewalUnitPrice !== undefined && service.renewalUnitPrice > 0) {
+    return service.renewalUnitPrice;
+  }
+
+  // 兼容 additionalItemPrice 字段
+  if (service.additionalItemPrice !== undefined && service.additionalItemPrice > 0) {
+    return service.additionalItemPrice;
+  }
+
+  return 0;
+}
+
+/**
  * Checkout Page - 下单阶段
  *
  * 用户在此页面：
@@ -105,7 +131,7 @@ function toOrderAddress(addr: DisplayAddress) {
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { renderPairedPrice } = useCurrency();
+  const { renderPairedPrice, fromMinimalUnit } = useCurrency();
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -309,11 +335,16 @@ export default function CheckoutPage() {
         service => service.name === selection.serviceName
       );
       if (!selectedService) return sum;
-      const additionalPrice = selectedService.additionalItemPrice || 0;
+      // 运费数据是最小单位（如 cents），需要转换为标准单位（如 dollars）
+      const currency = selectedOption?.currency || item.currency;
+      const shippingPriceRaw = getShippingPrice(selectedService, selectedOption);
+      const additionalPriceRaw = getAdditionalItemPrice(selectedService);
+      const shippingPrice = fromMinimalUnit(shippingPriceRaw, currency);
+      const additionalPrice = fromMinimalUnit(additionalPriceRaw, currency);
       const extraItems = Math.max(item.quantity - 1, 0);
-      return sum + selectedService.price + additionalPrice * extraItems;
+      return sum + shippingPrice + additionalPrice * extraItems;
     }, 0);
-  }, [checkoutItems, selectedShipping]);
+  }, [checkoutItems, selectedShipping, fromMinimalUnit]);
 
   const total = subtotal + shippingTotal; // 下单阶段不计算仲裁费，仲裁费在支付阶段计算
 
@@ -650,6 +681,7 @@ export default function CheckoutPage() {
                                     const isSelected =
                                       selectedShipping[item.id]?.optionName === option.name &&
                                       selectedShipping[item.id]?.serviceName === service.name;
+                                    const shippingPrice = getShippingPrice(service, option);
                                     return (
                                       <label
                                         key={`${option.name}-${service.name}`}
@@ -687,9 +719,9 @@ export default function CheckoutPage() {
                                           </div>
                                         </div>
                                         <span className="text-sm font-semibold text-foreground">
-                                          {service.price === 0
+                                          {shippingPrice === 0
                                             ? t('checkout.free') || 'Free'
-                                            : renderPairedPrice(service.price, item.currency)}
+                                            : renderPairedPrice(shippingPrice, item.currency)}
                                         </span>
                                       </label>
                                     );

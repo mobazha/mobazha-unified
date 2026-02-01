@@ -235,18 +235,18 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
   // 连接成功后显示商品详情
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden p-0 gap-0">
         <DialogHeader className="sr-only">
           <DialogTitle>Product Details</DialogTitle>
         </DialogHeader>
-        {/* 关闭按钮 */}
+        {/* 关闭按钮 - 放在右上角，与商家栏分开 */}
         <button
           onClick={handleClose}
-          className="absolute right-4 top-4 z-50 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors"
+          className="absolute right-3 top-3 z-[60] w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted border border-border/50 shadow-sm transition-colors"
           aria-label="Close"
         >
           <svg
-            className="w-5 h-5 text-foreground"
+            className="w-4 h-4 text-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -261,7 +261,7 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
         </button>
 
         {/* 商品详情内容 */}
-        <div className="overflow-y-auto max-h-[calc(90vh-2rem)]">
+        <div className="overflow-y-auto max-h-[calc(90vh-1rem)] scroll-smooth">
           <ProductDetail slug={slug} peerID={peerID} isModal={true} onClose={handleClose} />
         </div>
       </DialogContent>

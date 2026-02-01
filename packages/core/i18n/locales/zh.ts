@@ -249,6 +249,7 @@ export const zh: TranslationResource = {
     additionalItemFee: '续件费',
     noShippingOptions: '暂无配送选项',
     localPickup: '到店自提',
+    priceToBeCalculated: '待计算',
     worldwide: '全球',
     // More from store
     moreFromStore: '该店铺更多商品',

@@ -5,6 +5,7 @@
 import type { Locale, TranslationKey, TranslationParams, TranslationResource } from './types';
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from './types';
 import { translations } from './locales';
+import { initCountryLocales } from '../utils/countryUtils';
 
 // 当前语言
 let currentLocale: Locale = DEFAULT_LOCALE;
@@ -52,6 +53,9 @@ export function onLocaleChange(listener: LocaleChangeListener): () => void {
  * 初始化语言（从持久化存储或浏览器语言）
  */
 export function initLocale(): Locale {
+  // 初始化国家名称多语言支持
+  initCountryLocales();
+
   if (typeof window === 'undefined') {
     return DEFAULT_LOCALE;
   }

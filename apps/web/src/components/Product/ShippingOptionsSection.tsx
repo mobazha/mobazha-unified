@@ -3,13 +3,7 @@
 import React, { memo, useState, useMemo } from 'react';
 import { Truck, MapPin, Package } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Table,
   TableBody,
@@ -18,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, getCountryName } from '@mobazha/core';
 import type { ShippingOption } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -47,8 +41,8 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
   pricingCurrency = 'USD',
   className,
 }: ShippingOptionsSectionProps) {
-  const { t } = useI18n();
-  const { formatPrice } = useCurrency();
+  const { t, locale } = useI18n();
+  const { formatPrice, fromMinimalUnit } = useCurrency();
 
   // 提取所有可用地区（去重）
   const allRegions = useMemo(() => {
@@ -84,11 +78,17 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
     return null;
   }
 
-  // 获取地区显示名称
+  /**
+   * 获取地区显示名称（支持多语言）
+   * getCountryName 已支持多种格式（ISO代码、下划线格式等）
+   */
   const getRegionDisplayName = (region: string): string => {
-    if (region === 'ALL') return t('product.worldwide');
-    // 可以扩展为更详细的地区名称映射
-    return region;
+    // 特殊处理：全球（使用翻译）
+    if (region === 'ALL' || region === 'WORLDWIDE') {
+      return t('product.worldwide');
+    }
+    // 使用 i18n-iso-countries 获取本地化名称
+    return getCountryName(region, locale);
   };
 
   // 获取配送类型显示
@@ -109,6 +109,58 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
     );
   };
 
+  /**
+   * 获取运费价格
+   * API 返回的实际字段是 firstFreight，但某些情况下可能使用 price
+   */
+  const getShippingPrice = (
+    service: ShippingOption['services'][0],
+    option: ShippingOption
+  ): number | undefined => {
+    // 本地自提免运费
+    if (option.type === 'LOCAL_PICKUP') {
+      return 0;
+    }
+
+    // 优先使用 firstFreight（API 实际返回的字段）
+    if (service.firstFreight !== undefined && service.firstFreight !== null) {
+      return service.firstFreight;
+    }
+
+    // 兼容 price 字段
+    if (service.price !== undefined && service.price !== null) {
+      return service.price;
+    }
+
+    return undefined;
+  };
+
+  /**
+   * 获取续件费
+   * API 返回的实际字段可能是 renewalUnitPrice 或 additionalItemPrice
+   */
+  const getAdditionalItemPrice = (service: ShippingOption['services'][0]): number | undefined => {
+    // 优先使用 renewalUnitPrice
+    if (service.renewalUnitPrice !== undefined && service.renewalUnitPrice > 0) {
+      return service.renewalUnitPrice;
+    }
+
+    // 兼容 additionalItemPrice 字段
+    if (service.additionalItemPrice !== undefined && service.additionalItemPrice > 0) {
+      return service.additionalItemPrice;
+    }
+
+    return undefined;
+  };
+
+  /**
+   * 获取用于价格格式化的货币代码
+   * 优先使用配送选项的货币，其次使用商品定价货币
+   */
+  const getServiceCurrency = (option: ShippingOption): string => {
+    return option.currency || pricingCurrency;
+  };
+
   return (
     <Card className={cn('p-4 sm:p-6', className)} data-testid="shipping-options-section">
       {/* 标题 */}
@@ -119,25 +171,25 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
         </h2>
       </div>
 
-      {/* 目的地选择器 */}
+      {/* 目的地选择器 - 支持搜索 */}
       {allRegions.length > 1 && (
         <div className="flex items-center gap-3 mb-4">
           <span className="text-sm text-muted-foreground flex items-center gap-1.5">
             <MapPin className="w-4 h-4" />
             {t('product.shipTo')}:
           </span>
-          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-[180px] h-9">
-              <SelectValue placeholder={t('product.selectDestination')} />
-            </SelectTrigger>
-            <SelectContent>
-              {allRegions.map(region => (
-                <SelectItem key={region} value={region}>
-                  {getRegionDisplayName(region)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            value={selectedRegion}
+            onValueChange={setSelectedRegion}
+            options={allRegions.map(region => ({
+              value: region,
+              label: getRegionDisplayName(region),
+            }))}
+            placeholder={t('product.selectDestination')}
+            searchPlaceholder={t('common.search') || 'Search...'}
+            emptyText={t('common.noResults') || 'No results found'}
+            className="w-[200px]"
+          />
         </div>
       )}
 
@@ -154,40 +206,59 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
           </TableHeader>
           <TableBody>
             {filteredOptions.map((option, optionIndex) =>
-              option.services.map((service, serviceIndex) => (
-                <TableRow
-                  key={`${optionIndex}-${serviceIndex}`}
-                  className="hover:bg-muted/50 transition-colors"
-                >
-                  <TableCell className="font-medium">
-                    <div className="space-y-0.5">
-                      <div>{service.name || option.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {getShippingTypeDisplay(option.type)}
+              option.services.map((service, serviceIndex) => {
+                const shippingPriceRaw = getShippingPrice(service, option);
+                const additionalPriceRaw = getAdditionalItemPrice(service);
+                const currency = getServiceCurrency(option);
+                // 将最小单位（如 cents）转换为标准单位（如 dollars）
+                const shippingPrice =
+                  shippingPriceRaw !== undefined
+                    ? fromMinimalUnit(shippingPriceRaw, currency)
+                    : undefined;
+                const additionalPrice =
+                  additionalPriceRaw !== undefined
+                    ? fromMinimalUnit(additionalPriceRaw, currency)
+                    : undefined;
+
+                return (
+                  <TableRow
+                    key={`${optionIndex}-${serviceIndex}`}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
+                    <TableCell className="font-medium">
+                      <div className="space-y-0.5">
+                        <div>{service.name || option.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {getShippingTypeDisplay(option.type)}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-muted-foreground">
-                      {service.estimatedDelivery || '-'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {service.price === 0 ? (
-                      <span className="text-primary font-medium">{t('product.freeShipping')}</span>
-                    ) : (
-                      <span className="font-medium">
-                        {formatPrice(service.price, pricingCurrency)}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground">
+                        {service.estimatedDelivery || '-'}
                       </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {service.additionalItemPrice !== undefined && service.additionalItemPrice > 0
-                      ? formatPrice(service.additionalItemPrice, pricingCurrency)
-                      : '-'}
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell className="text-right min-w-[80px]">
+                      {shippingPrice === 0 ? (
+                        <span className="text-primary font-medium">
+                          {t('product.freeShipping')}
+                        </span>
+                      ) : shippingPrice === undefined ? (
+                        <span className="text-muted-foreground text-sm">
+                          {t('product.priceToBeCalculated') || '待计算'}
+                        </span>
+                      ) : (
+                        <span className="font-medium">{formatPrice(shippingPrice, currency)}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground min-w-[80px]">
+                      {additionalPrice !== undefined && additionalPrice > 0
+                        ? formatPrice(additionalPrice, currency)
+                        : '-'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -196,46 +267,65 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
       {/* 配送服务卡片 - 移动端 */}
       <div className="sm:hidden space-y-3">
         {filteredOptions.map((option, optionIndex) =>
-          option.services.map((service, serviceIndex) => (
-            <div
-              key={`mobile-${optionIndex}-${serviceIndex}`}
-              className="p-3 rounded-lg bg-muted/30 space-y-2"
-            >
-              {/* 服务名称 */}
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-sm">{service.name || option.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {getShippingTypeDisplay(option.type)}
-                </div>
-              </div>
+          option.services.map((service, serviceIndex) => {
+            const shippingPriceRaw = getShippingPrice(service, option);
+            const additionalPriceRaw = getAdditionalItemPrice(service);
+            const currency = getServiceCurrency(option);
+            // 将最小单位（如 cents）转换为标准单位（如 dollars）
+            const shippingPrice =
+              shippingPriceRaw !== undefined
+                ? fromMinimalUnit(shippingPriceRaw, currency)
+                : undefined;
+            const additionalPrice =
+              additionalPriceRaw !== undefined
+                ? fromMinimalUnit(additionalPriceRaw, currency)
+                : undefined;
 
-              {/* 预计送达 */}
-              {service.estimatedDelivery && (
+            return (
+              <div
+                key={`mobile-${optionIndex}-${serviceIndex}`}
+                className="p-3 rounded-lg bg-muted/30 space-y-2"
+              >
+                {/* 服务名称 */}
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-sm">{service.name || option.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {getShippingTypeDisplay(option.type)}
+                  </div>
+                </div>
+
+                {/* 预计送达 */}
+                {service.estimatedDelivery && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t('product.estimatedDelivery')}</span>
+                    <span>{service.estimatedDelivery}</span>
+                  </div>
+                )}
+
+                {/* 运费 */}
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t('product.estimatedDelivery')}</span>
-                  <span>{service.estimatedDelivery}</span>
+                  <span className="text-muted-foreground">{t('product.shippingFee')}</span>
+                  {shippingPrice === 0 ? (
+                    <span className="text-primary font-medium">{t('product.freeShipping')}</span>
+                  ) : shippingPrice === undefined ? (
+                    <span className="text-muted-foreground">
+                      {t('product.priceToBeCalculated') || '待计算'}
+                    </span>
+                  ) : (
+                    <span className="font-medium">{formatPrice(shippingPrice, currency)}</span>
+                  )}
                 </div>
-              )}
 
-              {/* 运费 */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{t('product.shippingFee')}</span>
-                {service.price === 0 ? (
-                  <span className="text-primary font-medium">{t('product.freeShipping')}</span>
-                ) : (
-                  <span className="font-medium">{formatPrice(service.price, pricingCurrency)}</span>
+                {/* 续件费 */}
+                {additionalPrice !== undefined && additionalPrice > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t('product.additionalItemFee')}</span>
+                    <span>{formatPrice(additionalPrice, currency)}</span>
+                  </div>
                 )}
               </div>
-
-              {/* 续件费 */}
-              {service.additionalItemPrice !== undefined && service.additionalItemPrice > 0 && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t('product.additionalItemFee')}</span>
-                  <span>{formatPrice(service.additionalItemPrice, pricingCurrency)}</span>
-                </div>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

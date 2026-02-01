@@ -251,6 +251,7 @@ export const en: TranslationResource = {
     additionalItemFee: 'Additional Item',
     noShippingOptions: 'No shipping options available',
     localPickup: 'Local Pickup',
+    priceToBeCalculated: 'To be calculated',
     worldwide: 'Worldwide',
     // More from store
     moreFromStore: 'More from this store',
