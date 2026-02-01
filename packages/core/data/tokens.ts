@@ -358,10 +358,32 @@ export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefi
 }
 
 /**
+ * 获取智能小数位数
+ * 当金额太小时，自动增加小数位以显示有效数字
+ */
+function getSmartDecimals(amount: number, desiredDecimals: number, maxDecimals = 8): number {
+  if (amount === 0) return desiredDecimals;
+
+  const absAmount = Math.abs(amount);
+  let decimals = desiredDecimals;
+
+  // 如果按当前精度格式化后为 0，增加精度直到能显示有效数字
+  while (decimals < maxDecimals) {
+    const multiplier = Math.pow(10, decimals);
+    if (Math.round(absAmount * multiplier) > 0) {
+      break;
+    }
+    decimals++;
+  }
+
+  return Math.max(decimals, desiredDecimals);
+}
+
+/**
  * 格式化金额（从最小单位转换为显示单位）
  * @param amount 最小单位金额
  * @param tokenId 代币 ID
- * @param displayDecimals 显示的小数位数（默认根据代币类型自动判断）
+ * @param displayDecimals 显示的小数位数（默认根据代币类型自动判断，会智能扩展以显示非零值）
  */
 export function formatTokenAmount(
   amount: number | string,
@@ -372,10 +394,13 @@ export function formatTokenAmount(
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   const normalizedAmount = numAmount / Math.pow(10, decimals);
 
-  // 确定显示小数位数
-  const display = displayDecimals ?? (decimals >= 6 ? 2 : Math.min(decimals, 8));
+  // 确定基础显示小数位数
+  const baseDisplay = displayDecimals ?? (decimals >= 6 ? 2 : Math.min(decimals, 8));
 
-  return normalizedAmount.toFixed(display);
+  // 使用智能小数位数，确保不会显示 0.00 当实际有值时
+  const smartDisplay = getSmartDecimals(normalizedAmount, baseDisplay, decimals);
+
+  return normalizedAmount.toFixed(smartDisplay);
 }
 
 /**
