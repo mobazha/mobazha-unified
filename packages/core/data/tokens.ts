@@ -358,31 +358,45 @@ export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefi
 }
 
 /**
- * 获取智能小数位数
- * 当金额太小时，自动增加小数位以显示有效数字
- * 目标：显示至少 2 个有效数字，避免 0.00024 显示为 0.0002
+ * 获取智能小数位数（参考币安/OKX等主流交易所的显示规则）
+ *
+ * 规则：
+ * 1. 对于 >= 1 的数字，使用 desiredDecimals（通常2位小数）
+ * 2. 对于 < 1 的数字，显示 3-4 位有效数字
+ *
+ * 示例：
+ * - 1234.5678 → 1234.57 (2位小数)
+ * - 0.12345 → 0.1235 (4位有效数字)
+ * - 0.00024567 → 0.0002457 (4位有效数字)
+ * - 0.000001234 → 0.00000123 (3位有效数字，受 maxDecimals 限制)
  */
-function getSmartDecimals(amount: number, desiredDecimals: number, maxDecimals = 8): number {
+function getSmartDecimals(
+  amount: number,
+  desiredDecimals: number,
+  maxDecimals = 8,
+  significantDigits = 4 // 期望显示的有效数字位数
+): number {
   if (amount === 0) return desiredDecimals;
 
   const absAmount = Math.abs(amount);
-  let decimals = desiredDecimals;
 
-  // 首先找到第一个非零数字的位置
-  while (decimals < maxDecimals) {
-    const multiplier = Math.pow(10, decimals);
-    if (Math.round(absAmount * multiplier) > 0) {
-      break;
-    }
-    decimals++;
+  // 对于 >= 1 的数字，使用期望的小数位数
+  if (absAmount >= 1) {
+    return desiredDecimals;
   }
 
-  // 再增加 1-2 位以显示更多有效数字
-  // 例如：0.00024 应该显示为 0.00024 而不是 0.0002
-  const extraDigits = 1;
-  decimals = Math.min(decimals + extraDigits, maxDecimals);
+  // 对于 < 1 的数字，计算需要多少小数位来显示 N 位有效数字
+  // 使用 log10 找到第一个有效数字的位置
+  // 例如：0.00024 → log10(0.00024) ≈ -3.62 → floor = -4 → 第一个有效数字在小数点后第4位
+  const log = Math.log10(absAmount);
+  const firstSignificantPosition = Math.floor(log); // 负数表示小数点后的位置
 
-  return Math.max(decimals, desiredDecimals);
+  // 计算需要的小数位数：第一个有效数字位置 + 额外的有效数字
+  // 例如：0.00024 需要 4 + (4-1) = 7 位小数来显示 4 位有效数字
+  const requiredDecimals = -firstSignificantPosition + (significantDigits - 1);
+
+  // 限制在 [desiredDecimals, maxDecimals] 范围内
+  return Math.min(Math.max(requiredDecimals, desiredDecimals), maxDecimals);
 }
 
 /**

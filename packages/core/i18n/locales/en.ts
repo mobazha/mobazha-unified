@@ -379,6 +379,14 @@ export const en: TranslationResource = {
       resolved: 'Resolved',
       declined: 'Declined',
     },
+    // Modal sidebar
+    menu: 'Menu',
+    tabs: {
+      summary: 'Summary',
+      discussion: 'Discussion',
+      contract: 'Contract (JSON)',
+    },
+    discussionPlaceholder: 'Chat with the other party about this order.',
     // Timeline event descriptions
     timeline: {
       orderPlaced: 'Order placed',

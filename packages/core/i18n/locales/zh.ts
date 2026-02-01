@@ -376,6 +376,14 @@ export const zh: TranslationResource = {
       resolved: '已解决',
       declined: '已拒绝',
     },
+    // 弹框侧边栏
+    menu: '菜单',
+    tabs: {
+      summary: '摘要',
+      discussion: '讨论',
+      contract: '合同 (JSON)',
+    },
+    discussionPlaceholder: '与交易对方讨论此订单相关事宜。',
     // 时间线事件描述
     timeline: {
       orderPlaced: '订单已提交',
