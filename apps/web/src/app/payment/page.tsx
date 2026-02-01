@@ -20,6 +20,7 @@ import {
   useCurrency,
   useI18n,
   ordersApi,
+  profileApi,
   getImageUrl,
   getTransactionService,
 } from '@mobazha/core';
@@ -41,6 +42,7 @@ interface OrderDetails {
   vendor: {
     name: string;
     peerID: string;
+    avatar?: string;
   };
   shippingAddress: {
     name: string;
@@ -250,14 +252,39 @@ export default function PaymentPage() {
               ? totalFromOrderOpen
               : calculatedTotal;
 
+        // 获取卖家 profile（包括名称和头像）
+        const vendorPeerID = vendorInfo?.peerID || urlVendorPeerID || '';
+        let vendorName = vendorInfo?.handle || urlVendorName || 'Unknown';
+        let vendorAvatar: string | undefined;
+
+        if (vendorPeerID) {
+          try {
+            const vendorProfile = await profileApi.getProfile(vendorPeerID);
+            if (vendorProfile) {
+              vendorName = vendorProfile.name || vendorProfile.handle || vendorName;
+              // 获取头像 URL
+              const avatarHash =
+                vendorProfile.avatarHashes?.medium ||
+                vendorProfile.avatarHashes?.small ||
+                vendorProfile.avatarHashes?.tiny;
+              if (avatarHash) {
+                vendorAvatar = getImageUrl(avatarHash);
+              }
+            }
+          } catch {
+            // 获取 profile 失败时使用默认值
+            console.warn('Failed to fetch vendor profile for:', vendorPeerID);
+          }
+        }
+
         const orderDetailsData: OrderDetails = {
           orderID: contract?.OrderID || contract?.orderID || orderID,
           status: order?.state || 'AWAITING_PAYMENT',
           items,
           vendor: {
-            name:
-              vendorInfo?.handle || vendorInfo?.peerID?.slice(0, 8) || urlVendorName || 'Unknown',
-            peerID: vendorInfo?.peerID || urlVendorPeerID || '',
+            name: vendorName,
+            peerID: vendorPeerID,
+            avatar: vendorAvatar,
           },
           shippingAddress: {
             name: shippingInfo?.shipTo || shippingInfo?.name || '',

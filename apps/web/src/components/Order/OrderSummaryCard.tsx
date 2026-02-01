@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useI18n, useCurrency } from '@mobazha/core';
 import { Card, CardContent } from '@/components/ui/card';
 import { HStack, VStack } from '@/components/layouts';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { cn } from '@/lib/utils';
 
 export interface OrderSummaryItem {
@@ -24,13 +26,16 @@ export interface OrderSummaryAddress {
   postalCode: string;
 }
 
+export interface OrderSummaryVendor {
+  name: string;
+  peerID: string;
+  avatar?: string;
+}
+
 export interface OrderSummaryCardProps {
   orderID: string;
   items: OrderSummaryItem[];
-  vendor: {
-    name: string;
-    peerID: string;
-  };
+  vendor: OrderSummaryVendor;
   shippingAddress?: OrderSummaryAddress;
   memo?: string;
   className?: string;
@@ -101,8 +106,21 @@ export function OrderSummaryCard({
 
         {/* Vendor */}
         <div className="mb-4 pb-4 border-b border-border">
-          <p className="text-xs text-muted-foreground mb-1">{t('order.seller')}</p>
-          <p className="text-sm font-medium text-foreground">{vendor.name}</p>
+          <p className="text-xs text-muted-foreground mb-2">{t('order.seller')}</p>
+          <Link
+            href={vendor.peerID ? `/store/${vendor.peerID}` : '#'}
+            className="flex items-center gap-3 hover:bg-muted/50 rounded-lg p-2 -ml-2 transition-colors"
+          >
+            <Avatar src={vendor.avatar} name={vendor.name} size="md" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{vendor.name}</p>
+              {vendor.peerID && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {vendor.peerID.slice(0, 16)}...
+                </p>
+              )}
+            </div>
+          </Link>
         </div>
 
         {/* Shipping Address - 仅当有实际地址内容时显示 */}
