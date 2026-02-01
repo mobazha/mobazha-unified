@@ -915,20 +915,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
         </div>
 
         {/* Action Buttons - 仅在 Modal 的桌面端显示，移动端使用底部 footer */}
-        {inModal && (
+        {/* 注意：Message 和 Open Dispute 按钮已移至左侧边栏，这里只保留其他操作 */}
+        {inModal && (canConfirmReceipt || canRefund) && (
           <div className="hidden lg:flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-            <Button variant="outline" size="sm" className="touch-feedback">
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              {t('order.message')}
-            </Button>
-
             {canConfirmReceipt && (
               <Button
                 size="sm"
@@ -937,17 +926,6 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 className="touch-feedback"
               >
                 {isLoading ? t('common.processing') : t('order.actions.complete')}
-              </Button>
-            )}
-
-            {canOpenDispute && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-red-500 text-red-500 hover:bg-red-50 touch-feedback"
-                onClick={() => setShowDisputeModal(true)}
-              >
-                {t('order.openDispute')}
               </Button>
             )}
 

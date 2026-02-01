@@ -111,16 +111,9 @@ interface OrderSidebarProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
   onOpenDispute?: () => void;
-  onMessage?: () => void;
 }
 
-function OrderSidebar({
-  order,
-  activeTab,
-  onTabChange,
-  onOpenDispute,
-  onMessage,
-}: OrderSidebarProps) {
+function OrderSidebar({ order, activeTab, onTabChange, onOpenDispute }: OrderSidebarProps) {
   const { t } = useI18n();
 
   // 判断用户角色，显示对应的交易对方信息
@@ -199,26 +192,44 @@ function OrderSidebar({
         </nav>
       </div>
 
-      {/* 操作按钮 */}
-      <div className="p-3 border-t border-border space-y-2">
-        {onMessage && (
-          <Button variant="outline" size="sm" className="w-full justify-start" onClick={onMessage}>
-            <MessageCircle className="w-4 h-4 mr-2" />
-            {t('order.message')}
-          </Button>
-        )}
-        {canDispute && onOpenDispute && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-            onClick={onOpenDispute}
-          >
-            <AlertTriangle className="w-4 h-4 mr-2" />
-            {t('order.openDispute')}
-          </Button>
-        )}
-      </div>
+      {/* 争议提示区 - 桌面端风格 */}
+      {canDispute && onOpenDispute && (
+        <div className="p-3 border-t border-border">
+          <div className="bg-muted/50 rounded-lg p-3">
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-4 h-4 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground mb-2">
+                  {t('order.disputeTimeoutHint')}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  onClick={onOpenDispute}
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  {t('order.openDispute')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -335,11 +346,6 @@ export const OrderDetailModal = memo(function OrderDetailModal({
     console.warn('Open dispute not implemented yet for order:', orderId);
   }, [orderId]);
 
-  // 处理消息
-  const handleMessage = useCallback(() => {
-    setActiveTab('discussion');
-  }, []);
-
   // 将 DisplayOrder 转换为 OrderDetailContent 需要的格式
   const contentDisplayOrder = displayOrder as
     | Parameters<typeof OrderDetailContent>[0]['displayOrder']
@@ -375,7 +381,6 @@ export const OrderDetailModal = memo(function OrderDetailModal({
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 onOpenDispute={handleOpenDispute}
-                onMessage={handleMessage}
               />
 
               {/* 右侧主内容区 */}
