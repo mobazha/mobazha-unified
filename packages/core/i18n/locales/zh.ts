@@ -429,7 +429,9 @@ export const zh: TranslationResource = {
     confirmReceipt: '确认收货',
     confirmingReceipt: '处理中...',
     openDispute: '开立订单争议',
-    disputeTimeoutHint: '您可以在超时期限内对此订单开立争议。',
+    disputeTimeoutHint:
+      '可以在 {{blocksRemaining}} 区块 或者大约 {{timeRemaining}} 内对该订单开立争议。',
+    disputeHelpTip: '超时后，托管资金将释放给卖家。',
     markAsShipped: '标记发货',
     refundOrder: '退款',
     shipOrder: '发货',
