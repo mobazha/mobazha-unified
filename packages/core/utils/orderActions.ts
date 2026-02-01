@@ -213,6 +213,59 @@ export function getTimeRemaining(
 }
 
 /**
+ * 获取争议超时详情（包括剩余区块数和天数）
+ * 参考桌面端 TimeoutInfo.vue 的显示方式
+ */
+export function getDisputeTimeoutDetails(
+  timestamp: string,
+  timeoutHours: number = ESCROW_TIMEOUT_HOURS
+): {
+  blocksRemaining: number;
+  daysRemaining: number;
+  hoursRemaining: number;
+  isExpired: boolean;
+  timeRemainingStr: string;
+} {
+  const orderTime = new Date(timestamp).getTime();
+  const now = Date.now();
+  const endTime = orderTime + timeoutHours * 60 * 60 * 1000;
+  const remainingMs = endTime - now;
+
+  if (remainingMs <= 0) {
+    return {
+      blocksRemaining: 0,
+      daysRemaining: 0,
+      hoursRemaining: 0,
+      isExpired: true,
+      timeRemainingStr: 'Expired',
+    };
+  }
+
+  const daysRemaining = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+  const hoursRemaining = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+  // 区块数估算：以太坊约每 12 秒一个区块
+  const blocksRemaining = Math.floor(remainingMs / (12 * 1000));
+
+  let timeRemainingStr = '';
+  if (daysRemaining > 0) {
+    timeRemainingStr = `${daysRemaining} days`;
+  } else if (hoursRemaining > 0) {
+    timeRemainingStr = `${hoursRemaining} hours`;
+  } else {
+    timeRemainingStr = 'Less than 1 hour';
+  }
+
+  return {
+    blocksRemaining,
+    daysRemaining,
+    hoursRemaining,
+    isExpired: false,
+    timeRemainingStr,
+  };
+}
+
+/**
  * 获取订单状态信息
  */
 export function getOrderStatusInfo(state: OrderState): { label: string; description: string } {

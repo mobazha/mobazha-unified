@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import {
   isOrderFulfilled,
+  getDisputeTimeoutDetails,
   type OrderAction,
   type UserRole as CoreUserRole,
   useI18n,
@@ -178,6 +179,71 @@ function getProgressBarState(
     currentState,
     disputeState: 0,
   };
+}
+
+// ============ Dispute Timeout Card ============
+
+interface DisputeTimeoutCardProps {
+  createdAt: string;
+  onOpenDispute: () => void;
+}
+
+function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProps) {
+  const { t } = useI18n();
+  const timeoutDetails = useMemo(() => getDisputeTimeoutDetails(createdAt), [createdAt]);
+
+  if (timeoutDetails.isExpired) {
+    return null;
+  }
+
+  return (
+    <div className="mb-4 p-4 sm:p-5 bg-muted/30 border border-border rounded-lg">
+      <div className="flex flex-col items-center text-center">
+        {/* 时钟图标 */}
+        <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center mb-3">
+          <svg
+            className="w-6 h-6 text-muted-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+
+        {/* 提示文字 - 桌面端风格 */}
+        <p className="text-sm text-foreground mb-3">
+          {t('order.disputeTimeoutHint', {
+            blocksRemaining: timeoutDetails.blocksRemaining.toLocaleString(),
+            timeRemaining: timeoutDetails.timeRemainingStr,
+          })}
+          {/* Help 图标 */}
+          <span
+            className="inline-flex items-center ml-1 text-muted-foreground cursor-help"
+            title={t('order.disputeHelpTip')}
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        </p>
+
+        {/* 开立争议按钮 - 桌面端风格（红色填充） */}
+        <Button variant="destructive" size="default" className="px-6" onClick={onOpenDispute}>
+          {t('order.openDispute')}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 // ============ Main Component ============
@@ -495,41 +561,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           />
         </div>
 
-        {/* 争议提示卡片 - 仅在 Modal 模式且可开立争议时显示（桌面端风格） */}
+        {/* 争议提示卡片 - 桌面端风格布局 */}
         {inModal && onOpenDispute && canOpenDispute && !order.dispute && (
-          <div className="mb-4 p-3 sm:p-4 bg-muted/50 border border-border rounded-lg">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-muted-foreground mb-2">
-                  {t('order.disputeTimeoutHint')}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                  onClick={onOpenDispute}
-                >
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  {t('order.openDispute')}
-                </Button>
-              </div>
-            </div>
-          </div>
+          <DisputeTimeoutCard createdAt={order.createdAt} onOpenDispute={onOpenDispute} />
         )}
 
         {/* Dispute Banner */}
@@ -863,9 +897,14 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
         {/* Order Details Section */}
         <div className="border-t border-border pt-4 mt-4">
-          <h3 className="text-sm sm:text-base font-semibold text-foreground mb-4">
-            {t('order.details')}
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">
+              {t('order.details')}
+            </h3>
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {new Date(order.createdAt).toLocaleString()}
+            </span>
+          </div>
 
           {/* Product Info */}
           <div className="flex gap-3 sm:gap-4 mb-4 p-3 sm:p-4 bg-muted/30 rounded-lg">
