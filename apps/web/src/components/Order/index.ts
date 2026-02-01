@@ -12,6 +12,7 @@ export type {
   OrderSummaryCardProps,
   OrderSummaryItem,
   OrderSummaryAddress,
+  OrderSummaryVendor,
 } from './OrderSummaryCard';
 
 export { OrderProgressBar } from './OrderProgressBar';
