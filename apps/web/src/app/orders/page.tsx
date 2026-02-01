@@ -271,12 +271,13 @@ function OrdersPageContent() {
               reject: false,
               transactionID: txID,
             }),
-          onSuccess: () => {
+          onSuccess: async () => {
             toast({
               title: t('order.dialogs.acceptOrder.title'),
               description: t('common.success'),
             });
-            refetchSales();
+            // Bug Fix: 等待 refetch 完成后再释放锁定状态
+            await refetchSales();
           },
           onError: error => {
             toast({
@@ -319,12 +320,13 @@ function OrdersPageContent() {
               reject: true,
               transactionID: txID,
             }),
-          onSuccess: () => {
+          onSuccess: async () => {
             toast({
               title: t('order.dialogs.declineOrder.title'),
               description: t('common.success'),
             });
-            refetchSales();
+            // Bug Fix: 等待 refetch 完成后再释放锁定状态
+            await refetchSales();
           },
           onError: error => {
             toast({

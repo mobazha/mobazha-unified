@@ -23,6 +23,9 @@ import {
   profileApi,
   getImageUrl,
   getTransactionService,
+  convertCurrency,
+  toMinimalUnit,
+  fetchExchangeRates,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
@@ -502,9 +505,6 @@ export default function PaymentPage() {
         } else {
           // 传统订单：需要从定价币种转换为支付代币
           // 使用 currencyService 进行汇率转换
-          const { convertCurrency, toMinimalUnit, fetchExchangeRates } =
-            await import('@mobazha/core');
-
           // 确保有汇率数据
           await fetchExchangeRates();
 
@@ -515,6 +515,16 @@ export default function PaymentPage() {
             pricingCurrency,
             selectedTokenId
           );
+
+          // Bug Fix: 验证汇率转换结果有效
+          if (
+            convertedAmount === undefined ||
+            convertedAmount === null ||
+            isNaN(convertedAmount) ||
+            convertedAmount <= 0
+          ) {
+            throw new Error(`Currency conversion failed: ${pricingCurrency} to ${selectedTokenId}`);
+          }
 
           // 转换为最小单位（如 wei, satoshi）
           paymentAmountForApi = Math.round(toMinimalUnit(convertedAmount, selectedTokenId));

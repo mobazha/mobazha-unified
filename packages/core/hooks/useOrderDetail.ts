@@ -95,10 +95,13 @@ async function fetchProfileWithCache(peerID: string): Promise<UserProfile | null
 interface ProfileEnhancement {
   vendorName?: string;
   vendorAvatar?: string;
+  vendorLocation?: string;
   buyerName?: string;
   buyerAvatar?: string;
+  buyerLocation?: string;
   moderatorName?: string;
   moderatorAvatar?: string;
+  moderatorLocation?: string;
 }
 
 export function useOrderDetail(
@@ -155,6 +158,7 @@ export function useOrderDetail(
             vendorProfile.name || vendorProfile.handle || currentOrder.vendor.name;
           const avatarHash = vendorProfile.avatarHashes?.medium;
           enhancement.vendorAvatar = avatarHash ? getImageUrl(avatarHash) || '' : '';
+          enhancement.vendorLocation = vendorProfile.location;
         }
       }
 
@@ -166,6 +170,7 @@ export function useOrderDetail(
             buyerProfile.name || buyerProfile.handle || currentOrder.buyer.name;
           const avatarHash = buyerProfile.avatarHashes?.medium;
           enhancement.buyerAvatar = avatarHash ? getImageUrl(avatarHash) || '' : '';
+          enhancement.buyerLocation = buyerProfile.location;
         }
       }
 
@@ -177,6 +182,7 @@ export function useOrderDetail(
             modProfile.name || modProfile.handle || currentOrder.moderator.name;
           const avatarHash = modProfile.avatarHashes?.medium;
           enhancement.moderatorAvatar = avatarHash ? getImageUrl(avatarHash) || '' : '';
+          enhancement.moderatorLocation = modProfile.location;
         }
       }
 
@@ -202,6 +208,7 @@ export function useOrderDetail(
         ...order.vendor,
         name: profileEnhancement.vendorName || order.vendor.name,
         avatar: profileEnhancement.vendorAvatar || order.vendor.avatar,
+        location: profileEnhancement.vendorLocation || order.vendor.location,
       };
     }
 
@@ -210,6 +217,7 @@ export function useOrderDetail(
         ...order.buyer,
         name: profileEnhancement.buyerName || order.buyer.name,
         avatar: profileEnhancement.buyerAvatar || order.buyer.avatar,
+        location: profileEnhancement.buyerLocation || order.buyer.location,
       };
     }
 
@@ -221,6 +229,7 @@ export function useOrderDetail(
         ...order.moderator,
         name: profileEnhancement.moderatorName || order.moderator.name,
         avatar: profileEnhancement.moderatorAvatar || order.moderator.avatar,
+        location: profileEnhancement.moderatorLocation || order.moderator.location,
       };
     }
 

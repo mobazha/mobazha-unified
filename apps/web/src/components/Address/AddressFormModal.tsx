@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useI18n } from '@mobazha/core';
-import type { Address } from '@mobazha/core';
+import type { Address, DisplayAddress } from '@mobazha/core';
 import {
   Dialog,
   DialogContent,
@@ -16,18 +16,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { VStack } from '@/components/layouts';
 
+// 支持 Address 或 DisplayAddress（包含 id）
+type AddressInput = Address | DisplayAddress;
+
 export interface AddressFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (address: Address) => Promise<boolean>;
-  address?: Address | null;
+  address?: AddressInput | null;
   isSaving?: boolean;
 }
 
 /**
  * 计算初始表单数据
  */
-function getInitialFormData(address?: Address | null): Address {
+function getInitialFormData(address?: AddressInput | null): Address {
   return {
     name: address?.name || '',
     company: address?.company || '',
@@ -45,7 +48,7 @@ function getInitialFormData(address?: Address | null): Address {
  * 内部表单组件 - 通过 key 重新挂载来重置状态
  */
 interface AddressFormContentProps {
-  address?: Address | null;
+  address?: AddressInput | null;
   onClose: () => void;
   onSave: (address: Address) => Promise<boolean>;
   isSaving: boolean;
@@ -265,11 +268,12 @@ export const AddressFormModal: React.FC<AddressFormModalProps> = ({
 }) => {
   const { t } = useI18n();
 
-  // 使用 address 的 name 或 'new' 作为 key，当 address 改变时重新挂载表单
+  // Bug Fix: 使用 address.id 作为主要区分符，确保切换地址时表单状态正确重置
+  // 使用类型断言处理 DisplayAddress 的 id 字段
+  const addressId = address && 'id' in address ? address.id : undefined;
   const formKey = useMemo(
-    () =>
-      `${address?.name || 'new'}-${address?.addressLineOne || ''}-${isOpen ? 'open' : 'closed'}`,
-    [address?.name, address?.addressLineOne, isOpen]
+    () => `${addressId || 'new'}-${address?.name || ''}-${isOpen ? 'open' : 'closed'}`,
+    [addressId, address?.name, isOpen]
   );
 
   const isEditing = !!address;

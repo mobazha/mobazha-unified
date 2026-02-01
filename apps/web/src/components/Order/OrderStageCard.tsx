@@ -2,6 +2,7 @@
 
 import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
+import { getBlockExplorerUrl } from './utils';
 import { Card } from '@/components/ui/card';
 import { Check, Package, CheckCircle } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
@@ -115,6 +116,7 @@ export interface PaymentCardProps {
   pricingCurrency?: string;
   txHash?: string;
   confirmations?: number;
+  chainId?: number;
   timestamp?: string;
   blockchainUrl?: string;
   description?: string;
@@ -128,6 +130,10 @@ export const PaymentCard = memo(function PaymentCard({
   currency,
   pricingAmount,
   pricingCurrency,
+  txHash,
+  confirmations,
+  chainId,
+  blockchainUrl,
   timestamp,
   description,
   title,
@@ -151,6 +157,14 @@ export const PaymentCard = memo(function PaymentCard({
 
   // 判断是否有原始定价信息（与支付币种不同时显示）
   const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== currency;
+
+  // 格式化交易 hash（显示前后各 6 位）
+  const formatTxHash = (hash: string) => {
+    if (hash.length <= 16) return hash;
+    return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
+  };
+
+  const txUrl = txHash ? getBlockExplorerUrl(txHash, currency, chainId) || blockchainUrl || '' : '';
 
   return (
     <OrderStageCard
@@ -185,7 +199,34 @@ export const PaymentCard = memo(function PaymentCard({
             >
               {showPricingInfo ? `≈ ${amount} ${currency}` : `${amount} ${currency}`}
             </p>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            {/* 确认数 */}
+            {confirmations !== undefined && (
+              <p className="text-xs text-muted-foreground">
+                {confirmations} {t('order.confirmations')}
+              </p>
+            )}
+            {/* 交易 hash */}
+            {txHash && (
+              <div className="flex items-center gap-1.5 mt-1">
+                {txUrl ? (
+                  <a
+                    href={txUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-mono text-primary hover:underline"
+                    title={txHash}
+                  >
+                    {formatTxHash(txHash)}
+                  </a>
+                ) : (
+                  <span className="text-xs font-mono text-muted-foreground" title={txHash}>
+                    {formatTxHash(txHash)}
+                  </span>
+                )}
+              </div>
+            )}
+            {/* 描述 */}
+            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
           </div>
         </div>
       </Card>

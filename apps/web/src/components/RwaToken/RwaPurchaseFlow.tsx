@@ -20,6 +20,8 @@ import {
   TradeMode,
   getContractAddress,
   ordersApi,
+  getExplorerResourceUrl,
+  getCurrentChainId as getAppkitChainId,
 } from '@mobazha/core';
 import { ethers } from 'ethers';
 import { Button } from '@/components/ui/button';
@@ -78,17 +80,9 @@ function formatTimeout(seconds: number, t: (key: string) => string): string {
 /**
  * 获取区块链浏览器链接
  */
-function getExplorerUrl(txHash: string, chainId?: number): string {
-  const explorers: Record<number, string> = {
-    1: 'https://etherscan.io/tx/',
-    11155111: 'https://sepolia.etherscan.io/tx/',
-    56: 'https://bscscan.com/tx/',
-    97: 'https://testnet.bscscan.com/tx/',
-    8453: 'https://basescan.org/tx/',
-    84532: 'https://sepolia.basescan.org/tx/',
-  };
-  const baseUrl = explorers[chainId || 11155111] || 'https://etherscan.io/tx/';
-  return `${baseUrl}${txHash}`;
+function buildExplorerUrl(txHash: string, chainId?: number): string {
+  const resolvedChainId = chainId ?? getAppkitChainId();
+  return getExplorerResourceUrl(txHash, 'tx', { chainId: resolvedChainId }) || '';
 }
 
 /**
@@ -526,7 +520,7 @@ export function RwaPurchaseFlow({
             {/* 交易链接 */}
             {txHash && (
               <a
-                href={getExplorerUrl(txHash, getCurrentChainId() || undefined)}
+                href={buildExplorerUrl(txHash, getCurrentChainId() || undefined)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
@@ -570,7 +564,7 @@ export function RwaPurchaseFlow({
             {/* 交易链接 */}
             {txHash && (
               <a
-                href={getExplorerUrl(txHash, getCurrentChainId() || undefined)}
+                href={buildExplorerUrl(txHash, getCurrentChainId() || undefined)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-primary hover:underline"

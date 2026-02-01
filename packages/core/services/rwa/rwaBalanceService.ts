@@ -12,7 +12,8 @@ import type {
   EtherscanUrls,
 } from '../../types/rwa';
 import { ChainId } from '../payment/types';
-import { getCurrentChainId, BLOCK_EXPLORERS } from '../../config/appkit';
+import { getExplorerBaseUrl } from '../payment/explorers';
+import { getCurrentChainId } from '../../config/appkit';
 
 // 导出 Sepolia Chain ID 常量以保持向后兼容
 export const SEPOLIA_CHAIN_ID = ChainId.ETHEREUM_SEPOLIA;
@@ -29,11 +30,6 @@ const FALLBACK_RPC_URLS = [
   'https://sepolia.drpc.org', // DRPC - 支持 CORS
   'https://1rpc.io/sepolia', // 1RPC - 支持 CORS
 ];
-
-// 获取当前网络的 Block Explorer URL
-function getBlockExplorerUrl(chainId: number = DEFAULT_CHAIN_ID): string {
-  return BLOCK_EXPLORERS[chainId as keyof typeof BLOCK_EXPLORERS] || 'https://sepolia.etherscan.io';
-}
 
 // 缓存配置
 const CACHE_TTL = 120 * 1000; // 120秒（2分钟）缓存，减少重复链上查询
@@ -443,7 +439,7 @@ export async function batchGetBalances(
  * @param chainId - 链 ID，默认使用 DEFAULT_CHAIN_ID
  */
 export function createEtherscanUrls(chainId: number = DEFAULT_CHAIN_ID): EtherscanUrls {
-  const baseUrl = getBlockExplorerUrl(chainId);
+  const baseUrl = getExplorerBaseUrl({ chainId }) || 'https://sepolia.etherscan.io';
   return {
     contract: (contractAddress: string) => `${baseUrl}/token/${contractAddress}`,
     address: (address: string) => `${baseUrl}/address/${address}`,
