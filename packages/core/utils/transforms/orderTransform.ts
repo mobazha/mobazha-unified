@@ -59,12 +59,19 @@ interface RealOrderData {
           shippingOptions?: Array<{ regions?: string[] }>;
         };
       }>;
-      items?: Array<{ quantity?: number; memo?: string }>;
+      items?: Array<{
+        quantity?: number;
+        memo?: string;
+        shippingOption?: { name?: string; service?: string };
+      }>;
       shipping?: {
         name?: string;
+        shipTo?: string;
         company?: string;
+        address?: string;
         addressLineOne?: string;
         addressLineTwo?: string;
+        addressNotes?: string;
         city?: string;
         state?: string;
         postalCode?: string;
@@ -168,19 +175,23 @@ function getThumbnailUrl(
  */
 function formatShippingAddress(shipping?: {
   name?: string;
+  shipTo?: string;
   company?: string;
+  address?: string;
   addressLineOne?: string;
   addressLineTwo?: string;
+  addressNotes?: string;
   city?: string;
   state?: string;
   postalCode?: string;
   country?: string;
 }): string {
   if (!shipping) return 'No shipping address';
+  const line1 = shipping.address || shipping.addressLineOne;
   const parts = [
-    shipping.name,
+    shipping.shipTo || shipping.name,
     shipping.company,
-    shipping.addressLineOne,
+    line1,
     shipping.addressLineTwo,
     [shipping.city, shipping.state, shipping.postalCode].filter(Boolean).join(', '),
     shipping.country,
@@ -411,6 +422,22 @@ export function transformCoreOrder(
   const notes = orderOpen?.alternateContactInfo;
   const orderOpenItems = orderOpen?.items || [];
 
+  const shippingRecipient = shipping?.shipTo || shipping?.name;
+  const shippingAddressLine1 = shipping?.address || shipping?.addressLineOne;
+  const shippingAddressLine2 = shipping?.addressLineTwo;
+  const shippingCity = shipping?.city;
+  const shippingState = shipping?.state;
+  const shippingPostalCode = shipping?.postalCode;
+  const shippingCountryCode = shipping?.country;
+
+  // 提取运费选项和服务（从第一个 item）
+  const firstItem = orderOpenItems[0];
+  const shippingOption = firstItem?.shippingOption?.name || '';
+  const shippingService = firstItem?.shippingOption?.service || '';
+
+  // 获取交易确认数
+  const txConfirmations = data.paymentAddressTransactions?.[0]?.confirmations;
+
   // 判断用户角色
   const userRole = determineUserRole(
     currentUserPeerID,
@@ -539,8 +566,18 @@ export function transformCoreOrder(
     moderator,
     trackingNumber: trackingInfo?.trackingNumber,
     shippingAddress: formatShippingAddress(shipping),
+    shippingRecipient,
+    shippingAddressLine1,
+    shippingAddressLine2,
+    shippingCity,
+    shippingState,
+    shippingPostalCode,
+    shippingCountryCode,
+    shippingOption: shippingOption || undefined,
+    shippingService: shippingService || undefined,
     // 支持 RWA 模式和传统交易
     paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
+    txConfirmations,
     // RWA 标识
     isRwaInstant,
     isRwaEscrow,

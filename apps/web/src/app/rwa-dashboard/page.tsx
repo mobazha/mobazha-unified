@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, useWallet } from '@mobazha/core';
+import { useI18n, useWallet, getExplorerResourceUrl, getCurrentChainId } from '@mobazha/core';
 import { useRwaAssets } from '@mobazha/core';
 import {
   getUserTransactionHistory,
@@ -34,9 +34,9 @@ import {
 import { PriceHistoryChart } from '@/components/charts';
 import { cn } from '@/lib/utils';
 
-// Etherscan URL helper
-const getEtherscanUrl = (address: string, type: 'address' | 'tx' | 'token' = 'address') => {
-  return `https://sepolia.etherscan.io/${type}/${address}`;
+// Explorer URL helper
+const getExplorerUrlForValue = (value: string, type: 'address' | 'tx' | 'token' = 'address') => {
+  return getExplorerResourceUrl(value, type, { chainId: getCurrentChainId() }) || '';
 };
 
 // Format address for display
@@ -256,7 +256,7 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
                 )}
               </button>
               <a
-                href={getEtherscanUrl(asset.contractAddress, 'address')}
+                href={getExplorerUrlForValue(asset.contractAddress, 'address')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1 hover:bg-muted rounded transition-colors"
@@ -334,7 +334,7 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
               )}
             </button>
             <a
-              href={getEtherscanUrl(group.contractAddress, 'address')}
+              href={getExplorerUrlForValue(group.contractAddress, 'address')}
               target="_blank"
               rel="noopener noreferrer"
               className="p-1 hover:bg-muted rounded transition-colors"
@@ -380,7 +380,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
 
   return (
     <a
-      href={getEtherscanUrl(tx.hash, 'tx')}
+      href={getExplorerUrlForValue(tx.hash, 'tx')}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
@@ -495,7 +495,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
       </td>
       <td className="py-3 px-4">
         <a
-          href={getEtherscanUrl(tx.hash, 'tx')}
+          href={getExplorerUrlForValue(tx.hash, 'tx')}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -865,7 +865,7 @@ export default function RwaAssetDashboardPage() {
                     </p>
                   </div>
                   <a
-                    href={getEtherscanUrl(walletInfo?.address || '', 'address')}
+                    href={getExplorerUrlForValue(walletInfo?.address || '', 'address')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 hover:bg-muted rounded-lg transition-colors"

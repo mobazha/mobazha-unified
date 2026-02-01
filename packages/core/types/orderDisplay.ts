@@ -23,6 +23,7 @@ export interface DisplayOrderParticipant {
   name: string;
   avatar: string;
   peerID?: string;
+  location?: string;
 }
 
 /**
@@ -33,6 +34,7 @@ export interface DisplayModerator {
   name: string;
   avatar: string;
   fee: number;
+  location?: string;
 }
 
 /**
@@ -135,8 +137,28 @@ export interface DisplayOrder {
   trackingNumber?: string;
   /** 收货地址 */
   shippingAddress: string;
+  /** 收件人 */
+  shippingRecipient?: string;
+  /** 详细地址（第一行） */
+  shippingAddressLine1?: string;
+  /** 详细地址（第二行） */
+  shippingAddressLine2?: string;
+  /** 城市 */
+  shippingCity?: string;
+  /** 州/省 */
+  shippingState?: string;
+  /** 邮编 */
+  shippingPostalCode?: string;
+  /** 国家代码 */
+  shippingCountryCode?: string;
+  /** 配送方式名称 */
+  shippingOption?: string;
+  /** 配送服务名称 */
+  shippingService?: string;
   /** 支付交易哈希 */
   paymentTx?: string;
+  /** 支付交易确认数 */
+  txConfirmations?: number;
   /** 托管交易哈希 */
   escrowTx?: string;
   /** 托管地址 */

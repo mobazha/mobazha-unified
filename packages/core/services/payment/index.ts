@@ -5,6 +5,7 @@
 
 export * from './types';
 export * from './chains';
+export * from './explorers';
 export * from './wallet';
 export * from './escrow';
 export * from './solana';

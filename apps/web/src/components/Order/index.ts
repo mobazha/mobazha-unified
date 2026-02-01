@@ -60,7 +60,8 @@ export { PaymentInstructions } from './PaymentInstructions';
 export type { PaymentInstructionsProps } from './PaymentInstructions';
 
 export { RwaTokenFulfill } from './RwaTokenFulfill';
-export type { RwaTokenFulfillProps, TokenInfo } from './RwaTokenFulfill';
+export type { RwaTokenFulfillProps } from './RwaTokenFulfill';
+export type { TokenInfo } from '@mobazha/core';
 
 export { OrderDetailContent } from './OrderDetailContent';
 export type {

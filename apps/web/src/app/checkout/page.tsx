@@ -153,11 +153,12 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 当地址加载完成后，自动选择默认地址
+  // Bug Fix: 移除 selectedAddress 依赖，避免循环检查
   useEffect(() => {
-    if (!selectedAddress && defaultAddress) {
-      setSelectedAddress(defaultAddress.id);
+    if (defaultAddress) {
+      setSelectedAddress(prev => prev || defaultAddress.id);
     }
-  }, [selectedAddress, defaultAddress]);
+  }, [defaultAddress]);
 
   // 运费选项状态（物理商品用）
   // key: itemId, value: { optionName, serviceName }
@@ -295,7 +296,26 @@ export default function CheckoutPage() {
     return checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [checkoutItems]);
 
-  const total = subtotal; // 下单阶段不计算仲裁费，仲裁费在支付阶段计算
+  const shippingTotal = useMemo(() => {
+    return checkoutItems.reduce((sum, item) => {
+      if (item.contractType !== 'PHYSICAL_GOOD') return sum;
+      if (!item.shippingOptions || item.shippingOptions.length === 0) return sum;
+      const selection = selectedShipping[item.id];
+      if (!selection) return sum;
+      const selectedOption = item.shippingOptions.find(
+        option => option.name === selection.optionName
+      );
+      const selectedService = selectedOption?.services.find(
+        service => service.name === selection.serviceName
+      );
+      if (!selectedService) return sum;
+      const additionalPrice = selectedService.additionalItemPrice || 0;
+      const extraItems = Math.max(item.quantity - 1, 0);
+      return sum + selectedService.price + additionalPrice * extraItems;
+    }, 0);
+  }, [checkoutItems, selectedShipping]);
+
+  const total = subtotal + shippingTotal; // 下单阶段不计算仲裁费，仲裁费在支付阶段计算
 
   // 判断是否为 RWA 商品
   const isRwaToken = useMemo(() => {
@@ -321,8 +341,8 @@ export default function CheckoutPage() {
     return checkoutItems.every(item => {
       // 非物理商品不需要运费选项
       if (item.contractType !== 'PHYSICAL_GOOD') return true;
-      // 物理商品必须有运费选项并且已选择
-      if (!item.shippingOptions || item.shippingOptions.length === 0) return true; // 没有运费选项的商品跳过
+      // Bug Fix: 物理商品必须有运费选项配置，否则视为配置错误
+      if (!item.shippingOptions || item.shippingOptions.length === 0) return false;
       const selection = selectedShipping[item.id];
       return selection && selection.optionName && selection.serviceName;
     });
@@ -851,7 +871,14 @@ export default function CheckoutPage() {
                             {t('checkout.shipping')}
                           </span>
                           <span className="font-medium text-primary text-xs sm:text-sm">
-                            {t('checkout.free')}
+                            {!hasAllShippingSelected
+                              ? t('checkout.selectShippingFirst')
+                              : shippingTotal === 0
+                                ? t('checkout.free')
+                                : renderPairedPrice(
+                                    shippingTotal,
+                                    checkoutItems[0]?.currency || 'USD'
+                                  )}
                           </span>
                         </HStack>
                       )}

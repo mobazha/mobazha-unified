@@ -4,15 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { VStack, HStack } from '@/components/layouts';
-import { useI18n } from '@mobazha/core';
-
-export interface TokenInfo {
-  address: string;
-  symbol: string;
-  name: string;
-  decimals: number;
-  blockchain: 'ethereum' | 'bsc' | 'polygon';
-}
+import { useI18n, getExplorerResourceUrl } from '@mobazha/core';
+import type { TokenInfo } from '@mobazha/core';
 
 export interface RwaTokenFulfillProps {
   orderId: string;
@@ -134,14 +127,12 @@ export const RwaTokenFulfill: React.FC<RwaTokenFulfillProps> = ({
     }
   }, [selectedReceivingAddress, isWalletConnected, orderId, onTransfer, onComplete, t]);
 
-  const getBlockExplorerUrl = (hash: string) => {
-    const explorers: Record<string, string> = {
-      ethereum: 'https://etherscan.io/tx/',
-      bsc: 'https://bscscan.com/tx/',
-      polygon: 'https://polygonscan.com/tx/',
-    };
-    return `${explorers[tokenInfo.blockchain] || explorers.ethereum}${hash}`;
-  };
+  const getTxExplorerUrl = useCallback(
+    (hash: string) => {
+      return getExplorerResourceUrl(hash, 'tx', { chainId: tokenInfo.chainId }) || '';
+    },
+    [tokenInfo.chainId]
+  );
 
   return (
     <Card className={`p-4 sm:p-6 ${className}`}>
@@ -385,26 +376,44 @@ export const RwaTokenFulfill: React.FC<RwaTokenFulfillProps> = ({
                       </svg>
                     )}
                   </Button>
-                  <a
-                    href={getBlockExplorerUrl(transactionHash)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                  >
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  {getTxExplorerUrl(transactionHash) ? (
+                    <a
+                      href={getTxExplorerUrl(transactionHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </a>
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </a>
+                  ) : (
+                    <span className="h-6 w-6 flex items-center justify-center text-muted-foreground">
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </span>
+                  )}
                 </HStack>
               </HStack>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -123,16 +124,24 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
     <div className="w-56 flex-shrink-0 border-r border-border flex flex-col bg-muted/30">
       {/* 交易对方信息 */}
       <div className="p-4 flex flex-col items-center border-b border-border">
-        <AvatarCompat
-          src={counterparty?.avatar}
-          name={counterparty?.name || 'Unknown'}
-          size="xl"
-          className="mb-3"
-        />
-        <h3 className="text-sm font-semibold text-foreground text-center">
-          {counterparty?.name || 'Unknown'}
-        </h3>
-        <p className="text-xs text-muted-foreground">{counterpartyLabel}</p>
+        <Link
+          href={counterparty?.peerID ? `/store/${counterparty.peerID}` : '#'}
+          className="flex flex-col items-center"
+        >
+          <AvatarCompat
+            src={counterparty?.avatar}
+            name={counterparty?.name || 'Unknown'}
+            size="xl"
+            className="mb-3"
+          />
+          <h3 className="text-sm font-semibold text-foreground text-center">
+            {counterparty?.name || 'Unknown'}
+          </h3>
+          {counterparty?.location && (
+            <p className="text-xs text-muted-foreground mt-0.5">{counterparty.location}</p>
+          )}
+        </Link>
+        <p className="text-xs text-muted-foreground mt-1">{counterpartyLabel}</p>
       </div>
 
       {/* 菜单 */}
@@ -243,6 +252,9 @@ export const OrderDetailModal = memo(function OrderDetailModal({
   // 当前激活的标签页
   const [activeTab, setActiveTab] = useState<TabType>('summary');
 
+  // Bug Fix: 存储 timeout ID 以便在组件卸载时清理
+  const resetTabTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // 获取当前用户信息（用于传递给 OrderDetailContent）
   const currentUser = useUserStore(state => state.profile);
   const currentUserPeerID = currentUser?.peerID || null;
@@ -256,13 +268,23 @@ export const OrderDetailModal = memo(function OrderDetailModal({
     refetch,
   } = useOrderDetail(orderId || '', viewingContext);
 
+  // Bug Fix: 清理 timeout 防止内存泄漏
+  React.useEffect(() => {
+    return () => {
+      if (resetTabTimeoutRef.current) {
+        clearTimeout(resetTabTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // 处理 Dialog 打开状态变化
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
         onClose();
         // 延迟重置标签页，避免在关闭动画期间触发重渲染
-        setTimeout(() => setActiveTab('summary'), 100);
+        // Bug Fix: 存储 timeout ID 以便清理
+        resetTabTimeoutRef.current = setTimeout(() => setActiveTab('summary'), 100);
       }
     },
     [onClose]

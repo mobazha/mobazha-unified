@@ -2,6 +2,8 @@
  * Order 组件共享工具函数
  */
 
+import { getBlockExplorerUrl } from '@mobazha/core';
+
 /**
  * 格式化日期为本地化字符串
  * @param dateString - ISO 日期字符串
@@ -67,33 +69,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-/**
- * 获取区块链浏览器 URL
- * @param txid - 交易哈希
- * @param coin - 币种或链
- * @param chainId - 链 ID
- */
-export function getBlockExplorerUrl(txid: string, coin?: string, chainId?: number): string | null {
-  const coinUpper = coin?.toUpperCase();
-
-  if (coinUpper === 'BTC') {
-    return `https://blockstream.info/tx/${txid}`;
-  }
-  if (coinUpper === 'LTC') {
-    return `https://blockchair.com/litecoin/transaction/${txid}`;
-  }
-  if (coinUpper === 'ETH' || chainId === 1) {
-    return `https://etherscan.io/tx/${txid}`;
-  }
-  if (coinUpper === 'BSC' || chainId === 56) {
-    return `https://bscscan.com/tx/${txid}`;
-  }
-  if (chainId === 137) {
-    return `https://polygonscan.com/tx/${txid}`;
-  }
-
-  return null;
-}
+export { getBlockExplorerUrl };
 
 /**
  * 角色颜色映射

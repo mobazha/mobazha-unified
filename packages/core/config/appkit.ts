@@ -6,6 +6,7 @@
  */
 
 import { sepolia, mainnet } from '@reown/appkit/networks';
+import { getExplorerResourceUrl } from '../services/payment/explorers';
 import { getEnvConfig } from './env';
 
 // ============= Project ID =============
@@ -155,21 +156,12 @@ export function getCurrentChainId(): number {
   return env.isTestEnv ? CHAIN_IDS.SEPOLIA : CHAIN_IDS.ETHEREUM_MAINNET;
 }
 
-// ============= 区块浏览器 =============
-
-export const BLOCK_EXPLORERS = {
-  [CHAIN_IDS.ETHEREUM_MAINNET]: 'https://etherscan.io',
-  [CHAIN_IDS.SEPOLIA]: 'https://sepolia.etherscan.io',
-} as const;
-
 /**
  * 获取交易链接
  */
 export function getTxUrl(txHash: string, chainId?: number): string {
   const chain = chainId ?? getCurrentChainId();
-  const explorer =
-    BLOCK_EXPLORERS[chain as keyof typeof BLOCK_EXPLORERS] || BLOCK_EXPLORERS[CHAIN_IDS.SEPOLIA];
-  return `${explorer}/tx/${txHash}`;
+  return getExplorerResourceUrl(txHash, 'tx', { chainId: chain }) || '';
 }
 
 /**
@@ -177,9 +169,7 @@ export function getTxUrl(txHash: string, chainId?: number): string {
  */
 export function getAddressUrl(address: string, chainId?: number): string {
   const chain = chainId ?? getCurrentChainId();
-  const explorer =
-    BLOCK_EXPLORERS[chain as keyof typeof BLOCK_EXPLORERS] || BLOCK_EXPLORERS[CHAIN_IDS.SEPOLIA];
-  return `${explorer}/address/${address}`;
+  return getExplorerResourceUrl(address, 'address', { chainId: chain }) || '';
 }
 
 // ============= 平台费用 =============
