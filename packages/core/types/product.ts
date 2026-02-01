@@ -186,8 +186,14 @@ export interface ProductSku {
 export interface ShippingOption {
   name: string;
   type: ShippingType;
+  /** 配送区域列表 */
   regions: string[];
+  /** 配送服务列表 */
   services: ShippingService[];
+  /** 货币代码（如 USD） */
+  currency?: string;
+  /** 服务类型：FIXED_PRICE 或 FIRST_RENEWAL_FEE */
+  serviceType?: 'FIXED_PRICE' | 'FIRST_RENEWAL_FEE';
 }
 
 /**
@@ -197,11 +203,25 @@ export type ShippingType = 'LOCAL_PICKUP' | 'FIXED_PRICE';
 
 /**
  * 运输服务
+ * 注意：API 返回的实际字段是 firstFreight 而不是 price
  */
 export interface ShippingService {
   name: string;
-  price: number;
-  estimatedDelivery: string;
+  /** 运费（简化字段，优先使用 firstFreight） */
+  price?: number;
+  /** 首重运费（API 实际返回的字段） */
+  firstFreight?: number;
+  /** 首重重量（克） */
+  firstWeight?: number;
+  /** 续重单位重量（克） */
+  renewalUnitWeight?: number;
+  /** 续重单价 */
+  renewalUnitPrice?: number;
+  /** 挂号费 */
+  registrationFee?: number;
+  /** 预计送达时间 */
+  estimatedDelivery?: string;
+  /** 续件价格（简化字段，优先使用 renewalUnitPrice） */
   additionalItemPrice?: number;
 }
 

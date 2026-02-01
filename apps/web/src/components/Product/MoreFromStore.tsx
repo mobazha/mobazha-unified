@@ -20,6 +20,8 @@ export interface MoreFromStoreProps {
   currentSlug?: string;
   /** 显示的商品数量 */
   maxItems?: number;
+  /** 紧凑模式（弹窗内使用） */
+  compact?: boolean;
   /** 自定义样式 */
   className?: string;
   /** 商品点击回调 */
@@ -43,6 +45,7 @@ export const MoreFromStore = memo(function MoreFromStore({
   vendorName,
   currentSlug,
   maxItems = 6,
+  compact = false,
   className,
   onProductClick,
 }: MoreFromStoreProps) {
@@ -99,14 +102,26 @@ export const MoreFromStore = memo(function MoreFromStore({
   }
 
   return (
-    <Card className={cn('p-3 sm:p-4', className)} data-testid="more-from-store">
+    <Card className={cn(compact ? 'p-3' : 'p-3 sm:p-4', className)} data-testid="more-from-store">
       {/* 标题栏 */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1.5">
-          <Store className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+      <div className={cn('flex items-center justify-between', compact ? 'mb-2' : 'mb-3')}>
+        <h2
+          className={cn(
+            'font-bold text-foreground flex items-center gap-1.5',
+            compact ? 'text-sm' : 'text-sm sm:text-base'
+          )}
+        >
+          <Store
+            className={cn('text-muted-foreground', compact ? 'w-4 h-4' : 'w-4 h-4 sm:w-5 sm:h-5')}
+          />
           {t('product.moreFromStore')}
           {vendorName && (
-            <span className="text-muted-foreground font-normal text-base hidden sm:inline">
+            <span
+              className={cn(
+                'text-muted-foreground font-normal',
+                compact ? 'text-sm hidden md:inline' : 'text-base hidden sm:inline'
+              )}
+            >
               - {vendorName}
             </span>
           )}
@@ -115,17 +130,27 @@ export const MoreFromStore = memo(function MoreFromStore({
           <Button
             variant="ghost"
             size="sm"
-            className="text-sm hover:text-primary transition-colors touch-feedback"
+            className={cn(
+              'hover:text-primary transition-colors touch-feedback',
+              compact ? 'text-xs h-7 px-2' : 'text-sm'
+            )}
           >
             {t('product.viewAllProducts')}
-            <ChevronRight className="w-4 h-4 ml-1" />
+            <ChevronRight className="w-4 h-4 ml-0.5" />
           </Button>
         </Link>
       </div>
 
       {/* 加载骨架 */}
       {isLoading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+        <div
+          className={cn(
+            'grid gap-3',
+            compact
+              ? 'grid-cols-2 md:grid-cols-4'
+              : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 sm:gap-4'
+          )}
+        >
           {[...Array(maxItems)].map((_, i) => (
             <div key={i} className="space-y-2">
               <Skeleton className="aspect-square rounded-lg" />
@@ -138,7 +163,14 @@ export const MoreFromStore = memo(function MoreFromStore({
 
       {/* 商品网格 */}
       {!isLoading && products.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+        <div
+          className={cn(
+            'grid gap-3',
+            compact
+              ? 'grid-cols-2 md:grid-cols-4'
+              : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 sm:gap-4'
+          )}
+        >
           {products.map(product => (
             <ProductCard
               key={product.slug}
@@ -165,7 +197,7 @@ export const MoreFromStore = memo(function MoreFromStore({
       )}
 
       {/* 移动端水平滚动提示 */}
-      {!isLoading && products.length > 2 && (
+      {!isLoading && products.length > 2 && !compact && (
         <div className="sm:hidden mt-4 text-center">
           <Link href={`/store/${vendorPeerID}`}>
             <Button variant="outline" size="sm" className="w-full touch-feedback">

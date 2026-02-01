@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { cn } from '@/lib/utils';
 import {
   productDataService,
   profileApi,
@@ -730,17 +731,20 @@ export function ProductDetail({
           </div>
 
           {/* Product Info */}
-          <div className="space-y-3 sm:space-y-4">
+          <div className={cn('space-y-3', isModal ? 'space-y-2.5' : 'sm:space-y-4')}>
             {/* Title & Rating */}
             <div>
               <h1
-                className={`${isModal ? 'text-sm sm:text-base lg:text-lg' : 'text-base sm:text-lg lg:text-xl'} font-bold text-foreground mb-1.5`}
+                className={cn(
+                  'font-bold text-foreground leading-tight',
+                  isModal ? 'text-base lg:text-lg mb-1' : 'text-lg sm:text-xl lg:text-2xl mb-1.5'
+                )}
               >
                 {decodeHtmlEntities(product.item.title)}
               </h1>
               <HStack gap="sm" align="center">
-                <StarRating rating={averageRating} />
-                <span className="text-sm text-muted-foreground ml-1">
+                <StarRating rating={averageRating} size={isModal ? 'sm' : 'md'} />
+                <span className={cn('text-muted-foreground ml-1', isModal ? 'text-xs' : 'text-sm')}>
                   {averageRating.toFixed(1)} ({safeRatings.length} {t('product.reviews')})
                 </span>
               </HStack>
@@ -748,22 +752,27 @@ export function ProductDetail({
 
             {/* Price */}
             <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-primary">
+              <span
+                className={cn(
+                  'font-bold text-primary',
+                  isModal ? 'text-lg lg:text-xl' : 'text-xl sm:text-2xl lg:text-3xl'
+                )}
+              >
                 {priceInfo.pairedPrice}
               </span>
             </div>
 
             {/* Shipping - 仅对实物商品显示 */}
             {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
-              <div className="flex items-center gap-2 text-xs sm:text-sm flex-wrap">
+              <div
+                className={cn(
+                  'flex items-center gap-2 flex-wrap',
+                  isModal ? 'text-xs' : 'text-xs sm:text-sm'
+                )}
+              >
                 {freeShipping ? (
-                  <span className="inline-flex items-center gap-1 text-primary">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                  <span className="inline-flex items-center gap-1 text-primary font-medium">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -778,7 +787,7 @@ export function ProductDetail({
                 )}
                 {estimatedDelivery && (
                   <>
-                    <span className="text-muted-foreground/60">•</span>
+                    <span className="text-muted-foreground/50">•</span>
                     <span className="text-muted-foreground">
                       {t('product.estDelivery')}: {estimatedDelivery}
                     </span>
@@ -788,10 +797,15 @@ export function ProductDetail({
             )}
 
             {/* Product Attributes Panel */}
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className={cn('flex flex-wrap', isModal ? 'gap-1.5' : 'gap-2 sm:gap-2.5')}>
               {/* Type Badge - 使用 primary 主题色增强对比度 */}
               {product.metadata?.contractType && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20">
+                <div
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20',
+                    isModal ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-xs sm:text-sm'
+                  )}
+                >
                   <span className="font-medium">{t('product.type')}:</span>
                   <span>
                     {product.metadata.contractType === 'PHYSICAL_GOOD' && t('product.physicalGood')}
@@ -814,14 +828,24 @@ export function ProductDetail({
               )}
               {/* Condition Badge */}
               {product.item.condition && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-muted text-foreground border border-border">
+                <div
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-md bg-muted text-foreground border border-border',
+                    isModal ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-xs sm:text-sm'
+                  )}
+                >
                   <span className="font-medium">{t('product.condition')}:</span>
                   <span>{product.item.condition.replace('_', ' ')}</span>
                 </div>
               )}
               {/* Weight Badge */}
               {product.item.grams !== undefined && product.item.grams > 0 && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg bg-muted text-foreground border border-border">
+                <div
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-md bg-muted text-foreground border border-border',
+                    isModal ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-xs sm:text-sm'
+                  )}
+                >
                   <span className="font-medium">{t('product.weight')}:</span>
                   <span>{t('product.weightGrams', { weight: product.item.grams })}</span>
                 </div>
@@ -843,16 +867,26 @@ export function ProductDetail({
 
             {/* Tags - 放在商品属性后面 */}
             {tags.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+              <div className={cn('space-y-1.5', isModal && 'space-y-1')}>
+                <span
+                  className={cn(
+                    'font-medium text-muted-foreground',
+                    isModal ? 'text-xs' : 'text-xs sm:text-sm'
+                  )}
+                >
                   {t('product.tags')}
                 </span>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                <div className={cn('flex flex-wrap', isModal ? 'gap-1' : 'gap-1.5 sm:gap-2')}>
                   {tags.map(tag => (
                     <Link
                       key={tag}
                       href={`/marketplace?tag=${tag}`}
-                      className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm border border-border bg-background text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors touch-feedback"
+                      className={cn(
+                        'border border-border bg-background text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors touch-feedback',
+                        isModal
+                          ? 'px-2 py-0.5 text-xs'
+                          : 'px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm'
+                      )}
                     >
                       #{tag}
                     </Link>
@@ -865,7 +899,34 @@ export function ProductDetail({
             <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
 
             {/* Quantity & Add to Cart - 桌面端显示 */}
-            <Card className="space-y-3 sm:space-y-4 p-4 sm:p-6 hidden lg:block">
+            <Card
+              className={cn(
+                'space-y-3 p-4 hidden lg:block',
+                stock === 0 && 'border-destructive/30 bg-destructive/5'
+              )}
+            >
+              {/* 缺货提示 - 醒目显示 */}
+              {stock === 0 && (
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <svg
+                    className="w-4 h-4 text-destructive flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium text-destructive">
+                    {t('product.outOfStock')}
+                  </span>
+                </div>
+              )}
+
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
                   {t('product.quantity')}
@@ -873,7 +934,11 @@ export function ProductDetail({
                 <HStack gap="sm" align="center">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover touch-feedback"
+                    disabled={stock === 0}
+                    className={cn(
+                      'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                      stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                    )}
                   >
                     -
                   </button>
@@ -882,30 +947,45 @@ export function ProductDetail({
                     min="1"
                     max={stock}
                     value={quantity}
+                    disabled={stock === 0}
                     onChange={e => {
                       const val = parseInt(e.target.value, 10);
                       if (!isNaN(val) && val >= 1) {
                         setQuantity(Math.min(stock, val));
                       }
                     }}
-                    className="w-12 sm:w-14 h-7 sm:h-8 text-center font-medium text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className={cn(
+                      'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+                      stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
+                    )}
                   />
                   <button
                     onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover touch-feedback"
+                    disabled={stock === 0}
+                    className={cn(
+                      'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                      stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                    )}
                   >
                     +
                   </button>
                 </HStack>
               </div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                {stock > 0 ? `${stock} ${t('product.inStock')}` : t('product.outOfStock')}
-              </span>
+
+              {/* 库存数量 - 仅在有库存时显示 */}
+              {stock > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {stock} {t('product.inStock')}
+                </span>
+              )}
 
               <VStack gap="xs">
                 <Button
                   size="default"
-                  className="w-full touch-feedback"
+                  className={cn(
+                    'w-full touch-feedback',
+                    stock === 0 && 'opacity-50 cursor-not-allowed'
+                  )}
                   onClick={handleAddToCart}
                   disabled={addingToCart || stock === 0}
                 >
@@ -931,6 +1011,8 @@ export function ProductDetail({
                       </svg>
                       {t('product.addedToCart')}
                     </span>
+                  ) : stock === 0 ? (
+                    t('product.outOfStock')
                   ) : (
                     t('product.addToCart')
                   )}
@@ -938,7 +1020,10 @@ export function ProductDetail({
                 <Button
                   variant="outline"
                   size="default"
-                  className="w-full touch-feedback"
+                  className={cn(
+                    'w-full touch-feedback',
+                    stock === 0 && 'opacity-50 cursor-not-allowed'
+                  )}
                   onClick={handleBuyNow}
                   disabled={stock === 0}
                 >
@@ -948,11 +1033,11 @@ export function ProductDetail({
 
               {/* Accepted Currencies */}
               {acceptedCurrencies.length > 0 && (
-                <div className="pt-3 sm:pt-4 border-t border-border">
-                  <span className="text-xs sm:text-sm text-muted-foreground">
+                <div className="pt-3 border-t border-border">
+                  <span className="text-xs text-muted-foreground">
                     {t('product.acceptedCurrencies')}:{' '}
                   </span>
-                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {acceptedCurrencies.join(', ')}
                   </span>
                 </div>
@@ -1001,16 +1086,27 @@ export function ProductDetail({
 
         {/* Description & Reviews */}
         <div
-          className={`mt-6 sm:mt-12 grid grid-cols-1 ${isModal ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-4 sm:gap-8`}
+          className={cn(
+            'grid grid-cols-1 gap-4',
+            isModal ? 'mt-4' : 'mt-6 sm:mt-12 lg:grid-cols-3 sm:gap-8'
+          )}
         >
           {/* Description */}
           <div className={isModal ? '' : 'lg:col-span-2'}>
-            <Card className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
+            <Card className={cn('p-4', !isModal && 'sm:p-6')}>
+              <h2
+                className={cn(
+                  'font-bold text-foreground',
+                  isModal ? 'text-base mb-2' : 'text-lg sm:text-xl mb-3 sm:mb-4'
+                )}
+              >
                 {t('product.description')}
               </h2>
               <div
-                className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none text-sm sm:text-base text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80"
+                className={cn(
+                  'prose prose-slate dark:prose-invert max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80',
+                  isModal ? 'prose-sm text-sm' : 'prose-sm sm:prose text-sm sm:text-base'
+                )}
                 dangerouslySetInnerHTML={{
                   __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
                 }}
@@ -1018,10 +1114,20 @@ export function ProductDetail({
 
               {/* Terms & Refund Policy - 可折叠 */}
               {(product.termsAndConditions || product.refundPolicy) && (
-                <div className="mt-4 pt-4 sm:mt-6 sm:pt-6 border-t border-border space-y-2">
+                <div
+                  className={cn(
+                    'border-t border-border space-y-1',
+                    isModal ? 'mt-3 pt-3' : 'mt-4 pt-4 sm:mt-6 sm:pt-6 space-y-2'
+                  )}
+                >
                   {product.termsAndConditions && (
                     <details className="group">
-                      <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-medium text-foreground hover:text-primary transition-colors touch-feedback list-none">
+                      <summary
+                        className={cn(
+                          'flex items-center justify-between cursor-pointer py-1.5 font-medium text-foreground hover:text-primary transition-colors touch-feedback list-none',
+                          isModal ? 'text-xs' : 'text-sm'
+                        )}
+                      >
                         <span>{t('product.termsAndConditions')}</span>
                         <svg
                           className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
@@ -1037,14 +1143,24 @@ export function ProductDetail({
                           />
                         </svg>
                       </summary>
-                      <p className="text-xs sm:text-sm text-muted-foreground pb-2 pl-0">
+                      <p
+                        className={cn(
+                          'text-muted-foreground pb-2 pl-0',
+                          isModal ? 'text-xs' : 'text-xs sm:text-sm'
+                        )}
+                      >
                         {product.termsAndConditions}
                       </p>
                     </details>
                   )}
                   {product.refundPolicy && (
                     <details className="group">
-                      <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-medium text-foreground hover:text-primary transition-colors touch-feedback list-none">
+                      <summary
+                        className={cn(
+                          'flex items-center justify-between cursor-pointer py-1.5 font-medium text-foreground hover:text-primary transition-colors touch-feedback list-none',
+                          isModal ? 'text-xs' : 'text-sm'
+                        )}
+                      >
                         <span>{t('product.refundPolicy')}</span>
                         <svg
                           className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
@@ -1060,7 +1176,12 @@ export function ProductDetail({
                           />
                         </svg>
                       </summary>
-                      <p className="text-xs sm:text-sm text-muted-foreground pb-2 pl-0">
+                      <p
+                        className={cn(
+                          'text-muted-foreground pb-2 pl-0',
+                          isModal ? 'text-xs' : 'text-xs sm:text-sm'
+                        )}
+                      >
                         {product.refundPolicy}
                       </p>
                     </details>
@@ -1188,12 +1309,13 @@ export function ProductDetail({
 
         {/* More from Store */}
         {vendorPeerID && (
-          <div className="mt-6 sm:mt-8">
+          <div className={cn('mt-4', !isModal && 'mt-6 sm:mt-8')}>
             <MoreFromStore
               vendorPeerID={vendorPeerID}
               vendorName={vendor?.name}
               currentSlug={product.slug}
               maxItems={isModal ? 4 : 6}
+              compact={isModal}
             />
           </div>
         )}
@@ -1207,6 +1329,17 @@ export function ProductDetail({
         <div
           className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
           onClick={() => setIsImagePreviewOpen(false)}
+          onKeyDown={e => {
+            if (e.key === 'Escape') {
+              setIsImagePreviewOpen(false);
+            } else if (e.key === 'ArrowLeft') {
+              setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+            } else if (e.key === 'ArrowRight') {
+              setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
+            }
+          }}
+          tabIndex={0}
+          ref={el => el?.focus()}
         >
           {/* 关闭按钮 */}
           <button
