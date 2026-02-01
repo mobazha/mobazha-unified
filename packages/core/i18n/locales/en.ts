@@ -432,6 +432,7 @@ export const en: TranslationResource = {
     confirmReceipt: 'Confirm Receipt',
     confirmingReceipt: 'Processing...',
     openDispute: 'Open Dispute',
+    disputeTimeoutHint: 'You can open a dispute for this order within the timeout period.',
     markAsShipped: 'Mark as Shipped',
     refundOrder: 'Refund Order',
     shipOrder: 'Ship Order',
