@@ -479,32 +479,51 @@ export default function PaymentPage() {
     setIsProcessing(true);
 
     try {
-      // 1. 计算支付金额（需要传给后端 API）
-      // 获取支付代币精度
-      const getPaymentTokenDivisibility = (coin: string): number => {
-        const upperCoin = (coin || '').toUpperCase();
-        if (upperCoin.includes('USDT') || upperCoin.includes('USDC')) return 6;
-        if (upperCoin.includes('DAI')) return 18;
-        if (upperCoin.includes('ETH')) return 18;
-        if (upperCoin.includes('BTC')) return 8;
-        return 6; // 默认 6
-      };
-
-      let paymentAmountForApi = 0;
+      // 1. 计算支付金额
+      // 与移动端保持一致：使用汇率转换将订单金额（USD）转换为支付代币金额
+      let paymentAmountForApi: number | undefined;
       if (orderDetails) {
         const isRwaToken = orderDetails.isRwaToken;
+        // 订单的定价币种（通常是 USD）
+        const pricingCurrency = orderDetails.currency || 'USD';
+        // 订单金额（最小单位，如 cents）
+        const rawAmount = orderDetails.rawOrderAmount || 0;
+        // 转换为标准单位（如 dollars）
+        const pricingDivisibility = 2; // USD 精度
+        const amountInStandardUnit = rawAmount / Math.pow(10, pricingDivisibility);
+
         if (isRwaToken) {
-          // RWA Token 订单：从 fiat 金额计算稳定币金额
+          // RWA Token 订单：使用稳定币支付，直接使用订单金额
           const totalInFiat = orderDetails.total;
-          const paymentTokenDivisibility = getPaymentTokenDivisibility(selectedTokenId);
-          paymentAmountForApi = Math.round(totalInFiat * Math.pow(10, paymentTokenDivisibility));
+          // 稳定币（USDT/USDC）精度是 6，DAI 是 18
+          const isDAI = selectedTokenId.toUpperCase().includes('DAI');
+          const stableCoinDivisibility = isDAI ? 18 : 6;
+          paymentAmountForApi = Math.round(totalInFiat * Math.pow(10, stableCoinDivisibility));
         } else {
-          // 传统订单：使用 rawOrderAmount 并转换精度
-          const rawAmount = orderDetails.rawOrderAmount || 0;
-          const pricingDivisibility = 2; // USD 精度
-          const paymentTokenDivisibility = getPaymentTokenDivisibility(selectedTokenId);
-          const multiplier = Math.pow(10, paymentTokenDivisibility - pricingDivisibility);
-          paymentAmountForApi = Math.round(rawAmount * multiplier);
+          // 传统订单：需要从定价币种转换为支付代币
+          // 使用 currencyService 进行汇率转换
+          const { convertCurrency, toMinimalUnit, fetchExchangeRates } =
+            await import('@mobazha/core');
+
+          // 确保有汇率数据
+          await fetchExchangeRates();
+
+          // 将 USD 金额转换为支付代币金额（标准单位）
+          // convertCurrency(amount, fromCur, toCur) - amount 是标准单位
+          const convertedAmount = convertCurrency(
+            amountInStandardUnit,
+            pricingCurrency,
+            selectedTokenId
+          );
+
+          // 转换为最小单位（如 wei, satoshi）
+          paymentAmountForApi = Math.round(toMinimalUnit(convertedAmount, selectedTokenId));
+
+          // Debug: 金额转换日志
+          // console.log('[Payment] Amount conversion:', {
+          //   rawAmount, pricingCurrency, amountInStandardUnit,
+          //   selectedTokenId, convertedAmount, paymentAmountForApi,
+          // });
         }
       }
 
