@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { Suspense, useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useUserStore, getEnvConfig } from '@mobazha/core';
+import { useUserStore, getEnvConfig, useI18n } from '@mobazha/core';
 import {
   startCasdoorLogin,
   hasOAuthCallback,
@@ -26,6 +26,20 @@ function getRedirectFromParams(searchParams: URLSearchParams): string {
 }
 
 /**
+ * 登录页面加载状态
+ * 用于 Suspense fallback，在 useSearchParams 初始化期间显示
+ */
+function LoginPageLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
+      </div>
+    </div>
+  );
+}
+
+/**
  * 登录页面
  *
  * 支持两种认证模式：
@@ -33,11 +47,26 @@ function getRedirectFromParams(searchParams: URLSearchParams): string {
  * - basic（VPS模式）：显示用户名/密码表单
  *
  * 支持 redirect 参数：登录成功后重定向到指定页面
+ *
+ * 注意：使用 Suspense 包裹内容组件以正确处理 useSearchParams
  */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageLoading />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+/**
+ * 登录页面内容组件
+ * 包含所有使用 useSearchParams 的逻辑，必须在 Suspense 边界内使用
+ */
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, loginWithOAuth, isAuthenticated, isLoading, error } = useUserStore();
+  const { t } = useI18n();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -105,7 +134,7 @@ export default function LoginPage() {
             const redirectPath = getRedirectFromParams(searchParams);
             router.push(redirectPath);
           } else {
-            setLocalError('登录失败，请重试');
+            setLocalError(t('login.loginFailed'));
             setIsProcessing(false);
             setOauthFailed(true);
           }
@@ -128,7 +157,7 @@ export default function LoginPage() {
       // 注意：跳转后页面会离开，不需要设置 isHostedInitializing
       return;
     }
-  }, [isAuthenticated, isProcessing, router, loginWithOAuth, searchParams]);
+  }, [isAuthenticated, isProcessing, router, loginWithOAuth, searchParams, t]);
 
   // Basic Auth 登录处理
   const handleBasicLogin = async (e: React.FormEvent) => {
@@ -136,7 +165,7 @@ export default function LoginPage() {
     setLocalError('');
 
     if (!username || !password) {
-      setLocalError('请输入用户名和密码');
+      setLocalError(t('login.usernamePasswordRequired'));
       return;
     }
 
@@ -153,8 +182,8 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
-          <p className="text-white text-lg">正在跳转登录...</p>
-          <p className="text-slate-400 text-sm mt-2">请稍候</p>
+          <p className="text-white text-lg">{t('login.redirectingToLogin')}</p>
+          <p className="text-slate-400 text-sm mt-2">{t('login.pleaseWait')}</p>
         </div>
       </div>
     );
@@ -166,8 +195,8 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
-          <p className="text-white text-lg">正在登录...</p>
-          <p className="text-slate-400 text-sm mt-2">请稍候</p>
+          <p className="text-white text-lg">{t('login.loggingIn')}</p>
+          <p className="text-slate-400 text-sm mt-2">{t('login.pleaseWait')}</p>
         </div>
       </div>
     );
@@ -180,10 +209,10 @@ export default function LoginPage() {
         <div className="w-full max-w-md px-8 py-10 bg-slate-800/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Mobazha</h1>
-            <p className="text-slate-400">去中心化市场</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
+            <p className="text-slate-400">{t('login.subtitle')}</p>
             <span className="inline-block mt-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
-              VPS 模式
+              {t('login.vpsMode')}
             </span>
           </div>
 
@@ -198,7 +227,7 @@ export default function LoginPage() {
           <form onSubmit={handleBasicLogin} className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-1">
-                用户名
+                {t('login.username')}
               </label>
               <input
                 id="username"
@@ -206,13 +235,13 @@ export default function LoginPage() {
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="请输入用户名"
+                placeholder={t('login.usernamePlaceholder')}
                 autoComplete="username"
               />
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
-                密码
+                {t('login.password')}
               </label>
               <input
                 id="password"
@@ -220,7 +249,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="请输入密码"
+                placeholder={t('login.passwordPlaceholder')}
                 autoComplete="current-password"
               />
             </div>
@@ -250,7 +279,7 @@ export default function LoginPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  登录中...
+                  {t('login.loggingIn')}
                 </>
               ) : (
                 <>
@@ -267,7 +296,7 @@ export default function LoginPage() {
                       d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                     />
                   </svg>
-                  登录
+                  {t('login.login')}
                 </>
               )}
             </button>
@@ -288,18 +317,16 @@ export default function LoginPage() {
       <div className="w-full max-w-md px-8 py-10 bg-slate-800/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Mobazha</h1>
-          <p className="text-slate-400">去中心化市场</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
+          <p className="text-slate-400">{t('login.subtitle')}</p>
           <span className="inline-block mt-2 px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs rounded-full">
-            托管模式
+            {t('login.hostedMode')}
           </span>
         </div>
 
         {/* Login Info */}
         <div className="mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-600/50">
-          <p className="text-slate-300 text-sm">
-            点击下方按钮将跳转到安全登录页面，完成登录后会自动返回。
-          </p>
+          <p className="text-slate-300 text-sm">{t('login.hostedModeInfo')}</p>
         </div>
 
         {/* Error Message */}
@@ -337,7 +364,7 @@ export default function LoginPage() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              处理中...
+              {t('login.processing')}
             </>
           ) : (
             <>
@@ -349,7 +376,7 @@ export default function LoginPage() {
                   d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                 />
               </svg>
-              登录 / 注册
+              {t('login.loginRegister')}
             </>
           )}
         </button>
@@ -357,7 +384,7 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="mt-8 flex items-center">
           <div className="flex-1 border-t border-slate-700"></div>
-          <span className="px-4 text-slate-500 text-sm">支持平台</span>
+          <span className="px-4 text-slate-500 text-sm">{t('login.supportedPlatforms')}</span>
           <div className="flex-1 border-t border-slate-700"></div>
         </div>
 
@@ -367,7 +394,7 @@ export default function LoginPage() {
             <div className="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-1">
               <span className="text-2xl">🌐</span>
             </div>
-            <span className="text-xs text-slate-400">浏览器</span>
+            <span className="text-xs text-slate-400">{t('login.browser')}</span>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-1">
@@ -386,7 +413,8 @@ export default function LoginPage() {
         {/* Environment Info */}
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-500">
-            {envConfig.isTestEnv ? '测试环境' : '生产环境'}: {envConfig.api.baseUrl}
+            {envConfig.isTestEnv ? t('login.testEnvironment') : t('login.productionEnvironment')}:{' '}
+            {envConfig.api.baseUrl}
           </p>
         </div>
       </div>

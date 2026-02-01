@@ -107,6 +107,31 @@ export interface TranslationResource {
     logout: string;
   };
 
+  // 登录页面（可选，fallback 到英文）
+  login?: TranslationSection & {
+    title?: string;
+    subtitle?: string;
+    hostedMode?: string;
+    vpsMode?: string;
+    redirectingToLogin?: string;
+    pleaseWait?: string;
+    loggingIn?: string;
+    processing?: string;
+    username?: string;
+    password?: string;
+    usernamePlaceholder?: string;
+    passwordPlaceholder?: string;
+    login?: string;
+    loginRegister?: string;
+    loginFailed?: string;
+    usernamePasswordRequired?: string;
+    hostedModeInfo?: string;
+    supportedPlatforms?: string;
+    browser?: string;
+    testEnvironment?: string;
+    productionEnvironment?: string;
+  };
+
   // 首页
   home: TranslationSection & {
     welcome: string;
