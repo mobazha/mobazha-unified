@@ -169,7 +169,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     );
   };
 
-  // 获取状态显示标签 - 使用友好的格式化名称
+  // 获取状态显示标签 - 使用 i18n 国际化
   const getStatusLabel = (state: OrderState): string => {
     // 将 SNAKE_CASE 转换为 Title Case（如 AWAITING_PAYMENT → Awaiting Payment）
     const formatStatus = (s: string) =>
@@ -179,26 +179,28 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
-    // 常用状态的简短友好名称
-    const friendlyNames: Record<string, string> = {
-      PENDING: 'Pending',
-      AWAITING_PAYMENT: 'Awaiting Payment',
-      AWAITING_PICKUP: 'Awaiting Pickup',
-      AWAITING_FULFILLMENT: 'Processing',
-      PARTIALLY_FULFILLED: 'Partial Shipped',
-      FULFILLED: 'Shipped',
-      COMPLETED: 'Completed',
-      CANCELED: 'Canceled',
-      DECLINED: 'Declined',
-      REFUNDED: 'Refunded',
-      DISPUTED: 'Disputed',
-      DECIDED: 'Decided',
-      RESOLVED: 'Resolved',
-      PAYMENT_FINALIZED: 'Finalized',
-      PROCESSING_ERROR: 'Error',
+    // 状态对应的 i18n key
+    const statusKeys: Record<string, string> = {
+      PENDING: 'order.statusLabels.pending',
+      AWAITING_PAYMENT: 'order.statusLabels.awaitingPayment',
+      AWAITING_PICKUP: 'order.statusLabels.awaitingPickup',
+      AWAITING_FULFILLMENT: 'order.statusLabels.processing',
+      PARTIALLY_FULFILLED: 'order.statusLabels.partialShipped',
+      FULFILLED: 'order.statusLabels.shipped',
+      COMPLETED: 'order.statusLabels.completed',
+      CANCELED: 'order.statusLabels.cancelled',
+      DECLINED: 'order.stages.declined',
+      REFUNDED: 'order.statusLabels.refunded',
+      DISPUTED: 'order.stages.disputed',
+      DECIDED: 'order.stages.decided',
+      RESOLVED: 'order.stages.resolved',
+      PAYMENT_FINALIZED: 'order.statusLabels.finalized',
+      PROCESSING_ERROR: 'order.statusLabels.error',
     };
 
-    return friendlyNames[state] || formatStatus(state);
+    const key = statusKeys[state];
+    if (key) return t(key);
+    return formatStatus(state);
   };
 
   const statusLabel = getStatusLabel(orderState);

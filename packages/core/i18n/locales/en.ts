@@ -378,12 +378,29 @@ export const en: TranslationResource = {
       paid: 'Paid',
       accepted: 'Accepted',
       fulfilled: 'Fulfilled',
+      delivered: 'Delivered',
       complete: 'Complete',
       disputed: 'Disputed',
       decided: 'Decided',
       resolved: 'Resolved',
       declined: 'Declined',
     },
+    // Status labels (for footer display)
+    statusLabels: {
+      pending: 'Pending',
+      awaitingPayment: 'Awaiting Payment',
+      awaitingPickup: 'Awaiting Pickup',
+      processing: 'Processing',
+      partialShipped: 'Partial Shipped',
+      shipped: 'Shipped',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      refunded: 'Refunded',
+      finalized: 'Finalized',
+      error: 'Error',
+    },
+    // Shipping
+    shippingDetails: 'Shipping Details',
     // Modal sidebar
     menu: 'Menu',
     tabs: {
@@ -681,6 +698,8 @@ export const en: TranslationResource = {
     },
     // Dispute modal
     dispute: {
+      escrowHint:
+        'Funds are being held in escrow for approximately {{time}} or until the buyer completes the order. If you have any questions about the order, you can open a dispute with the moderator.',
       title: 'Open Dispute',
       description:
         'Please describe the issue with your order. The moderator will review your case and help resolve the dispute.',
@@ -734,8 +753,11 @@ export const en: TranslationResource = {
     // Fulfillment display
     fulfillment: {
       title: 'Fulfillment Details',
+      packageShipped: 'Package shipped',
+      serviceDelivered: 'Service delivered',
+      digitalDelivered: 'Digital content delivered',
       carrier: 'Carrier',
-      trackingNumber: 'Tracking Number',
+      trackingNumber: 'Tracking',
       downloadUrl: 'Download URL',
       password: 'Password',
       transactionId: 'Transaction ID',

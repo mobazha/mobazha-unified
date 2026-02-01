@@ -375,12 +375,29 @@ export const zh: TranslationResource = {
       paid: '已付款',
       accepted: '已接受',
       fulfilled: '已发货',
+      delivered: '已交付',
       complete: '完成',
       disputed: '申诉中',
       decided: '已裁决',
       resolved: '已解决',
       declined: '已拒绝',
     },
+    // 状态标签（底部显示）
+    statusLabels: {
+      pending: '待处理',
+      awaitingPayment: '待付款',
+      awaitingPickup: '待取货',
+      processing: '处理中',
+      partialShipped: '部分发货',
+      shipped: '已发货',
+      completed: '已完成',
+      cancelled: '已取消',
+      refunded: '已退款',
+      finalized: '已结算',
+      error: '错误',
+    },
+    // 发货
+    shippingDetails: '发货详情',
     // 弹框侧边栏
     menu: '菜单',
     tabs: {
@@ -451,7 +468,7 @@ export const zh: TranslationResource = {
     message: '消息',
     confirmReceipt: '确认收货',
     confirmingReceipt: '处理中...',
-    openDispute: '开立订单争议',
+    openDispute: '订单争议',
     disputeTimeoutHint:
       '可以在 {{blocksRemaining}} 区块 或者大约 {{timeRemaining}} 内对该订单开立争议。',
     disputeHelpTip: '超时后，托管资金将释放给卖家。',
@@ -664,6 +681,8 @@ export const zh: TranslationResource = {
     },
     // 申诉模态框
     dispute: {
+      escrowHint:
+        '订单资金正在第三方托管约 {{time}} 或直到买家完成订单为止。如您对订单有任何疑问，可以与仲裁人提出争议。',
       title: '发起申诉',
       description: '请描述您遇到的问题，仲裁员将审核您的申诉并帮助解决争议。',
       placeholder: '详细说明问题，提供任何有助于仲裁员理解情况的相关信息。',
@@ -710,6 +729,9 @@ export const zh: TranslationResource = {
     // 发货信息展示
     fulfillment: {
       title: '发货详情',
+      packageShipped: '包裹已发出',
+      serviceDelivered: '服务已交付',
+      digitalDelivered: '数字内容已交付',
       carrier: '物流公司',
       trackingNumber: '物流单号',
       downloadUrl: '下载地址',
