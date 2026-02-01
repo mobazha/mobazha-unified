@@ -37,7 +37,7 @@ import {
   OrderCompleteCard,
 } from '@/components/Order';
 import { RwaAssetDetail } from '@/components/RwaToken';
-import { Copy } from 'lucide-react';
+import { Copy, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ============ Types ============
@@ -78,6 +78,8 @@ export interface OrderDetailContentProps {
   onClose?: () => void;
   /** 支付回调（打开支付选择器） */
   onPay?: (orderId: string) => void;
+  /** 开立争议回调 */
+  onOpenDispute?: () => void;
   className?: string;
 }
 
@@ -191,6 +193,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   onOrderUpdate,
   onClose: _onClose,
   onPay,
+  onOpenDispute,
   className,
 }: OrderDetailContentProps) {
   const { t } = useI18n();
@@ -464,21 +467,21 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     <div className={cn('flex flex-col', className)}>
       {/* Scrollable Content */}
       <div className={cn('flex-1 overflow-y-auto', inModal ? 'px-4 sm:px-6 py-4' : '')}>
-        {/* Title Row */}
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-base sm:text-lg font-semibold text-muted-foreground">
+        {/* Title Row - 订单号完整显示，字体稍小 */}
+        <div className="flex items-start gap-2 mb-1">
+          <h1 className="text-sm font-medium text-muted-foreground flex-shrink-0">
             {t('order.orderIdLabel')}
           </h1>
-          <span className="text-base sm:text-lg font-semibold text-foreground truncate max-w-[200px] sm:max-w-[400px]">
+          <span className="text-sm font-mono text-foreground break-all" title={order.orderId}>
             {order.orderId}
           </span>
           <button
             onClick={() => {
               navigator.clipboard.writeText(order.orderId);
             }}
-            className="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1 touch-feedback"
+            className="text-primary hover:text-primary/80 text-xs font-medium flex items-center gap-1 touch-feedback flex-shrink-0"
           >
-            <Copy className="w-3.5 h-3.5" />
+            <Copy className="w-3 h-3" />
             <span className="hidden sm:inline">{t('common.copy')}</span>
           </button>
         </div>
@@ -491,6 +494,43 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             disputeState={progressState.disputeState}
           />
         </div>
+
+        {/* 争议提示卡片 - 仅在 Modal 模式且可开立争议时显示（桌面端风格） */}
+        {inModal && onOpenDispute && canOpenDispute && !order.dispute && (
+          <div className="mb-4 p-3 sm:p-4 bg-muted/50 border border-border rounded-lg">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-muted-foreground mb-2">
+                  {t('order.disputeTimeoutHint')}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  onClick={onOpenDispute}
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  {t('order.openDispute')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Dispute Banner */}
         {order.dispute && (
