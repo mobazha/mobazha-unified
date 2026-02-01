@@ -360,6 +360,7 @@ export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefi
 /**
  * 获取智能小数位数
  * 当金额太小时，自动增加小数位以显示有效数字
+ * 目标：显示至少 2 个有效数字，避免 0.00024 显示为 0.0002
  */
 function getSmartDecimals(amount: number, desiredDecimals: number, maxDecimals = 8): number {
   if (amount === 0) return desiredDecimals;
@@ -367,7 +368,7 @@ function getSmartDecimals(amount: number, desiredDecimals: number, maxDecimals =
   const absAmount = Math.abs(amount);
   let decimals = desiredDecimals;
 
-  // 如果按当前精度格式化后为 0，增加精度直到能显示有效数字
+  // 首先找到第一个非零数字的位置
   while (decimals < maxDecimals) {
     const multiplier = Math.pow(10, decimals);
     if (Math.round(absAmount * multiplier) > 0) {
@@ -375,6 +376,11 @@ function getSmartDecimals(amount: number, desiredDecimals: number, maxDecimals =
     }
     decimals++;
   }
+
+  // 再增加 1-2 位以显示更多有效数字
+  // 例如：0.00024 应该显示为 0.00024 而不是 0.0002
+  const extraDigits = 1;
+  decimals = Math.min(decimals + extraDigits, maxDecimals);
 
   return Math.max(decimals, desiredDecimals);
 }
