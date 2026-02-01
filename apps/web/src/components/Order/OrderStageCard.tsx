@@ -105,8 +105,14 @@ export const OrderStageCard = memo(function OrderStageCard({
  * 支付信息卡片 - 紧凑版
  */
 export interface PaymentCardProps {
+  /** 支付金额（加密货币） */
   amount: string;
+  /** 支付币种（加密货币，如 ETH） */
   currency: string;
+  /** 原始定价金额（法币，如 "0.60"） */
+  pricingAmount?: string;
+  /** 原始定价币种（法币，如 "USD"） */
+  pricingCurrency?: string;
   txHash?: string;
   confirmations?: number;
   timestamp?: string;
@@ -120,6 +126,8 @@ export interface PaymentCardProps {
 export const PaymentCard = memo(function PaymentCard({
   amount,
   currency,
+  pricingAmount,
+  pricingCurrency,
   timestamp,
   description,
   title,
@@ -127,6 +135,22 @@ export const PaymentCard = memo(function PaymentCard({
   showDivider = true,
 }: PaymentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
+
+  // 格式化法币金额显示
+  const formatFiatAmount = (value: string, curr: string) => {
+    const symbols: Record<string, string> = {
+      USD: '$',
+      EUR: '€',
+      GBP: '£',
+      CNY: '¥',
+      JPY: '¥',
+    };
+    const symbol = symbols[curr] || '';
+    return symbol ? `${symbol}${value}` : `${value} ${curr}`;
+  };
+
+  // 判断是否有原始定价信息（与支付币种不同时显示）
+  const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== currency;
 
   return (
     <OrderStageCard
@@ -144,8 +168,22 @@ export const PaymentCard = memo(function PaymentCard({
 
           {/* 支付信息 */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm sm:text-base font-semibold text-foreground">
-              {amount} {currency}
+            {/* 原始定价（法币） */}
+            {showPricingInfo && (
+              <p className="text-sm sm:text-base font-semibold text-foreground">
+                {formatFiatAmount(pricingAmount, pricingCurrency)}
+              </p>
+            )}
+            {/* 实际支付（加密货币） */}
+            <p
+              className={cn(
+                'text-foreground',
+                showPricingInfo
+                  ? 'text-xs sm:text-sm text-muted-foreground'
+                  : 'text-sm sm:text-base font-semibold'
+              )}
+            >
+              {showPricingInfo ? `≈ ${amount} ${currency}` : `${amount} ${currency}`}
             </p>
             <p className="text-xs text-muted-foreground">{description}</p>
           </div>

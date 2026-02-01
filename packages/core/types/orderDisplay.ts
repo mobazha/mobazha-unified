@@ -101,20 +101,28 @@ export type DisplayUserRole = 'buyer' | 'seller' | 'moderator';
  * 由 transformCoreOrder 函数将 API 数据转换而来
  */
 export interface DisplayOrder {
-  /** 订单唯一标识 */
+  /** 订单唯一标识（完整订单哈希，如 QmXXX...） */
   id: string;
-  /** 订单 ID（用于显示） */
+  /** 订单 ID（用于显示，与 id 相同） */
   orderId: string;
+  /** 商品 slug（用于商品链接） */
+  slug?: string;
   /** 订单状态 */
   status: DisplayOrderStatus;
   /** 订单商品列表 */
   items: DisplayOrderItem[];
-  /** 订单总金额 */
+  /** 订单总金额（支付币种格式化后的值） */
   total: string;
-  /** 货币类型 */
+  /** 货币类型（支付币种） */
   currency: string;
-  /** 支付币种（用于订单操作） */
+  /** 原始定价金额（格式化后，如 "0.60"） */
+  pricingAmount?: string;
+  /** 原始定价币种（如 "USD"） */
+  pricingCurrency?: string;
+  /** 支付币种（用于订单操作，如 "ETH"） */
   paymentCoin?: string;
+  /** 实际支付金额（格式化后，如 "0.0002"） */
+  paymentAmount?: string;
   /** 创建时间 */
   createdAt: string;
   /** 卖家信息 */
