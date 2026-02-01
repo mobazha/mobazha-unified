@@ -58,6 +58,7 @@ export { SettingsDrawer, SettingsDrawerProvider, useSettingsDrawer } from './Set
 
 // Auth Components
 export { AuthGuard } from './AuthGuard';
+export { ProtectedRoute } from './ProtectedRoute';
 
 // Wallet Components
 export { AppKitProvider } from './AppKitProvider';

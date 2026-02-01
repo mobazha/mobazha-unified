@@ -14,6 +14,9 @@ export * from './testAccounts';
 // 导出 AppKit 配置
 export * from './appkit';
 
+// 导出路由配置
+export * from './routeConfig';
+
 export interface AppConfig {
   /** Use mock data instead of real API */
   useMockData: boolean;
