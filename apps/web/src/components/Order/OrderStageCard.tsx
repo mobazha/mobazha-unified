@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl } from './utils';
 import { Card } from '@/components/ui/card';
 import { Check, Package, CheckCircle } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getChainFromCoin, getChainByEVMId } from '@mobazha/core';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 export interface OrderStageCardProps {
   /** 阶段标题 */
@@ -173,12 +174,26 @@ export const PaymentCard = memo(function PaymentCard({
       className={className}
       showDivider={showDivider}
     >
-      <Card className="p-2.5 bg-muted/30">
+      <div className="p-2.5">
         <div className="flex items-center gap-2.5">
-          {/* 支付状态图标 - 移动端 28px */}
-          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-          </div>
+          {/* 币种图标 - 使用项目统一的 TokenIcon，支持显示链徽章 */}
+          {(() => {
+            // 优先使用 EVM chainId 获取链，否则从币种名推断
+            const chainFromEVM = chainId ? getChainByEVMId(chainId)?.id : null;
+            const chainFromCurrency = getChainFromCoin(currency);
+            const chainSymbol = chainFromEVM || chainFromCurrency || null;
+            // 只有当代币不是原生代币时才显示链徽章（如 ETHUSDT 显示 ETH 徽章，但 ETH 本身不需要）
+            const showBadge = !!chainSymbol && currency.toUpperCase() !== chainSymbol.toUpperCase();
+            return (
+              <TokenIcon
+                token={currency}
+                size={28}
+                className="flex-shrink-0"
+                showChainBadge={showBadge}
+                chainId={chainSymbol || undefined}
+              />
+            );
+          })()}
 
           {/* 支付信息 */}
           <div className="flex-1 min-w-0">
@@ -191,23 +206,22 @@ export const PaymentCard = memo(function PaymentCard({
             {/* 实际支付（加密货币） */}
             <p
               className={cn(
-                'text-foreground',
+                'text-foreground flex items-center gap-1',
                 showPricingInfo
                   ? 'text-xs sm:text-sm text-muted-foreground'
                   : 'text-sm sm:text-base font-semibold'
               )}
             >
               {showPricingInfo ? `≈ ${amount} ${currency}` : `${amount} ${currency}`}
+              {confirmations !== undefined && confirmations > 0 && (
+                <span className="text-[10px] text-muted-foreground ml-1">
+                  ({confirmations} confirms)
+                </span>
+              )}
             </p>
-            {/* 确认数 */}
-            {confirmations !== undefined && (
-              <p className="text-xs text-muted-foreground">
-                {confirmations} {t('order.confirmations')}
-              </p>
-            )}
             {/* 交易 hash */}
             {txHash && (
-              <div className="flex items-center gap-1.5 mt-1">
+              <div className="flex items-center gap-1.5 mt-0.5">
                 {txUrl ? (
                   <a
                     href={txUrl}
@@ -229,7 +243,7 @@ export const PaymentCard = memo(function PaymentCard({
             {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
           </div>
         </div>
-      </Card>
+      </div>
     </OrderStageCard>
   );
 });
@@ -315,13 +329,19 @@ export const OrderRatingCard = memo(function OrderRatingCard({
 });
 
 /**
- * 发货信息卡片 - 紧凑版
+ * 发货/交付信息卡片 - 紧凑版
+ * 根据商品类型显示不同内容：
+ * - PHYSICAL_GOOD: 显示物流信息
+ * - SERVICE: 显示服务已交付
+ * - DIGITAL_GOOD: 显示数字商品已交付
  */
 export interface FulfillmentCardProps {
   timestamp?: string;
   shipper?: string;
   trackingNumber?: string;
   note?: string;
+  /** 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD */
+  contractType?: string;
   className?: string;
 }
 
@@ -330,14 +350,25 @@ export const FulfillmentCard = memo(function FulfillmentCard({
   shipper,
   trackingNumber,
   note,
+  contractType,
   className,
   showDivider = true,
 }: FulfillmentCardProps & { showDivider?: boolean }) {
-  const { t } = useI18n();
+  // 根据商品类型确定显示内容
+  const isPhysicalGood = !contractType || contractType === 'PHYSICAL_GOOD';
+  const isService = contractType === 'SERVICE';
+
+  // 标题和内容
+  const title = isPhysicalGood ? 'Fulfilled' : isService ? 'Delivered' : 'Delivered';
+  const statusText = isPhysicalGood
+    ? 'Package shipped'
+    : isService
+      ? 'Service delivered'
+      : 'Digital content delivered';
 
   return (
     <OrderStageCard
-      title={t('order.stages.fulfilled')}
+      title={title}
       timestamp={timestamp}
       icon={<Package className="w-4 h-4" />}
       className={className}
@@ -346,19 +377,21 @@ export const FulfillmentCard = memo(function FulfillmentCard({
       <Card className="p-2.5 bg-muted/30">
         <div className="flex items-center gap-2">
           <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-            <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+            {isPhysicalGood ? (
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+            ) : (
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">{t('order.packageShipped')}</p>
-            {shipper && (
-              <p className="text-xs text-muted-foreground">
-                {t('order.fulfillment.carrier')}: {shipper}
-              </p>
+            <p className="text-sm font-medium text-foreground">{statusText}</p>
+            {/* 物流信息仅对实物商品显示 */}
+            {isPhysicalGood && shipper && (
+              <p className="text-xs text-muted-foreground">Carrier: {shipper}</p>
             )}
-            {trackingNumber && (
+            {isPhysicalGood && trackingNumber && (
               <p className="text-xs text-muted-foreground">
-                {t('order.fulfillment.trackingNumber')}:{' '}
-                <span className="font-mono text-primary">{trackingNumber}</span>
+                Tracking: <span className="font-mono text-primary">{trackingNumber}</span>
               </p>
             )}
             {note && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{note}</p>}

@@ -41,6 +41,7 @@ import {
 import { RwaAssetDetail } from '@/components/RwaToken';
 import { Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getBlockExplorerUrl } from '@/components/Order/utils';
 
 // ============ Types ============
 // 从 @mobazha/core 重新导出基础类型，保持向后兼容
@@ -198,12 +199,11 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
   }
 
   return (
-    <div className="mb-4 p-3 bg-muted/30 border border-border rounded-lg">
-      <div className="flex items-center justify-center gap-3">
-        {/* 时钟图标 - 紧凑尺寸 */}
-        <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
+    <div className="mb-4 p-3 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-700/30 rounded-lg">
+      <div className="flex items-start gap-2 mb-2">
+        <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-800/30 flex items-center justify-center flex-shrink-0">
           <svg
-            className="w-4 h-4 text-muted-foreground"
+            className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -216,39 +216,31 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
             />
           </svg>
         </div>
-
-        {/* 提示文字和按钮 - 横向布局 */}
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm text-foreground">
-            {t('order.disputeTimeoutHint', {
-              blocksRemaining: timeoutDetails.blocksRemaining.toLocaleString(),
-              timeRemaining: timeoutDetails.timeRemainingStr,
-            })}
-            {/* Help 图标 */}
-            <span
-              className="inline-flex items-center ml-1 text-muted-foreground cursor-help"
-              title={t('order.disputeHelpTip')}
-            >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </span>
-          </p>
-          {/* 开立争议按钮 - 紧凑尺寸，主题友好 */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={onOpenDispute}
+        <p className="flex-1 text-[11px] sm:text-xs text-amber-700 dark:text-amber-300 leading-snug">
+          订单资金正在第三方托管约 {timeoutDetails.timeRemainingStr}{' '}
+          或直到买家完成订单为止。如您对订单有任何疑问，可以与仲裁人提出争议。
+          <span
+            className="inline-flex items-center ml-1 text-amber-500 cursor-help"
+            title={t('order.disputeHelpTip')}
           >
-            {t('order.openDispute')}
-          </Button>
-        </div>
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        </p>
       </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full border-destructive text-destructive hover:bg-destructive/10 font-medium"
+        onClick={onOpenDispute}
+      >
+        订单争议
+      </Button>
     </div>
   );
 }
@@ -525,6 +517,22 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     [order.status, order.dispute, t]
   );
 
+  const statusLabel = useMemo(() => {
+    const raw = order.status?.toString() || '';
+    if (!raw) return '';
+    const friendly: Record<string, string> = {
+      paid: 'Paid',
+      processing: 'Accepted',
+      shipped: 'Fulfilled',
+      delivered: 'Delivered',
+      completed: 'Complete',
+      disputed: 'Disputed',
+      cancelled: 'Cancelled',
+      refunded: 'Refunded',
+    };
+    return friendly[raw] || raw.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
+  }, [order.status]);
+
   // 检查是否是 RWA Token 订单，并构造 Product 对象
   const { isRwaTokenOrder, rwaProduct } = useMemo(() => {
     const listing = coreOrder?.contract?.orderOpen?.listings?.[0]?.listing;
@@ -553,15 +561,23 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   }, [coreOrder]);
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div className={cn('flex flex-col overflow-x-hidden', className)}>
       {/* Scrollable Content */}
-      <div className={cn('flex-1 overflow-y-auto', inModal ? 'px-4 sm:px-6 py-4' : '')}>
-        {/* Title Row - 订单号完整显示，字体稍小 */}
-        <div className="flex items-start gap-2 mb-1">
-          <h1 className="text-sm font-medium text-muted-foreground flex-shrink-0">
+      <div
+        className={cn(
+          'flex-1 overflow-y-auto overflow-x-hidden',
+          inModal ? 'px-4 sm:px-6 py-4' : ''
+        )}
+      >
+        {/* Title Row - 订单号完整显示（仅桌面端显示，移动端顶部已有） */}
+        <div className="hidden sm:flex items-start gap-1.5 sm:gap-2 mb-1">
+          <h1 className="text-xs sm:text-sm font-medium text-muted-foreground flex-shrink-0">
             {t('order.orderIdLabel')}
           </h1>
-          <span className="text-sm font-mono text-foreground break-all" title={order.orderId}>
+          <span
+            className="text-xs sm:text-sm font-mono text-foreground break-all leading-relaxed"
+            title={order.orderId}
+          >
             {order.orderId}
           </span>
           <button
@@ -575,19 +591,178 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div className="my-6 sm:my-8 px-2 sm:px-8">
+        {/* ========== 商品信息 - 靠前显示 ========== */}
+        {(() => {
+          // 获取商品类型标签
+          const getTypeLabel = () => {
+            if (!order.contractType || order.contractType === 'PHYSICAL_GOOD') return null;
+            if (order.contractType === 'SERVICE') return t('order.product.service');
+            if (order.contractType === 'DIGITAL_GOOD') return t('order.product.digital');
+            return null;
+          };
+          const typeLabel = getTypeLabel();
+
+          // 格式化单价显示
+          const formatPrice = () => {
+            const price = order.pricingAmount || order.total;
+            if (order.pricingCurrency === 'USD') return `$${price}`;
+            return `${price} ${order.pricingCurrency || ''}`;
+          };
+
+          const vendorRow = order.vendor?.peerID ? (
+            <Link
+              href={`/store/${order.vendor.peerID}`}
+              className="flex items-center gap-2.5 p-2.5 mb-2 bg-muted/20 rounded-lg border border-border/40"
+            >
+              <Avatar
+                src={order.vendor.avatar}
+                name={order.vendor.name}
+                size="md"
+                className="w-9 h-9 ring-1 ring-border/50"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {order.vendor.name}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">{order.vendor.peerID}</p>
+              </div>
+            </Link>
+          ) : null;
+
+          const productCard = (
+            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/50">
+              {order.items[0]?.image && (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50">
+                  <img
+                    src={order.items[0].image}
+                    alt={order.items[0].title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-foreground text-sm truncate">
+                  {order.items[0]?.title || t('order.unknownItem')}
+                </h4>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {typeLabel && (
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                      {typeLabel}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {t('order.product.unitPrice')}
+                  </span>
+                  <span className="text-sm text-primary font-medium">{formatPrice()}</span>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <span className="text-xs text-muted-foreground">
+                  {t('order.product.quantity')}:{' '}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {order.items[0]?.quantity || 1}
+                </span>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="mb-4">
+              {vendorRow}
+              {order.slug ? (
+                <Link
+                  href={
+                    order.vendor?.peerID
+                      ? `/product/${order.slug}?peerID=${order.vendor.peerID}`
+                      : `/product/${order.slug}`
+                  }
+                  className="block group"
+                >
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/50 hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all">
+                    {order.items[0]?.image && (
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50 group-hover:ring-primary/30 transition-all">
+                        <img
+                          src={order.items[0].image}
+                          alt={order.items[0].title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground text-sm truncate group-hover:text-primary transition-colors">
+                        {order.items[0]?.title || t('order.unknownItem')}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {typeLabel && (
+                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {typeLabel}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {t('order.product.unitPrice')}
+                        </span>
+                        <span className="text-sm text-primary font-medium">{formatPrice()}</span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-xs text-muted-foreground">
+                        {t('order.product.quantity')}:{' '}
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {order.items[0]?.quantity || 1}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ) : (
+                productCard
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Summary（更接近原移动端：概要 + 状态徽章 + 总价） */}
+        <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-foreground">{t('order.summary')}</span>
+            <span className="text-[11px] px-2 py-0.5 rounded-full border border-border/60 text-foreground bg-background/60">
+              {statusLabel || progressState.currentState}
+            </span>
+          </div>
+          <div className="flex items-end justify-between">
+            <div className="text-xs text-muted-foreground">{t('order.total')}</div>
+            <div className="text-right">
+              {order.pricingAmount &&
+              order.pricingCurrency &&
+              order.pricingCurrency !== order.currency ? (
+                <>
+                  <p className="text-sm font-semibold text-foreground">
+                    {order.pricingCurrency === 'USD' ? '$' : ''}
+                    {order.pricingAmount}{' '}
+                    {order.pricingCurrency !== 'USD' ? order.pricingCurrency : ''}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    ≈ {order.total} {order.currency}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm font-semibold text-foreground">
+                  {order.total} {order.currency}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 桌面端：保留进度条 */}
+        <div className="hidden sm:block mt-2 sm:mt-4 mb-4 sm:mb-6 px-2 sm:px-8">
           <OrderProgressBar
             states={progressState.states}
             currentState={progressState.currentState}
             disputeState={progressState.disputeState}
           />
         </div>
-
-        {/* 争议提示卡片 - 桌面端风格布局 */}
-        {inModal && onOpenDispute && canOpenDispute && !order.dispute && (
-          <DisputeTimeoutCard createdAt={order.createdAt} onOpenDispute={onOpenDispute} />
-        )}
 
         {/* Dispute Banner */}
         {order.dispute && (
@@ -635,283 +810,351 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           </div>
         )}
 
-        {/* Stage Cards - 按时间倒序展示各阶段信息 */}
-        <div className="space-y-4">
-          {/* Order Complete / Rating Card */}
-          {order.status === 'completed' && (
-            <OrderCompleteCard
-              timestamp={order.timeline.find(e => e.status === 'completed')?.timestamp}
-              amount={order.total}
-              currency={order.currency}
-              description="Funds released to seller"
-              showDivider={true}
-            />
-          )}
+        {/* Order History（原移动端风格：标题 + 小卡片列表） */}
+        {(() => {
+          const hasHistory =
+            order.status === 'completed' ||
+            order.trackingNumber ||
+            ['processing', 'shipped', 'delivered', 'completed'].includes(order.status);
+          if (!hasHistory) return null;
 
-          {/* Fulfilled Card */}
-          {order.trackingNumber || ['shipped', 'delivered', 'completed'].includes(order.status) ? (
-            <FulfillmentCard
-              timestamp={order.timeline.find(e => e.status === 'shipped')?.timestamp}
-              trackingNumber={order.trackingNumber}
-              showDivider={true}
-            />
-          ) : null}
+          return (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-foreground">
+                  {t('order.orderHistory')}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {order.status === 'completed' && (
+                  <div className="bg-muted/10 rounded-lg p-2">
+                    <OrderCompleteCard
+                      timestamp={order.timeline.find(e => e.status === 'completed')?.timestamp}
+                      amount={order.total}
+                      currency={order.currency}
+                      description="Funds released to seller"
+                      showDivider={false}
+                    />
+                  </div>
+                )}
 
-          {/* Accepted Card */}
-          {['processing', 'shipped', 'delivered', 'completed'].includes(order.status) && (
-            <AcceptedCard
-              timestamp={order.timeline.find(e => e.status === 'processing')?.timestamp}
-              description={
-                order.userRole === 'seller'
-                  ? t('order.acceptedDescSeller')
-                  : t('order.acceptedDescBuyer')
-              }
-              // 发货按钮由页面级 OrderFooter 组件处理
-              showDivider={true}
-            />
-          )}
+                {(order.trackingNumber ||
+                  ['shipped', 'delivered', 'completed'].includes(order.status)) && (
+                  <div className="bg-muted/10 rounded-lg p-2">
+                    <FulfillmentCard
+                      timestamp={order.timeline.find(e => e.status === 'shipped')?.timestamp}
+                      shipper={order.shipper}
+                      trackingNumber={order.trackingNumber}
+                      contractType={order.contractType}
+                      showDivider={false}
+                    />
+                  </div>
+                )}
 
-          {/* RWA Payment Locked Card */}
-          {order.paymentLocked &&
-            (() => {
-              // 判断订单是否已完成（资金已释放）
-              const completedStatuses = ['shipped', 'delivered', 'completed', 'split_resolved'];
-              const isReleased = completedStatuses.includes(order.status);
+                {['processing', 'shipped', 'delivered', 'completed'].includes(order.status) && (
+                  <div className="bg-muted/10 rounded-lg p-2">
+                    <AcceptedCard
+                      timestamp={order.timeline.find(e => e.status === 'processing')?.timestamp}
+                      description={
+                        order.userRole === 'seller'
+                          ? 'Order accepted by seller.'
+                          : 'Your order has been accepted.'
+                      }
+                      showDivider={false}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
-              // 计算是否过期（只有在资金未释放时才可能过期）
-              const isExpired =
-                !isReleased && order.paymentLocked.expiresAt
-                  ? new Date(order.paymentLocked.expiresAt) <= new Date()
-                  : false;
+        {/* Payment（标题 + 日期 + 查看交易） */}
+        {order.paymentTx && !order.paymentLocked && (
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <span className="text-sm font-semibold text-foreground">
+                {t('order.payment.title')}
+              </span>
+              <div className="text-xs text-muted-foreground">
+                {order.timeline.find(e => e.status === 'paid')?.timestamp
+                  ? new Date(
+                      order.timeline.find(e => e.status === 'paid')!.timestamp
+                    ).toLocaleDateString()
+                  : ''}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (!order.paymentTx) return;
+                const url = getBlockExplorerUrl(
+                  order.paymentTx,
+                  order.currency || '',
+                  order.chainId
+                );
+                if (url) window.open(url, '_blank');
+              }}
+              className="text-xs text-primary hover:underline"
+            >
+              {t('order.viewTransaction')}
+            </button>
+          </div>
+        )}
 
-              // 确定卡片样式类
-              const cardColorClass = isReleased
-                ? 'from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border-sky-200 dark:border-sky-700/50'
-                : isExpired
-                  ? 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700/50'
-                  : 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50';
+        {/* RWA Payment Locked Card */}
+        {order.paymentLocked &&
+          (() => {
+            // 判断订单是否已完成（资金已释放）
+            const completedStatuses = ['shipped', 'delivered', 'completed', 'split_resolved'];
+            const isReleased = completedStatuses.includes(order.status);
 
-              const textColorClass = isReleased
-                ? 'text-sky-800 dark:text-sky-300'
-                : isExpired
-                  ? 'text-red-800 dark:text-red-300'
-                  : 'text-emerald-800 dark:text-emerald-300';
+            // 计算是否过期（只有在资金未释放时才可能过期）
+            const isExpired =
+              !isReleased && order.paymentLocked.expiresAt
+                ? new Date(order.paymentLocked.expiresAt) <= new Date()
+                : false;
 
-              const badgeColorClass = isReleased
-                ? 'bg-sky-500'
-                : isExpired
-                  ? 'bg-red-500'
-                  : 'bg-emerald-500';
+            // 确定卡片样式类
+            const cardColorClass = isReleased
+              ? 'from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border-sky-200 dark:border-sky-700/50'
+              : isExpired
+                ? 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700/50'
+                : 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50';
 
-              const statusText = isReleased
-                ? t('order.paymentLocked.released')
-                : isExpired
-                  ? t('order.paymentLocked.expired')
-                  : t('order.paymentLocked.locked');
+            const textColorClass = isReleased
+              ? 'text-sky-800 dark:text-sky-300'
+              : isExpired
+                ? 'text-red-800 dark:text-red-300'
+                : 'text-emerald-800 dark:text-emerald-300';
 
-              return (
-                <div className={`bg-gradient-to-r ${cardColorClass} border rounded-lg p-4 mb-4`}>
-                  <div className="flex items-center justify-between mb-3">
+            const badgeColorClass = isReleased
+              ? 'bg-sky-500'
+              : isExpired
+                ? 'bg-red-500'
+                : 'bg-emerald-500';
+
+            const statusText = isReleased
+              ? t('order.paymentLocked.released')
+              : isExpired
+                ? t('order.paymentLocked.expired')
+                : t('order.paymentLocked.locked');
+
+            return (
+              <div className={`bg-gradient-to-r ${cardColorClass} border rounded-lg p-4 mb-4`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
                     <h4 className={`font-semibold ${textColorClass}`}>
                       {t('order.paymentLocked.title')}
                     </h4>
-                    <span
-                      className={`${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full`}
-                    >
-                      {statusText}
-                    </span>
+                    {/* 查看交易链接 */}
+                    {order.paymentTx && (
+                      <button
+                        onClick={() => {
+                          const url = getBlockExplorerUrl(
+                            order.paymentTx!,
+                            order.currency || '',
+                            order.chainId
+                          );
+                          if (url) window.open(url, '_blank');
+                        }}
+                        className={`text-xs hover:underline ${textColorClass}`}
+                      >
+                        {t('order.viewTransaction')}
+                      </button>
+                    )}
                   </div>
-                  <div className="space-y-2 text-sm">
-                    {(() => {
-                      // 行内颜色类
-                      const borderClass = isReleased
-                        ? 'border-sky-100 dark:border-sky-800/50'
-                        : isExpired
-                          ? 'border-red-100 dark:border-red-800/50'
-                          : 'border-emerald-100 dark:border-emerald-800/50';
-                      const labelClass = isReleased
-                        ? 'text-sky-700/70 dark:text-sky-400/70'
-                        : isExpired
-                          ? 'text-red-700/70 dark:text-red-400/70'
-                          : 'text-emerald-700/70 dark:text-emerald-400/70';
-                      const valueClass = isReleased
-                        ? 'text-sky-900 dark:text-sky-200'
-                        : isExpired
-                          ? 'text-red-900 dark:text-red-200'
-                          : 'text-emerald-900 dark:text-emerald-200';
-
-                      return (
-                        <>
-                          <div
-                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
-                          >
-                            <span className={labelClass}>{t('order.paymentLocked.amount')}</span>
-                            <span className={`font-medium ${valueClass}`}>
-                              {order.paymentLocked.amount} {order.paymentLocked.coin}
-                            </span>
-                          </div>
-                          {/* 购买数量 */}
-                          {order.items?.[0]?.quantity && (
-                            <div
-                              className={`flex justify-between items-center py-1 border-b ${borderClass}`}
-                            >
-                              <span className={labelClass}>
-                                {t('order.paymentLocked.purchaseQuantity')}
-                              </span>
-                              <span className={`font-medium ${valueClass}`}>
-                                {order.items[0].quantity}
-                              </span>
-                            </div>
-                          )}
-                          <div
-                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
-                          >
-                            <span className={labelClass}>{t('order.paymentLocked.token')}</span>
-                            <span className={`font-medium ${valueClass}`}>
-                              {order.paymentLocked.coin}
-                            </span>
-                          </div>
-                          {order.paymentLocked.buyerReceiveAddress && (
-                            <div
-                              className={`flex justify-between items-center py-1 border-b ${borderClass}`}
-                            >
-                              <span className={labelClass}>
-                                {t('order.paymentLocked.buyerAddress')}
-                              </span>
-                              <span
-                                className={`font-mono text-xs truncate max-w-[180px] ${valueClass}`}
-                                title={order.paymentLocked.buyerReceiveAddress}
-                              >
-                                {order.paymentLocked.buyerReceiveAddress.slice(0, 8)}...
-                                {order.paymentLocked.buyerReceiveAddress.slice(-6)}
-                              </span>
-                            </div>
-                          )}
-                          {order.paymentLocked.timestamp && (
-                            <div
-                              className={`flex justify-between items-center py-1 border-b ${borderClass}`}
-                            >
-                              <span className={labelClass}>
-                                {t('order.paymentLocked.lockedTime')}
-                              </span>
-                              <span className={valueClass}>
-                                {new Date(order.paymentLocked.timestamp).toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                          {/* 过期时间 - 只在资金未释放时显示 */}
-                          {order.paymentLocked.expiresAt && !isReleased && (
-                            <div className="flex justify-between items-center py-1">
-                              <span className={labelClass}>
-                                {t('order.paymentLocked.expiresAt')}
-                              </span>
-                              <span className={valueClass}>
-                                {new Date(order.paymentLocked.expiresAt).toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                  {/* 买家端显示提示和操作按钮 */}
-                  {order.userRole === 'buyer' && !isReleased && (
-                    <div
-                      className={`mt-3 pt-3 border-t ${
-                        isExpired
-                          ? 'border-red-200 dark:border-red-700/50'
-                          : 'border-emerald-200 dark:border-emerald-700/50'
-                      }`}
-                    >
-                      {isExpired ? (
-                        <>
-                          <p className="text-sm text-red-700 dark:text-red-400 mb-3">
-                            {t('order.paymentLocked.expiredCanClaim')}
-                          </p>
-                          {displayOrder.onRwaClaimExpired && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={displayOrder.onRwaClaimExpired}
-                              className="w-full"
-                            >
-                              {t('order.paymentLocked.claimRefund')}
-                            </Button>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-sm mb-3">
-                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            {t('order.paymentLocked.waitingForSeller')}
-                          </div>
-                          {displayOrder.onRwaCancelOrder && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={displayOrder.onRwaCancelOrder}
-                              className="w-full"
-                            >
-                              {t('order.paymentLocked.cancelOrder')}
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {/* 资金已释放提示 */}
-                  {isReleased && (
-                    <div className="mt-3 pt-3 border-t border-sky-200 dark:border-sky-700/50">
-                      <p className="text-sm text-sky-700 dark:text-sky-400">
-                        {t('order.paymentLocked.fundsReleasedToSeller')}
-                      </p>
-                    </div>
-                  )}
-                  {/* 卖家端显示提示 */}
-                  {order.userRole === 'seller' && !isExpired && !isReleased && (
-                    <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50">
-                      <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                        {t('order.paymentLocked.waitingToConfirm')}
-                      </p>
-                    </div>
-                  )}
+                  <span
+                    className={`${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full`}
+                  >
+                    {statusText}
+                  </span>
                 </div>
-              );
-            })()}
+                <div className="space-y-2 text-sm">
+                  {(() => {
+                    // 行内颜色类
+                    const borderClass = isReleased
+                      ? 'border-sky-100 dark:border-sky-800/50'
+                      : isExpired
+                        ? 'border-red-100 dark:border-red-800/50'
+                        : 'border-emerald-100 dark:border-emerald-800/50';
+                    const labelClass = isReleased
+                      ? 'text-sky-700/70 dark:text-sky-400/70'
+                      : isExpired
+                        ? 'text-red-700/70 dark:text-red-400/70'
+                        : 'text-emerald-700/70 dark:text-emerald-400/70';
+                    const valueClass = isReleased
+                      ? 'text-sky-900 dark:text-sky-200'
+                      : isExpired
+                        ? 'text-red-900 dark:text-red-200'
+                        : 'text-emerald-900 dark:text-emerald-200';
 
-          {/* Traditional Payment Card */}
-          {order.paymentTx && !order.paymentLocked && (
-            <PaymentCard
-              amount={order.total}
-              currency={order.currency}
-              pricingAmount={order.pricingAmount}
-              pricingCurrency={order.pricingCurrency}
-              txHash={order.paymentTx}
-              confirmations={order.txConfirmations}
-              chainId={order.chainId}
-              timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
-              title={t('order.paid')}
-              description={
-                order.moderator ? t('order.fundsInEscrow') : t('order.directPaymentDesc')
-              }
-              showDivider={true}
-            />
-          )}
-        </div>
+                    return (
+                      <>
+                        <div
+                          className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                        >
+                          <span className={labelClass}>{t('order.paymentLocked.amount')}</span>
+                          <span className={`font-medium ${valueClass}`}>
+                            {order.paymentLocked.amount} {order.paymentLocked.coin}
+                          </span>
+                        </div>
+                        {/* 购买数量 */}
+                        {order.items?.[0]?.quantity && (
+                          <div
+                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                          >
+                            <span className={labelClass}>
+                              {t('order.paymentLocked.purchaseQuantity')}
+                            </span>
+                            <span className={`font-medium ${valueClass}`}>
+                              {order.items[0].quantity}
+                            </span>
+                          </div>
+                        )}
+                        <div
+                          className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                        >
+                          <span className={labelClass}>{t('order.paymentLocked.token')}</span>
+                          <span className={`font-medium ${valueClass}`}>
+                            {order.paymentLocked.coin}
+                          </span>
+                        </div>
+                        {order.paymentLocked.buyerReceiveAddress && (
+                          <div
+                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                          >
+                            <span className={labelClass}>
+                              {t('order.paymentLocked.buyerAddress')}
+                            </span>
+                            <span
+                              className={`font-mono text-xs truncate max-w-[180px] ${valueClass}`}
+                              title={order.paymentLocked.buyerReceiveAddress}
+                            >
+                              {order.paymentLocked.buyerReceiveAddress.slice(0, 8)}...
+                              {order.paymentLocked.buyerReceiveAddress.slice(-6)}
+                            </span>
+                          </div>
+                        )}
+                        {order.paymentLocked.timestamp && (
+                          <div
+                            className={`flex justify-between items-center py-1 border-b ${borderClass}`}
+                          >
+                            <span className={labelClass}>
+                              {t('order.paymentLocked.lockedTime')}
+                            </span>
+                            <span className={valueClass}>
+                              {new Date(order.paymentLocked.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                        {/* 过期时间 - 只在资金未释放时显示 */}
+                        {order.paymentLocked.expiresAt && !isReleased && (
+                          <div className="flex justify-between items-center py-1">
+                            <span className={labelClass}>{t('order.paymentLocked.expiresAt')}</span>
+                            <span className={valueClass}>
+                              {new Date(order.paymentLocked.expiresAt).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+                {/* 买家端显示提示和操作按钮 */}
+                {order.userRole === 'buyer' && !isReleased && (
+                  <div
+                    className={`mt-3 pt-3 border-t ${
+                      isExpired
+                        ? 'border-red-200 dark:border-red-700/50'
+                        : 'border-emerald-200 dark:border-emerald-700/50'
+                    }`}
+                  >
+                    {isExpired ? (
+                      <>
+                        <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+                          {t('order.paymentLocked.expiredCanClaim')}
+                        </p>
+                        {displayOrder.onRwaClaimExpired && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={displayOrder.onRwaClaimExpired}
+                            className="w-full"
+                          >
+                            {t('order.paymentLocked.claimRefund')}
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-sm mb-3">
+                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          {t('order.paymentLocked.waitingForSeller')}
+                        </div>
+                        {displayOrder.onRwaCancelOrder && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={displayOrder.onRwaCancelOrder}
+                            className="w-full"
+                          >
+                            {t('order.paymentLocked.cancelOrder')}
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+                {/* 资金已释放提示 */}
+                {isReleased && (
+                  <div className="mt-3 pt-3 border-t border-sky-200 dark:border-sky-700/50">
+                    <p className="text-sm text-sky-700 dark:text-sky-400">
+                      {t('order.paymentLocked.fundsReleasedToSeller')}
+                    </p>
+                  </div>
+                )}
+                {/* 卖家端显示提示 */}
+                {order.userRole === 'seller' && !isExpired && !isReleased && (
+                  <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50">
+                    <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                      {t('order.paymentLocked.waitingToConfirm')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+        {/* Traditional Payment Card */}
+        {order.paymentTx && !order.paymentLocked && (
+          <PaymentCard
+            amount={order.total}
+            currency={order.currency}
+            pricingAmount={order.pricingAmount}
+            pricingCurrency={order.pricingCurrency}
+            txHash={order.paymentTx}
+            confirmations={order.txConfirmations}
+            chainId={order.chainId}
+            timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
+            title={t('order.paid')}
+            description={order.moderator ? t('order.fundsInEscrow') : t('order.directPaymentDesc')}
+            showDivider={true}
+          />
+        )}
 
         {/* RWA Asset Details Section */}
         {isRwaTokenOrder && rwaProduct && (
@@ -920,185 +1163,156 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           </div>
         )}
 
-        {/* Order Details Section */}
-        <div className="border-t border-border pt-4 mt-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm sm:text-base font-semibold text-foreground">
-              {t('order.details')}
-            </h3>
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {new Date(order.createdAt).toLocaleString()}
+        {/* 争议提示卡片 - 放在支付之后 */}
+        {onOpenDispute && canOpenDispute && !order.dispute && (
+          <DisputeTimeoutCard createdAt={order.createdAt} onOpenDispute={onOpenDispute} />
+        )}
+
+        {/* Moderator */}
+        {order.moderator && (
+          <div className="p-2.5 mb-4 bg-muted/20 rounded-lg border border-border/30">
+            <span className="text-[11px] text-muted-foreground block mb-1">
+              {t('order.moderator')}
             </span>
-          </div>
-
-          {/* Product Info */}
-          {order.slug ? (
-            <Link
-              href={
-                order.vendor?.peerID
-                  ? `/product/${order.slug}?peerID=${order.vendor.peerID}`
-                  : `/product/${order.slug}`
-              }
-              className="flex gap-3 sm:gap-4 mb-4 p-3 sm:p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              {order.items[0]?.image && (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0">
-                  <img
-                    src={order.items[0].image}
-                    alt={order.items[0].title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-foreground text-sm sm:text-base truncate">
-                  {order.items[0]?.title || t('order.unknownItem')}
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs sm:text-sm">
-                  <div>
-                    <span className="text-muted-foreground">{t('order.coupons')}</span>
-                    <p className="text-foreground">{t('common.none')}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t('order.quantity')}</span>
-                    <p className="text-foreground">{order.items[0]?.quantity || 1}</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <div className="flex gap-3 sm:gap-4 mb-4 p-3 sm:p-4 bg-muted/30 rounded-lg">
-              {order.items[0]?.image && (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0">
-                  <img
-                    src={order.items[0].image}
-                    alt={order.items[0].title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-foreground text-sm sm:text-base truncate">
-                  {order.items[0]?.title || t('order.unknownItem')}
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs sm:text-sm">
-                  <div>
-                    <span className="text-muted-foreground">{t('order.coupons')}</span>
-                    <p className="text-foreground">{t('common.none')}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t('order.quantity')}</span>
-                    <p className="text-foreground">{order.items[0]?.quantity || 1}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Order Info Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm">
-            <div>
-              <span className="text-muted-foreground block mb-1">{t('order.shipTo')}</span>
-              <div className="text-foreground whitespace-pre-line">
-                {order.shippingRecipient && (
-                  <p className="font-medium">{order.shippingRecipient}</p>
-                )}
-                {order.shippingAddressLine1 && <p>{order.shippingAddressLine1}</p>}
-                {order.shippingAddressLine2 && <p>{order.shippingAddressLine2}</p>}
-                {(order.shippingCity || order.shippingState || order.shippingPostalCode) && (
-                  <p>
-                    {[order.shippingCity, order.shippingState, order.shippingPostalCode]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </p>
-                )}
-                {order.shippingCountryCode && <p>{formatCountryCode(order.shippingCountryCode)}</p>}
-                {!order.shippingRecipient &&
-                  !order.shippingAddressLine1 &&
-                  !order.shippingCity &&
-                  !order.shippingCountryCode && <p>{t('common.none')}</p>}
-              </div>
-              {order.shippingAddress && order.shippingAddress !== 'No shipping address' && (
-                <div className="flex items-center gap-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(order.shippingAddress);
-                    }}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    {t('common.copy')}
-                  </button>
-                  <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(order.shippingAddress.replace(/\n/g, ', '))}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline"
-                  >
-                    {t('order.viewOnMap')}
-                  </a>
-                </div>
-              )}
-            </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">{t('order.moderator')}</span>
-              {order.moderator ? (
-                <Link
-                  href={`/moderators/${order.moderator.id}`}
-                  className="text-primary hover:underline"
-                >
-                  {order.moderator.name}
-                </Link>
-              ) : (
-                <p className="text-foreground">{t('common.none')}</p>
-              )}
-            </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">{t('order.total')}</span>
-              {/* 如果有原始定价且与支付币种不同，显示两种金额 */}
-              {order.pricingAmount &&
-              order.pricingCurrency &&
-              order.pricingCurrency !== order.currency ? (
-                <>
-                  <p className="text-foreground font-semibold">
-                    {order.pricingCurrency === 'USD' ? '$' : ''}
-                    {order.pricingAmount}{' '}
-                    {order.pricingCurrency !== 'USD' ? order.pricingCurrency : ''}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    ≈ {order.total} {order.currency}
-                  </p>
-                </>
-              ) : (
-                <p className="text-foreground font-semibold">
-                  {order.total} {order.currency}
-                </p>
-              )}
-            </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">{t('order.shippingOption')}</span>
-              <p className="text-foreground">{order.shippingOption || t('common.none')}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">{t('order.shippingService')}</span>
-              <p className="text-foreground">{order.shippingService || t('common.none')}</p>
-            </div>
-          </div>
-
-          {/* Memo and Contact Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-border text-xs sm:text-sm">
-            <div>
-              <span className="text-muted-foreground block mb-1">{t('order.memo')}</span>
-              <p className="text-foreground">{order.notes || t('common.none')}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">
-                {t('order.additionalContact')}
+            <Link href={`/moderators/${order.moderator.id}`} className="flex items-center gap-2">
+              <Avatar
+                src={order.moderator.avatar}
+                name={order.moderator.name}
+                size="sm"
+                className="w-8 h-8 ring-1 ring-border/50"
+              />
+              <span className="text-sm font-medium text-primary hover:underline">
+                {order.moderator.name}
               </span>
-              <p className="text-foreground">{t('common.none')}</p>
-            </div>
+            </Link>
           </div>
-        </div>
+        )}
+
+        {/* ========== Memo / Contact 直显（不折叠） ========== */}
+        {(() => {
+          const hasMemo = !!order.notes;
+          const hasContact = !!order.alternateContactInfo;
+          if (!hasMemo && !hasContact) return null;
+          return (
+            <div className="space-y-2 mb-4">
+              {hasMemo && (
+                <div className="p-2.5 bg-muted/20 rounded-lg">
+                  <span className="text-[11px] text-muted-foreground block mb-0.5">Memo</span>
+                  <p className="text-sm text-foreground">{order.notes}</p>
+                </div>
+              )}
+              {hasContact && (
+                <div className="p-2.5 bg-muted/20 rounded-lg">
+                  <span className="text-[11px] text-muted-foreground block mb-0.5">
+                    Additional Contact
+                  </span>
+                  <p className="text-sm text-foreground">{order.alternateContactInfo}</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ========== Shipping 详情（仅实物商品折叠） ========== */}
+        {(() => {
+          const isPhysicalGood = order.contractType === 'PHYSICAL_GOOD';
+          const hasShippingInfo =
+            isPhysicalGood && (order.shippingRecipient || order.shippingAddressLine1);
+          const hasShippingMeta = isPhysicalGood && (order.shippingOption || order.shippingService);
+          if (!hasShippingInfo && !hasShippingMeta) return null;
+
+          return (
+            <details className="group">
+              <summary className="flex items-center justify-between cursor-pointer list-none p-2.5 bg-muted/20 rounded-lg hover:bg-muted/40 transition-colors border border-border/30">
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-90"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium text-foreground">Shipping Details</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </span>
+              </summary>
+              <div className="pt-3 space-y-3 text-xs sm:text-sm">
+                {hasShippingInfo && (
+                  <div className="p-3 bg-muted/20 rounded-lg">
+                    <span className="text-muted-foreground block mb-1 text-xs font-medium">
+                      Ship To
+                    </span>
+                    <div className="text-foreground whitespace-pre-line">
+                      {order.shippingRecipient && (
+                        <p className="font-medium">{order.shippingRecipient}</p>
+                      )}
+                      {order.shippingAddressLine1 && <p>{order.shippingAddressLine1}</p>}
+                      {order.shippingAddressLine2 && <p>{order.shippingAddressLine2}</p>}
+                      {(order.shippingCity || order.shippingState || order.shippingPostalCode) && (
+                        <p>
+                          {[order.shippingCity, order.shippingState, order.shippingPostalCode]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </p>
+                      )}
+                      {order.shippingCountryCode && (
+                        <p>{formatCountryCode(order.shippingCountryCode)}</p>
+                      )}
+                    </div>
+                    {order.shippingAddress && order.shippingAddress !== 'No shipping address' && (
+                      <div className="flex items-center gap-3 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => navigator.clipboard.writeText(order.shippingAddress)}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Copy
+                        </button>
+                        <a
+                          href={`https://maps.google.com/?q=${encodeURIComponent(order.shippingAddress.replace(/\n/g, ', '))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          View on Map
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {hasShippingMeta && (
+                  <div className="flex gap-4 p-3 bg-muted/20 rounded-lg">
+                    {order.shippingOption && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5 text-xs">
+                          Shipping Option
+                        </span>
+                        <p className="text-foreground">{order.shippingOption}</p>
+                      </div>
+                    )}
+                    {order.shippingService && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5 text-xs">
+                          Shipping Service
+                        </span>
+                        <p className="text-foreground">{order.shippingService}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </details>
+          );
+        })()}
 
         {/* Action Buttons - 仅在 Modal 的桌面端显示，移动端使用底部 footer */}
         {/* 注意：Message 和 Open Dispute 按钮已移至左侧边栏，这里只保留其他操作 */}
@@ -1137,9 +1351,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             {/* Seller Info */}
             <Link
               href={order.vendor?.peerID ? `/store/${order.vendor.peerID}` : '#'}
-              className="p-3 bg-muted/30 rounded-lg block hover:bg-muted/50 transition-colors"
+              className="group p-3 bg-muted/30 rounded-xl border border-border/50 block hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all"
             >
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                 {t('order.seller')}
               </h4>
               <HStack gap="sm" align="center">
@@ -1147,10 +1361,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                   src={order.vendor.avatar}
                   name={order.vendor.name}
                   size="sm"
-                  className="w-8 h-8"
+                  className="w-9 h-9 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
                 />
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground text-sm truncate">
+                  <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">
                     {order.vendor.name}
                   </p>
                   {order.vendor.location && (
@@ -1166,9 +1380,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             {order.buyer && (
               <Link
                 href={order.buyer?.peerID ? `/store/${order.buyer.peerID}` : '#'}
-                className="p-3 bg-muted/30 rounded-lg block hover:bg-muted/50 transition-colors"
+                className="group p-3 bg-muted/30 rounded-xl border border-border/50 block hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all"
               >
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   {t('order.buyer')}
                 </h4>
                 <HStack gap="sm" align="center">
@@ -1176,10 +1390,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     src={order.buyer.avatar}
                     name={order.buyer.name}
                     size="sm"
-                    className="w-8 h-8"
+                    className="w-9 h-9 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
                   />
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">
+                    <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">
                       {order.buyer.name}
                     </p>
                     {order.buyer.location && (
@@ -1196,9 +1410,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             {order.moderator && (
               <Link
                 href={`/moderators/${order.moderator.id}`}
-                className="p-3 bg-muted/30 rounded-lg block hover:bg-muted/50 transition-colors"
+                className="group p-3 bg-muted/30 rounded-xl border border-border/50 block hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all"
               >
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   {t('order.moderator')}
                 </h4>
                 <HStack gap="sm" align="center">
@@ -1206,10 +1420,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     src={order.moderator.avatar}
                     name={order.moderator.name}
                     size="sm"
-                    className="w-8 h-8"
+                    className="w-9 h-9 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
                   />
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">
+                    <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">
                       {order.moderator.name}
                     </p>
                     {order.moderator.location && (
@@ -1217,7 +1431,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                         {order.moderator.location}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-primary font-medium">
                       {t('order.moderatorFeePercent', { fee: order.moderator.fee })}
                     </p>
                   </div>

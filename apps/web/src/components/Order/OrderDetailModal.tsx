@@ -121,42 +121,46 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
   const counterpartyLabel = order.userRole === 'buyer' ? t('order.seller') : t('order.buyer');
 
   return (
-    <div className="w-56 flex-shrink-0 border-r border-border flex flex-col bg-muted/30">
+    <div className="w-56 flex-shrink-0 border-r border-border flex flex-col bg-muted/20">
       {/* 交易对方信息 */}
-      <div className="p-4 flex flex-col items-center border-b border-border">
+      <div className="p-4 flex flex-col items-center border-b border-border bg-background/50">
         <Link
           href={counterparty?.peerID ? `/store/${counterparty.peerID}` : '#'}
-          className="flex flex-col items-center"
+          className="group flex flex-col items-center"
         >
-          <AvatarCompat
-            src={counterparty?.avatar}
-            name={counterparty?.name || 'Unknown'}
-            size="xl"
-            className="mb-3"
-          />
-          <h3 className="text-sm font-semibold text-foreground text-center">
+          <div className="relative">
+            <AvatarCompat
+              src={counterparty?.avatar}
+              name={counterparty?.name || 'Unknown'}
+              size="xl"
+              className="mb-3 ring-2 ring-border/50 group-hover:ring-primary/50 transition-all"
+            />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground text-center group-hover:text-primary transition-colors">
             {counterparty?.name || 'Unknown'}
           </h3>
           {counterparty?.location && (
             <p className="text-xs text-muted-foreground mt-0.5">{counterparty.location}</p>
           )}
         </Link>
-        <p className="text-xs text-muted-foreground mt-1">{counterpartyLabel}</p>
+        <span className="text-[10px] text-muted-foreground mt-1.5 px-2 py-0.5 bg-muted/50 rounded-full uppercase tracking-wide font-medium">
+          {counterpartyLabel}
+        </span>
       </div>
 
       {/* 菜单 */}
       <div className="p-3 flex-1">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+        <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-3 px-2">
           {t('order.menu')}
         </p>
         <nav className="space-y-1">
           <button
             onClick={() => onTabChange('summary')}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-left',
+              'w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left',
               activeTab === 'summary'
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground hover:bg-muted'
+                ? 'bg-primary text-primary-foreground font-medium shadow-sm'
+                : 'text-foreground hover:bg-muted/80'
             )}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,10 +176,10 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
           <button
             onClick={() => onTabChange('discussion')}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-left',
+              'w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left',
               activeTab === 'discussion'
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground hover:bg-muted'
+                ? 'bg-primary text-primary-foreground font-medium shadow-sm'
+                : 'text-foreground hover:bg-muted/80'
             )}
           >
             <MessageCircle className="w-4 h-4" />
@@ -184,10 +188,10 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
           <button
             onClick={() => onTabChange('contract')}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-left',
+              'w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left',
               activeTab === 'contract'
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground hover:bg-muted'
+                ? 'bg-primary text-primary-foreground font-medium shadow-sm'
+                : 'text-foreground hover:bg-muted/80'
             )}
           >
             <FileJson className="w-4 h-4" />

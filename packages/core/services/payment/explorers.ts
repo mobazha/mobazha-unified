@@ -5,6 +5,7 @@
 
 import { CHAIN_CONFIG } from './chains';
 import { ChainId } from './types';
+import { getChainFromCoin, getEVMChainId } from '../../data/tokens';
 
 export type ExplorerResource = 'tx' | 'address' | 'token' | 'nft';
 
@@ -42,18 +43,37 @@ function getEvmExplorerBase(chainId: number): string | null {
 }
 
 export function getExplorerBaseUrl({ chainId, coin }: ExplorerContext = {}): string | null {
+  // 优先使用传入的 chainId
   if (chainId) {
     const base = getEvmExplorerBase(chainId);
     if (base) return base;
   }
 
   const coinUpper = coin?.toUpperCase();
+
+  // 检查非 EVM 链（BTC, LTC）
   if (coinUpper && NON_EVM_EXPLORERS[coinUpper]) {
     return NON_EVM_EXPLORERS[coinUpper].base;
   }
 
-  if (coinUpper && COIN_CHAIN_FALLBACK[coinUpper]) {
-    return getEvmExplorerBase(COIN_CHAIN_FALLBACK[coinUpper]);
+  // 使用 tokens.ts 的 getChainFromCoin 从代币名称获取链 ID（支持 ETHUSDT -> ETH）
+  if (coinUpper) {
+    const chainSymbol = getChainFromCoin(coinUpper);
+    if (chainSymbol) {
+      // 检查是否为非 EVM 链
+      if (NON_EVM_EXPLORERS[chainSymbol]) {
+        return NON_EVM_EXPLORERS[chainSymbol].base;
+      }
+      // 尝试获取 EVM chainId
+      const evmChainId = getEVMChainId(chainSymbol);
+      if (evmChainId) {
+        return getEvmExplorerBase(evmChainId);
+      }
+      // 回退到 COIN_CHAIN_FALLBACK
+      if (COIN_CHAIN_FALLBACK[chainSymbol]) {
+        return getEvmExplorerBase(COIN_CHAIN_FALLBACK[chainSymbol]);
+      }
+    }
   }
 
   return null;

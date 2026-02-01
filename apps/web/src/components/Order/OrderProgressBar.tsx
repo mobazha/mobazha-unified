@@ -56,47 +56,50 @@ export const OrderProgressBar = memo(function OrderProgressBar({
       aria-valuemin={0}
       aria-valuemax={states.length}
     >
-      {/* 进度条容器 - 使用 flex 布局 */}
-      <div className="flex h-6 relative">
+      {/* 进度条容器 */}
+      <div className="relative h-6">
+        {/* 背景线条 */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-0.5 bg-muted-foreground/30" />
+
+        {/* 已完成线条 */}
+        {currentState > 0 && (
+          <div
+            className="absolute top-1/2 -translate-y-1/2 left-0 h-0.5 bg-foreground transition-all duration-300"
+            style={{
+              width: `${((currentState - 1) / (states.length - 1)) * 100}%`,
+            }}
+          />
+        )}
+
+        {/* 节点 */}
         {states.map((state, index) => {
           const stateNumber = index + 1;
           const isCompleted = stateNumber <= currentState;
           const isDisputed = disputeState > 0 && stateNumber === disputeState;
           const isFirst = index === 0;
           const isLast = index === states.length - 1;
+          const positionPercent = (index / (states.length - 1)) * 100;
 
           return (
-            <div key={index} className="relative h-6" style={{ width: `${getStateWidth(index)}%` }}>
-              {/* 线条 - 贯穿整个 section */}
-              <div
-                className={cn(
-                  'absolute top-1/2 -translate-y-1/2 left-0 right-0 h-0.5',
-                  isCompleted ? 'bg-foreground' : 'bg-muted-foreground/30'
-                )}
-              />
-
-              {/* 圆点 - 移动端 20px，桌面端 24px */}
+            <div key={index}>
+              {/* 圆点 - 移动端 22px，桌面端 26px */}
               <div
                 className={cn(
                   'absolute top-1/2 -translate-y-1/2 z-10',
-                  'w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center',
+                  'w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full flex items-center justify-center',
                   'transition-all duration-300',
-                  // 位置：首节点左边、尾节点右边、其他居中
-                  isFirst
-                    ? 'left-0 -translate-x-1/2'
-                    : isLast
-                      ? 'right-0 translate-x-1/2'
-                      : 'left-1/2 -translate-x-1/2',
-                  // 样式
+                  // 定位：首节点不偏移，尾节点向左偏移100%，中间向左偏移50%
+                  isFirst ? '' : isLast ? '-translate-x-full' : '-translate-x-1/2',
                   isCompleted
                     ? 'bg-foreground text-background'
                     : 'bg-muted border-2 border-muted-foreground/30 text-muted-foreground'
                 )}
+                style={{ left: `${positionPercent}%` }}
               >
                 {isCompleted ? (
                   <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={3} />
                 ) : (
-                  <span className="text-[9px] sm:text-[10px] font-medium">{stateNumber}</span>
+                  <span className="text-[10px] sm:text-[11px] font-medium">{stateNumber}</span>
                 )}
               </div>
 
@@ -105,28 +108,35 @@ export const OrderProgressBar = memo(function OrderProgressBar({
                 <div
                   className={cn(
                     'absolute top-0 z-20',
-                    isFirst ? 'left-1.5' : isLast ? 'right-1.5' : 'left-1/2 translate-x-0.5'
+                    isFirst ? 'translate-x-3' : isLast ? '-translate-x-3' : ''
                   )}
+                  style={{
+                    left: isFirst
+                      ? `${positionPercent}%`
+                      : isLast
+                        ? `calc(${positionPercent}% - 12px)`
+                        : `calc(${positionPercent}% + 4px)`,
+                  }}
                 >
-                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm">
-                    <AlertCircle className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                  <div className="w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm">
+                    <AlertCircle className="w-2.5 h-2.5" />
                   </div>
                 </div>
               )}
 
-              {/* 标签 - 移动端 10px，首尾对齐边界 */}
+              {/* 标签 - 首尾对齐边界，中间居中 */}
               <span
                 className={cn(
-                  'absolute top-full mt-1 text-[10px] sm:text-[11px]',
-                  // 位置：首节点左对齐，尾节点右对齐，其他居中
+                  'absolute top-full mt-2 text-[11px] sm:text-xs whitespace-nowrap',
+                  // 对齐方式：首节点左对齐，尾节点右对齐，中间居中
                   isFirst
                     ? 'left-0 text-left'
                     : isLast
                       ? 'right-0 text-right'
                       : 'left-1/2 -translate-x-1/2 text-center',
-                  // 样式
                   isCompleted ? 'text-foreground font-medium' : 'text-muted-foreground'
                 )}
+                style={!isFirst && !isLast ? { left: `${positionPercent}%` } : undefined}
               >
                 {state}
               </span>
@@ -134,6 +144,9 @@ export const OrderProgressBar = memo(function OrderProgressBar({
           );
         })}
       </div>
+
+      {/* 为标签留出底部空间 */}
+      <div className="h-6 sm:h-7" />
     </div>
   );
 });

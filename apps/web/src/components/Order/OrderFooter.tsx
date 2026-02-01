@@ -16,25 +16,6 @@ import {
   type OrderState,
 } from '@mobazha/core';
 
-// 状态中文标签
-const statusLabelsZh: Record<string, string> = {
-  PENDING: '待处理',
-  AWAITING_PAYMENT: '待付款',
-  AWAITING_PICKUP: '待取货',
-  AWAITING_FULFILLMENT: '待发货',
-  PARTIALLY_FULFILLED: '部分发货',
-  FULFILLED: '已发货',
-  COMPLETED: '已完成',
-  CANCELED: '已取消',
-  DECLINED: '已拒绝',
-  REFUNDED: '已退款',
-  DISPUTED: '争议中',
-  DECIDED: '已裁决',
-  RESOLVED: '已解决',
-  PAYMENT_FINALIZED: '已结算',
-  PROCESSING_ERROR: '处理错误',
-};
-
 export interface OrderFooterProps {
   orderState: OrderState;
   userRole: UserRole;
@@ -156,61 +137,99 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       outline: 'outline',
     };
 
-    // 主要操作按钮使用绿色，参照原有移动端设计
+    // 主要操作按钮 - 醒目的样式
     if (isPrimary) {
       return (
         <Button
           key={action}
           size="sm"
           onClick={() => onAction(action)}
-          className="whitespace-nowrap px-6 bg-primary hover:bg-primary/90 text-white"
+          className="whitespace-nowrap px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-full"
         >
           {getActionLabel(action)}
         </Button>
       );
     }
 
-    // 危险操作按钮使用主题感知的 destructive-foreground 颜色
+    // 危险操作按钮（如 Open Dispute）
     const isDanger = config.variant === 'danger';
 
     return (
       <Button
         key={action}
-        variant={variantMap[config.variant] || 'outline'}
+        variant={isDanger ? 'outline' : variantMap[config.variant] || 'outline'}
         size="sm"
         onClick={() => onAction(action)}
-        className={`whitespace-nowrap px-4 ${isDanger ? 'text-destructive-foreground' : ''}`}
+        className={`whitespace-nowrap px-3 sm:px-4 h-9 sm:h-10 text-xs sm:text-sm font-medium rounded-full ${
+          isDanger ? 'border-destructive text-destructive hover:bg-destructive/10' : ''
+        }`}
       >
         {getActionLabel(action)}
       </Button>
     );
   };
 
-  // 获取状态显示标签
-  const statusLabel = statusLabelsZh[orderState] || orderState;
+  // 获取状态显示标签 - 使用友好的格式化名称
+  const getStatusLabel = (state: OrderState): string => {
+    // 将 SNAKE_CASE 转换为 Title Case（如 AWAITING_PAYMENT → Awaiting Payment）
+    const formatStatus = (s: string) =>
+      s
+        .toLowerCase()
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+    // 常用状态的简短友好名称
+    const friendlyNames: Record<string, string> = {
+      PENDING: 'Pending',
+      AWAITING_PAYMENT: 'Awaiting Payment',
+      AWAITING_PICKUP: 'Awaiting Pickup',
+      AWAITING_FULFILLMENT: 'Processing',
+      PARTIALLY_FULFILLED: 'Partial Shipped',
+      FULFILLED: 'Shipped',
+      COMPLETED: 'Completed',
+      CANCELED: 'Canceled',
+      DECLINED: 'Declined',
+      REFUNDED: 'Refunded',
+      DISPUTED: 'Disputed',
+      DECIDED: 'Decided',
+      RESOLVED: 'Resolved',
+      PAYMENT_FINALIZED: 'Finalized',
+      PROCESSING_ERROR: 'Error',
+    };
+
+    return friendlyNames[state] || formatStatus(state);
+  };
+
+  const statusLabel = getStatusLabel(orderState);
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-3 shadow-lg z-50 ${className}`}
+      className={`fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50 safe-area-inset-bottom ${className}`}
     >
-      <HStack justify="between" align="center" className="max-w-screen-xl mx-auto">
-        {/* 左侧：状态标签 + 价格信息 */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* 状态标签 - 移动端显示 */}
-          <span className="text-sm font-medium text-foreground lg:hidden">{statusLabel}</span>
-          {/* 价格/倒计时信息 */}
-          {renderPriceInfo() || renderDisputeCountdown()}
-        </div>
+      {/* 内容区域 - 有安全区域内边距 */}
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+        <HStack justify="between" align="center" className="max-w-screen-xl mx-auto gap-3">
+          {/* 左侧：状态标签 + 价格信息 */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
+            {/* 状态标签 - 移动端显示，带背景 */}
+            <span className="text-xs sm:text-sm font-medium text-foreground px-2 py-1 bg-muted/50 rounded-md lg:hidden truncate">
+              {statusLabel}
+            </span>
+            {/* 价格/倒计时信息 */}
+            {renderPriceInfo() || renderDisputeCountdown()}
+          </div>
 
-        {/* 右侧：操作按钮 */}
-        <HStack gap="sm" className="flex-shrink-0">
-          {/* 次要操作按钮 */}
-          {secondaryActions.map(action => renderActionButton(action, false))}
+          {/* 右侧：操作按钮 */}
+          <HStack gap="xs" className="flex-shrink-0 gap-2">
+            {/* 次要操作按钮 */}
+            {secondaryActions.map(action => renderActionButton(action, false))}
 
-          {/* 主要操作按钮 */}
-          {primaryAction && renderActionButton(primaryAction, true)}
+            {/* 主要操作按钮 */}
+            {primaryAction && renderActionButton(primaryAction, true)}
+          </HStack>
         </HStack>
-      </HStack>
+      </div>
     </div>
   );
 };

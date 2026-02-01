@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
+import { Search, CheckCircle, Star, Shield, X, ChevronRight, Filter, Users } from 'lucide-react';
 
 // Types
 interface Moderator {
@@ -94,6 +96,206 @@ const mockModerators: Moderator[] = [
   },
 ];
 
+// Moderator Card Component
+function ModeratorListCard({ moderator }: { moderator: Moderator }) {
+  const { t } = useI18n();
+
+  return (
+    <Link href={`/moderators/${moderator.id}`}>
+      <Card className="group relative p-5 border border-border/60 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 cursor-pointer">
+        <HStack gap="lg" align="start">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <img
+              src={moderator.avatar}
+              alt={moderator.name}
+              className="w-16 h-16 rounded-full bg-muted ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
+            />
+            {moderator.verified && (
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-background">
+                <CheckCircle className="w-4 h-4 text-white" />
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            {/* Name and Verified Badge */}
+            <HStack gap="sm" align="center" className="mb-1.5">
+              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+                {moderator.name}
+              </h3>
+              {moderator.verified && (
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 gap-1 text-xs"
+                >
+                  <Shield className="w-3 h-3" />
+                  Verified
+                </Badge>
+              )}
+            </HStack>
+
+            {/* Description */}
+            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+              {moderator.shortDescription}
+            </p>
+
+            {/* Stats Row */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Rating */}
+              <HStack gap="xs" align="center">
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <span className="font-semibold text-foreground">{moderator.rating}</span>
+                <span className="text-muted-foreground text-sm">({moderator.ratingCount})</span>
+              </HStack>
+
+              <span className="w-px h-4 bg-border" />
+
+              {/* Disputes */}
+              <HStack gap="xs" align="center">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {moderator.disputesHandled} {t('moderator.disputes')}
+                </span>
+              </HStack>
+
+              <span className="w-px h-4 bg-border" />
+
+              {/* Success Rate with mini progress bar */}
+              <HStack gap="sm" align="center">
+                <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${moderator.successRate}%` }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-primary">{moderator.successRate}%</span>
+              </HStack>
+            </div>
+
+            {/* Languages */}
+            <HStack gap="sm" className="mt-3">
+              {moderator.languages.map(lang => (
+                <span
+                  key={lang}
+                  className="text-xs px-2.5 py-1 bg-muted/60 text-muted-foreground rounded-full border border-border/50"
+                >
+                  {lang}
+                </span>
+              ))}
+            </HStack>
+          </div>
+
+          {/* Fee Badge */}
+          <div className="flex-shrink-0 flex flex-col items-end gap-2">
+            <div className="px-4 py-2 bg-primary/10 rounded-xl text-center min-w-[80px]">
+              <p className="text-xl font-bold text-primary">{moderator.fee}%</p>
+              <p className="text-xs text-muted-foreground">{t('moderator.fee')}</p>
+            </div>
+
+            {/* View Profile hint on hover */}
+            <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              View Profile
+              <ChevronRight className="w-3 h-3" />
+            </span>
+          </div>
+        </HStack>
+      </Card>
+    </Link>
+  );
+}
+
+// Active Filters Component
+function ActiveFilters({
+  selectedLanguage,
+  maxFee,
+  verifiedOnly,
+  onClearLanguage,
+  onClearMaxFee,
+  onClearVerified,
+  onClearAll,
+}: {
+  selectedLanguage: string;
+  maxFee: string;
+  verifiedOnly: boolean;
+  onClearLanguage: () => void;
+  onClearMaxFee: () => void;
+  onClearVerified: () => void;
+  onClearAll: () => void;
+}) {
+  const hasFilters = selectedLanguage !== 'all' || maxFee !== 'all' || verifiedOnly;
+
+  if (!hasFilters) return null;
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-sm text-muted-foreground">Active filters:</span>
+
+      {selectedLanguage !== 'all' && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1 bg-primary/10 text-primary border-primary/20"
+        >
+          {selectedLanguage}
+          <button
+            onClick={e => {
+              e.preventDefault();
+              onClearLanguage();
+            }}
+            className="ml-1 p-0.5 hover:bg-primary/20 rounded-full transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </Badge>
+      )}
+
+      {maxFee !== 'all' && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1 bg-primary/10 text-primary border-primary/20"
+        >
+          Max {maxFee}%
+          <button
+            onClick={e => {
+              e.preventDefault();
+              onClearMaxFee();
+            }}
+            className="ml-1 p-0.5 hover:bg-primary/20 rounded-full transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </Badge>
+      )}
+
+      {verifiedOnly && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1 bg-primary/10 text-primary border-primary/20"
+        >
+          Verified only
+          <button
+            onClick={e => {
+              e.preventDefault();
+              onClearVerified();
+            }}
+            className="ml-1 p-0.5 hover:bg-primary/20 rounded-full transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </Badge>
+      )}
+
+      <button
+        onClick={onClearAll}
+        className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+      >
+        Clear all
+      </button>
+    </div>
+  );
+}
+
 export default function ModeratorsPage() {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,37 +305,54 @@ export default function ModeratorsPage() {
   const [sortBy, setSortBy] = useState<'rating' | 'fee' | 'disputes'>('rating');
 
   // Filter and sort moderators
-  const filteredModerators = mockModerators
-    .filter(mod => {
-      if (searchQuery && !mod.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      if (selectedLanguage !== 'all' && !mod.languages.includes(selectedLanguage)) {
-        return false;
-      }
-      if (maxFee !== 'all' && mod.fee > Number(maxFee)) {
-        return false;
-      }
-      if (verifiedOnly && !mod.verified) {
-        return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'rating':
-          return b.rating - a.rating;
-        case 'fee':
-          return a.fee - b.fee;
-        case 'disputes':
-          return b.disputesHandled - a.disputesHandled;
-        default:
-          return 0;
-      }
-    });
+  const filteredModerators = useMemo(() => {
+    return mockModerators
+      .filter(mod => {
+        if (searchQuery && !mod.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false;
+        }
+        if (selectedLanguage !== 'all' && !mod.languages.includes(selectedLanguage)) {
+          return false;
+        }
+        if (maxFee !== 'all' && mod.fee > Number(maxFee)) {
+          return false;
+        }
+        if (verifiedOnly && !mod.verified) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'rating':
+            return b.rating - a.rating;
+          case 'fee':
+            return a.fee - b.fee;
+          case 'disputes':
+            return b.disputesHandled - a.disputesHandled;
+          default:
+            return 0;
+        }
+      });
+  }, [searchQuery, selectedLanguage, maxFee, verifiedOnly, sortBy]);
 
   // Get unique languages
   const allLanguages = Array.from(new Set(mockModerators.flatMap(m => m.languages)));
+
+  // Sort options for display
+  const sortLabels: Record<string, string> = {
+    rating: t('moderator.highestRating'),
+    fee: t('moderator.lowestFee'),
+    disputes: t('moderator.mostDisputes'),
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setSelectedLanguage('all');
+    setMaxFee('all');
+    setVerifiedOnly(false);
+    setSortBy('rating');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,32 +362,44 @@ export default function ModeratorsPage() {
         <Container size="xl">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">{t('moderator.title')}</h1>
-            <p className="text-muted-foreground">{t('moderator.subtitle')}</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">{t('moderator.title')}</h1>
+            </div>
+            <p className="text-muted-foreground ml-13">{t('moderator.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-4">
-                <h3 className="font-semibold text-foreground mb-4">{t('filter.filters')}</h3>
+              <Card className="sticky top-4 p-5 border border-border/60 shadow-sm">
+                <div className="flex items-center gap-2 pb-4 border-b border-border mb-4">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="font-semibold text-foreground">{t('filter.filters')}</h3>
+                </div>
 
                 <VStack gap="lg">
                   {/* Search */}
                   <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
+                    <label className="text-sm font-medium text-foreground mb-2 block">
                       {t('common.search')}
                     </label>
-                    <Input
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder={t('moderator.searchPlaceholder')}
-                    />
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        placeholder={t('moderator.searchPlaceholder')}
+                        className="pl-9"
+                      />
+                    </div>
                   </div>
 
                   {/* Language Filter */}
                   <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
+                    <label className="text-sm font-medium text-foreground mb-2 block">
                       {t('moderator.language')}
                     </label>
                     <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
@@ -188,7 +419,7 @@ export default function ModeratorsPage() {
 
                   {/* Max Fee Filter */}
                   <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
+                    <label className="text-sm font-medium text-foreground mb-2 block">
                       {t('moderator.maxFee')}
                     </label>
                     <Select value={maxFee} onValueChange={setMaxFee}>
@@ -206,21 +437,25 @@ export default function ModeratorsPage() {
                   </div>
 
                   {/* Verified Only */}
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={verifiedOnly}
-                      onChange={e => setVerifiedOnly(e.target.checked)}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {t('moderator.verifiedOnly')}
-                    </span>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                        verifiedOnly
+                          ? 'bg-primary border-primary'
+                          : 'border-muted-foreground/40 group-hover:border-primary/60'
+                      }`}
+                      onClick={() => setVerifiedOnly(!verifiedOnly)}
+                    >
+                      {verifiedOnly && (
+                        <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
+                      )}
+                    </div>
+                    <span className="text-sm text-foreground">{t('moderator.verifiedOnly')}</span>
                   </label>
 
                   {/* Sort */}
                   <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
+                    <label className="text-sm font-medium text-foreground mb-2 block">
                       {t('moderator.sortBy')}
                     </label>
                     <Select
@@ -239,17 +474,7 @@ export default function ModeratorsPage() {
                   </div>
 
                   {/* Reset */}
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSelectedLanguage('all');
-                      setMaxFee('all');
-                      setVerifiedOnly(false);
-                      setSortBy('rating');
-                    }}
-                  >
+                  <Button variant="outline" className="w-full" onClick={clearAllFilters}>
                     {t('moderator.resetFilters')}
                   </Button>
                 </VStack>
@@ -258,125 +483,52 @@ export default function ModeratorsPage() {
 
             {/* Moderators List */}
             <div className="lg:col-span-3">
-              <div className="mb-4">
+              {/* List Header */}
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
                 <p className="text-sm text-muted-foreground">
-                  {t('moderator.moderatorsFound', { count: filteredModerators.length })}
+                  <span className="font-semibold text-foreground">{filteredModerators.length}</span>{' '}
+                  moderator(s) found
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Sorted by:{' '}
+                  <span className="font-medium text-foreground">{sortLabels[sortBy]}</span>
                 </p>
               </div>
 
+              {/* Active Filters */}
+              <div className="mb-4">
+                <ActiveFilters
+                  selectedLanguage={selectedLanguage}
+                  maxFee={maxFee}
+                  verifiedOnly={verifiedOnly}
+                  onClearLanguage={() => setSelectedLanguage('all')}
+                  onClearMaxFee={() => setMaxFee('all')}
+                  onClearVerified={() => setVerifiedOnly(false)}
+                  onClearAll={clearAllFilters}
+                />
+              </div>
+
+              {/* Moderators Grid */}
               <VStack gap="md">
                 {filteredModerators.map(moderator => (
-                  <Link key={moderator.id} href={`/moderators/${moderator.id}`}>
-                    <Card className="transition-all hover:shadow-lg">
-                      <HStack gap="lg" align="start">
-                        {/* Avatar */}
-                        <img
-                          src={moderator.avatar}
-                          alt={moderator.name}
-                          className="w-16 h-16 rounded-full bg-muted"
-                        />
-
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <HStack gap="sm" align="center" className="mb-1">
-                            <h3 className="font-semibold text-foreground">{moderator.name}</h3>
-                            {moderator.verified && (
-                              <svg
-                                className="w-5 h-5 text-blue-500 flex-shrink-0"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </HStack>
-
-                          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                            {moderator.shortDescription}
-                          </p>
-
-                          {/* Stats */}
-                          <HStack gap="lg" wrap>
-                            <HStack gap="xs" align="center">
-                              <span className="text-amber-500">⭐</span>
-                              <span className="font-medium text-foreground">
-                                {moderator.rating}
-                              </span>
-                              <span className="text-muted-foreground text-sm">
-                                ({moderator.ratingCount})
-                              </span>
-                            </HStack>
-
-                            <span className="text-muted-foreground/50">|</span>
-
-                            <span className="text-sm text-muted-foreground">
-                              {t('moderator.disputesHandled', {
-                                count: moderator.disputesHandled,
-                              })}
-                            </span>
-
-                            <span className="text-muted-foreground/50">|</span>
-
-                            <span className="text-sm text-primary">
-                              {t('moderator.success', { rate: moderator.successRate })}
-                            </span>
-                          </HStack>
-
-                          {/* Languages */}
-                          <HStack gap="sm" className="mt-2">
-                            {moderator.languages.map(lang => (
-                              <span
-                                key={lang}
-                                className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded"
-                              >
-                                {lang}
-                              </span>
-                            ))}
-                          </HStack>
-                        </div>
-
-                        {/* Fee */}
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-2xl font-bold text-primary">{moderator.fee}%</p>
-                          <p className="text-sm text-muted-foreground">{t('moderator.fee')}</p>
-                        </div>
-                      </HStack>
-                    </Card>
-                  </Link>
+                  <ModeratorListCard key={moderator.id} moderator={moderator} />
                 ))}
 
                 {filteredModerators.length === 0 && (
-                  <Card>
-                    <VStack gap="md" align="center" className="py-8">
+                  <Card className="border border-border/60 shadow-sm">
+                    <VStack gap="md" align="center" className="py-12">
                       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-muted-foreground"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
+                        <Search className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <p className="text-muted-foreground">{t('moderator.noModeratorsFound')}</p>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSelectedLanguage('all');
-                          setMaxFee('all');
-                          setVerifiedOnly(false);
-                        }}
-                      >
+                      <div className="text-center">
+                        <p className="font-medium text-foreground mb-1">
+                          {t('moderator.noModeratorsFound')}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Try adjusting your filters to find more moderators
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={clearAllFilters}>
                         {t('marketplace.clearFilters')}
                       </Button>
                     </VStack>
