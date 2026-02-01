@@ -354,17 +354,18 @@ export const FulfillmentCard = memo(function FulfillmentCard({
   className,
   showDivider = true,
 }: FulfillmentCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
   // 根据商品类型确定显示内容
   const isPhysicalGood = !contractType || contractType === 'PHYSICAL_GOOD';
   const isService = contractType === 'SERVICE';
 
   // 标题和内容
-  const title = isPhysicalGood ? 'Fulfilled' : isService ? 'Delivered' : 'Delivered';
+  const title = isPhysicalGood ? t('order.stages.fulfilled') : t('order.stages.delivered');
   const statusText = isPhysicalGood
-    ? 'Package shipped'
+    ? t('order.fulfillment.packageShipped')
     : isService
-      ? 'Service delivered'
-      : 'Digital content delivered';
+      ? t('order.fulfillment.serviceDelivered')
+      : t('order.fulfillment.digitalDelivered');
 
   return (
     <OrderStageCard
@@ -387,11 +388,14 @@ export const FulfillmentCard = memo(function FulfillmentCard({
             <p className="text-sm font-medium text-foreground">{statusText}</p>
             {/* 物流信息仅对实物商品显示 */}
             {isPhysicalGood && shipper && (
-              <p className="text-xs text-muted-foreground">Carrier: {shipper}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('order.fulfillment.carrier')}: {shipper}
+              </p>
             )}
             {isPhysicalGood && trackingNumber && (
               <p className="text-xs text-muted-foreground">
-                Tracking: <span className="font-mono text-primary">{trackingNumber}</span>
+                {t('order.fulfillment.trackingNumber')}:{' '}
+                <span className="font-mono text-primary">{trackingNumber}</span>
               </p>
             )}
             {note && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{note}</p>}

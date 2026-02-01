@@ -217,8 +217,7 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
           </svg>
         </div>
         <p className="flex-1 text-[11px] sm:text-xs text-amber-700 dark:text-amber-300 leading-snug">
-          订单资金正在第三方托管约 {timeoutDetails.timeRemainingStr}{' '}
-          或直到买家完成订单为止。如您对订单有任何疑问，可以与仲裁人提出争议。
+          {t('order.dispute.escrowHint', { time: timeoutDetails.timeRemainingStr })}
           <span
             className="inline-flex items-center ml-1 text-amber-500 cursor-help"
             title={t('order.disputeHelpTip')}
@@ -239,7 +238,7 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
         className="w-full border-destructive text-destructive hover:bg-destructive/10 font-medium"
         onClick={onOpenDispute}
       >
-        订单争议
+        {t('order.openDispute')}
       </Button>
     </div>
   );
@@ -520,18 +519,21 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   const statusLabel = useMemo(() => {
     const raw = order.status?.toString() || '';
     if (!raw) return '';
-    const friendly: Record<string, string> = {
-      paid: 'Paid',
-      processing: 'Accepted',
-      shipped: 'Fulfilled',
-      delivered: 'Delivered',
-      completed: 'Complete',
-      disputed: 'Disputed',
-      cancelled: 'Cancelled',
-      refunded: 'Refunded',
+    // 使用 i18n 翻译状态
+    const statusKeys: Record<string, string> = {
+      paid: 'order.stages.paid',
+      processing: 'order.stages.accepted',
+      shipped: 'order.stages.fulfilled',
+      delivered: 'order.stages.delivered',
+      completed: 'order.stages.complete',
+      disputed: 'order.stages.disputed',
+      cancelled: 'order.statusLabels.cancelled',
+      refunded: 'order.statusLabels.refunded',
     };
-    return friendly[raw] || raw.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
-  }, [order.status]);
+    const key = statusKeys[raw];
+    if (key) return t(key);
+    return raw.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
+  }, [order.status, t]);
 
   // 检查是否是 RWA Token 订单，并构造 Product 对象
   const { isRwaTokenOrder, rwaProduct } = useMemo(() => {
@@ -644,16 +646,19 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 <h4 className="font-semibold text-foreground text-sm truncate">
                   {order.items[0]?.title || t('order.unknownItem')}
                 </h4>
-                <div className="flex items-center gap-2 mt-0.5">
+                {/* 类型标签和单价分行显示 */}
+                <div className="flex flex-col gap-1 mt-1">
                   {typeLabel && (
-                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded w-fit">
                       {typeLabel}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground">
-                    {t('order.product.unitPrice')}
-                  </span>
-                  <span className="text-sm text-primary font-medium">{formatPrice()}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-muted-foreground">
+                      {t('order.product.unitPrice')}
+                    </span>
+                    <span className="text-sm text-primary font-medium">{formatPrice()}</span>
+                  </div>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
@@ -693,16 +698,19 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       <h4 className="font-semibold text-foreground text-sm truncate group-hover:text-primary transition-colors">
                         {order.items[0]?.title || t('order.unknownItem')}
                       </h4>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      {/* 类型标签和单价分行显示 */}
+                      <div className="flex flex-col gap-1 mt-1">
                         {typeLabel && (
-                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded w-fit">
                             {typeLabel}
                           </span>
                         )}
-                        <span className="text-xs text-muted-foreground">
-                          {t('order.product.unitPrice')}
-                        </span>
-                        <span className="text-sm text-primary font-medium">{formatPrice()}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('order.product.unitPrice')}
+                          </span>
+                          <span className="text-sm text-primary font-medium">{formatPrice()}</span>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -733,24 +741,13 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           <div className="flex items-end justify-between">
             <div className="text-xs text-muted-foreground">{t('order.total')}</div>
             <div className="text-right">
-              {order.pricingAmount &&
-              order.pricingCurrency &&
-              order.pricingCurrency !== order.currency ? (
-                <>
-                  <p className="text-sm font-semibold text-foreground">
-                    {order.pricingCurrency === 'USD' ? '$' : ''}
-                    {order.pricingAmount}{' '}
-                    {order.pricingCurrency !== 'USD' ? order.pricingCurrency : ''}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    ≈ {order.total} {order.currency}
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm font-semibold text-foreground">
-                  {order.total} {order.currency}
-                </p>
-              )}
+              <p className="text-sm font-semibold text-foreground">
+                {order.pricingCurrency === 'USD' ? '$' : ''}
+                {order.pricingAmount || order.total}{' '}
+                {order.pricingCurrency && order.pricingCurrency !== 'USD'
+                  ? order.pricingCurrency
+                  : ''}
+              </p>
             </div>
           </div>
         </div>
@@ -857,8 +854,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       timestamp={order.timeline.find(e => e.status === 'processing')?.timestamp}
                       description={
                         order.userRole === 'seller'
-                          ? 'Order accepted by seller.'
-                          : 'Your order has been accepted.'
+                          ? t('order.acceptedDescSeller')
+                          : t('order.acceptedDescBuyer')
                       }
                       showDivider={false}
                     />
@@ -1139,13 +1136,11 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             );
           })()}
 
-        {/* Traditional Payment Card */}
+        {/* Traditional Payment Card - 只显示加密货币金额 */}
         {order.paymentTx && !order.paymentLocked && (
           <PaymentCard
             amount={order.total}
             currency={order.currency}
-            pricingAmount={order.pricingAmount}
-            pricingCurrency={order.pricingCurrency}
             txHash={order.paymentTx}
             confirmations={order.txConfirmations}
             chainId={order.chainId}
@@ -1197,14 +1192,16 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             <div className="space-y-2 mb-4">
               {hasMemo && (
                 <div className="p-2.5 bg-muted/20 rounded-lg">
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">Memo</span>
+                  <span className="text-[11px] text-muted-foreground block mb-0.5">
+                    {t('order.memo')}
+                  </span>
                   <p className="text-sm text-foreground">{order.notes}</p>
                 </div>
               )}
               {hasContact && (
                 <div className="p-2.5 bg-muted/20 rounded-lg">
                   <span className="text-[11px] text-muted-foreground block mb-0.5">
-                    Additional Contact
+                    {t('order.additionalContact')}
                   </span>
                   <p className="text-sm text-foreground">{order.alternateContactInfo}</p>
                 </div>
@@ -1238,7 +1235,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
-                  <span className="text-sm font-medium text-foreground">Shipping Details</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {t('order.shippingDetails')}
+                  </span>
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {new Date(order.createdAt).toLocaleDateString()}
@@ -1248,7 +1247,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 {hasShippingInfo && (
                   <div className="p-3 bg-muted/20 rounded-lg">
                     <span className="text-muted-foreground block mb-1 text-xs font-medium">
-                      Ship To
+                      {t('order.shipTo')}
                     </span>
                     <div className="text-foreground whitespace-pre-line">
                       {order.shippingRecipient && (
@@ -1294,7 +1293,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     {order.shippingOption && (
                       <div>
                         <span className="text-muted-foreground block mb-0.5 text-xs">
-                          Shipping Option
+                          {t('order.shipping.option')}
                         </span>
                         <p className="text-foreground">{order.shippingOption}</p>
                       </div>
@@ -1302,7 +1301,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     {order.shippingService && (
                       <div>
                         <span className="text-muted-foreground block mb-0.5 text-xs">
-                          Shipping Service
+                          {t('order.shippingService')}
                         </span>
                         <p className="text-foreground">{order.shippingService}</p>
                       </div>
