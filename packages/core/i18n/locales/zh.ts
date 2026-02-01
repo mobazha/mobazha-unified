@@ -101,6 +101,39 @@ export const zh: TranslationResource = {
     logout: '退出',
   },
 
+  login: {
+    // 页面标题和副标题
+    title: 'Mobazha',
+    subtitle: '去中心化市场',
+    // 模式
+    hostedMode: '托管模式',
+    vpsMode: 'VPS 模式',
+    // 加载状态
+    redirectingToLogin: '正在跳转登录...',
+    pleaseWait: '请稍候',
+    loggingIn: '正在登录...',
+    processing: '处理中...',
+    // 表单标签
+    username: '用户名',
+    password: '密码',
+    usernamePlaceholder: '请输入用户名',
+    passwordPlaceholder: '请输入密码',
+    // 按钮
+    login: '登录',
+    loginRegister: '登录 / 注册',
+    // 错误消息
+    loginFailed: '登录失败，请重试',
+    usernamePasswordRequired: '请输入用户名和密码',
+    // 托管模式信息
+    hostedModeInfo: '点击下方按钮将跳转到安全登录页面，完成登录后会自动返回。',
+    // 平台支持
+    supportedPlatforms: '支持平台',
+    browser: '浏览器',
+    // 环境
+    testEnvironment: '测试环境',
+    productionEnvironment: '生产环境',
+  },
+
   home: {
     welcome: '欢迎来到 Mobazha',
     featured: '精选商品',

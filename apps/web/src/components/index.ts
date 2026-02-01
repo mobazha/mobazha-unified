@@ -58,7 +58,8 @@ export { SettingsDrawer, SettingsDrawerProvider, useSettingsDrawer } from './Set
 
 // Auth Components
 export { AuthGuard } from './AuthGuard';
-export { ProtectedRoute } from './ProtectedRoute';
+// Note: ProtectedRoute is NOT exported here because it uses react-router-dom hooks
+// and is only used in routes.tsx for Vite development. For Next.js, use AuthGuard instead.
 
 // Wallet Components
 export { AppKitProvider } from './AppKitProvider';

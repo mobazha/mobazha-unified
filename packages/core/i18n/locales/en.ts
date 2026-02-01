@@ -101,6 +101,40 @@ export const en: TranslationResource = {
     logout: 'Logout',
   },
 
+  login: {
+    // Page title and subtitle
+    title: 'Mobazha',
+    subtitle: 'Decentralized Marketplace',
+    // Modes
+    hostedMode: 'Hosted Mode',
+    vpsMode: 'VPS Mode',
+    // Loading states
+    redirectingToLogin: 'Redirecting to login...',
+    pleaseWait: 'Please wait',
+    loggingIn: 'Logging in...',
+    processing: 'Processing...',
+    // Form labels
+    username: 'Username',
+    password: 'Password',
+    usernamePlaceholder: 'Enter username',
+    passwordPlaceholder: 'Enter password',
+    // Buttons
+    login: 'Login',
+    loginRegister: 'Login / Register',
+    // Error messages
+    loginFailed: 'Login failed, please try again',
+    usernamePasswordRequired: 'Please enter username and password',
+    // Hosted mode info
+    hostedModeInfo:
+      'Click the button below to go to the secure login page, you will be redirected back after logging in.',
+    // Platform support
+    supportedPlatforms: 'Supported Platforms',
+    browser: 'Browser',
+    // Environment
+    testEnvironment: 'Test Environment',
+    productionEnvironment: 'Production Environment',
+  },
+
   home: {
     welcome: 'Welcome to Mobazha',
     featured: 'Featured Products',
