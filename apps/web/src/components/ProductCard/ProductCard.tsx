@@ -257,9 +257,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           >
             <span>{typeConfig.label}</span>
-            {contractType === 'RWA_TOKEN' && tokenStandard && ['ERC721', 'ERC1155', 'ERC3525'].includes(tokenStandard) && (
-              <span className="pl-1 border-l border-white/30">{tokenStandard}</span>
-            )}
+            {contractType === 'RWA_TOKEN' &&
+              tokenStandard &&
+              ['ERC721', 'ERC1155', 'ERC3525'].includes(tokenStandard) && (
+                <span className="pl-1 border-l border-white/30">{tokenStandard}</span>
+              )}
           </span>
         )}
 
@@ -389,15 +391,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             )}
           </div>
-          {rating !== undefined && rating !== null && (
-            <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
-              <span className="text-yellow-500">★</span>
-              <span className="text-muted-foreground">
-                {Number(rating).toFixed(1)}
-                {reviewCount !== undefined && reviewCount > 0 && ` (${reviewCount})`}
-              </span>
-            </div>
-          )}
+          {/* 评分显示：有评价才显示评分，否则显示空心星 */}
+          <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
+            {reviewCount !== undefined && reviewCount > 0 ? (
+              <>
+                <span className="text-yellow-500">★</span>
+                <span className="text-muted-foreground">{Number(rating || 0).toFixed(1)}</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground/50">☆</span>
+            )}
+          </div>
         </div>
 
         {/* 卖家信息 & 配送标签 */}

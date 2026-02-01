@@ -105,7 +105,7 @@ export const Header: React.FC = () => {
               </Button>
             </Link>
 
-            {/* 已登录用户显示：通知、消息、购物车 */}
+            {/* 已登录用户显示：通知、消息、购物车、钱包连接 */}
             {isAuthenticated && (
               <>
                 {/* 通知下拉面板 */}
@@ -139,11 +139,11 @@ export const Header: React.FC = () => {
                     3
                   </span>
                 </Link>
+
+                {/* 钱包连接 - 使用 AppKit 原生组件，包含余额显示 */}
+                <WalletConnectButton />
               </>
             )}
-
-            {/* 钱包连接 - 使用 AppKit 原生组件，包含余额显示 */}
-            <WalletConnectButton />
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />

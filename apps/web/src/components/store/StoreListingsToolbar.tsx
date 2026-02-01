@@ -56,6 +56,8 @@ interface StoreListingsToolbarProps {
   filteredCount?: number;
   categories?: CategoryItem[]; // 可用的分类列表
   onOpenMobileFilter?: () => void;
+  /** 紧凑模式：桌面端有侧边栏时使用，只显示搜索+排序+数量 */
+  compact?: boolean;
   className?: string;
 }
 
@@ -83,6 +85,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
   filteredCount,
   categories = [],
   onOpenMobileFilter,
+  compact = false,
   className,
 }) => {
   const { t } = useI18n();
@@ -105,116 +108,167 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
 
   return (
     <div className={cn('space-y-3', className)}>
-      {/* 桌面端布局 */}
-      <div className="hidden md:flex items-center gap-4">
-        {/* 搜索框 */}
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('filter.searchInStore') || '搜索店铺商品...'}
-            value={filter.search}
-            onChange={e => updateFilter({ search: e.target.value })}
-            className="pl-9 h-9"
-          />
-          {filter.search && (
-            <button
-              onClick={() => updateFilter({ search: '' })}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+      {/* 桌面端紧凑布局（有侧边栏时）：搜索 + 数量 + 排序 */}
+      {compact ? (
+        <div className="hidden md:flex items-center gap-4">
+          {/* 搜索框 */}
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('filter.searchInStore') || '搜索店铺商品...'}
+              value={filter.search}
+              onChange={e => updateFilter({ search: e.target.value })}
+              className="pl-9 h-9"
+            />
+            {filter.search && (
+              <button
+                onClick={() => updateFilter({ search: '' })}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-        {/* 类型筛选标签 */}
-        <HStack gap="xs" className="flex-1">
-          {productTypes.map(type => (
-            <Badge
-              key={type.value}
-              variant={filter.type === type.value ? 'default' : 'outline'}
-              className={cn(
-                'cursor-pointer transition-colors px-3 py-1',
-                filter.type === type.value
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'hover:bg-muted'
-              )}
-              onClick={() => updateFilter({ type: type.value })}
-            >
-              {t(type.labelKey)}
-            </Badge>
-          ))}
-        </HStack>
+          {/* 商品数量 */}
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {displayCount} {t('filter.resultsFound') || '件商品'}
+          </span>
 
-        {/* 排序下拉 */}
-        <Select
-          value={filter.sortBy}
-          onValueChange={(value: SortOption) => updateFilter({ sortBy: value })}
-        >
-          <SelectTrigger className="w-[160px] h-9">
-            <SelectValue placeholder={t('search.sortBy')} />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {t(option.labelKey)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* 桌面端第二行：分类 + 免运费 + 商品数量 */}
-      <div className="hidden md:flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {/* 分类筛选 */}
-          {categories.length > 0 && (
+          {/* 排序下拉 */}
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm text-muted-foreground">{t('search.sortBy') || '排序'}</span>
             <Select
-              value={filter.category}
-              onValueChange={(value: string) => updateFilter({ category: value })}
+              value={filter.sortBy}
+              onValueChange={(value: SortOption) => updateFilter({ sortBy: value })}
             >
-              <SelectTrigger className="w-[140px] h-8">
-                <SelectValue placeholder={t('filter.category') || '分类'} />
+              <SelectTrigger className="w-[140px] h-9">
+                <SelectValue placeholder={t('search.sortBy')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('common.all') || '全部'}</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                    {cat.count !== undefined && (
-                      <span className="ml-1 text-muted-foreground">({cat.count})</span>
-                    )}
+                {sortOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
-
-          {/* 免运费开关 */}
-          <div className="flex items-center gap-2">
-            <Switch
-              id="free-shipping"
-              checked={filter.freeShipping}
-              onCheckedChange={checked => updateFilter({ freeShipping: checked })}
-            />
-            <Label htmlFor="free-shipping" className="text-sm cursor-pointer">
-              {t('filter.freeShippingOnly') || '仅显示免运费'}
-            </Label>
           </div>
         </div>
+      ) : (
+        <>
+          {/* 桌面端完整布局（无侧边栏时） */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* 搜索框 */}
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('filter.searchInStore') || '搜索店铺商品...'}
+                value={filter.search}
+                onChange={e => updateFilter({ search: e.target.value })}
+                className="pl-9 h-9"
+              />
+              {filter.search && (
+                <button
+                  onClick={() => updateFilter({ search: '' })}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
 
-        <div className="flex items-center gap-3">
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
-              <X className="h-3 w-3 mr-1" />
-              {t('filter.clearFilters') || '清除筛选'}
-            </Button>
-          )}
-          <span className="text-sm text-muted-foreground">
-            <Package className="h-4 w-4 inline mr-1" />
-            {displayCount} {t('profile.listings')}
-          </span>
-        </div>
-      </div>
+            {/* 类型筛选标签 */}
+            <HStack gap="xs" className="flex-1">
+              {productTypes.map(type => (
+                <Badge
+                  key={type.value}
+                  variant={filter.type === type.value ? 'default' : 'outline'}
+                  className={cn(
+                    'cursor-pointer transition-colors px-3 py-1',
+                    filter.type === type.value
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'hover:bg-muted'
+                  )}
+                  onClick={() => updateFilter({ type: type.value })}
+                >
+                  {t(type.labelKey)}
+                </Badge>
+              ))}
+            </HStack>
+
+            {/* 排序下拉 */}
+            <Select
+              value={filter.sortBy}
+              onValueChange={(value: SortOption) => updateFilter({ sortBy: value })}
+            >
+              <SelectTrigger className="w-[160px] h-9">
+                <SelectValue placeholder={t('search.sortBy')} />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 桌面端第二行：分类 + 免运费 + 商品数量 */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* 分类筛选 */}
+              {categories.length > 0 && (
+                <Select
+                  value={filter.category}
+                  onValueChange={(value: string) => updateFilter({ category: value })}
+                >
+                  <SelectTrigger className="w-[140px] h-8">
+                    <SelectValue placeholder={t('filter.category') || '分类'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('common.all') || '全部'}</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                        {cat.count !== undefined && (
+                          <span className="ml-1 text-muted-foreground">({cat.count})</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* 免运费开关 */}
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="free-shipping"
+                  checked={filter.freeShipping}
+                  onCheckedChange={checked => updateFilter({ freeShipping: checked })}
+                />
+                <Label htmlFor="free-shipping" className="text-sm cursor-pointer">
+                  {t('filter.freeShippingOnly') || '仅显示免运费'}
+                </Label>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
+                  <X className="h-3 w-3 mr-1" />
+                  {t('filter.clearFilters') || '清除筛选'}
+                </Button>
+              )}
+              <span className="text-sm text-muted-foreground">
+                <Package className="h-4 w-4 inline mr-1" />
+                {displayCount} {t('profile.listings')}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 移动端布局 */}
       <div className="md:hidden space-y-3">

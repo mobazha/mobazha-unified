@@ -26,3 +26,4 @@ export * from './textarea';
 export * from './table';
 export * from './skeleton';
 export * from './MobazhaLogo';
+export * from './radio-option';
