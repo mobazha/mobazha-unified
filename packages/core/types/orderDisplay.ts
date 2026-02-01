@@ -165,8 +165,14 @@ export interface DisplayOrder {
   escrowAddress?: string;
   /** 链 ID */
   chainId?: number;
-  /** 订单备注 */
+  /** 订单备注（来自 items[0].memo） */
   notes?: string;
+  /** 额外联系方式（来自 alternateContactInfo） */
+  alternateContactInfo?: string;
+  /** 发货商 */
+  shipper?: string;
+  /** 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD */
+  contractType?: string;
   /** 订单时间线 */
   timeline: DisplayTimelineEvent[];
   /** 当前用户角色 */

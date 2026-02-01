@@ -365,6 +365,11 @@ export const zh: TranslationResource = {
     cancelled: '已取消',
     refunded: '已退款',
     disputed: '申诉中',
+    // 查看交易
+    viewTransaction: '查看交易',
+    // 摘要
+    summary: '概要',
+    orderHistory: '订单历史',
     // 进度条阶段
     stages: {
       paid: '已付款',
@@ -404,6 +409,13 @@ export const zh: TranslationResource = {
     additionalContact: '其他联系方式',
     coupons: '优惠券',
     unknownItem: '未知商品',
+    // 商品信息
+    product: {
+      unitPrice: '单价',
+      quantity: '数量',
+      service: '服务',
+      digital: '数字',
+    },
     countries: {
       UNITED_STATES: '美国',
       CHINA: '中国',
@@ -565,6 +577,17 @@ export const zh: TranslationResource = {
       zeroAddressError: '此订单的支付配置不完整（零地址）。卖家可能需要更新支付设置并重新发货。',
       reviewComingSoon: '评价功能即将上线。',
       error: '错误',
+      // ActionSheet 和复制操作
+      orderIdUnavailable: '订单号不可用',
+      orderIdCopied: '已复制订单号',
+      copyFailed: '复制失败',
+      copyOrderIdManually: '请手动复制订单号',
+      orderDataUnavailable: '订单数据不可用',
+      contractCopied: '已复制合约数据',
+      goToSellerPage: '转到卖家页面',
+      copyOrderId: '复制订单号',
+      viewContract: '查看交易合约',
+      copyToClipboard: '复制到剪贴板',
     },
     // 订单操作确认对话框
     dialogs: {

@@ -368,6 +368,11 @@ export const en: TranslationResource = {
     cancelled: 'Cancelled',
     refunded: 'Refunded',
     disputed: 'Disputed',
+    // View transaction
+    viewTransaction: 'View Transaction',
+    // Summary section
+    summary: 'Summary',
+    orderHistory: 'Order History',
     // Progress bar stages
     stages: {
       paid: 'Paid',
@@ -407,6 +412,13 @@ export const en: TranslationResource = {
     additionalContact: 'Additional Contact Information',
     coupons: 'Coupons',
     unknownItem: 'Unknown Item',
+    // Product info
+    product: {
+      unitPrice: 'Unit Price',
+      quantity: 'Qty',
+      service: 'Service',
+      digital: 'Digital',
+    },
     countries: {
       UNITED_STATES: 'United States',
       CHINA: 'China',
@@ -574,6 +586,17 @@ export const en: TranslationResource = {
         'This order has incomplete payment configuration (zero address). The vendor may need to update their payment settings and re-ship the order.',
       reviewComingSoon: 'Review feature is coming soon.',
       error: 'Error',
+      // ActionSheet & Copy actions
+      orderIdUnavailable: 'Order ID unavailable',
+      orderIdCopied: 'Order ID copied',
+      copyFailed: 'Copy failed',
+      copyOrderIdManually: 'Please copy order ID manually',
+      orderDataUnavailable: 'Order data unavailable',
+      contractCopied: 'Contract data copied',
+      goToSellerPage: 'Go to Seller Page',
+      copyOrderId: 'Copy Order ID',
+      viewContract: 'View Contract',
+      copyToClipboard: 'Copy to Clipboard',
     },
     // Order action dialogs
     dialogs: {

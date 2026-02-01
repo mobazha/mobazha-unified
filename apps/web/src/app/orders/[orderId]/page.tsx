@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
@@ -10,6 +10,9 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MessageCircle, Copy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   useOrderDetail,
   useUserStore,
@@ -21,16 +24,17 @@ import {
   type OrderAction,
   type UserRole as CoreUserRole,
   type WebSocketMessage,
-  type DisplayOrder,
-  type Order,
 } from '@mobazha/core';
 import {
   OrderDetailContent,
   OrderFooter,
+  OrderChat,
   AcceptOrderDialog,
   FulfillOrderDialog,
   OrderConfirmDialog,
   type OrderConfirmType,
+  type OrderChatMessage,
+  type OrderChatParticipant,
 } from '@/components/Order';
 
 // 用于类型安全地访问订单合约数据的接口
@@ -86,6 +90,112 @@ export default function OrderDetailPage() {
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   // 发货对话框状态
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  // 合约数据模态框状态
+  const [showContractModal, setShowContractModal] = useState(false);
+
+  const displayOrderId = displayOrder?.orderId ?? '';
+
+  const handleCopyOrderId = useCallback(async () => {
+    if (!displayOrderId) {
+      toast({ title: t('order.actions.orderIdUnavailable') });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(displayOrderId);
+      toast({ title: t('order.actions.orderIdCopied') });
+    } catch {
+      toast({
+        title: t('order.actions.copyFailed'),
+        description: t('order.actions.copyOrderIdManually'),
+      });
+    }
+  }, [displayOrderId, toast, t]);
+
+  // 查看交易合约 - 显示订单合约数据（JSON格式），与原移动端一致
+  const handleViewContract = useCallback(() => {
+    if (!coreOrder) {
+      toast({ title: t('order.actions.orderDataUnavailable') });
+      return;
+    }
+    setShowContractModal(true);
+  }, [coreOrder, toast, t]);
+
+  // 复制合约数据到剪贴板
+  const handleCopyContract = useCallback(async () => {
+    if (!coreOrder) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(coreOrder, null, 2));
+      toast({ title: t('order.actions.contractCopied') });
+    } catch {
+      toast({ title: t('order.actions.copyFailed') });
+    }
+  }, [coreOrder, toast, t]);
+
+  // ============ 移动端 Tab 状态 ============
+  const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
+
+  // ============ 聊天相关状态（模拟数据，实际需接入 Matrix） ============
+  const [chatMessages, setChatMessages] = useState<OrderChatMessage[]>([]);
+
+  // 构建聊天参与者列表
+  const chatParticipants = useMemo<OrderChatParticipant[]>(() => {
+    if (!displayOrder) return [];
+    const participants: OrderChatParticipant[] = [];
+
+    if (displayOrder.vendor) {
+      participants.push({
+        id: displayOrder.vendor.peerID || 'vendor',
+        peerID: displayOrder.vendor.peerID || '',
+        name: displayOrder.vendor.name || 'Seller',
+        avatar: displayOrder.vendor.avatar,
+        role: 'seller',
+      });
+    }
+
+    if (displayOrder.buyer) {
+      participants.push({
+        id: displayOrder.buyer.peerID || 'buyer',
+        peerID: displayOrder.buyer.peerID || '',
+        name: displayOrder.buyer.name || 'Buyer',
+        avatar: displayOrder.buyer.avatar,
+        role: 'buyer',
+      });
+    }
+
+    if (displayOrder.moderator) {
+      participants.push({
+        id: displayOrder.moderator.id || 'moderator',
+        peerID: displayOrder.moderator.id || '',
+        name: displayOrder.moderator.name || 'Moderator',
+        avatar: displayOrder.moderator.avatar,
+        role: 'moderator',
+      });
+    }
+
+    return participants;
+  }, [displayOrder]);
+
+  // 发送消息处理（模拟）
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      const newMessage: OrderChatMessage = {
+        id: `msg-${Date.now()}`,
+        content,
+        senderId: currentUserPeerID || 'unknown',
+        timestamp: new Date().toISOString(),
+        status: 'sent',
+      };
+      setChatMessages(prev => [...prev, newMessage]);
+    },
+    [currentUserPeerID]
+  );
+
+  // 获取交易对方信息（移动端顶部显示）
+  const counterparty = useMemo(() => {
+    if (!displayOrder) return null;
+    return displayOrder.userRole === 'buyer' ? displayOrder.vendor : displayOrder.buyer;
+  }, [displayOrder]);
 
   // ============ WebSocket 订单实时更新监听 ============
   // 参考移动端和桌面端实现，监听 WebSocket 消息，当收到与当前订单相关的通知时自动刷新
@@ -426,40 +536,197 @@ export default function OrderDetailPage() {
 
       <main className="py-4 sm:py-8">
         <Container size="xl">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground mb-4 text-sm touch-feedback"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+          {/* ============ 移动端：顶部导航 + Tab ============ */}
+          <div className="lg:hidden">
+            {/* 顶部：返回按钮 + 订单号 + 更多操作 */}
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => router.back()}
+                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                Order #{displayOrder.orderId.slice(0, 8)}...
+              </span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowMobileMenu(prev => !prev)}
+                  className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  aria-label="More actions"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* ActionSheet 风格菜单 */}
+            {showMobileMenu && (
+              <div className="fixed inset-0 z-[60]">
+                <div
+                  className="absolute inset-0 bg-black/40"
+                  onClick={() => setShowMobileMenu(false)}
+                />
+                <div className="absolute left-0 right-0 bottom-0 bg-background rounded-t-2xl shadow-xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pointer-events-auto">
+                  <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-4" />
+                  <div className="space-y-1">
+                    {counterparty?.peerID && (
+                      <button
+                        onClick={() => {
+                          setShowMobileMenu(false);
+                          router.push(`/store/${counterparty.peerID}`);
+                        }}
+                        className="w-full py-4 text-center text-[15px] font-medium hover:bg-muted/20 rounded-lg transition-colors"
+                      >
+                        {t('order.actions.goToSellerPage')}
+                      </button>
+                    )}
+                    <button
+                      onClick={async e => {
+                        e.stopPropagation();
+                        setShowMobileMenu(false);
+                        await handleCopyOrderId();
+                      }}
+                      className="w-full py-4 text-center text-[15px] font-medium hover:bg-muted/20 rounded-lg transition-colors"
+                    >
+                      {t('order.actions.copyOrderId')}
+                    </button>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowMobileMenu(false);
+                        handleViewContract();
+                      }}
+                      className="w-full py-4 text-center text-[15px] font-medium hover:bg-muted/20 rounded-lg transition-colors"
+                    >
+                      {t('order.actions.viewContract')}
+                    </button>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-border/60">
+                    <button
+                      onClick={() => setShowMobileMenu(false)}
+                      className="w-full py-4 text-center text-[15px] font-medium text-primary hover:bg-muted/20 rounded-lg transition-colors"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 导航（置顶吸附） */}
+            <div className="sticky top-0 z-20 bg-background border-b border-border mb-4">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={cn(
+                    'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative',
+                    activeTab === 'details'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {t('order.tabs.summary')}
+                  {activeTab === 'details' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('discussion')}
+                  className={cn(
+                    'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative flex items-center justify-center gap-1.5',
+                    activeTab === 'discussion'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {t('order.tabs.discussion')}
+                  {activeTab === 'discussion' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Tab 内容 */}
+            {activeTab === 'details' ? (
+              <Card className="mb-4 p-2.5 border border-border/60 shadow-sm overflow-hidden">
+                <OrderDetailContent
+                  displayOrder={displayOrder}
+                  coreOrder={coreOrder}
+                  currentUserPeerID={currentUserPeerID}
+                  inModal={false}
+                  showFooter={false}
+                  refetch={refetch}
+                  onOpenDispute={() => handleOrderAction('Dispute')}
+                />
+              </Card>
+            ) : (
+              <Card className="mb-4 border border-border/60 shadow-sm overflow-hidden">
+                <OrderChat
+                  orderId={orderId}
+                  participants={chatParticipants}
+                  messages={chatMessages}
+                  currentUserId={currentUserPeerID || ''}
+                  onSendMessage={handleSendMessage}
+                  className="h-[calc(100vh-320px)] min-h-[400px]"
+                />
+              </Card>
+            )}
+          </div>
+
+          {/* ============ 桌面端：原有布局 ============ */}
+          <div className="hidden lg:block">
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="group flex items-center gap-2 text-muted-foreground hover:text-primary mb-4 text-sm touch-feedback transition-colors"
+            >
+              <div className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </div>
+              {t('order.backToOrders')}
+            </button>
+
+            {/* Order Detail Content */}
+            <Card className="mb-4 sm:mb-6 p-6 border border-border/60 shadow-sm overflow-hidden">
+              <OrderDetailContent
+                displayOrder={displayOrder}
+                coreOrder={coreOrder}
+                currentUserPeerID={currentUserPeerID}
+                inModal={false}
+                showFooter={false}
+                refetch={refetch}
+                onOpenDispute={() => handleOrderAction('Dispute')}
               />
-            </svg>
-            {t('order.backToOrders')}
-          </button>
+            </Card>
+          </div>
 
-          {/* Order Detail Content */}
-          <Card className="mb-4 sm:mb-6 p-3 sm:p-6">
-            <OrderDetailContent
-              displayOrder={displayOrder}
-              coreOrder={coreOrder}
-              currentUserPeerID={currentUserPeerID}
-              inModal={false}
-              showFooter={false}
-              refetch={refetch}
-            />
-          </Card>
-
-          {/* Desktop: Sidebar with Seller Info - Hidden on mobile */}
-          <div className="hidden lg:block mt-6">
-            <div className="grid grid-cols-3 gap-6">
-              {/* Seller Info */}
-              <Card className="p-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">
+          {/* Desktop: Participants Info - Hidden on mobile */}
+          <div className="hidden lg:grid grid-cols-3 gap-4 mt-6">
+            {/* Seller Info */}
+            <Link
+              href={displayOrder.vendor?.peerID ? `/store/${displayOrder.vendor.peerID}` : '#'}
+              className="group"
+            >
+              <Card className="p-4 border border-border/50 hover:border-primary/30 hover:shadow-sm transition-all">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                   {t('order.seller')}
                 </h3>
                 <HStack gap="sm" align="center">
@@ -467,24 +734,30 @@ export default function OrderDetailPage() {
                     src={displayOrder.vendor.avatar}
                     name={displayOrder.vendor.name}
                     size="md"
-                    className="w-12 h-12"
+                    className="w-11 h-11 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
                   />
                   <VStack gap="none">
-                    <Link
-                      href={`/store/${displayOrder.vendor.id}`}
-                      className="font-semibold text-foreground hover:text-primary text-sm"
-                    >
+                    <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
                       {displayOrder.vendor.name}
-                    </Link>
-                    <span className="text-xs text-muted-foreground">{t('order.viewStore')}</span>
+                    </span>
+                    {displayOrder.vendor.location && (
+                      <span className="text-xs text-muted-foreground">
+                        {displayOrder.vendor.location}
+                      </span>
+                    )}
                   </VStack>
                 </HStack>
               </Card>
+            </Link>
 
-              {/* Buyer Info */}
-              {displayOrder.buyer && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+            {/* Buyer Info */}
+            {displayOrder.buyer && (
+              <Link
+                href={displayOrder.buyer?.peerID ? `/store/${displayOrder.buyer.peerID}` : '#'}
+                className="group"
+              >
+                <Card className="p-4 border border-border/50 hover:border-primary/30 hover:shadow-sm transition-all">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                     {t('order.buyer')}
                   </h3>
                   <HStack gap="sm" align="center">
@@ -492,22 +765,28 @@ export default function OrderDetailPage() {
                       src={displayOrder.buyer.avatar}
                       name={displayOrder.buyer.name}
                       size="md"
-                      className="w-12 h-12"
+                      className="w-11 h-11 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
                     />
                     <VStack gap="none">
-                      <span className="font-semibold text-foreground text-sm">
+                      <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
                         {displayOrder.buyer.name}
                       </span>
-                      <span className="text-xs text-muted-foreground">{t('order.buyer')}</span>
+                      {displayOrder.buyer.location && (
+                        <span className="text-xs text-muted-foreground">
+                          {displayOrder.buyer.location}
+                        </span>
+                      )}
                     </VStack>
                   </HStack>
                 </Card>
-              )}
+              </Link>
+            )}
 
-              {/* Moderator Info */}
-              {displayOrder.moderator && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+            {/* Moderator Info */}
+            {displayOrder.moderator && (
+              <Link href={`/moderators/${displayOrder.moderator.id}`} className="group">
+                <Card className="p-4 border border-border/50 hover:border-primary/30 hover:shadow-sm transition-all">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                     {t('order.moderator')}
                   </h3>
                   <HStack gap="sm" align="center">
@@ -515,23 +794,20 @@ export default function OrderDetailPage() {
                       src={displayOrder.moderator.avatar}
                       name={displayOrder.moderator.name}
                       size="md"
-                      className="w-12 h-12"
+                      className="w-11 h-11 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
                     />
                     <VStack gap="none">
-                      <Link
-                        href={`/moderators/${displayOrder.moderator.id}`}
-                        className="font-semibold text-foreground hover:text-primary text-sm"
-                      >
+                      <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
                         {displayOrder.moderator.name}
-                      </Link>
-                      <span className="text-xs text-muted-foreground">
+                      </span>
+                      <span className="text-xs text-primary font-medium">
                         {t('order.moderatorFeePercent', { fee: displayOrder.moderator.fee })}
                       </span>
                     </VStack>
                   </HStack>
                 </Card>
-              )}
-            </div>
+              </Link>
+            )}
           </div>
 
           {/* Spacer for fixed bottom bar (OrderFooter) */}
@@ -594,6 +870,31 @@ export default function OrderDetailPage() {
         }
         onSuccess={refetch}
       />
+
+      {/* 合约数据模态框 - 与原移动端 ContractModal 一致 */}
+      <Dialog open={showContractModal} onOpenChange={setShowContractModal}>
+        <DialogContent className="sm:max-w-2xl max-w-[95vw] max-h-[85vh] sm:max-h-[80vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-4 py-3 border-b shrink-0">
+            <DialogTitle className="text-base font-semibold text-center">
+              {t('order.actions.viewContract')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto bg-background px-2 py-2.5">
+            <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all px-2">
+              {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
+            </pre>
+          </div>
+          <div className="px-4 py-3 border-t shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <Button
+              onClick={handleCopyContract}
+              className="w-full h-11 text-sm font-semibold gap-2"
+            >
+              <Copy className="w-4 h-4" />
+              {t('order.actions.copyToClipboard')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

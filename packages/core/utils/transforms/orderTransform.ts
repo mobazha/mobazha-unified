@@ -419,8 +419,15 @@ export function transformCoreOrder(
 
   const paymentAddress = paymentSent?.address || contract.orderConfirmation?.paymentAddress;
 
-  const notes = orderOpen?.alternateContactInfo;
   const orderOpenItems = orderOpen?.items || [];
+  // memo 来自第一个 item 的 memo 字段
+  const memo = orderOpenItems[0]?.memo;
+  // 额外联系方式
+  const alternateContactInfo = orderOpen?.alternateContactInfo;
+  // 发货商信息
+  const shipper = trackingInfo?.shipper;
+  // 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD
+  const contractType = listingData?.metadata?.contractType;
 
   const shippingRecipient = shipping?.shipTo || shipping?.name;
   const shippingAddressLine1 = shipping?.address || shipping?.addressLineOne;
@@ -584,7 +591,10 @@ export function transformCoreOrder(
     // RWA 支付锁定信息（仅用于托管模式）
     paymentLocked,
     escrowAddress: paymentAddress,
-    notes: notes,
+    notes: memo,
+    alternateContactInfo: alternateContactInfo,
+    shipper: shipper,
+    contractType: contractType,
     timeline: generateTimelineFromRealData(data),
     userRole,
   };
