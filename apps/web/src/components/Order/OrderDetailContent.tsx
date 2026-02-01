@@ -1151,7 +1151,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             chainId={order.chainId}
             timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
             title={t('order.paid')}
-            description={order.moderator ? t('order.fundsInEscrow') : t('order.directPaymentDesc')}
+            description={!order.moderator ? t('order.directPaymentDesc') : undefined}
             showDivider={true}
           />
         )}
