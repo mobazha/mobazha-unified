@@ -1,8 +1,8 @@
 /**
- * Next.js Middleware - 路由保护
+ * Next.js Proxy - 路由保护 (Next.js 16+)
  *
- * 注意：由于 token 存储在 localStorage 中，middleware 无法直接访问。
- * 此 middleware 主要用于：
+ * 注意：由于 token 存储在 localStorage 中，proxy 无法直接访问。
+ * 此 proxy 主要用于：
  * 1. 检测公开路由，避免不必要的检查
  * 2. 检查 cookie 中的 auth 信息（如果启用了 cookie 认证）
  * 3. 检查 Zustand persist 的 cookie（如果配置了 cookie storage）
@@ -15,7 +15,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * 公开路由模式列表（与 @mobazha/core/config/routeConfig.ts 保持同步）
- * 在 middleware 中需要独立定义，因为 Edge runtime 限制
+ * 在 proxy 中需要独立定义，因为运行时限制
  */
 const PUBLIC_ROUTES = [
   '/',
@@ -99,7 +99,7 @@ function hasAuthCookie(request: NextRequest): boolean {
   return false;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 跳过静态资源和 API 路由
@@ -125,7 +125,7 @@ export function middleware(request: NextRequest) {
     // 没有 cookie 认证，但仍然放行
     // 让客户端的 ProtectedRoute/AuthProvider 处理重定向
     // 这样可以避免闪烁，因为客户端可以检查 localStorage
-    // 可选：如果想在 middleware 层面强制重定向，取消下面的注释
+    // 可选：如果想在 proxy 层面强制重定向，取消下面的注释
     // const loginUrl = new URL('/login', request.url);
     // loginUrl.searchParams.set('redirect', pathname);
     // return NextResponse.redirect(loginUrl);
@@ -135,7 +135,7 @@ export function middleware(request: NextRequest) {
 }
 
 /**
- * Middleware 配置
+ * Proxy 配置
  * 匹配除了以下路径外的所有请求：
  * - /_next/ (Next.js 内部路由)
  * - /api/ (API 路由)

@@ -83,8 +83,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ServiceWorkerProvider>
             <AppKitProvider>
               <CurrencyProvider>
-                <AuthProvider>
-                  <Suspense fallback={null}>
+                <Suspense fallback={null}>
+                  <AuthProvider>
                     <ProductModalProvider>
                       <PaymentSelectorProvider>
                         <SettingsDrawerProvider>
@@ -108,8 +108,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         </SettingsDrawerProvider>
                       </PaymentSelectorProvider>
                     </ProductModalProvider>
-                  </Suspense>
-                </AuthProvider>
+                  </AuthProvider>
+                </Suspense>
               </CurrencyProvider>
             </AppKitProvider>
           </ServiceWorkerProvider>
