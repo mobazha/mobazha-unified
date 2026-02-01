@@ -196,6 +196,23 @@ export function getLoginRedirectPath(): string {
 }
 
 /**
+ * 设置登录后应该返回的页面路径
+ * 用于在重定向到登录页之前保存原始路径
+ *
+ * @param path 要保存的路径
+ */
+export function setLoginRedirectPath(path: string): void {
+  if (typeof sessionStorage === 'undefined') return;
+
+  // 确保是有效的相对路径
+  if (path && path.startsWith('/') && !path.startsWith('//')) {
+    // 排除登录页和 OAuth 回调参数
+    const cleanPath = path.replace(/[?&](code|state)=[^&]*/g, '').replace(/\?$/, '');
+    sessionStorage.setItem('login_redirect', cleanPath || '/');
+  }
+}
+
+/**
  * 处理 OAuth2 回调，交换 code 获取 token
  * 调用后端 /api/signin 接口（不需要 /v1 前缀）
  */

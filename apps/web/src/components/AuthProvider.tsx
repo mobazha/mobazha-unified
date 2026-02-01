@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, type ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useUserStore, useMatrixInit } from '@mobazha/core';
 import {
   hasOAuthCallback,
@@ -17,6 +17,33 @@ interface AuthProviderProps {
 }
 
 /**
+ * 获取登录后应重定向到的路径
+ * 优先级：
+ * 1. URL 查询参数 redirect
+ * 2. sessionStorage 中的 login_redirect（用于 OAuth 流程）
+ * 3. 默认返回首页
+ */
+function getRedirectPath(searchParams: URLSearchParams): string {
+  // 1. 检查 URL 查询参数
+  const redirectParam = searchParams.get('redirect');
+  if (redirectParam) {
+    // 确保是相对路径，防止 open redirect 攻击
+    if (redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+      return redirectParam;
+    }
+  }
+
+  // 2. 检查 sessionStorage（用于 OAuth 流程）
+  const sessionRedirect = getLoginRedirectPath();
+  if (sessionRedirect && sessionRedirect !== '/') {
+    return sessionRedirect;
+  }
+
+  // 3. 默认返回首页
+  return '/';
+}
+
+/**
  * 认证状态提供者
  * 自动恢复会话并处理 OAuth 回调
  * 同时初始化 Matrix 聊天连接
@@ -27,6 +54,7 @@ export function AuthProvider({
 }: AuthProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated, restoreSession, loginWithOAuth, isLoading } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
@@ -58,7 +86,7 @@ export function AuthProvider({
             // OAuth 登录成功，标记会话已恢复，防止后续不必要的 restoreSession 调用
             hasRestoredSession.current = true;
             // 获取登录前的页面路径
-            const redirectPath = getLoginRedirectPath();
+            const redirectPath = getRedirectPath(searchParams);
             router.push(redirectPath);
           }
         }
@@ -68,7 +96,7 @@ export function AuthProvider({
     };
 
     handleOAuthCallback();
-  }, [loginWithOAuth, router, isProcessingOAuth]);
+  }, [loginWithOAuth, router, isProcessingOAuth, searchParams]);
 
   // 恢复会话（仅在没有 OAuth 回调时）
   // 使用 ref 防止 HMR 导致的重复执行
@@ -94,11 +122,12 @@ export function AuthProvider({
   useEffect(() => {
     if (!isInitialized || isProcessingOAuth) return;
 
-    // 如果已认证且在登录页（且没有 OAuth 参数），重定向到首页
+    // 如果已认证且在登录页（且没有 OAuth 参数），重定向到目标页面
     if (isAuthenticated && pathname === '/login' && !hasOAuthCallback()) {
-      router.push('/');
+      const redirectPath = getRedirectPath(searchParams);
+      router.push(redirectPath);
     }
-  }, [isAuthenticated, isInitialized, pathname, router, isProcessingOAuth]);
+  }, [isAuthenticated, isInitialized, pathname, router, isProcessingOAuth, searchParams]);
 
   // 正在处理 OAuth 回调
   if (isProcessingOAuth) {

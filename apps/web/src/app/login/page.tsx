@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore, getEnvConfig } from '@mobazha/core';
 import {
   startCasdoorLogin,
@@ -9,9 +9,21 @@ import {
   getOAuthParams,
   clearOAuthParams,
   getLoginRedirectPath,
+  setLoginRedirectPath,
   isHosted,
   isBasic,
 } from '@mobazha/core';
+
+/**
+ * 获取重定向路径（优先从 URL 参数获取）
+ */
+function getRedirectFromParams(searchParams: URLSearchParams): string {
+  const redirect = searchParams.get('redirect');
+  if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+    return redirect;
+  }
+  return getLoginRedirectPath();
+}
 
 /**
  * 登录页面
@@ -19,9 +31,12 @@ import {
  * 支持两种认证模式：
  * - hosted（托管模式）：直接跳转到 Casdoor 登录，无中间界面
  * - basic（VPS模式）：显示用户名/密码表单
+ *
+ * 支持 redirect 参数：登录成功后重定向到指定页面
  */
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, loginWithOAuth, isAuthenticated, isLoading, error } = useUserStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -47,13 +62,26 @@ export default function LoginPage() {
   // 防止重复处理
   const hasProcessedOAuth = useRef(false);
   const hasRedirectedToCasdoor = useRef(false);
+  const hasSavedRedirect = useRef(false);
+
+  // 保存 redirect 参数到 sessionStorage（供 OAuth 流程使用）
+  useEffect(() => {
+    if (hasSavedRedirect.current) return;
+
+    const redirect = searchParams.get('redirect');
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+      hasSavedRedirect.current = true;
+      setLoginRedirectPath(redirect);
+      console.log('📝 Saved redirect path:', redirect);
+    }
+  }, [searchParams]);
 
   // 初始化：处理各种情况
   useEffect(() => {
-    // 如果已认证，重定向到首页
+    // 如果已认证，重定向到目标页面
     if (isAuthenticated && !isProcessing) {
-      // 直接跳转，无需更新 loading 状态
-      router.push('/');
+      const redirectPath = getRedirectFromParams(searchParams);
+      router.push(redirectPath);
       return;
     }
 
@@ -74,7 +102,7 @@ export default function LoginPage() {
           clearOAuthParams();
 
           if (success) {
-            const redirectPath = getLoginRedirectPath();
+            const redirectPath = getRedirectFromParams(searchParams);
             router.push(redirectPath);
           } else {
             setLocalError('登录失败，请重试');
@@ -100,7 +128,7 @@ export default function LoginPage() {
       // 注意：跳转后页面会离开，不需要设置 isHostedInitializing
       return;
     }
-  }, [isAuthenticated, isProcessing, router, loginWithOAuth]);
+  }, [isAuthenticated, isProcessing, router, loginWithOAuth, searchParams]);
 
   // Basic Auth 登录处理
   const handleBasicLogin = async (e: React.FormEvent) => {
@@ -114,7 +142,7 @@ export default function LoginPage() {
 
     const success = await login({ username, password });
     if (success) {
-      const redirectPath = getLoginRedirectPath();
+      const redirectPath = getRedirectFromParams(searchParams);
       router.push(redirectPath);
     }
   };

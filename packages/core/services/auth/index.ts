@@ -37,6 +37,7 @@ export {
   getOAuthParams,
   clearOAuthParams,
   getLoginRedirectPath,
+  setLoginRedirectPath,
   // Token 验证
   validateToken,
   getUserInfo,

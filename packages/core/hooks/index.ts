@@ -82,3 +82,6 @@ export * from './useOrderAction';
 export * from './useShippingAddresses';
 export type { DisplayAddress, DisplayAddressUI } from './useShippingAddresses';
 export { toDisplayAddressUI } from './useShippingAddresses';
+
+// 认证守卫相关
+export * from './useAuthGuard';
