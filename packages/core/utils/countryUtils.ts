@@ -17,7 +17,7 @@ async function registerLocale(locale: string): Promise<void> {
 
   try {
     // 动态导入语言包
-    const localeData = await import(`i18n-iso-countries/langs/${locale}.json`);
+    const localeData = await import(/* @vite-ignore */ `i18n-iso-countries/langs/${locale}.json`);
     countries.registerLocale(localeData.default || localeData);
     registeredLocales.add(locale);
   } catch {
@@ -25,7 +25,9 @@ async function registerLocale(locale: string): Promise<void> {
     const baseLocale = locale.split('-')[0];
     if (baseLocale !== locale && !registeredLocales.has(baseLocale)) {
       try {
-        const localeData = await import(`i18n-iso-countries/langs/${baseLocale}.json`);
+        const localeData = await import(
+          /* @vite-ignore */ `i18n-iso-countries/langs/${baseLocale}.json`
+        );
         countries.registerLocale(localeData.default || localeData);
         registeredLocales.add(baseLocale);
         registeredLocales.add(locale); // 标记原始 locale 也已处理
@@ -41,22 +43,26 @@ async function registerLocale(locale: string): Promise<void> {
  */
 export function initCountryLocales(): void {
   // 预加载常用语言
-  import('i18n-iso-countries/langs/en.json').then(data => {
-    countries.registerLocale(data.default || data);
-    registeredLocales.add('en');
-  });
-  import('i18n-iso-countries/langs/zh.json').then(data => {
-    countries.registerLocale(data.default || data);
-    registeredLocales.add('zh');
-    registeredLocales.add('zh-CN');
-    registeredLocales.add('zh-TW');
-  });
+  import('i18n-iso-countries/langs/en.json')
+    .then(data => {
+      countries.registerLocale(data.default || data);
+      registeredLocales.add('en');
+    })
+    .catch(() => {
+      console.warn('Failed to load country locale: en');
+    });
+  import('i18n-iso-countries/langs/zh.json')
+    .then(data => {
+      countries.registerLocale(data.default || data);
+      registeredLocales.add('zh');
+      registeredLocales.add('zh-CN');
+      registeredLocales.add('zh-TW');
+    })
+    .catch(() => {
+      console.warn('Failed to load country locale: zh');
+    });
 }
 
-/**
- * 国家名称（下划线格式）到 ISO 代码的映射
- * 用于处理 API 返回的下划线格式国家名称
- */
 /**
  * 完整的国家名称（下划线格式）到 ISO 代码的映射
  * 与后端 countrycodes.proto 保持同步
@@ -295,7 +301,6 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
   SIERRA_LEONE: 'SL',
   SINGAPORE: 'SG',
   SINT_MAARTEN: 'SX',
-  SUCRE: 'SK', // Note: This might be Slovakia based on proto position
   SLOVAKIA: 'SK',
   SLOVENIA: 'SI',
   SOLOMON_ISLANDS: 'SB',
@@ -358,15 +363,16 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
  * 支持多种格式：ISO 代码、下划线格式名称等
  */
 export function toISOCountryCode(countryIdentifier: string): string {
+  const upperIdentifier = countryIdentifier.toUpperCase();
+
   // 已经是 ISO 代码（2位字母）
-  if (/^[A-Z]{2}$/.test(countryIdentifier)) {
-    return countryIdentifier;
+  if (/^[A-Z]{2}$/.test(upperIdentifier)) {
+    return upperIdentifier;
   }
 
   // 尝试从映射表获取
-  const upperCode = countryIdentifier.toUpperCase();
-  if (COUNTRY_NAME_TO_ISO[upperCode]) {
-    return COUNTRY_NAME_TO_ISO[upperCode];
+  if (COUNTRY_NAME_TO_ISO[upperIdentifier]) {
+    return COUNTRY_NAME_TO_ISO[upperIdentifier];
   }
 
   // 返回原始值（可能是未知格式）
@@ -374,9 +380,25 @@ export function toISOCountryCode(countryIdentifier: string): string {
 }
 
 /**
+ * 洲级区域名称映射（与 Proto 中 500-508 对应）
+ */
+const REGION_NAMES: Record<string, { en: string; zh: string }> = {
+  ALL: { en: 'Worldwide', zh: '全球' },
+  WORLDWIDE: { en: 'Worldwide', zh: '全球' },
+  AFRICA: { en: 'Africa', zh: '非洲' },
+  ASIA: { en: 'Asia', zh: '亚洲' },
+  CENTRAL_AMERICA: { en: 'Central America', zh: '中美洲' },
+  EUROPE: { en: 'Europe', zh: '欧洲' },
+  MIDDLE_EAST: { en: 'Middle East', zh: '中东' },
+  NORTH_AMERICA: { en: 'North America', zh: '北美洲' },
+  SOUTH_AMERICA: { en: 'South America', zh: '南美洲' },
+  OCEANIA: { en: 'Oceania', zh: '大洋洲' },
+};
+
+/**
  * 获取国家名称（本地化）
  *
- * @param countryCode 国家标识，支持 ISO 代码或下划线格式名称
+ * @param countryCode 国家标识，支持 ISO 代码、下划线格式名称、洲级区域等
  * @param locale 语言代码 (如 'en', 'zh')
  * @returns 本地化的国家名称，如果找不到则返回格式化后的名称
  *
@@ -385,11 +407,14 @@ export function toISOCountryCode(countryIdentifier: string): string {
  * getCountryName('UNITED_STATES', 'zh') // '美国'
  * getCountryName('CN', 'en') // 'China'
  * getCountryName('ALL', 'en') // 'Worldwide'
+ * getCountryName('ASIA', 'zh') // '亚洲'
  */
 export function getCountryName(countryCode: string, locale: string = 'en'): string {
-  // 特殊处理：全球/所有地区
-  if (countryCode === 'ALL' || countryCode === 'WORLDWIDE') {
-    return locale.startsWith('zh') ? '全球' : 'Worldwide';
+  const upperCode = countryCode.toUpperCase();
+
+  // 特殊处理：洲级区域
+  if (REGION_NAMES[upperCode]) {
+    return locale.startsWith('zh') ? REGION_NAMES[upperCode].zh : REGION_NAMES[upperCode].en;
   }
 
   // 转换为 ISO 代码
