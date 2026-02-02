@@ -681,7 +681,13 @@ export default function CheckoutPage() {
                                     const isSelected =
                                       selectedShipping[item.id]?.optionName === option.name &&
                                       selectedShipping[item.id]?.serviceName === service.name;
-                                    const shippingPrice = getShippingPrice(service, option);
+                                    // 运费数据是最小单位（如 cents），需要转换为标准单位（如 dollars）
+                                    const currency = option.currency || item.currency;
+                                    const shippingPriceRaw = getShippingPrice(service, option);
+                                    const shippingPrice = fromMinimalUnit(
+                                      shippingPriceRaw,
+                                      currency
+                                    );
                                     return (
                                       <label
                                         key={`${option.name}-${service.name}`}
@@ -721,7 +727,7 @@ export default function CheckoutPage() {
                                         <span className="text-sm font-semibold text-foreground">
                                           {shippingPrice === 0
                                             ? t('checkout.free') || 'Free'
-                                            : renderPairedPrice(shippingPrice, item.currency)}
+                                            : renderPairedPrice(shippingPrice, currency)}
                                         </span>
                                       </label>
                                     );
