@@ -4,9 +4,20 @@
  */
 
 import countries from 'i18n-iso-countries';
+// 静态导入常用语言包，确保启动时立即可用，避免竞态条件
+import enLocale from 'i18n-iso-countries/langs/en.json';
+import zhLocale from 'i18n-iso-countries/langs/zh.json';
 
 // 注册支持的语言 - 按需动态加载
 const registeredLocales = new Set<string>();
+
+// 立即注册常用语言包（同步）
+countries.registerLocale(enLocale);
+countries.registerLocale(zhLocale);
+registeredLocales.add('en');
+registeredLocales.add('zh');
+registeredLocales.add('zh-CN');
+registeredLocales.add('zh-TW');
 
 /**
  * 注册语言包
@@ -39,28 +50,12 @@ async function registerLocale(locale: string): Promise<void> {
 }
 
 /**
- * 同步注册常用语言包（用于初始化）
+ * 初始化国家语言包（保留用于向后兼容）
+ * 注意：常用语言包（en, zh）已在模块加载时静态导入并注册
  */
 export function initCountryLocales(): void {
-  // 预加载常用语言
-  import('i18n-iso-countries/langs/en.json')
-    .then(data => {
-      countries.registerLocale(data.default || data);
-      registeredLocales.add('en');
-    })
-    .catch(() => {
-      console.warn('Failed to load country locale: en');
-    });
-  import('i18n-iso-countries/langs/zh.json')
-    .then(data => {
-      countries.registerLocale(data.default || data);
-      registeredLocales.add('zh');
-      registeredLocales.add('zh-CN');
-      registeredLocales.add('zh-TW');
-    })
-    .catch(() => {
-      console.warn('Failed to load country locale: zh');
-    });
+  // 常用语言包已在模块顶部静态导入并同步注册
+  // 此函数保留用于向后兼容，也可用于未来添加其他语言的动态加载
 }
 
 /**
