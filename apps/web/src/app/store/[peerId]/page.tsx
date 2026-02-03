@@ -39,6 +39,8 @@ import {
   getImageUrl,
   useVerifiedModerators,
   useAccessControl,
+  stripHtmlTags,
+  sanitizeHtml,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
 import { Settings, Camera, Package, Lock, ShieldCheck, Plus, Upload, Ban } from 'lucide-react';
@@ -864,7 +866,7 @@ export default function StorePage() {
                   {/* 简介 */}
                   {store.shortDescription && (
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                      {store.shortDescription}
+                      {stripHtmlTags(store.shortDescription)}
                     </p>
                   )}
                 </div>
@@ -1090,11 +1092,10 @@ export default function StorePage() {
                     </h2>
                     <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
                       {store.about ? (
-                        store.about.split('\n').map((paragraph, i) => (
-                          <p key={i} className="text-sm sm:text-base text-muted-foreground mb-3">
-                            {paragraph}
-                          </p>
-                        ))
+                        <div
+                          className="text-sm sm:text-base text-muted-foreground [&>p]:mb-3 [&>p:last-child]:mb-0"
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(store.about) }}
+                        />
                       ) : (
                         <p className="text-sm sm:text-base text-muted-foreground">
                           {t('common.noData')}

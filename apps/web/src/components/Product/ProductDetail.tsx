@@ -17,6 +17,8 @@ import {
   useI18n,
   useCurrency,
   universalSwapService,
+  decodeHtmlEntities,
+  sanitizeHtml,
 } from '@mobazha/core';
 import type { Product, ProductRating, UserProfile } from '@mobazha/core';
 import {
@@ -28,108 +30,6 @@ import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
-
-// HTML 实体解码
-function decodeHtmlEntities(text: string): string {
-  if (typeof window === 'undefined') {
-    // SSR 环境下的简单解码
-    return text
-      .replace(/&#39;/g, "'")
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>');
-  }
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  return textarea.value;
-}
-
-// 安全的 HTML 消毒函数（允许基本的格式化标签）
-function sanitizeHtml(html: string): string {
-  if (typeof window === 'undefined') {
-    // SSR 环境下不处理
-    return html;
-  }
-
-  // 允许的标签白名单
-  const allowedTags = [
-    'p',
-    'br',
-    'b',
-    'i',
-    'strong',
-    'em',
-    'u',
-    'a',
-    'ul',
-    'ol',
-    'li',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'blockquote',
-    'code',
-    'pre',
-    'span',
-    'div',
-  ];
-  // 允许的属性白名单
-  const allowedAttrs = ['href', 'target', 'rel', 'class'];
-
-  const parser = new window.DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  function cleanNode(node: globalThis.Node, isRoot = false): void {
-    if (node.nodeType === window.Node.ELEMENT_NODE) {
-      const element = node as Element;
-      const tagName = element.tagName.toLowerCase();
-
-      // 如果标签不在白名单中且不是根节点，替换为其内容
-      if (!isRoot && !allowedTags.includes(tagName)) {
-        const parent = element.parentNode;
-        while (element.firstChild) {
-          parent?.insertBefore(element.firstChild, element);
-        }
-        parent?.removeChild(element);
-        return;
-      }
-
-      // 移除不允许的属性（根节点除外）
-      if (!isRoot) {
-        const attrs = Array.from(element.attributes);
-        for (const attr of attrs) {
-          if (!allowedAttrs.includes(attr.name.toLowerCase())) {
-            element.removeAttribute(attr.name);
-          }
-        }
-
-        // 为外部链接添加安全属性
-        if (tagName === 'a') {
-          element.setAttribute('target', '_blank');
-          element.setAttribute('rel', 'noopener noreferrer nofollow');
-        }
-      }
-    }
-
-    // 递归处理子节点
-    const children = Array.from(node.childNodes);
-    for (const child of children) {
-      cleanNode(child, false);
-    }
-  }
-
-  // 检查 body 是否存在
-  if (!doc.body) {
-    return html;
-  }
-
-  cleanNode(doc.body, true);
-  return doc.body.innerHTML;
-}
 
 // 星星评分组件
 function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {

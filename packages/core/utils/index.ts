@@ -23,6 +23,9 @@ export * from './countryUtils';
 // 数据转换函数
 export * from './transforms';
 
+// HTML 处理工具
+export * from './htmlUtils';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';
