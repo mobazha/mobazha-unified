@@ -40,6 +40,10 @@ import {
   getPopularCurrencies,
   isHosted,
   startCasdoorLogin,
+  getAllCountries,
+  getCountryName,
+  POPULAR_COUNTRIES,
+  useShippingOptions,
 } from '@mobazha/core';
 import type { CurrencyInfo } from '@mobazha/core';
 import {
@@ -55,32 +59,11 @@ import {
   Users,
   Package,
   Lock,
+  Truck,
 } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
-// Countries data
-const countries = [
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'CN', name: 'China' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'IN', name: 'India' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'RU', name: 'Russia' },
-];
+// 国家列表从 @mobazha/core 动态获取，支持本地化和智能排序
 
 // Languages data
 const languages = [
@@ -304,7 +287,37 @@ const GeneralTabContent: React.FC = () => {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // 获取国家列表（智能排序：热门国家优先）
+  const countryOptions = useMemo(() => {
+    const allCountries = getAllCountries(language);
+    return allCountries.sort((a, b) => {
+      const aIsPopular = POPULAR_COUNTRIES.includes(a.code);
+      const bIsPopular = POPULAR_COUNTRIES.includes(b.code);
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      if (aIsPopular && bIsPopular) {
+        return POPULAR_COUNTRIES.indexOf(a.code) - POPULAR_COUNTRIES.indexOf(b.code);
+      }
+      return a.name.localeCompare(b.name, language);
+    });
+  }, [language]);
+
+  // 过滤后的国家列表（支持搜索）
+  const filteredCountryOptions = useMemo(() => {
+    if (!countrySearchQuery.trim()) return countryOptions;
+    const query = countrySearchQuery.toLowerCase();
+    return countryOptions.filter(
+      c => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
+    );
+  }, [countryOptions, countrySearchQuery]);
+
+  // 当前选中国家的显示名称
+  const selectedCountryName = useMemo(() => {
+    return getCountryName(country, language) || country;
+  }, [country, language]);
 
   const currencyOptions = useMemo(() => {
     const popular = getPopularCurrencies();
@@ -406,7 +419,7 @@ const GeneralTabContent: React.FC = () => {
             className="w-full justify-between"
             onClick={() => setShowCountryModal(true)}
           >
-            {countries.find(c => c.code === country)?.name || country}
+            {selectedCountryName}
             <svg
               className="w-4 h-4 opacity-50"
               fill="none"
@@ -631,19 +644,32 @@ const GeneralTabContent: React.FC = () => {
       </Dialog>
 
       {/* Country Modal */}
-      <Dialog open={showCountryModal} onOpenChange={setShowCountryModal}>
+      <Dialog
+        open={showCountryModal}
+        onOpenChange={open => {
+          setShowCountryModal(open);
+          if (!open) setCountrySearchQuery('');
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t('settingsExtended.country')}</DialogTitle>
           </DialogHeader>
+          <Input
+            placeholder={t('common.search')}
+            value={countrySearchQuery}
+            onChange={e => setCountrySearchQuery(e.target.value)}
+            className="mb-4"
+          />
           <ScrollArea className="max-h-[400px]">
             <div className="space-y-1">
-              {countries.map(c => (
+              {filteredCountryOptions.map(c => (
                 <button
                   key={c.code}
                   onClick={() => {
                     setCountry(c.code);
                     setShowCountryModal(false);
+                    setCountrySearchQuery('');
                   }}
                   className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors ${
                     country === c.code ? 'bg-primary/10' : ''
@@ -653,6 +679,11 @@ const GeneralTabContent: React.FC = () => {
                   {country === c.code && <Check className="w-4 h-4 text-primary" />}
                 </button>
               ))}
+              {filteredCountryOptions.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  {t('common.noResults')}
+                </div>
+              )}
             </div>
           </ScrollArea>
         </DialogContent>
@@ -965,10 +996,13 @@ const StoreTabContent: React.FC = () => {
   const [returnPolicy, setReturnPolicy] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('');
 
-  // Shipping options state
-  const [shippingOptions, setShippingOptions] = useState<
-    Array<{ name: string; price: string; days: string }>
-  >([{ name: 'Standard Shipping', price: '5.00', days: '5-7' }]);
+  // Shipping options - 使用 useShippingOptions hook
+  const {
+    options: shippingOptions,
+    isLoading: shippingLoading,
+    isSaving: shippingSaving,
+    deleteOption: deleteShippingOption,
+  } = useShippingOptions();
 
   const enabledCoinsCount = coins.filter(c => c.enabled).length;
 
@@ -979,19 +1013,15 @@ const StoreTabContent: React.FC = () => {
     });
   };
 
-  const handleAddShipping = () => {
-    setShippingOptions([...shippingOptions, { name: '', price: '', days: '' }]);
-  };
-
-  const handleRemoveShipping = (index: number) => {
-    setShippingOptions(shippingOptions.filter((_, i) => i !== index));
-  };
-
-  const handleShippingChange = (index: number, field: 'name' | 'price' | 'days', value: string) => {
-    const newOptions = [...shippingOptions];
-    newOptions[index] = { ...newOptions[index], [field]: value };
-    setShippingOptions(newOptions);
-  };
+  const handleDeleteShipping = useCallback(
+    async (optionId: number) => {
+      const success = await deleteShippingOption(optionId);
+      if (success) {
+        toast({ title: t('common.success'), description: 'Shipping option deleted' });
+      }
+    },
+    [deleteShippingOption, toast, t]
+  );
 
   // 导航到访问控制相关页面
   const navigateToAccessControl = (path: string) => {
@@ -1131,65 +1161,63 @@ const StoreTabContent: React.FC = () => {
             <DialogTitle>{t('settingsExtended.shippingOptions')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {shippingOptions.map((option, index) => (
-              <div key={index} className="p-4 border rounded-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-sm">Shipping Option {index + 1}</span>
-                  {shippingOptions.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveShipping(index)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-                <Input
-                  value={option.name}
-                  onChange={e => handleShippingChange(index, 'name', e.target.value)}
-                  placeholder="Shipping name (e.g. Standard, Express)"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Price (USD)</Label>
-                    <Input
-                      type="number"
-                      value={option.price}
-                      onChange={e => handleShippingChange(index, 'price', e.target.value)}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Est. Days</Label>
-                    <Input
-                      value={option.days}
-                      onChange={e => handleShippingChange(index, 'days', e.target.value)}
-                      placeholder="5-7"
-                    />
-                  </div>
-                </div>
+            <p className="text-sm text-muted-foreground">
+              {t('settingsExtended.shippingOptionsDesc')}
+            </p>
+
+            {shippingLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
-            ))}
-            <Button variant="outline" onClick={handleAddShipping} className="w-full">
-              <Plus className="w-4 h-4 mr-1" />
-              Add Shipping Option
-            </Button>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowShippingModal(false)}>
-                {t('common.cancel')}
+            ) : shippingOptions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Truck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>{t('settingsExtended.noShippingOptions') || 'No shipping options configured'}</p>
+                <p className="text-xs mt-2">
+                  {t('settingsExtended.addShippingHint') ||
+                    'Add shipping options to enable physical product delivery'}
+                </p>
+              </div>
+            ) : (
+              <ScrollArea className="max-h-[300px]">
+                <div className="space-y-3">
+                  {shippingOptions.map(option => (
+                    <div key={option.id} className="p-3 border rounded-lg bg-card">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium">{option.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {option.regions?.length === 1 && option.regions[0] === 'ALL'
+                              ? t('shipping.worldwide') || 'Worldwide'
+                              : `${option.regions?.length || 0} ${t('shipping.regions') || 'regions'}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {option.services?.length || 0} {t('shipping.services') || 'service(s)'}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteShipping(option.id!)}
+                          disabled={shippingSaving}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+
+            <div className="flex justify-between pt-4 border-t">
+              <Button variant="outline" onClick={() => handleComingSoon('Shipping editor')}>
+                <Plus className="w-4 h-4 mr-1" />
+                {t('settingsExtended.addShipping') || 'Add Option'}
               </Button>
-              <Button
-                onClick={() => {
-                  toast({
-                    title: t('common.success'),
-                    description: t('settingsModal.settingsSaved'),
-                  });
-                  setShowShippingModal(false);
-                }}
-              >
-                {t('common.save')}
+              <Button variant="outline" onClick={() => setShowShippingModal(false)}>
+                {t('common.close')}
               </Button>
             </div>
           </div>
@@ -1214,10 +1242,25 @@ interface ShippingAddress {
 }
 
 const AddressesTabContent: React.FC = () => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { toast } = useToast();
 
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
+
+  // 获取国家列表
+  const countryOptions = useMemo(() => {
+    const allCountries = getAllCountries(language);
+    return allCountries.sort((a, b) => {
+      const aIsPopular = POPULAR_COUNTRIES.includes(a.code);
+      const bIsPopular = POPULAR_COUNTRIES.includes(b.code);
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      if (aIsPopular && bIsPopular) {
+        return POPULAR_COUNTRIES.indexOf(a.code) - POPULAR_COUNTRIES.indexOf(b.code);
+      }
+      return a.name.localeCompare(b.name, language);
+    });
+  }, [language]);
 
   const [newAddress, setNewAddress] = useState<Partial<ShippingAddress>>({
     name: '',
@@ -1299,7 +1342,9 @@ const AddressesTabContent: React.FC = () => {
                   <p className="text-sm">
                     {address.city}, {address.state} {address.postalCode}
                   </p>
-                  <p className="text-sm">{countries.find(c => c.code === address.country)?.name}</p>
+                  <p className="text-sm">
+                    {getCountryName(address.country, language) || address.country}
+                  </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => handleDeleteAddress(address.id)}>
                   {t('common.delete')}
@@ -1381,7 +1426,7 @@ const AddressesTabContent: React.FC = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {countries.map(c => (
+              {countryOptions.map(c => (
                 <SelectItem key={c.code} value={c.code}>
                   {c.name}
                 </SelectItem>

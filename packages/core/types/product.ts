@@ -181,6 +181,14 @@ export interface ProductSku {
 }
 
 /**
+ * 满额免邮配置
+ */
+export interface FreeShippingThreshold {
+  enabled: boolean;
+  minAmount: string;
+}
+
+/**
  * 运输选项
  */
 export interface ShippingOption {
@@ -194,6 +202,8 @@ export interface ShippingOption {
   currency?: string;
   /** 服务类型：FIXED_PRICE 或 FIRST_RENEWAL_FEE */
   serviceType?: 'FIXED_PRICE' | 'FIRST_RENEWAL_FEE';
+  /** 满额免邮配置 */
+  freeShippingThreshold?: FreeShippingThreshold;
 }
 
 /**

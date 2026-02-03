@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState, useMemo } from 'react';
+import React, { memo, useState, useMemo, useCallback } from 'react';
 import { Truck, MapPin, Package } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -12,7 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useI18n, useCurrency, getCountryName } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getCountryName,
+  POPULAR_COUNTRIES,
+  isSpecialRegion,
+  isValidShippingRegion,
+} from '@mobazha/core';
 import type { ShippingOption } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -44,7 +51,23 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
   const { t, locale } = useI18n();
   const { formatPrice, fromMinimalUnit } = useCurrency();
 
-  // 提取所有可用地区（去重）
+  /**
+   * 获取地区显示名称（支持多语言）
+   * getCountryName 已支持多种格式（ISO代码、下划线格式等）
+   */
+  const getRegionDisplayName = useCallback(
+    (region: string): string => {
+      // 特殊处理：全球（使用翻译）
+      if (region === 'ALL' || region === 'WORLDWIDE') {
+        return t('product.worldwide');
+      }
+      // 使用 i18n-iso-countries 获取本地化名称
+      return getCountryName(region, locale);
+    },
+    [locale, t]
+  );
+
+  // 提取所有可用地区（去重），过滤无效区域，智能排序
   const allRegions = useMemo(() => {
     if (!shippingOptions || shippingOptions.length === 0) return [];
 
@@ -53,13 +76,39 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
       option.regions.forEach(region => regionSet.add(region));
     });
 
-    // 按字母排序，但把 "ALL" 放在最前面
-    return Array.from(regionSet).sort((a, b) => {
-      if (a === 'ALL') return -1;
-      if (b === 'ALL') return 1;
-      return a.localeCompare(b);
+    // 过滤掉无效的区域代码（如旧数据中的 "SUCRE" 等非标准代码）
+    const regions = Array.from(regionSet).filter(region => isValidShippingRegion(region));
+
+    // 智能排序：特殊区域 > 热门国家 > 其他（按本地化名称）
+    return regions.sort((a, b) => {
+      const aUpper = a.toUpperCase();
+      const bUpper = b.toUpperCase();
+
+      // 1. 特殊区域（ALL/WORLDWIDE, 大洲）放最前面
+      const aIsSpecial = isSpecialRegion(aUpper);
+      const bIsSpecial = isSpecialRegion(bUpper);
+      if (aIsSpecial && !bIsSpecial) return -1;
+      if (!aIsSpecial && bIsSpecial) return 1;
+      // ALL/WORLDWIDE 最优先
+      if (aUpper === 'ALL' || aUpper === 'WORLDWIDE') return -1;
+      if (bUpper === 'ALL' || bUpper === 'WORLDWIDE') return 1;
+
+      // 2. 热门国家优先
+      const aIsPopular = POPULAR_COUNTRIES.includes(aUpper);
+      const bIsPopular = POPULAR_COUNTRIES.includes(bUpper);
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      // 热门国家内部按热门顺序排序
+      if (aIsPopular && bIsPopular) {
+        return POPULAR_COUNTRIES.indexOf(aUpper) - POPULAR_COUNTRIES.indexOf(bUpper);
+      }
+
+      // 3. 其他国家按本地化名称排序
+      const nameA = getRegionDisplayName(a);
+      const nameB = getRegionDisplayName(b);
+      return nameA.localeCompare(nameB, locale);
     });
-  }, [shippingOptions]);
+  }, [shippingOptions, locale, getRegionDisplayName]);
 
   // 当前选中的地区
   const [selectedRegion, setSelectedRegion] = useState<string>(allRegions[0] || 'ALL');
@@ -77,19 +126,6 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
   if (!shippingOptions || shippingOptions.length === 0) {
     return null;
   }
-
-  /**
-   * 获取地区显示名称（支持多语言）
-   * getCountryName 已支持多种格式（ISO代码、下划线格式等）
-   */
-  const getRegionDisplayName = (region: string): string => {
-    // 特殊处理：全球（使用翻译）
-    if (region === 'ALL' || region === 'WORLDWIDE') {
-      return t('product.worldwide');
-    }
-    // 使用 i18n-iso-countries 获取本地化名称
-    return getCountryName(region, locale);
-  };
 
   // 获取配送类型显示
   const getShippingTypeDisplay = (type: string): React.ReactNode => {

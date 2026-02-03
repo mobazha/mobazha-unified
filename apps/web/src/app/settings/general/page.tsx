@@ -25,25 +25,12 @@ import {
   getPopularCurrencies,
   useNotificationStore,
   testNotificationSound,
+  getAllCountries,
+  getCountryName,
+  POPULAR_COUNTRIES,
 } from '@mobazha/core';
 import type { CurrencyInfo, Locale } from '@mobazha/core';
 import { ChevronLeft, Check, Volume2 } from 'lucide-react';
-
-// Countries data
-const countries = [
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'CN', name: 'China' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'IN', name: 'India' },
-];
 
 // Languages data
 const languages: { code: Locale; name: string }[] = [
@@ -151,6 +138,7 @@ export default function GeneralSettingsPage() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [localVolume, setLocalVolume] = useState(Math.round(volume * 100));
 
   // 同步音量
@@ -197,6 +185,39 @@ export default function GeneralSettingsPage() {
     return currencyOptions.find(c => c.code === localCurrency) || currencyOptions[0];
   }, [localCurrency, currencyOptions]);
 
+  // 获取国家列表（智能排序：热门国家优先）
+  const countryOptions = useMemo(() => {
+    const allCountries = getAllCountries(language);
+
+    // 智能排序：热门国家优先，其他按本地化名称排序
+    return allCountries.sort((a, b) => {
+      const aIsPopular = POPULAR_COUNTRIES.includes(a.code);
+      const bIsPopular = POPULAR_COUNTRIES.includes(b.code);
+
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      if (aIsPopular && bIsPopular) {
+        return POPULAR_COUNTRIES.indexOf(a.code) - POPULAR_COUNTRIES.indexOf(b.code);
+      }
+
+      return a.name.localeCompare(b.name, language);
+    });
+  }, [language]);
+
+  // 当前选中国家的显示名称
+  const selectedCountryName = useMemo(() => {
+    return getCountryName(country, language) || country;
+  }, [country, language]);
+
+  // 过滤后的国家列表（支持搜索）
+  const filteredCountryOptions = useMemo(() => {
+    if (!countrySearchQuery.trim()) return countryOptions;
+    const query = countrySearchQuery.toLowerCase();
+    return countryOptions.filter(
+      c => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
+    );
+  }, [countryOptions, countrySearchQuery]);
+
   const selectedLanguageInfo = languages.find(l => l.code === language);
 
   return (
@@ -223,7 +244,7 @@ export default function GeneralSettingsPage() {
         />
         <SettingItem
           title={t('settingsExtended.country')}
-          value={countries.find(c => c.code === country)?.name}
+          value={selectedCountryName}
           onClick={() => setShowCountryModal(true)}
         />
         <SettingItem
@@ -312,18 +333,33 @@ export default function GeneralSettingsPage() {
       </Dialog>
 
       {/* Country Modal */}
-      <Dialog open={showCountryModal} onOpenChange={setShowCountryModal}>
+      <Dialog
+        open={showCountryModal}
+        onOpenChange={open => {
+          setShowCountryModal(open);
+          if (!open) setCountrySearchQuery('');
+        }}
+      >
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{t('settingsExtended.selectCountry')}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
-            {countries.map(c => (
+          <div className="mb-2">
+            <Input
+              placeholder={t('common.search') + '...'}
+              value={countrySearchQuery}
+              onChange={e => setCountrySearchQuery(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <ScrollArea className="flex-1 -mx-6 px-6 max-h-[50vh]">
+            {filteredCountryOptions.map(c => (
               <button
                 key={c.code}
                 onClick={() => {
                   setCountry(c.code);
                   setShowCountryModal(false);
+                  setCountrySearchQuery('');
                 }}
                 className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
                   country === c.code ? 'bg-primary/10' : ''
@@ -333,6 +369,9 @@ export default function GeneralSettingsPage() {
                 {country === c.code && <Check className="w-5 h-5 text-primary" />}
               </button>
             ))}
+            {filteredCountryOptions.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">{t('common.noResults')}</div>
+            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>

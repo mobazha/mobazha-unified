@@ -83,5 +83,9 @@ export * from './useShippingAddresses';
 export type { DisplayAddress, DisplayAddressUI } from './useShippingAddresses';
 export { toDisplayAddressUI } from './useShippingAddresses';
 
+// 配送选项管理相关
+export * from './useShippingOptions';
+export { createEmptyOption, createEmptyService } from './useShippingOptions';
+
 // 认证守卫相关
 export * from './useAuthGuard';

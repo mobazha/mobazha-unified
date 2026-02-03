@@ -62,9 +62,19 @@ import {
   SUPPORTED_PROVIDERS,
   useShippingAddresses,
   toDisplayAddressUI,
+  getAllCountries,
+  getCountryName,
+  POPULAR_COUNTRIES,
+  useShippingOptions,
 } from '@mobazha/core';
-import type { Address as ApiAddress, DisplayAddress, DisplayAddressUI } from '@mobazha/core';
+import type {
+  Address as ApiAddress,
+  DisplayAddress,
+  DisplayAddressUI,
+  ShippingOptionSetting,
+} from '@mobazha/core';
 import { AddressFormModal } from '@/components/Address';
+import { ShippingOptionCard, ShippingOptionForm } from '@/components/Shipping';
 import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
 import type { CurrencyInfo, Locale } from '@mobazha/core';
 import { ProviderIcon } from '@/components/ProviderIcon';
@@ -112,28 +122,7 @@ import {
 
 // ============ Data & Types ============
 
-const countries = [
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'CN', name: 'China' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'IN', name: 'India' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'RU', name: 'Russia' },
-];
+// 国家列表从 @mobazha/core 动态获取，支持本地化和智能排序
 
 const languages: { code: Locale; name: string }[] = [
   { code: 'en', name: 'English (English, America)' },
@@ -433,7 +422,37 @@ const GeneralTabContent: React.FC = () => {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // 获取国家列表（智能排序：热门国家优先）
+  const countryOptions = useMemo(() => {
+    const allCountries = getAllCountries(language);
+    return allCountries.sort((a, b) => {
+      const aIsPopular = POPULAR_COUNTRIES.includes(a.code);
+      const bIsPopular = POPULAR_COUNTRIES.includes(b.code);
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      if (aIsPopular && bIsPopular) {
+        return POPULAR_COUNTRIES.indexOf(a.code) - POPULAR_COUNTRIES.indexOf(b.code);
+      }
+      return a.name.localeCompare(b.name, language);
+    });
+  }, [language]);
+
+  // 过滤后的国家列表（支持搜索）
+  const filteredCountryOptions = useMemo(() => {
+    if (!countrySearchQuery.trim()) return countryOptions;
+    const query = countrySearchQuery.toLowerCase();
+    return countryOptions.filter(
+      c => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
+    );
+  }, [countryOptions, countrySearchQuery]);
+
+  // 当前选中国家的显示名称
+  const selectedCountryName = useMemo(() => {
+    return getCountryName(country, language) || country;
+  }, [country, language]);
 
   // 测试声音
   const handleTestSound = useCallback(() => {
@@ -505,7 +524,7 @@ const GeneralTabContent: React.FC = () => {
             className="w-full justify-between"
             onClick={() => setShowCountryModal(true)}
           >
-            {countries.find(c => c.code === country)?.name || country}
+            {selectedCountryName}
             <ChevronRight className="w-4 h-4 opacity-50" />
           </Button>
         </FormField>
@@ -634,19 +653,32 @@ const GeneralTabContent: React.FC = () => {
       </Dialog>
 
       {/* Country Modal */}
-      <Dialog open={showCountryModal} onOpenChange={setShowCountryModal}>
+      <Dialog
+        open={showCountryModal}
+        onOpenChange={open => {
+          setShowCountryModal(open);
+          if (!open) setCountrySearchQuery('');
+        }}
+      >
         <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>{t('settingsExtended.country')}</DialogTitle>
           </DialogHeader>
+          <Input
+            placeholder={t('common.search')}
+            value={countrySearchQuery}
+            onChange={e => setCountrySearchQuery(e.target.value)}
+            className="mb-4"
+          />
           <ScrollArea className="max-h-[400px]">
             <div className="space-y-1">
-              {countries.map(c => (
+              {filteredCountryOptions.map(c => (
                 <button
                   key={c.code}
                   onClick={() => {
                     setCountry(c.code);
                     setShowCountryModal(false);
+                    setCountrySearchQuery('');
                   }}
                   className={cn(
                     'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors',
@@ -657,6 +689,11 @@ const GeneralTabContent: React.FC = () => {
                   {country === c.code && <Check className="w-4 h-4 text-primary" />}
                 </button>
               ))}
+              {filteredCountryOptions.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  {t('common.noResults')}
+                </div>
+              )}
             </div>
           </ScrollArea>
         </DialogContent>
@@ -1448,17 +1485,130 @@ const StoreTabContent: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{t('settingsExtended.shippingOptions')}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {t('settingsExtended.shippingOptionsDesc')}
-            </p>
-            <div className="text-center py-8 text-muted-foreground">
-              <Truck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{t('settingsExtended.comingSoon')}</p>
-            </div>
-          </div>
+          <ShippingOptionsContent onClose={() => setShowShippingModal(false)} />
         </DialogContent>
       </Dialog>
+    </>
+  );
+};
+
+// Shipping Options Content - 使用 useShippingOptions hook 和新组件
+// ShippingOptionCard 和 ShippingOptionForm 已在文件顶部导入
+
+interface ShippingOptionsContentProps {
+  onClose: () => void;
+}
+
+const ShippingOptionsContent: React.FC<ShippingOptionsContentProps> = ({ onClose }) => {
+  const { t } = useI18n();
+  const { toast } = useToast();
+
+  const { options, isLoading, isSaving, addOption, updateOption, deleteOption } =
+    useShippingOptions();
+
+  // 表单状态
+  const [showForm, setShowForm] = useState(false);
+  const [editingOption, setEditingOption] = useState<ShippingOptionSetting | null>(null);
+
+  // 处理添加
+  const handleAdd = useCallback(() => {
+    setEditingOption(null);
+    setShowForm(true);
+  }, []);
+
+  // 处理编辑
+  const handleEdit = useCallback((option: ShippingOptionSetting) => {
+    setEditingOption(option);
+    setShowForm(true);
+  }, []);
+
+  // 处理保存
+  const handleSave = useCallback(
+    async (option: ShippingOptionSetting): Promise<boolean> => {
+      if (editingOption?.id) {
+        return await updateOption(editingOption.id, option);
+      } else {
+        return await addOption(option);
+      }
+    },
+    [editingOption, addOption, updateOption]
+  );
+
+  // 处理删除
+  const handleDelete = useCallback(
+    async (optionId: number) => {
+      const success = await deleteOption(optionId);
+      if (success) {
+        toast({
+          title: t('common.success'),
+          description: t('settingsExtended.shippingDeleted') || 'Shipping option deleted',
+        });
+      }
+    },
+    [deleteOption, toast, t]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">{t('settingsExtended.shippingOptionsDesc')}</p>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">{t('settingsExtended.shippingOptionsDesc')}</p>
+
+        {options.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Truck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>{t('settingsExtended.noShippingOptions') || 'No shipping options configured'}</p>
+            <p className="text-xs mt-2">
+              {t('settingsExtended.addShippingHint') ||
+                'Add shipping options to enable physical product delivery'}
+            </p>
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[300px]">
+            <div className="space-y-3">
+              {options.map(option => (
+                <ShippingOptionCard
+                  key={option.id}
+                  option={option}
+                  onEdit={() => handleEdit(option)}
+                  onDelete={() => handleDelete(option.id!)}
+                  disabled={isSaving}
+                  className="border-0 shadow-none"
+                />
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+
+        <div className="flex justify-between pt-4 border-t">
+          <Button variant="outline" onClick={handleAdd}>
+            <Plus className="w-4 h-4 mr-1" />
+            {t('settingsExtended.addShipping') || 'Add Option'}
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            {t('common.close')}
+          </Button>
+        </div>
+      </div>
+
+      {/* 添加/编辑表单 */}
+      <ShippingOptionForm
+        open={showForm}
+        onOpenChange={setShowForm}
+        initialOption={editingOption || undefined}
+        onSave={handleSave}
+        mode={editingOption ? 'edit' : 'create'}
+      />
     </>
   );
 };

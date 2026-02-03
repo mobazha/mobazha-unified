@@ -78,6 +78,8 @@ export const en: TranslationResource = {
     prev: 'Previous',
     processing: 'Processing...',
     publishing: 'Publishing...',
+    optional: 'Optional',
+    required: 'Required',
   },
 
   validation: {
@@ -329,6 +331,8 @@ export const en: TranslationResource = {
     shipping: 'Shipping',
     shippingMethod: 'Shipping Method',
     free: 'Free',
+    cheapest: 'Cheapest',
+    fastest: 'Fastest',
     selectAddressFirst: 'Please select a shipping address',
     selectShippingFirst: 'Please select a shipping method',
     selectAddressWarning: 'Please select a shipping address',
@@ -1586,6 +1590,9 @@ export const en: TranslationResource = {
     // Addresses
     addAddress: 'Add Address',
     noAddresses: 'No addresses saved yet',
+    // Shipping
+    addShipping: 'Add Shipping Option',
+    addShippingHint: 'Add shipping options to enable physical product delivery',
   },
 
   userMenu: {
@@ -2452,6 +2459,93 @@ export const en: TranslationResource = {
       '1M': '1M',
       ALL: 'ALL',
     },
+  },
+
+  // Shipping settings
+  shipping: {
+    // Titles
+    createOption: 'Create Shipping Option',
+    editOption: 'Edit Shipping Option',
+    optionCreated: 'Shipping option created',
+    optionUpdated: 'Shipping option updated',
+    // Basic info
+    basicInfo: 'Basic Information',
+    optionName: 'Option Name',
+    optionNamePlaceholder: 'e.g. Standard Shipping',
+    shippingType: 'Shipping Type',
+    currency: 'Currency',
+    pricingModel: 'Pricing Model',
+    // Shipping types
+    type: {
+      FIXED_PRICE: 'Fixed Price Shipping',
+      LOCAL_PICKUP: 'Local Pickup',
+    },
+    // Service types (nested for dynamic keys)
+    serviceType: {
+      FIRST_RENEWAL_FEE: 'First Weight + Renewal Fee',
+      SAME_WEIGHT_SAME_FEE: 'Flat Rate by Weight Range',
+    },
+    // Service type labels for cards
+    serviceTypeLabel: {
+      firstRenewal: 'First + Renewal',
+      flatRate: 'Flat Rate',
+    },
+    firstRenewalFeeDesc: 'Charge first weight fee + additional fee for each unit of extra weight',
+    sameWeightSameFeeDesc: 'Charge a flat rate based on weight range',
+    // Regions
+    shippingRegions: 'Shipping Regions',
+    selectRegions: 'Select regions...',
+    regionsSelected: 'region(s) selected',
+    selectAtLeastOneRegion: 'Select at least one region',
+    worldwide: 'Worldwide',
+    popularCountries: 'Popular Countries',
+    allCountries: 'All Countries',
+    regions: 'regions',
+    noRegions: 'No regions',
+    // Services
+    shippingServices: 'Shipping Services',
+    service: 'Service',
+    services: 'service(s)',
+    addService: 'Add Service',
+    addAtLeastOneService: 'Add at least one service',
+    serviceName: 'Service Name',
+    serviceNamePlaceholder: 'e.g. Standard',
+    estimatedDelivery: 'Est. Delivery',
+    deliveryPlaceholder: 'e.g. 5-7 days',
+    // Weight and pricing
+    firstWeight: 'First Weight',
+    firstFreight: 'First Freight',
+    renewalUnitWeight: 'Renewal Unit Weight',
+    renewalUnitPrice: 'Renewal Unit Price',
+    startWeight: 'Min Weight',
+    endWeight: 'Max Weight',
+    shippingFee: 'Shipping Fee',
+    registrationFee: 'Registration Fee',
+    // Card display
+    unnamed: 'Unnamed',
+    // Free shipping
+    freeShipping: 'Free Shipping',
+    enableFreeShipping: 'Enable Free Shipping Threshold',
+    freeShippingDesc: 'Offer free shipping when order amount reaches minimum threshold',
+    minAmountForFreeShipping: 'Minimum Order Amount',
+    freeShippingExample: 'Example: Order over $50 gets free shipping',
+    freeShippingBadge: 'Free Shipping over',
+    spendMoreForFreeShipping: 'Spend {amount} more for free shipping',
+  },
+
+  // Shipping templates
+  shippingTemplates: {
+    quickStart: 'Quick Start Templates',
+    quickStartDesc: 'Choose a template to get started quickly',
+    createCustom: 'Or create a custom option',
+    domesticStandard: 'Domestic Standard',
+    domesticStandardDesc: 'First weight fee + renewal fee per kg',
+    worldwideFlat: 'Worldwide Flat Rate',
+    worldwideFlatDesc: 'Single flat rate for all countries',
+    express: 'Express Shipping',
+    expressDesc: 'Fast delivery with premium pricing',
+    localPickup: 'Local Pickup',
+    localPickupDesc: 'Customer picks up in store (free)',
   },
 };
 
