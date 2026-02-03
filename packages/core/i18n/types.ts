@@ -89,6 +89,8 @@ export interface TranslationResource {
     prev?: string;
     processing?: string;
     publishing?: string;
+    optional?: string;
+    required?: string;
   };
 
   // 导航
@@ -878,6 +880,9 @@ export interface TranslationResource {
     // Addresses
     addAddress: string;
     noAddresses: string;
+    // Shipping
+    addShipping?: string;
+    addShippingHint?: string;
   };
 
   // 用户菜单
@@ -1660,6 +1665,93 @@ export interface TranslationResource {
       '1M': string;
       ALL: string;
     };
+  };
+
+  // 配送设置
+  shipping?: TranslationSection & {
+    // 标题
+    createOption: string;
+    editOption: string;
+    optionCreated: string;
+    optionUpdated: string;
+    // 基本信息
+    basicInfo: string;
+    optionName: string;
+    optionNamePlaceholder: string;
+    shippingType: string;
+    currency: string;
+    pricingModel: string;
+    // 配送类型
+    type: {
+      FIXED_PRICE: string;
+      LOCAL_PICKUP: string;
+    };
+    // 服务类型
+    serviceType: {
+      FIRST_RENEWAL_FEE: string;
+      SAME_WEIGHT_SAME_FEE: string;
+    };
+    // 服务类型标签（卡片显示）
+    serviceTypeLabel?: {
+      firstRenewal: string;
+      flatRate: string;
+    };
+    firstRenewalFeeDesc: string;
+    sameWeightSameFeeDesc: string;
+    // 地区
+    shippingRegions: string;
+    selectRegions: string;
+    regionsSelected: string;
+    selectAtLeastOneRegion: string;
+    worldwide: string;
+    popularCountries: string;
+    allCountries: string;
+    regions: string;
+    noRegions: string;
+    // 服务
+    shippingServices: string;
+    service: string;
+    services: string;
+    addService: string;
+    addAtLeastOneService: string;
+    serviceName: string;
+    serviceNamePlaceholder: string;
+    estimatedDelivery: string;
+    deliveryPlaceholder: string;
+    // 重量和定价
+    firstWeight: string;
+    firstFreight: string;
+    renewalUnitWeight: string;
+    renewalUnitPrice: string;
+    startWeight: string;
+    endWeight: string;
+    shippingFee: string;
+    registrationFee: string;
+    // 卡片显示
+    unnamed: string;
+    // 免邮设置
+    freeShipping?: string;
+    enableFreeShipping?: string;
+    freeShippingDesc?: string;
+    minAmountForFreeShipping?: string;
+    freeShippingExample?: string;
+    freeShippingBadge?: string;
+    spendMoreForFreeShipping?: string;
+  };
+
+  // 运费模板
+  shippingTemplates?: TranslationSection & {
+    quickStart?: string;
+    quickStartDesc?: string;
+    createCustom?: string;
+    domesticStandard?: string;
+    domesticStandardDesc?: string;
+    worldwideFlat?: string;
+    worldwideFlatDesc?: string;
+    express?: string;
+    expressDesc?: string;
+    localPickup?: string;
+    localPickupDesc?: string;
   };
 }
 

@@ -118,6 +118,29 @@ function getAdditionalItemPrice(service: ShippingOption['services'][0]): number 
 }
 
 /**
+ * 检查运费选项是否适用于某个国家
+ * @param option 运费选项
+ * @param countryCode 国家代码 (ISO 3166-1 alpha-2)
+ * @returns 是否适用
+ */
+function isShippingOptionAvailable(
+  option: ShippingOption,
+  countryCode: string | undefined
+): boolean {
+  // 如果没有国家代码，显示所有选项
+  if (!countryCode) return true;
+
+  // 如果没有配置 regions 或为空数组，视为全球可用
+  if (!option.regions || option.regions.length === 0) return true;
+
+  // 检查是否包含 "ALL" 或用户国家代码
+  const upperCountry = countryCode.toUpperCase();
+  return option.regions.some(
+    region => region.toUpperCase() === 'ALL' || region.toUpperCase() === upperCountry
+  );
+}
+
+/**
  * Checkout Page - 下单阶段
  *
  * 用户在此页面：
@@ -360,6 +383,55 @@ export default function CheckoutPage() {
     // 只要有任何物理商品就需要收货地址
     return checkoutItems.some(item => item.contractType === 'PHYSICAL_GOOD');
   }, [checkoutItems]);
+
+  // 获取当前选中地址的国家代码
+  const selectedCountryCode = useMemo(() => {
+    if (!selectedAddress) return undefined;
+    const address = apiAddresses.find(a => a.id === selectedAddress);
+    return address?.country;
+  }, [selectedAddress, apiAddresses]);
+
+  // 当地址改变时，重新选择适用的运费选项
+  useEffect(() => {
+    if (!selectedCountryCode) return;
+
+    // 检查当前选中的运费选项是否适用于新地址
+    checkoutItems.forEach(item => {
+      if (item.contractType !== 'PHYSICAL_GOOD' || !item.shippingOptions) return;
+
+      const currentSelection = selectedShipping[item.id];
+      if (currentSelection) {
+        const currentOption = item.shippingOptions.find(
+          opt => opt.name === currentSelection.optionName
+        );
+        // 如果当前选项适用于新地址，不需要重新选择
+        if (currentOption && isShippingOptionAvailable(currentOption, selectedCountryCode)) {
+          return;
+        }
+      }
+
+      // 重新选择第一个适用的运费选项
+      const availableOption = item.shippingOptions.find(opt =>
+        isShippingOptionAvailable(opt, selectedCountryCode)
+      );
+      if (availableOption && availableOption.services?.[0]) {
+        setSelectedShipping(prev => ({
+          ...prev,
+          [item.id]: {
+            optionName: availableOption.name,
+            serviceName: availableOption.services[0].name,
+          },
+        }));
+      } else {
+        // 如果没有适用的选项，清空选择
+        setSelectedShipping(prev => {
+          const newState = { ...prev };
+          delete newState[item.id];
+          return newState;
+        });
+      }
+    });
+  }, [selectedCountryCode, checkoutItems, selectedShipping]);
 
   // 获取 RWA 交易模式
   const rwaTradeMode = useMemo(() => {
@@ -658,7 +730,9 @@ export default function CheckoutPage() {
                   item =>
                     item.contractType === 'PHYSICAL_GOOD' &&
                     item.shippingOptions &&
-                    item.shippingOptions.length > 0
+                    item.shippingOptions.some(opt =>
+                      isShippingOptionAvailable(opt, selectedCountryCode)
+                    )
                 ) && (
                   <Card>
                     <CardContent className="p-4 sm:p-6">
@@ -671,69 +745,71 @@ export default function CheckoutPage() {
                             item =>
                               item.contractType === 'PHYSICAL_GOOD' &&
                               item.shippingOptions &&
-                              item.shippingOptions.length > 0
+                              item.shippingOptions.some(opt =>
+                                isShippingOptionAvailable(opt, selectedCountryCode)
+                              )
                           )
                           .map(item => (
                             <div key={item.id} className="space-y-2">
-                              {item.shippingOptions!.map(option => (
-                                <div key={option.name} className="space-y-1.5">
-                                  {option.services.map(service => {
-                                    const isSelected =
-                                      selectedShipping[item.id]?.optionName === option.name &&
-                                      selectedShipping[item.id]?.serviceName === service.name;
-                                    // 运费数据是最小单位（如 cents），需要转换为标准单位（如 dollars）
-                                    const currency = option.currency || item.currency;
-                                    const shippingPriceRaw = getShippingPrice(service, option);
-                                    const shippingPrice = fromMinimalUnit(
-                                      shippingPriceRaw,
-                                      currency
-                                    );
-                                    return (
-                                      <label
-                                        key={`${option.name}-${service.name}`}
-                                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                                          isSelected
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-primary/50'
-                                        }`}
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <input
-                                            type="radio"
-                                            name={`shipping-${item.id}`}
-                                            checked={isSelected}
-                                            onChange={() => {
-                                              setSelectedShipping(prev => ({
-                                                ...prev,
-                                                [item.id]: {
-                                                  optionName: option.name,
-                                                  serviceName: service.name,
-                                                },
-                                              }));
-                                            }}
-                                            className="w-4 h-4 text-primary"
-                                          />
-                                          <div>
-                                            <p className="text-sm font-medium text-foreground">
-                                              {option.name} - {service.name}
-                                            </p>
-                                            {service.estimatedDelivery && (
-                                              <p className="text-xs text-muted-foreground">
-                                                {service.estimatedDelivery}
+                              {item
+                                .shippingOptions!.filter(option =>
+                                  isShippingOptionAvailable(option, selectedCountryCode)
+                                )
+                                .map(option => (
+                                  <div key={option.name} className="space-y-1.5">
+                                    {option.services.map(service => {
+                                      const isSelected =
+                                        selectedShipping[item.id]?.optionName === option.name &&
+                                        selectedShipping[item.id]?.serviceName === service.name;
+                                      // 运费数据是最小单位，renderPairedPrice 会自动转换
+                                      const currency = option.currency || item.currency;
+                                      const shippingPrice = getShippingPrice(service, option);
+                                      return (
+                                        <label
+                                          key={`${option.name}-${service.name}`}
+                                          className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                                            isSelected
+                                              ? 'border-primary bg-primary/5'
+                                              : 'border-border hover:border-primary/50'
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <input
+                                              type="radio"
+                                              name={`shipping-${item.id}`}
+                                              checked={isSelected}
+                                              onChange={() => {
+                                                setSelectedShipping(prev => ({
+                                                  ...prev,
+                                                  [item.id]: {
+                                                    optionName: option.name,
+                                                    serviceName: service.name,
+                                                  },
+                                                }));
+                                              }}
+                                              className="w-4 h-4 text-primary"
+                                            />
+                                            <div>
+                                              <p className="text-sm font-medium text-foreground">
+                                                {option.name} - {service.name}
                                               </p>
-                                            )}
+                                              {service.estimatedDelivery && (
+                                                <p className="text-xs text-muted-foreground">
+                                                  {service.estimatedDelivery}
+                                                </p>
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
-                                        <span className="text-sm font-semibold text-foreground">
-                                          {shippingPrice === 0
-                                            ? t('checkout.free') || 'Free'
-                                            : renderPairedPrice(shippingPrice, currency)}
-                                        </span>
-                                      </label>
-                                    );
-                                  })}
-                                </div>
-                              ))}
+                                          <span className="text-sm font-semibold text-foreground">
+                                            {shippingPrice === 0
+                                              ? t('checkout.free') || 'Free'
+                                              : renderPairedPrice(shippingPrice, currency)}
+                                          </span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                ))}
                             </div>
                           ))}
                       </VStack>

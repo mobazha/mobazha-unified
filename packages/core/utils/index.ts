@@ -26,6 +26,9 @@ export * from './transforms';
 // HTML 处理工具
 export * from './htmlUtils';
 
+// 运费验证工具
+export * from './shippingValidation';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

@@ -154,7 +154,7 @@ export default function StoreSettingsPage() {
         <SettingItem
           title={t('settingsExtended.shippingOptions')}
           description={t('settingsExtended.shippingOptionsDesc')}
-          onClick={() => handleComingSoon('Shipping Options')}
+          onClick={() => router.push('/settings/store/shipping')}
         />
       </SettingGroup>
 

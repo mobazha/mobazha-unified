@@ -519,5 +519,453 @@ export function getAllCountries(locale: string = 'en'): Array<{ code: string; na
     .sort((a, b) => a.name.localeCompare(b.name, locale));
 }
 
+/**
+ * 热门国家/地区配置
+ * 常用的跨境电商目的地国家
+ */
+export const POPULAR_COUNTRIES = [
+  'US', // 美国
+  'CN', // 中国
+  'GB', // 英国
+  'DE', // 德国
+  'JP', // 日本
+  'CA', // 加拿大
+  'AU', // 澳大利亚
+  'FR', // 法国
+  'KR', // 韩国
+  'SG', // 新加坡
+  'HK', // 香港
+  'TW', // 台湾
+];
+
+/**
+ * 特殊区域代码
+ */
+export const SPECIAL_REGIONS = ['ALL', 'WORLDWIDE'] as const;
+
+/**
+ * 大洲分组配置
+ */
+export const CONTINENT_GROUPS = {
+  ASIA: {
+    code: 'ASIA',
+    name: { en: 'Asia', zh: '亚洲' },
+    countries: [
+      'CN',
+      'JP',
+      'KR',
+      'IN',
+      'SG',
+      'HK',
+      'TW',
+      'MO',
+      'MY',
+      'TH',
+      'VN',
+      'ID',
+      'PH',
+      'BD',
+      'PK',
+      'LK',
+      'NP',
+      'MM',
+      'KH',
+      'LA',
+      'MN',
+      'KZ',
+      'UZ',
+      'KG',
+      'TJ',
+      'TM',
+      'AF',
+      'BT',
+      'BN',
+      'TL',
+      'MV',
+    ],
+  },
+  EUROPE: {
+    code: 'EUROPE',
+    name: { en: 'Europe', zh: '欧洲' },
+    countries: [
+      'GB',
+      'DE',
+      'FR',
+      'IT',
+      'ES',
+      'PT',
+      'NL',
+      'BE',
+      'CH',
+      'AT',
+      'SE',
+      'NO',
+      'DK',
+      'FI',
+      'IE',
+      'PL',
+      'CZ',
+      'HU',
+      'RO',
+      'BG',
+      'GR',
+      'HR',
+      'SK',
+      'SI',
+      'RS',
+      'UA',
+      'BY',
+      'LT',
+      'LV',
+      'EE',
+      'IS',
+      'LU',
+      'MT',
+      'CY',
+      'MC',
+      'AD',
+      'LI',
+      'SM',
+      'VA',
+      'ME',
+      'MK',
+      'AL',
+      'BA',
+      'MD',
+      'XK',
+    ],
+  },
+  NORTH_AMERICA: {
+    code: 'NORTH_AMERICA',
+    name: { en: 'North America', zh: '北美洲' },
+    countries: ['US', 'CA', 'MX', 'GL', 'BM', 'PM'],
+  },
+  SOUTH_AMERICA: {
+    code: 'SOUTH_AMERICA',
+    name: { en: 'South America', zh: '南美洲' },
+    countries: ['BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GY', 'SR', 'GF', 'FK'],
+  },
+  CENTRAL_AMERICA: {
+    code: 'CENTRAL_AMERICA',
+    name: { en: 'Central America & Caribbean', zh: '中美洲和加勒比海' },
+    countries: [
+      'GT',
+      'BZ',
+      'SV',
+      'HN',
+      'NI',
+      'CR',
+      'PA',
+      'CU',
+      'JM',
+      'HT',
+      'DO',
+      'PR',
+      'TT',
+      'BB',
+      'BS',
+      'AW',
+      'CW',
+      'AG',
+      'DM',
+      'GD',
+      'KN',
+      'LC',
+      'VC',
+      'AI',
+      'KY',
+      'TC',
+      'VG',
+      'VI',
+    ],
+  },
+  OCEANIA: {
+    code: 'OCEANIA',
+    name: { en: 'Oceania', zh: '大洋洲' },
+    countries: [
+      'AU',
+      'NZ',
+      'FJ',
+      'PG',
+      'NC',
+      'VU',
+      'SB',
+      'WS',
+      'TO',
+      'KI',
+      'FM',
+      'PW',
+      'MH',
+      'NR',
+      'TV',
+      'GU',
+      'PF',
+    ],
+  },
+  AFRICA: {
+    code: 'AFRICA',
+    name: { en: 'Africa', zh: '非洲' },
+    countries: [
+      'ZA',
+      'EG',
+      'NG',
+      'KE',
+      'MA',
+      'GH',
+      'TZ',
+      'ET',
+      'DZ',
+      'TN',
+      'UG',
+      'SD',
+      'AO',
+      'MZ',
+      'CM',
+      'CI',
+      'SN',
+      'ZW',
+      'ZM',
+      'MW',
+      'MU',
+      'BW',
+      'NA',
+      'RW',
+      'LY',
+      'GA',
+      'BJ',
+      'BF',
+      'CD',
+      'CG',
+      'CF',
+      'TD',
+      'DJ',
+      'GQ',
+      'ER',
+      'SZ',
+      'GM',
+      'GN',
+      'GW',
+      'LR',
+      'LS',
+      'MG',
+      'ML',
+      'MR',
+      'NE',
+      'SC',
+      'SL',
+      'SO',
+      'SS',
+      'ST',
+      'TG',
+      'CV',
+      'KM',
+      'RE',
+      'YT',
+    ],
+  },
+  MIDDLE_EAST: {
+    code: 'MIDDLE_EAST',
+    name: { en: 'Middle East', zh: '中东' },
+    countries: [
+      'AE',
+      'SA',
+      'IL',
+      'TR',
+      'IR',
+      'IQ',
+      'KW',
+      'QA',
+      'BH',
+      'OM',
+      'JO',
+      'LB',
+      'SY',
+      'YE',
+      'PS',
+    ],
+  },
+} as const;
+
+export type ContinentCode = keyof typeof CONTINENT_GROUPS;
+
+/**
+ * 获取国家所属大洲
+ */
+export function getCountryContinent(countryCode: string): ContinentCode | null {
+  const upperCode = countryCode.toUpperCase();
+  for (const [continent, data] of Object.entries(CONTINENT_GROUPS)) {
+    if (data.countries.includes(upperCode as never)) {
+      return continent as ContinentCode;
+    }
+  }
+  return null;
+}
+
+/**
+ * 获取大洲名称
+ */
+export function getContinentName(continentCode: ContinentCode, locale: string = 'en'): string {
+  const data = CONTINENT_GROUPS[continentCode];
+  if (!data) return continentCode;
+  return locale.startsWith('zh') ? data.name.zh : data.name.en;
+}
+
+/**
+ * 判断是否为特殊区域代码
+ */
+export function isSpecialRegion(code: string): boolean {
+  const upperCode = code.toUpperCase();
+  return (
+    SPECIAL_REGIONS.includes(upperCode as (typeof SPECIAL_REGIONS)[number]) ||
+    Object.keys(CONTINENT_GROUPS).includes(upperCode)
+  );
+}
+
+/**
+ * 判断是否为有效的配送区域
+ */
+export function isValidShippingRegion(code: string): boolean {
+  const upperCode = code.toUpperCase();
+  // 特殊区域
+  if (isSpecialRegion(upperCode)) return true;
+  // ISO 国家代码
+  if (/^[A-Z]{2}$/.test(upperCode)) {
+    return countries.isValid(upperCode);
+  }
+  // 旧格式（下划线分隔的名称）
+  if (COUNTRY_NAME_TO_ISO[upperCode]) return true;
+  return false;
+}
+
+/**
+ * 国家选项类型（用于选择器）
+ */
+export interface CountryOption {
+  code: string;
+  name: string;
+  isSpecial?: boolean;
+  continent?: ContinentCode;
+}
+
+/**
+ * 分组后的国家选项
+ */
+export interface GroupedCountryOptions {
+  special: CountryOption[];
+  popular: CountryOption[];
+  byContinent: Record<ContinentCode, CountryOption[]>;
+}
+
+/**
+ * 获取分组后的国家列表（用于分组选择器）
+ *
+ * @param locale 语言代码
+ * @param includeSpecialRegions 是否包含特殊区域（全球、大洲）
+ * @returns 分组后的国家选项
+ */
+export function getGroupedCountries(
+  locale: string = 'en',
+  includeSpecialRegions: boolean = true
+): GroupedCountryOptions {
+  const normalizedLocale = locale.split('-')[0];
+
+  // 特殊区域
+  const special: CountryOption[] = [];
+  if (includeSpecialRegions) {
+    // 全球
+    special.push({
+      code: 'ALL',
+      name: getCountryName('ALL', locale),
+      isSpecial: true,
+    });
+    // 大洲
+    for (const [code, data] of Object.entries(CONTINENT_GROUPS)) {
+      special.push({
+        code,
+        name: locale.startsWith('zh') ? data.name.zh : data.name.en,
+        isSpecial: true,
+      });
+    }
+  }
+
+  // 热门国家
+  const popular: CountryOption[] = POPULAR_COUNTRIES.map(code => ({
+    code,
+    name: getCountryName(code, locale),
+    continent: getCountryContinent(code) || undefined,
+  }));
+
+  // 按大洲分组的国家
+  const byContinent: Record<ContinentCode, CountryOption[]> = {} as Record<
+    ContinentCode,
+    CountryOption[]
+  >;
+  for (const continent of Object.keys(CONTINENT_GROUPS) as ContinentCode[]) {
+    byContinent[continent] = CONTINENT_GROUPS[continent].countries.map(code => ({
+      code,
+      name: getCountryName(code, locale),
+      continent,
+    }));
+    // 按名称排序
+    byContinent[continent].sort((a, b) => a.name.localeCompare(b.name, normalizedLocale));
+  }
+
+  return { special, popular, byContinent };
+}
+
+/**
+ * 获取带分组的国家列表（扁平化，带分组标记）
+ * 用于简单的下拉选择器
+ *
+ * @param locale 语言代码
+ * @param includeSpecialRegions 是否包含特殊区域
+ * @returns 扁平化的国家列表，包含分组信息
+ */
+export function getFlattenedCountriesWithGroups(
+  locale: string = 'en',
+  includeSpecialRegions: boolean = true
+): Array<{ code: string; name: string; group: string; isSpecial?: boolean }> {
+  const result: Array<{ code: string; name: string; group: string; isSpecial?: boolean }> = [];
+
+  // 特殊区域
+  if (includeSpecialRegions) {
+    const specialLabel = locale.startsWith('zh') ? '特殊区域' : 'Special Regions';
+    result.push({
+      code: 'ALL',
+      name: getCountryName('ALL', locale),
+      group: specialLabel,
+      isSpecial: true,
+    });
+  }
+
+  // 热门国家
+  const popularLabel = locale.startsWith('zh') ? '热门国家' : 'Popular Countries';
+  for (const code of POPULAR_COUNTRIES) {
+    result.push({
+      code,
+      name: getCountryName(code, locale),
+      group: popularLabel,
+    });
+  }
+
+  // 按大洲分组
+  const allCountries = getAllCountries(locale);
+  for (const [, data] of Object.entries(CONTINENT_GROUPS)) {
+    const groupLabel = locale.startsWith('zh') ? data.name.zh : data.name.en;
+    const continentCountries = allCountries.filter(
+      c => data.countries.includes(c.code as never) && !POPULAR_COUNTRIES.includes(c.code)
+    );
+    for (const country of continentCountries) {
+      result.push({
+        code: country.code,
+        name: country.name,
+        group: groupLabel,
+      });
+    }
+  }
+
+  return result;
+}
+
 // 导出 countries 实例供高级用法
 export { countries };

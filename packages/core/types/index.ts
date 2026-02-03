@@ -22,6 +22,8 @@ export type {
   UserSettings,
   SmtpSettings,
   AuthCredentials,
+  ShippingOptionSetting,
+  ShippingServiceSetting,
 } from './user';
 
 // Product types
@@ -268,3 +270,20 @@ export {
   SUPPORTED_CHAINS,
   getChainConfig,
 } from './rwa';
+
+// Shipping Config types (店铺配送选项设置)
+export type {
+  ShippingServiceType,
+  ShippingOptionConfig,
+  ShippingService as ShippingServiceConfig,
+} from './shippingConfig';
+
+export {
+  createEmptyShippingService,
+  createEmptyShippingOption,
+  SHIPPING_TYPE_LABELS,
+  SERVICE_TYPE_LABELS,
+} from './shippingConfig';
+
+// 重新导出 ShippingType 用于配送设置（与 product.ts 中的相同）
+export type { ShippingType as ShippingConfigType } from './shippingConfig';

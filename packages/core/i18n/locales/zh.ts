@@ -78,6 +78,8 @@ export const zh: TranslationResource = {
     prev: '上一步',
     processing: '处理中...',
     publishing: '发布中...',
+    optional: '可选',
+    required: '必填',
   },
 
   validation: {
@@ -327,6 +329,8 @@ export const zh: TranslationResource = {
     shipping: '运费',
     shippingMethod: '配送方式',
     free: '免费',
+    cheapest: '最便宜',
+    fastest: '最快',
     selectAddressFirst: '请先选择收货地址',
     selectShippingFirst: '请选择配送方式',
     selectAddressWarning: '请选择收货地址',
@@ -1548,6 +1552,9 @@ export const zh: TranslationResource = {
     // Addresses
     addAddress: '添加地址',
     noAddresses: '暂无保存的地址',
+    // Shipping
+    addShipping: '添加配送选项',
+    addShippingHint: '添加配送选项以支持实物商品配送',
   },
 
   userMenu: {
@@ -2400,6 +2407,93 @@ export const zh: TranslationResource = {
       '1M': '1月',
       ALL: '全部',
     },
+  },
+
+  // 配送设置
+  shipping: {
+    // 标题
+    createOption: '创建配送选项',
+    editOption: '编辑配送选项',
+    optionCreated: '配送选项已创建',
+    optionUpdated: '配送选项已更新',
+    // 基本信息
+    basicInfo: '基本信息',
+    optionName: '选项名称',
+    optionNamePlaceholder: '例如：标准配送',
+    shippingType: '配送类型',
+    currency: '货币',
+    pricingModel: '计费模式',
+    // 配送类型
+    type: {
+      FIXED_PRICE: '固定运费',
+      LOCAL_PICKUP: '本地自提',
+    },
+    // 服务类型（嵌套格式用于动态 key）
+    serviceType: {
+      FIRST_RENEWAL_FEE: '首重+续重费',
+      SAME_WEIGHT_SAME_FEE: '按重量区间定价',
+    },
+    // 服务类型标签（卡片显示）
+    serviceTypeLabel: {
+      firstRenewal: '首重+续重',
+      flatRate: '固定费率',
+    },
+    firstRenewalFeeDesc: '收取首重费用 + 每单位超重量额外收费',
+    sameWeightSameFeeDesc: '根据重量区间收取固定运费',
+    // 地区
+    shippingRegions: '配送地区',
+    selectRegions: '选择地区...',
+    regionsSelected: '个地区已选',
+    selectAtLeastOneRegion: '请选择至少一个地区',
+    worldwide: '全球',
+    popularCountries: '热门国家',
+    allCountries: '所有国家',
+    regions: '个地区',
+    noRegions: '未设置地区',
+    // 服务
+    shippingServices: '配送服务',
+    service: '服务',
+    services: '个服务',
+    addService: '添加服务',
+    addAtLeastOneService: '请添加至少一个服务',
+    serviceName: '服务名称',
+    serviceNamePlaceholder: '例如：普通快递',
+    estimatedDelivery: '预计送达',
+    deliveryPlaceholder: '例如：5-7 天',
+    // 重量和定价
+    firstWeight: '首重',
+    firstFreight: '首重费',
+    renewalUnitWeight: '续重单位',
+    renewalUnitPrice: '续重价格',
+    startWeight: '最小重量',
+    endWeight: '最大重量',
+    shippingFee: '运费',
+    registrationFee: '挂号费',
+    // 卡片显示
+    unnamed: '未命名',
+    // 免邮设置
+    freeShipping: '满额免邮',
+    enableFreeShipping: '启用满额免邮',
+    freeShippingDesc: '订单金额达到最低门槛时免运费',
+    minAmountForFreeShipping: '最低订单金额',
+    freeShippingExample: '例如：订单满 50 元免运费',
+    freeShippingBadge: '满额免邮',
+    spendMoreForFreeShipping: '再消费 {amount} 可享免运费',
+  },
+
+  // 运费模板
+  shippingTemplates: {
+    quickStart: '快速入门模板',
+    quickStartDesc: '选择一个模板快速开始配置',
+    createCustom: '或创建自定义选项',
+    domesticStandard: '国内标准快递',
+    domesticStandardDesc: '首重费用 + 续重费用',
+    worldwideFlat: '全球统一运费',
+    worldwideFlatDesc: '所有国家使用相同运费',
+    express: '特快专递',
+    expressDesc: '快速配送，价格较高',
+    localPickup: '本地自提',
+    localPickupDesc: '顾客到店自取（免费）',
   },
 };
 

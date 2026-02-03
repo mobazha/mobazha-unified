@@ -191,6 +191,10 @@ const routes: RouteObject[] = [
     element: protectedPage(() => import('./app/settings/receiving/page')),
   },
   { path: '/settings/store', element: protectedPage(() => import('./app/settings/store/page')) },
+  {
+    path: '/settings/store/shipping',
+    element: protectedPage(() => import('./app/settings/store/shipping/page')),
+  },
 
   // 设置 - 访问请求
   {

@@ -62,6 +62,44 @@ export interface SocialAccounts {
 }
 
 /**
+ * 满额免邮配置
+ */
+export interface FreeShippingThresholdSetting {
+  enabled: boolean;
+  minAmount: string;
+}
+
+/**
+ * 配送选项配置（店铺设置）
+ * 与后端 ShippingOption 结构对齐
+ */
+export interface ShippingOptionSetting {
+  id?: number;
+  name: string;
+  type: 'FIXED_PRICE' | 'LOCAL_PICKUP';
+  currency: string;
+  serviceType: 'FIRST_RENEWAL_FEE' | 'SAME_WEIGHT_SAME_FEE';
+  regions: string[];
+  services: ShippingServiceSetting[];
+  freeShippingThreshold?: FreeShippingThresholdSetting;
+}
+
+/**
+ * 配送服务设置
+ */
+export interface ShippingServiceSetting {
+  name: string;
+  estimatedDelivery: string;
+  startWeight: number;
+  endWeight: number;
+  firstWeight: number;
+  firstFreight: string;
+  renewalUnitWeight: number;
+  renewalUnitPrice: string;
+  registrationFee: string;
+}
+
+/**
  * 用户设置
  */
 export interface UserSettings {
@@ -69,6 +107,7 @@ export interface UserSettings {
   showNotifications?: boolean;
   showNsfw?: boolean;
   shippingAddresses?: Address[];
+  shippingOptions?: ShippingOptionSetting[];
   localCurrency?: string;
   country?: string;
   language?: string;
