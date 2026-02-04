@@ -78,8 +78,13 @@ export const zh: TranslationResource = {
     prev: '上一步',
     processing: '处理中...',
     publishing: '发布中...',
+    migrating: '迁移中...',
     optional: '可选',
     required: '必填',
+    collapse: '收起',
+    expand: '展开',
+    clickToEdit: '点击编辑',
+    deleteFailed: '删除失败',
   },
 
   validation: {
@@ -2411,6 +2416,32 @@ export const zh: TranslationResource = {
 
   // 配送设置
   shipping: {
+    // 配送档案（Shopify 风格）
+    shippingProfiles: '配送档案',
+    shippingOptions: '个配送选项',
+    upgradeToProfiles: '升级到配送档案',
+    upgradeDesc:
+      '使用配送档案可以更灵活地管理不同产品的配送方式。您现有的配送选项将被迁移到默认档案中。',
+    migrateNow: '立即迁移',
+    migrateSuccess: '迁移成功，您的配送选项已升级为配送档案',
+    migrateFailed: '迁移失败，请重试',
+    createProfile: '创建配送档案',
+    addProfile: '添加档案',
+    editProfile: '编辑档案',
+    deleteProfileTitle: '删除档案',
+    profileDeleted: '档案已删除',
+    profileName: '档案名称',
+    profileNamePlaceholder: '例如：默认配送',
+    defaultProfileName: '默认配送',
+    defaultProfileSet: '默认档案已更新',
+    setAsDefault: '设为默认',
+    orUseTemplate: '或使用模板快速创建：',
+    addOptionToProfile: '添加配送选项',
+    viewOptions: '查看配送选项',
+    option: '个选项',
+    options: '个选项',
+    region: '个地区',
+    multipleCurrencies: '多种货币',
     // 标题
     createOption: '创建配送选项',
     editOption: '编辑配送选项',
@@ -2479,6 +2510,15 @@ export const zh: TranslationResource = {
     freeShippingExample: '例如：订单满 50 元免运费',
     freeShippingBadge: '满额免邮',
     spendMoreForFreeShipping: '再消费 {amount} 可享免运费',
+  },
+
+  // 配送选项配置
+  shippingConfig: {
+    noOptions: '暂无配送选项',
+    noOptionsDesc: '添加配送选项以支持实物商品配送',
+    deleteSuccess: '配送选项已删除',
+    deleteConfirmTitle: '删除配送选项',
+    deleteConfirmDesc: '确定要删除此配送选项吗？',
   },
 
   // 运费模板

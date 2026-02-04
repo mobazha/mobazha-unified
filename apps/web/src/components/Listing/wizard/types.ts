@@ -58,6 +58,7 @@ export interface WizardFormData {
   // 物流
   shippingOptions: ShippingOption[];
   selectedShippingOptions: string[];
+  shippingProfileId: string;
 
   // 标签和分类
   tags: string[];
@@ -127,6 +128,7 @@ export const defaultFormData: WizardFormData = {
   altIntroVideoLinks: [],
   shippingOptions: [],
   selectedShippingOptions: [],
+  shippingProfileId: '',
   tags: [],
   categories: [],
   termsAndConditions: '',

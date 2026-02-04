@@ -11,7 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useI18n, getCountryName, type ShippingOptionSetting } from '@mobazha/core';
+import {
+  useI18n,
+  getCountryName,
+  type ShippingOptionSetting,
+  fromMinimalUnit,
+  formatPrice,
+} from '@mobazha/core';
 
 // 配送类型图标
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -54,19 +60,27 @@ export const ShippingOptionCard: React.FC<ShippingOptionCardProps> = ({
     return `${firstTwo} +${option.regions.length - 2}`;
   }, [option.regions, language, t]);
 
-  // 计算价格范围
+  // 计算价格范围（使用 fromMinimalUnit 处理不同货币精度）
   const priceRange = useMemo(() => {
     if (!option.services || option.services.length === 0) {
       return null;
     }
-    const prices = option.services.map(s => parseFloat(s.firstFreight) || 0);
+    // 使用 fromMinimalUnit 根据货币精度转换
+    const prices = option.services.map(s =>
+      fromMinimalUnit(s.firstFreight || '0', option.currency)
+    );
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
     if (minPrice === maxPrice) {
-      return `${option.currency} ${minPrice.toFixed(2)}`;
+      return formatPrice(minPrice, option.currency, { showSymbol: true, showCode: true });
     }
-    return `${option.currency} ${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}`;
+    const minFormatted = formatPrice(minPrice, option.currency, { showSymbol: false });
+    const maxFormatted = formatPrice(maxPrice, option.currency, {
+      showSymbol: true,
+      showCode: true,
+    });
+    return `${minFormatted} - ${maxFormatted}`;
   }, [option.services, option.currency]);
 
   // 获取配送时间范围

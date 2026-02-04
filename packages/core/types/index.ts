@@ -24,6 +24,7 @@ export type {
   AuthCredentials,
   ShippingOptionSetting,
   ShippingServiceSetting,
+  ShippingProfileSetting,
 } from './user';
 
 // Product types
@@ -276,11 +277,16 @@ export type {
   ShippingServiceType,
   ShippingOptionConfig,
   ShippingService as ShippingServiceConfig,
+  ShippingProfile,
+  ShippingData,
+  FreeShippingThreshold,
 } from './shippingConfig';
 
 export {
   createEmptyShippingService,
   createEmptyShippingOption,
+  createEmptyShippingProfile,
+  isUsingProfileMode,
   SHIPPING_TYPE_LABELS,
   SERVICE_TYPE_LABELS,
 } from './shippingConfig';

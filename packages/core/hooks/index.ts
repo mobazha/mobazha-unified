@@ -87,5 +87,9 @@ export { toDisplayAddressUI } from './useShippingAddresses';
 export * from './useShippingOptions';
 export { createEmptyOption, createEmptyService } from './useShippingOptions';
 
+// 配送档案管理相关（Shopify 模式）
+export * from './useShippingProfiles';
+export { createEmptyProfile } from './useShippingProfiles';
+
 // 认证守卫相关
 export * from './useAuthGuard';

@@ -107,7 +107,10 @@ export interface UserSettings {
   showNotifications?: boolean;
   showNsfw?: boolean;
   shippingAddresses?: Address[];
+  /** 传统模式：配送选项列表（向后兼容） */
   shippingOptions?: ShippingOptionSetting[];
+  /** 新模式：配送档案列表（Shopify 模式） */
+  shippingProfiles?: ShippingProfileSetting[];
   localCurrency?: string;
   country?: string;
   language?: string;
@@ -116,6 +119,19 @@ export interface UserSettings {
   blockedNodes?: string[];
   storeModerators?: string[];
   smtpSettings?: SmtpSettings;
+}
+
+/**
+ * 配送档案设置（用于 UserSettings）
+ */
+export interface ShippingProfileSetting {
+  profileId: string;
+  name: string;
+  isDefault: boolean;
+  options: ShippingOptionSetting[];
+  listingCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**

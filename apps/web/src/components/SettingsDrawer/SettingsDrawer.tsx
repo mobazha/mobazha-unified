@@ -65,16 +65,9 @@ import {
   getAllCountries,
   getCountryName,
   POPULAR_COUNTRIES,
-  useShippingOptions,
 } from '@mobazha/core';
-import type {
-  Address as ApiAddress,
-  DisplayAddress,
-  DisplayAddressUI,
-  ShippingOptionSetting,
-} from '@mobazha/core';
+import type { Address as ApiAddress, DisplayAddress, DisplayAddressUI } from '@mobazha/core';
 import { AddressFormModal } from '@/components/Address';
-import { ShippingOptionCard, ShippingOptionForm } from '@/components/Shipping';
 import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
 import type { CurrencyInfo, Locale } from '@mobazha/core';
 import { ProviderIcon } from '@/components/ProviderIcon';
@@ -1363,11 +1356,10 @@ const PageTabContent: React.FC = () => {
 const StoreTabContent: React.FC = () => {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { navigateTo } = useSettingsDrawer();
+  const { navigateTo, navigateToPage } = useSettingsDrawer();
 
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [showPoliciesModal, setShowPoliciesModal] = useState(false);
-  const [showShippingModal, setShowShippingModal] = useState(false);
   const [coins, setCoins] = useState(acceptedCoins);
   const [returnPolicy, setReturnPolicy] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('');
@@ -1398,7 +1390,7 @@ const StoreTabContent: React.FC = () => {
             icon={<Truck className="h-5 w-5" />}
             title={t('settingsExtended.shippingOptions')}
             description={t('settingsExtended.shippingOptionsDesc')}
-            onClick={() => setShowShippingModal(true)}
+            onClick={() => navigateToPage('/settings/store/shipping')}
           />
         </SettingGroup>
       </div>
@@ -1478,137 +1470,6 @@ const StoreTabContent: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Shipping Options Modal */}
-      <Dialog open={showShippingModal} onOpenChange={setShowShippingModal}>
-        <DialogContent className="max-w-lg" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>{t('settingsExtended.shippingOptions')}</DialogTitle>
-          </DialogHeader>
-          <ShippingOptionsContent onClose={() => setShowShippingModal(false)} />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-// Shipping Options Content - 使用 useShippingOptions hook 和新组件
-// ShippingOptionCard 和 ShippingOptionForm 已在文件顶部导入
-
-interface ShippingOptionsContentProps {
-  onClose: () => void;
-}
-
-const ShippingOptionsContent: React.FC<ShippingOptionsContentProps> = ({ onClose }) => {
-  const { t } = useI18n();
-  const { toast } = useToast();
-
-  const { options, isLoading, isSaving, addOption, updateOption, deleteOption } =
-    useShippingOptions();
-
-  // 表单状态
-  const [showForm, setShowForm] = useState(false);
-  const [editingOption, setEditingOption] = useState<ShippingOptionSetting | null>(null);
-
-  // 处理添加
-  const handleAdd = useCallback(() => {
-    setEditingOption(null);
-    setShowForm(true);
-  }, []);
-
-  // 处理编辑
-  const handleEdit = useCallback((option: ShippingOptionSetting) => {
-    setEditingOption(option);
-    setShowForm(true);
-  }, []);
-
-  // 处理保存
-  const handleSave = useCallback(
-    async (option: ShippingOptionSetting): Promise<boolean> => {
-      if (editingOption?.id) {
-        return await updateOption(editingOption.id, option);
-      } else {
-        return await addOption(option);
-      }
-    },
-    [editingOption, addOption, updateOption]
-  );
-
-  // 处理删除
-  const handleDelete = useCallback(
-    async (optionId: number) => {
-      const success = await deleteOption(optionId);
-      if (success) {
-        toast({
-          title: t('common.success'),
-          description: t('settingsExtended.shippingDeleted') || 'Shipping option deleted',
-        });
-      }
-    },
-    [deleteOption, toast, t]
-  );
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">{t('settingsExtended.shippingOptionsDesc')}</p>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">{t('settingsExtended.shippingOptionsDesc')}</p>
-
-        {options.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Truck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>{t('settingsExtended.noShippingOptions') || 'No shipping options configured'}</p>
-            <p className="text-xs mt-2">
-              {t('settingsExtended.addShippingHint') ||
-                'Add shipping options to enable physical product delivery'}
-            </p>
-          </div>
-        ) : (
-          <ScrollArea className="max-h-[300px]">
-            <div className="space-y-3">
-              {options.map(option => (
-                <ShippingOptionCard
-                  key={option.id}
-                  option={option}
-                  onEdit={() => handleEdit(option)}
-                  onDelete={() => handleDelete(option.id!)}
-                  disabled={isSaving}
-                  className="border-0 shadow-none"
-                />
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-
-        <div className="flex justify-between pt-4 border-t">
-          <Button variant="outline" onClick={handleAdd}>
-            <Plus className="w-4 h-4 mr-1" />
-            {t('settingsExtended.addShipping') || 'Add Option'}
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            {t('common.close')}
-          </Button>
-        </div>
-      </div>
-
-      {/* 添加/编辑表单 */}
-      <ShippingOptionForm
-        open={showForm}
-        onOpenChange={setShowForm}
-        initialOption={editingOption || undefined}
-        onSave={handleSave}
-        mode={editingOption ? 'edit' : 'create'}
-      />
     </>
   );
 };

@@ -78,8 +78,13 @@ export const en: TranslationResource = {
     prev: 'Previous',
     processing: 'Processing...',
     publishing: 'Publishing...',
+    migrating: 'Migrating...',
     optional: 'Optional',
     required: 'Required',
+    collapse: 'Collapse',
+    expand: 'Expand',
+    clickToEdit: 'Click to edit',
+    deleteFailed: 'Failed to delete',
   },
 
   validation: {
@@ -2463,6 +2468,32 @@ export const en: TranslationResource = {
 
   // Shipping settings
   shipping: {
+    // Shipping Profiles (Shopify-style)
+    shippingProfiles: 'Shipping Profiles',
+    shippingOptions: 'shipping option(s)',
+    upgradeToProfiles: 'Upgrade to Shipping Profiles',
+    upgradeDesc:
+      'Organize your shipping options into profiles for better product management. Your existing options will be migrated to a default profile.',
+    migrateNow: 'Migrate Now',
+    migrateSuccess: 'Migration completed, your shipping options have been upgraded to profiles',
+    migrateFailed: 'Migration failed, please try again',
+    createProfile: 'Create Shipping Profile',
+    addProfile: 'Add Profile',
+    editProfile: 'Edit Profile',
+    deleteProfileTitle: 'Delete Profile',
+    profileDeleted: 'Profile deleted',
+    profileName: 'Profile Name',
+    profileNamePlaceholder: 'e.g. Default Shipping',
+    defaultProfileName: 'Default Shipping',
+    defaultProfileSet: 'Default profile updated',
+    setAsDefault: 'Set as default',
+    orUseTemplate: 'Or start with a template:',
+    addOptionToProfile: 'Add Shipping Option',
+    viewOptions: 'View shipping options',
+    option: 'option',
+    options: 'options',
+    region: 'region',
+    multipleCurrencies: 'Multiple currencies',
     // Titles
     createOption: 'Create Shipping Option',
     editOption: 'Edit Shipping Option',
@@ -2531,6 +2562,15 @@ export const en: TranslationResource = {
     freeShippingExample: 'Example: Order over $50 gets free shipping',
     freeShippingBadge: 'Free Shipping over',
     spendMoreForFreeShipping: 'Spend {amount} more for free shipping',
+  },
+
+  // Shipping option configuration
+  shippingConfig: {
+    noOptions: 'No shipping options',
+    noOptionsDesc: 'Add shipping options to enable physical product delivery',
+    deleteSuccess: 'Shipping option deleted',
+    deleteConfirmTitle: 'Delete Shipping Option',
+    deleteConfirmDesc: 'Are you sure you want to delete',
   },
 
   // Shipping templates
