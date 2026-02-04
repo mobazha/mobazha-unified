@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
@@ -215,6 +215,10 @@ export default function CheckoutPage() {
     Record<string, { optionName: string; serviceName: string }>
   >({});
 
+  // 使用 ref 跟踪 selectedShipping 的最新值，避免 useEffect 中的循环依赖
+  const selectedShippingRef = useRef(selectedShipping);
+  selectedShippingRef.current = selectedShipping;
+
   // 从 URL 参数获取商品数据
   useEffect(() => {
     const fetchProductData = async () => {
@@ -395,11 +399,17 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!selectedCountryCode) return;
 
-    // 检查当前选中的运费选项是否适用于新地址
+    // 使用 ref 访问最新的 selectedShipping，避免循环依赖
+    const currentShipping = selectedShippingRef.current;
+
+    // 一次性计算所有需要更新的项
+    const updates: Record<string, { optionName: string; serviceName: string } | null> = {};
+    let hasChanges = false;
+
     checkoutItems.forEach(item => {
       if (item.contractType !== 'PHYSICAL_GOOD' || !item.shippingOptions) return;
 
-      const currentSelection = selectedShipping[item.id];
+      const currentSelection = currentShipping[item.id];
       if (currentSelection) {
         const currentOption = item.shippingOptions.find(
           opt => opt.name === currentSelection.optionName
@@ -415,23 +425,33 @@ export default function CheckoutPage() {
         isShippingOptionAvailable(opt, selectedCountryCode)
       );
       if (availableOption && availableOption.services?.[0]) {
-        setSelectedShipping(prev => ({
-          ...prev,
-          [item.id]: {
-            optionName: availableOption.name,
-            serviceName: availableOption.services[0].name,
-          },
-        }));
-      } else {
-        // 如果没有适用的选项，清空选择
-        setSelectedShipping(prev => {
-          const newState = { ...prev };
-          delete newState[item.id];
-          return newState;
-        });
+        updates[item.id] = {
+          optionName: availableOption.name,
+          serviceName: availableOption.services[0].name,
+        };
+        hasChanges = true;
+      } else if (currentSelection) {
+        // 如果没有适用的选项且之前有选择，标记为需要删除
+        updates[item.id] = null;
+        hasChanges = true;
       }
     });
-  }, [selectedCountryCode, checkoutItems, selectedShipping]);
+
+    // 只有在有变化时才更新状态
+    if (hasChanges) {
+      setSelectedShipping(prev => {
+        const newState = { ...prev };
+        Object.entries(updates).forEach(([itemId, value]) => {
+          if (value === null) {
+            delete newState[itemId];
+          } else {
+            newState[itemId] = value;
+          }
+        });
+        return newState;
+      });
+    }
+  }, [selectedCountryCode, checkoutItems]); // 移除 selectedShipping 依赖，使用 ref 代替
 
   // 获取 RWA 交易模式
   const rwaTradeMode = useMemo(() => {
