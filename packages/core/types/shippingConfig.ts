@@ -121,3 +121,53 @@ export const SERVICE_TYPE_LABELS: Record<ShippingServiceType, string> = {
   FIRST_RENEWAL_FEE: 'shippingConfig.firstRenewalFee',
   SAME_WEIGHT_SAME_FEE: 'shippingConfig.sameWeightSameFee',
 };
+
+/**
+ * 配送档案（Shopify 模式）
+ * 允许卖家创建多个配送方案，不同商品可关联不同档案
+ */
+export interface ShippingProfile {
+  /** 档案唯一 ID (UUID) */
+  profileId: string;
+  /** 档案名称 */
+  name: string;
+  /** 是否为默认档案 */
+  isDefault: boolean;
+  /** 该档案下的运费选项 */
+  options: ShippingOptionConfig[];
+  /** 关联商品数量（只读，由后端计算） */
+  listingCount?: number;
+  /** 创建时间 */
+  createdAt?: string;
+  /** 更新时间 */
+  updatedAt?: string;
+}
+
+/**
+ * 创建空的配送档案（用于表单初始化）
+ */
+export function createEmptyShippingProfile(isDefault = false): ShippingProfile {
+  return {
+    profileId: '', // 由后端生成或前端使用 uuid
+    name: '',
+    isDefault,
+    options: [],
+  };
+}
+
+/**
+ * 配送系统数据（包含传统模式和档案模式）
+ */
+export interface ShippingData {
+  /** 传统模式：配送选项列表（向后兼容） */
+  shippingOptions?: ShippingOptionConfig[];
+  /** 新模式：配送档案列表 */
+  shippingProfiles?: ShippingProfile[];
+}
+
+/**
+ * 检查是否使用配送档案模式
+ */
+export function isUsingProfileMode(data: ShippingData): boolean {
+  return (data.shippingProfiles?.length ?? 0) > 0;
+}

@@ -89,8 +89,14 @@ export interface TranslationResource {
     prev?: string;
     processing?: string;
     publishing?: string;
+    migrating?: string;
     optional?: string;
     required?: string;
+    collapse?: string;
+    expand?: string;
+    clickToEdit?: string;
+    deleteFailed?: string;
+    create?: string;
   };
 
   // 导航
@@ -1667,8 +1673,42 @@ export interface TranslationResource {
     };
   };
 
+  // 配送选项配置
+  shippingConfig?: TranslationSection & {
+    noOptions?: string;
+    noOptionsDesc?: string;
+    deleteSuccess?: string;
+    deleteConfirmTitle?: string;
+    deleteConfirmDesc?: string;
+  };
+
   // 配送设置
   shipping?: TranslationSection & {
+    // 配送档案（Shopify 模式）
+    shippingProfiles?: string;
+    shippingOptions?: string;
+    upgradeToProfiles?: string;
+    upgradeDesc?: string;
+    migrateNow?: string;
+    migrateSuccess?: string;
+    migrateFailed?: string;
+    createProfile?: string;
+    addProfile?: string;
+    editProfile?: string;
+    deleteProfileTitle?: string;
+    profileDeleted?: string;
+    profileName?: string;
+    profileNamePlaceholder?: string;
+    defaultProfileName?: string;
+    defaultProfileSet?: string;
+    setAsDefault?: string;
+    orUseTemplate?: string;
+    addOptionToProfile?: string;
+    viewOptions?: string;
+    option?: string;
+    options?: string;
+    region?: string;
+    multipleCurrencies?: string;
     // 标题
     createOption: string;
     editOption: string;
