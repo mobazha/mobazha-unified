@@ -4,9 +4,12 @@
  * 提供通知列表、实时订阅、声音设置等功能
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { notificationsApi, getNotificationRoute } from '../services/api/notifications';
-import type { NotificationFilter, Notification as ApiNotification } from '../services/api/notifications';
+import type {
+  NotificationFilter,
+  Notification as ApiNotification,
+} from '../services/api/notifications';
 import {
   useNotificationStore,
   selectNotifications,
@@ -103,19 +106,17 @@ interface UseNotificationsReturn {
     notification: NotificationData,
     options?: { isBuyer?: boolean }
   ) => NotificationDisplayData;
-  
+
   /** 获取通知的路由地址 */
   getRoute: (notification: ApiNotification) => string | null;
 }
 
 // ============ Hook 实现 ============
 
-export function useNotifications(
-  options: UseNotificationsOptions = {}
-): UseNotificationsReturn {
-  const { 
-    autoLoad = true, 
-    refreshInterval = 30000, 
+export function useNotifications(options: UseNotificationsOptions = {}): UseNotificationsReturn {
+  const {
+    autoLoad = true,
+    refreshInterval = 30000,
     enableRealtime = true,
     filter: initialFilter = 'all',
     pageSize = 20,
@@ -133,6 +134,7 @@ export function useNotifications(
   // 本地分页状态
   const [currentFilter, setCurrentFilter] = useState<NotificationFilter>(initialFilter);
   const [apiNotifications, setApiNotifications] = useState<ApiNotification[]>([]);
+  const apiNotificationsRef = useRef<ApiNotification[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
   const [lastOffsetId, setLastOffsetId] = useState<string>('');
@@ -192,38 +194,45 @@ export function useNotifications(
   /**
    * 获取通知列表
    */
-  const fetchNotifications = useCallback(async (reset = true): Promise<NotificationData[]> => {
-    const store = getStoreActions();
-    store.setLoading(true);
-    try {
-      const result = await notificationsApi.getNotifications({
-        limit: pageSize,
-        offsetId: reset ? '' : lastOffsetId,
-        filter: currentFilter,
-      });
-      
-      // 更新分页状态
-      if (reset) {
-        setApiNotifications(result.notifications);
-      } else {
-        setApiNotifications(prev => [...prev, ...result.notifications]);
+  const fetchNotifications = useCallback(
+    async (reset = true): Promise<NotificationData[]> => {
+      const store = getStoreActions();
+      store.setLoading(true);
+      try {
+        const result = await notificationsApi.getNotifications({
+          limit: pageSize,
+          offsetId: reset ? '' : lastOffsetId,
+          filter: currentFilter,
+        });
+
+        // 更新分页状态
+        setHasMore(result.hasMore);
+        setTotal(result.total);
+        setLastOffsetId(result.lastOffsetId || '');
+
+        // 转换并存储到 store（避免依赖 apiNotifications 造成重复请求）
+        if (reset) {
+          const convertedNotifications = convertApiToInternal(result.notifications);
+          apiNotificationsRef.current = result.notifications;
+          setApiNotifications(result.notifications);
+          store.setNotifications(convertedNotifications);
+          return convertedNotifications;
+        }
+
+        const combinedNotifications = [...apiNotificationsRef.current, ...result.notifications];
+        apiNotificationsRef.current = combinedNotifications;
+        setApiNotifications(combinedNotifications);
+        const convertedNotifications = convertApiToInternal(combinedNotifications);
+        store.setNotifications(convertedNotifications);
+        return convertedNotifications;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
+        store.setError(errorMessage);
+        return [];
       }
-      setHasMore(result.hasMore);
-      setTotal(result.total);
-      setLastOffsetId(result.lastOffsetId || '');
-      
-      // 转换并存储到 store
-      const allApiNotifs = reset ? result.notifications : [...apiNotifications, ...result.notifications];
-      const convertedNotifications = convertApiToInternal(allApiNotifs);
-      store.setNotifications(convertedNotifications);
-      
-      return convertedNotifications;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
-      store.setError(errorMessage);
-      return [];
-    }
-  }, [getStoreActions, pageSize, lastOffsetId, currentFilter, apiNotifications, convertApiToInternal]);
+    },
+    [getStoreActions, pageSize, lastOffsetId, currentFilter, convertApiToInternal]
+  );
 
   /**
    * 加载更多通知
@@ -261,18 +270,26 @@ export function useNotifications(
    */
   const markAsRead = useCallback(
     async (id: string): Promise<{ success: boolean; error?: string }> => {
+      // 乐观更新本地状态，保证未读数即时下降
+      getStoreActions().markAsRead(id);
+      const updatedNotifications = apiNotificationsRef.current.map(notification =>
+        notification.id === id ? { ...notification, read: true } : notification
+      );
+      apiNotificationsRef.current = updatedNotifications;
+      setApiNotifications(updatedNotifications);
       try {
         const result = await notificationsApi.markNotificationAsRead(id);
-        if (result.success) {
-          getStoreActions().markAsRead(id);
+        if (!result.success) {
+          void fetchNotifications(true);
         }
         return result;
       } catch (err) {
+        void fetchNotifications(true);
         const errorMessage = err instanceof Error ? err.message : 'Failed to mark as read';
         return { success: false, error: errorMessage };
       }
     },
-    [getStoreActions]
+    [getStoreActions, fetchNotifications]
   );
 
   /**
@@ -404,13 +421,13 @@ export function useNotifications(
     if (autoLoad) {
       void fetchNotifications(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoLoad, enableRealtime]);
 
   // 过滤器变化时重新加载
   useEffect(() => {
     void fetchNotifications(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFilter]);
 
   // 自动刷新未读数量
