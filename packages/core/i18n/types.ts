@@ -97,6 +97,10 @@ export interface TranslationResource {
     clickToEdit?: string;
     deleteFailed?: string;
     create?: string;
+    clearAll?: string;
+    done?: string;
+    selectAll?: string;
+    selected?: string;
   };
 
   // 导航
@@ -1777,6 +1781,79 @@ export interface TranslationResource {
     freeShippingExample?: string;
     freeShippingBadge?: string;
     spendMoreForFreeShipping?: string;
+    // 配送区域（Shopify 风格）
+    shippingZones?: string;
+    zone?: string;
+    zones?: string;
+    addZone?: string;
+    editZone?: string;
+    deleteZone?: string;
+    zoneName?: string;
+    zoneNamePlaceholder?: string;
+    zoneCreated?: string;
+    zoneUpdated?: string;
+    zoneDeleted?: string;
+    zoneAdded?: string;
+    noZones?: string;
+    noZonesDesc?: string;
+    // 运费费率
+    shippingRates?: string;
+    rate?: string;
+    rates?: string;
+    addRate?: string;
+    editRate?: string;
+    deleteRate?: string;
+    rateName?: string;
+    rateNamePlaceholder?: string;
+    ratePrice?: string;
+    rateCreated?: string;
+    rateUpdated?: string;
+    rateDeleted?: string;
+    noRates?: string;
+    noRatesDesc?: string;
+    // 费率条件
+    addCondition?: string;
+    conditionType?: string;
+    selectCondition?: string;
+    noCondition?: string;
+    basedOnWeight?: string;
+    basedOnPrice?: string;
+    minWeight?: string;
+    maxWeight?: string;
+    minOrderAmount?: string;
+    maxOrderAmount?: string;
+    noLimit?: string;
+    weightConditionHint?: string;
+    priceConditionHint?: string;
+    // 发货地点
+    shippingLocations?: string;
+    location?: string;
+    locations?: string;
+    addLocation?: string;
+    editLocation?: string;
+    deleteLocation?: string;
+    locationName?: string;
+    locationNamePlaceholder?: string;
+    locationAddress?: string;
+    locationCreated?: string;
+    locationUpdated?: string;
+    locationDeleted?: string;
+    defaultLocation?: string;
+    setAsDefaultLocation?: string;
+    noLocations?: string;
+    noLocationsDesc?: string;
+    defaultLocationSet?: string;
+    locationAddressPlaceholder?: string;
+    locationAddressHint?: string;
+    unnamedLocation?: string;
+    // 地点组（渐进式 UI）
+    locationGroups?: string;
+    locationGroup?: string;
+    addLocationGroup?: string;
+    editLocationGroup?: string;
+    deleteLocationGroup?: string;
+    selectLocations?: string;
+    locationsSelected?: string;
   };
 
   // 运费模板

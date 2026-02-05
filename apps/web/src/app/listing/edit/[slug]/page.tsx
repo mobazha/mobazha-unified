@@ -34,7 +34,7 @@ import type {
   ContractType,
   BlockchainNetwork,
   Image,
-  ShippingOption,
+  ShippingProfile,
   ListingFormData,
 } from '@mobazha/core';
 
@@ -225,18 +225,10 @@ export default function EditListingPage() {
     [updateField]
   );
 
-  // 处理物流选项变化
-  const handleShippingOptionsChange = useCallback(
-    (options: ShippingOption[]) => {
-      updateField('shippingOptions', options);
-    },
-    [updateField]
-  );
-
-  // 处理选中的物流选项变化
-  const handleSelectedShippingOptionsChange = useCallback(
-    (selected: string[]) => {
-      updateField('selectedShippingOptions', selected);
+  // 处理配送档案变化
+  const handleShippingProfileChange = useCallback(
+    (profile: ShippingProfile | null) => {
+      updateField('shippingProfile', profile || undefined);
     },
     [updateField]
   );
@@ -638,10 +630,8 @@ export default function EditListingPage() {
                   }}
                 >
                   <PhysicalGoodFields
-                    shippingOptions={formData.shippingOptions}
-                    selectedShippingOptions={formData.selectedShippingOptions || []}
-                    onShippingOptionsChange={handleShippingOptionsChange}
-                    onSelectedShippingOptionsChange={handleSelectedShippingOptionsChange}
+                    shippingProfile={formData.shippingProfile}
+                    onShippingProfileChange={handleShippingProfileChange}
                     errors={errors}
                   />
                 </div>

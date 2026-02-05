@@ -1,4 +1,5 @@
 import type { Image, Address, CryptoType } from './common';
+import type { ShippingProfile, ShippingLocation, ShippingOptionConfig } from './shippingConfig';
 
 /**
  * 用户角色
@@ -62,44 +63,6 @@ export interface SocialAccounts {
 }
 
 /**
- * 满额免邮配置
- */
-export interface FreeShippingThresholdSetting {
-  enabled: boolean;
-  minAmount: string;
-}
-
-/**
- * 配送选项配置（店铺设置）
- * 与后端 ShippingOption 结构对齐
- */
-export interface ShippingOptionSetting {
-  id?: number;
-  name: string;
-  type: 'FIXED_PRICE' | 'LOCAL_PICKUP';
-  currency: string;
-  serviceType: 'FIRST_RENEWAL_FEE' | 'SAME_WEIGHT_SAME_FEE';
-  regions: string[];
-  services: ShippingServiceSetting[];
-  freeShippingThreshold?: FreeShippingThresholdSetting;
-}
-
-/**
- * 配送服务设置
- */
-export interface ShippingServiceSetting {
-  name: string;
-  estimatedDelivery: string;
-  startWeight: number;
-  endWeight: number;
-  firstWeight: number;
-  firstFreight: string;
-  renewalUnitWeight: number;
-  renewalUnitPrice: string;
-  registrationFee: string;
-}
-
-/**
  * 用户设置
  */
 export interface UserSettings {
@@ -107,10 +70,12 @@ export interface UserSettings {
   showNotifications?: boolean;
   showNsfw?: boolean;
   shippingAddresses?: Address[];
-  /** 传统模式：配送选项列表（向后兼容） */
-  shippingOptions?: ShippingOptionSetting[];
-  /** 新模式：配送档案列表（Shopify 模式） */
-  shippingProfiles?: ShippingProfileSetting[];
+  /** @deprecated 传统模式：配送选项列表（用于迁移） */
+  shippingOptions?: ShippingOptionConfig[];
+  /** 配送档案列表（Shopify 风格） */
+  shippingProfiles?: ShippingProfile[];
+  /** 发货地点列表 */
+  shippingLocations?: ShippingLocation[];
   localCurrency?: string;
   country?: string;
   language?: string;
@@ -119,19 +84,6 @@ export interface UserSettings {
   blockedNodes?: string[];
   storeModerators?: string[];
   smtpSettings?: SmtpSettings;
-}
-
-/**
- * 配送档案设置（用于 UserSettings）
- */
-export interface ShippingProfileSetting {
-  profileId: string;
-  name: string;
-  isDefault: boolean;
-  options: ShippingOptionSetting[];
-  listingCount?: number;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 /**

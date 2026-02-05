@@ -7,7 +7,7 @@ import { useState, useCallback, useMemo } from 'react';
 import type {
   ContractType,
   ProductCondition,
-  ShippingOption,
+  ShippingProfile,
   Coupon,
   BlockchainNetwork,
   Image,
@@ -48,9 +48,8 @@ export interface ListingFormData {
   tags: string[];
   categories: string[];
 
-  // 物流选项
-  shippingOptions: ShippingOption[];
-  selectedShippingOptions?: string[];
+  // 配送档案
+  shippingProfile?: ShippingProfile;
 
   // 变体和库存
   options: VariantOption[];
@@ -131,8 +130,7 @@ export const initialFormData: ListingFormData = {
   altIntroVideoLinks: [],
   tags: [],
   categories: [],
-  shippingOptions: [],
-  selectedShippingOptions: [],
+  shippingProfile: undefined,
   options: [],
   skus: [
     {
@@ -173,7 +171,7 @@ export function getFieldsForType(contractType: ContractType): string[] {
         ...commonFields,
         'condition',
         'grams',
-        'shippingOptions',
+        'shippingProfile',
         'options',
         'skus',
         'inventoryTracking',
@@ -371,7 +369,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     if (formData.contractType === 'PHYSICAL_GOOD') {
       (data.item as Record<string, unknown>).condition = formData.condition;
       (data.item as Record<string, unknown>).grams = formData.grams;
-      data.shippingOptions = formData.shippingOptions;
+      data.shippingProfile = formData.shippingProfile;
       (data.item as Record<string, unknown>).options = formData.options.map(opt => ({
         name: opt.name,
         description: opt.description,

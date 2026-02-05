@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useI18n, fromMinimalUnit, formatPrice } from '@mobazha/core';
+import { useI18n, fromMinimalUnit, formatPrice, getAllZones, getAllRates } from '@mobazha/core';
 import type { ShippingProfile } from '@mobazha/core';
 import {
   ChevronDown,
@@ -31,7 +31,7 @@ export interface ShippingProfileCardProps {
 }
 
 /**
- * 配送档案卡片组件 - 改进版
+ * 配送档案卡片组件 - Shopify 风格
  * 支持展开/折叠、显示价格范围、地区覆盖摘要、内联编辑名称
  */
 export function ShippingProfileCard({
@@ -49,11 +49,14 @@ export function ShippingProfileCard({
   const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 获取所有区域和费率
+  const zones = useMemo(() => getAllZones(profile), [profile]);
+  const rates = useMemo(() => getAllRates(profile), [profile]);
+
   // 开始编辑
   const startEditing = useCallback(() => {
     setEditName(profile.name);
     setIsEditing(true);
-    // 聚焦输入框
     setTimeout(() => inputRef.current?.focus(), 50);
   }, [profile.name]);
 
@@ -93,23 +96,20 @@ export function ShippingProfileCard({
     [saveEdit, cancelEdit]
   );
 
-  // 计算价格范围（使用 fromMinimalUnit 处理不同货币精度）
+  // 计算价格范围
   const priceRange = useMemo(() => {
-    if (!profile.options || profile.options.length === 0) return null;
+    if (rates.length === 0) return null;
 
     // 收集所有价格和货币
     const pricesByCurrency: Record<string, number[]> = {};
 
-    profile.options.forEach(opt => {
-      const currency = opt.currency || 'USD';
+    rates.forEach(rate => {
+      const currency = rate.currency || 'USD';
       if (!pricesByCurrency[currency]) {
         pricesByCurrency[currency] = [];
       }
-      opt.services?.forEach(service => {
-        // 使用 fromMinimalUnit 根据货币精度转换
-        const price = fromMinimalUnit(service.firstFreight || '0', currency);
-        if (price > 0) pricesByCurrency[currency].push(price);
-      });
+      const price = fromMinimalUnit(rate.price || '0', currency);
+      if (price > 0) pricesByCurrency[currency].push(price);
     });
 
     const currencies = Object.keys(pricesByCurrency);
@@ -132,13 +132,13 @@ export function ShippingProfileCard({
       return `${minFormatted} - ${maxFormatted}`;
     }
 
-    // 多种货币，显示范围（简化显示）
+    // 多种货币
     return t('shipping.multipleCurrencies') || 'Multiple currencies';
-  }, [profile.options, t]);
+  }, [rates, t]);
 
   // 计算地区覆盖摘要
   const regionsSummary = useMemo(() => {
-    if (!profile.options || profile.options.length === 0) {
+    if (zones.length === 0) {
       return { isWorldwide: false, count: 0, display: t('shipping.noRegions') || 'No regions' };
     }
 
@@ -146,8 +146,8 @@ export function ShippingProfileCard({
     const allRegions = new Set<string>();
     let hasExplicitAll = false;
 
-    profile.options.forEach(opt => {
-      opt.regions?.forEach(region => {
+    zones.forEach(zone => {
+      zone.regions?.forEach(region => {
         if (region === 'ALL') {
           hasExplicitAll = true;
         } else {
@@ -156,9 +156,7 @@ export function ShippingProfileCard({
       });
     });
 
-    // 判断是否为全球配送：
-    // 1. 明确包含 'ALL' 标记
-    // 2. 或者地区数量超过 240 个（接近全部国家）
+    // 判断是否为全球配送
     const WORLDWIDE_THRESHOLD = 240;
     const isWorldwide = hasExplicitAll || allRegions.size >= WORLDWIDE_THRESHOLD;
 
@@ -179,7 +177,7 @@ export function ShippingProfileCard({
           ? t('shipping.noRegions') || 'No regions'
           : `${count} ${count === 1 ? t('shipping.region') || 'region' : t('shipping.regions') || 'regions'}`,
     };
-  }, [profile.options, t]);
+  }, [zones, t]);
 
   return (
     <Card className={cn('overflow-hidden', disabled && 'opacity-60')}>
@@ -219,25 +217,25 @@ export function ShippingProfileCard({
 
             {/* 摘要信息 */}
             <HStack gap="md" className="flex-wrap">
-              {/* 选项数量 */}
+              {/* 区域数量 */}
               <HStack gap="xs" className="text-sm text-muted-foreground">
                 <Package className="w-4 h-4" />
                 <span>
-                  {profile.options.length}{' '}
-                  {profile.options.length === 1
-                    ? t('shipping.option') || 'option'
-                    : t('shipping.options') || 'options'}
+                  {zones.length}{' '}
+                  {zones.length === 1
+                    ? t('shipping.zone') || 'zone'
+                    : t('shipping.zones') || 'zones'}
                 </span>
               </HStack>
 
               {/* 地区覆盖 */}
               <HStack gap="xs" className="text-sm text-muted-foreground">
                 {regionsSummary.isWorldwide ? (
-                  <Globe className="w-4 h-4 text-green-500" />
+                  <Globe className="w-4 h-4 text-primary" />
                 ) : (
                   <MapPin className="w-4 h-4" />
                 )}
-                <span className={cn(regionsSummary.isWorldwide && 'text-green-600 font-medium')}>
+                <span className={cn(regionsSummary.isWorldwide && 'text-primary font-medium')}>
                   {regionsSummary.display}
                 </span>
               </HStack>
@@ -279,8 +277,8 @@ export function ShippingProfileCard({
         </HStack>
       </div>
 
-      {/* 展开/折叠按钮 */}
-      {profile.options.length > 0 && onToggleExpand && (
+      {/* 展开/折叠按钮 - 始终显示以允许编辑 */}
+      {onToggleExpand && (
         <button
           onClick={onToggleExpand}
           className="w-full px-4 py-2 text-sm text-muted-foreground hover:bg-muted/50 border-t flex items-center justify-center gap-1 transition-colors"
@@ -293,7 +291,9 @@ export function ShippingProfileCard({
           ) : (
             <>
               <ChevronDown className="w-4 h-4" />
-              {t('shipping.viewOptions') || 'View shipping options'}
+              {zones.length > 0
+                ? t('shipping.viewZones') || 'View shipping zones'
+                : t('shipping.addZone') || 'Add shipping zone'}
             </>
           )}
         </button>
