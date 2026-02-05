@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import {
   useI18n,
   getCountryName,
-  type ShippingOptionSetting,
+  type ShippingOptionConfig,
   fromMinimalUnit,
   formatPrice,
 } from '@mobazha/core';
@@ -26,7 +26,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
 };
 
 interface ShippingOptionCardProps {
-  option: ShippingOptionSetting;
+  option: ShippingOptionConfig;
   onEdit?: () => void;
   onDelete?: () => void;
   disabled?: boolean;

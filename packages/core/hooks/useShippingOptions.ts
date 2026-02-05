@@ -5,12 +5,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { profileApi } from '../services/api';
-import type { ShippingOptionSetting, ShippingServiceSetting } from '../types';
+import type { ShippingOptionConfig, ShippingServiceConfig } from '../types/shippingConfig';
 
 /**
+ * @deprecated 使用新版 ShippingRate 替代
  * 创建空的配送服务（用于表单初始化）
  */
-export function createEmptyService(): ShippingServiceSetting {
+export function createEmptyService(): ShippingServiceConfig {
   return {
     name: '',
     estimatedDelivery: '',
@@ -27,7 +28,7 @@ export function createEmptyService(): ShippingServiceSetting {
 /**
  * 创建空的配送选项（用于表单初始化）
  */
-export function createEmptyOption(currency = 'USD'): ShippingOptionSetting {
+export function createEmptyOption(currency = 'USD'): ShippingOptionConfig {
   return {
     name: '',
     type: 'FIXED_PRICE',
@@ -53,7 +54,7 @@ export function createEmptyOption(currency = 'USD'): ShippingOptionSetting {
  * } = useShippingOptions();
  */
 export function useShippingOptions() {
-  const [options, setOptions] = useState<ShippingOptionSetting[]>([]);
+  const [options, setOptions] = useState<ShippingOptionConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +87,7 @@ export function useShippingOptions() {
 
   // 保存配送选项到后端
   const saveOptions = useCallback(
-    async (newOptions: ShippingOptionSetting[]) => {
+    async (newOptions: ShippingOptionConfig[]) => {
       setIsSaving(true);
       setError(null);
 
@@ -115,7 +116,7 @@ export function useShippingOptions() {
 
   // 添加配送选项
   const addOption = useCallback(
-    async (option: ShippingOptionSetting) => {
+    async (option: ShippingOptionConfig) => {
       // 新选项不需要 id，后端会自动分配
       const newOption = { ...option };
       delete newOption.id;
@@ -128,7 +129,7 @@ export function useShippingOptions() {
 
   // 更新配送选项
   const updateOption = useCallback(
-    async (id: number, option: Partial<ShippingOptionSetting>) => {
+    async (id: number, option: Partial<ShippingOptionConfig>) => {
       const index = options.findIndex(o => o.id === id);
       if (index === -1) return false;
 
@@ -151,7 +152,7 @@ export function useShippingOptions() {
 
   // 批量更新所有选项
   const setAllOptions = useCallback(
-    async (newOptions: ShippingOptionSetting[]) => {
+    async (newOptions: ShippingOptionConfig[]) => {
       return saveOptions(newOptions);
     },
     [saveOptions]

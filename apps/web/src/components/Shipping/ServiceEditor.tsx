@@ -14,16 +14,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useI18n, type ShippingServiceSetting } from '@mobazha/core';
+import { useI18n, type ShippingServiceConfig } from '@mobazha/core';
 
 type ServiceType = 'FIRST_RENEWAL_FEE' | 'SAME_WEIGHT_SAME_FEE';
 
 interface ServiceEditorProps {
-  service: ShippingServiceSetting;
+  service: ShippingServiceConfig;
   serviceType: ServiceType;
   currency: string;
   index: number;
-  onChange: (service: ShippingServiceSetting) => void;
+  onChange: (service: ShippingServiceConfig) => void;
   onRemove?: () => void;
   disabled?: boolean;
   canRemove?: boolean;
@@ -43,7 +43,7 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
 
   // 更新服务字段
   const updateField = useCallback(
-    <K extends keyof ShippingServiceSetting>(field: K, value: ShippingServiceSetting[K]) => {
+    <K extends keyof ShippingServiceConfig>(field: K, value: ShippingServiceConfig[K]) => {
       onChange({ ...service, [field]: value });
     },
     [service, onChange]
@@ -144,25 +144,27 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
           />
         )}
 
-        {/* 挂号费（可选） */}
-        <div className="space-y-1.5">
-          <Label htmlFor={`service-registration-${index}`} className="text-xs">
-            {t('shipping.registrationFee') || 'Registration Fee'} ({currency})
-            <span className="text-muted-foreground ml-1">
-              ({t('common.optional') || 'Optional'})
-            </span>
-          </Label>
-          <Input
-            id={`service-registration-${index}`}
-            type="number"
-            min="0"
-            step="0.01"
-            value={service.registrationFee}
-            onChange={e => updatePriceField('registrationFee', e.target.value)}
-            placeholder="0.00"
-            disabled={disabled}
-            className="h-9"
-          />
+        {/* 挂号费（可选）- 使用半宽保持视觉一致性 */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor={`service-registration-${index}`} className="text-xs">
+              {t('shipping.registrationFee') || 'Registration Fee'} ({currency})
+              <span className="text-muted-foreground ml-1">
+                ({t('common.optional') || 'Optional'})
+              </span>
+            </Label>
+            <Input
+              id={`service-registration-${index}`}
+              type="number"
+              min="0"
+              step="0.01"
+              value={service.registrationFee}
+              onChange={e => updatePriceField('registrationFee', e.target.value)}
+              placeholder="0.00"
+              disabled={disabled}
+              className="h-9"
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -173,7 +175,7 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
  * 首重+续重费字段
  */
 interface FeeFieldsProps {
-  service: ShippingServiceSetting;
+  service: ShippingServiceConfig;
   currency: string;
   index: number;
   disabled: boolean;
@@ -317,22 +319,24 @@ const SameWeightSameFeeFields: React.FC<FeeFieldsProps> = ({
       </div>
     </div>
 
-    {/* 运费 */}
-    <div className="space-y-1.5">
-      <Label htmlFor={`service-freight-${index}`} className="text-xs">
-        {t('shipping.shippingFee') || 'Shipping Fee'} ({currency})
-      </Label>
-      <Input
-        id={`service-freight-${index}`}
-        type="number"
-        min="0"
-        step="0.01"
-        value={service.firstFreight}
-        onChange={e => updatePriceField('firstFreight', e.target.value)}
-        placeholder="10.00"
-        disabled={disabled}
-        className="h-9"
-      />
+    {/* 运费 - 使用半宽 */}
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-1.5">
+        <Label htmlFor={`service-freight-${index}`} className="text-xs">
+          {t('shipping.shippingFee') || 'Shipping Fee'} ({currency})
+        </Label>
+        <Input
+          id={`service-freight-${index}`}
+          type="number"
+          min="0"
+          step="0.01"
+          value={service.firstFreight}
+          onChange={e => updatePriceField('firstFreight', e.target.value)}
+          placeholder="10.00"
+          disabled={disabled}
+          className="h-9"
+        />
+      </div>
     </div>
   </>
 );

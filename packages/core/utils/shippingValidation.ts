@@ -3,7 +3,10 @@
  * 提供地区冲突检测和重量范围验证功能
  */
 
-import type { ShippingOptionSetting, ShippingServiceSetting } from '../types/user';
+import type { ShippingOptionConfig, ShippingServiceConfig } from '../types/shippingConfig';
+
+// 为旧代码保持兼容性的类型别名
+type ShippingService = ShippingServiceConfig;
 
 /**
  * 地区冲突检测结果
@@ -39,8 +42,8 @@ export interface WeightRangeOverlap {
  * @returns 冲突的地区列表
  */
 export function detectRegionConflicts(
-  newOption: ShippingOptionSetting,
-  existingOptions: ShippingOptionSetting[],
+  newOption: ShippingOptionConfig,
+  existingOptions: ShippingOptionConfig[],
   excludeId?: number
 ): RegionConflict[] {
   const conflicts: RegionConflict[] = [];
@@ -106,7 +109,7 @@ export function detectRegionConflicts(
  * @param services 服务列表
  * @returns 重量范围间隙列表
  */
-export function validateWeightRangeCoverage(services: ShippingServiceSetting[]): WeightRangeGap[] {
+export function validateWeightRangeCoverage(services: ShippingService[]): WeightRangeGap[] {
   if (services.length === 0) return [];
 
   // 按起始重量排序
@@ -143,9 +146,7 @@ export function validateWeightRangeCoverage(services: ShippingServiceSetting[]):
  * @param services 服务列表
  * @returns 重叠列表
  */
-export function detectWeightRangeOverlaps(
-  services: ShippingServiceSetting[]
-): WeightRangeOverlap[] {
+export function detectWeightRangeOverlaps(services: ShippingService[]): WeightRangeOverlap[] {
   const overlaps: WeightRangeOverlap[] = [];
 
   for (let i = 0; i < services.length; i++) {
@@ -199,8 +200,8 @@ export interface ValidationResult {
 }
 
 export function validateShippingOption(
-  option: ShippingOptionSetting,
-  existingOptions: ShippingOptionSetting[],
+  option: ShippingOptionConfig,
+  existingOptions: ShippingOptionConfig[],
   excludeId?: number
 ): ValidationResult {
   const regionConflicts = detectRegionConflicts(option, existingOptions, excludeId);

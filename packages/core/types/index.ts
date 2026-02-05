@@ -22,9 +22,6 @@ export type {
   UserSettings,
   SmtpSettings,
   AuthCredentials,
-  ShippingOptionSetting,
-  ShippingServiceSetting,
-  ShippingProfileSetting,
 } from './user';
 
 // Product types
@@ -274,22 +271,37 @@ export {
 
 // Shipping Config types (店铺配送选项设置)
 export type {
-  ShippingServiceType,
-  ShippingOptionConfig,
-  ShippingService as ShippingServiceConfig,
+  // 新版 Shopify 风格类型
+  ShippingLocation,
+  RateConditionType,
+  RateCondition,
+  FreeShippingThreshold,
+  ShippingRate,
+  ShippingZone,
+  LocationGroup,
   ShippingProfile,
   ShippingData,
-  FreeShippingThreshold,
+  // 旧版类型（已废弃，用于迁移）
+  ShippingServiceConfig,
+  ShippingOptionConfig,
 } from './shippingConfig';
 
 export {
+  // 新版工厂函数
+  generateId,
+  createEmptyLocation,
+  createEmptyRate,
+  createEmptyZone,
+  createEmptyLocationGroup,
+  createEmptyShippingProfile,
+  // 新版辅助函数
+  isUsingLocationGroups,
+  getAllZones,
+  getAllRates,
+  getPriceRange,
+  getAllRegions,
+  hasMultipleLocations,
+  // 旧版函数（已废弃）
   createEmptyShippingService,
   createEmptyShippingOption,
-  createEmptyShippingProfile,
-  isUsingProfileMode,
-  SHIPPING_TYPE_LABELS,
-  SERVICE_TYPE_LABELS,
 } from './shippingConfig';
-
-// 重新导出 ShippingType 用于配送设置（与 product.ts 中的相同）
-export type { ShippingType as ShippingConfigType } from './shippingConfig';

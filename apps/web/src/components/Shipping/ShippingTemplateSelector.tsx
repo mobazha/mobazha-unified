@@ -9,7 +9,7 @@ import React from 'react';
 import { Package, Globe, MapPin, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n, type ShippingOptionSetting } from '@mobazha/core';
+import { useI18n, type ShippingOptionConfig } from '@mobazha/core';
 
 // 预设模板类型
 export type ShippingTemplateType =
@@ -24,7 +24,7 @@ export interface ShippingTemplate {
   icon: React.ComponentType<{ className?: string }>;
   labelKey: string;
   descKey: string;
-  createOption: (currency: string) => ShippingOptionSetting;
+  createOption: (currency: string) => ShippingOptionConfig;
 }
 
 // 预设模板配置
@@ -34,7 +34,7 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: Package,
     labelKey: 'shippingTemplates.domesticStandard',
     descKey: 'shippingTemplates.domesticStandardDesc',
-    createOption: (currency: string): ShippingOptionSetting => ({
+    createOption: (currency: string): ShippingOptionConfig => ({
       name: currency === 'CNY' ? '国内标准快递' : 'Domestic Standard',
       type: 'FIXED_PRICE',
       currency,
@@ -60,7 +60,7 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: Globe,
     labelKey: 'shippingTemplates.worldwideFlat',
     descKey: 'shippingTemplates.worldwideFlatDesc',
-    createOption: (currency: string): ShippingOptionSetting => ({
+    createOption: (currency: string): ShippingOptionConfig => ({
       name: currency === 'CNY' ? '全球统一运费' : 'Worldwide Flat Rate',
       type: 'FIXED_PRICE',
       currency,
@@ -86,7 +86,7 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: Truck,
     labelKey: 'shippingTemplates.express',
     descKey: 'shippingTemplates.expressDesc',
-    createOption: (currency: string): ShippingOptionSetting => ({
+    createOption: (currency: string): ShippingOptionConfig => ({
       name: currency === 'CNY' ? '特快专递' : 'Express Shipping',
       type: 'FIXED_PRICE',
       currency,
@@ -112,7 +112,7 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: MapPin,
     labelKey: 'shippingTemplates.localPickup',
     descKey: 'shippingTemplates.localPickupDesc',
-    createOption: (currency: string): ShippingOptionSetting => ({
+    createOption: (currency: string): ShippingOptionConfig => ({
       name: currency === 'CNY' ? '本地自提' : 'Local Pickup',
       type: 'LOCAL_PICKUP',
       currency,
@@ -137,7 +137,7 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
 
 interface ShippingTemplateSelectorProps {
   currency: string;
-  onSelect: (option: ShippingOptionSetting) => void;
+  onSelect: (option: ShippingOptionConfig) => void;
   className?: string;
 }
 

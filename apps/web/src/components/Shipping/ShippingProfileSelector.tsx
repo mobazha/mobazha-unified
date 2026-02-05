@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { Package, Settings, AlertTriangle, Check } from 'lucide-react';
 import Link from 'next/link';
-import { useI18n, useShippingProfiles } from '@mobazha/core';
+import { useI18n, useShippingProfiles, getAllZones } from '@mobazha/core';
 import type { ShippingProfile } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -161,6 +161,7 @@ export function ShippingProfileSelector({
       <div className="space-y-3">
         {profiles.map(profile => {
           const isSelected = selectedProfile?.profileId === profile.profileId;
+          const zones = getAllZones(profile);
           return (
             <div
               key={profile.profileId}
@@ -190,16 +191,19 @@ export function ShippingProfileSelector({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {profile.options.length} {t('listing.shippingOptions') || 'option(s)'}
+                      {zones.length}{' '}
+                      {zones.length === 1
+                        ? t('shipping.zone') || 'zone'
+                        : t('shipping.zones') || 'zones'}
                     </span>
                   </div>
-                  {profile.options.length > 0 && (
+                  {zones.length > 0 && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      {profile.options
-                        .map(opt => opt.name)
+                      {zones
+                        .map(zone => zone.name)
                         .slice(0, 3)
                         .join(', ')}
-                      {profile.options.length > 3 && ` +${profile.options.length - 3}`}
+                      {zones.length > 3 && ` +${zones.length - 3}`}
                     </p>
                   )}
                 </div>

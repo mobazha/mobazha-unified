@@ -1,24 +1,100 @@
 /**
  * useShippingProfiles hook
- * 管理配送档案（Shopify 模式）
+ * 管理配送档案（Shopify 风格）
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { profileApi } from '../services/api';
-import type { ShippingProfile, ShippingOptionConfig, ShippingProfileSetting } from '../types';
-import { createEmptyShippingOption } from '../types';
+import type {
+  ShippingProfile,
+  ShippingZone,
+  ShippingRate,
+  ShippingLocation,
+  ShippingOptionConfig,
+} from '../types';
+import { createEmptyZone, createEmptyRate, generateId } from '../types';
+import { toISOCountryCode } from '../utils/countryUtils';
 
-// 生成 UUID（优先使用原生 API，回退到自定义实现）
+// 特殊地区代码（不需要转换）
+const SPECIAL_REGION_CODES = ['ALL', 'WORLDWIDE'];
+
+/**
+ * 标准化地区代码为 ISO 格式
+ */
+function normalizeRegionCode(code: string): string {
+  const upperCode = code.toUpperCase();
+  if (SPECIAL_REGION_CODES.includes(upperCode)) {
+    return upperCode === 'WORLDWIDE' ? 'ALL' : upperCode;
+  }
+  return toISOCountryCode(code);
+}
+
+/**
+ * 标准化配送区域中的地区代码
+ */
+function normalizeZoneRegions(zone: ShippingZone): ShippingZone {
+  return {
+    ...zone,
+    regions: zone.regions?.map(normalizeRegionCode) || [],
+  };
+}
+
+/**
+ * 标准化配送档案中所有区域的地区代码
+ */
+function normalizeProfileRegions(profile: ShippingProfile): ShippingProfile {
+  return {
+    ...profile,
+    zones: profile.zones?.map(normalizeZoneRegions),
+    locationGroups: profile.locationGroups?.map(lg => ({
+      ...lg,
+      zones: lg.zones?.map(normalizeZoneRegions),
+    })),
+  };
+}
+
+// 生成 UUID
 function generateUUID(): string {
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID();
   }
-  // Fallback for older environments
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+/**
+ * 将旧版 ShippingOptionConfig 迁移到新版 ShippingZone
+ */
+function migrateOptionToZone(option: ShippingOptionConfig): ShippingZone {
+  const rates: ShippingRate[] = option.services.map((service, index) => ({
+    id: generateId(),
+    name: service.name || `Rate ${index + 1}`,
+    price: service.firstFreight || '0',
+    currency: option.currency,
+    estimatedDelivery: service.estimatedDelivery || '',
+    freeShippingThreshold: index === 0 ? option.freeShippingThreshold : undefined,
+  }));
+
+  // 如果没有服务，创建一个默认费率
+  if (rates.length === 0) {
+    rates.push({
+      id: generateId(),
+      name: option.name,
+      price: '0',
+      currency: option.currency,
+      estimatedDelivery: '',
+    });
+  }
+
+  return {
+    id: generateId(),
+    name: option.name,
+    regions: option.regions?.map(normalizeRegionCode) || [],
+    rates,
+  };
 }
 
 /**
@@ -29,57 +105,16 @@ export function createEmptyProfile(isDefault = false): ShippingProfile {
     profileId: generateUUID(),
     name: '',
     isDefault,
-    options: [createEmptyShippingOption()],
-  };
-}
-
-/**
- * 转换 ShippingProfileSetting 到 ShippingProfile
- */
-function toShippingProfile(setting: ShippingProfileSetting): ShippingProfile {
-  return {
-    profileId: setting.profileId,
-    name: setting.name,
-    isDefault: setting.isDefault,
-    options: setting.options,
-    listingCount: setting.listingCount,
-    createdAt: setting.createdAt,
-    updatedAt: setting.updatedAt,
-  };
-}
-
-/**
- * 转换 ShippingProfile 到 ShippingProfileSetting
- */
-function toShippingProfileSetting(profile: ShippingProfile): ShippingProfileSetting {
-  return {
-    profileId: profile.profileId,
-    name: profile.name,
-    isDefault: profile.isDefault,
-    options: profile.options,
-    listingCount: profile.listingCount,
-    createdAt: profile.createdAt,
-    updatedAt: profile.updatedAt,
+    zones: [],
   };
 }
 
 /**
  * useShippingProfiles hook
- *
- * @example
- * const {
- *   profiles,
- *   isLoading,
- *   isUsingProfiles,
- *   addProfile,
- *   updateProfile,
- *   deleteProfile,
- *   migrateToProfiles,
- *   refetch
- * } = useShippingProfiles();
  */
 export function useShippingProfiles() {
   const [profiles, setProfiles] = useState<ShippingProfile[]>([]);
+  const [locations, setLocations] = useState<ShippingLocation[]>([]);
   const [legacyOptions, setLegacyOptions] = useState<ShippingOptionConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -88,6 +123,9 @@ export function useShippingProfiles() {
   // 是否使用配送档案模式
   const isUsingProfiles = useMemo(() => profiles.length > 0, [profiles]);
 
+  // 是否有多个发货地点（渐进式 UI）
+  const hasMultipleLocations = useMemo(() => locations.length > 1, [locations]);
+
   // 获取数据
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -95,10 +133,21 @@ export function useShippingProfiles() {
 
     try {
       const settings = await profileApi.getSettings();
+
+      // 加载发货地点
+      if (settings?.shippingLocations) {
+        setLocations(settings.shippingLocations);
+      } else {
+        setLocations([]);
+      }
+
+      // 加载配送档案
       if (settings?.shippingProfiles && settings.shippingProfiles.length > 0) {
-        setProfiles(settings.shippingProfiles.map(toShippingProfile));
+        const normalizedProfiles = settings.shippingProfiles.map(normalizeProfileRegions);
+        setProfiles(normalizedProfiles);
         setLegacyOptions([]);
-      } else if (settings?.shippingOptions) {
+      } else if (settings?.shippingOptions && settings.shippingOptions.length > 0) {
+        // 有旧版数据，保存用于迁移提示
         setProfiles([]);
         setLegacyOptions(settings.shippingOptions);
       } else {
@@ -128,14 +177,13 @@ export function useShippingProfiles() {
 
       try {
         const result = await profileApi.setSettings({
-          shippingProfiles: newProfiles.map(toShippingProfileSetting),
+          shippingProfiles: newProfiles,
         });
 
         if (result.error) {
           throw new Error(result.error);
         }
 
-        // 重新获取最新数据
         await fetchData();
         return true;
       } catch (err) {
@@ -149,17 +197,44 @@ export function useShippingProfiles() {
     [fetchData]
   );
 
-  // 添加配送档案
+  // 保存发货地点
+  const saveLocations = useCallback(
+    async (newLocations: ShippingLocation[]) => {
+      setIsSaving(true);
+      setError(null);
+
+      try {
+        const result = await profileApi.setSettings({
+          shippingLocations: newLocations,
+        });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to save shipping locations:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [fetchData]
+  );
+
+  // ============== 档案操作 ==============
+
   const addProfile = useCallback(
     async (profile: ShippingProfile) => {
-      // 如果是第一个档案，自动设为默认
       const newProfile = {
         ...profile,
         profileId: profile.profileId || generateUUID(),
         isDefault: profiles.length === 0 ? true : profile.isDefault,
       };
 
-      // 如果新档案是默认的，取消其他档案的默认状态
       const updatedProfiles = newProfile.isDefault
         ? profiles.map(p => ({ ...p, isDefault: false }))
         : [...profiles];
@@ -169,7 +244,6 @@ export function useShippingProfiles() {
     [profiles, saveProfiles]
   );
 
-  // 更新配送档案
   const updateProfile = useCallback(
     async (profileId: string, updates: Partial<ShippingProfile>) => {
       const index = profiles.findIndex(p => p.profileId === profileId);
@@ -178,7 +252,6 @@ export function useShippingProfiles() {
       const updatedProfiles = [...profiles];
       updatedProfiles[index] = { ...updatedProfiles[index], ...updates };
 
-      // 如果更新为默认档案，取消其他档案的默认状态
       if (updates.isDefault) {
         for (let i = 0; i < updatedProfiles.length; i++) {
           if (i !== index) {
@@ -192,13 +265,11 @@ export function useShippingProfiles() {
     [profiles, saveProfiles]
   );
 
-  // 删除配送档案
   const deleteProfile = useCallback(
     async (profileId: string) => {
       const profileToDelete = profiles.find(p => p.profileId === profileId);
       const newProfiles = profiles.filter(p => p.profileId !== profileId);
 
-      // 如果删除的是默认档案，将第一个设为默认
       if (profileToDelete?.isDefault && newProfiles.length > 0) {
         newProfiles[0] = { ...newProfiles[0], isDefault: true };
       }
@@ -208,26 +279,6 @@ export function useShippingProfiles() {
     [profiles, saveProfiles]
   );
 
-  // 从传统模式迁移到档案模式
-  const migrateToProfiles = useCallback(
-    async (profileName = '默认配送') => {
-      if (isUsingProfiles || legacyOptions.length === 0) {
-        return false;
-      }
-
-      const defaultProfile: ShippingProfile = {
-        profileId: generateUUID(),
-        name: profileName,
-        isDefault: true,
-        options: legacyOptions,
-      };
-
-      return saveProfiles([defaultProfile]);
-    },
-    [isUsingProfiles, legacyOptions, saveProfiles]
-  );
-
-  // 设置默认档案
   const setDefaultProfile = useCallback(
     async (profileId: string) => {
       return updateProfile(profileId, { isDefault: true });
@@ -235,12 +286,224 @@ export function useShippingProfiles() {
     [updateProfile]
   );
 
-  // 获取默认档案
+  // ============== 区域操作 ==============
+
+  const addZone = useCallback(
+    async (profileId: string, zone: ShippingZone) => {
+      const profile = profiles.find(p => p.profileId === profileId);
+      if (!profile) return false;
+
+      const newZone = {
+        ...zone,
+        id: zone.id || generateId(),
+      };
+
+      return updateProfile(profileId, {
+        zones: [...(profile.zones || []), newZone],
+      });
+    },
+    [profiles, updateProfile]
+  );
+
+  const updateZone = useCallback(
+    async (profileId: string, zoneId: string, updates: Partial<ShippingZone>) => {
+      const profile = profiles.find(p => p.profileId === profileId);
+      if (!profile) return false;
+
+      const zones = profile.zones?.map(z => (z.id === zoneId ? { ...z, ...updates } : z)) || [];
+
+      return updateProfile(profileId, { zones });
+    },
+    [profiles, updateProfile]
+  );
+
+  const deleteZone = useCallback(
+    async (profileId: string, zoneId: string) => {
+      const profile = profiles.find(p => p.profileId === profileId);
+      if (!profile) return false;
+
+      const zones = profile.zones?.filter(z => z.id !== zoneId) || [];
+
+      return updateProfile(profileId, { zones });
+    },
+    [profiles, updateProfile]
+  );
+
+  // ============== 费率操作 ==============
+
+  const addRate = useCallback(
+    async (profileId: string, zoneId: string, rate: ShippingRate) => {
+      const profile = profiles.find(p => p.profileId === profileId);
+      if (!profile) return false;
+
+      const zones =
+        profile.zones?.map(z => {
+          if (z.id === zoneId) {
+            return {
+              ...z,
+              rates: [...z.rates, { ...rate, id: rate.id || generateId() }],
+            };
+          }
+          return z;
+        }) || [];
+
+      return updateProfile(profileId, { zones });
+    },
+    [profiles, updateProfile]
+  );
+
+  const updateRate = useCallback(
+    async (profileId: string, zoneId: string, rateId: string, updates: Partial<ShippingRate>) => {
+      const profile = profiles.find(p => p.profileId === profileId);
+      if (!profile) return false;
+
+      const zones =
+        profile.zones?.map(z => {
+          if (z.id === zoneId) {
+            return {
+              ...z,
+              rates: z.rates.map(r => (r.id === rateId ? { ...r, ...updates } : r)),
+            };
+          }
+          return z;
+        }) || [];
+
+      return updateProfile(profileId, { zones });
+    },
+    [profiles, updateProfile]
+  );
+
+  const deleteRate = useCallback(
+    async (profileId: string, zoneId: string, rateId: string) => {
+      const profile = profiles.find(p => p.profileId === profileId);
+      if (!profile) return false;
+
+      const zones =
+        profile.zones?.map(z => {
+          if (z.id === zoneId) {
+            return {
+              ...z,
+              rates: z.rates.filter(r => r.id !== rateId),
+            };
+          }
+          return z;
+        }) || [];
+
+      return updateProfile(profileId, { zones });
+    },
+    [profiles, updateProfile]
+  );
+
+  // ============== 发货地点操作 ==============
+
+  const addLocation = useCallback(
+    async (location: ShippingLocation) => {
+      const newLocation = {
+        ...location,
+        id: location.id || generateId(),
+        isDefault: locations.length === 0 ? true : location.isDefault,
+      };
+
+      const updatedLocations = newLocation.isDefault
+        ? locations.map(l => ({ ...l, isDefault: false }))
+        : [...locations];
+
+      return saveLocations([...updatedLocations, newLocation]);
+    },
+    [locations, saveLocations]
+  );
+
+  const updateLocation = useCallback(
+    async (locationId: string, updates: Partial<ShippingLocation>) => {
+      let updatedLocations = locations.map(l => (l.id === locationId ? { ...l, ...updates } : l));
+
+      // 如果设置为默认，需要取消其他位置的默认状态（不可变更新）
+      if (updates.isDefault) {
+        updatedLocations = updatedLocations.map(loc =>
+          loc.id === locationId ? loc : { ...loc, isDefault: false }
+        );
+      }
+
+      return saveLocations(updatedLocations);
+    },
+    [locations, saveLocations]
+  );
+
+  const deleteLocation = useCallback(
+    async (locationId: string) => {
+      const locationToDelete = locations.find(l => l.id === locationId);
+      const newLocations = locations.filter(l => l.id !== locationId);
+
+      if (locationToDelete?.isDefault && newLocations.length > 0) {
+        newLocations[0] = { ...newLocations[0], isDefault: true };
+      }
+
+      return saveLocations(newLocations);
+    },
+    [locations, saveLocations]
+  );
+
+  // ============== 迁移 ==============
+
+  const migrateFromLegacy = useCallback(
+    async (profileName = '默认配送', locationName = '默认发货地点') => {
+      if (isUsingProfiles || legacyOptions.length === 0) {
+        return false;
+      }
+
+      // 迁移配送选项为配送区域
+      const zones = legacyOptions.map(migrateOptionToZone);
+
+      const defaultProfile: ShippingProfile = {
+        profileId: generateUUID(),
+        name: profileName,
+        isDefault: true,
+        zones,
+      };
+
+      // 创建默认发货地点
+      const defaultLocation: ShippingLocation = {
+        id: generateId(),
+        name: locationName,
+        isDefault: true,
+      };
+
+      setIsSaving(true);
+      setError(null);
+
+      try {
+        const result = await profileApi.setSettings({
+          shippingProfiles: [defaultProfile],
+          shippingLocations: [defaultLocation],
+        });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to migrate shipping data:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [isUsingProfiles, legacyOptions, fetchData]
+  );
+
+  // ============== 辅助函数 ==============
+
   const defaultProfile = useMemo(() => {
     return profiles.find(p => p.isDefault) || profiles[0] || null;
   }, [profiles]);
 
-  // 根据 ID 获取档案
+  const defaultLocation = useMemo(() => {
+    return locations.find(l => l.isDefault) || locations[0] || null;
+  }, [locations]);
+
   const getProfileById = useCallback(
     (profileId: string) => {
       return profiles.find(p => p.profileId === profileId) || null;
@@ -248,27 +511,60 @@ export function useShippingProfiles() {
     [profiles]
   );
 
+  const getLocationById = useCallback(
+    (locationId: string) => {
+      return locations.find(l => l.id === locationId) || null;
+    },
+    [locations]
+  );
+
   return {
     // 状态
     profiles,
+    locations,
     legacyOptions,
     isLoading,
     isSaving,
     error,
     isUsingProfiles,
+    hasMultipleLocations,
     defaultProfile,
+    defaultLocation,
 
-    // 操作
+    // 档案操作
     addProfile,
     updateProfile,
     deleteProfile,
     setDefaultProfile,
-    migrateToProfiles,
-    refetch: fetchData,
+
+    // 区域操作
+    addZone,
+    updateZone,
+    deleteZone,
+
+    // 费率操作
+    addRate,
+    updateRate,
+    deleteRate,
+
+    // 发货地点操作
+    addLocation,
+    updateLocation,
+    deleteLocation,
+
+    // 迁移
+    migrateFromLegacy,
+    migrateToProfiles: migrateFromLegacy, // 兼容旧名称
 
     // 辅助函数
     getProfileById,
+    getLocationById,
+    refetch: fetchData,
+
+    // 工厂函数
     createEmptyProfile,
+    createEmptyZone,
+    createEmptyRate,
   };
 }
 

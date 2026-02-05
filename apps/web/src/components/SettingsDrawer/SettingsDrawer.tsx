@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   ScrollArea,
@@ -65,7 +66,13 @@ import {
   getAllCountries,
   getCountryName,
   POPULAR_COUNTRIES,
+  useShippingOptions,
+  useShippingProfiles,
+  createEmptyProfile,
+  generateId,
+  getAllZones,
 } from '@mobazha/core';
+import type { ShippingOptionConfig, ShippingProfile, ShippingZone } from '@mobazha/core';
 import type { Address as ApiAddress, DisplayAddress, DisplayAddressUI } from '@mobazha/core';
 import { AddressFormModal } from '@/components/Address';
 import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
@@ -103,6 +110,9 @@ import {
   LogOut,
   Truck,
   Link2,
+  FolderOpen,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { cn } from '@/lib/utils';
@@ -112,6 +122,16 @@ import {
   ProductGroupsContent,
   AccessRequestsContent,
 } from '@/components/SettingsContent';
+import {
+  ShippingOptionCard,
+  ShippingOptionForm,
+  ShippingTemplateSelector,
+  ShippingProfileCard,
+  ShippingZoneCard,
+  ShippingZoneForm,
+} from '@/components/Shipping';
+import { VStack, HStack } from '@/components/layouts';
+import { Skeleton } from '@/components/ui';
 
 // ============ Data & Types ============
 
@@ -147,6 +167,7 @@ type SettingsSection =
   | 'account'
   | 'page'
   | 'store'
+  | 'shipping' // 配送选项
   | 'accessControl' // 访问控制主菜单
   | 'accessControl.privacy'
   | 'accessControl.userGroups'
@@ -1390,7 +1411,7 @@ const StoreTabContent: React.FC = () => {
             icon={<Truck className="h-5 w-5" />}
             title={t('settingsExtended.shippingOptions')}
             description={t('settingsExtended.shippingOptionsDesc')}
-            onClick={() => navigateToPage('/settings/store/shipping')}
+            onClick={() => navigateTo('shipping')}
           />
         </SettingGroup>
       </div>
@@ -2035,6 +2056,591 @@ const ModerationContent: React.FC = () => {
   );
 };
 
+// Shipping Content - 配送选项管理
+const ShippingContent: React.FC = () => {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const { goBack } = useSettingsDrawer();
+
+  // 传统运费选项 hook
+  const {
+    options: legacyOptions,
+    isLoading: legacyLoading,
+    isSaving: legacySaving,
+    addOption,
+    updateOption,
+    deleteOption,
+  } = useShippingOptions();
+
+  // 配送档案 hook
+  const {
+    profiles,
+    isLoading: profilesLoading,
+    isSaving: profilesSaving,
+    isUsingProfiles,
+    addProfile,
+    updateProfile,
+    deleteProfile,
+    setDefaultProfile,
+    migrateToProfiles,
+  } = useShippingProfiles();
+
+  const isLoading = legacyLoading || profilesLoading;
+  const isSaving = legacySaving || profilesSaving;
+
+  // 配送档案创建状态
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // 传统运费选项表单状态（保留用于迁移）
+  const [showForm, setShowForm] = useState(false);
+  const [editingOption, setEditingOption] = useState<ShippingOptionConfig | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+
+  // 新版 Zone 表单状态
+  const [showZoneForm, setShowZoneForm] = useState(false);
+  const [editingZone, setEditingZone] = useState<ShippingZone | null>(null);
+
+  // 删除确认状态
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: 'profile' | 'option' | 'zone';
+    item: ShippingProfile | ShippingOptionConfig | ShippingZone;
+  } | null>(null);
+
+  // 展开/折叠状态
+  const [expandedProfiles, setExpandedProfiles] = useState<Set<string>>(new Set());
+
+  // 切换展开/折叠
+  const toggleProfileExpand = useCallback((profileId: string) => {
+    setExpandedProfiles(prev => {
+      const next = new Set(prev);
+      if (next.has(profileId)) {
+        next.delete(profileId);
+      } else {
+        next.add(profileId);
+      }
+      return next;
+    });
+  }, []);
+
+  // 创建新档案
+  const handleCreateProfile = useCallback(() => {
+    setProfileName('');
+    setShowProfileEditor(true);
+  }, []);
+
+  // 保存新档案
+  const handleSaveProfile = useCallback(async () => {
+    if (!profileName.trim()) return;
+
+    setIsSavingProfile(true);
+    try {
+      const newProfile = { ...createEmptyProfile(false), name: profileName.trim() };
+      const success = await addProfile(newProfile);
+      if (success) {
+        setShowProfileEditor(false);
+        toast({
+          title: t('common.success') || 'Success',
+          description: t('shipping.profileCreated') || 'Profile created',
+        });
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
+  }, [profileName, addProfile, toast, t]);
+
+  // 删除档案确认
+  const handleDeleteProfileClick = useCallback((profile: ShippingProfile) => {
+    setItemToDelete({ type: 'profile', item: profile });
+    setShowDeleteConfirm(true);
+  }, []);
+
+  // 删除选项确认（旧版）
+  const handleDeleteOptionClick = useCallback(
+    (option: ShippingOptionConfig, profileId?: string) => {
+      setItemToDelete({ type: 'option', item: option });
+      if (profileId) setSelectedProfileId(profileId);
+      setShowDeleteConfirm(true);
+    },
+    []
+  );
+
+  // 删除区域确认（新版）
+  const handleDeleteZoneClick = useCallback((zone: ShippingZone, profileId: string) => {
+    setItemToDelete({ type: 'zone', item: zone as unknown as ShippingOptionConfig });
+    setSelectedProfileId(profileId);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  // 设为默认档案
+  const handleSetDefaultProfile = useCallback(
+    async (profileId: string) => {
+      const success = await setDefaultProfile(profileId);
+      if (success) {
+        toast({
+          title: t('common.success') || 'Success',
+          description: t('shipping.defaultProfileSet') || 'Default profile updated',
+        });
+      }
+    },
+    [setDefaultProfile, toast, t]
+  );
+
+  // 迁移到档案模式
+  const handleMigrate = useCallback(async () => {
+    const success = await migrateToProfiles(t('shipping.defaultProfileName') || 'Default Shipping');
+    if (success) {
+      toast({
+        title: t('common.success') || 'Success',
+        description: t('shipping.migrateSuccess') || 'Migration completed successfully',
+      });
+    } else {
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('shipping.migrateFailed') || 'Migration failed',
+        variant: 'destructive',
+      });
+    }
+  }, [migrateToProfiles, toast, t]);
+
+  // 处理模板选择 - 将旧格式模板转换为新的 Zone 格式
+  const handleSelectTemplate = useCallback(
+    async (option: ShippingOptionConfig) => {
+      // 转换 ShippingOptionConfig 为 ShippingZone
+      const zone: ShippingZone = {
+        id: generateId(),
+        name: option.name,
+        regions: option.regions || [],
+        rates:
+          option.services?.map(service => ({
+            id: generateId(),
+            name: service.name,
+            price: service.firstFreight || '0',
+            currency: option.currency || 'USD',
+            estimatedDelivery: service.estimatedDelivery || '',
+          })) || [],
+      };
+
+      if (!isUsingProfiles) {
+        const newProfile = createEmptyProfile(true);
+        newProfile.name = t('shipping.defaultProfileName') || 'Default Shipping';
+        newProfile.zones = [zone];
+        await addProfile(newProfile);
+      } else {
+        setEditingZone(zone);
+        setShowZoneForm(true);
+      }
+    },
+    [isUsingProfiles, addProfile, t]
+  );
+
+  // 添加运费选项到档案（旧版，保留用于传统选项）
+  const handleAddOption = useCallback((profileId: string) => {
+    setSelectedProfileId(profileId);
+    setEditingOption(null);
+    setShowForm(true);
+  }, []);
+
+  // 添加配送区域到档案（新版）
+  const handleAddZone = useCallback((profileId: string) => {
+    setSelectedProfileId(profileId);
+    setEditingZone(null);
+    setShowZoneForm(true);
+  }, []);
+
+  // 保存运费选项（旧版，保留用于传统选项迁移）
+  const handleSaveOption = useCallback(
+    async (option: ShippingOptionConfig): Promise<boolean> => {
+      if (!isUsingProfiles) {
+        if (editingOption?.id) {
+          return await updateOption(editingOption.id, option);
+        } else {
+          return await addOption(option);
+        }
+      }
+      return false;
+    },
+    [isUsingProfiles, editingOption, updateOption, addOption]
+  );
+
+  // 保存配送区域（新版）
+  const handleSaveZone = useCallback(
+    async (zone: ShippingZone): Promise<boolean> => {
+      if (!selectedProfileId) return false;
+
+      const profile = profiles.find(p => p.profileId === selectedProfileId);
+      if (!profile) return false;
+
+      const currentZones = profile.zones || [];
+      const updatedZones = editingZone
+        ? currentZones.map(z => (z.id === editingZone.id ? zone : z))
+        : [...currentZones, zone];
+
+      const success = await updateProfile(selectedProfileId, { zones: updatedZones });
+      if (success) {
+        setShowZoneForm(false);
+        setEditingZone(null);
+        toast({
+          title: t('common.success') || 'Success',
+          description: editingZone
+            ? t('shipping.zoneUpdated') || 'Zone updated'
+            : t('shipping.zoneAdded') || 'Zone added',
+        });
+      }
+      return success;
+    },
+    [selectedProfileId, profiles, editingZone, updateProfile, toast, t]
+  );
+
+  // 确认删除
+  const handleConfirmDelete = useCallback(async () => {
+    if (!itemToDelete) return;
+
+    let success = false;
+    if (itemToDelete.type === 'profile') {
+      success = await deleteProfile((itemToDelete.item as ShippingProfile).profileId);
+    } else if (itemToDelete.type === 'zone') {
+      // 删除配送区域
+      if (selectedProfileId) {
+        const profile = profiles.find(p => p.profileId === selectedProfileId);
+        if (profile) {
+          const zoneToDelete = itemToDelete.item as ShippingZone;
+          const updatedZones = (profile.zones || []).filter(z => z.id !== zoneToDelete.id);
+          success = await updateProfile(selectedProfileId, { zones: updatedZones });
+        }
+      }
+    } else {
+      // 删除传统选项
+      if (!isUsingProfiles) {
+        success = await deleteOption((itemToDelete.item as ShippingOptionConfig).id!);
+      }
+    }
+
+    if (success) {
+      toast({
+        title: t('common.success') || 'Success',
+        description:
+          itemToDelete.type === 'profile'
+            ? t('shipping.profileDeleted') || 'Profile deleted'
+            : itemToDelete.type === 'zone'
+              ? t('shipping.zoneDeleted') || 'Zone deleted'
+              : t('shippingConfig.deleteSuccess') || 'Shipping option deleted',
+      });
+    } else {
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('common.deleteFailed') || 'Failed to delete',
+        variant: 'destructive',
+      });
+    }
+
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+    setSelectedProfileId(null);
+  }, [
+    itemToDelete,
+    deleteProfile,
+    deleteOption,
+    isUsingProfiles,
+    selectedProfileId,
+    profiles,
+    updateProfile,
+    toast,
+    t,
+  ]);
+
+  // 加载骨架屏
+  const LoadingSkeleton = () => (
+    <VStack gap="md">
+      {[1, 2].map(i => (
+        <Card key={i} className="p-4">
+          <HStack justify="between" align="start">
+            <VStack gap="xs" className="flex-1">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-24" />
+            </VStack>
+            <HStack gap="xs">
+              <Skeleton className="h-8 w-8 rounded" />
+              <Skeleton className="h-8 w-8 rounded" />
+            </HStack>
+          </HStack>
+        </Card>
+      ))}
+    </VStack>
+  );
+
+  // 空状态组件
+  const EmptyState = () => (
+    <Card className="p-6">
+      <VStack gap="lg">
+        <VStack gap="xs" align="center" className="text-center">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+            <Truck className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium text-foreground">
+            {t('shippingConfig.noOptions') || 'No shipping options'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t('shippingConfig.noOptionsDesc') ||
+              'Add shipping options to enable physical product delivery'}
+          </p>
+        </VStack>
+
+        <Button onClick={handleCreateProfile} className="w-full">
+          <FolderOpen className="w-4 h-4 mr-2" />
+          {t('shipping.createProfile') || 'Create Shipping Profile'}
+        </Button>
+
+        <div className="w-full">
+          <p className="text-xs text-muted-foreground text-center mb-3">
+            {t('shipping.orUseTemplate') || 'Or start with a template:'}
+          </p>
+          <ShippingTemplateSelector currency="USD" onSelect={handleSelectTemplate} />
+        </div>
+      </VStack>
+    </Card>
+  );
+
+  // 迁移提示组件
+  const MigrationBanner = () => (
+    <Card className="p-4 mb-4 border-primary/30 bg-primary/5">
+      <HStack gap="md" align="start">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5 text-primary" />
+        </div>
+        <VStack gap="xs" className="flex-1">
+          <p className="font-medium text-foreground">
+            {t('shipping.upgradeToProfiles') || 'Upgrade to Shipping Profiles'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t('shipping.upgradeDesc') ||
+              'Organize your shipping options into profiles for better product management.'}
+          </p>
+          <Button size="sm" onClick={handleMigrate} disabled={isSaving} className="mt-2 w-fit">
+            {isSaving ? (
+              t('common.migrating') || 'Migrating...'
+            ) : (
+              <>
+                {t('shipping.migrateNow') || 'Migrate Now'}
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </Button>
+        </VStack>
+      </HStack>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* 标题和添加按钮 */}
+      <HStack justify="between" align="center">
+        {isLoading ? (
+          <Skeleton className="h-5 w-24" />
+        ) : (
+          <h3 className="text-base font-semibold">
+            {t('shipping.shippingProfiles') || 'Shipping Profiles'}
+          </h3>
+        )}
+        {!isLoading && isUsingProfiles && profiles.length > 0 && (
+          <Button onClick={handleCreateProfile} size="sm">
+            <Plus className="w-4 h-4 mr-1" />
+            {t('shipping.addProfile') || 'Add Profile'}
+          </Button>
+        )}
+      </HStack>
+
+      {/* 迁移提示 - 仅在加载完成后且不使用档案模式时显示 */}
+      {!isLoading && !isUsingProfiles && legacyOptions.length > 0 && <MigrationBanner />}
+
+      {/* 内容区域 */}
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : isUsingProfiles ? (
+        profiles.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <VStack gap="lg">
+            {profiles.map(profile => {
+              const isExpanded = expandedProfiles.has(profile.profileId);
+              return (
+                <div key={profile.profileId} className="space-y-0">
+                  <ShippingProfileCard
+                    profile={profile}
+                    onRename={async newName => {
+                      return await updateProfile(profile.profileId, { ...profile, name: newName });
+                    }}
+                    onDelete={() => handleDeleteProfileClick(profile)}
+                    onSetDefault={() => handleSetDefaultProfile(profile.profileId)}
+                    disabled={isSaving}
+                    expanded={isExpanded}
+                    onToggleExpand={() => toggleProfileExpand(profile.profileId)}
+                  />
+                  {/* 档案内的配送区域 - 可展开/折叠 */}
+                  {isExpanded && (
+                    <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
+                      {(profile.zones?.length || 0) > 0 ? (
+                        (profile.zones || []).map(zone => (
+                          <ShippingZoneCard
+                            key={zone.id}
+                            zone={zone}
+                            onEdit={() => {
+                              setSelectedProfileId(profile.profileId);
+                              setEditingZone(zone);
+                              setShowZoneForm(true);
+                            }}
+                            onDelete={() => handleDeleteZoneClick(zone, profile.profileId)}
+                            disabled={isSaving}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground py-2">
+                          {t('shipping.noZonesDesc') ||
+                            'Add shipping zones to define delivery regions and rates'}
+                        </p>
+                      )}
+                      {/* 添加配送区域按钮 - 始终显示 */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-dashed"
+                        onClick={() => handleAddZone(profile.profileId)}
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        {t('shipping.addZone') || 'Add Shipping Zone'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </VStack>
+        )
+      ) : legacyOptions.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <VStack gap="md">
+          {legacyOptions.map(option => (
+            <ShippingOptionCard
+              key={option.id || option.name}
+              option={option}
+              onEdit={() => {
+                setEditingOption(option);
+                setShowForm(true);
+              }}
+              onDelete={() => handleDeleteOptionClick(option)}
+              disabled={isSaving}
+            />
+          ))}
+        </VStack>
+      )}
+
+      {/* 创建配送档案弹框 */}
+      <Dialog open={showProfileEditor} onOpenChange={setShowProfileEditor}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('shipping.createProfile') || 'Create Profile'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="profile-name">{t('shipping.profileName') || 'Profile Name'} *</Label>
+              <Input
+                id="profile-name"
+                value={profileName}
+                onChange={e => setProfileName(e.target.value)}
+                placeholder={t('shipping.profileNamePlaceholder') || 'e.g. Default Shipping'}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && profileName.trim()) {
+                    handleSaveProfile();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowProfileEditor(false)}
+              disabled={isSavingProfile}
+            >
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={isSavingProfile || !profileName.trim()}>
+              {isSavingProfile ? t('common.saving') || 'Saving...' : t('common.create') || 'Create'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 运费选项表单（旧版，用于传统选项） */}
+      <ShippingOptionForm
+        open={showForm}
+        onOpenChange={setShowForm}
+        initialOption={editingOption || undefined}
+        onSave={handleSaveOption}
+        mode={editingOption ? 'edit' : 'create'}
+      />
+
+      {/* 配送区域表单（新版） */}
+      <Dialog open={showZoneForm} onOpenChange={setShowZoneForm}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingZone
+                ? t('shipping.editZone') || 'Edit Shipping Zone'
+                : t('shipping.addZone') || 'Add Shipping Zone'}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {t('shipping.zoneFormDescription') || 'Configure shipping zone regions and rates'}
+            </DialogDescription>
+          </DialogHeader>
+          <ShippingZoneForm
+            zone={editingZone}
+            currency="USD"
+            onSave={handleSaveZone}
+            onCancel={() => {
+              setShowZoneForm(false);
+              setEditingZone(null);
+            }}
+            isSaving={isSaving}
+            hideHeader
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认弹窗 */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {itemToDelete?.type === 'profile'
+                ? t('shipping.deleteProfileTitle') || 'Delete Profile'
+                : itemToDelete?.type === 'zone'
+                  ? t('shipping.deleteZoneTitle') || 'Delete Zone'
+                  : t('shippingConfig.deleteConfirmTitle') || 'Delete Shipping Option'}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {t('shippingConfig.deleteConfirmDesc') || 'Are you sure you want to delete'} &quot;
+            {itemToDelete?.item?.name || ''}&quot;?
+          </p>
+          <HStack gap="sm" justify="end" className="mt-4">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isSaving}>
+              {isSaving ? t('common.deleting') || 'Deleting...' : t('common.delete') || 'Delete'}
+            </Button>
+          </HStack>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 // Chat Encryption Content
 const ChatEncryptionContent: React.FC = () => {
   const { t } = useI18n();
@@ -2409,31 +3015,42 @@ interface SettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialSection?: SettingsSection;
+  currentSection?: SettingsSection;
+  onSectionChange?: (section: SettingsSection) => void;
 }
 
 export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   open,
   onOpenChange,
   initialSection = 'main',
+  currentSection: externalCurrentSection,
+  onSectionChange,
 }) => {
   const { t } = useI18n();
-  const [currentSection, setCurrentSection] = useState<SettingsSection>(initialSection);
+  const [internalSection, setInternalSection] = useState<SettingsSection>(initialSection);
   const [navigationStack, setNavigationStack] = useState<SettingsSection[]>([]);
 
-  // Reset when opening
+  // 使用外部传入的 section 或内部状态
+  const currentSection = externalCurrentSection ?? internalSection;
+  const setCurrentSection = onSectionChange ?? setInternalSection;
+
+  // Reset navigation stack when opening (但不重置 section，因为可能由外部控制)
   React.useEffect(() => {
     if (open) {
-      setCurrentSection(initialSection);
       setNavigationStack([]);
+      // 只有在没有外部控制时才重置为 initialSection
+      if (!externalCurrentSection) {
+        setInternalSection(initialSection);
+      }
     }
-  }, [open, initialSection]);
+  }, [open, initialSection, externalCurrentSection]);
 
   const _navigateTo = useCallback(
     (section: SettingsSection) => {
       setNavigationStack(prev => [...prev, currentSection]);
       setCurrentSection(section);
     },
-    [currentSection]
+    [currentSection, setCurrentSection]
   );
 
   const goBack = useCallback(() => {
@@ -2444,7 +3061,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
     } else {
       setCurrentSection('main');
     }
-  }, [navigationStack]);
+  }, [navigationStack, setCurrentSection]);
 
   const getSectionTitle = (section: SettingsSection): string => {
     const item = settingsMenuItems.find(i => i.id === section);
@@ -2456,6 +3073,11 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
       if (child) return t(child.labelKey);
     }
 
+    // 特殊处理不在菜单中的 section
+    if (section === 'shipping') {
+      return t('settingsExtended.shippingOptions') || 'Shipping Options';
+    }
+
     return t('settings.title');
   };
 
@@ -2463,7 +3085,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   const _isInSubmenu =
     currentSection.startsWith('accessControl.') || currentSection === 'accessControl';
   const showBackInContent =
-    currentSection.startsWith('accessControl.') && currentSection !== 'accessControl';
+    (currentSection.startsWith('accessControl.') && currentSection !== 'accessControl') ||
+    currentSection === 'shipping'; // 从 store 进入 shipping 时显示返回按钮
 
   // 获取当前显示的内容区 section
   const getContentSection = () => {
@@ -2499,6 +3122,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         return <BlockedContent />;
       case 'moderation':
         return <ModerationContent />;
+      case 'shipping':
+        return <ShippingContent />;
       case 'chatEncryption':
         return <ChatEncryptionContent />;
       default:
@@ -2636,6 +3261,7 @@ const sectionToRoute: Record<SettingsSection, string> = {
   account: '/settings/account',
   page: '/settings/page-profile',
   store: '/settings/store',
+  shipping: '/settings/store/shipping',
   accessControl: '/settings/access-control',
   'accessControl.privacy': '/settings/access-control/privacy',
   'accessControl.userGroups': '/settings/access-control/user-groups',
@@ -2710,7 +3336,12 @@ export const SettingsDrawerProvider: React.FC<SettingsDrawerProviderProps> = ({ 
   );
 
   const goBack = useCallback(() => {
-    setCurrentSection('main');
+    // 处理子页面的返回逻辑
+    setCurrentSection(prev => {
+      if (prev === 'shipping') return 'store'; // shipping 返回到 store
+      if (prev.startsWith('accessControl.')) return 'accessControl';
+      return 'main';
+    });
   }, []);
 
   // 关闭弹框并导航到指定页面（用于复杂操作需要跳转到独立页面时）
@@ -2742,7 +3373,13 @@ export const SettingsDrawerProvider: React.FC<SettingsDrawerProviderProps> = ({ 
       }}
     >
       {children}
-      <SettingsDrawer open={isOpen} onOpenChange={setIsOpen} initialSection={initialSection} />
+      <SettingsDrawer
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        initialSection={initialSection}
+        currentSection={currentSection}
+        onSectionChange={setCurrentSection}
+      />
     </SettingsDrawerContext.Provider>
   );
 };

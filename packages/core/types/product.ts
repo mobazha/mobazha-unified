@@ -1,4 +1,5 @@
 import type { Image, Price, CryptoType } from './common';
+import type { ShippingProfile } from './shippingConfig';
 
 /**
  * 商品分类
@@ -48,7 +49,10 @@ export interface Product {
   vendorID: VendorID;
   metadata: ProductMetadata;
   item: ProductItem;
+  /** @deprecated 旧版配送选项，保留以向后兼容 */
   shippingOptions?: ShippingOption[];
+  /** Shopify 风格配送档案（新版） */
+  shippingProfile?: ShippingProfile;
   taxes?: Tax[];
   coupons?: Coupon[];
   moderators?: string[];

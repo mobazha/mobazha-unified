@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -20,15 +21,25 @@ import {
   useShippingOptions,
   useShippingProfiles,
   createEmptyProfile,
+  generateId,
 } from '@mobazha/core';
-import type { ShippingOptionSetting, ShippingProfile } from '@mobazha/core';
-import { ChevronLeft, Plus, Truck, FolderOpen, Sparkles, ArrowRight } from 'lucide-react';
+import type {
+  ShippingOptionConfig,
+  ShippingProfile,
+  ShippingZone,
+  ShippingLocation,
+} from '@mobazha/core';
+import { ChevronLeft, Plus, Truck, FolderOpen, Sparkles, ArrowRight, MapPin } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
 import {
   ShippingOptionCard,
   ShippingOptionForm,
   ShippingTemplateSelector,
   ShippingProfileCard,
+  ShippingZoneCard,
+  ShippingZoneForm,
+  ShippingLocationCard,
+  ShippingLocationForm,
 } from '@/components/Shipping';
 
 /**
@@ -38,7 +49,7 @@ function EmptyState({
   onSelectTemplate,
   onCreateProfile,
 }: {
-  onSelectTemplate: (option: ShippingOptionSetting) => void;
+  onSelectTemplate: (option: ShippingOptionConfig) => void;
   onCreateProfile: () => void;
 }) {
   const { t } = useI18n();
@@ -183,6 +194,9 @@ function ProfileEditor({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('shipping.createProfile') || 'Create Profile'}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('shipping.createProfileDescription') || 'Create a new shipping profile'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -236,6 +250,7 @@ export default function ShippingOptionsPage() {
   // 配送档案 hook
   const {
     profiles,
+    locations,
     isLoading: profilesLoading,
     isSaving: profilesSaving,
     isUsingProfiles,
@@ -244,6 +259,9 @@ export default function ShippingOptionsPage() {
     deleteProfile,
     setDefaultProfile,
     migrateToProfiles,
+    addLocation,
+    updateLocation,
+    deleteLocation,
     refetch: refetchProfiles,
   } = useShippingProfiles();
 
@@ -253,16 +271,24 @@ export default function ShippingOptionsPage() {
   // 配送档案创建状态（编辑通过内联进行）
   const [showProfileEditor, setShowProfileEditor] = useState(false);
 
-  // 传统运费选项表单状态
+  // 传统运费选项表单状态（保留用于迁移）
   const [showForm, setShowForm] = useState(false);
-  const [editingOption, setEditingOption] = useState<ShippingOptionSetting | null>(null);
+  const [editingOption, setEditingOption] = useState<ShippingOptionConfig | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+
+  // 新版 Zone 表单状态
+  const [showZoneForm, setShowZoneForm] = useState(false);
+  const [editingZone, setEditingZone] = useState<ShippingZone | null>(null);
+
+  // Location 表单状态
+  const [showLocationForm, setShowLocationForm] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<ShippingLocation | null>(null);
 
   // 删除确认状态
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{
-    type: 'profile' | 'option';
-    item: ShippingProfile | ShippingOptionSetting;
+    type: 'profile' | 'option' | 'zone' | 'location';
+    item: ShippingProfile | ShippingOptionConfig | ShippingZone | ShippingLocation;
   } | null>(null);
 
   // 展开/折叠状态 - 记录哪些档案被展开
@@ -331,65 +357,101 @@ export default function ShippingOptionsPage() {
     }
   }, [migrateToProfiles, toast, t]);
 
-  // 处理模板选择（创建带模板的档案）
+  // 处理模板选择（创建带模板的档案）- 转换为新的 Zone 格式
   const handleSelectTemplate = useCallback(
-    async (option: ShippingOptionSetting) => {
-      // 如果还没有档案，先创建一个默认档案
+    async (option: ShippingOptionConfig) => {
+      // 转换 ShippingOptionConfig 为 ShippingZone
+      const zone: ShippingZone = {
+        id: generateId(),
+        name: option.name,
+        regions: option.regions || [],
+        rates:
+          option.services?.map(service => ({
+            id: generateId(),
+            name: service.name,
+            price: service.firstFreight || '0',
+            currency: option.currency || 'USD',
+            estimatedDelivery: service.estimatedDelivery || '',
+          })) || [],
+      };
+
       if (!isUsingProfiles) {
         const newProfile = createEmptyProfile(true);
         newProfile.name = t('shipping.defaultProfileName') || 'Default Shipping';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        newProfile.options = [option as any];
+        newProfile.zones = [zone];
         await addProfile(newProfile);
       } else {
-        // 添加到默认档案
-        setEditingOption(option);
-        setShowForm(true);
+        setEditingZone(zone);
+        setShowZoneForm(true);
       }
     },
     [isUsingProfiles, addProfile, t]
   );
 
-  // 添加运费选项到档案
+  // 添加运费选项到档案（旧版，保留用于传统选项）
   const handleAddOption = useCallback((profileId: string) => {
     setSelectedProfileId(profileId);
     setEditingOption(null);
     setShowForm(true);
   }, []);
 
-  // 保存运费选项
+  // 添加配送区域到档案（新版）
+  const handleAddZone = useCallback((profileId: string) => {
+    setSelectedProfileId(profileId);
+    setEditingZone(null);
+    setShowZoneForm(true);
+  }, []);
+
+  // 保存运费选项（旧版，用于传统选项迁移）
   const handleSaveOption = useCallback(
-    async (option: ShippingOptionSetting): Promise<boolean> => {
-      if (isUsingProfiles && selectedProfileId) {
-        // 更新档案中的运费选项
-        const profile = profiles.find(p => p.profileId === selectedProfileId);
-        if (profile) {
-          const updatedOptions = editingOption
-            ? profile.options.map(o => (o.name === editingOption.name ? option : o))
-            : [...profile.options, option];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return await updateProfile(selectedProfileId, { options: updatedOptions as any });
-        }
-        return false;
-      } else {
-        // 传统模式
+    async (option: ShippingOptionConfig): Promise<boolean> => {
+      if (!isUsingProfiles) {
         if (editingOption?.id) {
           return await updateOption(editingOption.id, option);
         } else {
           return await addOption(option);
         }
       }
+      return false;
     },
-    [
-      isUsingProfiles,
-      selectedProfileId,
-      profiles,
-      editingOption,
-      updateOption,
-      addOption,
-      updateProfile,
-    ]
+    [isUsingProfiles, editingOption, updateOption, addOption]
   );
+
+  // 保存配送区域（新版）
+  const handleSaveZone = useCallback(
+    async (zone: ShippingZone): Promise<boolean> => {
+      if (!selectedProfileId) return false;
+
+      const profile = profiles.find(p => p.profileId === selectedProfileId);
+      if (!profile) return false;
+
+      const currentZones = profile.zones || [];
+      const updatedZones = editingZone
+        ? currentZones.map(z => (z.id === editingZone.id ? zone : z))
+        : [...currentZones, zone];
+
+      const success = await updateProfile(selectedProfileId, { zones: updatedZones });
+      if (success) {
+        setShowZoneForm(false);
+        setEditingZone(null);
+        toast({
+          title: t('common.success') || 'Success',
+          description: editingZone
+            ? t('shipping.zoneUpdated') || 'Zone updated'
+            : t('shipping.zoneAdded') || 'Zone added',
+        });
+      }
+      return success;
+    },
+    [selectedProfileId, profiles, editingZone, updateProfile, toast, t]
+  );
+
+  // 删除区域确认（新版）
+  const handleDeleteZoneClick = useCallback((zone: ShippingZone, profileId: string) => {
+    setItemToDelete({ type: 'zone', item: zone });
+    setSelectedProfileId(profileId);
+    setShowDeleteConfirm(true);
+  }, []);
 
   // 确认删除
   const handleConfirmDelete = useCallback(async () => {
@@ -398,25 +460,23 @@ export default function ShippingOptionsPage() {
     let success = false;
     if (itemToDelete.type === 'profile') {
       success = await deleteProfile((itemToDelete.item as ShippingProfile).profileId);
-    } else {
-      // 在配送档案模式下，需要从 profile 中删除选项
-      if (isUsingProfiles && selectedProfileId) {
+    } else if (itemToDelete.type === 'zone') {
+      // 删除配送区域
+      if (selectedProfileId) {
         const profile = profiles.find(p => p.profileId === selectedProfileId);
         if (profile) {
-          const optionToDelete = itemToDelete.item as ShippingOptionSetting;
-          const updatedOptions = profile.options.filter(
-            opt =>
-              opt.name !== optionToDelete.name ||
-              opt.regions?.join(',') !== optionToDelete.regions?.join(',')
-          );
-          success = await updateProfile(selectedProfileId, {
-            ...profile,
-            options: updatedOptions,
-          });
+          const zoneToDelete = itemToDelete.item as ShippingZone;
+          const updatedZones = (profile.zones || []).filter(z => z.id !== zoneToDelete.id);
+          success = await updateProfile(selectedProfileId, { zones: updatedZones });
         }
-      } else {
-        // 传统模式
-        success = await deleteOption((itemToDelete.item as ShippingOptionSetting).id!);
+      }
+    } else if (itemToDelete.type === 'location') {
+      // 删除发货地点
+      success = await deleteLocation((itemToDelete.item as ShippingLocation).id);
+    } else {
+      // 传统模式删除选项
+      if (!isUsingProfiles) {
+        success = await deleteOption((itemToDelete.item as ShippingOptionConfig).id!);
       }
     }
 
@@ -426,7 +486,11 @@ export default function ShippingOptionsPage() {
         description:
           itemToDelete.type === 'profile'
             ? t('shipping.profileDeleted') || 'Profile deleted'
-            : t('shippingConfig.deleteSuccess') || 'Shipping option deleted',
+            : itemToDelete.type === 'zone'
+              ? t('shipping.zoneDeleted') || 'Zone deleted'
+              : itemToDelete.type === 'location'
+                ? t('shipping.locationDeleted') || 'Location deleted'
+                : t('shippingConfig.deleteSuccess') || 'Shipping option deleted',
       });
     } else {
       toast({
@@ -443,6 +507,7 @@ export default function ShippingOptionsPage() {
     itemToDelete,
     deleteProfile,
     deleteOption,
+    deleteLocation,
     isUsingProfiles,
     selectedProfileId,
     profiles,
@@ -452,10 +517,69 @@ export default function ShippingOptionsPage() {
   ]);
 
   // 删除传统运费选项
-  const handleDeleteLegacyOption = useCallback((option: ShippingOptionSetting) => {
+  const handleDeleteLegacyOption = useCallback((option: ShippingOptionConfig) => {
     setItemToDelete({ type: 'option', item: option });
     setShowDeleteConfirm(true);
   }, []);
+
+  // ============== 发货地点操作 ==============
+
+  // 添加发货地点
+  const handleAddLocation = useCallback(() => {
+    setEditingLocation(null);
+    setShowLocationForm(true);
+  }, []);
+
+  // 编辑发货地点
+  const handleEditLocation = useCallback((location: ShippingLocation) => {
+    setEditingLocation(location);
+    setShowLocationForm(true);
+  }, []);
+
+  // 保存发货地点
+  const handleSaveLocation = useCallback(
+    async (location: ShippingLocation): Promise<boolean> => {
+      let success = false;
+      if (editingLocation) {
+        success = await updateLocation(editingLocation.id, location);
+      } else {
+        success = await addLocation(location);
+      }
+
+      if (success) {
+        setShowLocationForm(false);
+        setEditingLocation(null);
+        toast({
+          title: t('common.success') || 'Success',
+          description: editingLocation
+            ? t('shipping.locationUpdated') || 'Location updated'
+            : t('shipping.locationCreated') || 'Location created',
+        });
+      }
+      return success;
+    },
+    [editingLocation, updateLocation, addLocation, toast, t]
+  );
+
+  // 删除发货地点确认
+  const handleDeleteLocationClick = useCallback((location: ShippingLocation) => {
+    setItemToDelete({ type: 'location', item: location });
+    setShowDeleteConfirm(true);
+  }, []);
+
+  // 设为默认发货地点
+  const handleSetDefaultLocation = useCallback(
+    async (locationId: string) => {
+      const success = await updateLocation(locationId, { isDefault: true });
+      if (success) {
+        toast({
+          title: t('common.success') || 'Success',
+          description: t('shipping.defaultLocationSet') || 'Default location updated',
+        });
+      }
+    },
+    [updateLocation, toast, t]
+  );
 
   return (
     <div>
@@ -517,38 +641,38 @@ export default function ShippingOptionsPage() {
                     expanded={isExpanded}
                     onToggleExpand={() => toggleProfileExpand(profile.profileId)}
                   />
-                  {/* 档案内的运费选项 - 可展开/折叠 */}
-                  {isExpanded && profile.options.length > 0 && (
+                  {/* 档案内的配送区域 - 可展开/折叠 */}
+                  {isExpanded && (
                     <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
-                      {profile.options.map((option, idx) => (
-                        <ShippingOptionCard
-                          key={idx}
-                          option={option as ShippingOptionSetting}
-                          onEdit={() => {
-                            setSelectedProfileId(profile.profileId);
-                            setEditingOption(option as ShippingOptionSetting);
-                            setShowForm(true);
-                          }}
-                          onDelete={() => {
-                            setItemToDelete({
-                              type: 'option',
-                              item: option as ShippingOptionSetting,
-                            });
-                            setSelectedProfileId(profile.profileId);
-                            setShowDeleteConfirm(true);
-                          }}
-                          disabled={isSaving}
-                        />
-                      ))}
-                      {/* 添加运费选项按钮 - 放在展开区域内 */}
+                      {(profile.zones?.length || 0) > 0 ? (
+                        (profile.zones || []).map(zone => (
+                          <ShippingZoneCard
+                            key={zone.id}
+                            zone={zone}
+                            onEdit={() => {
+                              setSelectedProfileId(profile.profileId);
+                              setEditingZone(zone);
+                              setShowZoneForm(true);
+                            }}
+                            onDelete={() => handleDeleteZoneClick(zone, profile.profileId)}
+                            disabled={isSaving}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground py-2">
+                          {t('shipping.noZonesDesc') ||
+                            'Add shipping zones to define delivery regions and rates'}
+                        </p>
+                      )}
+                      {/* 添加配送区域按钮 - 放在展开区域内 */}
                       <Button
                         variant="outline"
                         size="sm"
                         className="w-full border-dashed"
-                        onClick={() => handleAddOption(profile.profileId)}
+                        onClick={() => handleAddZone(profile.profileId)}
                       >
                         <Plus className="w-3.5 h-3.5 mr-1" />
-                        {t('shipping.addOptionToProfile') || 'Add Shipping Option'}
+                        {t('shipping.addZone') || 'Add Shipping Zone'}
                       </Button>
                     </div>
                   )}
@@ -577,6 +701,53 @@ export default function ShippingOptionsPage() {
         </VStack>
       )}
 
+      {/* 发货地点管理区域 - 仅在档案模式下显示 */}
+      {isUsingProfiles && (
+        <div className="mt-8 pt-8 border-t">
+          <HStack justify="between" align="center" className="mb-4">
+            <HStack gap="sm" align="center">
+              <MapPin className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-base font-semibold">
+                {t('shipping.shippingLocations') || 'Shipping Locations'}
+              </h2>
+            </HStack>
+            <Button onClick={handleAddLocation} size="sm" variant="outline">
+              <Plus className="w-4 h-4 mr-1" />
+              {t('shipping.addLocation') || 'Add Location'}
+            </Button>
+          </HStack>
+
+          {locations.length === 0 ? (
+            <Card className="p-6">
+              <VStack gap="sm" align="center" className="text-center">
+                <MapPin className="w-10 h-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {t('shipping.noLocationsDesc') ||
+                    'Add shipping locations to define where products ship from'}
+                </p>
+                <Button onClick={handleAddLocation} variant="outline" size="sm">
+                  <Plus className="w-4 h-4 mr-1" />
+                  {t('shipping.addLocation') || 'Add Location'}
+                </Button>
+              </VStack>
+            </Card>
+          ) : (
+            <VStack gap="md">
+              {locations.map(location => (
+                <ShippingLocationCard
+                  key={location.id}
+                  location={location}
+                  onEdit={() => handleEditLocation(location)}
+                  onDelete={() => handleDeleteLocationClick(location)}
+                  onSetDefault={() => handleSetDefaultLocation(location.id)}
+                  disabled={isSaving}
+                />
+              ))}
+            </VStack>
+          )}
+        </div>
+      )}
+
       {/* 创建配送档案弹框 */}
       <ProfileEditor
         open={showProfileEditor}
@@ -585,7 +756,7 @@ export default function ShippingOptionsPage() {
         isLoading={isSaving}
       />
 
-      {/* 运费选项表单 */}
+      {/* 运费选项表单（旧版，用于传统选项） */}
       <ShippingOptionForm
         open={showForm}
         onOpenChange={setShowForm}
@@ -594,6 +765,49 @@ export default function ShippingOptionsPage() {
         mode={editingOption ? 'edit' : 'create'}
       />
 
+      {/* 配送区域表单（新版） */}
+      <Dialog open={showZoneForm} onOpenChange={setShowZoneForm}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingZone
+                ? t('shipping.editZone') || 'Edit Shipping Zone'
+                : t('shipping.addZone') || 'Add Shipping Zone'}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {t('shipping.zoneFormDescription') || 'Configure shipping zone regions and rates'}
+            </DialogDescription>
+          </DialogHeader>
+          <ShippingZoneForm
+            zone={editingZone}
+            currency="USD"
+            onSave={handleSaveZone}
+            onCancel={() => {
+              setShowZoneForm(false);
+              setEditingZone(null);
+            }}
+            isSaving={isSaving}
+            hideHeader
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* 发货地点表单 */}
+      <Dialog open={showLocationForm} onOpenChange={setShowLocationForm}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <ShippingLocationForm
+            location={editingLocation}
+            onSave={handleSaveLocation}
+            onCancel={() => {
+              setShowLocationForm(false);
+              setEditingLocation(null);
+            }}
+            isSaving={isSaving}
+            showDefaultOption={locations.length > 0}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* 删除确认弹窗 */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-sm">
@@ -601,7 +815,11 @@ export default function ShippingOptionsPage() {
             <DialogTitle>
               {itemToDelete?.type === 'profile'
                 ? t('shipping.deleteProfileTitle') || 'Delete Profile'
-                : t('shippingConfig.deleteConfirmTitle') || 'Delete Shipping Option'}
+                : itemToDelete?.type === 'zone'
+                  ? t('shipping.deleteZone') || 'Delete Shipping Zone'
+                  : itemToDelete?.type === 'location'
+                    ? t('shipping.deleteLocation') || 'Delete Location'
+                    : t('shippingConfig.deleteConfirmTitle') || 'Delete Shipping Option'}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">

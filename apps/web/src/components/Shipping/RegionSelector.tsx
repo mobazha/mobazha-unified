@@ -3,6 +3,12 @@
 /**
  * RegionSelector - 多选国家/地区选择器
  * 支持选择多个配送地区，包括"全球"选项
+ *
+ * UX 改进:
+ * - 使用复选框显示选中状态，更直观
+ * - 在弹窗顶部显示选择摘要
+ * - 添加"全选"功能
+ * - 已选地区用勾选标记清晰展示
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -11,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -96,6 +103,12 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
     [value, isWorldwide, onChange]
   );
 
+  // 全选所有国家
+  const selectAllCountries = useCallback(() => {
+    const allCodes = countryOptions.map(c => c.code);
+    onChange(allCodes);
+  }, [countryOptions, onChange]);
+
   // 移除单个地区
   const removeRegion = useCallback(
     (code: string) => {
@@ -132,6 +145,13 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
 
   const remainingCount = isWorldwide ? 0 : Math.max(0, value.length - maxDisplay);
 
+  // 计算选中的国家数量（不包含 ALL）
+  const selectedCountryCount = isWorldwide
+    ? countryOptions.length
+    : value.filter(c => c !== WORLDWIDE_CODE).length;
+  const totalCountryCount = countryOptions.length;
+  const isAllSelected = !isWorldwide && value.length === totalCountryCount;
+
   return (
     <div className="space-y-2">
       {/* 已选择的地区标签 */}
@@ -166,14 +186,14 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             <span className="text-muted-foreground">
               {value.length === 0
                 ? placeholder || t('shipping.selectRegions') || 'Select regions...'
-                : `${value.length} ${t('shipping.regionsSelected') || 'region(s) selected'}`}
+                : `${selectedCountryCount} ${t('shipping.regionsSelected') || 'region(s) selected'}`}
             </span>
             <ChevronDown className="w-4 h-4 opacity-50" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('shipping.selectRegions') || 'Select Regions'}</DialogTitle>
+            <DialogTitle>{t('shipping.selectRegions') || 'Select Regions...'}</DialogTitle>
           </DialogHeader>
 
           {/* 搜索框 */}
@@ -189,20 +209,32 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
 
           <ScrollArea className="h-[350px] pr-4">
             {/* 全球选项 */}
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={toggleWorldwide}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleWorldwide();
+                }
+              }}
               className={cn(
-                'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors mb-2',
+                'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors mb-2 cursor-pointer',
                 isWorldwide && 'bg-primary/10'
               )}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={isWorldwide}
+                  onCheckedChange={toggleWorldwide}
+                  onClick={e => e.stopPropagation()}
+                />
                 <Globe className="w-5 h-5 text-primary" />
                 <span className="font-medium">{t('shipping.worldwide') || 'Worldwide'}</span>
               </div>
               {isWorldwide && <Check className="w-4 h-4 text-primary" />}
-            </button>
+            </div>
 
             <div className="border-t my-2" />
 
@@ -212,22 +244,37 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
                 <p className="text-xs text-muted-foreground px-3 py-2 font-medium">
                   {t('shipping.popularCountries') || 'Popular Countries'}
                 </p>
-                {POPULAR_COUNTRIES.slice(0, 8).map(code => {
+                {POPULAR_COUNTRIES.slice(0, 5).map(code => {
                   const name = getCountryName(code, language) || code;
                   const isSelected = !isWorldwide && value.includes(code);
                   return (
-                    <button
-                      key={code}
-                      type="button"
+                    <div
+                      key={`popular-${code}`}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleCountry(code)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleCountry(code);
+                        }
+                      }}
                       className={cn(
-                        'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors',
+                        'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer',
                         isSelected && 'bg-primary/10'
                       )}
                     >
-                      <span>{name}</span>
-                      {isSelected && <Check className="w-4 h-4 text-primary" />}
-                    </button>
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={isSelected || isWorldwide}
+                          disabled={isWorldwide}
+                          onCheckedChange={() => toggleCountry(code)}
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <span>{name}</span>
+                      </div>
+                      {(isSelected || isWorldwide) && <Check className="w-4 h-4 text-primary" />}
+                    </div>
                   );
                 })}
                 <div className="border-t my-2" />
@@ -241,18 +288,33 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             {filteredCountries.map(country => {
               const isSelected = !isWorldwide && value.includes(country.code);
               return (
-                <button
+                <div
                   key={country.code}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => toggleCountry(country.code)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleCountry(country.code);
+                    }
+                  }}
                   className={cn(
-                    'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors',
+                    'w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer',
                     isSelected && 'bg-primary/10'
                   )}
                 >
-                  <span>{country.name}</span>
-                  {isSelected && <Check className="w-4 h-4 text-primary" />}
-                </button>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={isSelected || isWorldwide}
+                      disabled={isWorldwide}
+                      onCheckedChange={() => toggleCountry(country.code)}
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <span>{country.name}</span>
+                  </div>
+                  {(isSelected || isWorldwide) && <Check className="w-4 h-4 text-primary" />}
+                </div>
               );
             })}
 
@@ -263,11 +325,23 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             )}
           </ScrollArea>
 
-          {/* 底部操作 */}
-          <div className="flex justify-between pt-2 border-t">
-            <Button variant="ghost" onClick={() => onChange([])} disabled={value.length === 0}>
-              {t('common.clearAll') || 'Clear All'}
-            </Button>
+          {/* 底部操作 - 显示选择统计和操作按钮 */}
+          <div className="flex items-center justify-between pt-2 border-t">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onChange([])}
+                disabled={value.length === 0}
+              >
+                {t('common.clearAll') || 'Clear All'}
+              </Button>
+              {!isWorldwide && !isAllSelected && (
+                <Button variant="ghost" size="sm" onClick={selectAllCountries}>
+                  {t('common.selectAll') || 'Select All'}
+                </Button>
+              )}
+            </div>
             <Button onClick={() => setOpen(false)}>{t('common.done') || 'Done'}</Button>
           </div>
         </DialogContent>

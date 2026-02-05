@@ -30,8 +30,8 @@ import {
   useI18n,
   useLocalCurrency,
   FIAT_CURRENCIES,
-  type ShippingOptionSetting,
-  type ShippingServiceSetting,
+  type ShippingOptionConfig,
+  type ShippingServiceConfig,
 } from '@mobazha/core';
 import { RegionSelector } from './RegionSelector';
 import { ServiceEditor } from './ServiceEditor';
@@ -49,7 +49,7 @@ const SERVICE_TYPES = [
 ] as const;
 
 // 创建空服务
-const createEmptyService = (): ShippingServiceSetting => ({
+const createEmptyService = (): ShippingServiceConfig => ({
   name: '',
   estimatedDelivery: '',
   startWeight: 0,
@@ -62,7 +62,7 @@ const createEmptyService = (): ShippingServiceSetting => ({
 });
 
 // 创建空配送选项
-const createEmptyOption = (currency: string): ShippingOptionSetting => ({
+const createEmptyOption = (currency: string): ShippingOptionConfig => ({
   name: '',
   type: 'FIXED_PRICE',
   currency,
@@ -74,8 +74,8 @@ const createEmptyOption = (currency: string): ShippingOptionSetting => ({
 interface ShippingOptionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialOption?: ShippingOptionSetting;
-  onSave: (option: ShippingOptionSetting) => Promise<boolean>;
+  initialOption?: ShippingOptionConfig;
+  onSave: (option: ShippingOptionConfig) => Promise<boolean>;
   mode?: 'create' | 'edit';
 }
 
@@ -91,7 +91,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
   const { localCurrency } = useLocalCurrency();
 
   // 表单状态
-  const [option, setOption] = useState<ShippingOptionSetting>(
+  const [option, setOption] = useState<ShippingOptionConfig>(
     () => initialOption || createEmptyOption(localCurrency)
   );
   const [isSaving, setIsSaving] = useState(false);
@@ -112,7 +112,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
 
   // 更新基本字段
   const updateField = useCallback(
-    <K extends keyof ShippingOptionSetting>(field: K, value: ShippingOptionSetting[K]) => {
+    <K extends keyof ShippingOptionConfig>(field: K, value: ShippingOptionConfig[K]) => {
       setOption(prev => ({ ...prev, [field]: value }));
       // 清除对应的错误
       if (errors[field]) {
@@ -127,7 +127,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
   );
 
   // 更新服务
-  const updateService = useCallback((index: number, service: ShippingServiceSetting) => {
+  const updateService = useCallback((index: number, service: ShippingServiceConfig) => {
     setOption(prev => ({
       ...prev,
       services: prev.services.map((s, i) => (i === index ? service : s)),

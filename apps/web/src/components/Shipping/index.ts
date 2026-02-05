@@ -13,3 +13,15 @@ export { ShippingComparison } from './ShippingComparison';
 export { ShippingProfileSelector } from './ShippingProfileSelector';
 export { ShippingProfileCard } from './ShippingProfileCard';
 export type { ShippingProfileCardProps } from './ShippingProfileCard';
+
+// 新版 Shopify 风格组件
+export { ShippingZoneCard } from './ShippingZoneCard';
+export type { ShippingZoneCardProps } from './ShippingZoneCard';
+export { ShippingZoneForm } from './ShippingZoneForm';
+export type { ShippingZoneFormProps } from './ShippingZoneForm';
+
+// 发货地点组件
+export { ShippingLocationCard } from './ShippingLocationCard';
+export type { ShippingLocationCardProps } from './ShippingLocationCard';
+export { ShippingLocationForm } from './ShippingLocationForm';
+export type { ShippingLocationFormProps } from './ShippingLocationForm';
