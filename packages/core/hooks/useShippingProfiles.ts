@@ -98,6 +98,15 @@ function migrateOptionToZone(option: ShippingOptionConfig): ShippingZone {
 }
 
 /**
+ * 检查 profiles 是否有效（至少有一个 zone 有实际数据）
+ */
+function hasValidProfileData(profiles: ShippingProfile[]): boolean {
+  if (!profiles || profiles.length === 0) return false;
+  // 检查是否有任何 profile 包含 zones
+  return profiles.some(p => p.zones && p.zones.length > 0);
+}
+
+/**
  * 创建空的配送档案
  */
 export function createEmptyProfile(isDefault = false): ShippingProfile {
@@ -120,8 +129,14 @@ export function useShippingProfiles() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 是否使用配送档案模式
-  const isUsingProfiles = useMemo(() => profiles.length > 0, [profiles]);
+  // 是否使用配送档案模式（有有效的配送数据，而非空的 profile）
+  const isUsingProfiles = useMemo(() => hasValidProfileData(profiles), [profiles]);
+
+  // 是否需要迁移（有旧版数据且没有有效的新版数据）
+  const needsMigration = useMemo(
+    () => legacyOptions.length > 0 && !hasValidProfileData(profiles),
+    [legacyOptions, profiles]
+  );
 
   // 是否有多个发货地点（渐进式 UI）
   const hasMultipleLocations = useMemo(() => locations.length > 1, [locations]);
@@ -142,15 +157,35 @@ export function useShippingProfiles() {
       }
 
       // 加载配送档案
-      if (settings?.shippingProfiles && settings.shippingProfiles.length > 0) {
-        const normalizedProfiles = settings.shippingProfiles.map(normalizeProfileRegions);
-        setProfiles(normalizedProfiles);
-        setLegacyOptions([]);
-      } else if (settings?.shippingOptions && settings.shippingOptions.length > 0) {
-        // 有旧版数据，保存用于迁移提示
+      const profilesData = settings?.shippingProfiles ?? [];
+      const legacyData = settings?.shippingOptions ?? [];
+      const hasProfiles = profilesData.length > 0;
+      const hasLegacy = legacyData.length > 0;
+
+      if (hasProfiles) {
+        const normalizedProfiles = profilesData.map(normalizeProfileRegions);
+        const hasValidData = hasValidProfileData(normalizedProfiles);
+
+        if (hasValidData) {
+          // 有有效的新版数据，使用 profiles 模式
+          setProfiles(normalizedProfiles);
+          setLegacyOptions([]);
+        } else if (hasLegacy) {
+          // profiles 存在但为空，且有旧版数据 → 需要迁移
+          // 保留空的 profiles（以便迁移后合并），同时设置 legacyOptions
+          setProfiles(normalizedProfiles);
+          setLegacyOptions(legacyData);
+        } else {
+          // profiles 为空，也没有旧版数据
+          setProfiles(normalizedProfiles);
+          setLegacyOptions([]);
+        }
+      } else if (hasLegacy) {
+        // 没有新版数据，有旧版数据 → 需要迁移
         setProfiles([]);
-        setLegacyOptions(settings.shippingOptions);
+        setLegacyOptions(legacyData);
       } else {
+        // 都没有
         setProfiles([]);
         setLegacyOptions([]);
       }
@@ -447,34 +482,68 @@ export function useShippingProfiles() {
 
   const migrateFromLegacy = useCallback(
     async (profileName = '默认配送', locationName = '默认发货地点') => {
-      if (isUsingProfiles || legacyOptions.length === 0) {
+      // 如果没有需要迁移的旧版数据，直接返回
+      if (legacyOptions.length === 0) {
+        return false;
+      }
+
+      // 如果已经有有效的新版数据，不需要迁移
+      if (hasValidProfileData(profiles)) {
         return false;
       }
 
       // 迁移配送选项为配送区域
       const zones = legacyOptions.map(migrateOptionToZone);
 
-      const defaultProfile: ShippingProfile = {
-        profileId: generateUUID(),
-        name: profileName,
-        isDefault: true,
-        zones,
-      };
+      // 如果已存在空的 profile，合并到第一个 profile 中
+      // 否则创建新的 profile
+      let migratedProfile: ShippingProfile;
 
-      // 创建默认发货地点
-      const defaultLocation: ShippingLocation = {
-        id: generateId(),
-        name: locationName,
-        isDefault: true,
-      };
+      const existingDefault = profiles.find(p => p.isDefault) || profiles[0];
+      if (existingDefault) {
+        // 将迁移的 zones 合并到现有空 profile
+        migratedProfile = {
+          ...existingDefault,
+          name: existingDefault.name || profileName,
+          zones: [...(existingDefault.zones || []), ...zones],
+        };
+      } else {
+        // 创建新 profile
+        migratedProfile = {
+          profileId: generateUUID(),
+          name: profileName,
+          isDefault: true,
+          zones,
+        };
+      }
+
+      // 处理发货地点
+      let finalLocations: ShippingLocation[];
+      if (locations.length > 0) {
+        finalLocations = locations;
+      } else {
+        // 创建默认发货地点
+        finalLocations = [
+          {
+            id: generateId(),
+            name: locationName,
+            isDefault: true,
+          },
+        ];
+      }
 
       setIsSaving(true);
       setError(null);
 
       try {
+        // 构建最终的 profiles 列表
+        const finalProfiles = existingDefault
+          ? profiles.map(p => (p.profileId === existingDefault.profileId ? migratedProfile : p))
+          : [migratedProfile];
+
         const result = await profileApi.setSettings({
-          shippingProfiles: [defaultProfile],
-          shippingLocations: [defaultLocation],
+          shippingProfiles: finalProfiles,
+          shippingLocations: finalLocations,
         });
 
         if (result.error) {
@@ -491,7 +560,7 @@ export function useShippingProfiles() {
         setIsSaving(false);
       }
     },
-    [isUsingProfiles, legacyOptions, fetchData]
+    [profiles, locations, legacyOptions, fetchData]
   );
 
   // ============== 辅助函数 ==============
@@ -527,6 +596,7 @@ export function useShippingProfiles() {
     isSaving,
     error,
     isUsingProfiles,
+    needsMigration,
     hasMultipleLocations,
     defaultProfile,
     defaultLocation,
