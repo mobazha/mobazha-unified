@@ -5,6 +5,7 @@
 import { post, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
+import { getI18n } from '../../i18n/i18n';
 
 // 通知类型（简化分类）
 export type NotificationType =
@@ -218,90 +219,142 @@ const mockNotifications: Notification[] = [
 ];
 
 /**
- * 生成通知标题
+ * 生成通知标题（支持 i18n）
  */
 function generateNotificationTitle(
   type: string,
   notification: BackendNotificationRecord['notification']
 ): string {
+  const { t } = getI18n();
+
   switch (type) {
     case 'newOrder':
-      return 'New Order';
+      return t('notifications.titles.newOrder');
     case 'orderFunded':
     case 'orderPaymentReceived':
-      return 'Payment Received';
+      return t('notifications.titles.paymentReceived');
     case 'orderConfirmation':
-      return 'Order Confirmed';
+      return t('notifications.titles.orderConfirmed');
     case 'orderDeclined':
-      return 'Order Declined';
+      return t('notifications.titles.orderDeclined');
     case 'orderCancel':
-      return 'Order Cancelled';
+      return t('notifications.titles.orderCancelled');
     case 'refund':
-      return 'Refund Received';
+      return t('notifications.titles.refundReceived');
     case 'orderFulfillment':
-      return 'Order Fulfilled';
+      return t('notifications.titles.orderFulfilled');
     case 'orderCompletion':
-      return 'Order Completed';
+      return t('notifications.titles.orderCompleted');
     case 'vendorFinalizedPayment':
-      return 'Payment Finalized';
+      return t('notifications.titles.paymentFinalized');
     case 'disputeOpen':
     case 'caseOpen':
-      return 'Dispute Opened';
+      return t('notifications.titles.disputeOpened');
     case 'disputeClose':
-      return 'Dispute Resolved';
+      return t('notifications.titles.disputeResolved');
     case 'disputeAccepted':
-      return 'Dispute Accepted';
+      return t('notifications.titles.disputeAccepted');
     case 'caseUpdate':
-      return 'Case Update';
+      return t('notifications.titles.caseUpdate');
     case 'follow':
-      return 'New Follower';
+      return t('notifications.titles.newFollower');
     case 'unfollow':
-      return 'Unfollowed';
+      return t('notifications.titles.unfollowed');
     case 'moderatorAdd':
-      return 'Moderator Added';
+      return t('notifications.titles.moderatorAdded');
     case 'moderatorRemove':
-      return 'Moderator Removed';
+      return t('notifications.titles.moderatorRemoved');
     default:
       return notification.title || type;
   }
 }
 
 /**
- * 生成通知消息
+ * 生成通知消息（支持 i18n）
  */
 function generateNotificationMessage(
   type: string,
   notification: BackendNotificationRecord['notification']
 ): string {
+  const { t } = getI18n();
   const orderId = notification.orderID || notification.orderId || '';
   const vendorHandle = notification.vendorHandle || '';
   const buyerHandle = notification.buyerHandle || '';
+  const shortOrderId = orderId ? orderId.slice(0, 8) : '';
 
   switch (type) {
     case 'newOrder':
       return orderId
-        ? `You received a new order #${orderId.slice(0, 8)}`
-        : 'You received a new order';
+        ? t('notifications.messages.newOrderWithId', { orderId: shortOrderId })
+        : t('notifications.messages.newOrderNoId');
     case 'orderFunded':
     case 'orderPaymentReceived':
-      return orderId ? `Payment received for order #${orderId.slice(0, 8)}` : 'Payment received';
+      return orderId
+        ? t('notifications.messages.paymentReceivedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.paymentReceivedNoId');
     case 'orderConfirmation':
-      return orderId ? `Order #${orderId.slice(0, 8)} has been confirmed` : 'Order confirmed';
+      return orderId
+        ? t('notifications.messages.orderConfirmedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderConfirmedNoId');
+    case 'orderDeclined':
+      return orderId
+        ? t('notifications.messages.orderDeclinedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderDeclinedNoId');
+    case 'orderCancel':
+      return orderId
+        ? t('notifications.messages.orderCancelledWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderCancelledNoId');
+    case 'refund':
+      return orderId
+        ? t('notifications.messages.refundReceivedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.refundReceivedNoId');
     case 'orderFulfillment':
-      return orderId ? `Order #${orderId.slice(0, 8)} has been shipped` : 'Order shipped';
+      return orderId
+        ? t('notifications.messages.orderShippedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderShippedNoId');
     case 'orderCompletion':
-      return orderId ? `Order #${orderId.slice(0, 8)} is complete` : 'Order completed';
+      return orderId
+        ? t('notifications.messages.orderCompleteWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderCompleteNoId');
+    case 'vendorFinalizedPayment':
+      return orderId
+        ? t('notifications.messages.paymentFinalizedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.paymentFinalizedNoId');
     case 'disputeOpen':
     case 'caseOpen':
       return orderId
-        ? `A dispute has been opened for order #${orderId.slice(0, 8)}`
-        : 'A dispute has been opened';
+        ? t('notifications.messages.disputeOpenedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.disputeOpenedNoId');
+    case 'disputeClose':
+      return orderId
+        ? t('notifications.messages.disputeResolvedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.disputeResolvedNoId');
+    case 'disputeAccepted':
+      return orderId
+        ? t('notifications.messages.disputeAcceptedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.disputeAcceptedNoId');
+    case 'caseUpdate':
+      return orderId
+        ? t('notifications.messages.caseUpdateWithId', { orderId: shortOrderId })
+        : t('notifications.messages.caseUpdateNoId');
     case 'follow':
-      return buyerHandle ? `${buyerHandle} started following you` : 'Someone started following you';
+      return buyerHandle
+        ? t('notifications.messages.followedBy', { name: buyerHandle })
+        : t('notifications.messages.followedBySomeone');
     case 'unfollow':
-      return buyerHandle ? `${buyerHandle} unfollowed you` : 'Someone unfollowed you';
+      return buyerHandle
+        ? t('notifications.messages.unfollowedBy', { name: buyerHandle })
+        : t('notifications.messages.unfollowedBySomeone');
+    case 'moderatorAdd':
+      return buyerHandle
+        ? t('notifications.messages.moderatorAddedBy', { name: buyerHandle })
+        : t('notifications.messages.moderatorAddedBySomeone');
+    case 'moderatorRemove':
+      return buyerHandle
+        ? t('notifications.messages.moderatorRemovedBy', { name: buyerHandle })
+        : t('notifications.messages.moderatorRemovedBySomeone');
     default:
-      return vendorHandle || buyerHandle || 'Notification';
+      return vendorHandle || buyerHandle || t('notifications.messages.defaultNotification');
   }
 }
 
