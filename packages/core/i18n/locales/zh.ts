@@ -2529,6 +2529,7 @@ export const zh: TranslationResource = {
     zoneAdded: '配送区域已添加',
     noZones: '暂无配送区域',
     noZonesDesc: '添加配送区域以定义配送地区和运费',
+    viewZones: '查看配送区域',
     // 运费费率
     shippingRates: '运费费率',
     rate: '费率',

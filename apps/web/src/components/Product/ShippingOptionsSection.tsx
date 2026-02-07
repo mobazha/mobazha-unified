@@ -15,187 +15,106 @@ import {
 import {
   useI18n,
   useCurrency,
+  fromMinimalUnit,
   getCountryName,
   POPULAR_COUNTRIES,
   isSpecialRegion,
   isValidShippingRegion,
 } from '@mobazha/core';
-import type { ShippingOption } from '@mobazha/core';
+import type { ShippingOption, ShippingProfile } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
 export interface ShippingOptionsSectionProps {
-  /** 配送选项数据 */
+  /** @deprecated 旧版配送选项数据 */
   shippingOptions?: ShippingOption[];
+  /** 新版配送档案数据（优先使用） */
+  shippingProfile?: ShippingProfile;
   /** 商品定价货币代码 */
   pricingCurrency?: string;
   /** 自定义样式 */
   className?: string;
 }
 
-/**
- * 配送选项区块组件
- *
- * 显示商品的配送选项，包括目的地选择器和配送服务表格。
- *
- * @example
- * <ShippingOptionsSection
- *   shippingOptions={product.shippingOptions}
- *   pricingCurrency="USD"
- * />
- */
-export const ShippingOptionsSection = memo(function ShippingOptionsSection({
-  shippingOptions,
-  pricingCurrency = 'USD',
-  className,
-}: ShippingOptionsSectionProps) {
-  const { t, locale } = useI18n();
-  const { formatPrice, fromMinimalUnit } = useCurrency();
+// ─── 新版 Profile 渲染 ───────────────────────────────────────────────
 
-  /**
-   * 获取地区显示名称（支持多语言）
-   * getCountryName 已支持多种格式（ISO代码、下划线格式等）
-   */
+interface ProfileViewProps {
+  profile: ShippingProfile;
+  pricingCurrency: string;
+  className?: string;
+}
+
+/**
+ * 基于新版 ShippingProfile (Profile → Zone → Rate) 渲染配送选项
+ */
+const ProfileShippingView = memo(function ProfileShippingView({
+  profile,
+  pricingCurrency,
+  className,
+}: ProfileViewProps) {
+  const { t, locale } = useI18n();
+  const { formatPrice } = useCurrency();
+
+  const zones = useMemo(() => profile.zones || [], [profile.zones]);
+
+  /** 获取地区本地化名称 */
   const getRegionDisplayName = useCallback(
     (region: string): string => {
-      // 特殊处理：全球（使用翻译）
       if (region === 'ALL' || region === 'WORLDWIDE') {
         return t('product.worldwide');
       }
-      // 使用 i18n-iso-countries 获取本地化名称
       return getCountryName(region, locale);
     },
     [locale, t]
   );
 
-  // 提取所有可用地区（去重），过滤无效区域，智能排序
+  /** 所有可用地区（去重、过滤、排序） */
   const allRegions = useMemo(() => {
-    if (!shippingOptions || shippingOptions.length === 0) return [];
-
     const regionSet = new Set<string>();
-    shippingOptions.forEach(option => {
-      option.regions.forEach(region => regionSet.add(region));
+    zones.forEach(zone => {
+      zone.regions.forEach(r => regionSet.add(r));
     });
 
-    // 过滤掉无效的区域代码（如旧数据中的 "SUCRE" 等非标准代码）
-    const regions = Array.from(regionSet).filter(region => isValidShippingRegion(region));
+    const regions = Array.from(regionSet).filter(r => isValidShippingRegion(r));
 
-    // 智能排序：特殊区域 > 热门国家 > 其他（按本地化名称）
     return regions.sort((a, b) => {
-      const aUpper = a.toUpperCase();
-      const bUpper = b.toUpperCase();
-
-      // 1. 特殊区域（ALL/WORLDWIDE, 大洲）放最前面
-      const aIsSpecial = isSpecialRegion(aUpper);
-      const bIsSpecial = isSpecialRegion(bUpper);
-      if (aIsSpecial && !bIsSpecial) return -1;
-      if (!aIsSpecial && bIsSpecial) return 1;
-      // ALL/WORLDWIDE 最优先
-      if (aUpper === 'ALL' || aUpper === 'WORLDWIDE') return -1;
-      if (bUpper === 'ALL' || bUpper === 'WORLDWIDE') return 1;
-
-      // 2. 热门国家优先
-      const aIsPopular = POPULAR_COUNTRIES.includes(aUpper);
-      const bIsPopular = POPULAR_COUNTRIES.includes(bUpper);
-      if (aIsPopular && !bIsPopular) return -1;
-      if (!aIsPopular && bIsPopular) return 1;
-      // 热门国家内部按热门顺序排序
-      if (aIsPopular && bIsPopular) {
-        return POPULAR_COUNTRIES.indexOf(aUpper) - POPULAR_COUNTRIES.indexOf(bUpper);
-      }
-
-      // 3. 其他国家按本地化名称排序
-      const nameA = getRegionDisplayName(a);
-      const nameB = getRegionDisplayName(b);
-      return nameA.localeCompare(nameB, locale);
+      const aU = a.toUpperCase();
+      const bU = b.toUpperCase();
+      const aSpec = isSpecialRegion(aU);
+      const bSpec = isSpecialRegion(bU);
+      if (aSpec && !bSpec) return -1;
+      if (!aSpec && bSpec) return 1;
+      if (aU === 'ALL' || aU === 'WORLDWIDE') return -1;
+      if (bU === 'ALL' || bU === 'WORLDWIDE') return 1;
+      const aPop = POPULAR_COUNTRIES.includes(aU);
+      const bPop = POPULAR_COUNTRIES.includes(bU);
+      if (aPop && !bPop) return -1;
+      if (!aPop && bPop) return 1;
+      if (aPop && bPop) return POPULAR_COUNTRIES.indexOf(aU) - POPULAR_COUNTRIES.indexOf(bU);
+      return getRegionDisplayName(a).localeCompare(getRegionDisplayName(b), locale);
     });
-  }, [shippingOptions, locale, getRegionDisplayName]);
+  }, [zones, locale, getRegionDisplayName]);
 
-  // 当前选中的地区
   const [selectedRegion, setSelectedRegion] = useState<string>(allRegions[0] || 'ALL');
 
-  // 根据选中地区过滤配送选项
-  const filteredOptions = useMemo(() => {
-    if (!shippingOptions || shippingOptions.length === 0) return [];
+  /** 根据选中地区筛选匹配的 rates */
+  const matchedRates = useMemo(() => {
+    const result: { rate: (typeof zones)[0]['rates'][0]; zoneName: string }[] = [];
+    zones.forEach(zone => {
+      if (!zone.rates || zone.rates.length === 0) return;
+      const regionMatch =
+        zone.regions.includes(selectedRegion) ||
+        zone.regions.includes('ALL') ||
+        zone.regions.includes('WORLDWIDE');
+      if (regionMatch) {
+        zone.rates.forEach(rate => {
+          result.push({ rate, zoneName: zone.name });
+        });
+      }
+    });
+    return result;
+  }, [zones, selectedRegion]);
 
-    return shippingOptions.filter(
-      option => option.regions.includes(selectedRegion) || option.regions.includes('ALL')
-    );
-  }, [shippingOptions, selectedRegion]);
-
-  // 如果没有配送选项，不渲染
-  if (!shippingOptions || shippingOptions.length === 0) {
-    return null;
-  }
-
-  // 获取配送类型显示
-  const getShippingTypeDisplay = (type: string): React.ReactNode => {
-    if (type === 'LOCAL_PICKUP') {
-      return (
-        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
-          <MapPin className="w-3.5 h-3.5" />
-          {t('product.localPickup')}
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1">
-        <Truck className="w-3.5 h-3.5" />
-        {type.replace('_', ' ')}
-      </span>
-    );
-  };
-
-  /**
-   * 获取运费价格
-   * API 返回的实际字段是 firstFreight，但某些情况下可能使用 price
-   */
-  const getShippingPrice = (
-    service: ShippingOption['services'][0],
-    option: ShippingOption
-  ): number | undefined => {
-    // 本地自提免运费
-    if (option.type === 'LOCAL_PICKUP') {
-      return 0;
-    }
-
-    // 优先使用 firstFreight（API 实际返回的字段）
-    if (service.firstFreight !== undefined && service.firstFreight !== null) {
-      return service.firstFreight;
-    }
-
-    // 兼容 price 字段
-    if (service.price !== undefined && service.price !== null) {
-      return service.price;
-    }
-
-    return undefined;
-  };
-
-  /**
-   * 获取续件费
-   * API 返回的实际字段可能是 renewalUnitPrice 或 additionalItemPrice
-   */
-  const getAdditionalItemPrice = (service: ShippingOption['services'][0]): number | undefined => {
-    // 优先使用 renewalUnitPrice
-    if (service.renewalUnitPrice !== undefined && service.renewalUnitPrice > 0) {
-      return service.renewalUnitPrice;
-    }
-
-    // 兼容 additionalItemPrice 字段
-    if (service.additionalItemPrice !== undefined && service.additionalItemPrice > 0) {
-      return service.additionalItemPrice;
-    }
-
-    return undefined;
-  };
-
-  /**
-   * 获取用于价格格式化的货币代码
-   * 优先使用配送选项的货币，其次使用商品定价货币
-   */
-  const getServiceCurrency = (option: ShippingOption): string => {
-    return option.currency || pricingCurrency;
-  };
+  if (zones.length === 0) return null;
 
   return (
     <Card className={cn('p-4 sm:p-6', className)} data-testid="shipping-options-section">
@@ -207,7 +126,7 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
         </h2>
       </div>
 
-      {/* 目的地选择器 - 支持搜索 */}
+      {/* 目的地选择器 */}
       {allRegions.length > 1 && (
         <div className="flex items-center gap-3 mb-4">
           <span className="text-sm text-muted-foreground flex items-center gap-1.5">
@@ -229,7 +148,217 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
         </div>
       )}
 
-      {/* 配送服务表格 - 桌面端 */}
+      {/* 桌面端表格 - 无"续件费"列，无 type 标签 */}
+      <div className="hidden sm:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">{t('product.shippingService')}</TableHead>
+              <TableHead>{t('product.estimatedDelivery')}</TableHead>
+              <TableHead className="text-right">{t('product.shippingFee')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {matchedRates.map(({ rate }) => {
+              const currency = rate.currency || pricingCurrency || 'USD';
+              const price =
+                rate.price != null ? fromMinimalUnit(Number(rate.price) || 0, currency) : 0;
+
+              return (
+                <TableRow key={rate.id} className="hover:bg-muted/50 transition-colors">
+                  <TableCell className="font-medium">{rate.name}</TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground">{rate.estimatedDelivery || '-'}</span>
+                  </TableCell>
+                  <TableCell className="text-right min-w-[80px]">
+                    {price === 0 ? (
+                      <span className="text-primary font-medium">{t('product.freeShipping')}</span>
+                    ) : (
+                      <span className="font-medium">{formatPrice(price, currency)}</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* 移动端卡片 */}
+      <div className="sm:hidden space-y-3">
+        {matchedRates.map(({ rate }) => {
+          const currency = rate.currency || pricingCurrency || 'USD';
+          const price = rate.price != null ? fromMinimalUnit(Number(rate.price) || 0, currency) : 0;
+
+          return (
+            <div key={rate.id} className="p-3 rounded-lg bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="font-medium text-sm">{rate.name}</div>
+              </div>
+              {rate.estimatedDelivery && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t('product.estimatedDelivery')}</span>
+                  <span>{rate.estimatedDelivery}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t('product.shippingFee')}</span>
+                {price === 0 ? (
+                  <span className="text-primary font-medium">{t('product.freeShipping')}</span>
+                ) : (
+                  <span className="font-medium">{formatPrice(price, currency)}</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 无匹配 */}
+      {matchedRates.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p className="text-sm">{t('product.noShippingOptions')}</p>
+        </div>
+      )}
+    </Card>
+  );
+});
+
+// ─── 旧版 ShippingOption 渲染（向后兼容） ─────────────────────────────
+
+interface LegacyViewProps {
+  shippingOptions: ShippingOption[];
+  pricingCurrency: string;
+  className?: string;
+}
+
+/**
+ * 基于旧版 ShippingOption 渲染（向后兼容）
+ */
+const LegacyShippingView = memo(function LegacyShippingView({
+  shippingOptions,
+  pricingCurrency,
+  className,
+}: LegacyViewProps) {
+  const { t, locale } = useI18n();
+  const { formatPrice, fromMinimalUnit: fromMinUnit } = useCurrency();
+
+  const getRegionDisplayName = useCallback(
+    (region: string): string => {
+      if (region === 'ALL' || region === 'WORLDWIDE') {
+        return t('product.worldwide');
+      }
+      return getCountryName(region, locale);
+    },
+    [locale, t]
+  );
+
+  const allRegions = useMemo(() => {
+    const regionSet = new Set<string>();
+    shippingOptions.forEach(option => {
+      option.regions.forEach(region => regionSet.add(region));
+    });
+
+    const regions = Array.from(regionSet).filter(region => isValidShippingRegion(region));
+
+    return regions.sort((a, b) => {
+      const aU = a.toUpperCase();
+      const bU = b.toUpperCase();
+      const aSpec = isSpecialRegion(aU);
+      const bSpec = isSpecialRegion(bU);
+      if (aSpec && !bSpec) return -1;
+      if (!aSpec && bSpec) return 1;
+      if (aU === 'ALL' || aU === 'WORLDWIDE') return -1;
+      if (bU === 'ALL' || bU === 'WORLDWIDE') return 1;
+      const aPop = POPULAR_COUNTRIES.includes(aU);
+      const bPop = POPULAR_COUNTRIES.includes(bU);
+      if (aPop && !bPop) return -1;
+      if (!aPop && bPop) return 1;
+      if (aPop && bPop) return POPULAR_COUNTRIES.indexOf(aU) - POPULAR_COUNTRIES.indexOf(bU);
+      return getRegionDisplayName(a).localeCompare(getRegionDisplayName(b), locale);
+    });
+  }, [shippingOptions, locale, getRegionDisplayName]);
+
+  const [selectedRegion, setSelectedRegion] = useState<string>(allRegions[0] || 'ALL');
+
+  const filteredOptions = useMemo(() => {
+    return shippingOptions.filter(
+      option => option.regions.includes(selectedRegion) || option.regions.includes('ALL')
+    );
+  }, [shippingOptions, selectedRegion]);
+
+  const getShippingPrice = (
+    service: ShippingOption['services'][0],
+    option: ShippingOption
+  ): number | undefined => {
+    if (option.type === 'LOCAL_PICKUP') return 0;
+    if (service.firstFreight !== undefined && service.firstFreight !== null)
+      return service.firstFreight;
+    if (service.price !== undefined && service.price !== null) return service.price;
+    return undefined;
+  };
+
+  const getAdditionalItemPrice = (service: ShippingOption['services'][0]): number | undefined => {
+    if (service.renewalUnitPrice !== undefined && service.renewalUnitPrice > 0)
+      return service.renewalUnitPrice;
+    if (service.additionalItemPrice !== undefined && service.additionalItemPrice > 0)
+      return service.additionalItemPrice;
+    return undefined;
+  };
+
+  const getServiceCurrency = (option: ShippingOption): string => {
+    return option.currency || pricingCurrency;
+  };
+
+  const getShippingTypeDisplay = (type: string): React.ReactNode => {
+    if (type === 'LOCAL_PICKUP') {
+      return (
+        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+          <MapPin className="w-3.5 h-3.5" />
+          {t('product.localPickup')}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Truck className="w-3.5 h-3.5" />
+        {type.replace('_', ' ')}
+      </span>
+    );
+  };
+
+  return (
+    <Card className={cn('p-4 sm:p-6', className)} data-testid="shipping-options-section">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+          <Package className="w-5 h-5 text-muted-foreground" />
+          {t('product.shippingOptions')}
+        </h2>
+      </div>
+
+      {allRegions.length > 1 && (
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <MapPin className="w-4 h-4" />
+            {t('product.shipTo')}:
+          </span>
+          <SearchableSelect
+            value={selectedRegion}
+            onValueChange={setSelectedRegion}
+            options={allRegions.map(region => ({
+              value: region,
+              label: getRegionDisplayName(region),
+            }))}
+            placeholder={t('product.selectDestination')}
+            searchPlaceholder={t('common.search') || 'Search...'}
+            emptyText={t('common.noResults') || 'No results found'}
+            className="w-[200px]"
+          />
+        </div>
+      )}
+
+      {/* 桌面端 */}
       <div className="hidden sm:block">
         <Table>
           <TableHeader>
@@ -246,14 +375,13 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
                 const shippingPriceRaw = getShippingPrice(service, option);
                 const additionalPriceRaw = getAdditionalItemPrice(service);
                 const currency = getServiceCurrency(option);
-                // 将最小单位（如 cents）转换为标准单位（如 dollars）
                 const shippingPrice =
                   shippingPriceRaw !== undefined
-                    ? fromMinimalUnit(shippingPriceRaw, currency)
+                    ? fromMinUnit(shippingPriceRaw, currency)
                     : undefined;
                 const additionalPrice =
                   additionalPriceRaw !== undefined
-                    ? fromMinimalUnit(additionalPriceRaw, currency)
+                    ? fromMinUnit(additionalPriceRaw, currency)
                     : undefined;
 
                 return (
@@ -300,21 +428,18 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
         </Table>
       </div>
 
-      {/* 配送服务卡片 - 移动端 */}
+      {/* 移动端 */}
       <div className="sm:hidden space-y-3">
         {filteredOptions.map((option, optionIndex) =>
           option.services.map((service, serviceIndex) => {
             const shippingPriceRaw = getShippingPrice(service, option);
             const additionalPriceRaw = getAdditionalItemPrice(service);
             const currency = getServiceCurrency(option);
-            // 将最小单位（如 cents）转换为标准单位（如 dollars）
             const shippingPrice =
-              shippingPriceRaw !== undefined
-                ? fromMinimalUnit(shippingPriceRaw, currency)
-                : undefined;
+              shippingPriceRaw !== undefined ? fromMinUnit(shippingPriceRaw, currency) : undefined;
             const additionalPrice =
               additionalPriceRaw !== undefined
-                ? fromMinimalUnit(additionalPriceRaw, currency)
+                ? fromMinUnit(additionalPriceRaw, currency)
                 : undefined;
 
             return (
@@ -322,23 +447,18 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
                 key={`mobile-${optionIndex}-${serviceIndex}`}
                 className="p-3 rounded-lg bg-muted/30 space-y-2"
               >
-                {/* 服务名称 */}
                 <div className="flex items-center justify-between">
                   <div className="font-medium text-sm">{service.name || option.name}</div>
                   <div className="text-xs text-muted-foreground">
                     {getShippingTypeDisplay(option.type)}
                   </div>
                 </div>
-
-                {/* 预计送达 */}
                 {service.estimatedDelivery && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t('product.estimatedDelivery')}</span>
                     <span>{service.estimatedDelivery}</span>
                   </div>
                 )}
-
-                {/* 运费 */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t('product.shippingFee')}</span>
                   {shippingPrice === 0 ? (
@@ -351,8 +471,6 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
                     <span className="font-medium">{formatPrice(shippingPrice, currency)}</span>
                   )}
                 </div>
-
-                {/* 续件费 */}
                 {additionalPrice !== undefined && additionalPrice > 0 && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t('product.additionalItemFee')}</span>
@@ -365,7 +483,6 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
         )}
       </div>
 
-      {/* 无配送选项提示 */}
       {filteredOptions.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -374,6 +491,55 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
       )}
     </Card>
   );
+});
+
+// ─── 主组件：自动选择新/旧渲染器 ─────────────────────────────────────
+
+/**
+ * 配送选项区块组件
+ *
+ * 优先使用新版 ShippingProfile (Profile → Zone → Rate)；
+ * 如果没有 profile，降级使用旧版 ShippingOption（向后兼容）。
+ *
+ * @example
+ * <ShippingOptionsSection
+ *   shippingProfile={product.shippingProfile}
+ *   shippingOptions={product.shippingOptions}
+ *   pricingCurrency="USD"
+ * />
+ */
+export const ShippingOptionsSection = memo(function ShippingOptionsSection({
+  shippingProfile,
+  shippingOptions,
+  pricingCurrency = 'USD',
+  className,
+}: ShippingOptionsSectionProps) {
+  // 优先使用新版 ShippingProfile
+  const hasProfile = shippingProfile && shippingProfile.zones && shippingProfile.zones.length > 0;
+
+  if (hasProfile) {
+    return (
+      <ProfileShippingView
+        profile={shippingProfile}
+        pricingCurrency={pricingCurrency}
+        className={className}
+      />
+    );
+  }
+
+  // 降级使用旧版 ShippingOption
+  if (shippingOptions && shippingOptions.length > 0) {
+    return (
+      <LegacyShippingView
+        shippingOptions={shippingOptions}
+        pricingCurrency={pricingCurrency}
+        className={className}
+      />
+    );
+  }
+
+  // 都没有时不渲染
+  return null;
 });
 
 export default ShippingOptionsSection;

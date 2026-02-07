@@ -1796,6 +1796,7 @@ export interface TranslationResource {
     zoneAdded?: string;
     noZones?: string;
     noZonesDesc?: string;
+    viewZones?: string;
     // 运费费率
     shippingRates?: string;
     rate?: string;
