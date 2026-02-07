@@ -1,0 +1,223 @@
+---
+description: 货币格式化与显示规范 - 涉及价格、金额、货币相关代码时应用
+alwaysApply: false
+globs:
+  - "**/*.tsx"
+  - "**/*.ts"
+---
+
+# 货币格式化与显示规范
+
+## 核心原则
+
+Mobazha 支持多种法币和加密货币。所有价格显示必须使用 `@mobazha/core` 提供的统一货币服务，**禁止硬编码货币符号或本地定义格式化函数**。
+
+---
+
+## 严格禁止
+
+### 1. 禁止硬编码货币符号
+
+```tsx
+// ❌ 错误：硬编码 $ 符号
+<span>${price}</span>
+<span>${amount.toFixed(2)}</span>
+<span>{`$${value}`}</span>
+
+// ❌ 错误：条件判断货币符号
+{currency === 'USD' ? '$' : ''}{price}
+
+// ✅ 正确：使用 useCurrency() hook
+const { formatPrice } = useCurrency();
+<span>{formatPrice(price, currency)}</span>
+```
+
+### 2. 禁止在 `apps/` 中定义本地价格格式化或单位转换函数
+
+```tsx
+// ❌ 错误：本地定义格式化函数
+function formatPrice(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
+function formatFiatAmount(value: string, currency: string): string {
+  const symbols: Record<string, string> = { USD: '$', EUR: '€' };
+  return `${symbols[currency] || ''}${value}`;
+}
+
+// ❌ 错误：本地定义单位转换函数
+function formatPriceAmount(total: { amount: number; currency?: { divisibility?: number } }): string {
+  const normalAmount = total.amount / Math.pow(10, total.currency?.divisibility ?? 2);
+  return String(normalAmount);
+}
+
+// ✅ 正确：使用 @mobazha/core 的 useCurrency hook 和 fromMinimalUnit
+import { useCurrency, fromMinimalUnit } from '@mobazha/core';
+const { formatPrice, renderPairedPrice } = useCurrency();
+const standardAmount = fromMinimalUnit(minimalUnitAmount, currencyCode);
+```
+
+### 3. 禁止硬编码小数位数
+
+```tsx
+// ❌ 错误：硬编码 .toFixed(2) 用于所有货币
+<span>{price.toFixed(2)}</span>
+
+// ✅ 正确：不同货币有不同精度，由 formatPrice 自动处理
+<span>{formatPrice(price, currency)}</span>
+```
+
+---
+
+## 必须遵循
+
+### 1. 使用 `useCurrency()` Hook
+
+所有涉及价格显示的组件，必须使用 `@mobazha/core` 的 `useCurrency()` hook：
+
+```tsx
+import { useCurrency } from '@mobazha/core';
+
+function MyComponent() {
+  const { formatPrice, renderPairedPrice, formatLocalPrice } = useCurrency();
+
+  return (
+    <div>
+      {/* 单一货币格式化 */}
+      <span>{formatPrice(amount, currency)}</span>
+
+      {/* 配对价格（原始货币 + 本地货币） */}
+      <span>{renderPairedPrice(amount, currency)}</span>
+
+      {/* 转换为本地货币 */}
+      <span>{formatLocalPrice(amount, fromCurrency)}</span>
+    </div>
+  );
+}
+```
+
+### 2. 注意 `isMinimalUnit` 参数
+
+**重要**：`formatPrice` **不接受** `isMinimalUnit`，它始终期望**标准单位**金额。只有 `renderPairedPrice` 和 `formatLocalPrice` 支持 `isMinimalUnit`（默认 `true`）。
+
+```tsx
+// formatPrice 始终接收标准单位金额
+formatPrice(199.00, 'USD')  // → "$199.00"
+
+// renderPairedPrice / formatLocalPrice 默认假定最小单位
+renderPairedPrice(19900, 'USD')  // → "$199.00 (¥1,372.31)"
+
+// 如果金额已经是标准单位，需要显式指定
+renderPairedPrice(199.00, 'USD', { isMinimalUnit: false })  // → "$199.00 (¥1,372.31)"
+formatLocalPrice(199.00, 'USD', { isMinimalUnit: false })  // → "¥1,372.31"
+```
+
+### 3. 单位转换使用 `fromMinimalUnit`
+
+需要手动转换单位时，使用 `@mobazha/core` 的 `fromMinimalUnit`：
+
+```tsx
+import { fromMinimalUnit } from '@mobazha/core';
+
+// ❌ 错误：手动除以 100
+const displayPrice = apiPrice / 100;
+
+// ✅ 正确：使用核心函数（自动处理不同货币的精度）
+const displayPrice = fromMinimalUnit(apiPrice, currency);
+```
+
+### 4. 货币代码而非符号
+
+数据层应存储货币代码（如 `'USD'`、`'BTC'`、`'ETH'`），而非符号（如 `'$'`、`'€'`）：
+
+```tsx
+// ❌ 错误
+{ currency: '$', price: 199.99 }
+
+// ✅ 正确
+{ currency: 'USD', price: 199.99 }
+```
+
+---
+
+## API 与函数对照表
+
+| 场景 | 使用函数 | 示例 |
+|---|---|---|
+| 显示价格（带货币符号） | `formatPrice(amount, currency)` | `$199.00` |
+| 显示配对价格 | `renderPairedPrice(amount, currency)` | `$199.00 (¥1,372.31)` |
+| 仅显示本地货币价格 | `formatLocalPrice(amount, fromCurrency)` | `¥1,372.31` |
+| 最小单位 → 标准单位 | `fromMinimalUnit(amount, currency)` | `19900 → 199.00` |
+| 标准单位 → 最小单位 | `toMinimalUnit(amount, currency)` | `199.00 → 19900` |
+| 获取货币符号 | `getCurrencySymbol(code)` | `'USD' → '$'` |
+| RWA 价格格式化 | `formatRwaPrice(price, currency)` | `1.23 USDT` |
+
+---
+
+## 复合代币码与数据架构
+
+Mobazha 使用复合代币码（如 `ETHUSDT`、`BSCUSDC`、`BASEETH`）来标识不同链上的同一代币。
+
+### 数据源架构
+
+- **`packages/core/data/tokens.ts`** — 唯一数据源，定义所有代币（含链、精度、类型）
+- **`packages/core/data/currencies.ts`** — 自动从 `TOKENS` 推导复合代币的 `CRYPTO_CURRENCIES` 条目和 `TOKEN_TO_BASE_RATE` 映射
+
+### 新增币种/链
+
+新增代币或链时，**只需更新 `tokens.ts`** 中的 `TOKENS` 和 `CHAINS` 数组，`currencies.ts` 会自动生成对应条目。
+
+```tsx
+// ❌ 错误：手动在 currencies.ts 中添加复合代币条目
+CRYPTO_CURRENCIES.push({ code: 'NEWCHAINUSDT', symbol: '₮', decimals: 6, ... });
+
+// ✅ 正确：在 tokens.ts 中添加
+TOKENS.push({ id: 'NEWCHAINUSDT', token: 'USDT', chain: 'NEWCHAIN', decimals: 6, ... });
+// currencies.ts 会自动生成 CRYPTO_CURRENCIES 条目和 TOKEN_TO_BASE_RATE 映射
+```
+
+### 复合代币码的函数支持
+
+`getCurrencySymbol`、`getCurrencyDecimals`、`isCryptoCurrency` 等函数完全支持复合代币码：
+
+```tsx
+getCurrencySymbol('ETHUSDT')   // → '₮'
+getCurrencyDecimals('ETHUSDT') // → 6
+isCryptoCurrency('ETHUSDT')    // → true
+getBaseRateSymbol('ETHUSDT')   // → 'USDT'（用于汇率查询）
+```
+
+---
+
+## 检查方法
+
+```bash
+# 检查硬编码的 $ 符号（排除 CSS 模板字符串和正则）
+rg '\$\{[^}]*(price|amount|total|cost|fee|subtotal)' apps/web/src --include '*.tsx'
+
+# 检查本地格式化/单位转换函数
+rg 'function format(Price|FiatAmount|Currency|Amount)' apps/web/src
+rg 'Math\.pow\(10.*divisibility' apps/web/src
+
+# 检查 .toFixed(2) 用于价格显示
+rg '(price|amount|total|cost).*\.toFixed\(' apps/web/src --include '*.tsx'
+
+# 检查条件判断货币符号
+rg "=== 'USD' \? '\\\$'" apps/web/src
+
+# 检查 currencies.ts 中是否有不该手动添加的复合代币（应自动从 TOKENS 推导）
+rg "code: '(ETH|BSC|BASE|SOL|MATIC)" packages/core/data/currencies.ts
+```
+
+---
+
+## Code Review 检查清单
+
+- [ ] 没有硬编码的货币符号（`$`、`€`、`¥` 等）
+- [ ] 没有在 `apps/` 中定义的 `formatPrice` / `formatFiatAmount` / `formatPriceAmount` 等本地函数
+- [ ] 没有在 `apps/` 中手动进行 `Math.pow(10, divisibility)` 单位转换
+- [ ] 没有 `.toFixed(2)` 直接用于价格显示
+- [ ] `formatPrice` 不传 `isMinimalUnit`（它不支持）；`renderPairedPrice` / `formatLocalPrice` 根据数据源正确设置 `isMinimalUnit`
+- [ ] 货币代码使用标准 ISO 代码（如 `'USD'`、`'EUR'`）或 Mobazha 复合代币码（如 `'ETHUSDT'`）
+- [ ] 数据层使用货币代码而非货币符号
+- [ ] 新增币种/链只更新了 `tokens.ts`，没有手动在 `currencies.ts` 中添加复合代币条目

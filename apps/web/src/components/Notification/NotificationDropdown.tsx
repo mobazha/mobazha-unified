@@ -23,6 +23,7 @@ import {
   useNotifications,
   useUnreadNotificationCount,
   useI18n,
+  useCurrency,
   getNotificationRoute,
 } from '@mobazha/core';
 import type { Notification } from '@mobazha/core';
@@ -93,15 +94,6 @@ function truncatePeerId(peerId?: string): string {
 }
 
 /**
- * 格式化价格
- */
-function formatPrice(amount?: number): string {
-  if (amount === undefined) return '';
-  const value = amount / 100;
-  return `$${value.toFixed(2)}`;
-}
-
-/**
  * 通知项组件（增强版）
  */
 function NotificationItem({
@@ -115,6 +107,7 @@ function NotificationItem({
   onClick?: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
+  const { renderPairedPrice } = useCurrency();
   const icon = getNotificationIcon(notification.type);
   const route = getNotificationRoute(notification);
   const { data, read, timestamp, type, message } = notification;
@@ -191,7 +184,7 @@ function NotificationItem({
             <span className="text-xs text-text-tertiary truncate">{data.productTitle}</span>
             {data.price && (
               <span className="text-xs font-semibold text-primary flex-shrink-0">
-                {formatPrice(data.price.amount)}
+                {renderPairedPrice(data.price.amount, data.price.currencyCode || 'USD')}
               </span>
             )}
           </div>

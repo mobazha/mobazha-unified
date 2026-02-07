@@ -3,7 +3,7 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { Search, Plus, X, CheckCircle } from 'lucide-react';
 import type { BlockchainNetwork, RwaTokenInfo } from '@mobazha/core';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useCurrency } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,6 +152,7 @@ export function RwaTokenFields({
   className = '',
 }: RwaTokenFieldsProps) {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const [tokenSearchMode, setTokenSearchMode] = useState<'search' | 'address'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedToken, setSelectedToken] = useState<RwaTokenInfo | null>(null);
@@ -409,7 +410,9 @@ export function RwaTokenFields({
                 <span className="text-muted-foreground">
                   {t('listing.currentPrice') || '当前价格'}:
                 </span>
-                <span className="ml-2 font-medium">${selectedToken.currentPrice}</span>
+                <span className="ml-2 font-medium">
+                  {formatCurrencyPrice(selectedToken.currentPrice ?? 0, 'USD')}
+                </span>
               </div>
               <div>
                 <span className="text-muted-foreground">{t('listing.issuer') || '发行方'}:</span>

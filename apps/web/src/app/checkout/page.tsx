@@ -267,7 +267,7 @@ export default function CheckoutPage() {
           }
 
           // 转换为 CheckoutItem 格式
-          // 注意：productDataService.getProduct() 返回的 price 已经是转换后的值（不是最小单位）
+          // 注意：productDataService.getProduct() 返回的 price 是最小单位（如 cents for USD, satoshis for BTC）
           const price = Number(productData.item.price) || 0;
           const currency = productData.metadata?.pricingCurrency?.code || 'USD';
           const imageUrl =
@@ -380,7 +380,7 @@ export default function CheckoutPage() {
       const selectedZone = item.shippingZones.find(z => z.name === selection.zoneName);
       const selectedRate = selectedZone?.rates.find(r => r.name === selection.rateName);
       if (!selectedRate) return sum;
-      // 运费数据已经是最小单位（如 cents），保持最小单位与 subtotal 一致
+      // 运费数据是最小单位（如 cents），与 item.price / subtotal 单位一致
       const shippingPrice = selectedRate.price;
       const additionalPrice = selectedRate.additionalItemPrice || 0;
       const extraItems = Math.max(item.quantity - 1, 0);

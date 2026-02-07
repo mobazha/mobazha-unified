@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl } from './utils';
 import { Card } from '@/components/ui/card';
 import { Check, Package, CheckCircle } from 'lucide-react';
-import { useI18n, getChainFromCoin, getChainByEVMId } from '@mobazha/core';
+import { useI18n, useCurrency, getChainFromCoin, getChainByEVMId } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 export interface OrderStageCardProps {
@@ -142,19 +142,7 @@ export const PaymentCard = memo(function PaymentCard({
   showDivider = true,
 }: PaymentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
-
-  // 格式化法币金额显示
-  const formatFiatAmount = (value: string, curr: string) => {
-    const symbols: Record<string, string> = {
-      USD: '$',
-      EUR: '€',
-      GBP: '£',
-      CNY: '¥',
-      JPY: '¥',
-    };
-    const symbol = symbols[curr] || '';
-    return symbol ? `${symbol}${value}` : `${value} ${curr}`;
-  };
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
 
   // 判断是否有原始定价信息（与支付币种不同时显示）
   const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== currency;
@@ -200,7 +188,7 @@ export const PaymentCard = memo(function PaymentCard({
             {/* 原始定价（法币） */}
             {showPricingInfo && (
               <p className="text-sm sm:text-base font-semibold text-foreground">
-                {formatFiatAmount(pricingAmount, pricingCurrency)}
+                {formatCurrencyPrice(pricingAmount, pricingCurrency)}
               </p>
             )}
             {/* 实际支付（加密货币） */}

@@ -7,6 +7,7 @@ import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { useCurrency } from '@mobazha/core';
 
 export interface OrderItem {
   id: string;
@@ -149,6 +150,7 @@ const statusConfig = {
 };
 
 export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails, onContact }) => {
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const status = statusConfig[order.status];
 
   const formatDate = (dateString: string) => {
@@ -254,7 +256,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             <VStack gap="none">
               <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
               <span className="text-lg sm:text-xl font-bold text-foreground">
-                {order.total} {order.currency}
+                {formatCurrencyPrice(order.total, order.currency || 'USD')}
               </span>
             </VStack>
 

@@ -3,6 +3,7 @@
 import React from 'react';
 import { VStack, HStack } from '@/components/layouts';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { useCurrency } from '@mobazha/core';
 
 export interface Transaction {
   id: string;
@@ -30,6 +31,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   isLoading = false,
   onTransactionClick,
 }) => {
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
+
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -245,7 +248,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <HStack justify="between" align="center" className="mt-1">
               <span className="text-sm text-muted-foreground">{formatTime(tx.timestamp)}</span>
               <HStack gap="sm" align="center">
-                <span className="text-sm text-muted-foreground">${tx.amountUSD}</span>
+                <span className="text-sm text-muted-foreground">
+                  {formatCurrencyPrice(tx.amountUSD, 'USD')}
+                </span>
                 {getStatusBadge(tx.status)}
               </HStack>
             </HStack>

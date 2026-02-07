@@ -29,7 +29,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { useListingForm, useListing, useI18n, getGatewayUrl, productsApi } from '@mobazha/core';
+import {
+  useListingForm,
+  useListing,
+  useI18n,
+  useCurrency,
+  getGatewayUrl,
+  productsApi,
+} from '@mobazha/core';
 import type {
   ContractType,
   BlockchainNetwork,
@@ -100,6 +107,7 @@ export default function EditListingPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { toast } = useToast();
 
   // 加载现有商品数据
@@ -429,8 +437,8 @@ export default function EditListingPage() {
                       </h4>
                       <p className="text-primary font-bold mt-1">
                         {formData.price
-                          ? `${formData.pricingCurrency === 'USD' ? '$' : formData.pricingCurrency + ' '}${formData.price}`
-                          : '$0.00'}
+                          ? formatCurrencyPrice(formData.price, formData.pricingCurrency || 'USD')
+                          : formatCurrencyPrice(0, formData.pricingCurrency || 'USD')}
                       </p>
                     </div>
                   </Card>

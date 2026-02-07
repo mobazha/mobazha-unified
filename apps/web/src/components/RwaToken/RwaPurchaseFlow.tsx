@@ -15,6 +15,7 @@ import type { Order, PredefinedAsset } from '@mobazha/core';
 import {
   useI18n,
   useWallet,
+  useCurrency,
   resolveRwaAsset,
   UniversalSwapService,
   TradeMode,
@@ -100,6 +101,7 @@ export function RwaPurchaseFlow({
   className = '',
 }: RwaPurchaseFlowProps) {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const {
     isConnected,
     isConnecting,
@@ -617,7 +619,9 @@ export function RwaPurchaseFlow({
             <p className="text-sm text-muted-foreground">{resolvedAsset.typeName}</p>
           </div>
           <div className="text-right">
-            <p className="font-semibold text-primary">${orderAmount.toFixed(2)}</p>
+            <p className="font-semibold text-primary">
+              {formatCurrencyPrice(orderAmount, cryptoListingCurrencyCode || 'USDT')}
+            </p>
           </div>
         </div>
       )}
@@ -665,7 +669,9 @@ export function RwaPurchaseFlow({
                     <p className="text-xs text-muted-foreground">{resolvedAsset.typeName}</p>
                   </div>
                 </div>
-                <p className="font-semibold text-primary">${orderAmount.toFixed(2)}</p>
+                <p className="font-semibold text-primary">
+                  {formatCurrencyPrice(orderAmount, cryptoListingCurrencyCode || 'USDT')}
+                </p>
               </div>
             )}
 
