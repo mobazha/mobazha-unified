@@ -260,7 +260,7 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
                           `/settings/access-control/product-groups/${group.id}/authorization`
                         )
                       }
-                      className="block text-sm text-blue-600 hover:underline text-left"
+                      className="block text-sm text-info hover:underline text-left"
                     >
                       {t('settings.accessControl.configureAccess')} →
                     </button>
@@ -275,7 +275,7 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
                     </Link>
                     <Link
                       href={`/settings/access-control/product-groups/${group.id}/authorization`}
-                      className="block text-sm text-blue-600 hover:underline"
+                      className="block text-sm text-info hover:underline"
                     >
                       {t('settings.accessControl.configureAccess')} →
                     </Link>

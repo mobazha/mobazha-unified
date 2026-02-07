@@ -160,15 +160,15 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
   // 状态样式配置 - 使用更深的绿色确保浅色模式下清晰
   const statusConfig = {
     pending: {
-      color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+      color: 'bg-warning/15 text-warning',
       icon: <Clock className="w-3 h-3" />,
     },
     approved: {
-      color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300',
+      color: 'bg-success/15 text-success',
       icon: <CheckCircle className="w-3 h-3" />,
     },
     rejected: {
-      color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      color: 'bg-destructive/15 text-destructive',
       icon: <XCircle className="w-3 h-3" />,
     },
   };

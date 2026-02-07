@@ -93,7 +93,7 @@ export default function MarketplaceSellPage() {
           {/* Back Link */}
           <Link
             href={`/marketplace/${slug}`}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -129,7 +129,7 @@ export default function MarketplaceSellPage() {
                       value={profile.bio}
                       onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
                       rows={4}
-                      className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                       placeholder="Tell buyers about yourself and what you sell..."
                     />
                   </div>
@@ -220,7 +220,7 @@ export default function MarketplaceSellPage() {
                   value={applicationMessage}
                   onChange={e => setApplicationMessage(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   placeholder="I would like to join this marketplace because..."
                 />
               </Card>
@@ -240,8 +240,8 @@ export default function MarketplaceSellPage() {
                         onClick={() => toggleProduct(product.id)}
                         className={`p-3 rounded-lg border-2 text-left transition-all ${
                           selectedProducts.includes(product.id)
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-border hover:border-slate-300'
+                            ? 'border-success bg-success/8'
+                            : 'border-border hover:border-border'
                         }`}
                       >
                         <img
@@ -252,11 +252,11 @@ export default function MarketplaceSellPage() {
                         <p className="text-sm font-medium text-foreground line-clamp-1">
                           {product.title}
                         </p>
-                        <p className="text-sm text-emerald-600">
+                        <p className="text-sm text-success">
                           {formatCurrencyPrice(product.price, 'USD')}
                         </p>
                         {selectedProducts.includes(product.id) && (
-                          <div className="mt-2 flex items-center gap-1 text-emerald-600 text-sm">
+                          <div className="mt-2 flex items-center gap-1 text-success text-sm">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                               <path
                                 fillRule="evenodd"
@@ -272,7 +272,9 @@ export default function MarketplaceSellPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-slate-500 mb-4">You don&apos;t have any products yet.</p>
+                    <p className="text-muted-foreground mb-4">
+                      You don&apos;t have any products yet.
+                    </p>
                     <Link href="/listing/new">
                       <Button variant="outline">Create Your First Product</Button>
                     </Link>
@@ -295,7 +297,7 @@ export default function MarketplaceSellPage() {
                   <HStack justify="between">
                     <span className="text-muted-foreground">Profile Complete</span>
                     <span
-                      className={`font-medium ${profile.bio ? 'text-emerald-600' : 'text-amber-600'}`}
+                      className={`font-medium ${profile.bio ? 'text-success' : 'text-warning'}`}
                     >
                       {profile.bio ? 'Yes' : 'No'}
                     </span>
@@ -310,7 +312,7 @@ export default function MarketplaceSellPage() {
                   {isApplying ? 'Submitting...' : 'Submit Application'}
                 </Button>
 
-                <p className="text-xs text-slate-500 mt-4 text-center">
+                <p className="text-xs text-muted-foreground mt-4 text-center">
                   By applying, you agree to the marketplace&apos;s terms and conditions.
                 </p>
               </Card>
@@ -320,19 +322,19 @@ export default function MarketplaceSellPage() {
                 <h3 className="font-semibold text-foreground mb-4">What Happens Next?</h3>
                 <VStack gap="md" className="text-sm text-muted-foreground">
                   <HStack gap="sm" align="start">
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                    <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       1
                     </span>
                     <span>Your application will be reviewed by marketplace admins</span>
                   </HStack>
                   <HStack gap="sm" align="start">
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                    <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       2
                     </span>
                     <span>You&apos;ll receive a notification when approved</span>
                   </HStack>
                   <HStack gap="sm" align="start">
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                    <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       3
                     </span>
                     <span>Start listing and selling your products!</span>

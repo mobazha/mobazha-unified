@@ -126,10 +126,8 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
   // 如果没有账户且不在加载中，显示警告
   if (!isLoading && accounts.length === 0) {
     return (
-      <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
-        <p className="text-sm text-yellow-800 dark:text-yellow-200">
-          {t('order.fulfill.noReceivingAccount')}
-        </p>
+      <div className="p-3 rounded-lg bg-warning/15 border border-warning/20">
+        <p className="text-sm text-warning">{t('order.fulfill.noReceivingAccount')}</p>
       </div>
     );
   }

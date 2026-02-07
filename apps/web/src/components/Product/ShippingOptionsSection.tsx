@@ -314,7 +314,7 @@ const LegacyShippingView = memo(function LegacyShippingView({
   const getShippingTypeDisplay = (type: string): React.ReactNode => {
     if (type === 'LOCAL_PICKUP') {
       return (
-        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+        <span className="inline-flex items-center gap-1 text-warning">
           <MapPin className="w-3.5 h-3.5" />
           {t('product.localPickup')}
         </span>

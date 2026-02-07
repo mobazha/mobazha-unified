@@ -85,7 +85,7 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
             {/* 平均评分 */}
             <div className="text-center">
               <div className="flex items-center justify-center gap-2">
-                <span className="text-yellow-500 text-3xl sm:text-4xl">★</span>
+                <span className="text-warning text-3xl sm:text-4xl">★</span>
                 <span className="text-3xl sm:text-4xl font-bold text-foreground">
                   {average.toFixed(1)}
                 </span>

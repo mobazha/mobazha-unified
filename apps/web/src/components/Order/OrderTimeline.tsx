@@ -70,7 +70,7 @@ function StarRating({ rating, maxRating = 5 }: { rating: number; maxRating?: num
           className={cn(
             'w-3 h-3',
             i < rating
-              ? 'text-amber-400 fill-amber-400'
+              ? 'text-warning fill-warning'
               : 'text-muted-foreground/30 fill-muted-foreground/30'
           )}
           viewBox="0 0 24 24"
@@ -105,9 +105,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
         };
       case 'fulfilled':
         return {
-          icon: <Package className="w-3.5 h-3.5 text-blue-600" />,
+          icon: <Package className="w-3.5 h-3.5 text-info" />,
           title: 'Fulfilled',
-          bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+          bgColor: 'bg-info/15',
         };
       case 'accepted':
         return {
@@ -117,21 +117,21 @@ const TimelineItemRow = memo(function TimelineItemRow({
         };
       case 'disputed':
         return {
-          icon: <AlertCircle className="w-3.5 h-3.5 text-red-600" />,
+          icon: <AlertCircle className="w-3.5 h-3.5 text-error" />,
           title: 'Disputed',
-          bgColor: 'bg-red-100 dark:bg-red-900/30',
+          bgColor: 'bg-error/15',
         };
       case 'refunded':
         return {
-          icon: <RefreshCcw className="w-3.5 h-3.5 text-orange-600" />,
+          icon: <RefreshCcw className="w-3.5 h-3.5 text-warning" />,
           title: 'Refunded',
-          bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+          bgColor: 'bg-warning/15',
         };
       case 'decided':
         return {
-          icon: <CheckCircle className="w-3.5 h-3.5 text-purple-600" />,
+          icon: <CheckCircle className="w-3.5 h-3.5 text-primary" />,
           title: 'Decided',
-          bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+          bgColor: 'bg-primary/15',
         };
       case 'resolved':
         return {
@@ -245,7 +245,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
 
       case 'disputed':
         return (
-          <Card className="p-2.5 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 mt-1.5">
+          <Card className="p-2.5 bg-error/8 border-error/20 mt-1.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <span
@@ -257,9 +257,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
                   {icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                    Dispute opened
-                  </p>
+                  <p className="text-sm font-medium text-error">Dispute opened</p>
                   {data?.claim && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{data.claim}</p>
                   )}

@@ -94,9 +94,9 @@ export interface ProductCardProps {
 // 商品类型标签配置
 const contractTypeConfig: Record<ProductContractType, { label: string; color: string }> = {
   PHYSICAL_GOOD: { label: '', color: '' },
-  DIGITAL_GOOD: { label: 'Digital', color: 'bg-blue-500' },
+  DIGITAL_GOOD: { label: 'Digital', color: 'bg-info' },
   SERVICE: { label: 'Service', color: 'bg-primary' },
-  RWA_TOKEN: { label: 'RWA', color: 'bg-orange-500' },
+  RWA_TOKEN: { label: 'RWA', color: 'bg-warning' },
 };
 
 /**
@@ -230,7 +230,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Verified Moderator 盾牌 - 左上角 */}
         {hasVerifiedModerator && (
           <div className="absolute top-2 left-2 z-10" title="This listing has a verified moderator">
-            <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
+            <div className="w-7 h-7 rounded-full bg-warning flex items-center justify-center shadow-md">
               <Shield className="w-4 h-4 text-white" fill="currentColor" />
             </div>
           </div>
@@ -271,8 +271,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className={cn(
               'absolute bottom-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium shadow-md',
               rwaTradeMode === 1 || rwaTradeMode === 'confirm_required'
-                ? 'bg-orange-500'
-                : 'bg-emerald-500'
+                ? 'bg-warning'
+                : 'bg-success'
             )}
           >
             <span className="text-sm">
@@ -326,7 +326,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 onClick={handleEditClick}
                 className={cn(
                   'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 shadow-md',
+                  'bg-white/90 dark:bg-card/90 hover:bg-white dark:hover:bg-card shadow-md',
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-primary'
                 )}
@@ -340,7 +340,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 onClick={handleCloneClick}
                 className={cn(
                   'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 shadow-md',
+                  'bg-white/90 dark:bg-card/90 hover:bg-white dark:hover:bg-card shadow-md',
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-primary'
                 )}
@@ -354,7 +354,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 onClick={handleDeleteClick}
                 className={cn(
                   'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 shadow-md',
+                  'bg-white/90 dark:bg-card/90 hover:bg-white dark:hover:bg-card shadow-md',
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-destructive'
                 )}
@@ -395,7 +395,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
             {reviewCount !== undefined && reviewCount > 0 ? (
               <>
-                <span className="text-yellow-500">★</span>
+                <span className="text-warning">★</span>
                 <span className="text-muted-foreground">{Number(rating || 0).toFixed(1)}</span>
               </>
             ) : (

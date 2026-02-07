@@ -242,11 +242,11 @@ export function RwaTokenFields({
   const getRiskLevelStyle = (level?: string) => {
     switch (level) {
       case 'low':
-        return 'text-green-600 bg-green-100';
+        return 'text-success bg-success/15';
       case 'medium':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-warning bg-warning/15';
       case 'high':
-        return 'text-red-600 bg-red-100';
+        return 'text-error bg-error/15';
       default:
         return 'text-muted-foreground bg-muted';
     }
@@ -381,8 +381,8 @@ export function RwaTokenFields({
 
         {/* 已选择的 Token 信息 */}
         {selectedToken && (
-          <div className="p-4 bg-green-50 dark:bg-green-950/30 border-2 border-green-500 rounded-lg">
-            <h4 className="font-semibold text-green-700 dark:text-green-400 mb-3">
+          <div className="p-4 bg-success/8 border-2 border-success rounded-lg">
+            <h4 className="font-semibold text-success mb-3">
               {t('listing.selectedTokenInfo') || '已选择的RWA代币信息'}
             </h4>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -433,7 +433,7 @@ export function RwaTokenFields({
                   <span className="text-muted-foreground">
                     {t('listing.verification') || '验证状态'}:
                   </span>
-                  <span className="ml-2 text-green-600 flex items-center gap-1 inline-flex">
+                  <span className="ml-2 text-success flex items-center gap-1 inline-flex">
                     <CheckCircle className="w-4 h-4" />
                     {selectedToken.verification.verifiedBy}
                   </span>

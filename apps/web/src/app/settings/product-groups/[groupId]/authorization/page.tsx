@@ -217,12 +217,12 @@ export default function ProductGroupAuthorizationPage() {
           </HStack>
 
           {/* Info Card */}
-          <Card className="mb-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <Card className="mb-6 bg-info/8 border-info/20">
             <HStack gap="md" align="start">
-              <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <Shield className="w-5 h-5 text-info mt-0.5" />
               <div>
-                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">授权说明</h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
+                <h3 className="font-medium text-info mb-1">授权说明</h3>
+                <p className="text-sm text-info">
                   授权规则控制谁可以看到此产品组中的商品。您可以授权给特定的用户组，或者授权给某个群组集市的所有成员。
                 </p>
               </div>
@@ -230,11 +230,7 @@ export default function ProductGroupAuthorizationPage() {
           </Card>
 
           {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-error/8 text-error p-4 rounded-lg mb-6">{error}</div>}
 
           {/* Loading State */}
           {loading && (
@@ -264,7 +260,7 @@ export default function ProductGroupAuthorizationPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-red-500 hover:text-red-600"
+                      className="text-error hover:text-error"
                       onClick={() => setRemovingAuthId(auth.id)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -347,7 +343,7 @@ export default function ProductGroupAuthorizationPage() {
                       暂无用户组，请先
                       <Link
                         href="/settings/user-groups"
-                        className="text-blue-600 hover:underline ml-1"
+                        className="text-primary hover:underline ml-1"
                       >
                         创建用户组
                       </Link>
@@ -419,7 +415,7 @@ export default function ProductGroupAuthorizationPage() {
             <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveAuthorization}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-error hover:bg-error"
               disabled={saving}
             >
               {saving ? '移除中...' : '移除'}

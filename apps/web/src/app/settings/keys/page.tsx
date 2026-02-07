@@ -142,11 +142,11 @@ export default function KeyManagementPage() {
   const getKeyTypeLabel = (type: EncryptionKey['type']) => {
     switch (type) {
       case 'master':
-        return { label: '主密钥', icon: Shield, color: 'bg-amber-100 text-amber-800' };
+        return { label: '主密钥', icon: Shield, color: 'bg-warning/15 text-warning' };
       case 'product_group':
-        return { label: '产品组密钥', icon: Package, color: 'bg-purple-100 text-purple-800' };
+        return { label: '产品组密钥', icon: Package, color: 'bg-primary/15 text-primary' };
       case 'user_authorized':
-        return { label: '用户授权密钥', icon: Users, color: 'bg-blue-100 text-blue-800' };
+        return { label: '用户授权密钥', icon: Users, color: 'bg-info/15 text-info' };
     }
   };
 
@@ -213,13 +213,13 @@ export default function KeyManagementPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-amber-500" />
+                  <Shield className="w-5 h-5 text-warning" />
                   <div>
                     <CardTitle className="text-lg">主密钥 (Listing Master Key)</CardTitle>
                     <CardDescription>用于加密所有商品信息的主密钥</CardDescription>
                   </div>
                 </div>
-                <Badge className="bg-amber-100 text-amber-800">主要</Badge>
+                <Badge className="bg-warning/15 text-warning">主要</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -257,7 +257,7 @@ export default function KeyManagementPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-amber-600 hover:text-amber-700"
+                  className="text-warning hover:text-warning"
                   onClick={() => setShowRegenerateDialog(true)}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
@@ -265,10 +265,10 @@ export default function KeyManagementPage() {
                 </Button>
               </div>
 
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="p-3 bg-warning/8 border border-warning/20 rounded-lg">
                 <div className="flex gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                  <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
+                  <p className="text-sm text-warning">
                     请务必备份您的主密钥。如果丢失，您将无法解密已加密的商品信息。
                   </p>
                 </div>
@@ -281,7 +281,7 @@ export default function KeyManagementPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Key className="w-5 h-5 text-blue-500" />
+                  <Key className="w-5 h-5 text-info" />
                   <div>
                     <CardTitle className="text-lg">派生密钥</CardTitle>
                     <CardDescription>产品组和用户授权密钥</CardDescription>
@@ -336,7 +336,7 @@ export default function KeyManagementPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-500 hover:text-red-600"
+                              className="text-error hover:text-error"
                               onClick={() => setShowRevokeDialog(key.id)}
                             >
                               撤销
@@ -366,37 +366,31 @@ export default function KeyManagementPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                  <Shield className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-4 p-4 bg-warning/8 rounded-lg">
+                  <Shield className="w-6 h-6 text-warning flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-amber-800 dark:text-amber-400">
-                      Listing Master Key (LMK)
-                    </h4>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                    <h4 className="font-medium text-warning">Listing Master Key (LMK)</h4>
+                    <p className="text-sm text-warning">
                       主密钥，用于派生所有其他密钥。只有店主持有，丢失将无法恢复。
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <Package className="w-6 h-6 text-purple-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-4 p-4 bg-primary/8 rounded-lg">
+                  <Package className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-purple-800 dark:text-purple-400">
-                      Product Group Key (PGK)
-                    </h4>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">
+                    <h4 className="font-medium text-primary">Product Group Key (PGK)</h4>
+                    <p className="text-sm text-primary">
                       产品组密钥，由 LMK 派生。用于加密特定产品组的内容，可分发给用户组。
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-4 p-4 bg-info/8 rounded-lg">
+                  <Users className="w-6 h-6 text-info flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-blue-800 dark:text-blue-400">
-                      User Authorized Key (UAK)
-                    </h4>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <h4 className="font-medium text-info">User Authorized Key (UAK)</h4>
+                    <p className="text-sm text-info">
                       用户授权密钥，由 PGK 派生。授权特定用户访问加密内容，可设置过期时间。
                     </p>
                   </div>
@@ -420,7 +414,7 @@ export default function KeyManagementPage() {
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => showRevokeDialog && handleRevokeKey(showRevokeDialog)}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-error hover:bg-error"
             >
               撤销密钥
             </AlertDialogAction>
@@ -434,7 +428,7 @@ export default function KeyManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>重新生成主密钥</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="text-red-600 font-medium">警告：此操作不可逆！</span>
+              <span className="text-error font-medium">警告：此操作不可逆！</span>
               <br />
               <br />
               重新生成主密钥后：
@@ -449,7 +443,7 @@ export default function KeyManagementPage() {
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRegenerateMasterKey}
-              className="bg-amber-600 hover:bg-amber-700"
+              className="bg-warning hover:bg-warning"
             >
               确认重新生成
             </AlertDialogAction>

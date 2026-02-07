@@ -249,7 +249,7 @@ export default function MarketplacesPage() {
                           <img
                             src={marketplace.logo}
                             alt={marketplace.name}
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-card border-3 sm:border-4 border-white dark:border-slate-900 shadow-lg"
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-card border-3 sm:border-4 border-white dark:border-background shadow-lg"
                           />
                         </div>
 

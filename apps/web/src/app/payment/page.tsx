@@ -901,15 +901,15 @@ export default function PaymentPage() {
 
                       {/* Warnings */}
                       {!selectedTokenId && (
-                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
-                          <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
+                          <p className="text-xs sm:text-sm text-warning">
                             {t('payment.selectPaymentMethodWarning')}
                           </p>
                         </div>
                       )}
                       {paymentProtectionEnabled && !paymentModerator && (
-                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
-                          <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
+                          <p className="text-xs sm:text-sm text-warning">
                             {t('payment.selectModeratorWarning')}
                           </p>
                         </div>

@@ -33,7 +33,7 @@ function LoginPageLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
       </div>
     </div>
   );
@@ -181,9 +181,9 @@ function LoginPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-white text-lg">{t('login.redirectingToLogin')}</p>
-          <p className="text-slate-400 text-sm mt-2">{t('login.pleaseWait')}</p>
+          <p className="text-white/60 text-sm mt-2">{t('login.pleaseWait')}</p>
         </div>
       </div>
     );
@@ -194,9 +194,9 @@ function LoginPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-white text-lg">{t('login.loggingIn')}</p>
-          <p className="text-slate-400 text-sm mt-2">{t('login.pleaseWait')}</p>
+          <p className="text-white/60 text-sm mt-2">{t('login.pleaseWait')}</p>
         </div>
       </div>
     );
@@ -206,27 +206,27 @@ function LoginPageContent() {
   if (isBasic()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
-        <div className="w-full max-w-md px-8 py-10 bg-slate-800/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50">
+        <div className="w-full max-w-md px-8 py-10 bg-muted/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-border">
           {/* Logo & Title */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
-            <p className="text-slate-400">{t('login.subtitle')}</p>
-            <span className="inline-block mt-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+            <p className="text-white/60">{t('login.subtitle')}</p>
+            <span className="inline-block mt-2 px-3 py-1 bg-success/20 text-success text-xs rounded-full">
               {t('login.vpsMode')}
             </span>
           </div>
 
           {/* Error Message */}
           {(error || localError) && (
-            <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-              <p className="text-sm text-red-300">{error || localError}</p>
+            <div className="mb-6 p-3 bg-error/20 border border-error/20 rounded-lg">
+              <p className="text-sm text-error">{error || localError}</p>
             </div>
           )}
 
           {/* Login Form */}
           <form onSubmit={handleBasicLogin} className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium text-white/80 mb-1">
                 {t('login.username')}
               </label>
               <input
@@ -234,13 +234,13 @@ function LoginPageContent() {
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder={t('login.usernamePlaceholder')}
                 autoComplete="username"
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-1">
                 {t('login.password')}
               </label>
               <input
@@ -248,7 +248,7 @@ function LoginPageContent() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder={t('login.passwordPlaceholder')}
                 autoComplete="current-password"
               />
@@ -256,7 +256,7 @@ function LoginPageContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center text-lg mt-6"
+              className="w-full py-4 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center text-lg mt-6"
             >
               {isLoading ? (
                 <>
@@ -304,7 +304,7 @@ function LoginPageContent() {
 
           {/* Environment Info */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-slate-500">API: {envConfig.api.gateway}</p>
+            <p className="text-xs text-white/40">API: {envConfig.api.gateway}</p>
           </div>
         </div>
       </div>
@@ -314,25 +314,25 @@ function LoginPageContent() {
   // 托管模式但没有自动跳转（可能是用户手动访问）：显示跳转按钮
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
-      <div className="w-full max-w-md px-8 py-10 bg-slate-800/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50">
+      <div className="w-full max-w-md px-8 py-10 bg-muted/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-border">
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
-          <p className="text-slate-400">{t('login.subtitle')}</p>
-          <span className="inline-block mt-2 px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs rounded-full">
+          <p className="text-white/60">{t('login.subtitle')}</p>
+          <span className="inline-block mt-2 px-3 py-1 bg-primary/20 text-primary text-xs rounded-full">
             {t('login.hostedMode')}
           </span>
         </div>
 
         {/* Login Info */}
-        <div className="mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-600/50">
-          <p className="text-slate-300 text-sm">{t('login.hostedModeInfo')}</p>
+        <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+          <p className="text-white/80 text-sm">{t('login.hostedModeInfo')}</p>
         </div>
 
         {/* Error Message */}
         {(error || localError) && (
-          <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-sm text-red-300">{error || localError}</p>
+          <div className="mb-6 p-3 bg-error/20 border border-error/20 rounded-lg">
+            <p className="text-sm text-error">{error || localError}</p>
           </div>
         )}
 
@@ -341,7 +341,7 @@ function LoginPageContent() {
           type="button"
           onClick={() => startCasdoorLogin()}
           disabled={isLoading}
-          className="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center text-lg"
+          className="w-full py-4 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center text-lg"
         >
           {isLoading ? (
             <>
@@ -383,36 +383,36 @@ function LoginPageContent() {
 
         {/* Divider */}
         <div className="mt-8 flex items-center">
-          <div className="flex-1 border-t border-slate-700"></div>
-          <span className="px-4 text-slate-500 text-sm">{t('login.supportedPlatforms')}</span>
-          <div className="flex-1 border-t border-slate-700"></div>
+          <div className="flex-1 border-t border-border"></div>
+          <span className="px-4 text-white/40 text-sm">{t('login.supportedPlatforms')}</span>
+          <div className="flex-1 border-t border-border"></div>
         </div>
 
         {/* Platform Icons */}
         <div className="mt-4 flex justify-center space-x-6">
           <div className="text-center">
-            <div className="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-1">
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-1">
               <span className="text-2xl">🌐</span>
             </div>
-            <span className="text-xs text-slate-400">{t('login.browser')}</span>
+            <span className="text-xs text-white/60">{t('login.browser')}</span>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-1">
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-1">
               <span className="text-2xl">📱</span>
             </div>
-            <span className="text-xs text-slate-400">Telegram</span>
+            <span className="text-xs text-white/60">Telegram</span>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-1">
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-1">
               <span className="text-2xl">🎮</span>
             </div>
-            <span className="text-xs text-slate-400">Discord</span>
+            <span className="text-xs text-white/60">Discord</span>
           </div>
         </div>
 
         {/* Environment Info */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-white/40">
             {envConfig.isTestEnv ? t('login.testEnvironment') : t('login.productionEnvironment')}:{' '}
             {envConfig.api.baseUrl}
           </p>

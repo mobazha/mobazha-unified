@@ -484,9 +484,9 @@ export default function OrderDetailPage() {
         <Header />
         <Container className="py-8">
           <Card className="py-16 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-error/15 flex items-center justify-center">
               <svg
-                className="w-10 h-10 text-red-500"
+                className="w-10 h-10 text-error"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

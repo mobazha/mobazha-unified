@@ -20,8 +20,8 @@ export function PageErrorBoundary({ children, pageName }: PageErrorBoundaryProps
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-background p-6">
           <div className="text-center max-w-md">
-            <div className="mx-auto w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-6">
-              <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
+            <div className="mx-auto w-20 h-20 bg-destructive/15 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="w-10 h-10 text-destructive" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
               {pageName ? `${pageName} 加载失败` : '页面加载失败'}

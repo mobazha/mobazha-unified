@@ -115,9 +115,7 @@ export function PredefinedAssetList({
       <div
         className={cn(
           'flex items-center gap-2 p-3 rounded-lg text-sm',
-          isConnected
-            ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-            : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
+          isConnected ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
         )}
       >
         <Wallet className="w-4 h-4" />
@@ -189,7 +187,7 @@ export function PredefinedAssetList({
                       {displayBalance !== null ? (
                         <>
                           {displayBalance} {asset.unit}
-                          <span className="ml-1 text-green-600 dark:text-green-400">●</span>
+                          <span className="ml-1 text-success">●</span>
                         </>
                       ) : (
                         <span className="text-muted-foreground">连接钱包查看</span>
@@ -202,7 +200,7 @@ export function PredefinedAssetList({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={e => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
                     >
                       <ExternalLink className="w-3 h-3" />
                       Etherscan
@@ -210,7 +208,7 @@ export function PredefinedAssetList({
 
                     {/* ERC1155 会员信息 */}
                     {isErc1155 && asset.membership && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
                         <Users className="w-3 h-3" />
                         {asset.membership.holderCount} {t('listing.rwa.holders') || '人持有'}
                       </span>
@@ -218,7 +216,7 @@ export function PredefinedAssetList({
 
                     {/* ERC3525 收益信息 */}
                     {isErc3525 && asset.performance && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
                         <TrendingUp className="w-3 h-3" />
                         {t('listing.rwa.dividendRate') || '年化'} {asset.performance.dividendRate}
                       </span>

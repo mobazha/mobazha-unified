@@ -132,10 +132,10 @@ export function AuthProvider({
   // 正在处理 OAuth 回调
   if (isProcessingOAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
-          <p className="text-white">正在登录...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <p className="text-foreground">正在登录...</p>
         </div>
       </div>
     );
@@ -144,10 +144,10 @@ export function AuthProvider({
   // 初始化中显示加载状态
   if (!isInitialized && isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4" />
-          <p className="text-slate-400">加载中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <p className="text-muted-foreground">加载中...</p>
         </div>
       </div>
     );

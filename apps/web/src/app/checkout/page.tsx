@@ -715,12 +715,12 @@ export default function CheckoutPage() {
               <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                 {/* RWA 交易提示 */}
                 {isRwaToken && (
-                  <Card className="border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-900/10">
+                  <Card className="border-primary/20 bg-primary/8">
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
                           <svg
-                            className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                            className="w-5 h-5 text-primary"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -734,10 +734,10 @@ export default function CheckoutPage() {
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100">
+                          <h3 className="text-sm font-semibold text-primary">
                             {t('checkout.rwaTransaction')}
                           </h3>
-                          <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                          <p className="text-xs text-primary mt-1">
                             {rwaTradeMode === 1
                               ? t('checkout.rwaConfirmRequiredHint')
                               : t('checkout.rwaInstantHint')}
@@ -914,7 +914,7 @@ export default function CheckoutPage() {
                                 </p>
                                 {/* RWA 徽章 */}
                                 {item.contractType === 'RWA_TOKEN' && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 flex-shrink-0">
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/15 text-primary flex-shrink-0">
                                     RWA
                                   </span>
                                 )}
@@ -1082,8 +1082,8 @@ export default function CheckoutPage() {
 
                     {/* Warnings - 仅物理商品需要地址 */}
                     {needsShippingAddress && !selectedAddress && (
-                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md sm:rounded-lg">
-                        <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
+                        <p className="text-xs sm:text-sm text-warning">
                           {t('checkout.selectAddressWarning')}
                         </p>
                       </div>

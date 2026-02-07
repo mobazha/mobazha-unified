@@ -217,14 +217,14 @@ export default function ProductGroupAuthorizationPage() {
       </div>
 
       {/* 说明卡片 */}
-      <Card className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      <Card className="mb-6 p-4 bg-info/15 border-info/30">
         <HStack gap="md" align="start">
-          <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <Shield className="w-5 h-5 text-info mt-0.5 shrink-0" />
           <div>
-            <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+            <h3 className="font-medium text-info mb-1">
               {t('settings.accessControl.authorizationInfo')}
             </h3>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
+            <p className="text-sm text-info/80">
               {t('settings.accessControl.authorizationInfoDesc')}
             </p>
           </div>

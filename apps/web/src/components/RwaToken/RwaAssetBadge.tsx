@@ -59,7 +59,7 @@ export function RwaAssetBadge({
         className={cn(
           'inline-flex items-center rounded font-mono',
           size === 'sm' ? 'text-[10px] py-0.5 px-1.5' : 'text-xs py-0.5 px-2',
-          'bg-muted text-muted-foreground'
+          'bg-muted text-foreground/60'
         )}
       >
         {tokenStandard}
@@ -71,7 +71,7 @@ export function RwaAssetBadge({
           className={cn(
             'inline-flex items-center',
             size === 'sm' ? 'text-[10px]' : 'text-xs',
-            'text-muted-foreground'
+            'text-foreground/60'
           )}
         >
           · {networkName}

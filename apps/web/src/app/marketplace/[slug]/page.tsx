@@ -203,7 +203,11 @@ const mockOtcListings: OtcListing[] = [
     image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=400&h=400&fit=crop',
     price: 100,
     status: OtcOrderStatus.Active,
-    seller: { name: 'CryptoKOL', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kol', id: 'kol1' },
+    seller: {
+      name: 'CryptoKOL',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kol',
+      id: 'kol1',
+    },
     contractAddress: '0x17ebC8FeE90E7556E1E12Aa42604477D6A243324',
   },
   {
@@ -213,7 +217,11 @@ const mockOtcListings: OtcListing[] = [
     image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop',
     price: 500,
     status: OtcOrderStatus.Active,
-    seller: { name: 'InvestorPro', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=investor', id: 'inv1' },
+    seller: {
+      name: 'InvestorPro',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=investor',
+      id: 'inv1',
+    },
     contractAddress: '0x4c1A1b21c4471CA57145EE08404Cbaf9C8B83991',
   },
   {
@@ -223,7 +231,11 @@ const mockOtcListings: OtcListing[] = [
     image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
     price: 200,
     status: OtcOrderStatus.Completed,
-    seller: { name: 'FanClub', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fan', id: 'fan1' },
+    seller: {
+      name: 'FanClub',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fan',
+      id: 'fan1',
+    },
     contractAddress: '0x17ebC8FeE90E7556E1E12Aa42604477D6A243324',
   },
 ];
@@ -235,18 +247,20 @@ export default function MarketplaceDetailPage() {
   // slug is used for routing, params.slug is available
   void params.slug;
 
-  const [activeTab, setActiveTab] = useState<'products' | 'otc' | 'sellers' | 'about' | 'chat'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'otc' | 'sellers' | 'about' | 'chat'>(
+    'products'
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [isMember, setIsMember] = useState(false);
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
   const marketplace = mockMarketplace;
-  
+
   // OTC 辅助函数
   const handleOtcClick = (otc: OtcListing) => {
     router.push(`/otc/${otc.orderType}/${otc.orderId}`);
   };
-  
+
   const otcStatusText = (status: OtcOrderStatus) => {
     const texts: Record<OtcOrderStatus, string> = {
       [OtcOrderStatus.Active]: t('otc.status.active') || '活跃',
@@ -255,7 +269,7 @@ export default function MarketplaceDetailPage() {
     };
     return texts[status];
   };
-  
+
   const activeOtcListings = mockOtcListings.filter(o => o.status === OtcOrderStatus.Active);
 
   const handleJoinMarketplace = () => {
@@ -288,7 +302,7 @@ export default function MarketplaceDetailPage() {
                 <img
                   src={marketplace.logo}
                   alt={marketplace.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-xl bg-card border-4 border-white dark:border-slate-900 shadow-lg -mt-12 sm:-mt-16"
+                  className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-xl bg-card border-4 border-white border-border shadow-lg -mt-12 sm:-mt-16"
                 />
 
                 {/* Info */}
@@ -371,8 +385,8 @@ export default function MarketplaceDetailPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium transition-colors capitalize touch-feedback ${
                     activeTab === tab
-                      ? 'text-emerald-600 border-b-2 border-emerald-600'
-                      : 'text-muted-foreground hover:text-slate-900 dark:hover:text-white'
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {tab === 'otc' ? (
@@ -404,7 +418,7 @@ export default function MarketplaceDetailPage() {
                   className="h-10 sm:h-12 text-sm sm:text-base"
                   leftIcon={
                     <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -560,7 +574,7 @@ export default function MarketplaceDetailPage() {
                       <img
                         src={seller.avatar}
                         alt={seller.name}
-                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-200"
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted"
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
@@ -569,7 +583,7 @@ export default function MarketplaceDetailPage() {
                         <p className="text-xs sm:text-sm text-muted-foreground">
                           {seller.productCount} products • ⭐ {seller.rating}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                           Joined {new Date(seller.joinedAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -607,14 +621,14 @@ export default function MarketplaceDetailPage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Owner */}
                 <Card className="p-4 sm:p-6">
-                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
+                  <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">
                     Marketplace Owner
                   </h3>
                   <HStack gap="sm" align="center" className="sm:gap-md">
                     <img
                       src={marketplace.owner.avatar}
                       alt={marketplace.owner.name}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-200"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-muted"
                     />
                     <div>
                       <p className="font-semibold text-foreground text-sm sm:text-base">
@@ -627,7 +641,7 @@ export default function MarketplaceDetailPage() {
 
                 {/* Categories */}
                 <Card className="p-4 sm:p-6">
-                  <h3 className="text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
+                  <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">
                     Categories
                   </h3>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -650,7 +664,7 @@ export default function MarketplaceDetailPage() {
               <VStack gap="sm" align="center" className="py-8 sm:py-12 sm:gap-md">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center">
                   <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -666,7 +680,7 @@ export default function MarketplaceDetailPage() {
                 <h3 className="text-base sm:text-lg font-semibold text-foreground">
                   Community Chat
                 </h3>
-                <p className="text-slate-500 text-center max-w-md text-sm sm:text-base px-4">
+                <p className="text-muted-foreground text-center max-w-md text-sm sm:text-base px-4">
                   {isMember
                     ? 'Connect with other members and sellers in the marketplace chat room.'
                     : 'Join this marketplace to access the community chat.'}

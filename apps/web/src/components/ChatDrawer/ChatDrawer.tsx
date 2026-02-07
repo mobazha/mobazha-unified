@@ -323,9 +323,9 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             </div>
 
             <div className="relative z-10">
-              <div className="w-24 h-24 mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-emerald-500/5 flex items-center justify-center ring-2 ring-emerald-500/20 shadow-xl shadow-emerald-500/10">
+              <div className="w-24 h-24 mb-6 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center ring-2 ring-primary/20 shadow-xl shadow-primary/10">
                 <svg
-                  className="w-12 h-12 text-emerald-600 dark:text-emerald-400"
+                  className="w-12 h-12 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -348,13 +348,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 <Button
                   variant="outline"
                   onClick={() => handleRejectInvite(currentInvite.roomId)}
-                  className="px-6 py-2 rounded-xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all"
+                  className="px-6 py-2 rounded-xl hover:bg-error/15 hover:text-error hover:border-error/30 transition-all"
                 >
                   {t('common.decline')}
                 </Button>
                 <Button
                   onClick={() => handleAcceptInvite(currentInvite.roomId)}
-                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all"
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
                 >
                   {t('common.accept')}
                 </Button>
@@ -449,13 +449,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                     </span>
                   )}
                   {!isConnected && !isInitializing && (
-                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-warning/15 text-warning">
+                      <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                       {t('chat.offline')}
                     </span>
                   )}
                   {isInitializing && (
-                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400">
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-info/15 text-info">
                       <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle
                           className="opacity-25"
@@ -476,7 +476,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                   )}
                   {isConnected && !isInitializing && totalUnread === 0 && (
                     <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       Connected
                     </span>
                   )}
@@ -546,7 +546,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={closeDrawer}
-                className="h-9 w-9 p-0 rounded-xl hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-all duration-200"
+                className="h-9 w-9 p-0 rounded-xl hover:bg-error/15 text-muted-foreground hover:text-error transition-all duration-200"
               >
                 <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -599,7 +599,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                     className="w-24 h-24 ring-4 ring-background shadow-xl"
                   />
                   {currentRoom.isEncrypted && (
-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-background">
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center ring-4 ring-background">
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -617,7 +617,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                   {currentRoom.isDirect ? t('chat.directMessage') : t('chat.groupChat')}
                 </p>
                 {currentRoom.isEncrypted && (
-                  <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-emerald-500/15 text-emerald-600 rounded-full">
+                  <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-primary/15 text-primary rounded-full">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -672,7 +672,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                           <p className="text-xs text-muted-foreground truncate">{member.userId}</p>
                         </div>
                         {member.isExternal && (
-                          <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/15 text-blue-600 rounded-full">
+                          <span className="px-2 py-0.5 text-[10px] font-medium bg-info/15 text-info rounded-full">
                             External
                           </span>
                         )}

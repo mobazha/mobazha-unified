@@ -385,7 +385,7 @@ function SearchPageContent() {
                   {user.listingCount} {t('search.listings')}
                 </span>
                 <HStack gap="xs" align="center">
-                  <span className="text-yellow-500">★</span>
+                  <span className="text-warning">★</span>
                   <span className="text-muted-foreground">
                     {user.rating.toFixed(1)} ({user.reviewCount})
                   </span>

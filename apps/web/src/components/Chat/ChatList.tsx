@@ -55,23 +55,23 @@ const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type
   const badges: Record<string, { label: string; className: string }> = {
     group: {
       label: 'Group',
-      className: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+      className: 'bg-info/15 text-info',
     },
     order: {
       label: 'Order',
-      className: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
+      className: 'bg-warning/15 text-warning',
     },
     store: {
       label: 'Store',
-      className: 'bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400',
+      className: 'bg-primary/15 text-primary',
     },
     community: {
       label: 'Community',
-      className: 'bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400',
+      className: 'bg-primary/15 text-primary',
     },
     moderator: {
       label: 'Dispute',
-      className: 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400',
+      className: 'bg-error/15 text-error',
     },
   };
 
@@ -158,7 +158,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-primary to-primary/70 rounded-r-full" />
       )}
       {isInvite && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-emerald-500 to-emerald-500/70 rounded-r-full animate-pulse" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-success to-success/70 rounded-r-full animate-pulse" />
       )}
 
       {/* Avatar with online status */}
@@ -176,7 +176,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         )}
         {/* Invite badge */}
         {isInvite && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-gradient-to-br from-emerald-500 to-emerald-600 border-2 border-card rounded-full flex items-center justify-center shadow-md">
+          <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-success border-2 border-card rounded-full flex items-center justify-center shadow-md">
             <svg
               className="w-2.5 h-2.5 text-white"
               fill="none"
@@ -203,7 +203,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             {/* Verified badge */}
             {room.isVerified && (
               <svg
-                className="w-4 h-4 text-blue-500 flex-shrink-0 drop-shadow-sm"
+                className="w-4 h-4 text-info flex-shrink-0 drop-shadow-sm"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -256,7 +256,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                   e.stopPropagation();
                   onAcceptInvite?.(room.id);
                 }}
-                className="px-3 py-1.5 text-[10px] font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
+                className="px-3 py-1.5 text-[10px] font-semibold bg-success hover:bg-success/90 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
               >
                 Accept
               </button>
@@ -291,7 +291,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             <h2 className="text-[17px] sm:text-lg font-bold text-foreground">{t('chat.title')}</h2>
             {/* Connection status indicator */}
             {!isConnected && (
-              <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+              <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-warning/15 text-warning">
                 <svg className="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"

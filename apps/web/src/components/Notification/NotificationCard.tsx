@@ -66,28 +66,28 @@ function getNotificationIcon(type: string): React.ReactNode {
 
   switch (type) {
     case 'newOrder':
-      return <ShoppingCart className={cn(iconClass, 'text-blue-500')} />;
+      return <ShoppingCart className={cn(iconClass, 'text-info')} />;
     case 'orderFunded':
     case 'orderPaymentReceived':
       return <CreditCard className={cn(iconClass, 'text-primary')} />;
     case 'orderConfirmation':
-      return <CheckCircle className={cn(iconClass, 'text-green-500')} />;
+      return <CheckCircle className={cn(iconClass, 'text-success')} />;
     case 'orderDeclined':
     case 'orderCancel':
-      return <XCircle className={cn(iconClass, 'text-red-500')} />;
+      return <XCircle className={cn(iconClass, 'text-error')} />;
     case 'orderFulfillment':
-      return <Package className={cn(iconClass, 'text-indigo-500')} />;
+      return <Package className={cn(iconClass, 'text-primary')} />;
     case 'orderCompletion':
       return <CheckCircle className={cn(iconClass, 'text-primary')} />;
     case 'disputeOpen':
     case 'caseOpen':
     case 'disputeClose':
     case 'caseUpdate':
-      return <AlertTriangle className={cn(iconClass, 'text-amber-500')} />;
+      return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
     case 'follow':
     case 'moderatorAdd':
     case 'moderatorRemove':
-      return <UserPlus className={cn(iconClass, 'text-purple-500')} />;
+      return <UserPlus className={cn(iconClass, 'text-primary')} />;
     default:
       return <Clock className={cn(iconClass, 'text-gray-500')} />;
   }
@@ -311,16 +311,14 @@ export function DisputeNotificationCard({
     <div
       className={cn(
         'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all',
-        !read
-          ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500'
-          : 'bg-transparent hover:bg-muted/50',
+        !read ? 'bg-warning/8 border-l-4 border-l-warning' : 'bg-transparent hover:bg-muted/50',
         className
       )}
       onClick={handleClick}
     >
       {/* 图标 */}
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-        <AlertTriangle className="h-5 w-5 text-amber-600" />
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center">
+        <AlertTriangle className="h-5 w-5 text-warning" />
       </div>
 
       {/* 内容 */}

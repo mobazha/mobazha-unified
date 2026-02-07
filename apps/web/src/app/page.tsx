@@ -196,9 +196,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div
               className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                dataSource === 'api'
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                dataSource === 'api' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
               }`}
             >
               {dataSource === 'api' ? '🔗 Real API' : '🎭 Mock Data'}

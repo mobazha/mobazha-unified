@@ -129,7 +129,7 @@ const MessageStatus: React.FC<{ status?: string }> = ({ status }) => {
         </svg>
       )}
       {status === 'failed' && (
-        <svg className="w-3.5 h-3.5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+        <svg className="w-3.5 h-3.5 text-error" viewBox="0 0 20 20" fill="currentColor">
           <path
             fillRule="evenodd"
             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
@@ -306,7 +306,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             {/* Verified badge */}
             {isVerified && (
               <svg
-                className="w-4 h-4 text-blue-500 flex-shrink-0"
+                className="w-4 h-4 text-info flex-shrink-0"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -549,7 +549,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
                       {/* Retry button for failed messages */}
                       {message.status === 'failed' && (
-                        <button className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full flex items-center justify-center text-xs font-medium hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg hover:scale-110">
+                        <button className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110">
                           ↻
                         </button>
                       )}

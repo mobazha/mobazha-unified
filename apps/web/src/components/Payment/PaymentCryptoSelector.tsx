@@ -12,13 +12,13 @@ import { Badge } from '@/components/ui/badge';
 // 链标签颜色
 const CHAIN_COLORS: Record<string, string> = {
   all: 'bg-muted text-muted-foreground',
-  BTC: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  LTC: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-  ETH: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
-  SOL: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  BSC: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  BASE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  MATIC: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  BTC: 'bg-warning/15 text-warning',
+  LTC: 'bg-muted text-muted-foreground',
+  ETH: 'bg-primary/15 text-primary',
+  SOL: 'bg-primary/15 text-primary',
+  BSC: 'bg-warning/15 text-warning',
+  BASE: 'bg-info/15 text-info',
+  MATIC: 'bg-primary/15 text-primary',
 };
 
 export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({

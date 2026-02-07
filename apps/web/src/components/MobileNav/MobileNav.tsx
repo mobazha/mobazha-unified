@@ -220,7 +220,7 @@ export const MobileNav: React.FC = () => {
                   <span className={`relative transition-transform ${active ? 'scale-105' : ''}`}>
                     {active ? item.activeIcon || item.icon : item.icon}
                     {badge !== undefined && badge > 0 && (
-                      <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                      <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                         {badge > 99 ? '99+' : badge}
                       </span>
                     )}
@@ -270,7 +270,7 @@ export const MobileNav: React.FC = () => {
                   )}
                   {/* Badge - small red circle with number */}
                   {badge !== undefined && badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                       {badge > 99 ? '99+' : badge}
                     </span>
                   )}

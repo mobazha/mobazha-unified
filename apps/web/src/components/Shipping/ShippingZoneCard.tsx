@@ -95,11 +95,11 @@ export function ShippingZoneCard({
             {/* 地区覆盖 */}
             <HStack gap="xs">
               {regionsSummary.isWorldwide ? (
-                <Globe className="w-4 h-4 text-green-500" />
+                <Globe className="w-4 h-4 text-success" />
               ) : (
                 <MapPin className="w-4 h-4" />
               )}
-              <span className={cn(regionsSummary.isWorldwide && 'text-green-600 font-medium')}>
+              <span className={cn(regionsSummary.isWorldwide && 'text-success font-medium')}>
                 {regionsSummary.display}
               </span>
             </HStack>

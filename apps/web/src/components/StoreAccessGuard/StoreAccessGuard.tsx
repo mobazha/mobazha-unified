@@ -147,8 +147,8 @@ export function StoreAccessGuard({
       <div className="flex justify-center items-center py-20">
         <Card className="max-w-md w-full text-center">
           <VStack gap="lg" align="center" className="py-8">
-            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Clock className="w-8 h-8 text-amber-600" />
+            <div className="w-16 h-16 rounded-full bg-warning/15 flex items-center justify-center">
+              <Clock className="w-8 h-8 text-warning" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground mb-2">
@@ -168,8 +168,8 @@ export function StoreAccessGuard({
       <div className="flex justify-center items-center py-20">
         <Card className="max-w-md w-full text-center">
           <VStack gap="lg" align="center" className="py-8">
-            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <ShieldX className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 rounded-full bg-error/15 flex items-center justify-center">
+              <ShieldX className="w-8 h-8 text-error" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground mb-2">
@@ -189,8 +189,8 @@ export function StoreAccessGuard({
       <div className="flex justify-center items-center py-20">
         <Card className="max-w-md w-full text-center">
           <VStack gap="lg" align="center" className="py-8">
-            <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <ShieldCheck className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 rounded-full bg-info/15 flex items-center justify-center">
+              <ShieldCheck className="w-8 h-8 text-info" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground mb-2">
@@ -198,7 +198,7 @@ export function StoreAccessGuard({
               </h2>
               <p className="text-muted-foreground mb-4">{t('storeAccess.privateStoreDesc')}</p>
               {groupContext && (
-                <p className="text-sm text-blue-600 mb-4">
+                <p className="text-sm text-info mb-4">
                   {t('storeAccess.accessingViaGroup', {
                     group: groupContext.chatTitle || groupContext.chatId,
                   })}
@@ -229,12 +229,12 @@ export function StoreAccessGuard({
                     value={requestNote}
                     onChange={e => setRequestNote(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                    className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                     placeholder={t('storeAccess.requestNotePlaceholder')}
                   />
                 </div>
 
-                {accessError && <p className="text-sm text-red-600">{accessError}</p>}
+                {accessError && <p className="text-sm text-error">{accessError}</p>}
               </VStack>
 
               <HStack justify="end" gap="sm" className="mt-6">
@@ -268,8 +268,8 @@ export function StoreAccessGuard({
     <div className="flex justify-center items-center py-20">
       <Card className="max-w-md w-full text-center">
         <VStack gap="lg" align="center" className="py-8">
-          <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <ShieldX className="w-8 h-8 text-slate-400" />
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <ShieldX className="w-8 h-8 text-muted-foreground" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground mb-2">{t('storeAccess.noAccess')}</h2>
