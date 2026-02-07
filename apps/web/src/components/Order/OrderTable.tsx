@@ -36,28 +36,29 @@ export interface OrderTableProps {
 
 // ============ Status Config ============
 
+// 状态对应的 i18n key 和样式
 const statusConfig: Record<
   string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; color?: string }
+  { labelKey: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; color?: string }
 > = {
   pending: {
-    label: 'Pending',
+    labelKey: 'order.pending',
     variant: 'outline',
     color: 'text-warning border-warning/20 bg-warning/15',
   },
   awaiting_payment: {
-    label: 'Awaiting Payment',
+    labelKey: 'order.statusLabels.awaitingPayment',
     variant: 'outline',
     color: 'text-warning border-warning/20 bg-warning/15',
   },
-  paid: { label: 'Paid', variant: 'default', color: 'bg-info' },
-  processing: { label: 'Processing', variant: 'default', color: 'bg-info' },
-  shipped: { label: 'Fulfilled', variant: 'default', color: 'bg-primary' },
-  delivered: { label: 'Delivered', variant: 'default', color: 'bg-primary' },
-  completed: { label: 'Complete', variant: 'default', color: 'bg-primary' },
-  disputed: { label: 'Disputed', variant: 'destructive' },
-  refunded: { label: 'Refunded', variant: 'secondary' },
-  cancelled: { label: 'Declined', variant: 'secondary' },
+  paid: { labelKey: 'order.paid', variant: 'default', color: 'bg-info' },
+  processing: { labelKey: 'order.processing', variant: 'default', color: 'bg-info' },
+  shipped: { labelKey: 'order.shipped', variant: 'default', color: 'bg-primary' },
+  delivered: { labelKey: 'order.delivered', variant: 'default', color: 'bg-primary' },
+  completed: { labelKey: 'order.completed', variant: 'default', color: 'bg-primary' },
+  disputed: { labelKey: 'order.disputed', variant: 'destructive' },
+  refunded: { labelKey: 'order.refunded', variant: 'secondary' },
+  cancelled: { labelKey: 'order.cancelled', variant: 'secondary' },
 };
 
 // ============ Utility Functions ============
@@ -128,18 +129,20 @@ export const OrderTable = memo(function OrderTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[130px]">ORDER ID</TableHead>
-            <TableHead className="w-[160px]">DATE</TableHead>
-            <TableHead className="w-[200px]">LISTING</TableHead>
-            <TableHead className="w-[140px]">{type === 'purchase' ? 'SELLER' : 'BUYER'}</TableHead>
-            <TableHead className="w-[100px] text-right">TOTAL</TableHead>
-            <TableHead className="w-[180px]">STATUS</TableHead>
+            <TableHead className="w-[130px]">{t('order.table.orderId')}</TableHead>
+            <TableHead className="w-[160px]">{t('order.table.date')}</TableHead>
+            <TableHead className="w-[200px]">{t('order.table.listing')}</TableHead>
+            <TableHead className="w-[140px]">
+              {type === 'purchase' ? t('order.seller') : t('order.buyer')}
+            </TableHead>
+            <TableHead className="w-[100px] text-right">{t('order.table.total')}</TableHead>
+            <TableHead className="w-[180px]">{t('order.table.status')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.map(order => {
             const status = statusConfig[order.status] || {
-              label: order.status,
+              labelKey: 'order.pending',
               variant: 'secondary' as const,
             };
             const showActions = shouldShowActions(order.rawState);
@@ -157,7 +160,7 @@ export const OrderTable = memo(function OrderTable({
                     <button
                       className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                       onClick={e => handleButtonClick(e, () => copyToClipboard(order.orderId))}
-                      title="Copy Order ID"
+                      title={t('order.actions.copyOrderId')}
                     >
                       <Copy className="w-3 h-3" />
                     </button>
@@ -182,7 +185,7 @@ export const OrderTable = memo(function OrderTable({
                       </div>
                     )}
                     <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
-                      {order.items[0]?.title || 'Unknown'}
+                      {order.items[0]?.title || t('order.unknownItem')}
                     </span>
                   </div>
                 </TableCell>
@@ -236,7 +239,7 @@ export const OrderTable = memo(function OrderTable({
                             handleButtonClick(e, () => onReject?.(order.id, order.paymentCoin))
                           }
                         >
-                          Reject
+                          {t('order.actions.decline')}
                         </Button>
                         <Button
                           size="sm"
@@ -245,12 +248,12 @@ export const OrderTable = memo(function OrderTable({
                             handleButtonClick(e, () => onAccept?.(order.id, order.paymentCoin))
                           }
                         >
-                          Accept
+                          {t('order.actions.accept')}
                         </Button>
                       </>
                     ) : (
                       <Badge variant={status.variant} className={cn('text-xs', status.color)}>
-                        {status.label}
+                        {t(status.labelKey)}
                       </Badge>
                     )}
                   </div>
