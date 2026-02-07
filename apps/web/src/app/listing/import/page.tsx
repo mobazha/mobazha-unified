@@ -58,8 +58,8 @@ export default function ImportListingsPage() {
     } catch (error) {
       console.error('Failed to download template:', error);
       toast({
-        title: t('importListings.error') || 'Error',
-        description: t('importListings.downloadError') || 'Failed to download template',
+        title: t('importListings.error'),
+        description: t('importListings.downloadError'),
         variant: 'destructive',
       });
     } finally {
@@ -178,8 +178,8 @@ export default function ImportListingsPage() {
 
       if (result.created > 0 || result.updated > 0) {
         toast({
-          title: t('importListings.success') || 'Success',
-          description: t('importListings.importComplete') || 'Import completed successfully',
+          title: t('importListings.success'),
+          description: t('importListings.importComplete'),
         });
       }
     } catch (error: unknown) {
@@ -215,25 +215,16 @@ export default function ImportListingsPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                {t('importListings.title') || 'Import Listings'}
-              </h1>
-              <p className="text-muted-foreground">
-                {t('importListings.subtitle') || 'Bulk import listings from a ZIP file'}
-              </p>
+              <h1 className="text-2xl font-bold text-foreground">{t('importListings.title')}</h1>
+              <p className="text-muted-foreground">{t('importListings.subtitle')}</p>
             </div>
           </HStack>
 
           <VStack gap="lg">
             {/* Step 1: Download Template */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-2">
-                {t('importListings.step1Title') || 'Step 1: Download Template'}
-              </h2>
-              <p className="text-muted-foreground text-sm mb-4">
-                {t('importListings.step1Desc') ||
-                  'Download the Excel template, fill in your listing data, and save it with the images in a ZIP file.'}
-              </p>
+              <h2 className="text-lg font-semibold mb-2">{t('importListings.step1Title')}</h2>
+              <p className="text-muted-foreground text-sm mb-4">{t('importListings.step1Desc')}</p>
               <Button
                 variant="outline"
                 onClick={handleDownloadTemplate}
@@ -245,19 +236,14 @@ export default function ImportListingsPage() {
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                {t('importListings.downloadTemplate') || 'Download Template'}
+                {t('importListings.downloadTemplate')}
               </Button>
             </Card>
 
             {/* Step 2: Upload ZIP */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-2">
-                {t('importListings.step2Title') || 'Step 2: Upload ZIP File'}
-              </h2>
-              <p className="text-muted-foreground text-sm mb-4">
-                {t('importListings.step2Desc') ||
-                  'Upload a ZIP file containing your Excel file and product images.'}
-              </p>
+              <h2 className="text-lg font-semibold mb-2">{t('importListings.step2Title')}</h2>
+              <p className="text-muted-foreground text-sm mb-4">{t('importListings.step2Desc')}</p>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -276,13 +262,8 @@ export default function ImportListingsPage() {
                 {!selectedFile ? (
                   <div className="space-y-2">
                     <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      {t('importListings.dropOrClick') ||
-                        'Drop your ZIP file here or click to browse'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('importListings.maxSize') || 'Maximum file size: 300MB'}
-                    </p>
+                    <p className="text-muted-foreground">{t('importListings.dropOrClick')}</p>
+                    <p className="text-xs text-muted-foreground">{t('importListings.maxSize')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -301,7 +282,7 @@ export default function ImportListingsPage() {
                       className="gap-1"
                     >
                       <X className="h-4 w-4" />
-                      {t('importListings.clearFile') || 'Clear'}
+                      {t('importListings.clearFile')}
                     </Button>
                   </div>
                 )}
@@ -310,7 +291,7 @@ export default function ImportListingsPage() {
               {fileSizeError && (
                 <p className="text-destructive text-sm mt-2 flex items-center gap-1">
                   <AlertCircle className="h-4 w-4" />
-                  {t('importListings.fileTooLarge') || 'File is too large. Maximum size is 300MB.'}
+                  {t('importListings.fileTooLarge')}
                 </p>
               )}
             </Card>
@@ -325,12 +306,12 @@ export default function ImportListingsPage() {
               {importing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t('importListings.importing') || 'Importing...'}
+                  {t('importListings.importing')}
                 </>
               ) : (
                 <>
                   <Upload className="h-4 w-4" />
-                  {t('importListings.startImport') || 'Start Import'}
+                  {t('importListings.startImport')}
                 </>
               )}
             </Button>
@@ -345,8 +326,7 @@ export default function ImportListingsPage() {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground mt-2 text-center">
-                  {t('importListings.uploadingProgress', { progress: uploadProgress }) ||
-                    `Uploading... ${uploadProgress}%`}
+                  {t('importListings.uploadingProgress', { progress: uploadProgress })}
                 </p>
               </Card>
             )}
@@ -354,35 +334,25 @@ export default function ImportListingsPage() {
             {/* Results */}
             {importResult && (
               <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-4">
-                  {t('importListings.resultsTitle') || 'Import Results'}
-                </h2>
+                <h2 className="text-lg font-semibold mb-4">{t('importListings.resultsTitle')}</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                   <div className="p-4 bg-muted rounded-lg text-center">
                     <p className="text-2xl font-bold">{importResult.total}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {t('importListings.total') || 'Total'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('importListings.total')}</p>
                   </div>
                   <div className="p-4 bg-success/15 rounded-lg text-center">
                     <p className="text-2xl font-bold text-success">{importResult.created}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {t('importListings.created') || 'Created'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('importListings.created')}</p>
                   </div>
                   <div className="p-4 bg-warning/15 rounded-lg text-center">
                     <p className="text-2xl font-bold text-warning">{importResult.updated}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {t('importListings.updated') || 'Updated'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('importListings.updated')}</p>
                   </div>
                   {importResult.failed > 0 && (
                     <div className="p-4 bg-error/15 rounded-lg text-center">
                       <p className="text-2xl font-bold text-error">{importResult.failed}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {t('importListings.failed') || 'Failed'}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{t('importListings.failed')}</p>
                     </div>
                   )}
                 </div>
@@ -391,13 +361,13 @@ export default function ImportListingsPage() {
                 {importResult.errors && importResult.errors.length > 0 && (
                   <div className="bg-error/15 rounded-lg p-4 mb-4">
                     <h3 className="text-sm font-medium mb-2 text-error">
-                      {t('importListings.errorDetails') || 'Error Details'}
+                      {t('importListings.errorDetails')}
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {importResult.errors.map((err, index) => (
                         <div key={index} className="text-sm">
                           <span className="text-muted-foreground">
-                            {t('importListings.row') || 'Row'} {err.row}
+                            {t('importListings.row')} {err.row}
                             {err.title && ` - ${err.title}`}:
                           </span>
                           <span className="text-error ml-1">{err.error}</span>
@@ -417,8 +387,8 @@ export default function ImportListingsPage() {
                       onClick={() => setShowSuccessDetails(!showSuccessDetails)}
                     >
                       {showSuccessDetails
-                        ? t('importListings.hideDetails') || 'Hide Details'
-                        : t('importListings.showDetails') || 'Show Details'}
+                        ? t('importListings.hideDetails')
+                        : t('importListings.showDetails')}
                     </Button>
 
                     {showSuccessDetails && (
@@ -426,7 +396,7 @@ export default function ImportListingsPage() {
                         {importResult.createdItems && importResult.createdItems.length > 0 && (
                           <div>
                             <h4 className="text-sm font-medium mb-2">
-                              {t('importListings.createdItems') || 'Created Items'}
+                              {t('importListings.createdItems')}
                             </h4>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
                               {importResult.createdItems.map(item => (
@@ -444,7 +414,7 @@ export default function ImportListingsPage() {
                         {importResult.updatedItems && importResult.updatedItems.length > 0 && (
                           <div>
                             <h4 className="text-sm font-medium mb-2">
-                              {t('importListings.updatedItems') || 'Updated Items'}
+                              {t('importListings.updatedItems')}
                             </h4>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
                               {importResult.updatedItems.map(item => (

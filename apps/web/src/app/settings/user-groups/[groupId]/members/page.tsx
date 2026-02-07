@@ -18,10 +18,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useUserGroups, useUserStore, type UserGroupMember } from '@mobazha/core';
+import { useUserGroups, useUserStore, useI18n, type UserGroupMember } from '@mobazha/core';
 import { Loader2, UserPlus, Trash2, Users } from 'lucide-react';
 
 export default function UserGroupMembersPage() {
+  const { t } = useI18n();
   const params = useParams();
   const groupId = parseInt(params.groupId as string);
 
@@ -62,7 +63,7 @@ export default function UserGroupMembersPage() {
         const memberList = await loadMembers(groupId);
         setMembers(memberList);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载失败');
+        setError(err instanceof Error ? err.message : t('common.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -86,7 +87,7 @@ export default function UserGroupMembersPage() {
         setNewPeerID('');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '添加失败');
+      setError(err instanceof Error ? err.message : t('common.addFailed'));
     } finally {
       setSaving(false);
     }
@@ -106,7 +107,7 @@ export default function UserGroupMembersPage() {
         setRemovingMemberId(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '移除失败');
+      setError(err instanceof Error ? err.message : t('common.removeFailed'));
     } finally {
       setSaving(false);
     }
@@ -137,21 +138,22 @@ export default function UserGroupMembersPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            返回用户组
+            {t('settings.sidebar.userGroups')}
           </Link>
 
           <HStack justify="between" align="center" className="mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                {currentGroup?.name || '用户组'} - 成员管理
+                {currentGroup?.name || t('settings.accessControl.userGroup')} -{' '}
+                {t('common.members')}
               </h1>
               <p className="text-muted-foreground">
-                管理该用户组的成员，共 {members.length} 位成员
+                {members.length} {t('common.members')}
               </p>
             </div>
             <Button onClick={() => setShowAddModal(true)} disabled={!isAuthenticated}>
               <UserPlus className="w-4 h-4 mr-2" />
-              添加成员
+              {t('settings.accessControl.addMember')}
             </Button>
           </HStack>
 
@@ -178,7 +180,8 @@ export default function UserGroupMembersPage() {
                       <div>
                         <p className="font-medium text-foreground">{formatPeerID(member.peerID)}</p>
                         <p className="text-sm text-muted-foreground">
-                          添加于 {new Date(member.addedAt).toLocaleDateString()}
+                          {t('settings.accessControl.addedOn')}{' '}
+                          {new Date(member.addedAt).toLocaleDateString()}
                         </p>
                       </div>
                     </HStack>
@@ -203,11 +206,15 @@ export default function UserGroupMembersPage() {
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                   <Users className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">暂无成员</h3>
-                <p className="text-muted-foreground">添加成员到此用户组</p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {t('settings.accessControl.noMembers')}
+                </h3>
+                <p className="text-muted-foreground">
+                  {t('settings.accessControl.addFirstMember')}
+                </p>
                 <Button onClick={() => setShowAddModal(true)} disabled={!isAuthenticated}>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  添加成员
+                  {t('settings.accessControl.addMember')}
                 </Button>
               </VStack>
             </Card>
@@ -221,7 +228,9 @@ export default function UserGroupMembersPage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h2 className="text-xl font-bold text-foreground mb-6">添加成员</h2>
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              {t('settings.accessControl.addMember')}
+            </h2>
 
             <VStack gap="lg">
               <div>
@@ -231,10 +240,10 @@ export default function UserGroupMembersPage() {
                 <Input
                   value={newPeerID}
                   onChange={e => setNewPeerID(e.target.value)}
-                  placeholder="输入用户的 Peer ID"
+                  placeholder={t('settings.accessControl.peerIdPlaceholder')}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Peer ID 以 Qm 开头，是用户的唯一标识
+                  {t('settings.accessControl.peerIdHint')}
                 </p>
               </div>
             </VStack>
@@ -248,16 +257,16 @@ export default function UserGroupMembersPage() {
                 }}
                 disabled={saving}
               >
-                取消
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleAddMember} disabled={!newPeerID.trim() || saving}>
                 {saving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    添加中...
+                    {t('common.adding')}
                   </>
                 ) : (
-                  '添加'
+                  t('common.add')
                 )}
               </Button>
             </HStack>
@@ -272,19 +281,19 @@ export default function UserGroupMembersPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>移除成员</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.accessControl.removeMember')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要从此用户组移除该成员吗？此操作无法撤销。
+              {t('settings.accessControl.removeMemberConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={saving}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveMember}
               className="bg-error hover:bg-error"
               disabled={saving}
             >
-              {saving ? '移除中...' : '移除'}
+              {saving ? t('common.removing') : t('common.remove')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

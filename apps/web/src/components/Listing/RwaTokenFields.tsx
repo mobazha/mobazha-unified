@@ -228,12 +228,12 @@ export function RwaTokenFields({
   // 获取 Token 类型名称
   const getTokenTypeName = (type: string) => {
     const names: Record<string, string> = {
-      REAL_ESTATE: t('listing.rwa.realEstate') || '房地产代币',
-      BOND: t('listing.rwa.bond') || '债券代币',
-      COMMODITY: t('listing.rwa.commodity') || '商品代币',
-      ART: t('listing.rwa.art') || '艺术品代币',
-      CARBON_CREDIT: t('listing.rwa.carbonCredit') || '碳信用代币',
-      CUSTOM: t('listing.rwa.custom') || '自定义代币',
+      REAL_ESTATE: t('listing.rwa.realEstate'),
+      BOND: t('listing.rwa.bond'),
+      COMMODITY: t('listing.rwa.commodity'),
+      ART: t('listing.rwa.art'),
+      CARBON_CREDIT: t('listing.rwa.carbonCredit'),
+      CUSTOM: t('listing.rwa.custom'),
     };
     return names[type] || type;
   };
@@ -254,15 +254,13 @@ export function RwaTokenFields({
 
   return (
     <Card className={`p-6 ${className}`}>
-      <h2 className="text-lg font-semibold text-foreground mb-4">
-        {t('listing.rwaTokenDetails') || 'RWA Token Details'}
-      </h2>
+      <h2 className="text-lg font-semibold text-foreground mb-4">{t('listing.rwaTokenDetails')}</h2>
 
       <div className="space-y-5">
         {/* 区块链选择 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.blockchain') || 'Blockchain'} <span className="text-destructive">*</span>
+            {t('listing.blockchain')} <span className="text-destructive">*</span>
           </label>
           <Select
             value={blockchain}
@@ -282,17 +280,13 @@ export function RwaTokenFields({
           {errors.blockchain && (
             <p className="text-destructive text-sm mt-1">{errors.blockchain}</p>
           )}
-          <p className="text-xs text-muted-foreground mt-1">
-            {t('listing.blockchainHelper') ||
-              'Select the blockchain network where the RWA token is deployed'}
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{t('listing.blockchainHelper')}</p>
         </div>
 
         {/* Token 选择 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.selectRwaToken') || 'Select RWA Token'}{' '}
-            <span className="text-destructive">*</span>
+            {t('listing.selectRwaToken')} <span className="text-destructive">*</span>
           </label>
           {errors.cryptoListingCurrencyCode && (
             <p className="text-destructive text-sm mb-2">{errors.cryptoListingCurrencyCode}</p>
@@ -304,10 +298,10 @@ export function RwaTokenFields({
           >
             <TabsList className="w-full mb-3">
               <TabsTrigger value="search" className="flex-1">
-                {t('listing.searchTokens') || 'Search Tokens'}
+                {t('listing.searchTokens')}
               </TabsTrigger>
               <TabsTrigger value="address" className="flex-1">
-                {t('listing.enterAddress') || 'Enter Address'}
+                {t('listing.enterAddress')}
               </TabsTrigger>
             </TabsList>
 
@@ -318,10 +312,7 @@ export function RwaTokenFields({
                   <Input
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder={
-                      t('listing.searchTokenPlaceholder') ||
-                      'Search by token name, code or symbol...'
-                    }
+                    placeholder={t('listing.searchTokenPlaceholder')}
                     className="pl-10"
                   />
                 </div>
@@ -330,7 +321,7 @@ export function RwaTokenFields({
                 <div className="max-h-48 overflow-y-auto border border-border rounded-lg">
                   {filteredTokens.length === 0 ? (
                     <p className="p-4 text-center text-muted-foreground text-sm">
-                      {t('listing.noTokensFound') || 'No tokens found'}
+                      {t('listing.noTokensFound')}
                     </p>
                   ) : (
                     filteredTokens.map(token => (
@@ -367,13 +358,10 @@ export function RwaTokenFields({
                     className="flex-1 font-mono text-sm"
                   />
                   <Button type="button" variant="outline" onClick={handleAddressSearch}>
-                    {t('listing.search') || 'Search'}
+                    {t('listing.search')}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t('listing.tokenAddressHelper') ||
-                    'Search or enter address to find and confirm RWA token'}
-                </p>
+                <p className="text-xs text-muted-foreground">{t('listing.tokenAddressHelper')}</p>
               </div>
             )}
           </Tabs>
@@ -382,46 +370,34 @@ export function RwaTokenFields({
         {/* 已选择的 Token 信息 */}
         {selectedToken && (
           <div className="p-4 bg-success/8 border-2 border-success rounded-lg">
-            <h4 className="font-semibold text-success mb-3">
-              {t('listing.selectedTokenInfo') || '已选择的RWA代币信息'}
-            </h4>
+            <h4 className="font-semibold text-success mb-3">{t('listing.selectedTokenInfo')}</h4>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-muted-foreground">
-                  {t('listing.tokenName') || '代币名称'}:
-                </span>
+                <span className="text-muted-foreground">{t('listing.tokenName')}:</span>
                 <span className="ml-2 font-medium">{selectedToken.name}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">
-                  {t('listing.tokenSymbol') || '代币符号'}:
-                </span>
+                <span className="text-muted-foreground">{t('listing.tokenSymbol')}:</span>
                 <span className="ml-2 font-medium">{selectedToken.symbol}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">
-                  {t('listing.tokenType') || '代币类型'}:
-                </span>
+                <span className="text-muted-foreground">{t('listing.tokenType')}:</span>
                 <span className="ml-2 font-medium">
                   {getTokenTypeName(selectedToken.tokenType)}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">
-                  {t('listing.currentPrice') || '当前价格'}:
-                </span>
+                <span className="text-muted-foreground">{t('listing.currentPrice')}:</span>
                 <span className="ml-2 font-medium">
                   {formatCurrencyPrice(selectedToken.currentPrice ?? 0, 'USD')}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">{t('listing.issuer') || '发行方'}:</span>
+                <span className="text-muted-foreground">{t('listing.issuer')}:</span>
                 <span className="ml-2 font-medium">{selectedToken.issuer}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">
-                  {t('listing.riskLevel') || '风险等级'}:
-                </span>
+                <span className="text-muted-foreground">{t('listing.riskLevel')}:</span>
                 <span
                   className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${getRiskLevelStyle(selectedToken.metadata?.riskLevel)}`}
                 >
@@ -430,9 +406,7 @@ export function RwaTokenFields({
               </div>
               {selectedToken.verification?.verified && (
                 <div className="col-span-2">
-                  <span className="text-muted-foreground">
-                    {t('listing.verification') || '验证状态'}:
-                  </span>
+                  <span className="text-muted-foreground">{t('listing.verification')}:</span>
                   <span className="ml-2 text-success flex items-center gap-1 inline-flex">
                     <CheckCircle className="w-4 h-4" />
                     {selectedToken.verification.verifiedBy}
@@ -447,7 +421,7 @@ export function RwaTokenFields({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.price') || 'Price'} <span className="text-destructive">*</span>
+              {t('listing.price')} <span className="text-destructive">*</span>
             </label>
             <div className="flex gap-2">
               <Input
@@ -479,8 +453,7 @@ export function RwaTokenFields({
         {/* 支付币种 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.acceptedCurrencies') || 'Receive'}{' '}
-            <span className="text-destructive">*</span>
+            {t('listing.acceptedCurrencies')} <span className="text-destructive">*</span>
           </label>
           {errors.acceptedCurrencies && (
             <p className="text-destructive text-sm mb-2">{errors.acceptedCurrencies}</p>
@@ -516,13 +489,12 @@ export function RwaTokenFields({
             {acceptedCurrencies.length < 5 && (
               <Button type="button" variant="outline" size="sm" onClick={handleAddCurrency}>
                 <Plus className="w-4 h-4 mr-1" />
-                {t('listing.addPaymentCurrency') || 'Add Payment Currency'}
+                {t('listing.addPaymentCurrency')}
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {t('listing.acceptedCurrenciesHelper') ||
-              "The currency you'll receive for the trade (RWA Token supports multiple payment currencies)"}
+            {t('listing.acceptedCurrenciesHelper')}
           </p>
         </div>
 
@@ -530,8 +502,7 @@ export function RwaTokenFields({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.minQuantity') || 'Minimum Purchase Quantity'}{' '}
-              <span className="text-destructive">*</span>
+              {t('listing.minQuantity')} <span className="text-destructive">*</span>
             </label>
             <Input
               type="number"
@@ -544,15 +515,11 @@ export function RwaTokenFields({
             {errors.minQuantity && (
               <p className="text-destructive text-sm mt-1">{errors.minQuantity}</p>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('listing.minQuantityHelper') ||
-                'Minimum quantity a buyer can purchase in a single order'}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t('listing.minQuantityHelper')}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.maxQuantity') || 'Maximum Purchase Quantity'}{' '}
-              <span className="text-destructive">*</span>
+              {t('listing.maxQuantity')} <span className="text-destructive">*</span>
             </label>
             <Input
               type="number"
@@ -565,10 +532,7 @@ export function RwaTokenFields({
             {errors.maxQuantity && (
               <p className="text-destructive text-sm mt-1">{errors.maxQuantity}</p>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('listing.maxQuantityHelper') ||
-                'Maximum quantity a buyer can purchase in a single order'}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t('listing.maxQuantityHelper')}</p>
           </div>
         </div>
       </div>

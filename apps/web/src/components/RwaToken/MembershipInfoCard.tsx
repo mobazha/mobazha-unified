@@ -33,8 +33,12 @@ export function MembershipInfoCard({
             <span className="font-medium">{membership.level}</span>
           </div>
           <div className="flex items-center gap-3 text-foreground/70 font-medium">
-            <span>{membership.holderCount} 人</span>
-            <span>{membership.exclusivePerks} 项福利</span>
+            <span>
+              {membership.holderCount} {t('listing.rwa.holders')}
+            </span>
+            <span>
+              {membership.exclusivePerks} {t('listing.rwa.exclusivePerks')}
+            </span>
             <span>{membership.validityType}</span>
           </div>
         </div>
@@ -46,31 +50,27 @@ export function MembershipInfoCard({
     <div className={cn('p-4 bg-primary/8 rounded-lg border border-primary/20', className)}>
       <h5 className="font-medium text-primary mb-3 flex items-center gap-2">
         <Users className="w-4 h-4" />
-        {t('listing.rwa.membershipInfo') || '会员信息'}
+        {t('listing.rwa.membershipInfo')}
       </h5>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="text-center p-2 bg-background/80 rounded-lg">
-          <div className="text-xs text-muted-foreground mb-1">
-            {t('listing.rwa.memberLevel') || '会员等级'}
-          </div>
+          <div className="text-xs text-muted-foreground mb-1">{t('listing.rwa.memberLevel')}</div>
           <div className="font-semibold text-primary">{membership.level}</div>
         </div>
         <div className="text-center p-2 bg-background/80 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">
-            {t('listing.rwa.currentHolders') || '当前持有'}
+            {t('listing.rwa.currentHolders')}
           </div>
-          <div className="font-semibold text-primary">{membership.holderCount} 人</div>
+          <div className="font-semibold text-primary">{membership.holderCount}</div>
         </div>
         <div className="text-center p-2 bg-background/80 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">
-            {t('listing.rwa.exclusivePerks') || '专属福利'}
+            {t('listing.rwa.exclusivePerks')}
           </div>
-          <div className="font-semibold text-primary">{membership.exclusivePerks} 项</div>
+          <div className="font-semibold text-primary">{membership.exclusivePerks}</div>
         </div>
         <div className="text-center p-2 bg-background/80 rounded-lg">
-          <div className="text-xs text-muted-foreground mb-1">
-            {t('listing.rwa.validity') || '有效期'}
-          </div>
+          <div className="text-xs text-muted-foreground mb-1">{t('listing.rwa.validity')}</div>
           <div className="font-semibold text-primary">{membership.validityType}</div>
         </div>
       </div>

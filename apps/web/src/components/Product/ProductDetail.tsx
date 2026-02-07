@@ -726,8 +726,7 @@ export function ProductDetail({
                     {product.metadata.contractType === 'SERVICE' && t('product.serviceType')}
                     {product.metadata.contractType === 'CRYPTOCURRENCY' &&
                       t('product.cryptocurrency')}
-                    {product.metadata.contractType === 'RWA_TOKEN' &&
-                      (t('product.rwaToken') || 'RWA Token')}
+                    {product.metadata.contractType === 'RWA_TOKEN' && t('product.rwaToken')}
                     {![
                       'PHYSICAL_GOOD',
                       'DIGITAL_GOOD',

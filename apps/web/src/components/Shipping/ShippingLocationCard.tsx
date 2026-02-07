@@ -38,11 +38,11 @@ export function ShippingLocationCard({
           <HStack gap="sm" align="center">
             <MapPin className="w-5 h-5 text-primary" />
             <h4 className="font-medium text-foreground">
-              {location.name || t('shipping.unnamedLocation') || 'Unnamed Location'}
+              {location.name || t('shipping.unnamedLocation')}
             </h4>
             {location.isDefault && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                {t('common.default') || 'Default'}
+                {t('common.default')}
               </span>
             )}
           </HStack>
@@ -61,7 +61,7 @@ export function ShippingLocationCard({
               size="sm"
               onClick={onSetDefault}
               disabled={disabled}
-              title={t('shipping.setAsDefaultLocation') || 'Set as default'}
+              title={t('shipping.setAsDefaultLocation')}
             >
               <Check className="w-4 h-4" />
             </Button>
@@ -71,7 +71,7 @@ export function ShippingLocationCard({
             size="sm"
             onClick={onEdit}
             disabled={disabled}
-            title={t('common.edit') || 'Edit'}
+            title={t('common.edit')}
           >
             <Pencil className="w-4 h-4" />
           </Button>
@@ -80,7 +80,7 @@ export function ShippingLocationCard({
             size="sm"
             onClick={onDelete}
             disabled={disabled || location.isDefault}
-            title={t('common.delete') || 'Delete'}
+            title={t('common.delete')}
             className={cn(location.isDefault && 'cursor-not-allowed')}
           >
             <Trash2 className="w-4 h-4" />

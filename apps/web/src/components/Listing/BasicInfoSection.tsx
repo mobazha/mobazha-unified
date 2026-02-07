@@ -90,15 +90,13 @@ export function BasicInfoSection({
 
   return (
     <Card className={`p-6 ${className}`}>
-      <h2 className="text-lg font-semibold text-foreground mb-4">
-        {t('listing.basicInfo') || 'Basic Information'}
-      </h2>
+      <h2 className="text-lg font-semibold text-foreground mb-4">{t('listing.basicInfo')}</h2>
 
       <div className="space-y-4">
         {/* 标题 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.title') || 'Title'} <span className="text-destructive">*</span>
+            {t('listing.title')} <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
@@ -110,20 +108,17 @@ export function BasicInfoSection({
               focus:outline-none focus:ring-2 focus:ring-primary/50
               ${errors.title ? 'border-destructive' : 'border-border'}
             `}
-            placeholder={t('listing.titlePlaceholder') || 'Enter a descriptive title'}
+            placeholder={t('listing.titlePlaceholder')}
           />
           {errors.title && <p className="text-destructive text-sm mt-1">{errors.title}</p>}
-          <p className="text-xs text-muted-foreground mt-1">
-            {t('listing.titleHelper') ||
-              'Something descriptive that clearly explains what you are selling'}
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{t('listing.titleHelper')}</p>
         </div>
 
         {/* 价格和币种 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.price') || 'Price'} <span className="text-destructive">*</span>
+              {t('listing.price')} <span className="text-destructive">*</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -153,16 +148,14 @@ export function BasicInfoSection({
               </Select>
             </div>
             {errors.price && <p className="text-destructive text-sm mt-1">{errors.price}</p>}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('listing.priceHelper') || 'Set your price in Dollars, Yuan, Bitcoin, anything'}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t('listing.priceHelper')}</p>
           </div>
 
           {/* 商品状态 - 仅物理商品 */}
           {showCondition && (
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.condition') || 'Condition'} <span className="text-destructive">*</span>
+                {t('listing.condition')} <span className="text-destructive">*</span>
               </label>
               <Select
                 value={condition || 'NEW'}
@@ -174,7 +167,7 @@ export function BasicInfoSection({
                 <SelectContent>
                   {conditions.map(c => (
                     <SelectItem key={c.value} value={c.value}>
-                      {t(c.labelKey) || c.value.replace('_', ' ')}
+                      {t(c.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -182,9 +175,7 @@ export function BasicInfoSection({
               {errors.condition && (
                 <p className="text-destructive text-sm mt-1">{errors.condition}</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('listing.conditionHelper') || 'The overall condition of your listing'}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('listing.conditionHelper')}</p>
             </div>
           )}
         </div>
@@ -194,7 +185,7 @@ export function BasicInfoSection({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.weight') || 'Weight'} (g) <span className="text-destructive">*</span>
+                {t('listing.weight')} (g) <span className="text-destructive">*</span>
               </label>
               <input
                 type="number"
@@ -204,26 +195,22 @@ export function BasicInfoSection({
                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 placeholder="0"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('listing.weightHelper') || 'Item weight in grams'}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('listing.weightHelper')}</p>
             </div>
 
             {/* SKU */}
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.sku') || 'SKU'}
+                {t('listing.sku')}
               </label>
               <input
                 type="text"
                 value={sku || ''}
                 onChange={e => onSkuChange?.(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                placeholder={t('listing.skuPlaceholder') || 'SKU, Part Number, ID, etc'}
+                placeholder={t('listing.skuPlaceholder')}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('listing.skuHelper') || 'A unique identifier for your listing'}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('listing.skuHelper')}</p>
             </div>
           </div>
         )}
@@ -231,17 +218,14 @@ export function BasicInfoSection({
         {/* 描述 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.description') || 'Description'}
+            {t('listing.description')}
           </label>
           <textarea
             value={description}
             onChange={e => onDescriptionChange(e.target.value)}
             rows={6}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            placeholder={
-              t('listing.descriptionPlaceholder') ||
-              'Describe your listing as best as you can... Include inline photos. Link to Youtube videos. etc'
-            }
+            placeholder={t('listing.descriptionPlaceholder')}
           />
         </div>
       </div>

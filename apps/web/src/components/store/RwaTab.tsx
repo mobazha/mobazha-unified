@@ -73,7 +73,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
       setProducts(productsData as ProductListItem[]);
     } catch (err) {
       console.error('Failed to fetch products:', err);
-      setError(t('rwa.fetchError') || '获取 RWA 商品失败');
+      setError(t('rwa.fetchError'));
     } finally {
       setLoading(false);
     }
@@ -209,7 +209,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('filter.searchRwa') || '搜索数字资产...'}
+                placeholder={t('filter.searchRwa')}
                 value={filter.search}
                 onChange={e => updateFilter({ search: e.target.value })}
                 className="pl-9 h-9"
@@ -226,13 +226,13 @@ export const RwaTab: React.FC<RwaTabProps> = ({
 
             {/* 商品数量 */}
             <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {filteredProducts.length} {t('filter.resultsFound') || '件商品'}
+              {filteredProducts.length} {t('filter.resultsFound')}
             </span>
 
             {/* 排序下拉 */}
             <div className="flex items-center gap-2 ml-auto">
               <span className="text-sm text-muted-foreground hidden sm:inline">
-                {t('search.sortBy') || '排序方式'}
+                {t('search.sortBy')}
               </span>
               <Select
                 value={filter.sortBy}
@@ -258,7 +258,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
           <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
             {error}
             <button className="ml-2 underline hover:no-underline" onClick={fetchProducts}>
-              {t('common.retry') || '重试'}
+              {t('common.retry')}
             </button>
           </div>
         )}
@@ -270,14 +270,10 @@ export const RwaTab: React.FC<RwaTabProps> = ({
               <Coins className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {isOwnStore
-                ? t('rwa.noRwaYet') || '还没有 RWA 数字资产商品'
-                : t('rwa.noRwaInStore') || '该店铺暂无 RWA 数字资产商品'}
+              {isOwnStore ? t('rwa.noRwaYet') : t('rwa.noRwaInStore')}
             </h3>
             {isOwnStore && (
-              <p className="text-muted-foreground text-sm mb-4">
-                {t('rwa.createFirstRwa') || '创建商品时选择 RWA Token 类型，开始销售数字资产'}
-              </p>
+              <p className="text-muted-foreground text-sm mb-4">{t('rwa.createFirstRwa')}</p>
             )}
           </div>
         )}
@@ -289,11 +285,9 @@ export const RwaTab: React.FC<RwaTabProps> = ({
               <Package className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-base font-medium text-foreground mb-2">
-              {t('empty.noProductsFound') || '未找到匹配的商品'}
+              {t('empty.noProductsFound')}
             </h3>
-            <p className="text-sm text-muted-foreground">
-              {t('empty.tryAdjustingFilters') || '尝试调整筛选条件'}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
           </div>
         )}
 

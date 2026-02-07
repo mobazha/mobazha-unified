@@ -125,7 +125,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
   const getRegionDisplayName = useCallback(
     (code: string) => {
       if (code === WORLDWIDE_CODE) {
-        return t('shipping.worldwide') || 'Worldwide';
+        return t('shipping.worldwide');
       }
       return getCountryName(code, language) || code;
     },
@@ -135,7 +135,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
   // 显示的选中地区
   const displayRegions = useMemo(() => {
     if (isWorldwide) {
-      return [{ code: WORLDWIDE_CODE, name: t('shipping.worldwide') || 'Worldwide' }];
+      return [{ code: WORLDWIDE_CODE, name: t('shipping.worldwide') }];
     }
     return value.slice(0, maxDisplay).map(code => ({
       code,
@@ -185,22 +185,22 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
           <Button variant="outline" disabled={disabled} className="w-full justify-between">
             <span className="text-muted-foreground">
               {value.length === 0
-                ? placeholder || t('shipping.selectRegions') || 'Select regions...'
-                : `${selectedCountryCount} ${t('shipping.regionsSelected') || 'region(s) selected'}`}
+                ? placeholder || t('shipping.selectRegions')
+                : `${selectedCountryCount} ${t('shipping.regionsSelected')}`}
             </span>
             <ChevronDown className="w-4 h-4 opacity-50" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('shipping.selectRegions') || 'Select Regions...'}</DialogTitle>
+            <DialogTitle>{t('shipping.selectRegions')}</DialogTitle>
           </DialogHeader>
 
           {/* 搜索框 */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder={t('common.search') || 'Search...'}
+              placeholder={t('common.search')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -231,7 +231,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
                   onClick={e => e.stopPropagation()}
                 />
                 <Globe className="w-5 h-5 text-primary" />
-                <span className="font-medium">{t('shipping.worldwide') || 'Worldwide'}</span>
+                <span className="font-medium">{t('shipping.worldwide')}</span>
               </div>
               {isWorldwide && <Check className="w-4 h-4 text-primary" />}
             </div>
@@ -242,7 +242,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             {!searchQuery && (
               <>
                 <p className="text-xs text-muted-foreground px-3 py-2 font-medium">
-                  {t('shipping.popularCountries') || 'Popular Countries'}
+                  {t('shipping.popularCountries')}
                 </p>
                 {POPULAR_COUNTRIES.slice(0, 5).map(code => {
                   const name = getCountryName(code, language) || code;
@@ -279,7 +279,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
                 })}
                 <div className="border-t my-2" />
                 <p className="text-xs text-muted-foreground px-3 py-2 font-medium">
-                  {t('shipping.allCountries') || 'All Countries'}
+                  {t('shipping.allCountries')}
                 </p>
               </>
             )}
@@ -319,9 +319,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             })}
 
             {filteredCountries.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                {t('common.noResults') || 'No results found'}
-              </div>
+              <div className="text-center py-8 text-muted-foreground">{t('common.noResults')}</div>
             )}
           </ScrollArea>
 
@@ -334,15 +332,15 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
                 onClick={() => onChange([])}
                 disabled={value.length === 0}
               >
-                {t('common.clearAll') || 'Clear All'}
+                {t('common.clearAll')}
               </Button>
               {!isWorldwide && !isAllSelected && (
                 <Button variant="ghost" size="sm" onClick={selectAllCountries}>
-                  {t('common.selectAll') || 'Select All'}
+                  {t('common.selectAll')}
                 </Button>
               )}
             </div>
-            <Button onClick={() => setOpen(false)}>{t('common.done') || 'Done'}</Button>
+            <Button onClick={() => setOpen(false)}>{t('common.done')}</Button>
           </div>
         </DialogContent>
       </Dialog>

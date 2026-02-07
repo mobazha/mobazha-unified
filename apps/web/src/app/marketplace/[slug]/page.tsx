@@ -263,9 +263,9 @@ export default function MarketplaceDetailPage() {
 
   const otcStatusText = (status: OtcOrderStatus) => {
     const texts: Record<OtcOrderStatus, string> = {
-      [OtcOrderStatus.Active]: t('otc.status.active') || '活跃',
-      [OtcOrderStatus.Completed]: t('otc.status.completed') || '已成交',
-      [OtcOrderStatus.Cancelled]: t('otc.status.cancelled') || '已取消',
+      [OtcOrderStatus.Active]: t('otc.status.active'),
+      [OtcOrderStatus.Completed]: t('otc.status.completed'),
+      [OtcOrderStatus.Cancelled]: t('otc.status.cancelled'),
     };
     return texts[status];
   };
@@ -464,16 +464,14 @@ export default function MarketplaceDetailPage() {
                 <HStack justify="between" align="center" className="flex-wrap gap-4">
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">
-                      {t('otc.marketplaceOtcTitle') || '🔐 私密 OTC 交易'}
+                      {t('otc.marketplaceOtcTitle')}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t('otc.marketplaceOtcDesc') || '社区成员发布的 NFT 和 RWA 份额私密挂单'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('otc.marketplaceOtcDesc')}</p>
                   </div>
                   {isMember && (
                     <Link href="/otc/create">
                       <Button size="sm" className="touch-feedback">
-                        {t('otc.createOrder') || '创建挂单'}
+                        {t('otc.createOrder')}
                       </Button>
                     </Link>
                   )}
@@ -548,15 +546,13 @@ export default function MarketplaceDetailPage() {
                     <span className="text-3xl">🔐</span>
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">
-                    {t('otc.noOtcInMarketplace') || '暂无 OTC 资产'}
+                    {t('otc.noOtcInMarketplace')}
                   </h3>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    {t('otc.beFirstToCreate') || '成为第一个在社区内发布 OTC 挂单的成员'}
-                  </p>
+                  <p className="text-muted-foreground text-sm mb-4">{t('otc.beFirstToCreate')}</p>
                   {isMember && (
                     <Link href="/otc/create">
                       <Button size="sm" className="touch-feedback">
-                        {t('otc.createOrder') || '创建挂单'}
+                        {t('otc.createOrder')}
                       </Button>
                     </Link>
                   )}

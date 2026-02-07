@@ -85,6 +85,13 @@ export const en: TranslationResource = {
     expand: 'Expand',
     clickToEdit: 'Click to edit',
     deleteFailed: 'Failed to delete',
+    loadFailed: 'Failed to load',
+    addFailed: 'Failed to add',
+    removeFailed: 'Failed to remove',
+    adding: 'Adding...',
+    removing: 'Removing...',
+    remove: 'Remove',
+    loginRequired: 'Please log in to continue',
     clearAll: 'Clear All',
     done: 'Done',
     selectAll: 'Select All',
@@ -2050,6 +2057,13 @@ export const en: TranslationResource = {
     createListing: 'Create Listing',
     createListingDesc: 'Add a new product or service to your store',
     editListing: 'Edit Listing',
+    // Product card actions
+    verifiedModerator: 'This listing has a verified moderator',
+    report: 'Report this listing',
+    blockSeller: 'Block this seller',
+    edit: 'Edit listing',
+    clone: 'Clone listing',
+    deleteListing: 'Delete listing',
 
     // Product Types
     productType: 'Product Type',

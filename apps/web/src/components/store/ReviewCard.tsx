@@ -71,8 +71,8 @@ export function ReviewCard({ review }: ReviewCardProps) {
 
   // 获取购买者名称
   const getBuyerName = () => {
-    if (review.anonymous) return t('profile.anonymous') || 'Anonymous';
-    if (!review.buyerID) return t('profile.anonymous') || 'Anonymous';
+    if (review.anonymous) return t('profile.anonymous');
+    if (!review.buyerID) return t('profile.anonymous');
     return review.buyerID.handle || `${review.buyerID.peerID.slice(0, 8)}...`;
   };
 

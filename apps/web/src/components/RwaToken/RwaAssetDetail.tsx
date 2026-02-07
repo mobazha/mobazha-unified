@@ -75,14 +75,14 @@ export function RwaAssetDetail({
   const formatEscrowTimeout = (seconds: number) => {
     if (seconds >= 86400) {
       const days = Math.floor(seconds / 86400);
-      return `${days} ${t('common.days') || '天'}`;
+      return `${days} ${t('common.days')}`;
     }
     if (seconds >= 3600) {
       const hours = Math.floor(seconds / 3600);
-      return `${hours} ${t('common.hours') || '小时'}`;
+      return `${hours} ${t('common.hours')}`;
     }
     const minutes = Math.floor(seconds / 60);
-    return `${minutes} ${t('common.minutes') || '分钟'}`;
+    return `${minutes} ${t('common.minutes')}`;
   };
 
   // 非 RWA 商品不显示
@@ -123,7 +123,7 @@ export function RwaAssetDetail({
           </div>
           {source === 'predefined' && (
             <span className="text-xs font-medium text-success bg-success/10 px-2 py-1 rounded border border-success/20">
-              {t('listing.rwa.verifiedAsset') || '已认证资产'}
+              {t('listing.rwa.verifiedAsset')}
             </span>
           )}
         </div>
@@ -152,15 +152,12 @@ export function RwaAssetDetail({
             >
               <span>{isConfirmRequired ? '🔒' : '⚡'}</span>
               <span>
-                {isConfirmRequired
-                  ? t('listing.rwa.confirmTrade') || '确认交易'
-                  : t('listing.rwa.instantTrade') || '即时交易'}
+                {isConfirmRequired ? t('listing.rwa.confirmTrade') : t('listing.rwa.instantTrade')}
               </span>
             </div>
             {isConfirmRequired && (
               <span className="text-xs text-warning bg-warning/15 px-2 py-0.5 rounded border border-warning/25">
-                {t('listing.rwa.escrowTimeout') || '托管超时'}:{' '}
-                {formatEscrowTimeout(escrowTimeoutSeconds)}
+                {t('listing.rwa.escrowTimeout')}: {formatEscrowTimeout(escrowTimeoutSeconds)}
               </span>
             )}
           </div>
@@ -171,14 +168,13 @@ export function RwaAssetDetail({
             )}
           >
             {isConfirmRequired
-              ? t('listing.rwa.confirmTradeHint') ||
-                '付款进入托管，卖家确认后完成交易。超时未确认将自动退款。'
-              : t('listing.rwa.instantTradeHint') || '付款后立即获得 RWA 份额'}
+              ? t('listing.rwa.confirmTradeHint')
+              : t('listing.rwa.instantTradeHint')}
           </p>
           {acceptedCurrencies && acceptedCurrencies.length > 0 && (
             <div className="flex items-center flex-wrap gap-2 mt-2">
               <span className="text-xs text-foreground/60">
-                {t('listing.rwa.acceptedPayments') || '接受的支付方式'}:
+                {t('listing.rwa.acceptedPayments')}:
               </span>
               {acceptedCurrencies.map((coin, index) => (
                 <span
@@ -223,17 +219,15 @@ export function RwaAssetDetail({
         <Card className="p-4 bg-success/5 border-success/20">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-sm">📊</span>
-            <h4 className="font-semibold text-success text-sm">
-              {t('listing.rwa.sharesInfo') || '份额信息'}
-            </h4>
+            <h4 className="font-semibold text-success text-sm">{t('listing.rwa.sharesInfo')}</h4>
             <span className="ml-auto text-xs text-success bg-success/10 px-2 py-0.5 rounded">
-              🔗 {t('listing.rwa.onChainData') || '链上数据'}
+              🔗 {t('listing.rwa.onChainData')}
             </span>
           </div>
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground">
-                {t('listing.rwa.totalSharesOnChain') || '出售总份额'}
+                {t('listing.rwa.totalSharesOnChain')}
               </span>
               <span className="text-sm font-bold text-success">
                 {sharesInfo.total.toLocaleString()}
@@ -241,16 +235,14 @@ export function RwaAssetDetail({
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground">
-                {t('listing.rwa.availableShares') || '剩余份额'}
+                {t('listing.rwa.availableShares')}
               </span>
               <span className="text-sm font-bold text-success">
                 {sharesInfo.available.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">
-                {t('listing.rwa.soldShares') || '已售份额'}
-              </span>
+              <span className="text-xs text-muted-foreground">{t('listing.rwa.soldShares')}</span>
               <span className="text-sm font-bold text-warning">
                 {sharesInfo.sold.toLocaleString()}
               </span>
@@ -265,7 +257,7 @@ export function RwaAssetDetail({
               />
             </div>
             <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {t('listing.rwa.soldPercentage') || '已售'} {sharesInfo.percentage}%
+              {t('listing.rwa.soldPercentage')} {sharesInfo.percentage}%
             </span>
           </div>
         </Card>

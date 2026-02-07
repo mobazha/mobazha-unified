@@ -92,7 +92,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
                     <span className="font-medium text-foreground text-sm">{address.name}</span>
                     {address.isDefault && (
                       <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                        {t('common.default') || 'Default'}
+                        {t('common.default')}
                       </span>
                     )}
                   </HStack>
@@ -134,13 +134,13 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
                   {onEdit && (
                     <DropdownMenuItem onClick={() => onEdit(address)}>
                       <Pencil className="w-4 h-4 mr-2" />
-                      {t('common.edit') || 'Edit'}
+                      {t('common.edit')}
                     </DropdownMenuItem>
                   )}
                   {onSetDefault && !address.isDefault && (
                     <DropdownMenuItem onClick={() => onSetDefault(address.id)}>
                       <Check className="w-4 h-4 mr-2" />
-                      {t('address.setDefault') || 'Set as Default'}
+                      {t('address.setDefault')}
                     </DropdownMenuItem>
                   )}
                   {onDelete && (
@@ -149,7 +149,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      {t('common.delete') || 'Delete'}
+                      {t('common.delete')}
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
@@ -163,7 +163,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
       {onAddNew && (
         <Button variant="outline" size="sm" className="w-full mt-2" onClick={onAddNew}>
           <Plus className="w-4 h-4 mr-1" />
-          {t('checkout.addAddress') || 'Add Address'}
+          {t('checkout.addAddress')}
         </Button>
       )}
     </VStack>

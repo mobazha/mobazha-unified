@@ -115,7 +115,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t('filter.searchInStore') || '搜索店铺商品...'}
+              placeholder={t('filter.searchInStore')}
               value={filter.search}
               onChange={e => updateFilter({ search: e.target.value })}
               className="pl-9 h-9"
@@ -132,12 +132,12 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
 
           {/* 商品数量 */}
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {displayCount} {t('filter.resultsFound') || '件商品'}
+            {displayCount} {t('filter.resultsFound')}
           </span>
 
           {/* 排序下拉 */}
           <div className="flex items-center gap-2 ml-auto">
-            <span className="text-sm text-muted-foreground">{t('search.sortBy') || '排序'}</span>
+            <span className="text-sm text-muted-foreground">{t('search.sortBy')}</span>
             <Select
               value={filter.sortBy}
               onValueChange={(value: SortOption) => updateFilter({ sortBy: value })}
@@ -163,7 +163,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('filter.searchInStore') || '搜索店铺商品...'}
+                placeholder={t('filter.searchInStore')}
                 value={filter.search}
                 onChange={e => updateFilter({ search: e.target.value })}
                 className="pl-9 h-9"
@@ -225,10 +225,10 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
                   onValueChange={(value: string) => updateFilter({ category: value })}
                 >
                   <SelectTrigger className="w-[140px] h-8">
-                    <SelectValue placeholder={t('filter.category') || '分类'} />
+                    <SelectValue placeholder={t('filter.category')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t('common.all') || '全部'}</SelectItem>
+                    <SelectItem value="all">{t('common.all')}</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}
@@ -249,7 +249,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
                   onCheckedChange={checked => updateFilter({ freeShipping: checked })}
                 />
                 <Label htmlFor="free-shipping" className="text-sm cursor-pointer">
-                  {t('filter.freeShippingOnly') || '仅显示免运费'}
+                  {t('filter.freeShippingOnly')}
                 </Label>
               </div>
             </div>
@@ -258,7 +258,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
                   <X className="h-3 w-3 mr-1" />
-                  {t('filter.clearFilters') || '清除筛选'}
+                  {t('filter.clearFilters')}
                 </Button>
               )}
               <span className="text-sm text-muted-foreground">
@@ -276,7 +276,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={t('filter.searchInStore') || '搜索店铺商品...'}
+            placeholder={t('filter.searchInStore')}
             value={filter.search}
             onChange={e => updateFilter({ search: e.target.value })}
             className="pl-9"

@@ -38,9 +38,9 @@ export function AssetTypeSelector({
   // 获取翻译后的资产类型名称
   const getAssetTypeName = (type: AssetType) => {
     const translations: Record<string, string> = {
-      CREATOR: t('listing.rwa.assetTypes.creator') || '创作者权益',
-      BROADWAY: t('listing.rwa.assetTypes.broadway') || '百老汇票房',
-      CUSTOM: t('listing.rwa.assetTypes.custom') || '自定义资产',
+      CREATOR: t('listing.rwa.assetTypes.creator'),
+      BROADWAY: t('listing.rwa.assetTypes.broadway'),
+      CUSTOM: t('listing.rwa.assetTypes.custom'),
     };
     return translations[type.code] || type.name;
   };
@@ -48,9 +48,9 @@ export function AssetTypeSelector({
   // 获取翻译后的资产类型描述
   const getAssetTypeDesc = (type: AssetType) => {
     const translations: Record<string, string> = {
-      CREATOR: t('listing.rwa.assetTypesDesc.creator') || '游戏主播、科技博主等创作者社区权益份额',
-      BROADWAY: t('listing.rwa.assetTypesDesc.broadway') || '音乐剧、话剧等演出的票房收益份额',
-      CUSTOM: t('listing.rwa.assetTypesDesc.custom') || '手动输入合约地址和 Token 参数',
+      CREATOR: t('listing.rwa.assetTypesDesc.creator'),
+      BROADWAY: t('listing.rwa.assetTypesDesc.broadway'),
+      CUSTOM: t('listing.rwa.assetTypesDesc.custom'),
     };
     return translations[type.code] || type.description;
   };
@@ -58,7 +58,7 @@ export function AssetTypeSelector({
   return (
     <div className={cn('space-y-3', className)}>
       <label className="block text-sm font-medium text-muted-foreground mb-2">
-        {t('listing.rwa.selectAssetType') || '选择资产类型'}
+        {t('listing.rwa.selectAssetType')}
       </label>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {assetTypes.map(type => {

@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useUserGroups, useUserStore, GROUP_COLORS, type UserGroup } from '@mobazha/core';
+import { useUserGroups, useUserStore, GROUP_COLORS, useI18n, type UserGroup } from '@mobazha/core';
 import { Loader2 } from 'lucide-react';
 
 // 本地表单类型（UI 使用）
@@ -28,6 +28,7 @@ interface UserGroupForm {
 }
 
 export default function UserGroupsPage() {
+  const { t } = useI18n();
   const { profile, isAuthenticated } = useUserStore();
   const ownerPeerID = profile?.peerID || '';
 
@@ -130,16 +131,18 @@ export default function UserGroupsPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            返回隐私设置
+            {t('settings.accessControl.privacyTitle')}
           </Link>
 
           <HStack justify="between" align="center" className="mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">用户组</h1>
-              <p className="text-muted-foreground">创建和管理不同权限的客户群组</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                {t('settings.sidebar.userGroups')}
+              </h1>
+              <p className="text-muted-foreground">{t('settings.accessControl.userGroupsDesc')}</p>
             </div>
             <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-              创建用户组
+              {t('settings.accessControl.createUserGroup')}
             </Button>
           </HStack>
 
@@ -173,7 +176,7 @@ export default function UserGroupsPage() {
                         )}
                         <HStack gap="md" className="text-sm">
                           <span className="text-muted-foreground">
-                            {group.memberCount || 0} 位成员
+                            {group.memberCount || 0} {t('common.members')}
                           </span>
                         </HStack>
                       </div>
@@ -182,7 +185,7 @@ export default function UserGroupsPage() {
                     <HStack gap="sm">
                       <Link href={`/settings/user-groups/${group.id}/members`}>
                         <Button size="sm" variant="ghost">
-                          成员管理
+                          {t('common.members')}
                         </Button>
                       </Link>
                       <Button
@@ -195,7 +198,7 @@ export default function UserGroupsPage() {
                           })
                         }
                       >
-                        编辑
+                        {t('common.edit')}
                       </Button>
                       <Button
                         size="sm"
@@ -203,7 +206,7 @@ export default function UserGroupsPage() {
                         className="text-error hover:text-error"
                         onClick={() => setDeleteGroupId(group.id)}
                       >
-                        删除
+                        {t('common.delete')}
                       </Button>
                     </HStack>
                   </HStack>
@@ -231,10 +234,14 @@ export default function UserGroupsPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">暂无用户组</h3>
-                <p className="text-muted-foreground">创建第一个用户组来管理您的客户</p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {t('settings.accessControl.noUserGroups')}
+                </h3>
+                <p className="text-muted-foreground">
+                  {t('settings.accessControl.noUserGroupsDesc')}
+                </p>
                 <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-                  创建用户组
+                  {t('settings.accessControl.createFirstUserGroup')}
                 </Button>
               </VStack>
             </Card>
@@ -244,9 +251,9 @@ export default function UserGroupsPage() {
           {!isAuthenticated && !loading && (
             <Card className="text-center py-12">
               <VStack gap="md" align="center">
-                <p className="text-muted-foreground">请先登录以管理用户组</p>
+                <p className="text-muted-foreground">{t('common.loginRequired')}</p>
                 <Link href="/login">
-                  <Button>登录</Button>
+                  <Button>{t('common.login')}</Button>
                 </Link>
               </VStack>
             </Card>
@@ -261,13 +268,15 @@ export default function UserGroupsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
             <h2 className="text-xl font-bold text-foreground mb-6">
-              {editingGroup ? '编辑用户组' : '创建用户组'}
+              {editingGroup
+                ? t('settings.accessControl.editUserGroup')
+                : t('settings.accessControl.createUserGroup')}
             </h2>
 
             <VStack gap="lg">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  用户组名称 *
+                  {t('common.name')} *
                 </label>
                 <Input
                   value={editingGroup?.name || newGroup.name}
@@ -276,12 +285,14 @@ export default function UserGroupsPage() {
                       ? setEditingGroup({ ...editingGroup, name: e.target.value })
                       : setNewGroup(prev => ({ ...prev, name: e.target.value }))
                   }
-                  placeholder="例如：VIP 客户"
+                  placeholder={t('settings.accessControl.groupNamePlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">描述</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  {t('common.description')}
+                </label>
                 <textarea
                   value={editingGroup?.description || newGroup.description}
                   onChange={e =>
@@ -291,14 +302,14 @@ export default function UserGroupsPage() {
                   }
                   rows={2}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                  placeholder="描述这个用户组..."
+                  placeholder={t('settings.accessControl.groupDescPlaceholder')}
                 />
               </div>
 
               {!editingGroup && (
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    颜色
+                    {t('common.color')}
                   </label>
                   <div className="flex gap-2">
                     {GROUP_COLORS.map(color => (
@@ -327,7 +338,7 @@ export default function UserGroupsPage() {
                 }}
                 disabled={saving}
               >
-                取消
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={editingGroup ? handleUpdateGroup : handleCreateGroup}
@@ -336,12 +347,12 @@ export default function UserGroupsPage() {
                 {saving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    保存中...
+                    {t('common.saving')}
                   </>
                 ) : editingGroup ? (
-                  '保存'
+                  t('common.save')
                 ) : (
-                  '创建'
+                  t('common.create')
                 )}
               </Button>
             </HStack>
@@ -356,19 +367,19 @@ export default function UserGroupsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除用户组</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.accessControl.deleteUserGroup')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除这个用户组吗？该组中的成员将被移除。
+              {t('settings.accessControl.deleteUserGroupConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={saving}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGroupConfirm}
               className="bg-error hover:bg-error"
               disabled={saving}
             >
-              {saving ? '删除中...' : '删除'}
+              {saving ? t('common.deleting') : t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

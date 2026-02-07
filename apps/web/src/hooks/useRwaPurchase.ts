@@ -268,11 +268,11 @@ export function useRwaPurchase({
       }
 
       if (!paymentInstructions.buyerAddress) {
-        throw new Error(t('rwa.purchase.missingBuyerAddress') || '无法获取买家身份地址');
+        throw new Error(t('rwa.purchase.missingBuyerAddress'));
       }
 
       if (!paymentInstructions.vendorAddress) {
-        throw new Error(t('rwa.purchase.missingSellerAddress') || '无法获取卖家身份地址');
+        throw new Error(t('rwa.purchase.missingSellerAddress'));
       }
 
       // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
@@ -290,7 +290,7 @@ export function useRwaPurchase({
       const rwaListingId = parseInt(rwaListingIdRaw, 10);
       if (isNaN(rwaListingId) || rwaListingId <= 0) {
         throw new Error(
-          `商品缺少有效的 rwaListingId（当前值: ${rwaListingIdRaw}），无法购买。请联系卖家重新上架商品。`
+          `Product is missing a valid rwaListingId (current value: ${rwaListingIdRaw}). Cannot purchase. Please contact the seller to relist the product.`
         );
       }
 
@@ -320,7 +320,7 @@ export function useRwaPurchase({
         );
 
         if (!approvalResult.success) {
-          throw new Error(t('rwa.purchase.approveFailed') || '支付代币授权失败');
+          throw new Error(t('rwa.purchase.approveFailed'));
         }
         console.log('✅ 授权成功');
       }
@@ -439,12 +439,12 @@ export function useRwaPurchase({
       // 提供更友好的错误消息
       let errorMessage = error.message;
       if (errorMessage.includes('Token not approved') || errorMessage.includes('Token 未授权')) {
-        errorMessage = t('rwa.purchase.sellerTokenNotApproved') || '卖家尚未授权 Token，请联系卖家';
+        errorMessage = t('rwa.purchase.sellerTokenNotApproved');
       } else if (
         errorMessage.includes('Seller not owner') ||
         errorMessage.includes('卖家不是 Token 所有者')
       ) {
-        errorMessage = t('rwa.purchase.sellerNotOwner') || '卖家已不拥有此 Token';
+        errorMessage = t('rwa.purchase.sellerNotOwner');
       }
 
       setState(prev => ({

@@ -248,8 +248,8 @@ export default function EditListingPage() {
 
       if (!validate()) {
         toast({
-          title: t('common.error') || 'Error',
-          description: t('listing.validationFailed') || 'Please fix the errors before submitting',
+          title: t('common.error'),
+          description: t('listing.validationFailed'),
           variant: 'destructive',
         });
         return;
@@ -259,14 +259,14 @@ export default function EditListingPage() {
 
       if ('error' in result) {
         toast({
-          title: t('common.error') || 'Error',
+          title: t('common.error'),
           description: result.error,
           variant: 'destructive',
         });
       } else {
         toast({
-          title: t('common.success') || 'Success',
-          description: t('listing.updateSuccess') || 'Listing updated successfully!',
+          title: t('common.success'),
+          description: t('listing.updateSuccess'),
         });
         router.push('/profile');
       }
@@ -280,14 +280,14 @@ export default function EditListingPage() {
     try {
       await productsApi.deleteListing(slug);
       toast({
-        title: t('common.success') || 'Success',
-        description: t('listing.deleteSuccess') || 'Listing deleted successfully!',
+        title: t('common.success'),
+        description: t('listing.deleteSuccess'),
       });
       router.push('/profile');
     } catch {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('listing.deleteFailed') || 'Failed to delete listing',
+        title: t('common.error'),
+        description: t('listing.deleteFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -312,7 +312,7 @@ export default function EditListingPage() {
           <Container>
             <div className="flex flex-col items-center justify-center">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <p className="mt-4 text-muted-foreground">{t('common.loading') || 'Loading...'}</p>
+              <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
             </div>
           </Container>
         </main>
@@ -329,11 +329,9 @@ export default function EditListingPage() {
         <main className="py-20">
           <Container>
             <div className="flex flex-col items-center justify-center">
-              <p className="text-destructive">
-                {loadError || t('listing.notFound') || 'Listing not found'}
-              </p>
+              <p className="text-destructive">{loadError || t('listing.notFound')}</p>
               <Button className="mt-4" onClick={() => router.push('/profile')}>
-                {t('common.goBack') || 'Go Back'}
+                {t('common.goBack')}
               </Button>
             </div>
           </Container>
@@ -356,9 +354,7 @@ export default function EditListingPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {t('listing.editListing') || 'Edit Listing'}
-                </h1>
+                <h1 className="text-2xl font-bold text-foreground">{t('listing.editListing')}</h1>
                 <p className="text-sm text-muted-foreground">{formData.title || slug}</p>
               </div>
             </div>
@@ -372,11 +368,11 @@ export default function EditListingPage() {
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
-                {t('common.delete') || 'Delete'}
+                {t('common.delete')}
               </Button>
               <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
                 <X className="w-4 h-4 mr-1" />
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (
@@ -384,7 +380,7 @@ export default function EditListingPage() {
                 ) : (
                   <Save className="w-4 h-4 mr-1" />
                 )}
-                {t('common.save') || 'Save'}
+                {t('common.save')}
               </Button>
             </div>
           </div>
@@ -408,14 +404,14 @@ export default function EditListingPage() {
                     `}
                   >
                     {tab.icon}
-                    {t(tab.labelKey) || tab.key}
+                    {t(tab.labelKey)}
                   </button>
                 ))}
 
                 {/* 预览卡片 */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <h3 className="text-sm font-medium text-foreground mb-3">
-                    {t('listing.preview') || 'Preview'}
+                    {t('listing.preview')}
                   </h3>
                   <Card className="overflow-hidden">
                     <div className="aspect-square bg-muted">
@@ -427,13 +423,13 @@ export default function EditListingPage() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                          {t('listing.noImage') || 'No image'}
+                          {t('listing.noImage')}
                         </div>
                       )}
                     </div>
                     <div className="p-3">
                       <h4 className="font-medium text-foreground text-sm line-clamp-2">
-                        {formData.title || t('listing.productTitle') || 'Product Title'}
+                        {formData.title || t('listing.productTitle')}
                       </h4>
                       <p className="text-primary font-bold mt-1">
                         {formData.price
@@ -456,7 +452,7 @@ export default function EditListingPage() {
                 }}
               >
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {t('listing.productType') || 'Product Type'}
+                  {t('listing.productType')}
                 </h2>
                 <ProductTypeSelector
                   value={formData.contractType}
@@ -490,18 +486,17 @@ export default function EditListingPage() {
                 <>
                   <Card className="p-6">
                     <h2 className="text-lg font-semibold text-foreground mb-4">
-                      {t('listing.basicInfo') || 'Basic Information'}
+                      {t('listing.basicInfo')}
                     </h2>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                          {t('listing.title') || 'Title'}{' '}
-                          <span className="text-destructive">*</span>
+                          {t('listing.title')} <span className="text-destructive">*</span>
                         </label>
                         <Input
                           value={formData.title}
                           onChange={e => updateField('title', e.target.value)}
-                          placeholder={t('listing.titlePlaceholder') || 'Enter a descriptive title'}
+                          placeholder={t('listing.titlePlaceholder')}
                           maxLength={140}
                           className={errors.title ? 'border-destructive' : ''}
                         />
@@ -511,16 +506,14 @@ export default function EditListingPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                          {t('listing.description') || 'Description'}
+                          {t('listing.description')}
                         </label>
                         <textarea
                           value={formData.description}
                           onChange={e => updateField('description', e.target.value)}
                           rows={4}
                           className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                          placeholder={
-                            t('listing.descriptionPlaceholder') || 'Describe your listing...'
-                          }
+                          placeholder={t('listing.descriptionPlaceholder')}
                         />
                       </div>
                     </div>
@@ -574,9 +567,7 @@ export default function EditListingPage() {
                   sectionRefs.current.tags = el;
                 }}
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {t('listing.tags') || 'Tags'}
-                </h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">{t('listing.tags')}</h2>
                 <div className="flex gap-2 mb-3">
                   <Input
                     value={currentTag}
@@ -587,11 +578,11 @@ export default function EditListingPage() {
                         handleAddTag();
                       }
                     }}
-                    placeholder={t('listing.enterTag') || 'Enter #tags...'}
+                    placeholder={t('listing.enterTag')}
                     className="flex-1"
                   />
                   <Button type="button" variant="outline" onClick={handleAddTag}>
-                    {t('common.add') || 'Add'}
+                    {t('common.add')}
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -621,12 +612,12 @@ export default function EditListingPage() {
                 }}
               >
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {t('listing.category') || 'Category'}
+                  {t('listing.category')}
                 </h2>
                 <Input
                   value={formData.categories[0] || ''}
                   onChange={e => updateField('categories', e.target.value ? [e.target.value] : [])}
-                  placeholder={t('listing.enterCategory') || 'Enter a category...'}
+                  placeholder={t('listing.enterCategory')}
                 />
               </Card>
 
@@ -654,10 +645,10 @@ export default function EditListingPage() {
                   }}
                 >
                   <h2 className="text-lg font-semibold text-foreground mb-4">
-                    {t('listing.variants') || 'Variants'}
+                    {t('listing.variants')}
                   </h2>
                   <Button type="button" variant="outline">
-                    {t('listing.addVariant') || 'Add Variant'}
+                    {t('listing.addVariant')}
                   </Button>
                 </Card>
               )}
@@ -672,35 +663,31 @@ export default function EditListingPage() {
                     }}
                   >
                     <h2 className="text-lg font-semibold text-foreground mb-4">
-                      {t('listing.policies') || 'Return Policy & Terms'}
+                      {t('listing.policies')}
                     </h2>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                          {t('listing.returnPolicy') || 'Return Policy'}
+                          {t('listing.returnPolicy')}
                         </label>
                         <textarea
                           value={formData.refundPolicy}
                           onChange={e => updateField('refundPolicy', e.target.value)}
                           rows={3}
                           className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                          placeholder={
-                            t('listing.returnPolicyPlaceholder') || 'Enter your return policy...'
-                          }
+                          placeholder={t('listing.returnPolicyPlaceholder')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                          {t('listing.termsAndConditions') || 'Terms and Conditions'}
+                          {t('listing.termsAndConditions')}
                         </label>
                         <textarea
                           value={formData.termsAndConditions}
                           onChange={e => updateField('termsAndConditions', e.target.value)}
                           rows={3}
                           className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                          placeholder={
-                            t('listing.termsPlaceholder') || 'Enter terms and conditions...'
-                          }
+                          placeholder={t('listing.termsPlaceholder')}
                         />
                       </div>
                     </div>
@@ -717,10 +704,10 @@ export default function EditListingPage() {
                     }}
                   >
                     <h2 className="text-lg font-semibold text-foreground mb-4">
-                      {t('listing.coupons') || 'Coupons'}
+                      {t('listing.coupons')}
                     </h2>
                     <Button type="button" variant="outline">
-                      {t('listing.addCoupon') || 'Add Coupon'}
+                      {t('listing.addCoupon')}
                     </Button>
                   </Card>
                 )}
@@ -736,11 +723,8 @@ export default function EditListingPage() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('listing.deleteConfirmTitle') || 'Delete Listing?'}</DialogTitle>
-            <DialogDescription>
-              {t('listing.deleteConfirmDesc') ||
-                'This action cannot be undone. This will permanently delete your listing.'}
-            </DialogDescription>
+            <DialogTitle>{t('listing.deleteConfirmTitle')}</DialogTitle>
+            <DialogDescription>{t('listing.deleteConfirmDesc')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
@@ -748,7 +732,7 @@ export default function EditListingPage() {
               onClick={() => setShowDeleteDialog(false)}
               disabled={isDeleting}
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
               {isDeleting ? (
@@ -756,7 +740,7 @@ export default function EditListingPage() {
               ) : (
                 <Trash2 className="w-4 h-4 mr-1" />
               )}
-              {t('common.delete') || 'Delete'}
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

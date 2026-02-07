@@ -43,7 +43,7 @@ export function RightsListCard({ rights, className = '', compact = false }: Righ
     <div className={cn('p-4 bg-muted/50 rounded-lg', className)}>
       <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
         <Gift className="w-4 h-4 text-primary" />
-        {t('listing.rwa.holderRights') || '持有者权益'}
+        {t('listing.rwa.holderRights')}
       </h5>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {rights.map((right, index) => (

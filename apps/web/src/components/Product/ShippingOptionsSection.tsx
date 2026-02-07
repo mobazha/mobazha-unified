@@ -141,8 +141,8 @@ const ProfileShippingView = memo(function ProfileShippingView({
               label: getRegionDisplayName(region),
             }))}
             placeholder={t('product.selectDestination')}
-            searchPlaceholder={t('common.search') || 'Search...'}
-            emptyText={t('common.noResults') || 'No results found'}
+            searchPlaceholder={t('common.search')}
+            emptyText={t('common.noResults')}
             className="w-[200px]"
           />
         </div>
@@ -351,8 +351,8 @@ const LegacyShippingView = memo(function LegacyShippingView({
               label: getRegionDisplayName(region),
             }))}
             placeholder={t('product.selectDestination')}
-            searchPlaceholder={t('common.search') || 'Search...'}
-            emptyText={t('common.noResults') || 'No results found'}
+            searchPlaceholder={t('common.search')}
+            emptyText={t('common.noResults')}
             className="w-[200px]"
           />
         </div>
@@ -409,7 +409,7 @@ const LegacyShippingView = memo(function LegacyShippingView({
                         </span>
                       ) : shippingPrice === undefined ? (
                         <span className="text-muted-foreground text-sm">
-                          {t('product.priceToBeCalculated') || '待计算'}
+                          {t('product.priceToBeCalculated')}
                         </span>
                       ) : (
                         <span className="font-medium">{formatPrice(shippingPrice, currency)}</span>
@@ -465,7 +465,7 @@ const LegacyShippingView = memo(function LegacyShippingView({
                     <span className="text-primary font-medium">{t('product.freeShipping')}</span>
                   ) : shippingPrice === undefined ? (
                     <span className="text-muted-foreground">
-                      {t('product.priceToBeCalculated') || '待计算'}
+                      {t('product.priceToBeCalculated')}
                     </span>
                   ) : (
                     <span className="font-medium">{formatPrice(shippingPrice, currency)}</span>

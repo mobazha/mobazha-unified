@@ -62,7 +62,7 @@ export function RwaFulfillFlow({
 
       setStep('completed');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '执行失败');
+      setError(err instanceof Error ? err.message : t('rwa.fulfill.error'));
       setStep('error');
     } finally {
       setIsProcessing(false);
@@ -77,15 +77,11 @@ export function RwaFulfillFlow({
             <div className="w-16 h-16 mx-auto rounded-full bg-warning/15 flex items-center justify-center">
               <Clock className="w-8 h-8 text-warning" />
             </div>
-            <h3 className="font-semibold text-lg">
-              {t('rwa.fulfill.waitingBuyer') || '等待买家授权'}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {t('rwa.fulfill.waitingDesc') || '买家尚未完成支付授权，请等待'}
-            </p>
+            <h3 className="font-semibold text-lg">{t('rwa.fulfill.waitingBuyer')}</h3>
+            <p className="text-sm text-muted-foreground">{t('rwa.fulfill.waitingDesc')}</p>
             {onCancel && (
               <Button variant="outline" onClick={onCancel}>
-                {t('common.cancel') || '取消订单'}
+                {t('common.cancel')}
               </Button>
             )}
           </div>
@@ -97,19 +93,17 @@ export function RwaFulfillFlow({
             <div className="w-16 h-16 mx-auto rounded-full bg-success/15 flex items-center justify-center">
               <Wallet className="w-8 h-8 text-success" />
             </div>
-            <h3 className="font-semibold text-lg">{t('rwa.fulfill.readyToShip') || '可以发货'}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('rwa.fulfill.readyDesc') || '买家已授权支付，点击发货执行原子交换'}
-            </p>
+            <h3 className="font-semibold text-lg">{t('rwa.fulfill.readyToShip')}</h3>
+            <p className="text-sm text-muted-foreground">{t('rwa.fulfill.readyDesc')}</p>
             <div className="flex gap-3 justify-center">
               {onCancel && (
                 <Button variant="outline" onClick={onCancel}>
-                  {t('common.cancel') || '取消'}
+                  {t('common.cancel')}
                 </Button>
               )}
               <Button onClick={handleExecuteSwap} disabled={isProcessing}>
                 <Send className="w-4 h-4 mr-2" />
-                {t('rwa.fulfill.executeSwap') || '执行原子交换'}
+                {t('rwa.fulfill.executeSwap')}
               </Button>
             </div>
           </div>
@@ -121,10 +115,8 @@ export function RwaFulfillFlow({
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
-            <h3 className="font-semibold text-lg">{t('rwa.fulfill.executing') || '执行中...'}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('rwa.fulfill.executingDesc') || '正在执行原子交换，请在钱包中确认交易'}
-            </p>
+            <h3 className="font-semibold text-lg">{t('rwa.fulfill.executing')}</h3>
+            <p className="text-sm text-muted-foreground">{t('rwa.fulfill.executingDesc')}</p>
           </div>
         );
 
@@ -134,10 +126,8 @@ export function RwaFulfillFlow({
             <div className="w-16 h-16 mx-auto rounded-full bg-success/15 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-success" />
             </div>
-            <h3 className="font-semibold text-lg">{t('rwa.fulfill.completed') || '发货完成'}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('rwa.fulfill.completedDesc') || '原子交换已完成，Token 已转移给买家，款项已到账'}
-            </p>
+            <h3 className="font-semibold text-lg">{t('rwa.fulfill.completed')}</h3>
+            <p className="text-sm text-muted-foreground">{t('rwa.fulfill.completedDesc')}</p>
           </div>
         );
 
@@ -147,9 +137,9 @@ export function RwaFulfillFlow({
             <div className="w-16 h-16 mx-auto rounded-full bg-error/15 flex items-center justify-center">
               <AlertCircle className="w-8 h-8 text-error" />
             </div>
-            <h3 className="font-semibold text-lg">{t('rwa.fulfill.error') || '执行失败'}</h3>
+            <h3 className="font-semibold text-lg">{t('rwa.fulfill.error')}</h3>
             <p className="text-sm text-error">{error}</p>
-            <Button onClick={() => setStep('ready')}>{t('common.retry') || '重试'}</Button>
+            <Button onClick={() => setStep('ready')}>{t('common.retry')}</Button>
           </div>
         );
     }
