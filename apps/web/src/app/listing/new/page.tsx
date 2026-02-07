@@ -142,9 +142,7 @@ function CreateListingContent() {
           <Container>
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">
-                {t('listing.loadingCloneData') || '正在加载商品数据...'}
-              </p>
+              <p className="text-muted-foreground">{t('listing.loadingCloneData')}</p>
             </div>
           </Container>
         </main>
@@ -163,7 +161,7 @@ function CreateListingContent() {
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-destructive mb-4">{loadError}</p>
               <Link href="/settings/store">
-                <Button variant="outline">{t('common.back') || '返回'}</Button>
+                <Button variant="outline">{t('common.back')}</Button>
               </Link>
             </div>
           </Container>
@@ -188,13 +186,9 @@ function CreateListingContent() {
               </Link>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  {cloneSlug
-                    ? t('listing.cloneListing') || '克隆商品'
-                    : t('listing.createListing') || '创建商品'}
+                  {cloneSlug ? t('listing.cloneListing') : t('listing.createListing')}
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  {t('listing.createListingDesc') || '添加新商品或服务到您的店铺'}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('listing.createListingDesc')}</p>
               </div>
             </div>
           </div>

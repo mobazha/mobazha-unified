@@ -73,24 +73,21 @@ export function ShippingProfileSelector({
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
-            {t('listing.shippingOptions') || 'Shipping Options'}
+            {t('listing.shippingOptions')}
             <span className="text-destructive ml-1">*</span>
           </h2>
         </div>
 
         <div className="p-6 border-2 border-dashed border-warning rounded-lg text-center bg-warning/5">
           <AlertTriangle className="w-10 h-10 mx-auto text-warning mb-3" />
-          <h3 className="font-medium text-foreground mb-2">
-            {t('listing.noShippingConfigured') || 'No Shipping Configured'}
-          </h3>
+          <h3 className="font-medium text-foreground mb-2">{t('listing.noShippingConfigured')}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {t('listing.noShippingConfiguredDesc') ||
-              'You need to configure shipping options before creating a physical product.'}
+            {t('listing.noShippingConfiguredDesc')}
           </p>
           <Link href="/settings/store/shipping">
             <Button>
               <Settings className="w-4 h-4 mr-2" />
-              {t('listing.goToShippingSettings') || 'Configure Shipping'}
+              {t('listing.goToShippingSettings')}
             </Button>
           </Link>
         </div>
@@ -106,13 +103,13 @@ export function ShippingProfileSelector({
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
-            {t('listing.shippingOptions') || 'Shipping Options'}
+            {t('listing.shippingOptions')}
             <span className="text-destructive ml-1">*</span>
           </h2>
           <Link href="/settings/store/shipping">
             <Button variant="outline" size="sm">
               <Settings className="w-4 h-4 mr-1" />
-              {t('listing.manageShipping') || 'Manage'}
+              {t('listing.manageShipping')}
             </Button>
           </Link>
         </div>
@@ -120,14 +117,9 @@ export function ShippingProfileSelector({
         <div className="p-4 border border-border rounded-lg bg-muted/30">
           <div className="flex items-center gap-3 mb-3">
             <Package className="w-5 h-5 text-primary" />
-            <span className="font-medium">
-              {t('listing.storeShippingOptions') || 'Store Shipping Options'}
-            </span>
+            <span className="font-medium">{t('listing.storeShippingOptions')}</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {t('listing.usingStoreShippingOptions') ||
-              `Using ${legacyOptions.length} shipping option(s) from your store settings.`}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('listing.usingStoreShippingOptions')}</p>
         </div>
 
         {error && <p className="text-destructive text-sm mt-3">{error}</p>}
@@ -140,21 +132,18 @@ export function ShippingProfileSelector({
     <Card className={`p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-foreground">
-          {t('listing.shippingProfile') || 'Shipping Profile'}
+          {t('listing.shippingProfile')}
           <span className="text-destructive ml-1">*</span>
         </h2>
         <Link href="/settings/store/shipping">
           <Button variant="outline" size="sm">
             <Settings className="w-4 h-4 mr-1" />
-            {t('listing.manageProfiles') || 'Manage Profiles'}
+            {t('listing.manageProfiles')}
           </Button>
         </Link>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-4">
-        {t('listing.selectShippingProfile') ||
-          'Select a shipping profile to define how this product will be shipped.'}
-      </p>
+      <p className="text-sm text-muted-foreground mb-4">{t('listing.selectShippingProfile')}</p>
 
       {error && <p className="text-destructive text-sm mb-3">{error}</p>}
 
@@ -186,15 +175,12 @@ export function ShippingProfileSelector({
                       <span className="font-medium text-foreground">{profile.name}</span>
                       {profile.isDefault && (
                         <span className="ml-2 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
-                          {t('common.default') || 'Default'}
+                          {t('common.default')}
                         </span>
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {zones.length}{' '}
-                      {zones.length === 1
-                        ? t('shipping.zone') || 'zone'
-                        : t('shipping.zones') || 'zones'}
+                      {zones.length} {zones.length === 1 ? t('shipping.zone') : t('shipping.zones')}
                     </span>
                   </div>
                   {zones.length > 0 && (

@@ -58,9 +58,7 @@ export function ShippingLocationForm({
       {/* 头部 */}
       <HStack justify="between" align="center">
         <h3 className="text-lg font-semibold">
-          {location
-            ? t('shipping.editLocation') || 'Edit Location'
-            : t('shipping.addLocation') || 'Add Location'}
+          {location ? t('shipping.editLocation') : t('shipping.addLocation')}
         </h3>
         <Button variant="ghost" size="sm" onClick={onCancel}>
           <X className="w-4 h-4" />
@@ -69,29 +67,26 @@ export function ShippingLocationForm({
 
       {/* 地点名称 */}
       <div className="space-y-1.5">
-        <Label htmlFor="location-name">{t('shipping.locationName') || 'Location Name'} *</Label>
+        <Label htmlFor="location-name">{t('shipping.locationName')} *</Label>
         <Input
           id="location-name"
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder={t('shipping.locationNamePlaceholder') || 'e.g., Main Warehouse, Office'}
+          placeholder={t('shipping.locationNamePlaceholder')}
         />
       </div>
 
       {/* 地址 */}
       <div className="space-y-1.5">
-        <Label htmlFor="location-address">{t('shipping.locationAddress') || 'Address'}</Label>
+        <Label htmlFor="location-address">{t('shipping.locationAddress')}</Label>
         <Textarea
           id="location-address"
           value={address}
           onChange={e => setAddress(e.target.value)}
-          placeholder={t('shipping.locationAddressPlaceholder') || 'Full address (optional)'}
+          placeholder={t('shipping.locationAddressPlaceholder')}
           rows={3}
         />
-        <p className="text-xs text-muted-foreground">
-          {t('shipping.locationAddressHint') ||
-            "This address is for your reference only and won't be shown to buyers."}
-        </p>
+        <p className="text-xs text-muted-foreground">{t('shipping.locationAddressHint')}</p>
       </div>
 
       {/* 设为默认 */}
@@ -103,7 +98,7 @@ export function ShippingLocationForm({
             onCheckedChange={checked => setIsDefault(checked === true)}
           />
           <Label htmlFor="location-default" className="cursor-pointer">
-            {t('shipping.setAsDefaultLocation') || 'Set as default location'}
+            {t('shipping.setAsDefaultLocation')}
           </Label>
         </HStack>
       )}
@@ -111,10 +106,10 @@ export function ShippingLocationForm({
       {/* 操作按钮 */}
       <HStack justify="end" gap="sm" className="pt-4 border-t">
         <Button variant="outline" onClick={onCancel} disabled={isSaving}>
-          {t('common.cancel') || 'Cancel'}
+          {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} disabled={isSaving || !isValid}>
-          {isSaving ? t('common.saving') || 'Saving...' : t('common.save') || 'Save'}
+          {isSaving ? t('common.saving') : t('common.save')}
         </Button>
       </HStack>
     </VStack>

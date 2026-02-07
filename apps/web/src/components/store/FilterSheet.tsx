@@ -102,7 +102,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl">
         <SheetHeader className="px-4 pt-4 pb-2">
-          <SheetTitle>{t('filter.filters') || '筛选'}</SheetTitle>
+          <SheetTitle>{t('filter.filters')}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
@@ -111,11 +111,11 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
             <>
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-muted-foreground">
-                  {t('filter.category') || '分类'}
+                  {t('filter.category')}
                 </h3>
                 <div className="space-y-1">
                   <RadioOption
-                    label={t('common.all') || '全部'}
+                    label={t('common.all')}
                     selected={localFilter.category === 'all'}
                     onClick={() => updateLocalFilter({ category: 'all' })}
                   />
@@ -135,9 +135,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
 
           {/* 商品类型 */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {t('filter.productType') || '商品类型'}
-            </h3>
+            <h3 className="text-sm font-medium text-muted-foreground">{t('filter.productType')}</h3>
             <div className="space-y-1">
               {productTypes.map(type => (
                 <RadioOption
@@ -154,9 +152,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
 
           {/* 排序方式 */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {t('search.sortBy') || '排序方式'}
-            </h3>
+            <h3 className="text-sm font-medium text-muted-foreground">{t('search.sortBy')}</h3>
             <div className="space-y-1">
               {sortOptions.map(option => (
                 <RadioOption
@@ -174,7 +170,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
           {/* 免运费 */}
           <div className="flex items-center justify-between py-2">
             <Label htmlFor="mobile-free-shipping" className="text-sm">
-              {t('filter.freeShippingOnly') || '仅显示免运费'}
+              {t('filter.freeShippingOnly')}
             </Label>
             <Switch
               id="mobile-free-shipping"
@@ -186,10 +182,10 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
 
         <SheetFooter className="px-4 py-4 border-t gap-2">
           <Button variant="outline" onClick={handleReset} className="flex-1">
-            {t('filter.resetFilters') || '重置'}
+            {t('filter.resetFilters')}
           </Button>
           <Button onClick={handleApply} className="flex-1" disabled={!hasChanges}>
-            {t('common.apply') || '应用'}
+            {t('common.apply')}
           </Button>
         </SheetFooter>
       </SheetContent>

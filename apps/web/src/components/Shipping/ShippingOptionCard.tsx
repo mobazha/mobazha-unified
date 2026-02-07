@@ -45,10 +45,10 @@ export const ShippingOptionCard: React.FC<ShippingOptionCardProps> = ({
   // 获取地区显示文本
   const regionsDisplay = useMemo(() => {
     if (!option.regions || option.regions.length === 0) {
-      return t('shipping.noRegions') || 'No regions';
+      return t('shipping.noRegions');
     }
     if (option.regions.length === 1 && option.regions[0] === 'ALL') {
-      return t('shipping.worldwide') || 'Worldwide';
+      return t('shipping.worldwide');
     }
     if (option.regions.length <= 3) {
       return option.regions.map(code => getCountryName(code, language) || code).join(', ');
@@ -100,10 +100,10 @@ export const ShippingOptionCard: React.FC<ShippingOptionCardProps> = ({
   // 获取服务类型标签（动态翻译）
   const serviceTypeLabel = useMemo(() => {
     if (option.serviceType === 'FIRST_RENEWAL_FEE') {
-      return t('shipping.serviceTypeLabel.firstRenewal') || 'First + Renewal';
+      return t('shipping.serviceTypeLabel.firstRenewal');
     }
     if (option.serviceType === 'SAME_WEIGHT_SAME_FEE') {
-      return t('shipping.serviceTypeLabel.flatRate') || 'Flat Rate';
+      return t('shipping.serviceTypeLabel.flatRate');
     }
     return option.serviceType;
   }, [option.serviceType, t]);
@@ -114,9 +114,7 @@ export const ShippingOptionCard: React.FC<ShippingOptionCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             {typeIcon}
-            <CardTitle className="text-base">
-              {option.name || t('shipping.unnamed') || 'Unnamed'}
-            </CardTitle>
+            <CardTitle className="text-base">{option.name || t('shipping.unnamed')}</CardTitle>
           </div>
           <div className="flex items-center gap-1">
             {onEdit && (
@@ -159,7 +157,7 @@ export const ShippingOptionCard: React.FC<ShippingOptionCardProps> = ({
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
             <Package className="w-3 h-3 mr-1" />
-            {option.services?.length || 0} {t('shipping.services') || 'service(s)'}
+            {option.services?.length || 0} {t('shipping.services')}
           </Badge>
           <Badge variant="secondary" className="text-xs">
             {serviceTypeLabel}
@@ -172,7 +170,7 @@ export const ShippingOptionCard: React.FC<ShippingOptionCardProps> = ({
           <div>
             {deliveryRange && (
               <span className="text-muted-foreground">
-                {t('shipping.estimatedDelivery') || 'Est.'}: {deliveryRange}
+                {t('shipping.estimatedDelivery')}: {deliveryRange}
               </span>
             )}
           </div>

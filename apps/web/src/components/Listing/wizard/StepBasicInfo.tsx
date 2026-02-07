@@ -49,38 +49,32 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
     <div className="space-y-8">
       {/* 标题 */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          {t('listing.wizard.basicInfo') || '基本信息'}
-        </h2>
-        <p className="text-muted-foreground">
-          {t('listing.wizard.basicInfoDesc') || '填写商品的基本信息'}
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('listing.wizard.basicInfo')}</h2>
+        <p className="text-muted-foreground">{t('listing.wizard.basicInfoDesc')}</p>
       </div>
 
       <Card className="p-6 space-y-5">
         {/* 标题 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.title') || '标题'} <span className="text-destructive">*</span>
+            {t('listing.title')} <span className="text-destructive">*</span>
           </label>
           <Input
             value={formData.title}
             onChange={e => updateField('title', e.target.value)}
             maxLength={140}
-            placeholder={t('listing.titlePlaceholder') || '输入一个描述性的标题'}
+            placeholder={t('listing.titlePlaceholder')}
             className={errors.title ? 'border-destructive' : ''}
           />
           {errors.title && <p className="text-destructive text-sm mt-1">{errors.title}</p>}
-          <p className="text-xs text-muted-foreground mt-1">
-            {t('listing.titleHelper') || '清楚地描述您要出售的商品'}
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{t('listing.titleHelper')}</p>
         </div>
 
         {/* 价格 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.price') || '价格'} <span className="text-destructive">*</span>
+              {t('listing.price')} <span className="text-destructive">*</span>
             </label>
             <div className="flex gap-2">
               <Input
@@ -115,7 +109,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
           {isPhysicalGood && (
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.condition') || '成色'} <span className="text-destructive">*</span>
+                {t('listing.condition')} <span className="text-destructive">*</span>
               </label>
               <Select
                 value={formData.condition}
@@ -127,7 +121,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                 <SelectContent>
                   {conditions.map(c => (
                     <SelectItem key={c.value} value={c.value}>
-                      {t(c.labelKey) || c.value}
+                      {t(c.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -141,7 +135,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.weight') || '重量'} (g)
+                {t('listing.weight')} (g)
               </label>
               <Input
                 type="number"
@@ -153,12 +147,12 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
             </div>
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.sku') || 'SKU'}
+                {t('listing.sku')}
               </label>
               <Input
                 value={formData.sku}
                 onChange={e => updateField('sku', e.target.value)}
-                placeholder={t('listing.skuPlaceholder') || 'SKU、零件号等'}
+                placeholder={t('listing.skuPlaceholder')}
               />
             </div>
           </div>
@@ -169,7 +163,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.minQuantity') || '最小购买数量'}
+                {t('listing.minQuantity')}
               </label>
               <Input
                 type="number"
@@ -181,7 +175,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
             </div>
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                {t('listing.maxQuantity') || '最大购买数量'}
+                {t('listing.maxQuantity')}
               </label>
               <Input
                 type="number"
@@ -198,7 +192,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
         {isRwaToken && (
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              {t('listing.tradeMode') || '交易模式'}
+              {t('listing.tradeMode')}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* 即时交易 */}
@@ -222,13 +216,13 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                       <div className="w-2 h-2 rounded-full bg-primary" />
                     )}
                   </div>
-                  <span className="font-medium">{t('listing.instantTrade') || '即时交易'}</span>
+                  <span className="font-medium">{t('listing.instantTrade')}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    {t('listing.recommended') || '推荐'}
+                    {t('listing.recommended')}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground ml-6">
-                  {t('listing.instantTradeDesc') || '买家付款后自动获得 RWA 份额'}
+                  {t('listing.instantTradeDesc')}
                 </p>
               </div>
 
@@ -253,10 +247,10 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                       <div className="w-2 h-2 rounded-full bg-primary" />
                     )}
                   </div>
-                  <span className="font-medium">{t('listing.confirmTrade') || '确认交易'}</span>
+                  <span className="font-medium">{t('listing.confirmTrade')}</span>
                 </div>
                 <p className="text-sm text-muted-foreground ml-6">
-                  {t('listing.confirmTradeDesc') || '买家付款后资金托管，您确认后完成交易'}
+                  {t('listing.confirmTradeDesc')}
                 </p>
               </div>
             </div>
@@ -265,17 +259,17 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
             {formData.rwaTradeMode === 'confirm_required' && (
               <div className="mt-4">
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  {t('listing.escrowTimeout') || '托管时限'}
+                  {t('listing.escrowTimeout')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { value: 15, label: '15' + (t('listing.min') || '分钟') },
-                    { value: 60, label: '1' + (t('listing.hour') || '小时') },
-                    { value: 360, label: '6' + (t('listing.hours') || '小时') },
-                    { value: 720, label: '12' + (t('listing.hours') || '小时') },
-                    { value: 1440, label: '1' + (t('listing.day') || '天') },
-                    { value: 4320, label: '3' + (t('listing.days') || '天') },
-                    { value: 10080, label: '7' + (t('listing.days') || '天') },
+                    { value: 15, label: '15' + t('listing.min') },
+                    { value: 60, label: '1' + t('listing.hour') },
+                    { value: 360, label: '6' + t('listing.hours') },
+                    { value: 720, label: '12' + t('listing.hours') },
+                    { value: 1440, label: '1' + t('listing.day') },
+                    { value: 4320, label: '3' + t('listing.days') },
+                    { value: 10080, label: '7' + t('listing.days') },
                   ].map(option => (
                     <button
                       key={option.value}
@@ -291,9 +285,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                     </button>
                   ))}
                 </div>
-                <p className="text-sm text-warning mt-2">
-                  ⚠️ {t('listing.escrowTimeoutWarning') || '超时未确认，资金将自动退还给买家'}
-                </p>
+                <p className="text-sm text-warning mt-2">⚠️ {t('listing.escrowTimeoutWarning')}</p>
               </div>
             )}
           </div>
@@ -302,14 +294,14 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
         {/* 描述 */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.description') || '描述'}
+            {t('listing.description')}
           </label>
           <textarea
             value={formData.description}
             onChange={e => updateField('description', e.target.value)}
             rows={6}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            placeholder={t('listing.descriptionPlaceholder') || '尽可能详细地描述您的商品...'}
+            placeholder={t('listing.descriptionPlaceholder')}
           />
         </div>
       </Card>
@@ -318,10 +310,10 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onPrev}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t('common.prev') || '上一步'}
+          {t('common.prev')}
         </Button>
         <Button onClick={onNext} disabled={!canProceed}>
-          {t('common.next') || '下一步'}
+          {t('common.next')}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

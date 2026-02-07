@@ -151,7 +151,7 @@ export function MediaSection({
 
       const file = files[0];
       if (file.size > maxVideoSize * 1024 * 1024) {
-        window.alert(t('listing.videoTooLarge') || `Video must be less than ${maxVideoSize}MB`);
+        window.alert(t('listing.videoTooLarge'));
         return;
       }
 
@@ -203,7 +203,7 @@ export function MediaSection({
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
-            {t('listing.photos') || 'Photos'} <span className="text-destructive">*</span>
+            {t('listing.photos')} <span className="text-destructive">*</span>
           </h2>
           <span className="text-sm text-muted-foreground">
             {images.length} / {maxImages}
@@ -250,7 +250,7 @@ export function MediaSection({
               {/* 主图标记 */}
               {index === 0 && (
                 <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded">
-                  {t('listing.primaryPhoto') || 'PRIMARY PHOTO'}
+                  {t('listing.primaryPhoto')}
                 </div>
               )}
             </div>
@@ -272,16 +272,14 @@ export function MediaSection({
               ) : (
                 <>
                   <Plus className="w-6 h-6" />
-                  <span className="text-xs">{t('listing.add') || 'Add'}</span>
+                  <span className="text-xs">{t('listing.add')}</span>
                 </>
               )}
             </button>
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground mt-3">
-          {t('listing.photosHelper') || `Include up to ${maxImages} photos. Drag to reorder.`}
-        </p>
+        <p className="text-xs text-muted-foreground mt-3">{t('listing.photosHelper')}</p>
 
         <input
           ref={fileInputRef}
@@ -296,7 +294,7 @@ export function MediaSection({
       {/* 视频上传区域 */}
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">
-          {t('listing.introVideo') || 'Introduction Video'} (mp4, &lt;{maxVideoSize}MB)
+          {t('listing.introVideo')} (mp4, &lt;{maxVideoSize}MB)
         </h2>
 
         <div className="space-y-4">
@@ -313,7 +311,7 @@ export function MediaSection({
               ) : (
                 <>
                   <ImageIcon className="w-6 h-6" />
-                  <span className="text-xs">{t('listing.add') || 'Add'}</span>
+                  <span className="text-xs">{t('listing.add')}</span>
                 </>
               )}
             </button>
@@ -328,7 +326,7 @@ export function MediaSection({
                   className="text-destructive hover:text-destructive mt-1"
                 >
                   <X className="w-4 h-4 mr-1" />
-                  {t('common.remove') || 'Remove'}
+                  {t('common.remove')}
                 </Button>
               </div>
             )}
@@ -345,7 +343,7 @@ export function MediaSection({
           {/* 外部视频链接 */}
           <div className="border-t border-border pt-4">
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              {t('listing.externalVideoLink') || 'Or add external video link (YouTube, etc.)'}
+              {t('listing.externalVideoLink')}
             </label>
             <div className="flex gap-2">
               <Input
@@ -361,7 +359,7 @@ export function MediaSection({
                 disabled={!newVideoLink.trim()}
               >
                 <LinkIcon className="w-4 h-4 mr-1" />
-                {t('listing.add') || 'Add'}
+                {t('listing.add')}
               </Button>
             </div>
 

@@ -32,13 +32,13 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
   const getTypeName = () => {
     switch (formData.contractType) {
       case 'PHYSICAL_GOOD':
-        return t('listing.types.physicalGood') || '物理商品';
+        return t('listing.types.physicalGood');
       case 'DIGITAL_GOOD':
-        return t('listing.types.digitalGood') || '数字商品';
+        return t('listing.types.digitalGood');
       case 'SERVICE':
-        return t('listing.types.service') || '服务';
+        return t('listing.types.service');
       case 'RWA_TOKEN':
-        return t('listing.types.rwaToken') || 'RWA 代币';
+        return t('listing.types.rwaToken');
       default:
         return '';
     }
@@ -48,12 +48,8 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
     <div className="space-y-8">
       {/* 标题 */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          {t('listing.wizard.review') || '确认发布'}
-        </h2>
-        <p className="text-muted-foreground">
-          {t('listing.wizard.reviewDesc') || '请确认商品信息无误后发布'}
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('listing.wizard.review')}</h2>
+        <p className="text-muted-foreground">{t('listing.wizard.reviewDesc')}</p>
       </div>
 
       {/* 商品预览 */}
@@ -62,9 +58,7 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
         <div className="flex items-center gap-3 pb-4 border-b border-border">
           <div className="p-2 rounded-lg bg-primary/10 text-primary">{getTypeIcon()}</div>
           <div>
-            <p className="text-sm text-muted-foreground">
-              {t('listing.productType') || '商品类型'}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('listing.productType')}</p>
             <p className="font-semibold">{getTypeName()}</p>
           </div>
         </div>
@@ -99,12 +93,12 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
         {/* 基本信息 */}
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">{t('listing.title') || '标题'}</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('listing.title')}</p>
             <p className="font-semibold text-lg">{formData.title}</p>
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground mb-1">{t('listing.price') || '价格'}</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('listing.price')}</p>
             <p className="font-semibold text-2xl text-primary">
               {formData.price} {formData.pricingCurrency}
             </p>
@@ -112,9 +106,7 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
 
           {formData.description && (
             <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                {t('listing.description') || '描述'}
-              </p>
+              <p className="text-sm text-muted-foreground mb-1">{t('listing.description')}</p>
               <p className="text-sm line-clamp-3">{formData.description}</p>
             </div>
           )}
@@ -130,7 +122,7 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
           !formData.selectedAsset &&
           formData.tokenAddress && (
             <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-              <h4 className="font-medium">{t('listing.rwa.customAsset') || '自定义资产'}</h4>
+              <h4 className="font-medium">{t('listing.rwa.customAsset')}</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">Token 标准:</span>
@@ -153,18 +145,18 @@ export function StepReview({ formData, onPrev, onNext, isSubmitting }: StepProps
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onPrev} disabled={isSubmitting}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t('common.prev') || '上一步'}
+          {t('common.prev')}
         </Button>
         <Button onClick={onNext} disabled={isSubmitting} size="lg">
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              {t('common.publishing') || '发布中...'}
+              {t('common.publishing')}
             </>
           ) : (
             <>
               <Check className="w-4 h-4 mr-2" />
-              {t('listing.wizard.publish') || '发布商品'}
+              {t('listing.wizard.publish')}
             </>
           )}
         </Button>

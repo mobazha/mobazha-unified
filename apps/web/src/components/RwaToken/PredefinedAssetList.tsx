@@ -121,24 +121,26 @@ export function PredefinedAssetList({
         <Wallet className="w-4 h-4" />
         {isConnected ? (
           <>
-            <span>钱包已连接: {shortenAddress(walletAddress || '')}</span>
+            <span>
+              {t('listing.rwa.walletConnected')}: {shortenAddress(walletAddress || '')}
+            </span>
             <button
               type="button"
               onClick={refreshBalances}
               disabled={loading}
               className="ml-auto p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors"
-              title="刷新余额"
+              title={t('listing.rwa.refreshBalance')}
             >
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
             </button>
           </>
         ) : (
-          <span>请连接钱包以查看您的资产余额</span>
+          <span>{t('listing.rwa.pleaseConnectWallet')}</span>
         )}
       </div>
 
       <label className="block text-sm font-medium text-muted-foreground mb-2">
-        {t('listing.rwa.selectAsset') || '选择要出售的资产'}
+        {t('listing.rwa.selectAsset')}
       </label>
       <div className="space-y-3">
         {assets.map(asset => {
@@ -183,14 +185,16 @@ export function PredefinedAssetList({
                     </span>
 
                     <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                      {t('listing.rwa.available') || '可售'}:{' '}
+                      {t('listing.rwa.available')}:{' '}
                       {displayBalance !== null ? (
                         <>
                           {displayBalance} {asset.unit}
                           <span className="ml-1 text-success">●</span>
                         </>
                       ) : (
-                        <span className="text-muted-foreground">连接钱包查看</span>
+                        <span className="text-muted-foreground">
+                          {t('listing.rwa.connectWalletHint')}
+                        </span>
                       )}
                     </span>
 
@@ -210,7 +214,7 @@ export function PredefinedAssetList({
                     {isErc1155 && asset.membership && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
                         <Users className="w-3 h-3" />
-                        {asset.membership.holderCount} {t('listing.rwa.holders') || '人持有'}
+                        {asset.membership.holderCount} {t('listing.rwa.holders')}
                       </span>
                     )}
 
@@ -218,7 +222,7 @@ export function PredefinedAssetList({
                     {isErc3525 && asset.performance && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
                         <TrendingUp className="w-3 h-3" />
-                        {t('listing.rwa.dividendRate') || '年化'} {asset.performance.dividendRate}
+                        {t('listing.rwa.dividendRate')} {asset.performance.dividendRate}
                       </span>
                     )}
                   </div>

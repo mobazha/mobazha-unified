@@ -60,24 +60,24 @@ export function ShippingZoneCard({
       return `${formatPrice(minPrice, currency, { showSymbol: false })} - ${formatPrice(maxPrice, currency, { showSymbol: true, showCode: true })}`;
     }
 
-    return t('shipping.multipleCurrencies') || 'Multiple currencies';
+    return t('shipping.multipleCurrencies');
   }, [zone.rates, t]);
 
   // 地区摘要
   const regionsSummary = useMemo(() => {
     if (!zone.regions || zone.regions.length === 0) {
-      return { isWorldwide: false, display: t('shipping.noRegions') || 'No regions' };
+      return { isWorldwide: false, display: t('shipping.noRegions') };
     }
 
     const hasAll = zone.regions.includes('ALL');
     if (hasAll || zone.regions.length >= 240) {
-      return { isWorldwide: true, display: t('shipping.worldwide') || 'Worldwide' };
+      return { isWorldwide: true, display: t('shipping.worldwide') };
     }
 
     const count = zone.regions.length;
     return {
       isWorldwide: false,
-      display: `${count} ${count === 1 ? t('shipping.region') || 'region' : t('shipping.regions') || 'regions'}`,
+      display: `${count} ${count === 1 ? t('shipping.region') : t('shipping.regions')}`,
     };
   }, [zone.regions, t]);
 
@@ -86,9 +86,7 @@ export function ShippingZoneCard({
       <HStack justify="between" align="start">
         <VStack gap="sm" className="flex-1">
           {/* 区域名称 */}
-          <h4 className="font-medium text-foreground">
-            {zone.name || t('shipping.unnamedZone') || 'Unnamed Zone'}
-          </h4>
+          <h4 className="font-medium text-foreground">{zone.name || t('shipping.unnamedZone')}</h4>
 
           {/* 摘要信息 */}
           <HStack gap="md" className="flex-wrap text-sm text-muted-foreground">
@@ -107,9 +105,7 @@ export function ShippingZoneCard({
             {/* 费率数量 */}
             <span>
               {zone.rates?.length || 0}{' '}
-              {(zone.rates?.length || 0) === 1
-                ? t('shipping.rate') || 'rate'
-                : t('shipping.rates') || 'rates'}
+              {(zone.rates?.length || 0) === 1 ? t('shipping.rate') : t('shipping.rates')}
             </span>
 
             {/* 价格范围 */}

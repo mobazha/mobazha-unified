@@ -73,7 +73,7 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
           <div className="flex items-center gap-2">
             <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
             <CardTitle className="text-sm font-medium">
-              {t('shipping.service') || 'Service'} #{index + 1}
+              {t('shipping.service')} #{index + 1}
             </CardTitle>
           </div>
           {canRemove && onRemove && (
@@ -85,7 +85,7 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
               className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1" />
-              {t('common.delete') || 'Delete'}
+              {t('common.delete')}
             </Button>
           )}
         </div>
@@ -95,26 +95,26 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor={`service-name-${index}`} className="text-xs">
-              {t('shipping.serviceName') || 'Service Name'}
+              {t('shipping.serviceName')}
             </Label>
             <Input
               id={`service-name-${index}`}
               value={service.name}
               onChange={e => updateField('name', e.target.value)}
-              placeholder={t('shipping.serviceNamePlaceholder') || 'e.g. Standard'}
+              placeholder={t('shipping.serviceNamePlaceholder')}
               disabled={disabled}
               className="h-9"
             />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={`service-delivery-${index}`} className="text-xs">
-              {t('shipping.estimatedDelivery') || 'Est. Delivery'}
+              {t('shipping.estimatedDelivery')}
             </Label>
             <Input
               id={`service-delivery-${index}`}
               value={service.estimatedDelivery}
               onChange={e => updateField('estimatedDelivery', e.target.value)}
-              placeholder={t('shipping.deliveryPlaceholder') || 'e.g. 5-7 days'}
+              placeholder={t('shipping.deliveryPlaceholder')}
               disabled={disabled}
               className="h-9"
             />
@@ -148,10 +148,8 @@ export const ServiceEditor: React.FC<ServiceEditorProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor={`service-registration-${index}`} className="text-xs">
-              {t('shipping.registrationFee') || 'Registration Fee'} ({currency})
-              <span className="text-muted-foreground ml-1">
-                ({t('common.optional') || 'Optional'})
-              </span>
+              {t('shipping.registrationFee')} ({currency})
+              <span className="text-muted-foreground ml-1">({t('common.optional')})</span>
             </Label>
             <Input
               id={`service-registration-${index}`}
@@ -204,7 +202,7 @@ const FirstRenewalFeeFields: React.FC<FeeFieldsProps> = ({
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label htmlFor={`service-first-weight-${index}`} className="text-xs">
-          {t('shipping.firstWeight') || 'First Weight'} (g)
+          {t('shipping.firstWeight')} (g)
         </Label>
         <Input
           id={`service-first-weight-${index}`}
@@ -219,7 +217,7 @@ const FirstRenewalFeeFields: React.FC<FeeFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor={`service-first-freight-${index}`} className="text-xs">
-          {t('shipping.firstFreight') || 'First Freight'} ({currency})
+          {t('shipping.firstFreight')} ({currency})
         </Label>
         <Input
           id={`service-first-freight-${index}`}
@@ -239,7 +237,7 @@ const FirstRenewalFeeFields: React.FC<FeeFieldsProps> = ({
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label htmlFor={`service-renewal-weight-${index}`} className="text-xs">
-          {t('shipping.renewalUnitWeight') || 'Renewal Unit Weight'} (g)
+          {t('shipping.renewalUnitWeight')} (g)
         </Label>
         <Input
           id={`service-renewal-weight-${index}`}
@@ -254,7 +252,7 @@ const FirstRenewalFeeFields: React.FC<FeeFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor={`service-renewal-price-${index}`} className="text-xs">
-          {t('shipping.renewalUnitPrice') || 'Renewal Unit Price'} ({currency})
+          {t('shipping.renewalUnitPrice')} ({currency})
         </Label>
         <Input
           id={`service-renewal-price-${index}`}
@@ -289,7 +287,7 @@ const SameWeightSameFeeFields: React.FC<FeeFieldsProps> = ({
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label htmlFor={`service-start-weight-${index}`} className="text-xs">
-          {t('shipping.startWeight') || 'Min Weight'} (g)
+          {t('shipping.startWeight')} (g)
         </Label>
         <Input
           id={`service-start-weight-${index}`}
@@ -304,7 +302,7 @@ const SameWeightSameFeeFields: React.FC<FeeFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor={`service-end-weight-${index}`} className="text-xs">
-          {t('shipping.endWeight') || 'Max Weight'} (g)
+          {t('shipping.endWeight')} (g)
         </Label>
         <Input
           id={`service-end-weight-${index}`}
@@ -323,7 +321,7 @@ const SameWeightSameFeeFields: React.FC<FeeFieldsProps> = ({
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label htmlFor={`service-freight-${index}`} className="text-xs">
-          {t('shipping.shippingFee') || 'Shipping Fee'} ({currency})
+          {t('shipping.shippingFee')} ({currency})
         </Label>
         <Input
           id={`service-freight-${index}`}

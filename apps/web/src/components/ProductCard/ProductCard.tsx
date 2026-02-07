@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCurrencyFormat } from '@mobazha/core';
+import { useCurrencyFormat, useI18n } from '@mobazha/core';
 
 // HTML 实体解码
 function decodeHtmlEntities(text: string): string {
@@ -134,6 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   // 使用货币格式化 hook
   const { formatLocalPrice } = useCurrencyFormat();
+  const { t } = useI18n();
   // hover 状态
   const [isHovered, setIsHovered] = useState(false);
 
@@ -229,7 +230,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Verified Moderator 盾牌 - 左上角 */}
         {hasVerifiedModerator && (
-          <div className="absolute top-2 left-2 z-10" title="This listing has a verified moderator">
+          <div className="absolute top-2 left-2 z-10" title={t('listing.verifiedModerator')}>
             <div className="w-7 h-7 rounded-full bg-warning flex items-center justify-center shadow-md">
               <Shield className="w-4 h-4 text-white" fill="currentColor" />
             </div>
@@ -296,7 +297,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-destructive'
                 )}
-                title="Report this listing"
+                title={t('listing.report')}
               >
                 <Flag className="w-4 h-4" />
               </button>
@@ -310,7 +311,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-destructive'
                 )}
-                title="Block this seller"
+                title={t('listing.blockSeller')}
               >
                 <EyeOff className="w-4 h-4" />
               </button>
@@ -330,7 +331,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-primary'
                 )}
-                title="Edit listing"
+                title={t('listing.edit')}
               >
                 <Pencil className="w-4 h-4" />
               </button>
@@ -344,7 +345,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-primary'
                 )}
-                title="Clone listing"
+                title={t('listing.clone')}
               >
                 <Copy className="w-4 h-4" />
               </button>
@@ -358,7 +359,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   'transition-all duration-150 hover:scale-105',
                   'text-muted-foreground hover:text-destructive'
                 )}
-                title="Delete listing"
+                title={t('listing.deleteListing')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>

@@ -126,15 +126,15 @@ export function FollowTab({ peerID, type }: FollowTabProps) {
     const getEmptyMessage = (): string => {
       if (type === 'followers') {
         if (isOwnPage) {
-          return t('profile.noOwnFollowers') || "You don't have any followers yet";
+          return t('profile.noOwnFollowers');
         }
-        return t('profile.noFollowers') || 'No followers yet';
+        return t('profile.noFollowers');
       }
       // type === 'following'
       if (isOwnPage) {
-        return t('profile.noOwnFollowing') || 'You are not following anyone yet';
+        return t('profile.noOwnFollowing');
       }
-      return t('profile.noFollowing') || 'Not following anyone';
+      return t('profile.noFollowing');
     };
 
     const emptyMessage = getEmptyMessage();
@@ -171,10 +171,10 @@ export function FollowTab({ peerID, type }: FollowTabProps) {
               {isLoadingMore ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('common.loading') || 'Loading...'}
+                  {t('common.loading')}
                 </>
               ) : (
-                t('common.loadMore') || 'Load More'
+                t('common.loadMore')
               )}
             </Button>
           </div>

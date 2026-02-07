@@ -119,7 +119,7 @@ export function CreateListingWizard({
     switch (currentStep?.id) {
       case 'type':
         if (!formData.contractType) {
-          newErrors.contractType = t('validation.required') || '必填';
+          newErrors.contractType = t('validation.required');
         }
         if (formData.contractType === 'RWA_TOKEN' && !formData.rwaAssetType) {
           // 不报错，让用户选择
@@ -132,23 +132,23 @@ export function CreateListingWizard({
         }
         if (formData.rwaAssetType === 'CUSTOM') {
           if (!formData.tokenStandard) {
-            newErrors.tokenStandard = t('validation.required') || 'Token 标准必填';
+            newErrors.tokenStandard = t('validation.required');
           }
           if (!formData.tokenAddress) {
-            newErrors.tokenAddress = t('validation.required') || '合约地址必填';
+            newErrors.tokenAddress = t('validation.required');
           }
           if (!formData.tokenId) {
-            newErrors.tokenId = t('validation.required') || 'Token ID 必填';
+            newErrors.tokenId = t('validation.required');
           }
         }
         break;
 
       case 'basic':
         if (!formData.title.trim()) {
-          newErrors.title = t('validation.titleRequired') || '标题必填';
+          newErrors.title = t('validation.titleRequired');
         }
         if (!formData.price) {
-          newErrors.price = t('validation.priceRequired') || '价格必填';
+          newErrors.price = t('validation.priceRequired');
         }
         break;
 
@@ -232,8 +232,8 @@ export function CreateListingWizard({
       }
 
       toast({
-        title: t('common.success') || '成功',
-        description: t('listing.createSuccess') || '商品创建成功',
+        title: t('common.success'),
+        description: t('listing.createSuccess'),
       });
 
       // 回调或跳转
@@ -248,9 +248,8 @@ export function CreateListingWizard({
     } catch (error) {
       console.error('创建商品失败:', error);
       toast({
-        title: t('common.error') || '错误',
-        description:
-          error instanceof Error ? error.message : t('listing.createFailed') || '创建失败',
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('listing.createFailed'),
         variant: 'destructive',
       });
     } finally {

@@ -40,15 +40,13 @@ export function AtomicSwapPurchaseHint({
         )}
         <div className="text-sm text-info">
           <span className="font-medium">
-            {isConfirmRequired
-              ? t('listing.rwa.atomicSwap') || '原子交换'
-              : t('listing.rwa.instantSwap') || '即时交换'}
+            {isConfirmRequired ? t('listing.rwa.atomicSwap') : t('listing.rwa.instantSwap')}
           </span>
           <span className="text-info ml-1">
             -{' '}
             {isConfirmRequired
-              ? t('listing.rwa.atomicSwapShort') || '资产与支付同时完成，安全无忧'
-              : t('listing.rwa.instantSwapShort') || '付款后立即获得资产'}
+              ? t('listing.rwa.atomicSwapShort')
+              : t('listing.rwa.instantSwapShort')}
           </span>
         </div>
       </div>
@@ -65,16 +63,15 @@ export function AtomicSwapPurchaseHint({
         )}
         <h5 className="font-medium text-info">
           {isConfirmRequired
-            ? t('listing.rwa.atomicSwapPurchase') || '原子交换购买'
-            : t('listing.rwa.instantSwapPurchase') || '即时交换购买'}
+            ? t('listing.rwa.atomicSwapPurchase')
+            : t('listing.rwa.instantSwapPurchase')}
         </h5>
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">
         {isConfirmRequired
-          ? t('listing.rwa.atomicSwapDescription') ||
-            '此商品使用区块链原子交换进行交易，确保买卖双方的资产安全:'
-          : t('listing.rwa.instantSwapDescription') || '此商品支持即时购买，付款后立即获得资产:'}
+          ? t('listing.rwa.atomicSwapDescription')
+          : t('listing.rwa.instantSwapDescription')}
       </p>
 
       <div className="space-y-3">
@@ -84,12 +81,8 @@ export function AtomicSwapPurchaseHint({
             <Wallet className="w-3.5 h-3.5 text-info" />
           </div>
           <div>
-            <div className="text-sm font-medium text-foreground">
-              {t('listing.rwa.step1Title') || '1. 连接钱包并授权'}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {t('listing.rwa.step1Desc') || '授权支付金额，资金暂不转出'}
-            </div>
+            <div className="text-sm font-medium text-foreground">{t('listing.rwa.step1Title')}</div>
+            <div className="text-xs text-muted-foreground">{t('listing.rwa.step1Desc')}</div>
           </div>
         </div>
 
@@ -102,11 +95,9 @@ export function AtomicSwapPurchaseHint({
               </div>
               <div>
                 <div className="text-sm font-medium text-foreground">
-                  {t('listing.rwa.step2Title') || '2. 等待卖家确认'}
+                  {t('listing.rwa.step2Title')}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {t('listing.rwa.step2Desc') || '卖家收到订单后确认发货'}
-                </div>
+                <div className="text-xs text-muted-foreground">{t('listing.rwa.step2Desc')}</div>
               </div>
             </div>
 
@@ -117,11 +108,9 @@ export function AtomicSwapPurchaseHint({
               </div>
               <div>
                 <div className="text-sm font-medium text-foreground">
-                  {t('listing.rwa.step3Title') || '3. 自动完成交换'}
+                  {t('listing.rwa.step3Title')}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {t('listing.rwa.step3Desc') || '资产与支付同时完成，原子级安全'}
-                </div>
+                <div className="text-xs text-muted-foreground">{t('listing.rwa.step3Desc')}</div>
               </div>
             </div>
           </>
@@ -133,10 +122,10 @@ export function AtomicSwapPurchaseHint({
             </div>
             <div>
               <div className="text-sm font-medium text-foreground">
-                {t('listing.rwa.instantStep2Title') || '2. 即时完成交换'}
+                {t('listing.rwa.instantStep2Title')}
               </div>
               <div className="text-xs text-muted-foreground">
-                {t('listing.rwa.instantStep2Desc') || '资产直接转入您的钱包，无需等待'}
+                {t('listing.rwa.instantStep2Desc')}
               </div>
             </div>
           </div>
@@ -145,9 +134,7 @@ export function AtomicSwapPurchaseHint({
 
       <div className="mt-4 pt-3 border-t border-info/20 flex items-center gap-2">
         <Shield className="w-4 h-4 text-success" />
-        <span className="text-xs text-success font-medium">
-          {t('listing.rwa.safetyNote') || '安全保障: 资产与支付同时完成，无需信任中介'}
-        </span>
+        <span className="text-xs text-success font-medium">{t('listing.rwa.safetyNote')}</span>
       </div>
     </Card>
   );

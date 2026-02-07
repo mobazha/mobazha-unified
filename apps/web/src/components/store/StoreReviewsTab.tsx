@@ -90,9 +90,7 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
                   {average.toFixed(1)}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('product.overallRating') || 'overall rating'}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t('product.overallRating')}</p>
             </div>
 
             {/* 分隔线 */}
@@ -102,7 +100,7 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
             <div className="text-center">
               <span className="text-3xl sm:text-4xl font-bold text-foreground">{count}</span>
               <p className="text-sm text-muted-foreground mt-1">
-                {count === 1 ? t('profile.review') || 'review' : t('profile.reviews') || 'reviews'}
+                {count === 1 ? t('profile.review') : t('profile.reviews')}
               </p>
             </div>
           </div>
@@ -127,10 +125,10 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
                   {isLoadingMore ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('common.loading') || 'Loading...'}
+                      {t('common.loading')}
                     </>
                   ) : (
-                    t('common.loadMore') || 'Load More'
+                    t('common.loadMore')
                   )}
                 </Button>
               </div>
@@ -138,9 +136,7 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
           </div>
         ) : (
           <Card className="p-6">
-            <p className="text-center text-muted-foreground">
-              {t('product.noReviews') || 'No reviews yet'}
-            </p>
+            <p className="text-center text-muted-foreground">{t('product.noReviews')}</p>
           </Card>
         )}
       </div>

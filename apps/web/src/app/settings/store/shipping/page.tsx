@@ -60,25 +60,20 @@ function EmptyState({
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
             <Truck className="w-6 h-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-foreground">
-            {t('shippingConfig.noOptions') || 'No shipping options'}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('shippingConfig.noOptionsDesc') ||
-              'Add shipping options to enable physical product delivery'}
-          </p>
+          <p className="font-medium text-foreground">{t('shippingConfig.noOptions')}</p>
+          <p className="text-sm text-muted-foreground">{t('shippingConfig.noOptionsDesc')}</p>
         </VStack>
 
         {/* 创建配送档案按钮 */}
         <Button onClick={onCreateProfile} className="w-full">
           <FolderOpen className="w-4 h-4 mr-2" />
-          {t('shipping.createProfile') || 'Create Shipping Profile'}
+          {t('shipping.createProfile')}
         </Button>
 
         {/* 模板选择器 */}
         <div className="w-full">
           <p className="text-xs text-muted-foreground text-center mb-3">
-            {t('shipping.orUseTemplate') || 'Or start with a template:'}
+            {t('shipping.orUseTemplate')}
           </p>
           <ShippingTemplateSelector currency="USD" onSelect={onSelectTemplate} />
         </div>
@@ -100,19 +95,14 @@ function MigrationBanner({ onMigrate, isLoading }: { onMigrate: () => void; isLo
           <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <VStack gap="xs" className="flex-1">
-          <p className="font-medium text-foreground">
-            {t('shipping.upgradeToProfiles') || 'Upgrade to Shipping Profiles'}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('shipping.upgradeDesc') ||
-              'Organize your shipping options into profiles for better product management. Your existing options will be migrated to a default profile.'}
-          </p>
+          <p className="font-medium text-foreground">{t('shipping.upgradeToProfiles')}</p>
+          <p className="text-sm text-muted-foreground">{t('shipping.upgradeDesc')}</p>
           <Button size="sm" onClick={onMigrate} disabled={isLoading} className="mt-2 w-fit">
             {isLoading ? (
-              t('common.migrating') || 'Migrating...'
+              t('common.migrating')
             ) : (
               <>
-                {t('shipping.migrateNow') || 'Migrate Now'}
+                {t('shipping.migrateNow')}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}
@@ -192,20 +182,20 @@ function ProfileEditor({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('shipping.createProfile') || 'Create Profile'}</DialogTitle>
+          <DialogTitle>{t('shipping.createProfile')}</DialogTitle>
           <DialogDescription className="sr-only">
-            {t('shipping.createProfileDescription') || 'Create a new shipping profile'}
+            {t('shipping.createProfileDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="profile-name">{t('shipping.profileName') || 'Profile Name'} *</Label>
+            <Label htmlFor="profile-name">{t('shipping.profileName')} *</Label>
             <Input
               id="profile-name"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder={t('shipping.profileNamePlaceholder') || 'e.g. Default Shipping'}
+              placeholder={t('shipping.profileNamePlaceholder')}
               onKeyDown={e => {
                 if (e.key === 'Enter' && name.trim()) {
                   handleSave();
@@ -217,10 +207,10 @@ function ProfileEditor({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={isSaving || !name.trim()}>
-            {isSaving ? t('common.saving') || 'Saving...' : t('common.create') || 'Create'}
+            {isSaving ? t('common.saving') : t('common.create')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -331,8 +321,8 @@ export default function ShippingOptionsPage() {
       const success = await setDefaultProfile(profileId);
       if (success) {
         toast({
-          title: t('common.success') || 'Success',
-          description: t('shipping.defaultProfileSet') || 'Default profile updated',
+          title: t('common.success'),
+          description: t('shipping.defaultProfileSet'),
         });
       }
     },
@@ -341,16 +331,16 @@ export default function ShippingOptionsPage() {
 
   // 迁移到档案模式
   const handleMigrate = useCallback(async () => {
-    const success = await migrateToProfiles(t('shipping.defaultProfileName') || 'Default Shipping');
+    const success = await migrateToProfiles(t('shipping.defaultProfileName'));
     if (success) {
       toast({
-        title: t('common.success') || 'Success',
-        description: t('shipping.migrateSuccess') || 'Migration completed successfully',
+        title: t('common.success'),
+        description: t('shipping.migrateSuccess'),
       });
     } else {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('shipping.migrateFailed') || 'Migration failed',
+        title: t('common.error'),
+        description: t('shipping.migrateFailed'),
         variant: 'destructive',
       });
     }
@@ -361,7 +351,7 @@ export default function ShippingOptionsPage() {
     async (zone: ShippingZone) => {
       if (!isUsingProfiles) {
         const newProfile = createEmptyProfile(true);
-        newProfile.name = t('shipping.defaultProfileName') || 'Default Shipping';
+        newProfile.name = t('shipping.defaultProfileName');
         newProfile.zones = [zone];
         await addProfile(newProfile);
       } else {
@@ -412,10 +402,8 @@ export default function ShippingOptionsPage() {
         setShowZoneForm(false);
         setEditingZone(null);
         toast({
-          title: t('common.success') || 'Success',
-          description: editingZone
-            ? t('shipping.zoneUpdated') || 'Zone updated'
-            : t('shipping.zoneAdded') || 'Zone added',
+          title: t('common.success'),
+          description: editingZone ? t('shipping.zoneUpdated') : t('shipping.zoneAdded'),
         });
       }
       return success;
@@ -459,20 +447,20 @@ export default function ShippingOptionsPage() {
 
     if (success) {
       toast({
-        title: t('common.success') || 'Success',
+        title: t('common.success'),
         description:
           itemToDelete.type === 'profile'
-            ? t('shipping.profileDeleted') || 'Profile deleted'
+            ? t('shipping.profileDeleted')
             : itemToDelete.type === 'zone'
-              ? t('shipping.zoneDeleted') || 'Zone deleted'
+              ? t('shipping.zoneDeleted')
               : itemToDelete.type === 'location'
-                ? t('shipping.locationDeleted') || 'Location deleted'
-                : t('shippingConfig.deleteSuccess') || 'Shipping option deleted',
+                ? t('shipping.locationDeleted')
+                : t('shippingConfig.deleteSuccess'),
       });
     } else {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('common.deleteFailed') || 'Failed to delete',
+        title: t('common.error'),
+        description: t('common.deleteFailed'),
         variant: 'destructive',
       });
     }
@@ -527,10 +515,10 @@ export default function ShippingOptionsPage() {
         setShowLocationForm(false);
         setEditingLocation(null);
         toast({
-          title: t('common.success') || 'Success',
+          title: t('common.success'),
           description: editingLocation
-            ? t('shipping.locationUpdated') || 'Location updated'
-            : t('shipping.locationCreated') || 'Location created',
+            ? t('shipping.locationUpdated')
+            : t('shipping.locationCreated'),
         });
       }
       return success;
@@ -550,8 +538,8 @@ export default function ShippingOptionsPage() {
       const success = await updateLocation(locationId, { isDefault: true });
       if (success) {
         toast({
-          title: t('common.success') || 'Success',
-          description: t('shipping.defaultLocationSet') || 'Default location updated',
+          title: t('common.success'),
+          description: t('shipping.defaultLocationSet'),
         });
       }
     },
@@ -567,21 +555,19 @@ export default function ShippingOptionsPage() {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span>{t('common.back') || 'Back'}</span>
+          <span>{t('common.back')}</span>
         </Link>
       </div>
 
       {/* 标题和添加按钮 */}
       <HStack justify="between" align="center" className="mb-6">
         <h1 className="text-lg font-semibold">
-          {isUsingProfiles
-            ? t('shipping.shippingProfiles') || 'Shipping Profiles'
-            : t('settingsExtended.shippingOptions') || 'Shipping Options'}
+          {isUsingProfiles ? t('shipping.shippingProfiles') : t('settingsExtended.shippingOptions')}
         </h1>
         {isUsingProfiles && (
           <Button onClick={handleCreateProfile} size="sm">
             <Plus className="w-4 h-4 mr-1" />
-            {t('shipping.addProfile') || 'Add Profile'}
+            {t('shipping.addProfile')}
           </Button>
         )}
       </HStack>
@@ -631,13 +617,12 @@ export default function ShippingOptionsPage() {
                     ) : (
                       <div className="space-y-3">
                         <p className="text-sm text-muted-foreground py-2">
-                          {t('shipping.noZonesDesc') ||
-                            'Add shipping zones to define delivery regions and rates'}
+                          {t('shipping.noZonesDesc')}
                         </p>
                         {/* 模板快捷入口 */}
                         <div className="pt-1">
                           <p className="text-xs text-muted-foreground mb-2">
-                            {t('shipping.orUseTemplate') || 'Or start with a template:'}
+                            {t('shipping.orUseTemplate')}
                           </p>
                           <ShippingTemplateSelector
                             currency="USD"
@@ -657,7 +642,7 @@ export default function ShippingOptionsPage() {
                       onClick={() => handleAddZone(profile.profileId)}
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" />
-                      {t('shipping.addZone') || 'Add Shipping Zone'}
+                      {t('shipping.addZone')}
                     </Button>
                   </div>
                 )}
@@ -691,13 +676,11 @@ export default function ShippingOptionsPage() {
           <HStack justify="between" align="center" className="mb-4">
             <HStack gap="sm" align="center">
               <MapPin className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-base font-semibold">
-                {t('shipping.shippingLocations') || 'Shipping Locations'}
-              </h2>
+              <h2 className="text-base font-semibold">{t('shipping.shippingLocations')}</h2>
             </HStack>
             <Button onClick={handleAddLocation} size="sm" variant="outline">
               <Plus className="w-4 h-4 mr-1" />
-              {t('shipping.addLocation') || 'Add Location'}
+              {t('shipping.addLocation')}
             </Button>
           </HStack>
 
@@ -705,13 +688,10 @@ export default function ShippingOptionsPage() {
             <Card className="p-6">
               <VStack gap="sm" align="center" className="text-center">
                 <MapPin className="w-10 h-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  {t('shipping.noLocationsDesc') ||
-                    'Add shipping locations to define where products ship from'}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('shipping.noLocationsDesc')}</p>
                 <Button onClick={handleAddLocation} variant="outline" size="sm">
                   <Plus className="w-4 h-4 mr-1" />
-                  {t('shipping.addLocation') || 'Add Location'}
+                  {t('shipping.addLocation')}
                 </Button>
               </VStack>
             </Card>
@@ -754,12 +734,10 @@ export default function ShippingOptionsPage() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingZone
-                ? t('shipping.editZone') || 'Edit Shipping Zone'
-                : t('shipping.addZone') || 'Add Shipping Zone'}
+              {editingZone ? t('shipping.editZone') : t('shipping.addZone')}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              {t('shipping.zoneFormDescription') || 'Configure shipping zone regions and rates'}
+              {t('shipping.zoneFormDescription')}
             </DialogDescription>
           </DialogHeader>
           <ShippingZoneForm
@@ -798,24 +776,24 @@ export default function ShippingOptionsPage() {
           <DialogHeader>
             <DialogTitle>
               {itemToDelete?.type === 'profile'
-                ? t('shipping.deleteProfileTitle') || 'Delete Profile'
+                ? t('shipping.deleteProfileTitle')
                 : itemToDelete?.type === 'zone'
-                  ? t('shipping.deleteZone') || 'Delete Shipping Zone'
+                  ? t('shipping.deleteZone')
                   : itemToDelete?.type === 'location'
-                    ? t('shipping.deleteLocation') || 'Delete Location'
-                    : t('shippingConfig.deleteConfirmTitle') || 'Delete Shipping Option'}
+                    ? t('shipping.deleteLocation')
+                    : t('shippingConfig.deleteConfirmTitle')}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {t('shippingConfig.deleteConfirmDesc') || 'Are you sure you want to delete'} &quot;
+            {t('shippingConfig.deleteConfirmDesc')} &quot;
             {itemToDelete?.item?.name || ''}&quot;?
           </p>
           <HStack gap="sm" justify="end" className="mt-4">
             <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete} disabled={isSaving}>
-              {isSaving ? t('common.deleting') || 'Deleting...' : t('common.delete') || 'Delete'}
+              {isSaving ? t('common.deleting') : t('common.delete')}
             </Button>
           </HStack>
         </DialogContent>

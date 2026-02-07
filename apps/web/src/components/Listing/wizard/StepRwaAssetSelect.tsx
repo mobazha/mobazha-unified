@@ -55,14 +55,12 @@ export function StepRwaAssetSelect({
       {/* 标题 */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">
-          {isCustomMode
-            ? t('listing.wizard.configureAsset') || '配置资产信息'
-            : t('listing.wizard.selectAsset') || '选择要出售的资产'}
+          {isCustomMode ? t('listing.wizard.configureAsset') : t('listing.wizard.selectAsset')}
         </h2>
         <p className="text-muted-foreground">
           {isCustomMode
-            ? t('listing.wizard.configureAssetDesc') || '手动输入 Token 合约地址和参数'
-            : t('listing.wizard.selectAssetDesc') || '从预定义资产中选择'}
+            ? t('listing.wizard.configureAssetDesc')
+            : t('listing.wizard.selectAssetDesc')}
         </p>
       </div>
 
@@ -72,8 +70,7 @@ export function StepRwaAssetSelect({
           {/* Token 标准选择 */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.rwa.tokenStandard') || 'Token 标准'}{' '}
-              <span className="text-destructive">*</span>
+              {t('listing.rwa.tokenStandard')} <span className="text-destructive">*</span>
             </label>
             <Select
               value={formData.tokenStandard || ''}
@@ -82,9 +79,7 @@ export function StepRwaAssetSelect({
               }
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={t('listing.rwa.selectTokenStandard') || '选择 Token 标准'}
-                />
+                <SelectValue placeholder={t('listing.rwa.selectTokenStandard')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ERC721">ERC721 (NFT)</SelectItem>
@@ -97,8 +92,7 @@ export function StepRwaAssetSelect({
           {/* 合约地址 */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              {t('listing.rwa.contractAddress') || '合约地址'}{' '}
-              <span className="text-destructive">*</span>
+              {t('listing.rwa.contractAddress')} <span className="text-destructive">*</span>
             </label>
             <Input
               value={formData.tokenAddress}
@@ -135,9 +129,7 @@ export function StepRwaAssetSelect({
                 onChange={e => updateField('slotId', e.target.value)}
                 placeholder="1"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('listing.rwa.slotIdHelper') || 'ERC3525 Slot ID，表示资产类别'}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('listing.rwa.slotIdHelper')}</p>
             </div>
           )}
         </Card>
@@ -173,10 +165,10 @@ export function StepRwaAssetSelect({
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onPrev}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t('common.prev') || '上一步'}
+          {t('common.prev')}
         </Button>
         <Button onClick={onNext} disabled={!canProceed}>
-          {t('common.next') || '下一步'}
+          {t('common.next')}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

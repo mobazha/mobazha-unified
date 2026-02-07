@@ -608,8 +608,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
           // 格式化单价显示（使用商品单价，而非订单总额）
           const formatPrice = () => {
-            const price = order.items[0]?.price || order.pricingAmount || order.total;
-            const currency = order.items[0]?.currency || order.pricingCurrency;
+            const price = order.items[0]?.price;
+            const currency = order.items[0]?.currency;
             if (!price || !currency) return '--';
             return formatCurrencyPrice(price, currency);
           };

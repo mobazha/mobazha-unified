@@ -164,13 +164,13 @@ export const ShippingComparison: React.FC<ShippingComparisonProps> = ({
                     {service.isCheapest && (
                       <Badge variant="secondary" className="text-xs bg-success/15 text-success">
                         <DollarSign className="w-3 h-3 mr-0.5" />
-                        {t('checkout.cheapest') || 'Cheapest'}
+                        {t('checkout.cheapest')}
                       </Badge>
                     )}
                     {service.isFastest && (
                       <Badge variant="secondary" className="text-xs bg-info/15 text-info">
                         <Clock className="w-3 h-3 mr-0.5" />
-                        {t('checkout.fastest') || 'Fastest'}
+                        {t('checkout.fastest')}
                       </Badge>
                     )}
                   </div>
@@ -188,7 +188,7 @@ export const ShippingComparison: React.FC<ShippingComparisonProps> = ({
             <div className="text-right ml-3 flex-shrink-0">
               <span className="font-semibold text-foreground">
                 {displayPrice === 0
-                  ? t('checkout.free') || 'Free'
+                  ? t('checkout.free')
                   : formatPrice(displayPrice, service.currency)}
               </span>
             </div>
@@ -203,7 +203,7 @@ export const ShippingComparison: React.FC<ShippingComparisonProps> = ({
           <p className="text-sm text-warning">
             {t('shipping.spendMoreForFreeShipping', {
               amount: formatPrice(freeShippingGap, currency),
-            }) || `Spend ${formatPrice(freeShippingGap, currency)} more for free shipping`}
+            })}
           </p>
         </div>
       )}

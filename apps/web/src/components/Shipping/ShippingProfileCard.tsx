@@ -134,13 +134,13 @@ export function ShippingProfileCard({
     }
 
     // 多种货币
-    return t('shipping.multipleCurrencies') || 'Multiple currencies';
+    return t('shipping.multipleCurrencies');
   }, [rates, t]);
 
   // 计算地区覆盖摘要
   const regionsSummary = useMemo(() => {
     if (zones.length === 0) {
-      return { isWorldwide: false, count: 0, display: t('shipping.noRegions') || 'No regions' };
+      return { isWorldwide: false, count: 0, display: t('shipping.noRegions') };
     }
 
     // 统计所有唯一地区
@@ -165,7 +165,7 @@ export function ShippingProfileCard({
       return {
         isWorldwide: true,
         count: allRegions.size,
-        display: t('shipping.worldwide') || 'Worldwide',
+        display: t('shipping.worldwide'),
       };
     }
 
@@ -175,8 +175,8 @@ export function ShippingProfileCard({
       count,
       display:
         count === 0
-          ? t('shipping.noRegions') || 'No regions'
-          : `${count} ${count === 1 ? t('shipping.region') || 'region' : t('shipping.regions') || 'regions'}`,
+          ? t('shipping.noRegions')
+          : `${count} ${count === 1 ? t('shipping.region') : t('shipping.regions')}`,
     };
   }, [zones, t]);
 
@@ -204,14 +204,14 @@ export function ShippingProfileCard({
                   onClick={startEditing}
                   className="font-semibold text-foreground text-base hover:text-primary transition-colors text-left"
                   disabled={disabled}
-                  title={t('common.clickToEdit') || 'Click to edit'}
+                  title={t('common.clickToEdit')}
                 >
                   {profile.name}
                 </button>
               )}
               {profile.isDefault && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                  {t('common.default') || 'Default'}
+                  {t('common.default')}
                 </span>
               )}
             </HStack>
@@ -222,10 +222,7 @@ export function ShippingProfileCard({
               <HStack gap="xs" className="text-sm text-muted-foreground">
                 <Package className="w-4 h-4" />
                 <span>
-                  {zones.length}{' '}
-                  {zones.length === 1
-                    ? t('shipping.zone') || 'zone'
-                    : t('shipping.zones') || 'zones'}
+                  {zones.length} {zones.length === 1 ? t('shipping.zone') : t('shipping.zones')}
                 </span>
               </HStack>
 
@@ -259,7 +256,7 @@ export function ShippingProfileCard({
                 size="sm"
                 onClick={onSetDefault}
                 disabled={disabled}
-                title={t('shipping.setAsDefault') || 'Set as default'}
+                title={t('shipping.setAsDefault')}
               >
                 <Check className="w-4 h-4" />
               </Button>
@@ -280,9 +277,7 @@ export function ShippingProfileCard({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {profile.isDefault
-                    ? t('shipping.cannotDeleteDefault') || 'Default profile cannot be deleted'
-                    : t('common.delete') || 'Delete'}
+                  {profile.isDefault ? t('shipping.cannotDeleteDefault') : t('common.delete')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -299,14 +294,12 @@ export function ShippingProfileCard({
           {expanded ? (
             <>
               <ChevronUp className="w-4 h-4" />
-              {t('common.collapse') || 'Collapse'}
+              {t('common.collapse')}
             </>
           ) : (
             <>
               <ChevronDown className="w-4 h-4" />
-              {zones.length > 0
-                ? t('shipping.viewZones') || 'View shipping zones'
-                : t('shipping.addZone') || 'Add shipping zone'}
+              {zones.length > 0 ? t('shipping.viewZones') : t('shipping.addZone')}
             </>
           )}
         </button>

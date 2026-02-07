@@ -51,18 +51,18 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       {/* 快递 - Shipping */}
       <div className="space-y-3">
         <h3 className="text-sm lg:text-base font-semibold text-foreground">
-          {t('filter.shipping') || '快递'}
+          {t('filter.shipping')}
         </h3>
         <div className="space-y-2.5">
           {/* 发往国家选择（暂时禁用，后续可实现） */}
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{t('filter.shipTo') || '发往:'}</Label>
+            <Label className="text-xs text-muted-foreground">{t('filter.shipTo')}</Label>
             <Select value="any" disabled>
               <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder={t('filter.anyCountry') || '(任何国家)'} />
+                <SelectValue placeholder={t('filter.anyCountry')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">{t('filter.anyCountry') || '(任何国家)'}</SelectItem>
+                <SelectItem value="any">{t('filter.anyCountry')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -76,7 +76,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               className="scale-90"
             />
             <Label htmlFor="sidebar-free-shipping" className="text-sm cursor-pointer">
-              {t('filter.freeShipping') || '免运费'}
+              {t('filter.freeShipping')}
             </Label>
           </div>
         </div>
@@ -89,11 +89,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <>
           <div className="space-y-2">
             <h3 className="text-sm lg:text-base font-semibold text-foreground">
-              {t('filter.category') || '类别'}
+              {t('filter.category')}
             </h3>
             <div className="space-y-0.5">
               <RadioOption
-                label={t('common.all') || '全部'}
+                label={t('common.all')}
                 selected={filter.category === 'all'}
                 onClick={() => updateFilter({ category: 'all' })}
               />
@@ -113,9 +113,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
       {/* 类型 - Type */}
       <div className="space-y-2">
-        <h3 className="text-sm lg:text-base font-semibold text-foreground">
-          {t('filter.type') || '类型'}
-        </h3>
+        <h3 className="text-sm lg:text-base font-semibold text-foreground">{t('filter.type')}</h3>
         <div className="space-y-0.5">
           {productTypes.map(type => (
             <RadioOption

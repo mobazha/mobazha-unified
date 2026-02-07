@@ -69,7 +69,7 @@ export function BlockchainInfoCard({
             size="sm"
             className="h-7 w-7 p-0"
             onClick={handleCopy}
-            title={t('common.copy') || '复制'}
+            title={t('common.copy')}
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-success" />
@@ -95,30 +95,26 @@ export function BlockchainInfoCard({
     <div className={cn('p-4 bg-muted/50 rounded-lg', className)}>
       <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
         <Link className="w-4 h-4 text-primary" />
-        {t('listing.rwa.blockchainInfo') || '区块链信息'}
+        {t('listing.rwa.blockchainInfo')}
       </h5>
       <div className="space-y-2 text-sm">
         {/* 网络 */}
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">{t('listing.rwa.network') || '网络'}:</span>
+          <span className="text-muted-foreground">{t('listing.rwa.network')}:</span>
           <span className="font-medium">{networkDisplayName}</span>
         </div>
 
         {/* Token 标准 */}
         {tokenStandard && (
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">
-              {t('listing.rwa.tokenStandard') || 'Token 标准'}:
-            </span>
+            <span className="text-muted-foreground">{t('listing.rwa.tokenStandard')}:</span>
             <span className="font-medium">{tokenStandard}</span>
           </div>
         )}
 
         {/* 合约地址 */}
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">
-            {t('listing.rwa.contractAddress') || '合约地址'}:
-          </span>
+          <span className="text-muted-foreground">{t('listing.rwa.contractAddress')}:</span>
           <div className="flex items-center gap-1">
             <span className="font-mono text-xs">{shortenAddress(contractAddress)}</span>
             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleCopy}>

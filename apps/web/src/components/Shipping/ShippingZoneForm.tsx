@@ -165,36 +165,36 @@ export function ShippingZoneForm({
       {/* 头部 - 当在 Dialog 中使用时隐藏（由 DialogHeader 提供） */}
       {!hideHeader && (
         <h3 className="text-lg font-semibold">
-          {zone ? t('shipping.editZone') || 'Edit Zone' : t('shipping.addZone') || 'Add Zone'}
+          {zone ? t('shipping.editZone') : t('shipping.addZone')}
         </h3>
       )}
 
       {/* 区域名称 */}
       <div className="space-y-1.5">
-        <Label htmlFor="zone-name">{t('shipping.zoneName') || 'Zone Name'}</Label>
+        <Label htmlFor="zone-name">{t('shipping.zoneName')}</Label>
         <Input
           id="zone-name"
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder={t('shipping.zoneNamePlaceholder') || 'e.g., Domestic, Asia, Europe'}
+          placeholder={t('shipping.zoneNamePlaceholder')}
         />
       </div>
 
       {/* 地区选择 */}
       <div className="space-y-1.5">
-        <Label>{t('shipping.regions') || 'Regions'}</Label>
+        <Label>{t('shipping.regions')}</Label>
         <RegionSelector value={regions} onChange={setRegions} />
       </div>
 
       {/* 费率列表 */}
       <div className="space-y-3">
-        <Label>{t('shipping.rates') || 'Shipping Rates'}</Label>
+        <Label>{t('shipping.rates')}</Label>
 
         {rates.map((rate, index) => (
           <div key={rate.id || index} className="p-3 border rounded-lg bg-muted/30 space-y-3">
             <HStack justify="between" align="center">
               <span className="text-sm font-medium text-muted-foreground">
-                {t('shipping.rate') || 'Rate'} #{index + 1}
+                {t('shipping.rate')} #{index + 1}
               </span>
               {rates.length > 1 && (
                 <Button variant="ghost" size="sm" onClick={() => removeRate(index)}>
@@ -206,18 +206,18 @@ export function ShippingZoneForm({
             <div className="grid grid-cols-2 gap-3">
               {/* 费率名称 */}
               <div className="space-y-1">
-                <Label className="text-xs">{t('shipping.rateName') || 'Rate Name'}</Label>
+                <Label className="text-xs">{t('shipping.rateName')}</Label>
                 <Input
                   value={rate.name}
                   onChange={e => updateRate(index, { name: e.target.value })}
-                  placeholder={t('shipping.rateNamePlaceholder') || 'e.g., Standard, Express'}
+                  placeholder={t('shipping.rateNamePlaceholder')}
                 />
               </div>
 
               {/* 价格（展示为日常金额，并标明货币） */}
               <div className="space-y-1">
                 <Label className="text-xs">
-                  {t('shipping.ratePrice') || 'Price'} ({rate.currency || currency})
+                  {t('shipping.ratePrice')} ({rate.currency || currency})
                 </Label>
                 <Input
                   type="number"
@@ -226,19 +226,17 @@ export function ShippingZoneForm({
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  aria-label={`${t('shipping.ratePrice') || 'Price'} ${rate.currency || currency}`}
+                  aria-label={`${t('shipping.ratePrice')} ${rate.currency || currency}`}
                 />
               </div>
 
               {/* 预计送达时间 */}
               <div className="col-span-2 space-y-1">
-                <Label className="text-xs">
-                  {t('shipping.estimatedDelivery') || 'Estimated Delivery'}
-                </Label>
+                <Label className="text-xs">{t('shipping.estimatedDelivery')}</Label>
                 <Input
                   value={rate.estimatedDelivery}
                   onChange={e => updateRate(index, { estimatedDelivery: e.target.value })}
-                  placeholder={t('shipping.deliveryPlaceholder') || 'e.g., 5-7 business days'}
+                  placeholder={t('shipping.deliveryPlaceholder')}
                 />
               </div>
 
@@ -255,13 +253,11 @@ export function ShippingZoneForm({
                     {rate.condition ? (
                       <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                         {rate.condition.type === 'weight'
-                          ? t('shipping.basedOnWeight') || 'Based on weight'
-                          : t('shipping.basedOnPrice') || 'Based on order total'}
+                          ? t('shipping.basedOnWeight')
+                          : t('shipping.basedOnPrice')}
                       </span>
                     ) : (
-                      <span className="text-xs">
-                        {t('shipping.addCondition') || 'Add condition (optional)'}
-                      </span>
+                      <span className="text-xs">{t('shipping.addCondition')}</span>
                     )}
                   </span>
                   {expandedConditions.has(index) ? (
@@ -276,9 +272,7 @@ export function ShippingZoneForm({
               {expandedConditions.has(index) && (
                 <div className="col-span-2 p-3 bg-muted/50 rounded-md space-y-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {t('shipping.conditionType') || 'Condition Type'}
-                    </Label>
+                    <Label className="text-xs">{t('shipping.conditionType')}</Label>
                     <Select
                       value={rate.condition?.type || 'none'}
                       onValueChange={(value: 'none' | 'weight' | 'price') =>
@@ -286,20 +280,12 @@ export function ShippingZoneForm({
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue
-                          placeholder={t('shipping.selectCondition') || 'Select condition'}
-                        />
+                        <SelectValue placeholder={t('shipping.selectCondition')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">
-                          {t('shipping.noCondition') || 'No condition'}
-                        </SelectItem>
-                        <SelectItem value="weight">
-                          {t('shipping.basedOnWeight') || 'Based on weight'}
-                        </SelectItem>
-                        <SelectItem value="price">
-                          {t('shipping.basedOnPrice') || 'Based on order total'}
-                        </SelectItem>
+                        <SelectItem value="none">{t('shipping.noCondition')}</SelectItem>
+                        <SelectItem value="weight">{t('shipping.basedOnWeight')}</SelectItem>
+                        <SelectItem value="price">{t('shipping.basedOnPrice')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -309,8 +295,8 @@ export function ShippingZoneForm({
                       <div className="space-y-1">
                         <Label className="text-xs">
                           {rate.condition.type === 'weight'
-                            ? t('shipping.minWeight') || 'Min Weight (g)'
-                            : t('shipping.minOrderAmount') || 'Min Order Amount'}
+                            ? t('shipping.minWeight')
+                            : t('shipping.minOrderAmount')}
                         </Label>
                         <Input
                           type="number"
@@ -332,8 +318,8 @@ export function ShippingZoneForm({
                       <div className="space-y-1">
                         <Label className="text-xs">
                           {rate.condition.type === 'weight'
-                            ? t('shipping.maxWeight') || 'Max Weight (g)'
-                            : t('shipping.maxOrderAmount') || 'Max Order Amount'}
+                            ? t('shipping.maxWeight')
+                            : t('shipping.maxOrderAmount')}
                         </Label>
                         <Input
                           type="number"
@@ -348,16 +334,14 @@ export function ShippingZoneForm({
                               );
                             }
                           }}
-                          placeholder={t('shipping.noLimit') || '0 = no limit'}
+                          placeholder={t('shipping.noLimit')}
                           min="0"
                         />
                       </div>
                       <p className="col-span-2 text-xs text-muted-foreground">
                         {rate.condition.type === 'weight'
-                          ? t('shipping.weightConditionHint') ||
-                            'This rate will only apply when order weight is within the specified range.'
-                          : t('shipping.priceConditionHint') ||
-                            'This rate will only apply when order total is within the specified range.'}
+                          ? t('shipping.weightConditionHint')
+                          : t('shipping.priceConditionHint')}
                       </p>
                     </div>
                   )}
@@ -370,17 +354,17 @@ export function ShippingZoneForm({
         {/* 添加费率按钮 */}
         <Button variant="outline" size="sm" onClick={addRate} className="w-full border-dashed">
           <Plus className="w-3.5 h-3.5 mr-1" />
-          {t('shipping.addRate') || 'Add Rate'}
+          {t('shipping.addRate')}
         </Button>
       </div>
 
       {/* 操作按钮 */}
       <HStack justify="end" gap="sm" className="pt-4 border-t">
         <Button variant="outline" onClick={onCancel} disabled={isSaving}>
-          {t('common.cancel') || 'Cancel'}
+          {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} disabled={isSaving || !isValid}>
-          {isSaving ? t('common.saving') || 'Saving...' : t('common.save') || 'Save'}
+          {isSaving ? t('common.saving') : t('common.save')}
         </Button>
       </HStack>
     </VStack>

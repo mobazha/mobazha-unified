@@ -71,16 +71,16 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
     const newErrors: Partial<Record<keyof Address, string>> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = t('address.nameRequired') || 'Name is required';
+      newErrors.name = t('address.nameRequired');
     }
     if (!formData.addressLineOne.trim()) {
-      newErrors.addressLineOne = t('address.addressRequired') || 'Address is required';
+      newErrors.addressLineOne = t('address.addressRequired');
     }
     if (!formData.city.trim()) {
-      newErrors.city = t('address.cityRequired') || 'City is required';
+      newErrors.city = t('address.cityRequired');
     }
     if (!formData.country.trim()) {
-      newErrors.country = t('address.countryRequired') || 'Country is required';
+      newErrors.country = t('address.countryRequired');
     }
 
     setErrors(newErrors);
@@ -116,13 +116,13 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
         {/* 收件人姓名 */}
         <div className="space-y-1.5">
           <Label htmlFor="name">
-            {t('address.name') || 'Recipient Name'} <span className="text-destructive">*</span>
+            {t('address.name')} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="name"
             value={formData.name}
             onChange={e => handleChange('name', e.target.value)}
-            placeholder={t('address.namePlaceholder') || 'Enter recipient name'}
+            placeholder={t('address.namePlaceholder')}
             className={errors.name ? 'border-destructive' : ''}
           />
           {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
@@ -130,26 +130,25 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
 
         {/* 公司（可选） */}
         <div className="space-y-1.5">
-          <Label htmlFor="company">{t('address.company') || 'Company (Optional)'}</Label>
+          <Label htmlFor="company">{t('address.company')}</Label>
           <Input
             id="company"
             value={formData.company}
             onChange={e => handleChange('company', e.target.value)}
-            placeholder={t('address.companyPlaceholder') || 'Enter company name'}
+            placeholder={t('address.companyPlaceholder')}
           />
         </div>
 
         {/* 地址行1 */}
         <div className="space-y-1.5">
           <Label htmlFor="addressLineOne">
-            {t('address.addressLineOne') || 'Address Line 1'}{' '}
-            <span className="text-destructive">*</span>
+            {t('address.addressLineOne')} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="addressLineOne"
             value={formData.addressLineOne}
             onChange={e => handleChange('addressLineOne', e.target.value)}
-            placeholder={t('address.addressLinePlaceholder') || 'Street address, P.O. box'}
+            placeholder={t('address.addressLinePlaceholder')}
             className={errors.addressLineOne ? 'border-destructive' : ''}
           />
           {errors.addressLineOne && (
@@ -159,16 +158,12 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
 
         {/* 地址行2（可选） */}
         <div className="space-y-1.5">
-          <Label htmlFor="addressLineTwo">
-            {t('address.addressLineTwo') || 'Address Line 2 (Optional)'}
-          </Label>
+          <Label htmlFor="addressLineTwo">{t('address.addressLineTwo')}</Label>
           <Input
             id="addressLineTwo"
             value={formData.addressLineTwo}
             onChange={e => handleChange('addressLineTwo', e.target.value)}
-            placeholder={
-              t('address.addressLineTwoPlaceholder') || 'Apartment, suite, unit, building, floor'
-            }
+            placeholder={t('address.addressLineTwoPlaceholder')}
           />
         </div>
 
@@ -176,24 +171,24 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="city">
-              {t('address.city') || 'City'} <span className="text-destructive">*</span>
+              {t('address.city')} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="city"
               value={formData.city}
               onChange={e => handleChange('city', e.target.value)}
-              placeholder={t('address.cityPlaceholder') || 'Enter city'}
+              placeholder={t('address.cityPlaceholder')}
               className={errors.city ? 'border-destructive' : ''}
             />
             {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="state">{t('address.state') || 'State / Province'}</Label>
+            <Label htmlFor="state">{t('address.state')}</Label>
             <Input
               id="state"
               value={formData.state}
               onChange={e => handleChange('state', e.target.value)}
-              placeholder={t('address.statePlaceholder') || 'Enter state'}
+              placeholder={t('address.statePlaceholder')}
             />
           </div>
         </div>
@@ -201,23 +196,23 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
         {/* 邮编和国家 */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="postalCode">{t('address.postalCode') || 'Postal Code'}</Label>
+            <Label htmlFor="postalCode">{t('address.postalCode')}</Label>
             <Input
               id="postalCode"
               value={formData.postalCode}
               onChange={e => handleChange('postalCode', e.target.value)}
-              placeholder={t('address.postalCodePlaceholder') || 'Enter postal code'}
+              placeholder={t('address.postalCodePlaceholder')}
             />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="country">
-              {t('address.country') || 'Country'} <span className="text-destructive">*</span>
+              {t('address.country')} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="country"
               value={formData.country}
               onChange={e => handleChange('country', e.target.value)}
-              placeholder={t('address.countryPlaceholder') || 'Enter country'}
+              placeholder={t('address.countryPlaceholder')}
               className={errors.country ? 'border-destructive' : ''}
             />
             {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
@@ -226,14 +221,12 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
 
         {/* 地址备注（可选） */}
         <div className="space-y-1.5">
-          <Label htmlFor="addressNotes">
-            {t('address.addressNotes') || 'Delivery Notes (Optional)'}
-          </Label>
+          <Label htmlFor="addressNotes">{t('address.addressNotes')}</Label>
           <Textarea
             id="addressNotes"
             value={formData.addressNotes}
             onChange={e => handleChange('addressNotes', e.target.value)}
-            placeholder={t('address.addressNotesPlaceholder') || 'Special delivery instructions...'}
+            placeholder={t('address.addressNotesPlaceholder')}
             rows={2}
           />
         </div>
@@ -241,14 +234,10 @@ const AddressFormContent: React.FC<AddressFormContentProps> = ({
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-          {t('common.cancel') || 'Cancel'}
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isSaving}>
-          {isSaving
-            ? t('common.saving') || 'Saving...'
-            : isEditing
-              ? t('common.save') || 'Save'
-              : t('address.addAddress') || 'Add Address'}
+          {isSaving ? t('common.saving') : isEditing ? t('common.save') : t('address.addAddress')}
         </Button>
       </DialogFooter>
     </form>
@@ -283,9 +272,7 @@ export const AddressFormModal: React.FC<AddressFormModalProps> = ({
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing
-              ? t('address.editAddress') || 'Edit Address'
-              : t('address.addAddress') || 'Add Address'}
+            {isEditing ? t('address.editAddress') : t('address.addAddress')}
           </DialogTitle>
         </DialogHeader>
 

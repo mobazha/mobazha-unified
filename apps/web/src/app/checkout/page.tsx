@@ -499,7 +499,7 @@ export default function CheckoutPage() {
     // 检查运费选项
     if (!hasAllShippingSelected) {
       toast({
-        title: t('checkout.selectShippingFirst') || 'Please select shipping option',
+        title: t('checkout.selectShippingFirst'),
         variant: 'destructive',
       });
       return;
@@ -773,7 +773,7 @@ export default function CheckoutPage() {
                   <Card>
                     <CardContent className="p-4 sm:p-6">
                       <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                        {t('checkout.shippingMethod') || 'Shipping Method'}
+                        {t('checkout.shippingMethod')}
                       </h2>
                       <VStack gap="md">
                         {checkoutItems
@@ -837,7 +837,7 @@ export default function CheckoutPage() {
                                           </div>
                                           <span className="text-sm font-semibold text-foreground">
                                             {rate.price === 0
-                                              ? t('checkout.free') || 'Free'
+                                              ? t('checkout.free')
                                               : renderPairedPrice(rate.price, currency)}
                                           </span>
                                         </label>
@@ -1186,7 +1186,7 @@ export default function CheckoutPage() {
           const success = await deleteAddress(addressId);
           if (success) {
             toast({
-              title: t('address.deleted') || 'Address deleted',
+              title: t('address.deleted'),
             });
             // 如果删除的是当前选中的地址，清除选择
             if (selectedAddress === addressId) {
@@ -1198,7 +1198,7 @@ export default function CheckoutPage() {
           const success = await setDefaultAddress(addressId);
           if (success) {
             toast({
-              title: t('address.setAsDefault') || 'Address set as default',
+              title: t('address.setAsDefault'),
             });
           }
         }}
@@ -1226,9 +1226,7 @@ export default function CheckoutPage() {
 
           if (success) {
             toast({
-              title: editingAddress
-                ? t('address.updated') || 'Address updated'
-                : t('address.added') || 'Address added',
+              title: editingAddress ? t('address.updated') : t('address.added'),
             });
             setShowAddressForm(false);
             setEditingAddress(null);

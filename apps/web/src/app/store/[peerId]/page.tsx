@@ -580,13 +580,13 @@ export default function StorePage() {
       // 清除加载缓存，以便下次能重新加载
       productsLoadedRef.current = null;
       toast({
-        title: t('common.success') || 'Success',
-        description: t('listing.deleteSuccess') || 'Listing deleted successfully!',
+        title: t('common.success'),
+        description: t('listing.deleteSuccess'),
       });
     } catch {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('listing.deleteFailed') || 'Failed to delete listing',
+        title: t('common.error'),
+        description: t('listing.deleteFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -846,11 +846,7 @@ export default function StorePage() {
                             disabled={blockLoading || !isAuthenticated}
                             size="sm"
                             className="touch-feedback"
-                            title={
-                              isBlockedUser
-                                ? t('profile.unblock') || 'Unblock'
-                                : t('profile.block') || 'Block'
-                            }
+                            title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
                           >
                             {blockLoading ? (
                               <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
@@ -948,7 +944,7 @@ export default function StorePage() {
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {t('profile.rwa') || '数字资产'}
+                  {t('profile.rwa')}
                   {rwaListingCount > 0 && (
                     <span className="ml-1.5 text-xs sm:text-sm opacity-70">{rwaListingCount}</span>
                   )}
@@ -1288,19 +1284,14 @@ export default function StorePage() {
       <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              {t('userPage.storeWelcomeCalloutTitle') || 'Welcome to your store!'}
-            </DialogTitle>
+            <DialogTitle className="text-xl">{t('userPage.storeWelcomeCalloutTitle')}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-muted-foreground">
-              {t('userPage.storeWelcomeCalloutBody') ||
-                'Your Mobazha store is now live on the network. Get started by creating some listings or customizing your page.'}
-            </p>
+            <p className="text-muted-foreground">{t('userPage.storeWelcomeCalloutBody')}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={handleCloseWelcome} className="flex-1">
-              {t('userPage.storeWelcomeCalloutBtnClose') || 'Close'}
+              {t('userPage.storeWelcomeCalloutBtnClose')}
             </Button>
             <Button
               variant="outline"
@@ -1310,11 +1301,11 @@ export default function StorePage() {
               }}
               className="flex-1"
             >
-              {t('settingsModal.customize') || 'Customize'}
+              {t('settingsModal.customize')}
             </Button>
             <Link href="/listing/new" className="flex-1">
               <Button onClick={handleCloseWelcome} className="w-full">
-                {t('userPage.createListing') || 'Create Listing'}
+                {t('userPage.createListing')}
               </Button>
             </Link>
           </div>
@@ -1325,12 +1316,9 @@ export default function StorePage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('listingCard.confirmDelete.title') || 'Delete Listing'}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t('listingCard.confirmDelete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('listingCard.confirmDelete.body') ||
-                'Are you sure you want to delete this listing? This action cannot be undone.'}
+              {t('listingCard.confirmDelete.body')}
               {productToDelete && (
                 <span className="block mt-2 font-medium text-foreground">
                   &quot;{productToDelete.title}&quot;
@@ -1339,9 +1327,7 @@ export default function StorePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              {t('common.cancel') || 'Cancel'}
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={isDeleting}
@@ -1350,10 +1336,10 @@ export default function StorePage() {
               {isDeleting ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                  {t('common.deleting') || 'Deleting...'}
+                  {t('common.deleting')}
                 </span>
               ) : (
-                t('common.delete') || 'Delete'
+                t('common.delete')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

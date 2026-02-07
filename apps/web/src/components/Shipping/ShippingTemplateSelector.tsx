@@ -127,11 +127,9 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
   return (
     <div className={className}>
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-foreground">
-          {t('shippingTemplates.quickStart') || 'Quick Start Templates'}
-        </h3>
+        <h3 className="text-sm font-medium text-foreground">{t('shippingTemplates.quickStart')}</h3>
         <p className="text-xs text-muted-foreground mt-1">
-          {t('shippingTemplates.quickStartDesc') || 'Choose a template to get started quickly'}
+          {t('shippingTemplates.quickStartDesc')}
         </p>
       </div>
 
@@ -151,10 +149,10 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {t(template.labelKey) || template.id}
+                      {t(template.labelKey)}
                     </p>
                     <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                      {t(template.descKey) || ''}
+                      {t(template.descKey)}
                     </p>
                   </div>
                 </div>
@@ -187,7 +185,7 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
             });
           }}
         >
-          {t('shippingTemplates.createCustom') || 'Or create a custom option'}
+          {t('shippingTemplates.createCustom')}
         </Button>
       </div>
     </div>

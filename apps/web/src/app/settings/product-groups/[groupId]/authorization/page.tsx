@@ -28,12 +28,14 @@ import {
   useUserStore,
   getCasdoorUserId,
   useGroupContext,
+  useI18n,
   type ProductGroupAuthorization,
   type AuthorizationType,
 } from '@mobazha/core';
 import { Loader2, Plus, Trash2, Shield, Users, Globe } from 'lucide-react';
 
 export default function ProductGroupAuthorizationPage() {
+  const { t } = useI18n();
   const params = useParams();
   const groupId = parseInt(params.groupId as string);
 
@@ -92,7 +94,7 @@ export default function ProductGroupAuthorizationPage() {
         const authList = await loadAuthorizations(groupId);
         setAuthorizations(authList);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载失败');
+        setError(err instanceof Error ? err.message : t('common.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -137,7 +139,7 @@ export default function ProductGroupAuthorizationPage() {
         setSelectedUserGroupId('');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '添加失败');
+      setError(err instanceof Error ? err.message : t('common.addFailed'));
     } finally {
       setSaving(false);
     }
@@ -157,7 +159,7 @@ export default function ProductGroupAuthorizationPage() {
         setRemovingAuthId(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '移除失败');
+      setError(err instanceof Error ? err.message : t('common.removeFailed'));
     } finally {
       setSaving(false);
     }
@@ -166,9 +168,9 @@ export default function ProductGroupAuthorizationPage() {
   // 获取授权类型显示名称
   const getAuthTypeLabel = (auth: ProductGroupAuthorization) => {
     if (auth.authType === 'user_group') {
-      return auth.userGroupName || `用户组 #${auth.userGroupID}`;
+      return auth.userGroupName || `User Group #${auth.userGroupID}`;
     }
-    return `群组集市: ${auth.groupPlatform}/${auth.groupChatID}`;
+    return `${t('settings.accessControl.groupMarketplace')}: ${auth.groupPlatform}/${auth.groupChatID}`;
   };
 
   // 获取授权类型图标
@@ -198,21 +200,22 @@ export default function ProductGroupAuthorizationPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            返回产品组
+            {t('settings.sidebar.productGroups')}
           </Link>
 
           <HStack justify="between" align="center" className="mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                {currentGroup?.name || '产品组'} - 访问授权
+                {currentGroup?.name || t('settings.sidebar.productGroups')} -{' '}
+                {t('settings.accessControl.configureAccess')}
               </h1>
               <p className="text-muted-foreground">
-                配置谁可以访问此产品组中的商品，共 {authorizations.length} 条授权规则
+                {t('settings.accessControl.authorizationDesc', { count: authorizations.length })}
               </p>
             </div>
             <Button onClick={() => setShowAddModal(true)} disabled={!isAuthenticated}>
               <Plus className="w-4 h-4 mr-2" />
-              添加授权
+              {t('settings.accessControl.addAuthorization')}
             </Button>
           </HStack>
 
@@ -221,9 +224,11 @@ export default function ProductGroupAuthorizationPage() {
             <HStack gap="md" align="start">
               <Shield className="w-5 h-5 text-info mt-0.5" />
               <div>
-                <h3 className="font-medium text-info mb-1">授权说明</h3>
+                <h3 className="font-medium text-info mb-1">
+                  {t('settings.accessControl.authorizationInfo')}
+                </h3>
                 <p className="text-sm text-info">
-                  授权规则控制谁可以看到此产品组中的商品。您可以授权给特定的用户组，或者授权给某个群组集市的所有成员。
+                  {t('settings.accessControl.authorizationInfoDesc')}
                 </p>
               </div>
             </HStack>
@@ -252,7 +257,10 @@ export default function ProductGroupAuthorizationPage() {
                       <div>
                         <p className="font-medium text-foreground">{getAuthTypeLabel(auth)}</p>
                         <p className="text-sm text-muted-foreground">
-                          {auth.authType === 'user_group' ? '用户组授权' : '群组集市授权'} · 添加于{' '}
+                          {auth.authType === 'user_group'
+                            ? t('settings.accessControl.userGroupAuth')
+                            : t('settings.accessControl.groupMarketplaceAuth')}{' '}
+                          · {t('settings.accessControl.addedOn')}{' '}
                           {new Date(auth.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -278,13 +286,15 @@ export default function ProductGroupAuthorizationPage() {
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                   <Shield className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">暂无授权规则</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {t('settings.accessControl.noAuthorizations')}
+                </h3>
                 <p className="text-muted-foreground">
-                  此产品组当前对所有人开放，添加授权规则以限制访问
+                  {t('settings.accessControl.noAuthorizationsDesc')}
                 </p>
                 <Button onClick={() => setShowAddModal(true)} disabled={!isAuthenticated}>
                   <Plus className="w-4 h-4 mr-2" />
-                  添加授权
+                  {t('settings.accessControl.addAuthorization')}
                 </Button>
               </VStack>
             </Card>
@@ -298,12 +308,14 @@ export default function ProductGroupAuthorizationPage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h2 className="text-xl font-bold text-foreground mb-6">添加授权规则</h2>
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              {t('settings.accessControl.addAuthorization')}
+            </h2>
 
             <VStack gap="lg">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  授权类型
+                  {t('settings.accessControl.authorizationType')}
                 </label>
                 <Select
                   value={newAuthType}
@@ -313,9 +325,12 @@ export default function ProductGroupAuthorizationPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user_group">用户组授权</SelectItem>
+                    <SelectItem value="user_group">
+                      {t('settings.accessControl.userGroupAuth')}
+                    </SelectItem>
                     <SelectItem value="group_marketplace" disabled={!groupContext}>
-                      群组集市授权 {!groupContext && '(未在群组中)'}
+                      {t('settings.accessControl.groupMarketplaceAuth')}{' '}
+                      {!groupContext && `(${t('settings.accessControl.notInGroup')})`}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -324,11 +339,13 @@ export default function ProductGroupAuthorizationPage() {
               {newAuthType === 'user_group' && (
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    选择用户组
+                    {t('settings.accessControl.selectUserGroup')}
                   </label>
                   <Select value={selectedUserGroupId} onValueChange={setSelectedUserGroupId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择一个用户组" />
+                      <SelectValue
+                        placeholder={t('settings.accessControl.selectUserGroupPlaceholder')}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {userGroups.map(group => (
@@ -340,12 +357,12 @@ export default function ProductGroupAuthorizationPage() {
                   </Select>
                   {userGroups.length === 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      暂无用户组，请先
+                      {t('settings.accessControl.noUserGroups')}.
                       <Link
                         href="/settings/user-groups"
                         className="text-primary hover:underline ml-1"
                       >
-                        创建用户组
+                        {t('settings.accessControl.createUserGroup')}
                       </Link>
                     </p>
                   )}
@@ -354,7 +371,9 @@ export default function ProductGroupAuthorizationPage() {
 
               {newAuthType === 'group_marketplace' && groupContext && (
                 <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">将授权给当前群组：</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.accessControl.willAuthorizeGroup')}
+                  </p>
                   <p className="font-medium text-foreground">
                     {groupContext.chatTitle || groupContext.chatId}
                   </p>
@@ -375,7 +394,7 @@ export default function ProductGroupAuthorizationPage() {
                 }}
                 disabled={saving}
               >
-                取消
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleAddAuthorization}
@@ -388,10 +407,10 @@ export default function ProductGroupAuthorizationPage() {
                 {saving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    添加中...
+                    {t('common.adding')}
                   </>
                 ) : (
-                  '添加'
+                  t('common.add')
                 )}
               </Button>
             </HStack>
@@ -406,19 +425,19 @@ export default function ProductGroupAuthorizationPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>移除授权</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.accessControl.removeAuthorization')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要移除此授权规则吗？相关用户将无法访问此产品组中的商品。
+              {t('settings.accessControl.removeAuthorizationConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={saving}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveAuthorization}
               className="bg-error hover:bg-error"
               disabled={saving}
             >
-              {saving ? '移除中...' : '移除'}
+              {saving ? t('common.removing') : t('common.remove')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

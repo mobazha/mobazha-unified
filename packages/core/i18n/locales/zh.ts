@@ -85,6 +85,13 @@ export const zh: TranslationResource = {
     expand: '展开',
     clickToEdit: '点击编辑',
     deleteFailed: '删除失败',
+    loadFailed: '加载失败',
+    addFailed: '添加失败',
+    removeFailed: '移除失败',
+    adding: '添加中...',
+    removing: '移除中...',
+    remove: '移除',
+    loginRequired: '请先登录以继续',
     clearAll: '清除全部',
     done: '完成',
     selectAll: '全选',
@@ -2008,6 +2015,13 @@ export const zh: TranslationResource = {
     createListing: '创建商品',
     createListingDesc: '添加新商品或服务到您的店铺',
     editListing: '编辑商品',
+    // 商品卡片操作
+    verifiedModerator: '此商品有经过验证的仲裁者',
+    report: '举报此商品',
+    blockSeller: '屏蔽此卖家',
+    edit: '编辑商品',
+    clone: '克隆商品',
+    deleteListing: '删除商品',
 
     // 商品类型
     productType: '商品类型',

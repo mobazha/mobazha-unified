@@ -174,9 +174,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
           <div className="-mt-8 mb-2">
             <Avatar name={peerID.slice(0, 8)} size="lg" className="ring-4 ring-background" />
           </div>
-          <p className="text-sm text-muted-foreground">
-            {t('profile.userNotFound') || 'User not found'}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('profile.userNotFound')}</p>
           <p className="text-xs text-muted-foreground truncate mt-1">{peerID.slice(0, 16)}...</p>
         </div>
       </Card>
@@ -282,9 +280,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
           {/* 位置 */}
           <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0 flex-1">
             <MapPin className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">
-              {profile.location || t('profile.noLocation') || 'No location'}
-            </span>
+            <span className="truncate">{profile.location || t('profile.noLocation')}</span>
           </div>
 
           {/* 评分 */}

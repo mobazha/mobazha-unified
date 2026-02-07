@@ -1169,11 +1169,8 @@ const StoreTabContent: React.FC = () => {
             ) : shippingOptions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Truck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{t('settingsExtended.noShippingOptions') || 'No shipping options configured'}</p>
-                <p className="text-xs mt-2">
-                  {t('settingsExtended.addShippingHint') ||
-                    'Add shipping options to enable physical product delivery'}
-                </p>
+                <p>{t('settingsExtended.noShippingOptions')}</p>
+                <p className="text-xs mt-2">{t('settingsExtended.addShippingHint')}</p>
               </div>
             ) : (
               <ScrollArea className="max-h-[300px]">
@@ -1185,11 +1182,11 @@ const StoreTabContent: React.FC = () => {
                           <p className="font-medium">{option.name}</p>
                           <p className="text-sm text-muted-foreground">
                             {option.regions?.length === 1 && option.regions[0] === 'ALL'
-                              ? t('shipping.worldwide') || 'Worldwide'
-                              : `${option.regions?.length || 0} ${t('shipping.regions') || 'regions'}`}
+                              ? t('shipping.worldwide')
+                              : `${option.regions?.length || 0} ${t('shipping.regions')}`}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {option.services?.length || 0} {t('shipping.services') || 'service(s)'}
+                            {option.services?.length || 0} {t('shipping.services')}
                           </p>
                         </div>
                         <Button
@@ -1211,7 +1208,7 @@ const StoreTabContent: React.FC = () => {
             <div className="flex justify-between pt-4 border-t">
               <Button variant="outline" onClick={() => handleComingSoon('Shipping editor')}>
                 <Plus className="w-4 h-4 mr-1" />
-                {t('settingsExtended.addShipping') || 'Add Option'}
+                {t('settingsExtended.addShipping')}
               </Button>
               <Button variant="outline" onClick={() => setShowShippingModal(false)}>
                 {t('common.close')}

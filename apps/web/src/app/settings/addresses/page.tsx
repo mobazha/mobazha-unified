@@ -37,7 +37,7 @@ export default function AddressesSettingsPage() {
     async (address: ApiAddress) => {
       const success = await addAddress(address);
       if (success) {
-        toast({ title: t('address.added') || 'Address added' });
+        toast({ title: t('address.added') });
         setShowAddModal(false);
       }
       return success;
@@ -51,7 +51,7 @@ export default function AddressesSettingsPage() {
       if (!editingAddress) return false;
       const success = await updateAddress(editingAddress.id, address);
       if (success) {
-        toast({ title: t('address.updated') || 'Address updated' });
+        toast({ title: t('address.updated') });
         setEditingAddress(null);
       }
       return success;
@@ -64,7 +64,7 @@ export default function AddressesSettingsPage() {
     async (id: string) => {
       const success = await deleteAddress(id);
       if (success) {
-        toast({ title: t('address.deleted') || 'Address deleted' });
+        toast({ title: t('address.deleted') });
       }
     },
     [deleteAddress, toast, t]
@@ -75,7 +75,7 @@ export default function AddressesSettingsPage() {
     async (id: string) => {
       const success = await setDefaultAddress(id);
       if (success) {
-        toast({ title: t('address.setAsDefault') || 'Address set as default' });
+        toast({ title: t('address.setAsDefault') });
       }
     },
     [setDefaultAddress, toast, t]
@@ -107,27 +107,25 @@ export default function AddressesSettingsPage() {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold">{t('settings.sidebar.addresses') || 'Addresses'}</h1>
+        <h1 className="text-lg font-semibold">{t('settings.sidebar.addresses')}</h1>
         <Button size="sm" onClick={() => setShowAddModal(true)} disabled={isSaving}>
           <Plus className="w-4 h-4 mr-2" />
-          {t('address.addAddress') || 'Add Address'}
+          {t('address.addAddress')}
         </Button>
       </div>
 
       {isLoading ? (
         <Card className="p-8 text-center">
           <Loader2 className="w-8 h-8 mx-auto text-muted-foreground animate-spin mb-4" />
-          <p className="text-muted-foreground">{t('common.loading') || 'Loading...'}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </Card>
       ) : addresses.length === 0 ? (
         <Card className="p-8 text-center">
           <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            {t('settingsExtended.noAddresses') || 'No addresses saved yet'}
-          </p>
+          <p className="text-muted-foreground">{t('settingsExtended.noAddresses')}</p>
           <Button className="mt-4" onClick={() => setShowAddModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            {t('address.addAddress') || 'Add Address'}
+            {t('address.addAddress')}
           </Button>
         </Card>
       ) : (
@@ -141,12 +139,10 @@ export default function AddressesSettingsPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">
-                        {address.name || t('address.noName') || 'No Name'}
-                      </p>
+                      <p className="font-medium">{address.name || t('address.noName')}</p>
                       {address.isDefault && (
                         <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                          {t('common.default') || 'Default'}
+                          {t('common.default')}
                         </span>
                       )}
                     </div>
@@ -173,7 +169,7 @@ export default function AddressesSettingsPage() {
                       onClick={() => handleSetDefault(address.id)}
                       disabled={isSaving}
                     >
-                      {t('address.setDefault') || 'Set as default'}
+                      {t('address.setDefault')}
                     </Button>
                   )}
                   <Button

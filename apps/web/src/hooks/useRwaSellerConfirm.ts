@@ -131,7 +131,7 @@ export function useRwaSellerConfirm({
   // 确认订单
   const confirmOrder = useCallback(async () => {
     if (!order || !swapService) {
-      const error = new Error(t('rwa.confirm.serviceNotReady') || '服务未就绪');
+      const error = new Error(t('rwa.confirm.serviceNotReady'));
       setState(prev => ({ ...prev, error: error.message, step: 'error' }));
       onError?.(error);
       return;
@@ -142,7 +142,7 @@ export function useRwaSellerConfirm({
 
       const tokenInfo = getTokenInfo();
       if (!tokenInfo || !tokenInfo.tokenContract) {
-        throw new Error(t('rwa.confirm.missingTokenInfo') || '无法获取 Token 信息');
+        throw new Error(t('rwa.confirm.missingTokenInfo'));
       }
 
       // Step 1: 授权 Token
@@ -156,7 +156,7 @@ export function useRwaSellerConfirm({
       );
 
       if (!approvalResult.success) {
-        throw new Error(t('rwa.confirm.approveFailed') || 'Token 授权失败');
+        throw new Error(t('rwa.confirm.approveFailed'));
       }
       console.warn('✅ Token 授权成功');
 
@@ -166,7 +166,7 @@ export function useRwaSellerConfirm({
       // 获取卖家收款地址（当前连接的钱包地址）
       const sellerReceiveAddress = walletInfo?.address;
       if (!sellerReceiveAddress) {
-        throw new Error(t('rwa.confirm.missingWalletAddress') || '无法获取钱包地址');
+        throw new Error(t('rwa.confirm.missingWalletAddress'));
       }
 
       console.warn('🔧 确认订单...');
@@ -178,7 +178,7 @@ export function useRwaSellerConfirm({
       );
 
       if (!confirmResult.success) {
-        throw new Error(t('rwa.confirm.confirmFailed') || '确认订单失败');
+        throw new Error(t('rwa.confirm.confirmFailed'));
       }
       console.warn('✅ 链上确认成功，交易哈希:', confirmResult.transactionHash);
 
@@ -223,7 +223,7 @@ export function useRwaSellerConfirm({
   // 拒绝订单
   const declineOrder = useCallback(async () => {
     if (!order || !swapService) {
-      const error = new Error(t('rwa.confirm.serviceNotReady') || '服务未就绪');
+      const error = new Error(t('rwa.confirm.serviceNotReady'));
       setState(prev => ({ ...prev, error: error.message, step: 'error' }));
       onError?.(error);
       return;

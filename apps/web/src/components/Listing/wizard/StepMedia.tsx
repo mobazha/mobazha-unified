@@ -18,23 +18,19 @@ export function StepMedia({ formData, updateField, onNext, onPrev }: StepProps) 
     <div className="space-y-8">
       {/* 标题 */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          {t('listing.wizard.media') || '图片和视频'}
-        </h2>
-        <p className="text-muted-foreground">
-          {t('listing.wizard.mediaDesc') || '上传商品图片和视频（可选）'}
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('listing.wizard.media')}</h2>
+        <p className="text-muted-foreground">{t('listing.wizard.mediaDesc')}</p>
       </div>
 
       {/* 提示信息 */}
       <div className="flex items-center gap-6 p-4 bg-muted/50 rounded-lg">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <ImageIcon className="w-4 h-4" />
-          <span>{t('listing.wizard.maxImages') || '最多 30 张图片'}</span>
+          <span>{t('listing.wizard.maxImages')}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Video className="w-4 h-4" />
-          <span>{t('listing.wizard.videoSupport') || '支持 YouTube/Vimeo 链接'}</span>
+          <span>{t('listing.wizard.videoSupport')}</span>
         </div>
       </div>
 
@@ -54,10 +50,10 @@ export function StepMedia({ formData, updateField, onNext, onPrev }: StepProps) 
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onPrev}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t('common.prev') || '上一步'}
+          {t('common.prev')}
         </Button>
         <Button onClick={onNext}>
-          {t('common.next') || '下一步'}
+          {t('common.next')}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

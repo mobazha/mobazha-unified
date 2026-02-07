@@ -27,7 +27,7 @@ export function NftMetadataCard({
   const formatMintedAt = (timestamp?: number) => {
     if (!timestamp) return null;
     const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -73,14 +73,14 @@ export function NftMetadataCard({
     <div className={cn('p-4 bg-warning/8 rounded-lg border border-warning/20', className)}>
       <h5 className="font-medium text-warning mb-3 flex items-center gap-2">
         <ImageIcon className="w-4 h-4" />
-        {t('listing.rwa.nftMetadata') || 'NFT 信息'}
+        {t('listing.rwa.nftMetadata')}
       </h5>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {metadata.creator && (
           <div className="text-center p-2 bg-card rounded-lg">
             <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
               <User className="w-3 h-3" />
-              {t('listing.rwa.creator') || '创作者'}
+              {t('listing.rwa.creator')}
             </div>
             <div className="font-semibold text-warning truncate">{metadata.creator}</div>
           </div>
@@ -89,7 +89,7 @@ export function NftMetadataCard({
           <div className="text-center p-2 bg-card rounded-lg">
             <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
               <Layers className="w-3 h-3" />
-              {t('listing.rwa.collection') || '收藏系列'}
+              {t('listing.rwa.collection')}
             </div>
             <div className="font-semibold text-warning truncate">{metadata.collection}</div>
           </div>
@@ -98,7 +98,7 @@ export function NftMetadataCard({
           <div className="text-center p-2 bg-card rounded-lg">
             <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
               <Star className="w-3 h-3" />
-              {t('listing.rwa.rarity') || '稀有度'}
+              {t('listing.rwa.rarity')}
             </div>
             <div className={cn('font-semibold', getRarityColor(metadata.rarity))}>
               {metadata.rarity}
@@ -109,7 +109,7 @@ export function NftMetadataCard({
           <div className="text-center p-2 bg-card rounded-lg">
             <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
               <Clock className="w-3 h-3" />
-              {t('listing.rwa.mintedAt') || '铸造时间'}
+              {t('listing.rwa.mintedAt')}
             </div>
             <div className="font-semibold text-warning text-xs">
               {formatMintedAt(metadata.mintedAt)}

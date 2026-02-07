@@ -83,11 +83,11 @@ export const RwaFilterSidebar: React.FC<RwaFilterSidebarProps> = ({
       {/* 代币标准 - Token Standard */}
       <div className="space-y-2">
         <h3 className="text-sm lg:text-base font-semibold text-foreground">
-          {t('rwa.filterTokenStandard') || '代币标准'}
+          {t('rwa.filterTokenStandard')}
         </h3>
         <div className="space-y-0.5">
           <RadioOption
-            label={`${t('filter.allTypes') || '全部类型'} (${totalCount})`}
+            label={`${t('filter.allTypes')} (${totalCount})`}
             selected={filter.tokenStandard === 'all'}
             onClick={() => updateFilter({ tokenStandard: 'all' })}
           />
@@ -98,13 +98,13 @@ export const RwaFilterSidebar: React.FC<RwaFilterSidebarProps> = ({
             badge={<TokenBadge standard="ERC721" />}
           />
           <RadioOption
-            label={`${t('rwa.membership') || '会员权益'} (${tokenStandardCounts.ERC1155})`}
+            label={`${t('rwa.membership')} (${tokenStandardCounts.ERC1155})`}
             selected={filter.tokenStandard === 'ERC1155'}
             onClick={() => updateFilter({ tokenStandard: 'ERC1155' })}
             badge={<TokenBadge standard="ERC1155" />}
           />
           <RadioOption
-            label={`${t('rwa.share') || '份额代币'} (${tokenStandardCounts.ERC3525})`}
+            label={`${t('rwa.share')} (${tokenStandardCounts.ERC3525})`}
             selected={filter.tokenStandard === 'ERC3525'}
             onClick={() => updateFilter({ tokenStandard: 'ERC3525' })}
             badge={<TokenBadge standard="ERC3525" />}
@@ -117,22 +117,22 @@ export const RwaFilterSidebar: React.FC<RwaFilterSidebarProps> = ({
       {/* 交易模式 - Trade Mode */}
       <div className="space-y-2">
         <h3 className="text-sm lg:text-base font-semibold text-foreground">
-          {t('rwa.filterTradeMode') || '交易模式'}
+          {t('rwa.filterTradeMode')}
         </h3>
         <div className="space-y-0.5">
           <RadioOption
-            label={t('filter.allTypes') || '全部'}
+            label={t('filter.allTypes')}
             selected={filter.tradeMode === 'all'}
             onClick={() => updateFilter({ tradeMode: 'all' })}
           />
           <RadioOption
-            label={t('rwa.instantTrade') || '即时交易'}
+            label={t('rwa.instantTrade')}
             selected={filter.tradeMode === 'instant'}
             onClick={() => updateFilter({ tradeMode: 'instant' })}
             badge={<span className="text-warning">⚡</span>}
           />
           <RadioOption
-            label={t('rwa.confirmRequired') || '需确认'}
+            label={t('rwa.confirmRequired')}
             selected={filter.tradeMode === 'confirm_required'}
             onClick={() => updateFilter({ tradeMode: 'confirm_required' })}
             badge={<span className="text-info">🔒</span>}

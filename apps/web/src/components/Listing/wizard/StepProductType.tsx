@@ -81,11 +81,9 @@ export function StepProductType({ formData, updateField, updateFields, onNext }:
       {/* 标题 */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">
-          {t('listing.wizard.selectType') || '选择商品类型'}
+          {t('listing.wizard.selectType')}
         </h2>
-        <p className="text-muted-foreground">
-          {t('listing.wizard.selectTypeDesc') || '选择您要出售的商品类型'}
-        </p>
+        <p className="text-muted-foreground">{t('listing.wizard.selectTypeDesc')}</p>
       </div>
 
       {/* 商品类型选择 */}
@@ -133,12 +131,12 @@ export function StepProductType({ formData, updateField, updateFields, onNext }:
                   isSelected ? 'text-primary' : 'text-foreground'
                 )}
               >
-                {t(option.labelKey) || option.value.replace('_', ' ')}
+                {t(option.labelKey)}
               </h3>
 
               {/* 描述 */}
               <p className="text-xs text-muted-foreground line-clamp-2">
-                {t(option.descriptionKey) || ''}
+                {t(option.descriptionKey)}
               </p>
             </button>
           );
@@ -158,7 +156,7 @@ export function StepProductType({ formData, updateField, updateFields, onNext }:
       {/* 下一步按钮 */}
       <div className="flex justify-end pt-4">
         <Button onClick={onNext} disabled={!canProceed} size="lg">
-          {t('common.next') || '下一步'}
+          {t('common.next')}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

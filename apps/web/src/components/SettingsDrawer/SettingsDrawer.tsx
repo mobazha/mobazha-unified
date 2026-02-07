@@ -1520,7 +1520,7 @@ const AddressesContent: React.FC = () => {
     async (address: ApiAddress) => {
       const success = await addAddress(address);
       if (success) {
-        toast({ title: t('address.added') || 'Address added' });
+        toast({ title: t('address.added') });
         setShowAddModal(false);
       }
       return success;
@@ -1534,7 +1534,7 @@ const AddressesContent: React.FC = () => {
       if (!editingAddress) return false;
       const success = await updateAddress(editingAddress.id, address);
       if (success) {
-        toast({ title: t('address.updated') || 'Address updated' });
+        toast({ title: t('address.updated') });
         setEditingAddress(null);
       }
       return success;
@@ -1547,7 +1547,7 @@ const AddressesContent: React.FC = () => {
     async (id: string) => {
       const success = await deleteAddress(id);
       if (success) {
-        toast({ title: t('address.deleted') || 'Address deleted' });
+        toast({ title: t('address.deleted') });
       }
     },
     [deleteAddress, toast, t]
@@ -1558,7 +1558,7 @@ const AddressesContent: React.FC = () => {
     async (id: string) => {
       const success = await setDefaultAddress(id);
       if (success) {
-        toast({ title: t('address.setAsDefault') || 'Address set as default' });
+        toast({ title: t('address.setAsDefault') });
       }
     },
     [setDefaultAddress, toast, t]
@@ -1583,7 +1583,7 @@ const AddressesContent: React.FC = () => {
           <p className="text-sm text-muted-foreground">{t('settingsModal.addressesDescription')}</p>
           <Button size="sm" onClick={() => setShowAddModal(true)} disabled={isSaving}>
             <Plus className="w-4 h-4 mr-2" />
-            {t('address.addAddress') || 'Add Address'}
+            {t('address.addAddress')}
           </Button>
         </div>
 
@@ -1591,7 +1591,7 @@ const AddressesContent: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-muted-foreground">{t('common.loading') || 'Loading...'}</p>
+            <p className="text-muted-foreground">{t('common.loading')}</p>
           </div>
         ) : addresses.length > 0 ? (
           <div className="space-y-3">
@@ -1604,12 +1604,10 @@ const AddressesContent: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold">
-                          {address.name || t('address.noName') || 'No Name'}
-                        </p>
+                        <p className="font-semibold">{address.name || t('address.noName')}</p>
                         {address.isDefault && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                            {t('common.default') || 'Default'}
+                            {t('common.default')}
                           </span>
                         )}
                       </div>
@@ -1636,7 +1634,7 @@ const AddressesContent: React.FC = () => {
                         onClick={() => handleSetDefault(address.id)}
                         disabled={isSaving}
                       >
-                        {t('address.setDefault') || 'Set as default'}
+                        {t('address.setDefault')}
                       </Button>
                     )}
                     <Button
@@ -1667,7 +1665,7 @@ const AddressesContent: React.FC = () => {
             <p className="text-muted-foreground">{t('settingsModal.noAddresses')}</p>
             <Button className="mt-4" onClick={() => setShowAddModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              {t('address.addAddress') || 'Add Address'}
+              {t('address.addAddress')}
             </Button>
           </div>
         )}
@@ -2139,8 +2137,8 @@ const ShippingContent: React.FC = () => {
       if (success) {
         setShowProfileEditor(false);
         toast({
-          title: t('common.success') || 'Success',
-          description: t('shipping.profileCreated') || 'Profile created',
+          title: t('common.success'),
+          description: t('shipping.profileCreated'),
         });
       }
     } finally {
@@ -2177,8 +2175,8 @@ const ShippingContent: React.FC = () => {
       const success = await setDefaultProfile(profileId);
       if (success) {
         toast({
-          title: t('common.success') || 'Success',
-          description: t('shipping.defaultProfileSet') || 'Default profile updated',
+          title: t('common.success'),
+          description: t('shipping.defaultProfileSet'),
         });
       }
     },
@@ -2187,16 +2185,16 @@ const ShippingContent: React.FC = () => {
 
   // 迁移到档案模式
   const handleMigrate = useCallback(async () => {
-    const success = await migrateToProfiles(t('shipping.defaultProfileName') || 'Default Shipping');
+    const success = await migrateToProfiles(t('shipping.defaultProfileName'));
     if (success) {
       toast({
-        title: t('common.success') || 'Success',
-        description: t('shipping.migrateSuccess') || 'Migration completed successfully',
+        title: t('common.success'),
+        description: t('shipping.migrateSuccess'),
       });
     } else {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('shipping.migrateFailed') || 'Migration failed',
+        title: t('common.error'),
+        description: t('shipping.migrateFailed'),
         variant: 'destructive',
       });
     }
@@ -2207,7 +2205,7 @@ const ShippingContent: React.FC = () => {
     async (zone: ShippingZone) => {
       if (!isUsingProfiles) {
         const newProfile = createEmptyProfile(true);
-        newProfile.name = t('shipping.defaultProfileName') || 'Default Shipping';
+        newProfile.name = t('shipping.defaultProfileName');
         newProfile.zones = [zone];
         await addProfile(newProfile);
       } else {
@@ -2258,10 +2256,8 @@ const ShippingContent: React.FC = () => {
         setShowZoneForm(false);
         setEditingZone(null);
         toast({
-          title: t('common.success') || 'Success',
-          description: editingZone
-            ? t('shipping.zoneUpdated') || 'Zone updated'
-            : t('shipping.zoneAdded') || 'Zone added',
+          title: t('common.success'),
+          description: editingZone ? t('shipping.zoneUpdated') : t('shipping.zoneAdded'),
         });
       }
       return success;
@@ -2295,18 +2291,18 @@ const ShippingContent: React.FC = () => {
 
     if (success) {
       toast({
-        title: t('common.success') || 'Success',
+        title: t('common.success'),
         description:
           itemToDelete.type === 'profile'
-            ? t('shipping.profileDeleted') || 'Profile deleted'
+            ? t('shipping.profileDeleted')
             : itemToDelete.type === 'zone'
-              ? t('shipping.zoneDeleted') || 'Zone deleted'
-              : t('shippingConfig.deleteSuccess') || 'Shipping option deleted',
+              ? t('shipping.zoneDeleted')
+              : t('shippingConfig.deleteSuccess'),
       });
     } else {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('common.deleteFailed') || 'Failed to delete',
+        title: t('common.error'),
+        description: t('common.deleteFailed'),
         variant: 'destructive',
       });
     }
@@ -2355,23 +2351,18 @@ const ShippingContent: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
             <Truck className="w-6 h-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-foreground">
-            {t('shippingConfig.noOptions') || 'No shipping options'}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('shippingConfig.noOptionsDesc') ||
-              'Add shipping options to enable physical product delivery'}
-          </p>
+          <p className="font-medium text-foreground">{t('shippingConfig.noOptions')}</p>
+          <p className="text-sm text-muted-foreground">{t('shippingConfig.noOptionsDesc')}</p>
         </VStack>
 
         <Button onClick={handleCreateProfile} className="w-full">
           <FolderOpen className="w-4 h-4 mr-2" />
-          {t('shipping.createProfile') || 'Create Shipping Profile'}
+          {t('shipping.createProfile')}
         </Button>
 
         <div className="w-full">
           <p className="text-xs text-muted-foreground text-center mb-3">
-            {t('shipping.orUseTemplate') || 'Or start with a template:'}
+            {t('shipping.orUseTemplate')}
           </p>
           <ShippingTemplateSelector currency="USD" onSelect={handleSelectTemplate} />
         </div>
@@ -2387,19 +2378,14 @@ const ShippingContent: React.FC = () => {
           <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <VStack gap="xs" className="flex-1">
-          <p className="font-medium text-foreground">
-            {t('shipping.upgradeToProfiles') || 'Upgrade to Shipping Profiles'}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('shipping.upgradeDesc') ||
-              'Organize your shipping options into profiles for better product management.'}
-          </p>
+          <p className="font-medium text-foreground">{t('shipping.upgradeToProfiles')}</p>
+          <p className="text-sm text-muted-foreground">{t('shipping.upgradeDesc')}</p>
           <Button size="sm" onClick={handleMigrate} disabled={isSaving} className="mt-2 w-fit">
             {isSaving ? (
-              t('common.migrating') || 'Migrating...'
+              t('common.migrating')
             ) : (
               <>
-                {t('shipping.migrateNow') || 'Migrate Now'}
+                {t('shipping.migrateNow')}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}
@@ -2416,14 +2402,12 @@ const ShippingContent: React.FC = () => {
         {isLoading ? (
           <Skeleton className="h-5 w-24" />
         ) : (
-          <h3 className="text-base font-semibold">
-            {t('shipping.shippingProfiles') || 'Shipping Profiles'}
-          </h3>
+          <h3 className="text-base font-semibold">{t('shipping.shippingProfiles')}</h3>
         )}
         {!isLoading && isUsingProfiles && (
           <Button onClick={handleCreateProfile} size="sm">
             <Plus className="w-4 h-4 mr-1" />
-            {t('shipping.addProfile') || 'Add Profile'}
+            {t('shipping.addProfile')}
           </Button>
         )}
       </HStack>
@@ -2471,13 +2455,12 @@ const ShippingContent: React.FC = () => {
                     ) : (
                       <div className="space-y-3">
                         <p className="text-sm text-muted-foreground py-2">
-                          {t('shipping.noZonesDesc') ||
-                            'Add shipping zones to define delivery regions and rates'}
+                          {t('shipping.noZonesDesc')}
                         </p>
                         {/* 模板快捷入口 */}
                         <div className="pt-1">
                           <p className="text-xs text-muted-foreground mb-2">
-                            {t('shipping.orUseTemplate') || 'Or start with a template:'}
+                            {t('shipping.orUseTemplate')}
                           </p>
                           <ShippingTemplateSelector
                             currency="USD"
@@ -2497,7 +2480,7 @@ const ShippingContent: React.FC = () => {
                       onClick={() => handleAddZone(profile.profileId)}
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" />
-                      {t('shipping.addZone') || 'Add Shipping Zone'}
+                      {t('shipping.addZone')}
                     </Button>
                   </div>
                 )}
@@ -2528,16 +2511,16 @@ const ShippingContent: React.FC = () => {
       <Dialog open={showProfileEditor} onOpenChange={setShowProfileEditor}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('shipping.createProfile') || 'Create Profile'}</DialogTitle>
+            <DialogTitle>{t('shipping.createProfile')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="profile-name">{t('shipping.profileName') || 'Profile Name'} *</Label>
+              <Label htmlFor="profile-name">{t('shipping.profileName')} *</Label>
               <Input
                 id="profile-name"
                 value={profileName}
                 onChange={e => setProfileName(e.target.value)}
-                placeholder={t('shipping.profileNamePlaceholder') || 'e.g. Default Shipping'}
+                placeholder={t('shipping.profileNamePlaceholder')}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && profileName.trim()) {
                     handleSaveProfile();
@@ -2552,10 +2535,10 @@ const ShippingContent: React.FC = () => {
               onClick={() => setShowProfileEditor(false)}
               disabled={isSavingProfile}
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleSaveProfile} disabled={isSavingProfile || !profileName.trim()}>
-              {isSavingProfile ? t('common.saving') || 'Saving...' : t('common.create') || 'Create'}
+              {isSavingProfile ? t('common.saving') : t('common.create')}
             </Button>
           </div>
         </DialogContent>
@@ -2575,12 +2558,10 @@ const ShippingContent: React.FC = () => {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingZone
-                ? t('shipping.editZone') || 'Edit Shipping Zone'
-                : t('shipping.addZone') || 'Add Shipping Zone'}
+              {editingZone ? t('shipping.editZone') : t('shipping.addZone')}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              {t('shipping.zoneFormDescription') || 'Configure shipping zone regions and rates'}
+              {t('shipping.zoneFormDescription')}
             </DialogDescription>
           </DialogHeader>
           <ShippingZoneForm
@@ -2603,22 +2584,22 @@ const ShippingContent: React.FC = () => {
           <DialogHeader>
             <DialogTitle>
               {itemToDelete?.type === 'profile'
-                ? t('shipping.deleteProfileTitle') || 'Delete Profile'
+                ? t('shipping.deleteProfileTitle')
                 : itemToDelete?.type === 'zone'
-                  ? t('shipping.deleteZoneTitle') || 'Delete Zone'
-                  : t('shippingConfig.deleteConfirmTitle') || 'Delete Shipping Option'}
+                  ? t('shipping.deleteZoneTitle')
+                  : t('shippingConfig.deleteConfirmTitle')}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {t('shippingConfig.deleteConfirmDesc') || 'Are you sure you want to delete'} &quot;
+            {t('shippingConfig.deleteConfirmDesc')} &quot;
             {itemToDelete?.item?.name || ''}&quot;?
           </p>
           <HStack gap="sm" justify="end" className="mt-4">
             <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete} disabled={isSaving}>
-              {isSaving ? t('common.deleting') || 'Deleting...' : t('common.delete') || 'Delete'}
+              {isSaving ? t('common.deleting') : t('common.delete')}
             </Button>
           </HStack>
         </DialogContent>
@@ -3061,7 +3042,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
     // 特殊处理不在菜单中的 section
     if (section === 'shipping') {
-      return t('settingsExtended.shippingOptions') || 'Shipping Options';
+      return t('settingsExtended.shippingOptions');
     }
 
     return t('settings.title');
@@ -3211,7 +3192,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   <button
                     onClick={goBack}
                     className="p-1 hover:bg-muted rounded-lg transition-colors"
-                    aria-label="返回"
+                    aria-label="Back"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
@@ -3221,7 +3202,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               <button
                 onClick={() => onOpenChange(false)}
                 className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-                aria-label="关闭"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>

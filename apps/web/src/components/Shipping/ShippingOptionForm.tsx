@@ -155,24 +155,24 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!option.name.trim()) {
-      newErrors.name = t('validation.required') || 'Required';
+      newErrors.name = t('validation.required');
     }
 
     if (option.regions.length === 0) {
-      newErrors.regions = t('shipping.selectAtLeastOneRegion') || 'Select at least one region';
+      newErrors.regions = t('shipping.selectAtLeastOneRegion');
     }
 
     if (option.services.length === 0) {
-      newErrors.services = t('shipping.addAtLeastOneService') || 'Add at least one service';
+      newErrors.services = t('shipping.addAtLeastOneService');
     } else {
       // 验证每个服务
       option.services.forEach((service, index) => {
         if (!service.name.trim()) {
-          newErrors[`service_${index}_name`] = t('validation.required') || 'Required';
+          newErrors[`service_${index}_name`] = t('validation.required');
         }
         const freight = parseFloat(service.firstFreight);
         if (isNaN(freight) || freight < 0) {
-          newErrors[`service_${index}_freight`] = t('validation.invalidPrice') || 'Invalid price';
+          newErrors[`service_${index}_freight`] = t('validation.invalidPrice');
         }
       });
     }
@@ -185,8 +185,8 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
   const handleSubmit = useCallback(async () => {
     if (!validateForm()) {
       toast({
-        title: t('common.error') || 'Error',
-        description: t('validation.fixErrors') || 'Please fix the errors below',
+        title: t('common.error'),
+        description: t('validation.fixErrors'),
         variant: 'destructive',
       });
       return;
@@ -197,19 +197,17 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
       const success = await onSave(option);
       if (success) {
         toast({
-          title: t('common.success') || 'Success',
+          title: t('common.success'),
           description:
-            mode === 'create'
-              ? t('shipping.optionCreated') || 'Shipping option created'
-              : t('shipping.optionUpdated') || 'Shipping option updated',
+            mode === 'create' ? t('shipping.optionCreated') : t('shipping.optionUpdated'),
         });
         onOpenChange(false);
       }
     } catch (err) {
       console.error('Failed to save shipping option:', err);
       toast({
-        title: t('common.error') || 'Error',
-        description: (err as Error).message || t('common.unknownError') || 'Unknown error',
+        title: t('common.error'),
+        description: (err as Error).message || t('common.unknownError'),
         variant: 'destructive',
       });
     } finally {
@@ -232,29 +230,25 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create'
-              ? t('shipping.createOption') || 'Create Shipping Option'
-              : t('shipping.editOption') || 'Edit Shipping Option'}
+            {mode === 'create' ? t('shipping.createOption') : t('shipping.editOption')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* 基本信息 */}
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">
-              {t('shipping.basicInfo') || 'Basic Information'}
-            </h3>
+            <h3 className="text-sm font-medium">{t('shipping.basicInfo')}</h3>
 
             {/* 名称 */}
             <div className="space-y-2">
               <Label htmlFor="option-name" className={cn(errors.name && 'text-destructive')}>
-                {t('shipping.optionName') || 'Option Name'} *
+                {t('shipping.optionName')} *
               </Label>
               <Input
                 id="option-name"
                 value={option.name}
                 onChange={e => updateField('name', e.target.value)}
-                placeholder={t('shipping.optionNamePlaceholder') || 'e.g. Standard Shipping'}
+                placeholder={t('shipping.optionNamePlaceholder')}
                 className={cn(errors.name && 'border-destructive')}
               />
               {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
@@ -263,7 +257,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
             {/* 配送类型和货币 */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('shipping.shippingType') || 'Shipping Type'}</Label>
+                <Label>{t('shipping.shippingType')}</Label>
                 <Select
                   value={option.type}
                   onValueChange={v => updateField('type', v as 'FIXED_PRICE' | 'LOCAL_PICKUP')}
@@ -282,7 +276,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>{t('shipping.currency') || 'Currency'}</Label>
+                <Label>{t('shipping.currency')}</Label>
                 <Select value={option.currency} onValueChange={v => updateField('currency', v)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -300,7 +294,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
 
             {/* 计费模式 */}
             <div className="space-y-2">
-              <Label>{t('shipping.pricingModel') || 'Pricing Model'}</Label>
+              <Label>{t('shipping.pricingModel')}</Label>
               <Select
                 value={option.serviceType}
                 onValueChange={v =>
@@ -320,10 +314,8 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
               </Select>
               <p className="text-xs text-muted-foreground">
                 {option.serviceType === 'FIRST_RENEWAL_FEE'
-                  ? t('shipping.firstRenewalFeeDesc') ||
-                    'Charge first weight fee + additional fee for each unit of extra weight'
-                  : t('shipping.sameWeightSameFeeDesc') ||
-                    'Charge a flat rate based on weight range'}
+                  ? t('shipping.firstRenewalFeeDesc')
+                  : t('shipping.sameWeightSameFeeDesc')}
               </p>
             </div>
           </div>
@@ -331,7 +323,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
           {/* 配送地区 */}
           <div className="space-y-4">
             <h3 className={cn('text-sm font-medium', errors.regions && 'text-destructive')}>
-              {t('shipping.shippingRegions') || 'Shipping Regions'} *
+              {t('shipping.shippingRegions')} *
             </h3>
             <RegionSelector
               value={option.regions}
@@ -343,18 +335,11 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
           {/* 满额免邮设置 */}
           {option.type === 'FIXED_PRICE' && (
             <div className="space-y-4">
-              <h3 className="text-sm font-medium">
-                {t('shipping.freeShipping') || 'Free Shipping'}
-              </h3>
+              <h3 className="text-sm font-medium">{t('shipping.freeShipping')}</h3>
               <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
                 <div>
-                  <p className="text-sm font-medium">
-                    {t('shipping.enableFreeShipping') || 'Enable Free Shipping Threshold'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('shipping.freeShippingDesc') ||
-                      'Offer free shipping when order amount reaches minimum threshold'}
-                  </p>
+                  <p className="text-sm font-medium">{t('shipping.enableFreeShipping')}</p>
+                  <p className="text-xs text-muted-foreground">{t('shipping.freeShippingDesc')}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -372,8 +357,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
               {option.freeShippingThreshold?.enabled && (
                 <div className="space-y-2 pl-4 border-l-2 border-primary/30">
                   <Label htmlFor="free-shipping-min">
-                    {t('shipping.minAmountForFreeShipping') || 'Minimum Order Amount'} (
-                    {option.currency})
+                    {t('shipping.minAmountForFreeShipping')} ({option.currency})
                   </Label>
                   <Input
                     id="free-shipping-min"
@@ -398,8 +382,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
                     className="max-w-[200px]"
                   />
                   <p className="text-xs text-muted-foreground">
-                    {t('shipping.freeShippingExample') ||
-                      'Example: Order over $50 gets free shipping'}
+                    {t('shipping.freeShippingExample')}
                   </p>
                 </div>
               )}
@@ -410,11 +393,11 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className={cn('text-sm font-medium', errors.services && 'text-destructive')}>
-                {t('shipping.shippingServices') || 'Shipping Services'} *
+                {t('shipping.shippingServices')} *
               </h3>
               <Button variant="outline" size="sm" onClick={addService}>
                 <Plus className="w-4 h-4 mr-1" />
-                {t('shipping.addService') || 'Add Service'}
+                {t('shipping.addService')}
               </Button>
             </div>
             {errors.services && <p className="text-xs text-destructive">{errors.services}</p>}
@@ -439,7 +422,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
         <DialogFooter className="pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             <X className="w-4 h-4 mr-1" />
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isSaving}>
             {isSaving ? (
@@ -447,9 +430,7 @@ export const ShippingOptionForm: React.FC<ShippingOptionFormProps> = ({
             ) : (
               <Save className="w-4 h-4 mr-1" />
             )}
-            {mode === 'create'
-              ? t('shipping.createOption') || 'Create'
-              : t('common.save') || 'Save'}
+            {mode === 'create' ? t('shipping.createOption') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

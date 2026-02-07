@@ -256,7 +256,7 @@ export function RwaPurchaseFlow({
       }
 
       if (!paymentInstructions.buyerAddress) {
-        throw new Error(t('rwa.purchase.missingBuyerAddress') || '无法获取买家身份地址');
+        throw new Error(t('rwa.purchase.missingBuyerAddress'));
       }
 
       // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
@@ -269,7 +269,7 @@ export function RwaPurchaseFlow({
       const rwaListingId = parseInt(rwaListingIdRaw, 10);
       if (isNaN(rwaListingId) || rwaListingId <= 0) {
         throw new Error(
-          `商品缺少有效的 rwaListingId（当前值: ${rwaListingIdRaw}），无法创建确认交易订单。请联系卖家重新上架商品。`
+          `Product is missing a valid rwaListingId (current value: ${rwaListingIdRaw}). Cannot create confirm-trade order. Please contact the seller to relist the product.`
         );
       }
 
@@ -287,7 +287,7 @@ export function RwaPurchaseFlow({
 
       // 检查必要信息
       if (!buyerReceiveAddress) {
-        throw new Error(t('rwa.purchase.missingBuyerAddress') || '无法获取买家接收地址');
+        throw new Error(t('rwa.purchase.missingBuyerAddress'));
       }
 
       // Step 1: 授权支付代币
@@ -299,7 +299,7 @@ export function RwaPurchaseFlow({
         );
 
         if (!approvalResult.success) {
-          throw new Error(t('rwa.purchase.approveFailed') || '支付代币授权失败');
+          throw new Error(t('rwa.purchase.approveFailed'));
         }
         console.log('✅ 授权成功');
       }
