@@ -98,15 +98,6 @@ function migrateOptionToZone(option: ShippingOptionConfig): ShippingZone {
 }
 
 /**
- * 检查 profiles 是否有效（至少有一个 zone 有实际数据）
- */
-function hasValidProfileData(profiles: ShippingProfile[]): boolean {
-  if (!profiles || profiles.length === 0) return false;
-  // 检查是否有任何 profile 包含 zones
-  return profiles.some(p => p.zones && p.zones.length > 0);
-}
-
-/**
  * 创建空的配送档案
  */
 export function createEmptyProfile(isDefault = false): ShippingProfile {
@@ -129,14 +120,8 @@ export function useShippingProfiles() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 是否使用配送档案模式（有有效的配送数据，而非空的 profile）
-  const isUsingProfiles = useMemo(() => hasValidProfileData(profiles), [profiles]);
-
-  // 是否需要迁移（有旧版数据且没有有效的新版数据）
-  const needsMigration = useMemo(
-    () => legacyOptions.length > 0 && !hasValidProfileData(profiles),
-    [legacyOptions, profiles]
-  );
+  // 是否使用配送档案模式（有 profile 存在即为 profiles 模式，即使 zone 为空）
+  const isUsingProfiles = useMemo(() => profiles.length > 0, [profiles]);
 
   // 是否有多个发货地点（渐进式 UI）
   const hasMultipleLocations = useMemo(() => locations.length > 1, [locations]);
@@ -159,33 +144,17 @@ export function useShippingProfiles() {
       // 加载配送档案
       const profilesData = settings?.shippingProfiles ?? [];
       const legacyData = settings?.shippingOptions ?? [];
-      const hasProfiles = profilesData.length > 0;
-      const hasLegacy = legacyData.length > 0;
 
-      if (hasProfiles) {
-        const normalizedProfiles = profilesData.map(normalizeProfileRegions);
-        const hasValidData = hasValidProfileData(normalizedProfiles);
-
-        if (hasValidData) {
-          // 有有效的新版数据，使用 profiles 模式
-          setProfiles(normalizedProfiles);
-          setLegacyOptions([]);
-        } else if (hasLegacy) {
-          // profiles 存在但为空，且有旧版数据 → 需要迁移
-          // 保留空的 profiles（以便迁移后合并），同时设置 legacyOptions
-          setProfiles(normalizedProfiles);
-          setLegacyOptions(legacyData);
-        } else {
-          // profiles 为空，也没有旧版数据
-          setProfiles(normalizedProfiles);
-          setLegacyOptions([]);
-        }
-      } else if (hasLegacy) {
-        // 没有新版数据，有旧版数据 → 需要迁移
+      if (profilesData.length > 0) {
+        // 有 profiles → 进入 profiles 模式，忽略旧版数据
+        setProfiles(profilesData.map(normalizeProfileRegions));
+        setLegacyOptions([]);
+      } else if (legacyData.length > 0) {
+        // 无 profiles 但有旧版数据 → 需要迁移
         setProfiles([]);
         setLegacyOptions(legacyData);
       } else {
-        // 都没有
+        // 全空 → 新用户
         setProfiles([]);
         setLegacyOptions([]);
       }
@@ -487,8 +456,8 @@ export function useShippingProfiles() {
         return false;
       }
 
-      // 如果已经有有效的新版数据，不需要迁移
-      if (hasValidProfileData(profiles)) {
+      // 如果已有 profiles，不需要迁移
+      if (profiles.length > 0) {
         return false;
       }
 
@@ -596,7 +565,6 @@ export function useShippingProfiles() {
     isSaving,
     error,
     isUsingProfiles,
-    needsMigration,
     hasMultipleLocations,
     defaultProfile,
     defaultLocation,

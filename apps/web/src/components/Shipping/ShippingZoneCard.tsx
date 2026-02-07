@@ -127,7 +127,7 @@ export function ShippingZoneCard({
               {zone.rates.slice(0, 3).map((rate, idx) => (
                 <span key={rate.id || idx}>
                   {idx > 0 && ' • '}
-                  {rate.name}:{' '}
+                  {rate.name ? `${rate.name}: ` : ''}
                   {formatPrice(
                     fromMinimalUnit(rate.price || '0', rate.currency || 'USD'),
                     rate.currency || 'USD',
