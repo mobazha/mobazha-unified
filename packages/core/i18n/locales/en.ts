@@ -86,6 +86,7 @@ export const en: TranslationResource = {
     clickToEdit: 'Click to edit',
     deleteFailed: 'Failed to delete',
     loadFailed: 'Failed to load',
+    loadFailedDesc: 'Unable to load data, please try again later.',
     addFailed: 'Failed to add',
     removeFailed: 'Failed to remove',
     adding: 'Adding...',

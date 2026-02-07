@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@mobazha/core';
 import {
   Package,
   ShoppingCart,
@@ -48,7 +49,9 @@ export function EmptyState({
   children,
 }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-12 px-4 text-center', className)}>
+    <div
+      className={cn('flex flex-col items-center justify-center py-12 px-4 text-center', className)}
+    >
       <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
         <Icon className="w-8 h-8 text-gray-400" />
       </div>
@@ -172,13 +175,7 @@ export function NoOrders({
 /**
  * 搜索无结果
  */
-export function NoSearchResults({
-  query,
-  onClear,
-}: {
-  query?: string;
-  onClear?: () => void;
-}) {
+export function NoSearchResults({ query, onClear }: { query?: string; onClear?: () => void }) {
   return (
     <EmptyState
       icon={Search}
@@ -257,11 +254,7 @@ export function NoStore({ onSetup }: { onSetup?: () => void }) {
  */
 export function NoHistory() {
   return (
-    <EmptyState
-      icon={Clock}
-      title="暂无历史记录"
-      description="您还没有任何浏览或活动记录。"
-    />
+    <EmptyState icon={Clock} title="暂无历史记录" description="您还没有任何浏览或活动记录。" />
   );
 }
 
@@ -270,30 +263,20 @@ export function NoHistory() {
  */
 export function NoDisputes() {
   return (
-    <EmptyState
-      icon={Shield}
-      title="暂无争议案件"
-      description="目前没有需要处理的争议案件。"
-    />
+    <EmptyState icon={Shield} title="暂无争议案件" description="目前没有需要处理的争议案件。" />
   );
 }
 
 /**
  * 加载错误状态
  */
-export function LoadError({
-  message,
-  onRetry,
-}: {
-  message?: string;
-  onRetry?: () => void;
-}) {
+export function LoadError({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
-      title="加载失败"
-      description={message || '无法加载数据，请稍后重试。'}
-      action={onRetry ? { label: '重试', onClick: onRetry } : undefined}
+      title={t('common.loadFailed')}
+      description={message || t('common.loadFailedDesc')}
+      action={onRetry ? { label: t('common.retry'), onClick: onRetry } : undefined}
     />
   );
 }
-

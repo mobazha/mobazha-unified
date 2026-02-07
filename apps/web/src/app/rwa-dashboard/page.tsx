@@ -85,6 +85,7 @@ interface CompactAssetCardProps {
 }
 
 const CompactAssetCard: React.FC<CompactAssetCardProps> = ({ asset, isSelected, onClick }) => {
+  const { t } = useI18n();
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const displayBalance = asset.balance ?? '0';
   const hasTokenDetails =
@@ -135,7 +136,9 @@ const CompactAssetCard: React.FC<CompactAssetCardProps> = ({ asset, isSelected, 
           </div>
           <div className="text-right">
             <p className="font-semibold text-sm text-primary">{formatBalance(displayBalance)}</p>
-            <p className="text-xs text-muted-foreground">{asset.unit || '份'}</p>
+            <p className="text-xs text-muted-foreground">
+              {asset.unit || t('rwaDashboard.shares')}
+            </p>
           </div>
         </div>
       </button>
@@ -149,7 +152,7 @@ const CompactAssetCard: React.FC<CompactAssetCardProps> = ({ asset, isSelected, 
             >
               <span className="text-xs text-muted-foreground">Token #{token.tokenId}</span>
               <span className="text-xs font-medium">
-                {formatBalance(token.value)} {asset.unit || '份'}
+                {formatBalance(token.value)} {asset.unit || t('rwaDashboard.shares')}
               </span>
             </div>
           ))}
