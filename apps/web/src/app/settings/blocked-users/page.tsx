@@ -140,9 +140,9 @@ export default function BlockedUsersPage() {
         <Header />
         <Container className="py-8">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-            <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
-            <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="h-8 bg-muted rounded w-1/3" />
+            <div className="h-32 bg-muted rounded" />
+            <div className="h-32 bg-muted rounded" />
           </div>
         </Container>
         <Footer />
@@ -174,12 +174,12 @@ export default function BlockedUsersPage() {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Blocked Users</h1>
-                <p className="text-slate-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Manage users blocked from your store ({blockedUsers.length} blocked)
                 </p>
               </div>
             </HStack>
-            <Link href="/settings" className="text-emerald-600 hover:text-emerald-700 text-sm">
+            <Link href="/settings" className="text-primary hover:text-primary text-sm">
               ← Back to Settings
             </Link>
           </HStack>
@@ -208,10 +208,10 @@ export default function BlockedUsersPage() {
           </Card>
 
           {/* Info Banner */}
-          <Card className="mb-6 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+          <Card className="mb-6 bg-warning/8 border-warning/20">
             <HStack gap="sm" align="start">
               <svg
-                className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-warning flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -224,10 +224,10 @@ export default function BlockedUsersPage() {
                 />
               </svg>
               <div>
-                <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                <p className="text-sm text-warning font-medium">
                   What happens when you block a user?
                 </p>
-                <ul className="text-sm text-amber-700 dark:text-amber-300 mt-1 list-disc list-inside">
+                <ul className="text-sm text-warning mt-1 list-disc list-inside">
                   <li>They cannot view your store or products</li>
                   <li>They cannot send you messages</li>
                   <li>They cannot place orders with your store</li>
@@ -242,7 +242,7 @@ export default function BlockedUsersPage() {
             {filteredUsers.length === 0 ? (
               <Card className="text-center">
                 <svg
-                  className="w-12 h-12 mx-auto text-slate-300 mb-4"
+                  className="w-12 h-12 mx-auto text-muted-foreground mb-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -271,14 +271,14 @@ export default function BlockedUsersPage() {
                           <span
                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                               user.blockedBy === 'auto'
-                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                ? 'bg-warning/15 text-warning'
+                                : 'bg-error/15 text-error'
                             }`}
                           >
                             {user.blockedBy === 'auto' ? 'Auto-blocked' : 'Blocked'}
                           </span>
                         </HStack>
-                        <p className="text-sm text-slate-500 font-mono">{user.peerID}</p>
+                        <p className="text-sm text-muted-foreground font-mono">{user.peerID}</p>
                         <p className="text-sm text-muted-foreground">
                           Blocked on {formatDate(user.blockedAt)}
                         </p>
@@ -299,7 +299,7 @@ export default function BlockedUsersPage() {
                   {/* Reason */}
                   {user.reason && (
                     <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm text-slate-500 mb-1">Reason:</p>
+                      <p className="text-sm text-muted-foreground mb-1">Reason:</p>
                       <p className="text-muted-foreground">{user.reason}</p>
                     </div>
                   )}
@@ -309,11 +309,11 @@ export default function BlockedUsersPage() {
                     <div className="mt-4 flex gap-6">
                       <div>
                         <p className="text-xs text-muted-foreground">Disputes</p>
-                        <p className="font-medium text-red-600">{user.stats.disputes}</p>
+                        <p className="font-medium text-error">{user.stats.disputes}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Reports</p>
-                        <p className="font-medium text-orange-600">{user.stats.reports}</p>
+                        <p className="font-medium text-warning">{user.stats.reports}</p>
                       </div>
                     </div>
                   )}
@@ -350,7 +350,7 @@ export default function BlockedUsersPage() {
                   value={newBlockReason}
                   onChange={e => setNewBlockReason(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Why are you blocking this user?"
                 />
               </div>
@@ -363,7 +363,7 @@ export default function BlockedUsersPage() {
               <Button
                 onClick={handleAddBlock}
                 disabled={!newBlockPeerID || processingId === 'new'}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-error hover:bg-error"
               >
                 {processingId === 'new' ? 'Blocking...' : 'Block User'}
               </Button>

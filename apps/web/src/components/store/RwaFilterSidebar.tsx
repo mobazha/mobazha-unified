@@ -41,16 +41,16 @@ const TokenBadge: React.FC<{ standard: string; className?: string }> = ({
   className,
 }) => {
   const colors: Record<string, string> = {
-    ERC721: 'bg-purple-500',
-    ERC1155: 'bg-blue-500',
-    ERC3525: 'bg-green-500',
+    ERC721: 'bg-primary',
+    ERC1155: 'bg-info',
+    ERC3525: 'bg-success',
   };
 
   return (
     <span
       className={cn(
         'text-white text-[10px] px-1.5 py-0.5 rounded font-medium',
-        colors[standard] || 'bg-gray-500',
+        colors[standard] || 'bg-muted',
         className
       )}
     >
@@ -129,13 +129,13 @@ export const RwaFilterSidebar: React.FC<RwaFilterSidebarProps> = ({
             label={t('rwa.instantTrade') || '即时交易'}
             selected={filter.tradeMode === 'instant'}
             onClick={() => updateFilter({ tradeMode: 'instant' })}
-            badge={<span className="text-amber-500">⚡</span>}
+            badge={<span className="text-warning">⚡</span>}
           />
           <RadioOption
             label={t('rwa.confirmRequired') || '需确认'}
             selected={filter.tradeMode === 'confirm_required'}
             onClick={() => updateFilter({ tradeMode: 'confirm_required' })}
-            badge={<span className="text-blue-500">🔒</span>}
+            badge={<span className="text-info">🔒</span>}
           />
         </div>
       </div>

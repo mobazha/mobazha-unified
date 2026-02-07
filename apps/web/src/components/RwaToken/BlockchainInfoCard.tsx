@@ -71,7 +71,11 @@ export function BlockchainInfoCard({
             onClick={handleCopy}
             title={t('common.copy') || '复制'}
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-success" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" />
+            )}
           </Button>
           <Button
             variant="ghost"
@@ -99,39 +103,33 @@ export function BlockchainInfoCard({
           <span className="text-muted-foreground">{t('listing.rwa.network') || '网络'}:</span>
           <span className="font-medium">{networkDisplayName}</span>
         </div>
-        
+
         {/* Token 标准 */}
         {tokenStandard && (
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">{t('listing.rwa.tokenStandard') || 'Token 标准'}:</span>
+            <span className="text-muted-foreground">
+              {t('listing.rwa.tokenStandard') || 'Token 标准'}:
+            </span>
             <span className="font-medium">{tokenStandard}</span>
           </div>
         )}
-        
+
         {/* 合约地址 */}
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">{t('listing.rwa.contractAddress') || '合约地址'}:</span>
+          <span className="text-muted-foreground">
+            {t('listing.rwa.contractAddress') || '合约地址'}:
+          </span>
           <div className="flex items-center gap-1">
             <span className="font-mono text-xs">{shortenAddress(contractAddress)}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={handleCopy}
-            >
-              {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleCopy}>
+              {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={handleOpenEtherscan}
-            >
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleOpenEtherscan}>
               <ExternalLink className="w-3 h-3" />
             </Button>
           </div>
         </div>
-        
+
         {/* Token ID */}
         {tokenId && (
           <div className="flex items-center justify-between">
@@ -139,7 +137,7 @@ export function BlockchainInfoCard({
             <span className="font-mono text-xs">{tokenId}</span>
           </div>
         )}
-        
+
         {/* Slot ID (ERC3525) */}
         {slotId && (
           <div className="flex items-center justify-between">

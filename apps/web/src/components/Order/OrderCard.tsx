@@ -56,7 +56,7 @@ export interface OrderCardProps {
 const statusConfig = {
   pending: {
     label: 'Pending',
-    color: 'bg-yellow-500/20 text-yellow-600',
+    color: 'bg-warning/20 text-warning',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -70,7 +70,7 @@ const statusConfig = {
   },
   processing: {
     label: 'Processing',
-    color: 'bg-blue-500/20 text-blue-600',
+    color: 'bg-info/20 text-info',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -84,7 +84,7 @@ const statusConfig = {
   },
   shipped: {
     label: 'Shipped',
-    color: 'bg-purple-500/20 text-purple-600',
+    color: 'bg-primary/20 text-primary',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -112,7 +112,7 @@ const statusConfig = {
   },
   disputed: {
     label: 'Disputed',
-    color: 'bg-red-500/20 text-red-600',
+    color: 'bg-error/20 text-error',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -242,8 +242,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
 
         {/* Tracking */}
         {order.trackingNumber && order.status === 'shipped' && (
-          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-purple-500/10 rounded-lg">
-            <span className="text-[10px] sm:text-xs text-purple-600">Tracking Number</span>
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-primary/10 rounded-lg">
+            <span className="text-[10px] sm:text-xs text-primary">Tracking Number</span>
             <p className="font-mono font-medium text-sm sm:text-base text-foreground">
               {order.trackingNumber}
             </p>

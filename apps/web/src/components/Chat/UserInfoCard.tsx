@@ -82,7 +82,7 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
 
           {/* User type badge */}
           {user.isExternal && (
-            <div className="absolute top-3 left-3 px-2.5 py-1 text-[10px] font-semibold bg-blue-500/90 text-white rounded-full shadow-lg">
+            <div className="absolute top-3 left-3 px-2.5 py-1 text-[10px] font-semibold bg-info/90 text-white rounded-full shadow-lg">
               {t('chat.externalUser')}
             </div>
           )}

@@ -29,22 +29,22 @@ export function AtomicSwapPurchaseHint({
     return (
       <div
         className={cn(
-          'flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800',
+          'flex items-center gap-2 p-3 bg-info/8 rounded-lg border border-info/20',
           className
         )}
       >
         {isConfirmRequired ? (
-          <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <RefreshCw className="w-4 h-4 text-info flex-shrink-0" />
         ) : (
-          <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+          <Zap className="w-4 h-4 text-warning flex-shrink-0" />
         )}
-        <div className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="text-sm text-info">
           <span className="font-medium">
             {isConfirmRequired
               ? t('listing.rwa.atomicSwap') || '原子交换'
               : t('listing.rwa.instantSwap') || '即时交换'}
           </span>
-          <span className="text-blue-600 dark:text-blue-400 ml-1">
+          <span className="text-info ml-1">
             -{' '}
             {isConfirmRequired
               ? t('listing.rwa.atomicSwapShort') || '资产与支付同时完成，安全无忧'
@@ -56,19 +56,14 @@ export function AtomicSwapPurchaseHint({
   }
 
   return (
-    <Card
-      className={cn(
-        'p-4 bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
-        className
-      )}
-    >
+    <Card className={cn('p-4 bg-info/8 border-info/20', className)}>
       <div className="flex items-center gap-2 mb-3">
         {isConfirmRequired ? (
-          <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <RefreshCw className="w-5 h-5 text-info" />
         ) : (
-          <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          <Zap className="w-5 h-5 text-warning" />
         )}
-        <h5 className="font-medium text-blue-700 dark:text-blue-400">
+        <h5 className="font-medium text-info">
           {isConfirmRequired
             ? t('listing.rwa.atomicSwapPurchase') || '原子交换购买'
             : t('listing.rwa.instantSwapPurchase') || '即时交换购买'}
@@ -85,8 +80,8 @@ export function AtomicSwapPurchaseHint({
       <div className="space-y-3">
         {/* 步骤 1：连接钱包 - 两种模式都有 */}
         <div className="flex items-start gap-3">
-          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-            <Wallet className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="w-6 h-6 rounded-full bg-info/15 flex items-center justify-center flex-shrink-0">
+            <Wallet className="w-3.5 h-3.5 text-info" />
           </div>
           <div>
             <div className="text-sm font-medium text-foreground">
@@ -102,8 +97,8 @@ export function AtomicSwapPurchaseHint({
           <>
             {/* 确认模式：步骤 2 - 等待卖家确认 */}
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <div className="w-6 h-6 rounded-full bg-info/15 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-3.5 h-3.5 text-info" />
               </div>
               <div>
                 <div className="text-sm font-medium text-foreground">
@@ -117,8 +112,8 @@ export function AtomicSwapPurchaseHint({
 
             {/* 确认模式：步骤 3 - 自动完成交换 */}
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <div className="w-6 h-6 rounded-full bg-info/15 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5 text-info" />
               </div>
               <div>
                 <div className="text-sm font-medium text-foreground">
@@ -133,8 +128,8 @@ export function AtomicSwapPurchaseHint({
         ) : (
           /* 即时模式：步骤 2 - 即时完成交换 */
           <div className="flex items-start gap-3">
-            <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <div className="w-6 h-6 rounded-full bg-warning/15 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-warning" />
             </div>
             <div>
               <div className="text-sm font-medium text-foreground">
@@ -148,9 +143,9 @@ export function AtomicSwapPurchaseHint({
         )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-blue-200 dark:border-blue-800 flex items-center gap-2">
-        <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
-        <span className="text-xs text-green-700 dark:text-green-400 font-medium">
+      <div className="mt-4 pt-3 border-t border-info/20 flex items-center gap-2">
+        <Shield className="w-4 h-4 text-success" />
+        <span className="text-xs text-success font-medium">
           {t('listing.rwa.safetyNote') || '安全保障: 资产与支付同时完成，无需信任中介'}
         </span>
       </div>

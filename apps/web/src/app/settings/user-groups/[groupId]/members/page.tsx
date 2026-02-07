@@ -156,11 +156,7 @@ export default function UserGroupMembersPage() {
           </HStack>
 
           {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-error/8 text-error p-4 rounded-lg mb-6">{error}</div>}
 
           {/* Loading State */}
           {loading && (
@@ -189,7 +185,7 @@ export default function UserGroupMembersPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-red-500 hover:text-red-600"
+                      className="text-error hover:text-error"
                       onClick={() => setRemovingMemberId(member.id)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -285,7 +281,7 @@ export default function UserGroupMembersPage() {
             <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveMember}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-error hover:bg-error"
               disabled={saving}
             >
               {saving ? '移除中...' : '移除'}

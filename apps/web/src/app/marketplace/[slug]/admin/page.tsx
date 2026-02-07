@@ -153,7 +153,7 @@ export default function MarketplaceAdminPage() {
           {/* Back Link */}
           <Link
             href={`/marketplace/${slug}`}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -193,7 +193,7 @@ export default function MarketplaceAdminPage() {
                       onClick={() => setActiveTab(item.id as typeof activeTab)}
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-colors ${
                         activeTab === item.id
-                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                          ? 'bg-primary/8 text-primary'
                           : 'text-muted-foreground hover:bg-surface-hover'
                       }`}
                     >
@@ -202,8 +202,8 @@ export default function MarketplaceAdminPage() {
                         <span
                           className={`px-2 py-0.5 text-xs rounded-full ${
                             activeTab === item.id
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-200 dark:bg-slate-700 text-muted-foreground'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {item.count}
@@ -237,7 +237,7 @@ export default function MarketplaceAdminPage() {
                                 <img
                                   src={app.applicantAvatar}
                                   alt={app.applicantName}
-                                  className="w-12 h-12 rounded-full bg-slate-200"
+                                  className="w-12 h-12 rounded-full bg-muted"
                                 />
                                 <div>
                                   <h3 className="font-semibold text-foreground">
@@ -293,7 +293,7 @@ export default function MarketplaceAdminPage() {
                                 <img
                                   src={product.image}
                                   alt={product.title}
-                                  className="w-16 h-16 rounded-lg object-cover bg-slate-200"
+                                  className="w-16 h-16 rounded-lg object-cover bg-muted"
                                 />
                                 <div>
                                   <h3 className="font-semibold text-foreground">{product.title}</h3>
@@ -356,16 +356,13 @@ export default function MarketplaceAdminPage() {
                       </thead>
                       <tbody>
                         {mockMembers.map(member => (
-                          <tr
-                            key={member.id}
-                            className="border-b border-slate-100 dark:border-slate-800"
-                          >
+                          <tr key={member.id} className="border-b border-border">
                             <td className="py-3 px-4">
                               <HStack gap="md" align="center">
                                 <img
                                   src={member.avatar}
                                   alt={member.name}
-                                  className="w-10 h-10 rounded-full bg-slate-200"
+                                  className="w-10 h-10 rounded-full bg-muted"
                                 />
                                 <span className="font-medium text-foreground">{member.name}</span>
                               </HStack>
@@ -374,11 +371,11 @@ export default function MarketplaceAdminPage() {
                               <span
                                 className={`px-2 py-1 text-xs rounded-full capitalize ${
                                   member.role === 'owner'
-                                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                                    ? 'bg-primary/15 text-primary'
                                     : member.role === 'admin'
-                                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                                      ? 'bg-info/15 text-info'
                                       : member.role === 'seller'
-                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                        ? 'bg-success/15 text-success'
                                         : 'bg-muted text-muted-foreground'
                                 }`}
                               >
@@ -424,7 +421,7 @@ export default function MarketplaceAdminPage() {
                         </label>
                         <textarea
                           rows={4}
-                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                          className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                           defaultValue="Your one-stop shop for the latest tech gadgets..."
                         />
                       </div>
@@ -442,7 +439,7 @@ export default function MarketplaceAdminPage() {
                         <input
                           type="checkbox"
                           defaultChecked
-                          className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                          className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
                         />
                       </label>
 
@@ -451,7 +448,7 @@ export default function MarketplaceAdminPage() {
                         <input
                           type="checkbox"
                           defaultChecked
-                          className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                          className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
                         />
                       </label>
 
@@ -460,20 +457,20 @@ export default function MarketplaceAdminPage() {
                         <input
                           type="checkbox"
                           defaultChecked
-                          className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                          className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
                         />
                       </label>
                     </VStack>
                   </Card>
 
-                  <Card className="border-red-200 dark:border-red-800">
-                    <h2 className="text-xl font-bold text-red-600 mb-4">Danger Zone</h2>
+                  <Card className="border-destructive/20">
+                    <h2 className="text-xl font-bold text-destructive mb-4">Danger Zone</h2>
                     <p className="text-muted-foreground mb-4">
                       Permanently delete this marketplace. This action cannot be undone.
                     </p>
                     <Button
                       variant="outline"
-                      className="border-red-500 text-red-500 hover:bg-red-50"
+                      className="border-destructive text-destructive hover:bg-destructive/8"
                     >
                       Delete Marketplace
                     </Button>

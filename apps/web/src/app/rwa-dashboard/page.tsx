@@ -71,10 +71,10 @@ const getTransactionTypeKey = (type: string, from: string): string => {
 };
 
 const getTransactionTypeColor = (type: string, from: string): string => {
-  if (from === '0x0000000000000000000000000000000000000000') return 'text-blue-500 bg-blue-500/10';
-  if (type === 'in') return 'text-green-500 bg-green-500/10';
-  if (type === 'out') return 'text-red-500 bg-red-500/10';
-  return 'text-gray-500 bg-gray-500/10';
+  if (from === '0x0000000000000000000000000000000000000000') return 'text-info bg-info/15';
+  if (type === 'in') return 'text-success bg-success/15';
+  if (type === 'out') return 'text-error bg-error/15';
+  return 'text-muted-foreground bg-muted';
 };
 
 // Compact Asset Card for nested display
@@ -126,10 +126,10 @@ const CompactAssetCard: React.FC<CompactAssetCardProps> = ({ asset, isSelected, 
             <p className="font-medium text-sm truncate">{asset.name}</p>
             <div className="flex items-center gap-2 mt-0.5">
               {asset.tokenStandard === 'ERC3525' && asset.slotId && (
-                <span className="text-xs text-pink-500">Slot {asset.slotId}</span>
+                <span className="text-xs text-primary">Slot {asset.slotId}</span>
               )}
               {asset.tokenStandard === 'ERC1155' && asset.tokenId && (
-                <span className="text-xs text-indigo-500">#{asset.tokenId}</span>
+                <span className="text-xs text-primary">#{asset.tokenId}</span>
               )}
             </div>
           </div>
@@ -223,8 +223,8 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
               <span
                 className={`px-2 py-0.5 rounded-full ${
                   asset.tokenStandard === 'ERC1155'
-                    ? 'bg-indigo-500/10 text-indigo-500'
-                    : 'bg-pink-500/10 text-pink-500'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-primary/15 text-primary'
                 }`}
               >
                 {asset.tokenStandard}
@@ -250,7 +250,7 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
                 className="p-1 hover:bg-muted rounded transition-colors"
               >
                 {copied ? (
-                  <Check className="w-3 h-3 text-green-500" />
+                  <Check className="w-3 h-3 text-success" />
                 ) : (
                   <Copy className="w-3 h-3 text-muted-foreground" />
                 )}
@@ -299,8 +299,8 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
         <span
           className={`px-2 py-0.5 rounded-full text-xs ${
             group.tokenStandard === 'ERC1155'
-              ? 'bg-indigo-500/10 text-indigo-500'
-              : 'bg-pink-500/10 text-pink-500'
+              ? 'bg-primary/15 text-primary'
+              : 'bg-primary/15 text-primary'
           }`}
         >
           {group.tokenStandard}
@@ -328,7 +328,7 @@ const ContractGroup: React.FC<ContractGroupProps> = ({
               className="p-1 hover:bg-muted rounded transition-colors"
             >
               {copied ? (
-                <Check className="w-3 h-3 text-green-500" />
+                <Check className="w-3 h-3 text-success" />
               ) : (
                 <Copy className="w-3 h-3 text-muted-foreground" />
               )}
@@ -397,7 +397,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
           <span className={`text-xs px-2 py-0.5 rounded ${typeColor}`}>{typeText}</span>
           {/* 用户发起但转给他人的交易显示标识 */}
           {isUserInitiatedToOther && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-warning/15 text-warning">
               {t('rwaDashboard.initiated')}
             </span>
           )}
@@ -406,7 +406,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
           </span>
           {/* 显示对方的 Token ID */}
           {tx.tokenId && tx.to !== '0x0000000000000000000000000000000000000000' && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-500 font-mono">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono">
               #{tx.tokenId}
             </span>
           )}
@@ -466,7 +466,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
           </div>
           <span className={`text-xs px-2 py-0.5 rounded ${typeColor}`}>{typeText}</span>
           {isUserInitiatedToOther && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-warning/15 text-warning">
               {t('rwaDashboard.initiated')}
             </span>
           )}
@@ -831,8 +831,8 @@ export default function RwaAssetDashboardPage() {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
-                    <Wallet className="w-6 h-6 text-amber-500" />
+                  <div className="w-12 h-12 rounded-full bg-warning/15 flex items-center justify-center">
+                    <Wallet className="w-6 h-6 text-warning" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-sm">
@@ -855,8 +855,8 @@ export default function RwaAssetDashboardPage() {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                    <Wallet className="w-5 h-5 text-green-500" />
+                  <div className="w-10 h-10 rounded-full bg-success/15 flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-success" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm">{t('rwaDashboard.walletConnected')}</h3>
@@ -1050,8 +1050,8 @@ export default function RwaAssetDashboardPage() {
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded ${
                             selectedAsset.tokenStandard === 'ERC1155'
-                              ? 'bg-indigo-500/10 text-indigo-500'
-                              : 'bg-pink-500/10 text-pink-500'
+                              ? 'bg-primary/15 text-primary'
+                              : 'bg-primary/15 text-primary'
                           }`}
                         >
                           {selectedAsset.tokenStandard}

@@ -145,15 +145,15 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({
     if (priceChange > 0) {
       return {
         icon: TrendingUp,
-        color: 'text-green-500',
-        bgColor: 'bg-green-500/10',
+        color: 'text-success',
+        bgColor: 'bg-success/10',
         areaColor: '#22c55e',
       };
     } else if (priceChange < 0) {
       return {
         icon: TrendingDown,
-        color: 'text-red-500',
-        bgColor: 'bg-red-500/10',
+        color: 'text-error',
+        bgColor: 'bg-error/10',
         areaColor: '#ef4444',
       };
     }
@@ -238,13 +238,13 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t('rwaDashboard.highPrice')}</p>
-            <p className="text-sm font-semibold text-green-500">
+            <p className="text-sm font-semibold text-success">
               {formatRwaPrice(priceHistory.stats.highPrice, priceHistory.currency)}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t('rwaDashboard.lowPrice')}</p>
-            <p className="text-sm font-semibold text-red-500">
+            <p className="text-sm font-semibold text-error">
               {formatRwaPrice(priceHistory.stats.lowPrice, priceHistory.currency)}
             </p>
           </div>

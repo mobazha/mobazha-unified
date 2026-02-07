@@ -398,23 +398,21 @@ export function RwaPurchaseFlow({
               className={cn(
                 'p-3 rounded-lg text-left',
                 isConfirmRequired
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
-                  : 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                  ? 'bg-warning/8 border border-warning/20'
+                  : 'bg-success/8 border border-success/20'
               )}
             >
               <div className="flex items-start gap-2">
                 {isConfirmRequired ? (
-                  <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <Clock className="w-4 h-4 text-warning mt-0.5" />
                 ) : (
-                  <Shield className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5" />
+                  <Shield className="w-4 h-4 text-success mt-0.5" />
                 )}
                 <div>
                   <p
                     className={cn(
                       'text-sm font-medium',
-                      isConfirmRequired
-                        ? 'text-amber-700 dark:text-amber-300'
-                        : 'text-green-700 dark:text-green-300'
+                      isConfirmRequired ? 'text-warning' : 'text-success'
                     )}
                   >
                     {isConfirmRequired
@@ -424,9 +422,7 @@ export function RwaPurchaseFlow({
                   <p
                     className={cn(
                       'text-xs mt-0.5',
-                      isConfirmRequired
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-green-600 dark:text-green-400'
+                      isConfirmRequired ? 'text-warning' : 'text-success'
                     )}
                   >
                     {isConfirmRequired
@@ -472,8 +468,8 @@ export function RwaPurchaseFlow({
       case 'approve':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-yellow-600 dark:text-yellow-400 animate-spin" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-warning/15 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-warning animate-spin" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.purchase.approving')}</h3>
             <p className="text-sm text-muted-foreground">{t('rwa.purchase.approvingDesc')}</p>
@@ -483,8 +479,8 @@ export function RwaPurchaseFlow({
       case 'executing':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-info/15 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-info animate-spin" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.purchase.executing')}</h3>
             <p className="text-sm text-muted-foreground">{t('rwa.purchase.executingDesc')}</p>
@@ -494,8 +490,8 @@ export function RwaPurchaseFlow({
       case 'locking':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-amber-600 dark:text-amber-400 animate-spin" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-warning/15 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-warning animate-spin" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.purchase.locking')}</h3>
             <p className="text-sm text-muted-foreground">{t('rwa.purchase.lockingDesc')}</p>
@@ -505,8 +501,8 @@ export function RwaPurchaseFlow({
       case 'waiting':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-warning/15 flex items-center justify-center">
+              <Clock className="w-8 h-8 text-warning" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.purchase.waitingSeller')}</h3>
             <p className="text-sm text-muted-foreground">{t('rwa.purchase.waitingDesc')}</p>
@@ -557,8 +553,8 @@ export function RwaPurchaseFlow({
       case 'completed':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-success/15 flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-success" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.purchase.completed')}</h3>
             <p className="text-sm text-muted-foreground">{t('rwa.purchase.completedDesc')}</p>
@@ -581,11 +577,11 @@ export function RwaPurchaseFlow({
       case 'error':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-error/15 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-error" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.purchase.error')}</h3>
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-error">{error}</p>
             <div className="flex gap-2">
               <Button onClick={() => setStep('connect')} className="flex-1">
                 {t('common.retry')}
@@ -680,23 +676,21 @@ export function RwaPurchaseFlow({
               className={cn(
                 'p-3 rounded-lg',
                 isConfirmRequired
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
-                  : 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                  ? 'bg-warning/8 border border-warning/20'
+                  : 'bg-success/8 border border-success/20'
               )}
             >
               <div className="flex items-start gap-2">
                 {isConfirmRequired ? (
-                  <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <Clock className="w-4 h-4 text-warning mt-0.5" />
                 ) : (
-                  <Shield className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5" />
+                  <Shield className="w-4 h-4 text-success mt-0.5" />
                 )}
                 <div>
                   <p
                     className={cn(
                       'text-sm font-medium',
-                      isConfirmRequired
-                        ? 'text-amber-700 dark:text-amber-300'
-                        : 'text-green-700 dark:text-green-300'
+                      isConfirmRequired ? 'text-warning' : 'text-success'
                     )}
                   >
                     {isConfirmRequired
@@ -706,9 +700,7 @@ export function RwaPurchaseFlow({
                   <p
                     className={cn(
                       'text-xs mt-0.5',
-                      isConfirmRequired
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-green-600 dark:text-green-400'
+                      isConfirmRequired ? 'text-warning' : 'text-success'
                     )}
                   >
                     {isConfirmRequired

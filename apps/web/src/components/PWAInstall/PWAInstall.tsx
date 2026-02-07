@@ -103,18 +103,18 @@ export const PWAInstall: React.FC = () => {
         <Card className="shadow-xl border border-border">
           <div className="p-4">
             <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-success flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-xl">M</span>
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground">Install Mobazha</h3>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Add to your home screen for the best experience
                 </p>
               </div>
               <button
                 onClick={handleDismiss}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -130,11 +130,7 @@ export const PWAInstall: React.FC = () => {
             <div className="mt-4 p-3 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
                 Tap{' '}
-                <svg
-                  className="w-5 h-5 inline text-blue-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
+                <svg className="w-5 h-5 inline text-info" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                 </svg>{' '}
                 then <strong>&quot;Add to Home Screen&quot;</strong>
@@ -154,17 +150,16 @@ export const PWAInstall: React.FC = () => {
       <Card className="shadow-xl border border-border">
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-success flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold text-xl">M</span>
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-foreground">Install Mobazha</h3>
-              <p className="text-sm text-slate-500 mt-1">Get faster access and offline support</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Get faster access and offline support
+              </p>
             </div>
-            <button
-              onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
+            <button onClick={handleDismiss} className="text-muted-foreground hover:text-foreground">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"

@@ -54,9 +54,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     switch (type) {
       case 'send':
         return (
-          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-error/20 flex items-center justify-center">
             <svg
-              className="w-5 h-5 text-red-600"
+              className="w-5 h-5 text-error"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -90,9 +90,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         );
       case 'purchase':
         return (
-          <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-info/20 flex items-center justify-center">
             <svg
-              className="w-5 h-5 text-blue-600"
+              className="w-5 h-5 text-info"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -108,9 +108,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         );
       case 'sale':
         return (
-          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
             <svg
-              className="w-5 h-5 text-purple-600"
+              className="w-5 h-5 text-primary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -144,8 +144,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     switch (status) {
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-yellow-500/20 text-yellow-600 rounded-full">
-            <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-warning/20 text-warning rounded-full">
+            <span className="w-1.5 h-1.5 bg-warning rounded-full animate-pulse" />
             Pending
           </span>
         );
@@ -164,7 +164,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         );
       case 'failed':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-600 rounded-full">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-error/20 text-error rounded-full">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"

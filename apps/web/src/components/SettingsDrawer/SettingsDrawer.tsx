@@ -318,16 +318,14 @@ const SettingItem = ({
   const content = (
     <>
       {icon && (
-        <div
-          className={cn('mr-3 flex-shrink-0', danger ? 'text-red-600' : 'text-muted-foreground')}
-        >
+        <div className={cn('mr-3 flex-shrink-0', danger ? 'text-error' : 'text-muted-foreground')}>
           {icon}
         </div>
       )}
       <div className="flex-1 text-left min-w-0">
-        <p className={`font-medium text-sm ${danger ? 'text-red-600' : 'text-foreground'}`}>
+        <p className={`font-medium text-sm ${danger ? 'text-error' : 'text-foreground'}`}>
           {title}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="text-error ml-0.5">*</span>}
         </p>
         {description && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
@@ -388,7 +386,7 @@ const FormField = ({ label, required, description, children }: FormFieldProps) =
   <div className="space-y-2">
     <Label className="text-sm font-medium">
       {label}
-      {required && <span className="text-red-500 ml-0.5">*</span>}
+      {required && <span className="text-error ml-0.5">*</span>}
     </Label>
     {description && <p className="text-xs text-muted-foreground">{description}</p>}
     {children}
@@ -2686,8 +2684,8 @@ const ChatEncryptionContent: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Encryption Status */}
-      <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
-        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+      <div className="p-4 bg-success/8 rounded-lg border border-success/20">
+        <div className="flex items-center gap-2 text-success">
           <Shield className="w-5 h-5" />
           <span className="font-medium">{t('settingsModal.e2eAvailable')}</span>
         </div>
@@ -2736,7 +2734,7 @@ const ChatEncryptionContent: React.FC = () => {
           <p className="text-sm text-muted-foreground">{t('settingsModal.keyBackupDesc')}</p>
         </div>
         {lastBackup && (
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+          <div className="flex items-center gap-2 text-success">
             <Check className="w-4 h-4" />
             <span className="text-sm">{t('settingsModal.backupExists')}</span>
           </div>

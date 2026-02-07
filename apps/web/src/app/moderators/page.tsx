@@ -112,7 +112,7 @@ function ModeratorListCard({ moderator }: { moderator: Moderator }) {
               className="w-16 h-16 rounded-full bg-muted ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
             />
             {moderator.verified && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-background">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-info rounded-full flex items-center justify-center ring-2 ring-background">
                 <CheckCircle className="w-4 h-4 text-white" />
               </div>
             )}
@@ -128,7 +128,7 @@ function ModeratorListCard({ moderator }: { moderator: Moderator }) {
               {moderator.verified && (
                 <Badge
                   variant="secondary"
-                  className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 gap-1 text-xs"
+                  className="bg-info/10 text-info border-info/30 gap-1 text-xs"
                 >
                   <Shield className="w-3 h-3" />
                   Verified
@@ -145,7 +145,7 @@ function ModeratorListCard({ moderator }: { moderator: Moderator }) {
             <div className="flex items-center gap-4 flex-wrap">
               {/* Rating */}
               <HStack gap="xs" align="center">
-                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <Star className="w-4 h-4 text-warning fill-warning" />
                 <span className="font-semibold text-foreground">{moderator.rating}</span>
                 <span className="text-muted-foreground text-sm">({moderator.ratingCount})</span>
               </HStack>

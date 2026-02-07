@@ -326,7 +326,7 @@ export default function ReceivingAddressesPage() {
                             <span className="font-semibold">{coinInfo?.name || addr.coin}</span>
                             <span className="text-sm text-muted-foreground">({addr.coin})</span>
                             {addr.isExternal && (
-                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                              <span className="px-2 py-0.5 bg-info/15 text-info text-xs rounded">
                                 外部钱包
                               </span>
                             )}
@@ -380,7 +380,7 @@ export default function ReceivingAddressesPage() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-red-600">
+                                <Button variant="outline" size="sm" className="text-error">
                                   删除
                                 </Button>
                               </AlertDialogTrigger>
@@ -396,7 +396,7 @@ export default function ReceivingAddressesPage() {
                                   <AlertDialogCancel>取消</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleDelete(addr.coin)}
-                                    className="bg-red-600 hover:bg-red-700"
+                                    className="bg-error hover:bg-error"
                                   >
                                     删除
                                   </AlertDialogAction>
@@ -414,9 +414,9 @@ export default function ReceivingAddressesPage() {
           )}
 
           {/* 说明 */}
-          <Card className="w-full p-4 bg-blue-50 border-blue-200">
-            <h4 className="font-medium text-blue-900 mb-2">💡 关于收款地址</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
+          <Card className="w-full p-4 bg-info/8 border-info/20">
+            <h4 className="font-medium text-info mb-2">💡 关于收款地址</h4>
+            <ul className="text-sm text-info space-y-1">
               <li>• 收款地址用于接收买家的加密货币支付</li>
               <li>• 您可以使用外部钱包地址（如 MetaMask、Trust Wallet）</li>
               <li>• 请确保地址正确，错误的地址可能导致资金丢失</li>

@@ -98,10 +98,10 @@ export function EncryptedContent({
   if (isDecrypting) {
     return (
       <div className={cn('relative', className)}>
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 backdrop-blur-sm rounded-lg z-10">
           <div className="flex flex-col items-center gap-2 text-center">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">正在解密内容...</p>
+            <Loader2 className="w-8 h-8 text-info animate-spin" />
+            <p className="text-sm text-muted-foreground">正在解密内容...</p>
           </div>
         </div>
         <div className="blur-lg pointer-events-none">{fallback || children}</div>
@@ -112,14 +112,14 @@ export function EncryptedContent({
   // 无访问权限，显示模糊内容
   return (
     <div className={cn('relative', className)}>
-      <div className="absolute inset-0 flex items-center justify-center bg-gray-100/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg z-10">
+      <div className="absolute inset-0 flex items-center justify-center bg-muted/30 backdrop-blur-sm rounded-lg z-10">
         <div className="flex flex-col items-center gap-3 text-center p-4">
-          <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-            <Lock className="w-6 h-6 text-amber-500" />
+          <div className="w-12 h-12 rounded-full bg-warning/15 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-warning" />
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white">加密内容</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+            <h4 className="font-semibold text-foreground">加密内容</h4>
+            <p className="text-sm text-muted-foreground max-w-xs">
               此内容已加密，您需要获得授权才能查看
             </p>
           </div>
@@ -183,7 +183,7 @@ export function EncryptedImage({
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Lock className="w-8 h-8 text-amber-500" />
+          <Lock className="w-8 h-8 text-warning" />
           <p className="text-sm text-white font-medium drop-shadow-lg">加密图片</p>
           {onRequestAccess && (
             <Button onClick={onRequestAccess} variant="secondary" size="sm">
@@ -222,7 +222,7 @@ export function EncryptedText({
 
   if (!hasAccess) {
     return (
-      <span className={cn('inline-flex items-center gap-1 text-gray-400', className)}>
+      <span className={cn('inline-flex items-center gap-1 text-muted-foreground/60', className)}>
         <Lock className="w-3 h-3" />
         {placeholder}
       </span>
@@ -232,10 +232,7 @@ export function EncryptedText({
   return (
     <span className={cn('inline-flex items-center gap-1', className)}>
       {revealed ? text : placeholder}
-      <button
-        onClick={() => setRevealed(!revealed)}
-        className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
-      >
+      <button onClick={() => setRevealed(!revealed)} className="p-0.5 hover:bg-muted rounded">
         {revealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
       </button>
     </span>

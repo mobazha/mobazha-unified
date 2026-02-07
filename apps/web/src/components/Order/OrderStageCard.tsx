@@ -228,7 +228,7 @@ export const PaymentCard = memo(function PaymentCard({
               </div>
             )}
             {/* 描述 */}
-            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+            {description && <p className="text-xs text-foreground/60 mt-0.5">{description}</p>}
           </div>
         </div>
       </div>
@@ -264,7 +264,7 @@ function StarRating({ rating, maxRating = 5 }: { rating: number; maxRating?: num
           key={i}
           className={cn(
             'w-2.5 h-2.5 sm:w-3 sm:h-3',
-            i < rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/30'
+            i < rating ? 'text-warning fill-warning' : 'text-muted-foreground/30'
           )}
           viewBox="0 0 24 24"
         >
@@ -365,11 +365,11 @@ export const FulfillmentCard = memo(function FulfillmentCard({
     >
       <Card className="p-2.5 bg-muted/30">
         <div className="flex items-center gap-2">
-          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-info/15 flex items-center justify-center">
             {isPhysicalGood ? (
-              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-info" />
             ) : (
-              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-info" />
             )}
           </div>
           <div className="flex-1 min-w-0">

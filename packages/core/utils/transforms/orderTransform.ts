@@ -39,7 +39,7 @@ interface RealOrderData {
           slug?: string;
           metadata?: {
             contractType?: string;
-            pricingCurrency?: { divisibility?: number };
+            pricingCurrency?: { code?: string; divisibility?: number };
             rwaEscrowTimeoutSeconds?: number;
             escrowTimeoutSeconds?: number;
           };
@@ -411,7 +411,19 @@ export function transformCoreOrder(
   const paymentMethod = paymentSent?.method || '';
   const moderatorId = paymentSent?.moderator || '';
 
-  const divisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
+  // --- 货币与 divisibility 解析 ---
+  // listing 的定价货币（卖家设定的价格货币，如 USD）
+  const listingCurrencyCode = listingData?.metadata?.pricingCurrency?.code || 'USD';
+  const listingDivisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
+  // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
+  const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
+  // 支付币种的 divisibility（优先从 token 配置取 decimals）
+  const paymentTokenConfig = getTokenById(pricingCoin);
+  const paymentDivisibility = paymentTokenConfig
+    ? paymentTokenConfig.decimals
+    : listingDivisibility;
+  // 判断是否为跨币种订单（定价货币 ≠ 支付币种）
+  const isCrossCurrency = listingCurrencyCode.toUpperCase() !== pricingCoin.toUpperCase();
   const timestamp = orderOpen?.timestamp || '';
   const fulfillments = contract.orderFulfillments;
   const trackingInfo = fulfillments?.[0]?.physicalDelivery?.[0];
@@ -463,14 +475,15 @@ export function transformCoreOrder(
   const itemTitle = listingData?.item?.title || 'Unknown Item';
   const itemPrice = listingData?.item?.price || 0;
 
-  // 原始定价信息（从 orderOpen 获取）
-  const pricingCoin = orderOpen?.pricingCoin || 'USD';
+  // 原始定价信息（从 orderOpen 获取，pricingCoin 已在上方定义）
   const pricingAmount = orderOpen?.amount !== undefined ? orderOpen.amount : itemPrice;
 
   // 实际支付信息（从 paymentSent 获取）
   const paymentCoin = paymentSent?.coin || pricingCoin;
   const paymentAmount = paymentSent?.amount;
 
+  // 单价使用 listing 的定价货币（如 USD）和 divisibility
+  const formattedItemPrice = formatPriceAmount(itemPrice, listingDivisibility);
   const orderItems: DisplayOrderItem[] =
     orderOpenItems.length > 0
       ? orderOpenItems.map((item, index) => ({
@@ -478,8 +491,8 @@ export function transformCoreOrder(
           title: itemTitle,
           image: itemImageUrl,
           quantity: item.quantity || 1,
-          price: formatPriceAmount(itemPrice, divisibility, pricingCoin),
-          currency: pricingCoin,
+          price: formattedItemPrice,
+          currency: listingCurrencyCode,
         }))
       : [
           {
@@ -487,8 +500,8 @@ export function transformCoreOrder(
             title: itemTitle,
             image: itemImageUrl,
             quantity: 1,
-            price: formatPriceAmount(itemPrice, divisibility, pricingCoin),
-            currency: pricingCoin,
+            price: formattedItemPrice,
+            currency: listingCurrencyCode,
           },
         ];
 
@@ -531,36 +544,45 @@ export function transformCoreOrder(
     };
   }
 
-  // 计算运费（订单总额 - 商品小计）
+  // 运费计算：
+  // 1. 非物理商品（SERVICE / DIGITAL_GOOD / RWA_TOKEN）不显示运费
+  // 2. 跨币种订单（如 USD 定价 + ETHUSDT 支付）无法通过差值计算运费
+  // 3. 仅同币种物理商品订单可通过 pricingAmount - itemPrice * qty 推算运费
   const totalQuantity = orderOpenItems.reduce((sum, item) => sum + (item.quantity || 1), 0) || 1;
-  const shippingCost = pricingAmount - itemPrice * totalQuantity;
-  const formattedShippingAmount =
-    shippingCost > 0 ? formatPriceAmount(shippingCost, divisibility, pricingCoin) : undefined;
+  const isPhysicalGood = contractType === 'PHYSICAL_GOOD';
+  let formattedShippingAmount: string | undefined;
+  if (isPhysicalGood && !isCrossCurrency) {
+    const shippingCost = Number(pricingAmount) - Number(itemPrice) * totalQuantity;
+    formattedShippingAmount =
+      shippingCost > 0 ? formatPriceAmount(shippingCost, listingDivisibility) : undefined;
+  }
 
-  // 格式化原始定价金额（法币，如 USD）
-  const formattedPricingAmount = formatPriceAmount(pricingAmount, divisibility);
+  // 格式化定价总额（listing 货币，用于概要「总计」）
+  // 同币种：直接用 orderOpen.amount（包含运费等完整金额）
+  // 跨币种：使用 itemPrice * qty（仅商品小计，运费和总额在不同编码下无法混算）
+  const listingTotal = isCrossCurrency ? Number(itemPrice) * totalQuantity : Number(pricingAmount);
+  const formattedPricingAmount = formatPriceAmount(listingTotal, listingDivisibility);
 
-  // 格式化实际支付金额（加密货币，如 ETH）
-  // 如果有 paymentSent，使用它的金额；否则使用原始定价金额
+  // 格式化实际支付金额（支付币种，用于「已付款」显示）
+  const formattedOrderAmount = formatPriceAmount(pricingAmount, paymentDivisibility, pricingCoin);
   const formattedPaymentAmount =
     paymentAmount !== undefined
-      ? formatPriceAmount(paymentAmount, divisibility, paymentCoin)
-      : formattedPricingAmount;
+      ? formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
+      : formattedOrderAmount;
 
   const result: DisplayOrder = {
     id: fullOrderId,
     orderId: fullOrderId,
     slug: listingSlug,
     status: mapOrderState(data.state as OrderState),
-    items: orderItems,
-    // total 显示实际支付的加密货币金额
+    items: orderItems, // items[].price 使用 listing 定价货币, items[].currency = listingCurrencyCode
+    // total：实际支付金额（支付币种，用于订单列表等场景）
     total: formattedPaymentAmount,
-    // currency 是支付币种（加密货币）
     currency: paymentCoin,
-    // 原始定价信息（法币）
+    // 定价总额（listing 货币，用于订单详情概要「总计」）
     pricingAmount: formattedPricingAmount,
-    pricingCurrency: pricingCoin,
-    // 支付币种和金额
+    pricingCurrency: listingCurrencyCode,
+    // 支付信息（支付币种，用于订单详情「已付款」）
     paymentCoin: paymentCoin,
     paymentAmount: formattedPaymentAmount,
     createdAt: timestamp,

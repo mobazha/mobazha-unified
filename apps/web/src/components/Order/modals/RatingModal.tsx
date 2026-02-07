@@ -57,7 +57,7 @@ const StarRating: React.FC<{
           onClick={() => onChange(star)}
           onMouseEnter={() => setHoverValue(star)}
           onMouseLeave={() => setHoverValue(0)}
-          className="text-yellow-400 hover:scale-110 transition-transform"
+          className="text-warning hover:scale-110 transition-transform"
         >
           <svg
             className={sizeClasses[size]}
@@ -201,7 +201,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
               onChange={e => setReview(e.target.value)}
               rows={4}
               maxLength={500}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
               placeholder={t('order.rating.reviewPlaceholder')}
             />
             <p className="text-xs text-muted-foreground mt-1 text-right">{review.length}/500</p>

@@ -162,19 +162,13 @@ export const ShippingComparison: React.FC<ShippingComparisonProps> = ({
                   {/* 标签 */}
                   <div className="flex gap-1">
                     {service.isCheapest && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      >
+                      <Badge variant="secondary" className="text-xs bg-success/15 text-success">
                         <DollarSign className="w-3 h-3 mr-0.5" />
                         {t('checkout.cheapest') || 'Cheapest'}
                       </Badge>
                     )}
                     {service.isFastest && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                      >
+                      <Badge variant="secondary" className="text-xs bg-info/15 text-info">
                         <Clock className="w-3 h-3 mr-0.5" />
                         {t('checkout.fastest') || 'Fastest'}
                       </Badge>
@@ -204,9 +198,9 @@ export const ShippingComparison: React.FC<ShippingComparisonProps> = ({
 
       {/* 满额免邮提示 */}
       {freeShippingGap !== undefined && freeShippingGap > 0 && (
-        <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-          <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-          <p className="text-sm text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-2 p-3 bg-warning/8 rounded-lg border border-warning/20">
+          <Tag className="w-4 h-4 text-warning flex-shrink-0" />
+          <p className="text-sm text-warning">
             {t('shipping.spendMoreForFreeShipping', {
               amount: formatPrice(freeShippingGap, currency),
             }) || `Spend ${formatPrice(freeShippingGap, currency)} more for free shipping`}

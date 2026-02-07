@@ -101,15 +101,13 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
         {/* Escrow Countdown (for moderated orders) */}
         {paymentMethod === 'MODERATED' && (
           <div
-            className={`rounded-lg p-3 ${isExpired ? 'bg-red-50 dark:bg-red-950/30 border border-red-200' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200'}`}
+            className={`rounded-lg p-3 ${isExpired ? 'bg-error/8 border-error/20' : 'bg-warning/8 border-warning/20'}`}
           >
             <HStack justify="between" align="center">
-              <span className={`text-sm ${isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+              <span className={`text-sm ${isExpired ? 'text-error' : 'text-warning'}`}>
                 {t('order.payment.escrowPeriod')}
               </span>
-              <span
-                className={`text-sm font-medium ${isExpired ? 'text-red-700' : 'text-amber-700'}`}
-              >
+              <span className={`text-sm font-medium ${isExpired ? 'text-error' : 'text-warning'}`}>
                 {timeRemaining}
               </span>
             </HStack>

@@ -677,7 +677,7 @@ export default function StorePage() {
         {/* Store Header */}
         <div className="relative">
           {/* Cover Image */}
-          <div className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-emerald-500 to-teal-600 relative overflow-hidden">
+          <div className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-primary/80 to-primary/60 relative overflow-hidden">
             {displayHeaderHash && (
               <img
                 src={getImageUrl(displayHeaderHash) || ''}
@@ -755,7 +755,7 @@ export default function StorePage() {
                         {/* 隐私店铺徽标 */}
                         {store.private && (
                           <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 shrink-0"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
                             title={t('storeAccess.privateStore')}
                           >
                             <Lock className="h-3 w-3" />
@@ -776,7 +776,7 @@ export default function StorePage() {
                           onClick={() => setActiveTab('reviews')}
                           className="text-xs sm:text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
                         >
-                          <span className="text-yellow-500">★</span>
+                          <span className="text-warning">★</span>
                           <span className="font-medium text-foreground">
                             {stats.averageRating.toFixed(1)}
                           </span>
@@ -896,7 +896,7 @@ export default function StorePage() {
 
               {/* 私密店铺完整访问权限提示 */}
               {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
-                <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 text-sm border border-teal-200 dark:border-teal-800">
+                <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
                   <ShieldCheck className="h-4 w-4 shrink-0" />
                   <span>{t('storeAccess.fullAccessGranted')}</span>
                 </div>

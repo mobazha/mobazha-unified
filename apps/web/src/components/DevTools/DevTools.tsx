@@ -22,12 +22,12 @@ export function DevTools() {
     <div className="fixed bottom-4 right-4 z-50">
       {/* Expanded Panel */}
       {isExpanded && (
-        <div className="mb-2 bg-slate-900 text-white rounded-lg shadow-2xl p-4 w-72 animate-in slide-in-from-bottom-2">
+        <div className="mb-2 bg-card text-foreground rounded-lg shadow-2xl p-4 w-72 animate-in slide-in-from-bottom-2">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-sm">🛠️ Dev Tools</h3>
             <button
               onClick={() => setIsExpanded(false)}
-              className="text-slate-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -45,14 +45,14 @@ export function DevTools() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Data Source</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   {isMockMode ? 'Using mock data' : 'Using real API'}
                 </p>
               </div>
               <button
                 onClick={toggleMock}
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  isMockMode ? 'bg-amber-500' : 'bg-emerald-500'
+                  isMockMode ? 'bg-warning' : 'bg-success'
                 }`}
               >
                 <span
@@ -69,47 +69,49 @@ export function DevTools() {
             <div
               className={`p-2 rounded-lg text-xs ${
                 isMockMode
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  ? 'bg-warning/20 text-warning border border-warning/30'
+                  : 'bg-success/20 text-success border border-success/30'
               }`}
             >
               <div className="flex items-center gap-2">
                 <span
-                  className={`w-2 h-2 rounded-full ${isMockMode ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}
+                  className={`w-2 h-2 rounded-full ${isMockMode ? 'bg-warning' : 'bg-success'} animate-pulse`}
                 />
                 <span>{isMockMode ? 'Mock Mode Active' : 'API Mode Active'}</span>
               </div>
             </div>
 
             {/* Config Info */}
-            <div className="text-xs text-slate-400 space-y-1">
+            <div className="text-xs text-muted-foreground space-y-1">
               <div className="flex justify-between">
                 <span>API URL:</span>
-                <span className="text-slate-300 truncate max-w-[150px]">{config.apiBaseUrl}</span>
+                <span className="text-muted-foreground truncate max-w-[150px]">
+                  {config.apiBaseUrl}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Debug:</span>
-                <span className="text-slate-300">{config.debug ? 'On' : 'Off'}</span>
+                <span className="text-muted-foreground">{config.debug ? 'On' : 'Off'}</span>
               </div>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-4 pt-3 border-t border-slate-700">
-            <p className="text-xs text-slate-400 mb-2">Quick Actions</p>
+          <div className="mt-4 pt-3 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2">Quick Actions</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => {
                   localStorage.clear();
                   window.location.reload();
                 }}
-                className="px-2 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+                className="px-2 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
               >
                 Clear Storage
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="px-2 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+                className="px-2 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
               >
                 Reload Page
               </button>
@@ -122,7 +124,7 @@ export function DevTools() {
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 ${
-          isMockMode ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'
+          isMockMode ? 'bg-warning hover:bg-warning/90' : 'bg-success hover:bg-success/90'
         }`}
         title={`${isMockMode ? 'Mock' : 'API'} Mode - Click to configure`}
       >

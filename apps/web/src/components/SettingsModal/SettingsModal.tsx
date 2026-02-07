@@ -161,9 +161,9 @@ const SettingItem = ({
   const content = (
     <>
       <div className="flex-1 text-left min-w-0">
-        <p className={`font-medium text-sm ${danger ? 'text-red-600' : 'text-foreground'}`}>
+        <p className={`font-medium text-sm ${danger ? 'text-destructive' : 'text-foreground'}`}>
           {title}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="text-destructive ml-0.5">*</span>}
         </p>
         {description && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
@@ -181,7 +181,7 @@ const SettingItem = ({
         <span className="text-muted-foreground text-sm ml-3 flex-shrink-0">{value}</span>
       ) : onClick ? (
         <svg
-          className="w-4 h-4 text-slate-400 ml-3 flex-shrink-0"
+          className="w-4 h-4 text-muted-foreground ml-3 flex-shrink-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -192,8 +192,8 @@ const SettingItem = ({
     </>
   );
 
-  const baseClassName = `w-full flex items-center justify-between p-3 hover:bg-surface-hover/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
-    danger ? 'text-red-600' : ''
+  const baseClassName = `w-full flex items-center justify-between p-3 hover:bg-surface-hover/50 transition-colors border-b border-border last:border-0 ${
+    danger ? 'text-destructive' : ''
   }`;
 
   if (toggle || !onClick) {
@@ -201,10 +201,7 @@ const SettingItem = ({
   }
 
   return (
-    <button
-      onClick={onClick}
-      className={`${baseClassName} active:bg-slate-100 dark:active:bg-slate-700/50`}
-    >
+    <button onClick={onClick} className={`${baseClassName} active:bg-muted`}>
       {content}
     </button>
   );
@@ -239,7 +236,7 @@ const FormField = ({ label, required, description, children }: FormFieldProps) =
   <div className="space-y-2">
     <Label className="text-sm font-medium">
       {label}
-      {required && <span className="text-red-500 ml-0.5">*</span>}
+      {required && <span className="text-destructive ml-0.5">*</span>}
     </Label>
     {description && <p className="text-xs text-muted-foreground">{description}</p>}
     {children}
@@ -955,7 +952,7 @@ const PageTabContent: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleRemoveLink(index)}
-                  className="text-red-500 hover:text-red-600"
+                  className="text-destructive hover:text-destructive/80"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -1743,8 +1740,8 @@ const ChatEncryptionTabContent: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Encryption Status */}
-      <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
-        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+      <div className="p-4 bg-success/8 rounded-lg border border-success/20">
+        <div className="flex items-center gap-2 text-success">
           <Shield className="w-5 h-5" />
           <span className="font-medium text-sm">{t('settingsModal.e2eAvailable')}</span>
         </div>
@@ -1793,7 +1790,7 @@ const ChatEncryptionTabContent: React.FC = () => {
           <p className="text-xs text-muted-foreground">{t('settingsModal.keyBackupDesc')}</p>
         </div>
         {lastBackup && (
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+          <div className="flex items-center gap-2 text-success">
             <Check className="w-4 h-4" />
             <span className="text-sm">{t('settingsModal.backupExists')}</span>
           </div>

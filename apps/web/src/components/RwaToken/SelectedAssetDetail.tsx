@@ -23,13 +23,11 @@ export function SelectedAssetDetail({ asset, className = '' }: SelectedAssetDeta
   const isErc3525 = asset.tokenStandard === 'ERC3525';
 
   return (
-    <Card
-      className={cn('p-5 border-2 border-green-500 bg-green-50/50 dark:bg-green-950/20', className)}
-    >
+    <Card className={cn('p-5 border-2 border-success bg-success/8', className)}>
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
-        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-        <h4 className="font-semibold text-green-700 dark:text-green-400">
+        <CheckCircle className="w-5 h-5 text-success" />
+        <h4 className="font-semibold text-success">
           {t('listing.rwa.selectedAsset') || '已选择资产'}
         </h4>
       </div>
@@ -72,43 +70,35 @@ export function SelectedAssetDetail({ asset, className = '' }: SelectedAssetDeta
 
       {/* ERC1155 会员信息 */}
       {isErc1155 && asset.membership && (
-        <div className="mb-4 p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
-          <h5 className="font-medium text-indigo-700 dark:text-indigo-400 mb-3 flex items-center gap-2">
+        <div className="mb-4 p-4 bg-primary/8 rounded-lg border border-primary/20">
+          <h5 className="font-medium text-primary mb-3 flex items-center gap-2">
             <Users className="w-4 h-4" />
             {t('listing.rwa.membershipInfo') || '会员信息'}
           </h5>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="text-center p-2 bg-white dark:bg-indigo-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">
                 {t('listing.rwa.memberLevel') || '会员等级'}
               </div>
-              <div className="font-semibold text-indigo-700 dark:text-indigo-400">
-                {asset.membership.level}
-              </div>
+              <div className="font-semibold text-primary">{asset.membership.level}</div>
             </div>
-            <div className="text-center p-2 bg-white dark:bg-indigo-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">
                 {t('listing.rwa.currentHolders') || '当前持有'}
               </div>
-              <div className="font-semibold text-indigo-700 dark:text-indigo-400">
-                {asset.membership.holderCount} 人
-              </div>
+              <div className="font-semibold text-primary">{asset.membership.holderCount} 人</div>
             </div>
-            <div className="text-center p-2 bg-white dark:bg-indigo-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">
                 {t('listing.rwa.exclusivePerks') || '专属福利'}
               </div>
-              <div className="font-semibold text-indigo-700 dark:text-indigo-400">
-                {asset.membership.exclusivePerks} 项
-              </div>
+              <div className="font-semibold text-primary">{asset.membership.exclusivePerks} 项</div>
             </div>
-            <div className="text-center p-2 bg-white dark:bg-indigo-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">
                 {t('listing.rwa.validity') || '有效期'}
               </div>
-              <div className="font-semibold text-indigo-700 dark:text-indigo-400">
-                {asset.membership.validityType}
-              </div>
+              <div className="font-semibold text-primary">{asset.membership.validityType}</div>
             </div>
           </div>
         </div>
@@ -116,38 +106,34 @@ export function SelectedAssetDetail({ asset, className = '' }: SelectedAssetDeta
 
       {/* ERC3525 收益信息 */}
       {isErc3525 && asset.performance && (
-        <div className="mb-4 p-4 bg-pink-50 dark:bg-pink-950/30 rounded-lg border border-pink-200 dark:border-pink-800">
-          <h5 className="font-medium text-pink-700 dark:text-pink-400 mb-3 flex items-center gap-2">
+        <div className="mb-4 p-4 bg-primary/8 rounded-lg border border-primary/20">
+          <h5 className="font-medium text-primary mb-3 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             {t('listing.rwa.revenueInfo') || '收益信息'}
           </h5>
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-2 bg-white dark:bg-pink-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
                 <Coins className="w-3 h-3" />
                 {t('listing.rwa.totalShares') || '总份额'}
               </div>
-              <div className="font-semibold text-pink-700 dark:text-pink-400">
+              <div className="font-semibold text-primary">
                 {asset.performance.totalShares.toLocaleString()}
               </div>
             </div>
-            <div className="text-center p-2 bg-white dark:bg-pink-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 {t('listing.rwa.annualRate') || '年化收益'}
               </div>
-              <div className="font-semibold text-pink-700 dark:text-pink-400">
-                {asset.performance.dividendRate}
-              </div>
+              <div className="font-semibold text-primary">{asset.performance.dividendRate}</div>
             </div>
-            <div className="text-center p-2 bg-white dark:bg-pink-900/30 rounded-lg">
+            <div className="text-center p-2 bg-card rounded-lg">
               <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
                 <Calendar className="w-3 h-3" />
                 {t('listing.rwa.settlementPeriod') || '结算周期'}
               </div>
-              <div className="font-semibold text-pink-700 dark:text-pink-400">
-                {asset.performance.settlementPeriod}
-              </div>
+              <div className="font-semibold text-primary">{asset.performance.settlementPeriod}</div>
             </div>
           </div>
         </div>
@@ -163,7 +149,7 @@ export function SelectedAssetDetail({ asset, className = '' }: SelectedAssetDeta
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {asset.rights.map((right, index) => (
               <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <CheckCircle className="w-4 h-4 text-success flex-shrink-0" />
                 <span>{right}</span>
               </div>
             ))}

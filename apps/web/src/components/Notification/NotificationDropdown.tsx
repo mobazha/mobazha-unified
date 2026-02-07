@@ -37,27 +37,27 @@ function getNotificationIcon(type: string) {
 
   switch (type) {
     case 'newOrder':
-      return <ShoppingCart className={cn(iconClass, 'text-blue-500')} />;
+      return <ShoppingCart className={cn(iconClass, 'text-info')} />;
     case 'orderFunded':
     case 'orderPaymentReceived':
       return <CreditCard className={cn(iconClass, 'text-primary')} />;
     case 'orderConfirmation':
     case 'orderCompletion':
-      return <CheckCircle className={cn(iconClass, 'text-green-500')} />;
+      return <CheckCircle className={cn(iconClass, 'text-success')} />;
     case 'orderDeclined':
     case 'orderCancel':
-      return <XCircle className={cn(iconClass, 'text-red-500')} />;
+      return <XCircle className={cn(iconClass, 'text-error')} />;
     case 'orderFulfillment':
-      return <Package className={cn(iconClass, 'text-indigo-500')} />;
+      return <Package className={cn(iconClass, 'text-primary')} />;
     case 'disputeOpen':
     case 'caseOpen':
     case 'disputeClose':
     case 'caseUpdate':
-      return <AlertTriangle className={cn(iconClass, 'text-amber-500')} />;
+      return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
     case 'follow':
     case 'moderatorAdd':
     case 'moderatorRemove':
-      return <UserPlus className={cn(iconClass, 'text-purple-500')} />;
+      return <UserPlus className={cn(iconClass, 'text-primary')} />;
     default:
       return <Bell className={cn(iconClass, 'text-gray-500')} />;
   }
@@ -274,7 +274,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-white text-xs font-bold rounded-full">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}

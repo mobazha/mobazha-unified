@@ -56,9 +56,9 @@ export const VendorInfo: React.FC<VendorInfoProps> = ({
       case 'vendor':
         return 'text-primary';
       case 'buyer':
-        return 'text-blue-600';
+        return 'text-info';
       case 'moderator':
-        return 'text-purple-600';
+        return 'text-primary';
       default:
         return 'text-muted-foreground';
     }
@@ -94,7 +94,7 @@ export const VendorInfo: React.FC<VendorInfoProps> = ({
             )}
             {party.rating && party.rating.count > 0 && (
               <HStack gap="xs" className="mt-1">
-                <div className="flex items-center text-yellow-500">
+                <div className="flex items-center text-warning">
                   {[1, 2, 3, 4, 5].map(star => (
                     <svg
                       key={star}

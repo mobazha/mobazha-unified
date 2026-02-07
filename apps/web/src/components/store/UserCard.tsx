@@ -193,7 +193,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
   const cardContent = (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
       {/* 封面图片 */}
-      <div className="h-20 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
+      <div className="h-20 bg-gradient-to-br from-primary/40 to-primary/60 relative overflow-hidden">
         {headerUrl && (
           <img
             src={headerUrl}
@@ -257,7 +257,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
             {/* 隐私店铺徽标 */}
             {profile.private && (
               <span
-                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 shrink-0"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning shrink-0"
                 title={t('storeAccess.privateStore')}
               >
                 <Lock className="h-2.5 w-2.5" />
@@ -289,7 +289,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
 
           {/* 评分 */}
           <div className="flex items-center gap-1 text-xs flex-shrink-0 ml-2">
-            <span className="text-yellow-500">★</span>
+            <span className="text-warning">★</span>
             <span className="font-medium text-foreground">
               {stats.averageRating?.toFixed(1) || '0.0'}
             </span>

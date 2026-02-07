@@ -40,17 +40,17 @@ export const ChatFloatingButton: React.FC<ChatFloatingButtonProps> = ({ classNam
 
       {/* Unread badge */}
       {totalUnread > 0 && (
-        <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full shadow-sm animate-in zoom-in-50 duration-200">
+        <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 flex items-center justify-center bg-destructive text-white text-xs font-bold rounded-full shadow-sm animate-in zoom-in-50 duration-200">
           {totalUnread > 99 ? '99+' : totalUnread}
         </span>
       )}
 
       {/* Connection status indicator */}
       {!isConnected && !isInitializing && (
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-amber-500 border-2 border-white dark:border-gray-900 rounded-full" />
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-warning border-2 border-white border-background rounded-full" />
       )}
       {isInitializing && (
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-blue-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse" />
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-info border-2 border-white border-background rounded-full animate-pulse" />
       )}
     </button>
   );

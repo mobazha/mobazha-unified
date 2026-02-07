@@ -255,7 +255,7 @@ export default function CaseDetailPage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -275,12 +275,12 @@ export default function CaseDetailPage() {
                 <HStack gap="md" align="center" className="mb-2">
                   <h1 className="text-2xl font-bold text-foreground">Case #{caseData.caseId}</h1>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
                       caseData.state === 'OPEN'
-                        ? 'bg-red-500'
+                        ? 'bg-error text-error-foreground'
                         : caseData.state === 'PENDING'
-                          ? 'bg-yellow-500'
-                          : 'bg-emerald-500'
+                          ? 'bg-warning text-warning-foreground'
+                          : 'bg-success text-success-foreground'
                     }`}
                   >
                     {caseData.state}
@@ -324,15 +324,15 @@ export default function CaseDetailPage() {
                   <div>
                     <h3 className="font-semibold text-foreground">
                       {caseData.buyer.name}
-                      <span className="ml-2 text-sm font-normal text-red-500">
+                      <span className="ml-2 text-sm font-normal text-error">
                         (Buyer - Opened Dispute)
                       </span>
                     </h3>
                     <p className="text-sm text-muted-foreground">{caseData.buyer.peerID}</p>
                   </div>
                 </HStack>
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
-                  <h4 className="font-medium text-red-700 dark:text-red-400 mb-2">Claim</h4>
+                <div className="p-4 bg-error/8 border-l-4 border-error rounded">
+                  <h4 className="font-medium text-error mb-2">Claim</h4>
                   <p className="text-muted-foreground">{caseData.claim}</p>
                 </div>
               </Card>
@@ -344,13 +344,13 @@ export default function CaseDetailPage() {
                   <div>
                     <h3 className="font-semibold text-foreground">
                       {caseData.seller.name}
-                      <span className="ml-2 text-sm font-normal text-blue-500">(Seller)</span>
+                      <span className="ml-2 text-sm font-normal text-info">(Seller)</span>
                     </h3>
                     <p className="text-sm text-muted-foreground">{caseData.seller.peerID}</p>
                   </div>
                 </HStack>
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
-                  <h4 className="font-medium text-blue-700 dark:text-blue-400 mb-2">Response</h4>
+                <div className="p-4 bg-info/8 border-l-4 border-info rounded">
+                  <h4 className="font-medium text-info mb-2">Response</h4>
                   <p className="text-muted-foreground">
                     {caseData.sellerResponse || 'No response yet'}
                   </p>
@@ -366,14 +366,14 @@ export default function CaseDetailPage() {
                       key={ev.id}
                       className={`p-4 rounded-lg ${
                         ev.submittedBy === 'buyer'
-                          ? 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-300'
-                          : 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-300'
+                          ? 'bg-error/8 border-l-4 border-error/30'
+                          : 'bg-info/8 border-l-4 border-info/30'
                       }`}
                     >
                       <HStack justify="between" className="mb-2">
                         <span
                           className={`text-sm font-medium ${
-                            ev.submittedBy === 'buyer' ? 'text-red-600' : 'text-blue-600'
+                            ev.submittedBy === 'buyer' ? 'text-error' : 'text-info'
                           }`}
                         >
                           From {ev.submittedBy === 'buyer' ? 'Buyer' : 'Seller'}
@@ -405,20 +405,20 @@ export default function CaseDetailPage() {
                       key={msg.id}
                       className={`p-3 rounded-lg ${
                         msg.sender === 'moderator'
-                          ? 'bg-emerald-50 dark:bg-emerald-900/20'
+                          ? 'bg-success/8'
                           : msg.sender === 'buyer'
-                            ? 'bg-red-50 dark:bg-red-900/10'
-                            : 'bg-blue-50 dark:bg-blue-900/10'
+                            ? 'bg-error/8'
+                            : 'bg-info/8'
                       }`}
                     >
                       <HStack justify="between" className="mb-1">
                         <span
                           className={`text-sm font-medium ${
                             msg.sender === 'moderator'
-                              ? 'text-emerald-600'
+                              ? 'text-success'
                               : msg.sender === 'buyer'
-                                ? 'text-red-600'
-                                : 'text-blue-600'
+                                ? 'text-error'
+                                : 'text-info'
                           }`}
                         >
                           {msg.senderName}
@@ -457,9 +457,9 @@ export default function CaseDetailPage() {
 
                 {isResolved ? (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-4">
                       <svg
-                        className="w-8 h-8 text-emerald-600"
+                        className="w-8 h-8 text-success"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -492,8 +492,8 @@ export default function CaseDetailPage() {
                             className={`w-full p-2 text-sm rounded-lg border transition-colors text-left ${
                               buyerPercentage === decision.buyer &&
                               vendorPercentage === decision.vendor
-                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                                : 'border-border hover:border-emerald-300'
+                                ? 'border-primary bg-primary/8 text-primary'
+                                : 'border-border hover:border-primary/30'
                             }`}
                           >
                             {decision.label}
@@ -535,13 +535,13 @@ export default function CaseDetailPage() {
                       </div>
 
                       {/* Visual Bar */}
-                      <div className="mt-3 h-4 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex">
+                      <div className="mt-3 h-4 rounded-full overflow-hidden bg-muted flex">
                         <div
-                          className="bg-red-500 transition-all"
+                          className="bg-error transition-all"
                           style={{ width: `${buyerPercentage}%` }}
                         />
                         <div
-                          className="bg-blue-500 transition-all"
+                          className="bg-info transition-all"
                           style={{ width: `${vendorPercentage}%` }}
                         />
                       </div>
@@ -566,7 +566,7 @@ export default function CaseDetailPage() {
                         value={resolution}
                         onChange={e => setResolution(e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                         placeholder="Explain your decision..."
                       />
                     </div>

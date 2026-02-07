@@ -40,8 +40,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-lg',
-          'bg-muted hover:bg-slate-200 dark:hover:bg-slate-700',
-          'text-slate-700 dark:text-slate-200 text-sm font-medium',
+          'bg-muted hover:bg-muted/80',
+          'text-foreground text-sm font-medium',
           'transition-colors duration-200',
           compact && 'px-2'
         )}
@@ -84,15 +84,14 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                   'w-full flex items-center gap-3 px-4 py-2 text-left',
                   'hover:bg-surface-hover',
                   'transition-colors duration-150',
-                  isActive &&
-                    'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                  isActive && 'bg-primary/15 text-primary'
                 )}
               >
                 <span className="text-lg">{info.flag}</span>
                 <span className="text-sm font-medium">{info.nativeName}</span>
                 {isActive && (
                   <svg
-                    className="w-4 h-4 ml-auto text-emerald-500"
+                    className="w-4 h-4 ml-auto text-primary"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

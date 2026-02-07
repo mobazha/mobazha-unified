@@ -44,7 +44,7 @@ function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md
       {[...Array(5)].map((_, i) => (
         <svg
           key={i}
-          className={`${sizeClass} ${i < Math.floor(rating) ? 'text-amber-500' : 'text-muted-foreground/40'}`}
+          className={`${sizeClass} ${i < Math.floor(rating) ? 'text-warning' : 'text-muted-foreground/40'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -979,7 +979,7 @@ export function ProductDetail({
                       )}
                       {vendor?.stats && (
                         <HStack gap="xs" align="center" className="mt-0.5">
-                          <span className="text-amber-500 text-sm">★</span>
+                          <span className="text-warning text-sm">★</span>
                           <span className="text-xs sm:text-sm text-muted-foreground">
                             {vendor.stats.averageRating?.toFixed(1) || '0'} (
                             {vendor.stats.ratingCount || 0} {t('product.reviews')})

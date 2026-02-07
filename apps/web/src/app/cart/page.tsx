@@ -279,7 +279,7 @@ export default function CartPage() {
         rightAction={
           <button
             onClick={handleClearCart}
-            className="text-muted-foreground hover:text-red-500 font-medium text-xs touch-feedback"
+            className="text-muted-foreground hover:text-error font-medium text-xs touch-feedback"
           >
             {t('cart.clear')}
           </button>
@@ -298,7 +298,7 @@ export default function CartPage() {
             </div>
             <button
               onClick={handleClearCart}
-              className="text-muted-foreground hover:text-red-500 font-medium text-sm touch-feedback"
+              className="text-muted-foreground hover:text-error font-medium text-sm touch-feedback"
             >
               {t('cart.clear')}
             </button>
@@ -310,10 +310,8 @@ export default function CartPage() {
           </p>
 
           {/* P2P 提示 */}
-          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg">
-            <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium">
-              {t('cart.p2pNotice')}
-            </p>
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-warning/15 border border-warning/20 rounded-lg">
+            <p className="text-xs sm:text-sm text-warning font-medium">{t('cart.p2pNotice')}</p>
           </div>
 
           {/* Cart Items - 每个商户独立 */}

@@ -108,9 +108,9 @@ export const OrderChat: React.FC<OrderChatProps> = ({
       case 'seller':
         return 'text-primary';
       case 'buyer':
-        return 'text-blue-600';
+        return 'text-info';
       case 'moderator':
-        return 'text-purple-600';
+        return 'text-primary';
       default:
         return 'text-muted-foreground';
     }
@@ -163,7 +163,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
             <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
               {t('order.chat.discussion')}
               {unreadCount > 0 && (
-                <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                <span className="px-1.5 py-0.5 bg-error text-white text-xs rounded-full">
                   {unreadCount}
                 </span>
               )}
@@ -209,7 +209,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 max-h-80 min-h-[200px]">
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-8">
@@ -267,7 +267,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder={t('chat.typeMessage')}
-            className="flex-1 px-3 py-2 bg-muted rounded-full text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="flex-1 px-3 py-2 bg-muted rounded-full text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isSending}
           />
           <Button

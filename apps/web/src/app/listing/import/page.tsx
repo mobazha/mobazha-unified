@@ -365,21 +365,21 @@ export default function ImportListingsPage() {
                       {t('importListings.total') || 'Total'}
                     </p>
                   </div>
-                  <div className="p-4 bg-green-500/10 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-green-600">{importResult.created}</p>
+                  <div className="p-4 bg-success/15 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-success">{importResult.created}</p>
                     <p className="text-sm text-muted-foreground">
                       {t('importListings.created') || 'Created'}
                     </p>
                   </div>
-                  <div className="p-4 bg-yellow-500/10 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-yellow-600">{importResult.updated}</p>
+                  <div className="p-4 bg-warning/15 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-warning">{importResult.updated}</p>
                     <p className="text-sm text-muted-foreground">
                       {t('importListings.updated') || 'Updated'}
                     </p>
                   </div>
                   {importResult.failed > 0 && (
-                    <div className="p-4 bg-red-500/10 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-red-600">{importResult.failed}</p>
+                    <div className="p-4 bg-error/15 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-error">{importResult.failed}</p>
                       <p className="text-sm text-muted-foreground">
                         {t('importListings.failed') || 'Failed'}
                       </p>
@@ -389,8 +389,8 @@ export default function ImportListingsPage() {
 
                 {/* Error List */}
                 {importResult.errors && importResult.errors.length > 0 && (
-                  <div className="bg-red-500/10 rounded-lg p-4 mb-4">
-                    <h3 className="text-sm font-medium mb-2 text-red-600">
+                  <div className="bg-error/15 rounded-lg p-4 mb-4">
+                    <h3 className="text-sm font-medium mb-2 text-error">
                       {t('importListings.errorDetails') || 'Error Details'}
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -400,7 +400,7 @@ export default function ImportListingsPage() {
                             {t('importListings.row') || 'Row'} {err.row}
                             {err.title && ` - ${err.title}`}:
                           </span>
-                          <span className="text-red-600 ml-1">{err.error}</span>
+                          <span className="text-error ml-1">{err.error}</span>
                         </div>
                       ))}
                     </div>
@@ -434,7 +434,7 @@ export default function ImportListingsPage() {
                                   key={item.slug}
                                   className="text-sm text-muted-foreground flex items-center gap-1"
                                 >
-                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                  <CheckCircle className="h-3 w-3 text-success" />
                                   {item.title}
                                 </p>
                               ))}
@@ -452,7 +452,7 @@ export default function ImportListingsPage() {
                                   key={item.slug}
                                   className="text-sm text-muted-foreground flex items-center gap-1"
                                 >
-                                  <CheckCircle className="h-3 w-3 text-yellow-600" />
+                                  <CheckCircle className="h-3 w-3 text-warning" />
                                   {item.title}
                                 </p>
                               ))}

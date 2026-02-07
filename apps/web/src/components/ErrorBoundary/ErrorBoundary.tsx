@@ -73,8 +73,8 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-[400px] flex items-center justify-center p-6">
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              <div className="mx-auto w-16 h-16 bg-error/15 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-error" />
               </div>
               <CardTitle className="text-xl">出错了</CardTitle>
               <CardDescription>
@@ -84,22 +84,18 @@ export class ErrorBoundary extends Component<Props, State> {
             <CardContent className="space-y-4">
               {/* 错误详情（仅开发环境） */}
               {showDetails && error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg overflow-auto">
+                <div className="p-4 bg-error/15 border border-error/30 rounded-lg overflow-auto">
                   <div className="flex items-center gap-2 mb-2">
-                    <Bug className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    <span className="text-sm font-medium text-red-800 dark:text-red-300">
+                    <Bug className="w-4 h-4 text-error" />
+                    <span className="text-sm font-medium text-error">
                       错误详情（仅开发环境可见）
                     </span>
                   </div>
-                  <p className="text-sm text-red-700 dark:text-red-400 font-mono break-all">
-                    {error.message}
-                  </p>
+                  <p className="text-sm text-error font-mono break-all">{error.message}</p>
                   {errorInfo && (
                     <details className="mt-2">
-                      <summary className="text-xs text-red-600 dark:text-red-400 cursor-pointer">
-                        组件堆栈
-                      </summary>
-                      <pre className="mt-2 text-xs text-red-600 dark:text-red-400 whitespace-pre-wrap">
+                      <summary className="text-xs text-error cursor-pointer">组件堆栈</summary>
+                      <pre className="mt-2 text-xs text-error whitespace-pre-wrap">
                         {errorInfo.componentStack}
                       </pre>
                     </details>

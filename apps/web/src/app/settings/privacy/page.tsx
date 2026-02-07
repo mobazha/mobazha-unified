@@ -175,7 +175,7 @@ export default function PrivacySettingsPage() {
                           setSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))
                         }
                         rows={3}
-                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                       />
                     </div>
                   )}
@@ -194,7 +194,7 @@ export default function PrivacySettingsPage() {
                   <HStack justify="between" align="center" className="mb-6">
                     <h2 className="text-xl font-bold text-foreground">Access Requests</h2>
                     {pendingRequestsCount > 0 && (
-                      <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1 bg-warning/15 text-warning rounded-full text-sm font-medium">
                         {pendingRequestsCount} pending
                       </span>
                     )}
@@ -260,9 +260,9 @@ export default function PrivacySettingsPage() {
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <HStack gap="md" align="center">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center">
                         <svg
-                          className="w-5 h-5 text-blue-600"
+                          className="w-5 h-5 text-info"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -297,9 +297,9 @@ export default function PrivacySettingsPage() {
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <HStack gap="md" align="center">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
                         <svg
-                          className="w-5 h-5 text-purple-600"
+                          className="w-5 h-5 text-primary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"

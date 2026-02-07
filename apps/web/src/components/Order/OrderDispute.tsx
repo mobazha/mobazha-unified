@@ -41,15 +41,15 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
   const getStatusColor = (status: DisputeInfo['status']) => {
     switch (status) {
       case 'open':
-        return 'bg-red-100 text-red-700 border-red-300';
+        return 'bg-error/15 text-error border-error/20';
       case 'in_progress':
-        return 'bg-amber-100 text-amber-700 border-amber-300';
+        return 'bg-warning/15 text-warning border-warning/20';
       case 'decided':
-        return 'bg-blue-100 text-blue-700 border-blue-300';
+        return 'bg-info/15 text-info border-info/20';
       case 'resolved':
         return 'bg-primary/10 text-primary border-primary/30';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-300';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -82,18 +82,11 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
   };
 
   return (
-    <Card
-      className={`p-4 sm:p-6 border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 ${className}`}
-    >
+    <Card className={`p-4 sm:p-6 border-error/20 bg-error/8 ${className}`}>
       {/* Header */}
       <HStack justify="between" align="start" className="mb-4">
         <div className="flex items-center gap-2">
-          <svg
-            className="w-5 h-5 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -128,7 +121,7 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
               <span className="text-muted-foreground">
                 {t('order.disputeDisplay.timeRemaining')}
               </span>
-              <span className="text-amber-600 font-medium">
+              <span className="text-warning font-medium">
                 {getTimeRemaining(dispute.expiresAt)}
               </span>
             </HStack>
@@ -136,14 +129,14 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
         </div>
 
         {/* Claim */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-border">
+        <div className="bg-card rounded-lg p-3 border border-border">
           <p className="text-xs text-muted-foreground mb-1">{t('order.disputeDisplay.claim')}</p>
           <p className="text-sm text-foreground">{dispute.claim}</p>
         </div>
 
         {/* Response */}
         {dispute.response && (
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-border">
+          <div className="bg-card rounded-lg p-3 border border-border">
             <p className="text-xs text-muted-foreground mb-1">
               {t('order.disputeDisplay.response')}
             </p>
@@ -200,10 +193,8 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
 
         {/* Info for different roles */}
         {userRole === 'moderator' && dispute.status !== 'resolved' && (
-          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-            <p className="text-xs text-blue-700 dark:text-blue-400">
-              {t('order.disputeDisplay.moderatorHint')}
-            </p>
+          <div className="bg-info/8 rounded-lg p-3 border border-info/20">
+            <p className="text-xs text-info">{t('order.disputeDisplay.moderatorHint')}</p>
           </div>
         )}
       </VStack>

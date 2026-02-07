@@ -135,7 +135,7 @@ export function ProductBottomBar({
             <span className="text-[9px] text-muted-foreground leading-tight">{t('nav.cart')}</span>
             {/* 购物车徽章 */}
             {cartItemCount > 0 && (
-              <span className="absolute top-0 right-0.5 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-medium rounded-full flex items-center justify-center px-0.5">
+              <span className="absolute top-0 right-0.5 min-w-[16px] h-[16px] bg-destructive text-white text-[9px] font-medium rounded-full flex items-center justify-center px-0.5">
                 {cartItemCount > 99 ? '99+' : cartItemCount}
               </span>
             )}
@@ -147,7 +147,7 @@ export function ProductBottomBar({
             className="flex flex-col items-center justify-center w-10 h-10 touch-feedback active:bg-muted/50 rounded-lg"
           >
             <svg
-              className={`w-5 h-5 ${isWishlist ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`}
+              className={`w-5 h-5 ${isWishlist ? 'text-warning fill-warning' : 'text-muted-foreground'}`}
               fill={isWishlist ? 'currentColor' : 'none'}
               stroke="currentColor"
               viewBox="0 0 24 24"

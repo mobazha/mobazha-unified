@@ -144,22 +144,20 @@ export const RwaTokenFulfill: React.FC<RwaTokenFulfillProps> = ({
 
       {/* Timer */}
       <div
-        className={`text-center p-3 rounded-lg mb-6 ${isExpired ? 'bg-red-100 dark:bg-red-950/30' : 'bg-amber-100 dark:bg-amber-950/30'}`}
+        className={`text-center p-3 rounded-lg mb-6 ${isExpired ? 'bg-error/15' : 'bg-warning/15'}`}
       >
         <p className="text-xs text-muted-foreground mb-1">{t('order.rwa.timeRemaining')}</p>
-        <p
-          className={`text-2xl font-mono font-bold ${isExpired ? 'text-red-600' : 'text-amber-600'}`}
-        >
+        <p className={`text-2xl font-mono font-bold ${isExpired ? 'text-error' : 'text-warning'}`}>
           {timeRemaining}
         </p>
       </div>
 
       {/* Wallet Warning */}
       {!isWalletConnected && (
-        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
+        <div className="bg-warning/15 border border-warning/20 rounded-lg p-3 mb-4">
           <HStack gap="sm" align="start">
             <svg
-              className="w-5 h-5 text-amber-600 flex-shrink-0"
+              className="w-5 h-5 text-warning flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -171,9 +169,7 @@ export const RwaTokenFulfill: React.FC<RwaTokenFulfillProps> = ({
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <p className="text-sm text-amber-800 dark:text-amber-200">
-              {t('order.rwa.walletNotConnected')}
-            </p>
+            <p className="text-sm text-warning">{t('order.rwa.walletNotConnected')}</p>
           </HStack>
         </div>
       )}
@@ -273,8 +269,8 @@ export const RwaTokenFulfill: React.FC<RwaTokenFulfillProps> = ({
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          <div className="bg-error/15 border border-error/20 rounded-lg p-3">
+            <p className="text-sm text-error">{error}</p>
           </div>
         )}
 
@@ -329,11 +325,11 @@ export const RwaTokenFulfill: React.FC<RwaTokenFulfillProps> = ({
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              <span className="text-sm font-medium text-success">
                 {t('order.rwa.transferSuccess')}
               </span>
             </HStack>
-            <div className="bg-white dark:bg-gray-900 rounded p-2">
+            <div className="bg-card rounded p-2">
               <p className="text-xs text-muted-foreground mb-1">{t('order.rwa.transactionHash')}</p>
               <HStack justify="between" align="center">
                 <span className="text-xs font-mono text-foreground truncate max-w-[180px]">

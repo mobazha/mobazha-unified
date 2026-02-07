@@ -25,14 +25,9 @@ export function RevenueInfoCard({
 
   if (compact) {
     return (
-      <div
-        className={cn(
-          'p-3 bg-pink-50 dark:bg-pink-950/30 rounded-lg border border-pink-200 dark:border-pink-800',
-          className
-        )}
-      >
+      <div className={cn('p-3 bg-primary/8 rounded-lg border border-primary/20', className)}>
         <div className="flex items-center justify-between gap-4 text-sm">
-          <div className="flex items-center gap-2 text-pink-700 dark:text-pink-400">
+          <div className="flex items-center gap-2 text-primary">
             <TrendingUp className="w-4 h-4" />
             <span className="font-medium">{performance.dividendRate} 年化</span>
           </div>
@@ -46,43 +41,34 @@ export function RevenueInfoCard({
   }
 
   return (
-    <div
-      className={cn(
-        'p-4 bg-pink-50 dark:bg-pink-950/30 rounded-lg border border-pink-200 dark:border-pink-800',
-        className
-      )}
-    >
-      <h5 className="font-medium text-pink-700 dark:text-pink-400 mb-3 flex items-center gap-2">
+    <div className={cn('p-4 bg-primary/8 rounded-lg border border-primary/20', className)}>
+      <h5 className="font-medium text-primary mb-3 flex items-center gap-2">
         <TrendingUp className="w-4 h-4" />
         {t('listing.rwa.revenueInfo') || '收益信息'}
       </h5>
       <div className="grid grid-cols-3 gap-3">
-        <div className="text-center p-2 bg-white dark:bg-pink-900/30 rounded-lg">
+        <div className="text-center p-2 bg-card rounded-lg">
           <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
             <Coins className="w-3 h-3" />
             {t('listing.rwa.totalShares') || '总份额'}
           </div>
-          <div className="font-semibold text-pink-700 dark:text-pink-400">
+          <div className="font-semibold text-primary">
             {performance.totalShares.toLocaleString()}
           </div>
         </div>
-        <div className="text-center p-2 bg-white dark:bg-pink-900/30 rounded-lg">
+        <div className="text-center p-2 bg-card rounded-lg">
           <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
             <TrendingUp className="w-3 h-3" />
             {t('listing.rwa.annualRate') || '年化收益'}
           </div>
-          <div className="font-semibold text-pink-700 dark:text-pink-400">
-            {performance.dividendRate}
-          </div>
+          <div className="font-semibold text-primary">{performance.dividendRate}</div>
         </div>
-        <div className="text-center p-2 bg-white dark:bg-pink-900/30 rounded-lg">
+        <div className="text-center p-2 bg-card rounded-lg">
           <div className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
             <Calendar className="w-3 h-3" />
             {t('listing.rwa.settlementPeriod') || '结算周期'}
           </div>
-          <div className="font-semibold text-pink-700 dark:text-pink-400">
-            {performance.settlementPeriod}
-          </div>
+          <div className="font-semibold text-primary">{performance.settlementPeriod}</div>
         </div>
       </div>
     </div>

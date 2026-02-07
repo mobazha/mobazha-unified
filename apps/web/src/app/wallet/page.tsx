@@ -16,7 +16,7 @@ const mockBalances = [
     balanceUSD: 22879.43,
     change24h: 2.34,
     changeUSD: 523.45,
-    color: 'bg-orange-500',
+    color: 'bg-warning',
     icon: (
       <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
         <path d="M11.5 11.5v-2h1.25c.69 0 1.25.56 1.25 1.25v.5c0 .14-.11.25-.25.25H11.5zm0 1h1.75c.14 0 .25.11.25.25v.5c0 .69-.56 1.25-1.25 1.25H11.5v-2z" />
@@ -35,7 +35,7 @@ const mockBalances = [
     balanceUSD: 7523.87,
     change24h: -1.23,
     changeUSD: -93.54,
-    color: 'bg-blue-500',
+    color: 'bg-info',
     icon: (
       <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 1.5l-7 11.5 7 4 7-4-7-11.5zm0 13.5l-7-4 7 11.5 7-11.5-7 4z" />
@@ -63,7 +63,7 @@ const mockBalances = [
     balanceUSD: 141.5,
     change24h: 3.21,
     changeUSD: 4.39,
-    color: 'bg-yellow-500',
+    color: 'bg-warning',
     icon: <span className="text-white font-bold text-xs sm:text-base">Z</span>,
   },
 ];
@@ -84,7 +84,7 @@ export default function WalletPage() {
         <Container size="sm">
           {/* Portfolio Summary Card */}
           <Card className="mb-6 overflow-hidden">
-            <div className="relative p-4 sm:p-8 bg-gradient-to-br from-emerald-600 to-emerald-800 text-center">
+            <div className="relative p-4 sm:p-8 bg-success text-center">
               <div className="absolute inset-0 bg-black/10" />
               <div className="relative">
                 <p className="text-primary-foreground/80 text-xs sm:text-sm mb-1">
@@ -94,7 +94,7 @@ export default function WalletPage() {
                   ${totalBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </h1>
                 <p
-                  className={`text-xs sm:text-sm ${totalChangeUSD >= 0 ? 'text-primary-foreground/70' : 'text-red-200'}`}
+                  className={`text-xs sm:text-sm ${totalChangeUSD >= 0 ? 'text-primary-foreground/70' : 'text-error/80'}`}
                 >
                   {totalChangeUSD >= 0 ? '▲' : '▼'} {totalChangeUSD >= 0 ? '+' : ''}$
                   {Math.abs(totalChangeUSD).toFixed(2)} ({totalChangePercent >= 0 ? '+' : ''}

@@ -17,7 +17,7 @@ export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
 
       {/* Offline Indicator */}
       {showOffline && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white text-center py-2 px-4 text-sm font-medium animate-in slide-in-from-top duration-300">
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-warning text-white text-center py-2 px-4 text-sm font-medium animate-in slide-in-from-top duration-300">
           <div className="flex items-center justify-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -35,10 +35,10 @@ export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
       {/* Update Available */}
       {updateAvailable && (
         <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
-          <Card className="shadow-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30">
+          <Card className="shadow-xl border border-primary/30 bg-primary/15">
             <div className="p-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                   <svg
                     className="w-5 h-5 text-white"
                     fill="none"
@@ -54,10 +54,8 @@ export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">
-                    Update Available
-                  </h3>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+                  <h3 className="font-semibold text-primary">Update Available</h3>
+                  <p className="text-sm text-primary/80 mt-1">
                     A new version of Mobazha is ready. Refresh to update.
                   </p>
                 </div>

@@ -79,8 +79,8 @@ export default function ChatEncryptionSettingsPage() {
       <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.chatEncryption')}</h1>
 
       {/* Encryption Status */}
-      <Card className="p-4 mb-4 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900">
-        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+      <Card className="p-4 mb-4 bg-success/8 border-success/20">
+        <div className="flex items-center gap-2 text-success">
           <Shield className="w-5 h-5" />
           <span className="font-medium text-sm">{t('settingsModal.e2eAvailable')}</span>
         </div>
@@ -129,7 +129,7 @@ export default function ChatEncryptionSettingsPage() {
           <p className="text-xs text-muted-foreground">{t('settingsModal.keyBackupDesc')}</p>
         </div>
         {lastBackup && (
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
+          <div className="flex items-center gap-2 text-success mb-2">
             <Check className="w-4 h-4" />
             <span className="text-sm">{t('settingsModal.backupExists')}</span>
           </div>

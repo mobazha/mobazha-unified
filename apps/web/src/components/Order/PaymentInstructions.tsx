@@ -118,7 +118,7 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
             {t('order.paymentInstructions.timeRemaining')}
           </p>
           <p
-            className={`text-2xl font-mono font-bold ${timeRemaining === t('order.paymentInstructions.expired') ? 'text-red-600' : 'text-foreground'}`}
+            className={`text-2xl font-mono font-bold ${timeRemaining === t('order.paymentInstructions.expired') ? 'text-error' : 'text-foreground'}`}
           >
             {timeRemaining}
           </p>
@@ -182,11 +182,11 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
 
       {/* QR Code */}
       <div className="flex justify-center mb-6">
-        <div className="p-3 bg-white rounded-xl">
+        <div className="p-3 bg-card rounded-xl">
           {/* Placeholder for QR code - in production, use a QR library */}
-          <div className="w-40 h-40 sm:w-48 sm:h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+          <div className="w-40 h-40 sm:w-48 sm:h-48 bg-muted rounded-lg flex items-center justify-center">
             <svg
-              className="w-16 h-16 text-gray-300"
+              className="w-16 h-16 text-muted-foreground/30"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -277,7 +277,7 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
       {/* Loading indicator */}
       {isLoading && (
         <div className="flex items-center justify-center gap-2 py-4">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600" />
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
           <span className="text-sm text-muted-foreground">
             {t('order.paymentInstructions.waitingPayment')}
           </span>
@@ -285,10 +285,10 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
       )}
 
       {/* Warning */}
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-6">
+      <div className="bg-warning/8 border border-warning/20 rounded-lg p-3 mb-6">
         <HStack gap="sm" align="start">
           <svg
-            className="w-5 h-5 text-amber-600 flex-shrink-0"
+            className="w-5 h-5 text-warning flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -300,7 +300,7 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <div className="text-xs text-amber-800 dark:text-amber-200">
+          <div className="text-xs text-warning">
             <p className="font-medium mb-1">{t('order.paymentInstructions.important')}</p>
             <ul className="list-disc list-inside space-y-0.5">
               <li>{t('order.paymentInstructions.warning1')}</li>

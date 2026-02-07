@@ -74,8 +74,8 @@ export function RwaFulfillFlow({
       case 'waiting':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-              <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-warning/15 flex items-center justify-center">
+              <Clock className="w-8 h-8 text-warning" />
             </div>
             <h3 className="font-semibold text-lg">
               {t('rwa.fulfill.waitingBuyer') || '等待买家授权'}
@@ -94,8 +94,8 @@ export function RwaFulfillFlow({
       case 'ready':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <Wallet className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-success/15 flex items-center justify-center">
+              <Wallet className="w-8 h-8 text-success" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.fulfill.readyToShip') || '可以发货'}</h3>
             <p className="text-sm text-muted-foreground">
@@ -131,8 +131,8 @@ export function RwaFulfillFlow({
       case 'completed':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-success/15 flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-success" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.fulfill.completed') || '发货完成'}</h3>
             <p className="text-sm text-muted-foreground">
@@ -144,11 +144,11 @@ export function RwaFulfillFlow({
       case 'error':
         return (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-error/15 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-error" />
             </div>
             <h3 className="font-semibold text-lg">{t('rwa.fulfill.error') || '执行失败'}</h3>
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-error">{error}</p>
             <Button onClick={() => setStep('ready')}>{t('common.retry') || '重试'}</Button>
           </div>
         );

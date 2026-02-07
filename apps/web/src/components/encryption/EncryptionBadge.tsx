@@ -24,8 +24,8 @@ const statusConfig = {
     icon: Lock,
     label: '已加密',
     tooltip: '此内容已端到端加密，只有授权用户可以查看',
-    className: 'text-amber-500',
-    bgClass: 'bg-amber-100 dark:bg-amber-900/30',
+    className: 'text-warning',
+    bgClass: 'bg-warning/15',
   },
   decrypted: {
     icon: LockOpen,
@@ -38,22 +38,22 @@ const statusConfig = {
     icon: Loader2,
     label: '解密中',
     tooltip: '正在解密内容...',
-    className: 'text-blue-500 animate-spin',
-    bgClass: 'bg-blue-100 dark:bg-blue-900/30',
+    className: 'text-info animate-spin',
+    bgClass: 'bg-info/15',
   },
   failed: {
     icon: AlertTriangle,
     label: '解密失败',
     tooltip: '无法解密此内容，您可能没有访问权限',
-    className: 'text-red-500',
-    bgClass: 'bg-red-100 dark:bg-red-900/30',
+    className: 'text-error',
+    bgClass: 'bg-error/15',
   },
   none: {
     icon: ShieldOff,
     label: '未加密',
     tooltip: '此内容未加密',
-    className: 'text-gray-400',
-    bgClass: 'bg-gray-100 dark:bg-gray-800',
+    className: 'text-muted-foreground',
+    bgClass: 'bg-muted',
   },
 };
 
@@ -102,7 +102,7 @@ export function LockIcon({
   className?: string;
 }) {
   const Icon = locked ? Lock : LockOpen;
-  const colorClass = locked ? 'text-amber-500' : 'text-primary';
+  const colorClass = locked ? 'text-warning' : 'text-primary';
 
   return <Icon className={cn(sizeClasses[size], colorClass, className)} />;
 }

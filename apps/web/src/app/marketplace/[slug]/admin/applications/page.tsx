@@ -150,9 +150,9 @@ export default function MarketplaceApplicationsPage() {
   };
 
   const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    approved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    pending: 'bg-warning/15 text-warning',
+    approved: 'bg-success/15 text-success',
+    rejected: 'bg-error/15 text-error',
   };
 
   if (loading) {
@@ -161,9 +161,9 @@ export default function MarketplaceApplicationsPage() {
         <Header />
         <Container className="py-8">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-            <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
-            <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="h-8 bg-muted rounded w-1/3" />
+            <div className="h-32 bg-muted rounded" />
+            <div className="h-32 bg-muted rounded" />
           </div>
         </Container>
         <Footer />
@@ -195,14 +195,14 @@ export default function MarketplaceApplicationsPage() {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Seller Applications</h1>
-                <p className="text-slate-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Manage seller applications for your marketplace
                 </p>
               </div>
             </HStack>
             <Link
               href={`/marketplace/${slug}/admin`}
-              className="text-emerald-600 hover:text-emerald-700 text-sm"
+              className="text-primary hover:text-primary/80 text-sm"
             >
               ← Back to Admin
             </Link>
@@ -217,8 +217,8 @@ export default function MarketplaceApplicationsPage() {
                   onClick={() => setFilter(status)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === status
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -256,7 +256,7 @@ export default function MarketplaceApplicationsPage() {
                             {app.status}
                           </span>
                         </HStack>
-                        <p className="text-sm text-slate-500 font-mono">
+                        <p className="text-sm text-muted-foreground font-mono">
                           {app.applicantPeerID.slice(0, 12)}...
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -319,7 +319,7 @@ export default function MarketplaceApplicationsPage() {
 
                   {app.reviewNote && (
                     <div className="mt-4 p-3 bg-muted rounded-lg">
-                      <p className="text-xs text-slate-500 mb-1">Review Note:</p>
+                      <p className="text-xs text-muted-foreground mb-1">Review Note:</p>
                       <p className="text-sm text-muted-foreground">{app.reviewNote}</p>
                     </div>
                   )}
@@ -347,7 +347,7 @@ export default function MarketplaceApplicationsPage() {
                 value={reviewNote}
                 onChange={e => setReviewNote(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Add a note for your decision..."
               />
             </div>
@@ -360,7 +360,7 @@ export default function MarketplaceApplicationsPage() {
                 variant="outline"
                 onClick={() => handleReject(selectedApp.id, reviewNote)}
                 disabled={processingId === selectedApp.id}
-                className="border-red-500 text-red-500 hover:bg-red-50"
+                className="border-error text-error hover:bg-error/10"
               >
                 Reject
               </Button>

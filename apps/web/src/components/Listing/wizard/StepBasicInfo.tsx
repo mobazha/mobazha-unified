@@ -213,7 +213,9 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                 <div className="flex items-center gap-2 mb-1">
                   <div
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      formData.rwaTradeMode === 'instant' ? 'border-primary' : 'border-muted-foreground'
+                      formData.rwaTradeMode === 'instant'
+                        ? 'border-primary'
+                        : 'border-muted-foreground'
                     }`}
                   >
                     {formData.rwaTradeMode === 'instant' && (
@@ -242,7 +244,9 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                 <div className="flex items-center gap-2 mb-1">
                   <div
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      formData.rwaTradeMode === 'confirm_required' ? 'border-primary' : 'border-muted-foreground'
+                      formData.rwaTradeMode === 'confirm_required'
+                        ? 'border-primary'
+                        : 'border-muted-foreground'
                     }`}
                   >
                     {formData.rwaTradeMode === 'confirm_required' && (
@@ -287,7 +291,7 @@ export function StepBasicInfo({ formData, updateField, errors, onNext, onPrev }:
                     </button>
                   ))}
                 </div>
-                <p className="text-sm text-amber-600 mt-2">
+                <p className="text-sm text-warning mt-2">
                   ⚠️ {t('listing.escrowTimeoutWarning') || '超时未确认，资金将自动退还给买家'}
                 </p>
               </div>

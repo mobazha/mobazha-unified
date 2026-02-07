@@ -200,11 +200,11 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
   }
 
   return (
-    <div className="mb-4 p-3 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-700/30 rounded-lg">
+    <div className="mb-4 p-3 bg-warning/8 border border-warning/20 rounded-lg">
       <div className="flex items-start gap-2 mb-2">
-        <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-800/30 flex items-center justify-center flex-shrink-0">
+        <div className="w-6 h-6 rounded-full bg-warning/15 flex items-center justify-center flex-shrink-0">
           <svg
-            className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400"
+            className="w-3.5 h-3.5 text-warning"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -217,10 +217,10 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
             />
           </svg>
         </div>
-        <p className="flex-1 text-[11px] sm:text-xs text-amber-700 dark:text-amber-300 leading-snug">
+        <p className="flex-1 text-[11px] sm:text-xs text-warning leading-snug">
           {t('order.dispute.escrowHint', { time: timeoutDetails.timeRemainingStr })}
           <span
-            className="inline-flex items-center ml-1 text-amber-500 cursor-help"
+            className="inline-flex items-center ml-1 text-warning cursor-help"
             title={t('order.disputeHelpTip')}
           >
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -652,7 +652,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 {/* 类型标签和单价分行显示 */}
                 <div className="flex flex-col gap-1 mt-1">
                   {typeLabel && (
-                    <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded w-fit">
+                    <span className="text-[10px] text-info bg-info/8 px-1.5 py-0.5 rounded w-fit">
                       {typeLabel}
                     </span>
                   )}
@@ -704,7 +704,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       {/* 类型标签和单价分行显示 */}
                       <div className="flex flex-col gap-1 mt-1">
                         {typeLabel && (
-                          <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded w-fit">
+                          <span className="text-[10px] text-info bg-info/8 px-1.5 py-0.5 rounded w-fit">
                             {typeLabel}
                           </span>
                         )}
@@ -799,16 +799,14 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
         {/* Dispute Banner */}
         {order.dispute && (
-          <div className="p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-4">
+          <div className="p-3 sm:p-4 bg-error/8 border border-error/20 rounded-lg mb-4">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-red-700 dark:text-red-400 mb-0.5 text-sm sm:text-base">
+                <h3 className="font-semibold text-error mb-0.5 text-sm sm:text-base">
                   Dispute Open
                 </h3>
-                <p className="text-xs sm:text-sm text-red-600 dark:text-red-300">
-                  {order.dispute.claim}
-                </p>
-                <p className="text-[10px] sm:text-xs text-red-500 mt-0.5">
+                <p className="text-xs sm:text-sm text-error">{order.dispute.claim}</p>
+                <p className="text-[10px] sm:text-xs text-error mt-0.5">
                   Initiated by {order.dispute.initiator} • Status: {order.dispute.status}
                 </p>
               </div>
@@ -949,22 +947,18 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
             // 确定卡片样式类
             const cardColorClass = isReleased
-              ? 'from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border-sky-200 dark:border-sky-700/50'
+              ? 'from-info/8 to-info/8 border-info/20'
               : isExpired
-                ? 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700/50'
-                : 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50';
+                ? 'from-error/8 to-error/8 border-error/20'
+                : 'from-success/8 to-success/8 border-success/20';
 
             const textColorClass = isReleased
-              ? 'text-sky-800 dark:text-sky-300'
+              ? 'text-info'
               : isExpired
-                ? 'text-red-800 dark:text-red-300'
-                : 'text-emerald-800 dark:text-emerald-300';
+                ? 'text-error'
+                : 'text-success';
 
-            const badgeColorClass = isReleased
-              ? 'bg-sky-500'
-              : isExpired
-                ? 'bg-red-500'
-                : 'bg-emerald-500';
+            const badgeColorClass = isReleased ? 'bg-info' : isExpired ? 'bg-error' : 'bg-success';
 
             const statusText = isReleased
               ? t('order.paymentLocked.released')
@@ -1006,20 +1000,20 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                   {(() => {
                     // 行内颜色类
                     const borderClass = isReleased
-                      ? 'border-sky-100 dark:border-sky-800/50'
+                      ? 'border-info/15'
                       : isExpired
-                        ? 'border-red-100 dark:border-red-800/50'
-                        : 'border-emerald-100 dark:border-emerald-800/50';
+                        ? 'border-error/15'
+                        : 'border-success/15';
                     const labelClass = isReleased
-                      ? 'text-sky-700/70 dark:text-sky-400/70'
+                      ? 'text-info/70'
                       : isExpired
-                        ? 'text-red-700/70 dark:text-red-400/70'
-                        : 'text-emerald-700/70 dark:text-emerald-400/70';
+                        ? 'text-error/70'
+                        : 'text-success/70';
                     const valueClass = isReleased
-                      ? 'text-sky-900 dark:text-sky-200'
+                      ? 'text-info'
                       : isExpired
-                        ? 'text-red-900 dark:text-red-200'
-                        : 'text-emerald-900 dark:text-emerald-200';
+                        ? 'text-error'
+                        : 'text-success';
 
                     return (
                       <>
@@ -1097,14 +1091,12 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 {order.userRole === 'buyer' && !isReleased && (
                   <div
                     className={`mt-3 pt-3 border-t ${
-                      isExpired
-                        ? 'border-red-200 dark:border-red-700/50'
-                        : 'border-emerald-200 dark:border-emerald-700/50'
+                      isExpired ? 'border-error/20' : 'border-success/20'
                     }`}
                   >
                     {isExpired ? (
                       <>
-                        <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+                        <p className="text-sm text-error mb-3">
                           {t('order.paymentLocked.expiredCanClaim')}
                         </p>
                         {displayOrder.onRwaClaimExpired && (
@@ -1120,7 +1112,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-sm mb-3">
+                        <div className="flex items-center gap-2 text-success text-sm mb-3">
                           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle
                               className="opacity-25"
@@ -1154,16 +1146,16 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 )}
                 {/* 资金已释放提示 */}
                 {isReleased && (
-                  <div className="mt-3 pt-3 border-t border-sky-200 dark:border-sky-700/50">
-                    <p className="text-sm text-sky-700 dark:text-sky-400">
+                  <div className="mt-3 pt-3 border-t border-info/20">
+                    <p className="text-sm text-info">
                       {t('order.paymentLocked.fundsReleasedToSeller')}
                     </p>
                   </div>
                 )}
                 {/* 卖家端显示提示 */}
                 {order.userRole === 'seller' && !isExpired && !isReleased && (
-                  <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700/50">
-                    <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                  <div className="mt-3 pt-3 border-t border-success/20">
+                    <p className="text-sm text-success">
                       {t('order.paymentLocked.waitingToConfirm')}
                     </p>
                   </div>
@@ -1506,7 +1498,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               value={disputeReason}
               onChange={e => setDisputeReason(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none mb-3 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none mb-3 text-sm"
               placeholder="Describe your issue..."
             />
             <HStack justify="end" gap="sm">

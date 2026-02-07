@@ -150,7 +150,7 @@ export default function ModeratorSettingsPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-blue-500" />
+                  <Shield className="w-5 h-5 text-info" />
                   <div>
                     <CardTitle className="text-lg">启用仲裁服务</CardTitle>
                     <CardDescription>开启后，您将成为网络中的仲裁人</CardDescription>
@@ -208,7 +208,7 @@ export default function ModeratorSettingsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <DollarSign className="w-5 h-5 text-green-500" />
+                    <DollarSign className="w-5 h-5 text-success" />
                     <div>
                       <CardTitle className="text-lg">费率设置</CardTitle>
                       <CardDescription>设置您的仲裁服务收费标准</CardDescription>
@@ -326,7 +326,7 @@ export default function ModeratorSettingsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-purple-500" />
+                    <Globe className="w-5 h-5 text-primary" />
                     <div>
                       <CardTitle className="text-lg">语言和货币</CardTitle>
                       <CardDescription>设置您支持的语言和接受的加密货币</CardDescription>
@@ -349,7 +349,7 @@ export default function ModeratorSettingsPage() {
                       ))}
                     </div>
                     {settings.languages.length === 0 && (
-                      <p className="text-xs text-red-500 flex items-center gap-1">
+                      <p className="text-xs text-error flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         请至少选择一种语言
                       </p>
@@ -373,7 +373,7 @@ export default function ModeratorSettingsPage() {
                       ))}
                     </div>
                     {settings.acceptedCurrencies.length === 0 && (
-                      <p className="text-xs text-red-500 flex items-center gap-1">
+                      <p className="text-xs text-error flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         请至少选择一种货币
                       </p>
@@ -386,7 +386,7 @@ export default function ModeratorSettingsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-orange-500" />
+                    <FileText className="w-5 h-5 text-warning" />
                     <div>
                       <CardTitle className="text-lg">条款和条件</CardTitle>
                       <CardDescription>

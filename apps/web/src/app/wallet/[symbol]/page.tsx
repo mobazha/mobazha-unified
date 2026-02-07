@@ -30,7 +30,7 @@ const mockAssets: Record<
     balanceUSD: 22879.43,
     change24h: 2.34,
     changeUSD: 523.45,
-    color: 'bg-orange-500',
+    color: 'bg-warning',
     address: '3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5',
   },
   eth: {
@@ -40,7 +40,7 @@ const mockAssets: Record<
     balanceUSD: 7523.87,
     change24h: -1.23,
     changeUSD: -93.54,
-    color: 'bg-blue-500',
+    color: 'bg-info',
     address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38',
   },
   ltc: {
@@ -60,7 +60,7 @@ const mockAssets: Record<
     balanceUSD: 141.5,
     change24h: 3.21,
     changeUSD: 4.39,
-    color: 'bg-yellow-500',
+    color: 'bg-warning',
     address: 't1VShHAhsQc5RVndQLyM3G97U3ChMvtCqgd',
   },
 };
@@ -181,7 +181,7 @@ export default function AssetDetailPage() {
                 ${asset.balanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
               <p
-                className={`text-xs sm:text-sm ${asset.change24h >= 0 ? 'text-primary-foreground/70' : 'text-red-200'}`}
+                className={`text-xs sm:text-sm ${asset.change24h >= 0 ? 'text-primary-foreground/70' : 'text-error/80'}`}
               >
                 {asset.change24h >= 0 ? '▲' : '▼'} {asset.change24h >= 0 ? '+' : ''}
                 {asset.change24h.toFixed(2)}% ({asset.changeUSD >= 0 ? '+' : ''}$

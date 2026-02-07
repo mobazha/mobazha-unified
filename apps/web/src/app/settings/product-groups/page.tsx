@@ -154,11 +154,7 @@ export default function ProductGroupsPage() {
           </HStack>
 
           {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-error/8 text-error p-4 rounded-lg mb-6">{error}</div>}
 
           {/* Loading State */}
           {loading && (
@@ -203,7 +199,7 @@ export default function ProductGroupsPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-500"
+                        className="text-error"
                         onClick={() => setDeleteGroupId(group.id)}
                       >
                         删除
@@ -224,7 +220,7 @@ export default function ProductGroupsPage() {
                     </Link>
                     <Link
                       href={`/settings/product-groups/${group.id}/authorization`}
-                      className="block text-sm text-blue-600 hover:text-blue-700"
+                      className="block text-sm text-primary hover:text-primary"
                     >
                       访问授权 →
                     </Link>
@@ -312,7 +308,7 @@ export default function ProductGroupsPage() {
                       : setNewGroup(prev => ({ ...prev, description: e.target.value }))
                   }
                   rows={2}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   placeholder="描述这个产品组..."
                 />
               </div>
@@ -329,7 +325,7 @@ export default function ProductGroupsPage() {
                         onClick={() => setNewGroup(prev => ({ ...prev, color }))}
                         className={`w-8 h-8 rounded-lg transition-transform ${
                           newGroup.color === color
-                            ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
+                            ? 'ring-2 ring-offset-2 ring-border scale-110'
                             : ''
                         }`}
                         style={{ backgroundColor: color }}
@@ -387,7 +383,7 @@ export default function ProductGroupsPage() {
             <AlertDialogCancel disabled={saving}>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGroupConfirm}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-error hover:bg-error"
               disabled={saving}
             >
               {saving ? '删除中...' : '删除'}

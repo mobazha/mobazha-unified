@@ -17,7 +17,7 @@ function RatingStars({ rating, max = 5 }: { rating: number; max?: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: max }, (_, i) => (
-        <span key={i} className={i < rating ? 'text-yellow-500' : 'text-gray-300'}>
+        <span key={i} className={i < rating ? 'text-warning' : 'text-muted-foreground/40'}>
           ★
         </span>
       ))}

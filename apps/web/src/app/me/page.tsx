@@ -160,8 +160,8 @@ export default function MePage() {
                   href="/orders?tab=purchases"
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                    <ShoppingBag className="w-5 h-5 text-blue-500" />
+                  <div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center">
+                    <ShoppingBag className="w-5 h-5 text-info" />
                   </div>
                   <span className="text-xs">{t('me.purchases')}</span>
                 </Link>
@@ -169,8 +169,8 @@ export default function MePage() {
                   href="/orders?tab=sales"
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
                 >
-                  <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-green-500" />
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                    <Package className="w-5 h-5 text-success" />
                   </div>
                   <span className="text-xs">{t('me.sales')}</span>
                 </Link>
