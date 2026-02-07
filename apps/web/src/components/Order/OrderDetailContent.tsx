@@ -604,11 +604,12 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           };
           const typeLabel = getTypeLabel();
 
-          // 格式化单价显示
+          // 格式化单价显示（使用商品单价，而非订单总额）
           const formatPrice = () => {
-            const price = order.pricingAmount || order.total;
-            if (order.pricingCurrency === 'USD') return `$${price}`;
-            return `${price} ${order.pricingCurrency || ''}`;
+            const price = order.items[0]?.price || order.pricingAmount || order.total;
+            const currency = order.items[0]?.currency || order.pricingCurrency;
+            if (currency === 'USD') return `$${price}`;
+            return `${price} ${currency || ''}`;
           };
 
           const vendorRow = order.vendor?.peerID ? (
@@ -738,18 +739,56 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               {statusLabel || progressState.currentState}
             </span>
           </div>
-          <div className="flex items-end justify-between">
-            <div className="text-xs text-muted-foreground">{t('order.total')}</div>
-            <div className="text-right">
-              <p className="text-sm font-semibold text-foreground">
-                {order.pricingCurrency === 'USD' ? '$' : ''}
-                {order.pricingAmount || order.total}{' '}
-                {order.pricingCurrency && order.pricingCurrency !== 'USD'
-                  ? order.pricingCurrency
-                  : ''}
-              </p>
+          {/* 有运费时拆分显示：小计 + 运费 + 总计 */}
+          {order.shippingAmount ? (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">{t('order.subtotal')}</div>
+                <div className="text-xs text-foreground">
+                  {order.pricingCurrency === 'USD' ? '$' : ''}
+                  {order.items[0]?.price || ''}{' '}
+                  {order.pricingCurrency && order.pricingCurrency !== 'USD'
+                    ? order.pricingCurrency
+                    : ''}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">{t('order.shippingFee')}</div>
+                <div className="text-xs text-foreground">
+                  {order.pricingCurrency === 'USD' ? '$' : ''}
+                  {order.shippingAmount}{' '}
+                  {order.pricingCurrency && order.pricingCurrency !== 'USD'
+                    ? order.pricingCurrency
+                    : ''}
+                </div>
+              </div>
+              <div className="flex items-end justify-between pt-1 border-t border-border/30">
+                <div className="text-xs text-muted-foreground">{t('order.total')}</div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-foreground">
+                    {order.pricingCurrency === 'USD' ? '$' : ''}
+                    {order.pricingAmount || order.total}{' '}
+                    {order.pricingCurrency && order.pricingCurrency !== 'USD'
+                      ? order.pricingCurrency
+                      : ''}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-end justify-between">
+              <div className="text-xs text-muted-foreground">{t('order.total')}</div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-foreground">
+                  {order.pricingCurrency === 'USD' ? '$' : ''}
+                  {order.pricingAmount || order.total}{' '}
+                  {order.pricingCurrency && order.pricingCurrency !== 'USD'
+                    ? order.pricingCurrency
+                    : ''}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 桌面端：保留进度条 */}
@@ -1293,7 +1332,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     {order.shippingOption && (
                       <div>
                         <span className="text-muted-foreground block mb-0.5 text-xs">
-                          {t('order.shipping.option')}
+                          {t('order.shippingOption')}
                         </span>
                         <p className="text-foreground">{order.shippingOption}</p>
                       </div>

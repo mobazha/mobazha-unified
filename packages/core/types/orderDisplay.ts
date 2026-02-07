@@ -151,6 +151,8 @@ export interface DisplayOrder {
   shippingPostalCode?: string;
   /** 国家代码 */
   shippingCountryCode?: string;
+  /** 运费金额（格式化后的定价币种值，如 "0.10"） */
+  shippingAmount?: string;
   /** 配送方式名称 */
   shippingOption?: string;
   /** 配送服务名称 */

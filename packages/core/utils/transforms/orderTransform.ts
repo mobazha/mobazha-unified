@@ -14,7 +14,7 @@ import type {
   TransformOrderOptions,
 } from '../../types/orderDisplay';
 import { getImageUrl } from '../../services/api/config';
-import { formatTokenAmount } from '../../data/tokens';
+import { formatTokenAmount, getTokenById } from '../../data/tokens';
 
 // ============ Internal Types ============
 
@@ -147,11 +147,11 @@ export function mapOrderState(state: OrderState): DisplayOrderStatus {
  * 格式化价格金额（使用统一的 token 配置）
  */
 function formatPriceAmount(amount: number, divisibility: number = 2, coin?: string): string {
-  // 如果提供了 coin，使用统一配置中的 decimals
-  if (coin) {
+  // 如果提供了 coin，且是已知的加密货币 token，使用 token 配置的 decimals
+  if (coin && getTokenById(coin)) {
     return formatTokenAmount(amount, coin);
   }
-  // 否则使用传入的 divisibility
+  // 法币（如 USD）或未知 coin，使用 listing metadata 中的 divisibility
   const normalAmount = amount / Math.pow(10, divisibility);
   const displayDecimals = divisibility >= 6 ? 2 : Math.min(divisibility, 8);
   return normalAmount.toFixed(displayDecimals);
@@ -531,6 +531,12 @@ export function transformCoreOrder(
     };
   }
 
+  // 计算运费（订单总额 - 商品小计）
+  const totalQuantity = orderOpenItems.reduce((sum, item) => sum + (item.quantity || 1), 0) || 1;
+  const shippingCost = pricingAmount - itemPrice * totalQuantity;
+  const formattedShippingAmount =
+    shippingCost > 0 ? formatPriceAmount(shippingCost, divisibility, pricingCoin) : undefined;
+
   // 格式化原始定价金额（法币，如 USD）
   const formattedPricingAmount = formatPriceAmount(pricingAmount, divisibility);
 
@@ -580,6 +586,7 @@ export function transformCoreOrder(
     shippingState,
     shippingPostalCode,
     shippingCountryCode,
+    shippingAmount: formattedShippingAmount,
     shippingOption: shippingOption || undefined,
     shippingService: shippingService || undefined,
     // 支持 RWA 模式和传统交易
