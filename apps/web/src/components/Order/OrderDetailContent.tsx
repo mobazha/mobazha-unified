@@ -43,6 +43,7 @@ import { RwaAssetDetail } from '@/components/RwaToken';
 import { Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl } from '@/components/Order/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 // ============ Types ============
 // 从 @mobazha/core 重新导出基础类型，保持向后兼容
@@ -262,6 +263,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   className,
 }: OrderDetailContentProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
 
   const formatCountryCode = useCallback(
@@ -307,25 +309,37 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           {
             status: 'completed',
             timestamp: new Date().toISOString(),
-            description: 'Order completed - Funds released to seller',
+            description: t('order.timeline.orderCompleted'),
             actor: 'buyer' as const,
           },
         ],
       };
       setLocalOrder(updated);
       onOrderUpdate?.(updated);
-      window.alert('Order completed successfully! Funds have been released to the seller.');
+      toast({
+        title: t('order.orderCompleted'),
+        description: t('order.receiptConfirmed'),
+        variant: 'success',
+      });
       refetch?.();
     } catch (error) {
-      window.alert('Failed to confirm receipt: ' + (error as Error).message);
+      toast({
+        title: t('common.error'),
+        description: t('order.receiptConfirmFailed') + (error as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setIsActionLoading(false);
     }
-  }, [order, refetch, onOrderUpdate]);
+  }, [order, refetch, onOrderUpdate, t, toast]);
 
   const handleOpenDispute = useCallback(async () => {
     if (!disputeReason.trim()) {
-      window.alert('Please provide a reason for the dispute');
+      toast({
+        title: t('common.error'),
+        description: t('order.provideDisputeReason'),
+        variant: 'destructive',
+      });
       return;
     }
     setIsActionLoading(true);
@@ -345,7 +359,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           {
             status: 'disputed',
             timestamp: new Date().toISOString(),
-            description: 'Dispute opened by buyer',
+            description: t('order.timeline.disputeOpened'),
             actor: 'buyer' as const,
           },
         ],
@@ -354,14 +368,22 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       onOrderUpdate?.(updated);
       setShowDisputeModal(false);
       setDisputeReason('');
-      window.alert('Dispute has been opened. The moderator will review your case.');
+      toast({
+        title: t('order.disputeOpened'),
+        description: t('order.disputeOpenedSuccess'),
+        variant: 'success',
+      });
       refetch?.();
     } catch (error) {
-      window.alert('Failed to open dispute: ' + (error as Error).message);
+      toast({
+        title: t('common.error'),
+        description: t('order.disputeOpenFailed') + (error as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setIsActionLoading(false);
     }
-  }, [disputeReason, order, refetch, onOrderUpdate]);
+  }, [disputeReason, order, refetch, onOrderUpdate, t, toast]);
 
   const handleRefundConfirm = useCallback(async () => {
     setShowRefundDialog(false);
@@ -376,21 +398,29 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           {
             status: 'refunded',
             timestamp: new Date().toISOString(),
-            description: 'Order refunded by seller',
+            description: t('order.refundSuccess'),
             actor: 'seller' as const,
           },
         ],
       };
       setLocalOrder(updated);
       onOrderUpdate?.(updated);
-      window.alert('Refund processed successfully!');
+      toast({
+        title: t('order.actions.refundSuccess'),
+        description: t('order.refundSuccess'),
+        variant: 'success',
+      });
       refetch?.();
     } catch (error) {
-      window.alert('Failed to process refund: ' + (error as Error).message);
+      toast({
+        title: t('common.error'),
+        description: t('order.refundFailed') + (error as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setIsActionLoading(false);
     }
-  }, [order, refetch, onOrderUpdate]);
+  }, [order, refetch, onOrderUpdate, t, toast]);
 
   const handleResolveDisputeConfirm = useCallback(async () => {
     if (!showResolveDialog) return;
@@ -406,19 +436,19 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       switch (decision) {
         case 'buyer':
           newStatus = 'refunded';
-          description = 'Dispute resolved: Full refund to buyer';
+          description = t('order.resolveDisputeBuyerDesc');
           break;
         case 'seller':
           newStatus = 'completed';
-          description = 'Dispute resolved: Full payment to seller';
+          description = t('order.resolveDisputeSellerDesc');
           break;
         case 'split':
           newStatus = 'split_resolved';
-          description = 'Dispute resolved: Funds split between buyer and seller';
+          description = t('order.resolveDisputeSplitDesc');
           break;
         default:
           newStatus = 'completed';
-          description = `Dispute resolved in favor of ${decision}`;
+          description = t('order.disputeResolved');
       }
 
       const updated = {
@@ -439,14 +469,22 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       };
       setLocalOrder(updated);
       onOrderUpdate?.(updated);
-      window.alert('Dispute has been resolved!');
+      toast({
+        title: t('order.disputeResolved'),
+        description: t('order.disputeResolvedSuccess'),
+        variant: 'success',
+      });
       refetch?.();
     } catch (error) {
-      window.alert('Failed to resolve dispute: ' + (error as Error).message);
+      toast({
+        title: t('common.error'),
+        description: t('order.resolveDisputeFailed') + (error as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setIsActionLoading(false);
     }
-  }, [showResolveDialog, order, refetch, onOrderUpdate]);
+  }, [showResolveDialog, order, refetch, onOrderUpdate, t, toast]);
 
   // 统一处理订单操作（用于 OrderFooter）
   const handleOrderAction = useCallback(
@@ -457,11 +495,11 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           if (onPay) {
             onPay(order.id);
           } else {
-            window.alert('Payment flow coming soon');
+            toast({ description: t('order.actions.pay') });
           }
           break;
         case 'Cancel':
-          window.alert('Cancel order flow coming soon');
+          toast({ description: t('order.actions.cancel') });
           break;
         case 'Dispute':
           setShowDisputeModal(true);
@@ -470,30 +508,29 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           handleConfirmReceipt();
           break;
         case 'WriteReview':
-          window.alert('Review feature coming soon');
+          toast({ description: t('order.actions.reviewComingSoon') });
           break;
         case 'Accept':
-          window.alert('Accept order flow coming soon');
+          toast({ description: t('order.actions.accept') });
           break;
         case 'Decline':
-          window.alert('Decline order flow coming soon');
+          toast({ description: t('order.actions.decline') });
           break;
         case 'Fulfill':
           // 发货操作由页面级组件处理
-          window.alert('Fulfill action should be handled by parent component');
           break;
         case 'Refund':
           setShowRefundDialog(true);
           break;
         case 'Claim':
-          window.alert('Claim payment flow coming soon');
+          toast({ description: t('order.actions.claim') });
           break;
         case 'AcceptPayout':
-          window.alert('Accept payout flow coming soon');
+          toast({ description: t('order.actions.acceptPayout') });
           break;
       }
     },
-    [handleConfirmReceipt, onPay, order.id]
+    [handleConfirmReceipt, onPay, order.id, t, toast]
   );
 
   // ============ Permission Checks ============
@@ -523,6 +560,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     if (!raw) return '';
     // 使用 i18n 翻译状态
     const statusKeys: Record<string, string> = {
+      pending: 'order.pending',
+      awaiting_payment: 'order.statusLabels.awaitingPayment',
       paid: 'order.stages.paid',
       processing: 'order.stages.accepted',
       shipped: 'order.stages.fulfilled',
@@ -803,11 +842,12 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-error mb-0.5 text-sm sm:text-base">
-                  Dispute Open
+                  {t('order.disputeOpen')}
                 </h3>
                 <p className="text-xs sm:text-sm text-error">{order.dispute.claim}</p>
                 <p className="text-[10px] sm:text-xs text-error mt-0.5">
-                  Initiated by {order.dispute.initiator} • Status: {order.dispute.status}
+                  {t('order.initiatedBy', { party: order.dispute.initiator })} •{' '}
+                  {t('order.disputeStatus', { status: order.dispute.status })}
                 </p>
               </div>
               {canResolveDispute && (
@@ -817,7 +857,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     onClick={() => setShowResolveDialog('buyer')}
                     className="text-xs"
                   >
-                    Favor Buyer
+                    {t('order.favorBuyer')}
                   </Button>
                   <Button
                     size="sm"
@@ -825,7 +865,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     onClick={() => setShowResolveDialog('seller')}
                     className="text-xs"
                   >
-                    Favor Seller
+                    {t('order.favorSeller')}
                   </Button>
                   <Button
                     size="sm"
@@ -833,7 +873,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                     onClick={() => setShowResolveDialog('split')}
                     className="text-xs"
                   >
-                    Split
+                    {t('order.splitFunds')}
                   </Button>
                 </div>
               )}
@@ -863,7 +903,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       timestamp={order.timeline.find(e => e.status === 'completed')?.timestamp}
                       amount={order.total}
                       currency={order.currency}
-                      description="Funds released to seller"
+                      description={t('order.fundsReleased')}
                       showDivider={false}
                     />
                   </div>
@@ -1301,7 +1341,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                           onClick={() => navigator.clipboard.writeText(order.shippingAddress)}
                           className="text-xs text-primary hover:underline"
                         >
-                          Copy
+                          {t('order.actions.copyToClipboard')}
                         </button>
                         <a
                           href={`https://maps.google.com/?q=${encodeURIComponent(order.shippingAddress.replace(/\n/g, ', '))}`}
@@ -1309,7 +1349,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                           rel="noopener noreferrer"
                           className="text-xs text-primary hover:underline"
                         >
-                          View on Map
+                          {t('order.viewOnMap')}
                         </a>
                       </div>
                     )}
@@ -1490,23 +1530,23 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       {showDisputeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-3 sm:p-4">
           <Card className="w-full max-w-md p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">Open Dispute</h2>
-            <p className="text-sm text-muted-foreground mb-3">
-              Please describe the issue with your order. The moderator will review your case.
-            </p>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">
+              {t('order.openDisputeTitle')}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-3">{t('order.openDisputeDesc')}</p>
             <textarea
               value={disputeReason}
               onChange={e => setDisputeReason(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none mb-3 text-sm"
-              placeholder="Describe your issue..."
+              placeholder={t('order.describeIssue')}
             />
             <HStack justify="end" gap="sm">
               <Button variant="ghost" size="sm" onClick={() => setShowDisputeModal(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button size="sm" onClick={handleOpenDispute} disabled={isLoading}>
-                {isLoading ? 'Submitting...' : 'Submit Dispute'}
+                {isLoading ? t('order.submitting') : t('order.submitDispute')}
               </Button>
             </HStack>
           </Card>
@@ -1517,15 +1557,14 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       <AlertDialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Refund</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to refund this order? The funds will be returned to the buyer.
-              This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('order.confirmRefundTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('order.confirmRefundDesc')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRefundConfirm}>Refund</AlertDialogAction>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRefundConfirm}>
+              {t('order.refundAction')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1537,19 +1576,18 @@ export const OrderDetailContent = memo(function OrderDetailContent({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Resolve Dispute</AlertDialogTitle>
+            <AlertDialogTitle>{t('order.resolveDispute')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {showResolveDialog === 'buyer' &&
-                'Are you sure you want to resolve this dispute in favor of the buyer? Full refund will be issued.'}
-              {showResolveDialog === 'seller' &&
-                'Are you sure you want to resolve this dispute in favor of the seller? Full payment will be released.'}
-              {showResolveDialog === 'split' &&
-                'Are you sure you want to split the funds between buyer and seller?'}
+              {showResolveDialog === 'buyer' && t('order.resolveDisputeBuyerDesc')}
+              {showResolveDialog === 'seller' && t('order.resolveDisputeSellerDesc')}
+              {showResolveDialog === 'split' && t('order.resolveDisputeSplitDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResolveDisputeConfirm}>Confirm</AlertDialogAction>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResolveDisputeConfirm}>
+              {t('common.confirm')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

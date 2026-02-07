@@ -325,6 +325,7 @@ function OrdersPageContent() {
             toast({
               title: t('order.dialogs.acceptOrder.title'),
               description: t('common.success'),
+              variant: 'success',
             });
             // Bug Fix: 等待 refetch 完成后再释放锁定状态
             await refetchSales();
@@ -374,6 +375,7 @@ function OrdersPageContent() {
             toast({
               title: t('order.dialogs.declineOrder.title'),
               description: t('common.success'),
+              variant: 'success',
             });
             // Bug Fix: 等待 refetch 完成后再释放锁定状态
             await refetchSales();
@@ -645,14 +647,17 @@ function OrdersPageContent() {
           const count =
             tab.value === 'all' ? orders.length : orders.filter(o => o.status === tab.value).length;
 
-          // 状态描述映射
+          // 状态描述映射（使用 i18n）
           const descMap: Record<string, string> = {
-            all: orderType === 'purchases' ? '所有购买订单' : '所有出售',
-            pending: '等待买家付款',
-            processing: '等待发货中',
-            shipped: '物品已发货、文件已发送、在途中，等',
-            completed: '货物已发送，资金已释放，反馈已留下',
-            disputed: '订单在有仲裁人参与的争议中',
+            all:
+              orderType === 'purchases'
+                ? t('order.statusDesc.allPurchases')
+                : t('order.statusDesc.allSales'),
+            pending: t('order.statusDesc.pending'),
+            processing: t('order.statusDesc.processing'),
+            shipped: t('order.statusDesc.shipped'),
+            completed: t('order.statusDesc.completed'),
+            disputed: t('order.statusDesc.disputed'),
           };
 
           return (
