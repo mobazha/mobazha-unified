@@ -2688,6 +2688,75 @@ export const en: TranslationResource = {
     localPickup: 'Local Pickup',
     localPickupDesc: 'Customer picks up in store (free)',
   },
+
+  emptyState: {
+    noProducts: {
+      title: 'No Products',
+      description: "You haven't created any products yet. Start creating your first product!",
+      createProduct: 'Create Product',
+      browseMarket: 'Browse Market',
+    },
+    emptyCart: {
+      title: 'Cart is Empty',
+      description: 'Your cart has no items yet. Go find something you like!',
+      startShopping: 'Start Shopping',
+    },
+    noMessages: {
+      title: 'No Messages',
+      description: "You don't have any conversations yet. Start chatting with sellers or buyers!",
+      startChat: 'Start Chat',
+    },
+    noNotifications: {
+      title: 'No Notifications',
+      description:
+        "You don't have any notifications. We'll notify you when there are new messages or order updates.",
+    },
+    noOrders: {
+      allTitle: 'No Orders',
+      purchasesTitle: 'No Purchases',
+      salesTitle: 'No Sales',
+      allDescription: "You don't have any order records.",
+      purchasesDescription: "You haven't purchased anything yet. Go check out what's available!",
+      salesDescription: "You don't have any sales yet. Keep promoting your products!",
+      browseProducts: 'Browse Products',
+    },
+    noSearchResults: {
+      title: 'No Results Found',
+      descriptionWithQuery: 'No results found for "{{query}}". Try different keywords.',
+      description: 'No matching results found. Try adjusting your search criteria.',
+      clearSearch: 'Clear Search',
+    },
+    noFollowers: {
+      followersTitle: 'No Followers',
+      followingTitle: 'Not Following Anyone',
+      followersDescription: 'No one is following you yet. Share your store to get more followers!',
+      followingDescription:
+        "You haven't followed any sellers yet. Discover and follow sellers you're interested in!",
+    },
+    noFavorites: {
+      title: 'No Favorites',
+      description: "You haven't favorited any products yet. Browse and favorite products you like!",
+      browseProducts: 'Browse Products',
+    },
+    emptyWallet: {
+      title: 'Wallet Balance is Zero',
+      description: 'Your wallet has no balance. Deposit to start trading.',
+      deposit: 'Deposit',
+    },
+    noStore: {
+      title: 'No Store Yet',
+      description: "You haven't set up your store yet. Create your store and start selling!",
+      setupStore: 'Set Up Store',
+    },
+    noHistory: {
+      title: 'No History',
+      description: "You don't have any browsing or activity records.",
+    },
+    noDisputes: {
+      title: 'No Disputes',
+      description: 'There are no disputes to handle at the moment.',
+    },
+  },
 };
 
 export default en;

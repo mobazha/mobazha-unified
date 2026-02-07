@@ -86,13 +86,20 @@ export function NoProducts({
   onCreateProduct?: () => void;
   onBrowse?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Package}
-      title="暂无商品"
-      description="您还没有创建任何商品。开始创建您的第一个商品吧！"
-      action={onCreateProduct ? { label: '创建商品', onClick: onCreateProduct } : undefined}
-      secondaryAction={onBrowse ? { label: '浏览市场', onClick: onBrowse } : undefined}
+      title={t('emptyState.noProducts.title')}
+      description={t('emptyState.noProducts.description')}
+      action={
+        onCreateProduct
+          ? { label: t('emptyState.noProducts.createProduct'), onClick: onCreateProduct }
+          : undefined
+      }
+      secondaryAction={
+        onBrowse ? { label: t('emptyState.noProducts.browseMarket'), onClick: onBrowse } : undefined
+      }
     />
   );
 }
@@ -101,12 +108,15 @@ export function NoProducts({
  * 空购物车
  */
 export function EmptyCart({ onBrowse }: { onBrowse?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={ShoppingCart}
-      title="购物车是空的"
-      description="您的购物车中还没有商品。快去挑选您喜欢的商品吧！"
-      action={onBrowse ? { label: '开始购物', onClick: onBrowse } : undefined}
+      title={t('emptyState.emptyCart.title')}
+      description={t('emptyState.emptyCart.description')}
+      action={
+        onBrowse ? { label: t('emptyState.emptyCart.startShopping'), onClick: onBrowse } : undefined
+      }
     />
   );
 }
@@ -115,12 +125,17 @@ export function EmptyCart({ onBrowse }: { onBrowse?: () => void }) {
  * 无消息
  */
 export function NoMessages({ onStartChat }: { onStartChat?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={MessageSquare}
-      title="暂无消息"
-      description="您还没有任何对话记录。开始与卖家或买家聊天吧！"
-      action={onStartChat ? { label: '开始聊天', onClick: onStartChat } : undefined}
+      title={t('emptyState.noMessages.title')}
+      description={t('emptyState.noMessages.description')}
+      action={
+        onStartChat
+          ? { label: t('emptyState.noMessages.startChat'), onClick: onStartChat }
+          : undefined
+      }
     />
   );
 }
@@ -129,11 +144,12 @@ export function NoMessages({ onStartChat }: { onStartChat?: () => void }) {
  * 无通知
  */
 export function NoNotifications() {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Bell}
-      title="暂无通知"
-      description="您目前没有任何通知。当有新消息或订单更新时，我们会通知您。"
+      title={t('emptyState.noNotifications.title')}
+      description={t('emptyState.noNotifications.description')}
     />
   );
 }
@@ -148,16 +164,17 @@ export function NoOrders({
   type?: 'all' | 'purchases' | 'sales';
   onBrowse?: () => void;
 }) {
+  const { t } = useI18n();
   const titles = {
-    all: '暂无订单',
-    purchases: '暂无购买记录',
-    sales: '暂无销售记录',
+    all: t('emptyState.noOrders.allTitle'),
+    purchases: t('emptyState.noOrders.purchasesTitle'),
+    sales: t('emptyState.noOrders.salesTitle'),
   };
 
   const descriptions = {
-    all: '您还没有任何订单记录。',
-    purchases: '您还没有购买过任何商品。快去看看有什么好东西吧！',
-    sales: '您还没有任何销售记录。继续推广您的商品吧！',
+    all: t('emptyState.noOrders.allDescription'),
+    purchases: t('emptyState.noOrders.purchasesDescription'),
+    sales: t('emptyState.noOrders.salesDescription'),
   };
 
   return (
@@ -166,7 +183,9 @@ export function NoOrders({
       title={titles[type]}
       description={descriptions[type]}
       action={
-        type === 'purchases' && onBrowse ? { label: '浏览商品', onClick: onBrowse } : undefined
+        type === 'purchases' && onBrowse
+          ? { label: t('emptyState.noOrders.browseProducts'), onClick: onBrowse }
+          : undefined
       }
     />
   );
@@ -176,16 +195,21 @@ export function NoOrders({
  * 搜索无结果
  */
 export function NoSearchResults({ query, onClear }: { query?: string; onClear?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Search}
-      title="未找到结果"
+      title={t('emptyState.noSearchResults.title')}
       description={
         query
-          ? `没有找到与 "${query}" 相关的结果。请尝试其他关键词。`
-          : '没有找到匹配的结果。请尝试调整搜索条件。'
+          ? t('emptyState.noSearchResults.descriptionWithQuery', { query })
+          : t('emptyState.noSearchResults.description')
       }
-      action={onClear ? { label: '清除搜索', onClick: onClear } : undefined}
+      action={
+        onClear
+          ? { label: t('emptyState.noSearchResults.clearSearch'), onClick: onClear }
+          : undefined
+      }
     />
   );
 }
@@ -194,14 +218,19 @@ export function NoSearchResults({ query, onClear }: { query?: string; onClear?: 
  * 无关注者/关注
  */
 export function NoFollowers({ type = 'followers' }: { type?: 'followers' | 'following' }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Users}
-      title={type === 'followers' ? '暂无关注者' : '暂未关注任何人'}
+      title={
+        type === 'followers'
+          ? t('emptyState.noFollowers.followersTitle')
+          : t('emptyState.noFollowers.followingTitle')
+      }
       description={
         type === 'followers'
-          ? '还没有人关注您。分享您的店铺来获得更多关注者吧！'
-          : '您还没有关注任何卖家。发现并关注您感兴趣的卖家吧！'
+          ? t('emptyState.noFollowers.followersDescription')
+          : t('emptyState.noFollowers.followingDescription')
       }
     />
   );
@@ -211,12 +240,17 @@ export function NoFollowers({ type = 'followers' }: { type?: 'followers' | 'foll
  * 无收藏
  */
 export function NoFavorites({ onBrowse }: { onBrowse?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Heart}
-      title="暂无收藏"
-      description="您还没有收藏任何商品。浏览并收藏您喜欢的商品吧！"
-      action={onBrowse ? { label: '浏览商品', onClick: onBrowse } : undefined}
+      title={t('emptyState.noFavorites.title')}
+      description={t('emptyState.noFavorites.description')}
+      action={
+        onBrowse
+          ? { label: t('emptyState.noFavorites.browseProducts'), onClick: onBrowse }
+          : undefined
+      }
     />
   );
 }
@@ -225,12 +259,15 @@ export function NoFavorites({ onBrowse }: { onBrowse?: () => void }) {
  * 钱包为空
  */
 export function EmptyWallet({ onDeposit }: { onDeposit?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Wallet}
-      title="钱包余额为零"
-      description="您的钱包目前没有余额。充值以开始交易。"
-      action={onDeposit ? { label: '充值', onClick: onDeposit } : undefined}
+      title={t('emptyState.emptyWallet.title')}
+      description={t('emptyState.emptyWallet.description')}
+      action={
+        onDeposit ? { label: t('emptyState.emptyWallet.deposit'), onClick: onDeposit } : undefined
+      }
     />
   );
 }
@@ -239,12 +276,13 @@ export function EmptyWallet({ onDeposit }: { onDeposit?: () => void }) {
  * 无店铺
  */
 export function NoStore({ onSetup }: { onSetup?: () => void }) {
+  const { t } = useI18n();
   return (
     <EmptyState
       icon={Store}
-      title="还没有店铺"
-      description="您还没有设置店铺。创建您的店铺，开始销售商品吧！"
-      action={onSetup ? { label: '设置店铺', onClick: onSetup } : undefined}
+      title={t('emptyState.noStore.title')}
+      description={t('emptyState.noStore.description')}
+      action={onSetup ? { label: t('emptyState.noStore.setupStore'), onClick: onSetup } : undefined}
     />
   );
 }
@@ -253,8 +291,13 @@ export function NoStore({ onSetup }: { onSetup?: () => void }) {
  * 无历史记录
  */
 export function NoHistory() {
+  const { t } = useI18n();
   return (
-    <EmptyState icon={Clock} title="暂无历史记录" description="您还没有任何浏览或活动记录。" />
+    <EmptyState
+      icon={Clock}
+      title={t('emptyState.noHistory.title')}
+      description={t('emptyState.noHistory.description')}
+    />
   );
 }
 
@@ -262,8 +305,13 @@ export function NoHistory() {
  * 无争议/仲裁案件
  */
 export function NoDisputes() {
+  const { t } = useI18n();
   return (
-    <EmptyState icon={Shield} title="暂无争议案件" description="目前没有需要处理的争议案件。" />
+    <EmptyState
+      icon={Shield}
+      title={t('emptyState.noDisputes.title')}
+      description={t('emptyState.noDisputes.description')}
+    />
   );
 }
 
