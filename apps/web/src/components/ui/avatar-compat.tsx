@@ -84,7 +84,7 @@ export const AvatarCompat: React.FC<AvatarCompatProps> = ({
   const showImage = finalImageUrl && !authError && !directImageError;
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-flex">
       <Avatar className={cn(sizeClasses[size], className)}>
         {authLoading && (
           <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10">
