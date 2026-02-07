@@ -86,6 +86,7 @@ export const zh: TranslationResource = {
     clickToEdit: '点击编辑',
     deleteFailed: '删除失败',
     loadFailed: '加载失败',
+    loadFailedDesc: '无法加载数据，请稍后重试。',
     addFailed: '添加失败',
     removeFailed: '移除失败',
     adding: '添加中...',
