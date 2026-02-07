@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, Suspense } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, MobilePageHeader } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -17,8 +17,9 @@ import {
   ordersApi,
   useOrderAction,
   fromMinimalUnit,
+  batchGetProfileDisplayInfo,
 } from '@mobazha/core';
-import type { OrderListItem } from '@mobazha/core';
+import type { OrderListItem, ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -87,7 +88,13 @@ function getThumbnailUrl(thumbnail: OrderListItem['thumbnail']): string {
 }
 
 // 将 OrderListItem 转换为 OrderCard 期望的 Order 格式
-function transformOrderListItem(item: OrderListItem): Order {
+// orderType: 'purchases' 时对方是 vendor（卖家），'sales' 时对方是 buyer（买家）
+// profileMap: 通过全局 profileCache 异步获取的 profile 展示数据
+function transformOrderListItem(
+  item: OrderListItem,
+  orderType: OrderType,
+  profileMap: Map<string, ProfileDisplayInfo>
+): Order {
   const imageUrl = getThumbnailUrl(item.thumbnail);
 
   // 防御性处理：确保字段存在（后端可能返回不同的字段名）
@@ -101,6 +108,20 @@ function transformOrderListItem(item: OrderListItem): Order {
   const formattedPrice = item.total
     ? String(fromMinimalUnit(item.total.amount || 0, currency))
     : '0';
+
+  // 根据订单类型确定对方（counterparty）的信息
+  // purchases（我的购买）→ 对方是卖家 vendor
+  // sales（我的销售）→ 对方是买家 buyer
+  const counterpartyId = orderType === 'purchases' ? vendorId : buyerId;
+  const counterpartyHandle = orderType === 'purchases' ? item.vendorHandle : item.buyerHandle;
+
+  // 优先使用从 profile API 异步获取的名称和头像（与订单详情页一致）
+  const profileInfo = counterpartyId ? profileMap.get(counterpartyId) : undefined;
+  const counterpartyName =
+    profileInfo?.name ||
+    counterpartyHandle ||
+    (counterpartyId ? counterpartyId.slice(0, 12) + '...' : 'Unknown');
+  const counterpartyAvatar = profileInfo?.avatar || undefined;
 
   return {
     id: orderId,
@@ -122,15 +143,9 @@ function transformOrderListItem(item: OrderListItem): Order {
     currency: currency,
     createdAt: item.timestamp || new Date().toISOString(),
     vendor: {
-      id: vendorId,
-      name:
-        item.vendorHandle ||
-        item.buyerHandle ||
-        (vendorId
-          ? vendorId.slice(0, 12) + '...'
-          : buyerId
-            ? buyerId.slice(0, 12) + '...'
-            : 'Unknown'),
+      id: counterpartyId,
+      name: counterpartyName,
+      avatar: counterpartyAvatar,
     },
   };
 }
@@ -184,12 +199,60 @@ function OrdersPageContent() {
   const hasMore = orderType === 'purchases' ? purchasesHasMore : salesHasMore;
   const loadMore = orderType === 'purchases' ? loadMorePurchases : loadMoreSales;
 
-  // 转换数据格式（确保 rawOrders 是数组）
+  // ============ Profile 异步获取（使用全局 profileCache） ============
+  // 收集所有唯一的对方 peerID，异步获取 profile 数据以获取真实头像和名称
+  const [profileMap, setProfileMap] = useState<Map<string, ProfileDisplayInfo>>(new Map());
+  const fetchedPeerIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const ordersArray = Array.isArray(rawOrders) ? rawOrders : [];
+    if (ordersArray.length === 0) return;
+
+    // 收集需要获取 profile 的唯一 peerID（排除已获取的）
+    const peerIdsToFetch: string[] = [];
+    for (const item of ordersArray) {
+      const itemAny = item as unknown as Record<string, unknown>;
+      const vendorId = item.vendorID || (itemAny.vendorId as string) || '';
+      const buyerId = item.buyerID || (itemAny.buyerId as string) || '';
+      const counterpartyId = orderType === 'purchases' ? vendorId : buyerId;
+      if (counterpartyId && !fetchedPeerIdsRef.current.has(counterpartyId)) {
+        peerIdsToFetch.push(counterpartyId);
+        fetchedPeerIdsRef.current.add(counterpartyId);
+      }
+    }
+
+    if (peerIdsToFetch.length === 0) return;
+
+    let cancelled = false;
+
+    async function fetchProfiles() {
+      // 使用全局 profileCache 批量获取 profile 展示信息
+      const newEntries = await batchGetProfileDisplayInfo(peerIdsToFetch);
+
+      if (cancelled) return;
+
+      if (newEntries.size > 0) {
+        setProfileMap(prev => {
+          const merged = new Map(prev);
+          newEntries.forEach((value, key) => merged.set(key, value));
+          return merged;
+        });
+      }
+    }
+
+    fetchProfiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [rawOrders, orderType]);
+
+  // 转换数据格式（确保 rawOrders 是数组），使用 profileMap 增强数据
   const orders = useMemo(() => {
     // 防御性处理：确保是数组
     const ordersArray = Array.isArray(rawOrders) ? rawOrders : [];
-    return ordersArray.map(transformOrderListItem);
-  }, [rawOrders]);
+    return ordersArray.map(item => transformOrderListItem(item, orderType, profileMap));
+  }, [rawOrders, orderType, profileMap]);
 
   const statusTabs: { value: OrderStatus; label: string }[] = [
     { value: 'all', label: t('order.allOrders') },

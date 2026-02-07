@@ -23,6 +23,7 @@ import {
   type LoginCredentials,
 } from '../services/auth';
 import { connectWebSocket, disconnectWebSocket } from '../services/websocket';
+import { clearProfileCache } from '../services/profileCache';
 import { disableMockData } from '../config';
 
 interface UserState {
@@ -340,6 +341,9 @@ export const useUserStore = create<UserState>()(
         logout: () => {
           // 断开 WebSocket
           disconnectWebSocket();
+
+          // 清除 profile 缓存
+          clearProfileCache();
 
           clearAuthCredentials();
           clearAuth();

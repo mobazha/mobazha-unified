@@ -147,9 +147,27 @@ export const OrderListCompact = memo(function OrderListCompact({
                   <h3 className="text-sm font-semibold text-foreground truncate">
                     {item?.title || 'Unknown'}
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                    {type === 'purchase' ? t('order.from') : t('order.to')} {order.vendor.name}
-                  </p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {type === 'purchase' ? t('order.from') : t('order.to')}
+                    </span>
+                    {order.vendor.avatar ? (
+                      <img
+                        src={order.vendor.avatar}
+                        alt={order.vendor.name}
+                        className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[8px] text-primary font-medium">
+                          {order.vendor.name?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-xs text-muted-foreground truncate">
+                      {order.vendor.name}
+                    </span>
+                  </div>
                 </div>
                 <span className="text-[11px] text-muted-foreground flex-shrink-0">
                   {formatDate(order.createdAt)}

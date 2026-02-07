@@ -36,3 +36,6 @@ export * from './rwa';
 
 // 交易服务
 export * from './transaction';
+
+// Profile 缓存服务
+export * from './profileCache';
