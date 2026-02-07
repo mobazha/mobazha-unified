@@ -153,7 +153,7 @@ export const Header: React.FC = () => {
             ) : isAuthenticated && profile ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full">
+                  <button className="h-8 w-8 p-0 hover:opacity-80 transition-opacity focus:outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-full">
                     <Avatar
                       src={getImageUrl(profile.avatarHashes?.small)}
                       name={profile.name || 'User'}
