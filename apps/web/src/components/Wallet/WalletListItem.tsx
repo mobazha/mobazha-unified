@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useCurrency } from '@mobazha/core';
 import { WalletBalance } from './WalletCard';
 
 export interface WalletListItemProps {
@@ -18,6 +19,8 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   onSend,
   onReceive,
 }) => {
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
+
   return (
     <div className="overflow-hidden">
       {/* Main Row - Always visible */}
@@ -45,7 +48,9 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
           <div className="flex items-center justify-between gap-2 mt-0.5">
             <span className="text-sm text-muted-foreground">{balance.symbol}</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">${balance.balanceUSD}</span>
+              <span className="text-sm text-muted-foreground">
+                {formatCurrencyPrice(balance.balanceUSD, 'USD')}
+              </span>
               {balance.change24h !== undefined && (
                 <span
                   className={`text-xs font-medium px-1.5 py-0.5 rounded ${

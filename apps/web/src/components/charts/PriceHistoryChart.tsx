@@ -277,7 +277,7 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({
               axisLine={false}
               tickLine={false}
               width={50}
-              tickFormatter={value => `$${value}`}
+              tickFormatter={value => formatRwaPrice(value, priceHistory.currency)}
             />
             <Tooltip content={<CustomTooltip currency={priceHistory.currency} />} />
             <Area

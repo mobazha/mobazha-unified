@@ -8,7 +8,7 @@ import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useCurrency } from '@mobazha/core';
 
 // Types
 interface CartItem {
@@ -98,6 +98,7 @@ const mockCartItems: CartItem[] = [
 export default function CartPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const [cartItems, setCartItems] = useState<CartItem[]>(mockCartItems);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(
     new Set(mockCartItems.map(item => item.id))
@@ -456,7 +457,7 @@ export default function CartPage() {
                             {/* Price & Quantity */}
                             <div className="flex items-center justify-between mt-auto pt-1">
                               <span className="text-sm font-bold text-primary">
-                                ${item.price.toFixed(2)}
+                                {formatCurrencyPrice(item.price, item.currency)}
                               </span>
 
                               <div className="flex items-center gap-2">
@@ -514,7 +515,10 @@ export default function CartPage() {
                         <div className="text-sm">
                           <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
                           <span className="font-bold text-foreground ml-1.5">
-                            ${vendorTotal.subtotal.toFixed(2)}
+                            {formatCurrencyPrice(
+                              vendorTotal.subtotal,
+                              group.items[0]?.currency || 'USD'
+                            )}
                           </span>
                           <span className="text-muted-foreground text-xs ml-1">
                             ({vendorTotal.itemCount} {t('cart.items')})

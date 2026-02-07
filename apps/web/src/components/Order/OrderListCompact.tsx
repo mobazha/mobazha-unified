@@ -3,7 +3,7 @@
 import React, { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useCurrency } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import type { Order } from './OrderCard';
 
@@ -88,6 +88,7 @@ export const OrderListCompact = memo(function OrderListCompact({
   className,
 }: OrderListCompactProps) {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
 
   // 处理行点击
   const handleRowClick = useCallback(
@@ -164,7 +165,9 @@ export const OrderListCompact = memo(function OrderListCompact({
                     <TokenIcon token={token} size={20} showChainBadge={isToken} chainId={chainId} />
                   );
                 })()}
-                <span className="text-sm font-semibold text-primary">${order.total}</span>
+                <span className="text-sm font-semibold text-primary">
+                  {formatCurrencyPrice(order.total, order.currency || 'USD')}
+                </span>
               </div>
 
               {/* Bottom: Status + Order ID - 增加间距 */}

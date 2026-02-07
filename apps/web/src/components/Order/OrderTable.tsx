@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useCurrency } from '@mobazha/core';
 import { Copy } from 'lucide-react';
 import type { Order } from './OrderCard';
 
@@ -96,6 +96,7 @@ export const OrderTable = memo(function OrderTable({
   className,
 }: OrderTableProps) {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
 
   // 判断是否需要显示操作按钮
   // 只有原始状态为 PENDING（已付款等待确认）的销售订单才显示 Accept/Reject
@@ -200,7 +201,9 @@ export const OrderTable = memo(function OrderTable({
 
                 {/* TOTAL */}
                 <TableCell className="text-right">
-                  <span className="font-semibold text-foreground">${order.total}</span>
+                  <span className="font-semibold text-foreground">
+                    {formatCurrencyPrice(order.total, order.currency || 'USD')}
+                  </span>
                 </TableCell>
 
                 {/* STATUS */}

@@ -13,7 +13,7 @@ import {
   Clock,
   User,
 } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useCurrency } from '@mobazha/core';
 import type { Notification as ApiNotification } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -56,16 +56,6 @@ function formatTimeAgo(
   if (diffHours < 24) return t('time.hoursAgo', { count: diffHours });
   if (diffDays < 7) return t('time.daysAgo', { count: diffDays });
   return date.toLocaleDateString();
-}
-
-/**
- * 格式化价格
- */
-function formatPrice(amount?: number, currencyCode?: string): string {
-  if (amount === undefined) return '';
-  // 价格通常以最小单位存储（如分），需要转换
-  const value = amount / 100;
-  return `$${value.toFixed(2)}`;
 }
 
 /**
@@ -126,6 +116,7 @@ export function OrderNotificationCard({
   className,
 }: OrderNotificationCardProps) {
   const { t } = useI18n();
+  const { renderPairedPrice } = useCurrency();
   const { data, read, timestamp, type } = notification;
 
   const thumbnail = data?.thumbnail?.small || data?.thumbnail?.tiny;
@@ -193,7 +184,7 @@ export function OrderNotificationCard({
               )}
               {price && (
                 <p className="text-sm font-semibold text-primary">
-                  {formatPrice(price.amount, price.currencyCode)}
+                  {renderPairedPrice(price.amount, price.currencyCode || 'USD')}
                 </p>
               )}
             </div>

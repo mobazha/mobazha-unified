@@ -22,6 +22,7 @@ import {
   type OrderAction,
   type UserRole as CoreUserRole,
   useI18n,
+  useCurrency,
   // 从 @mobazha/core 导入订单展示类型
   type DisplayOrder as CoreDisplayOrder,
   type DisplayOrderItem,
@@ -261,6 +262,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   className,
 }: OrderDetailContentProps) {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
 
   const formatCountryCode = useCallback(
     (code?: string) => {
@@ -608,8 +610,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           const formatPrice = () => {
             const price = order.items[0]?.price || order.pricingAmount || order.total;
             const currency = order.items[0]?.currency || order.pricingCurrency;
-            if (currency === 'USD') return `$${price}`;
-            return `${price} ${currency || ''}`;
+            if (!price || !currency) return '--';
+            return formatCurrencyPrice(price, currency);
           };
 
           const vendorRow = order.vendor?.peerID ? (
@@ -745,32 +747,29 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               <div className="flex items-center justify-between">
                 <div className="text-xs text-muted-foreground">{t('order.subtotal')}</div>
                 <div className="text-xs text-foreground">
-                  {order.pricingCurrency === 'USD' ? '$' : ''}
-                  {order.items[0]?.price || ''}{' '}
-                  {order.pricingCurrency && order.pricingCurrency !== 'USD'
-                    ? order.pricingCurrency
-                    : ''}
+                  {order.pricingCurrency
+                    ? formatCurrencyPrice(order.items[0]?.price || '0', order.pricingCurrency)
+                    : order.items[0]?.price || ''}
                 </div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-xs text-muted-foreground">{t('order.shippingFee')}</div>
                 <div className="text-xs text-foreground">
-                  {order.pricingCurrency === 'USD' ? '$' : ''}
-                  {order.shippingAmount}{' '}
-                  {order.pricingCurrency && order.pricingCurrency !== 'USD'
-                    ? order.pricingCurrency
-                    : ''}
+                  {order.pricingCurrency
+                    ? formatCurrencyPrice(order.shippingAmount, order.pricingCurrency)
+                    : order.shippingAmount}
                 </div>
               </div>
               <div className="flex items-end justify-between pt-1 border-t border-border/30">
                 <div className="text-xs text-muted-foreground">{t('order.total')}</div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-foreground">
-                    {order.pricingCurrency === 'USD' ? '$' : ''}
-                    {order.pricingAmount || order.total}{' '}
-                    {order.pricingCurrency && order.pricingCurrency !== 'USD'
-                      ? order.pricingCurrency
-                      : ''}
+                    {order.pricingCurrency
+                      ? formatCurrencyPrice(
+                          order.pricingAmount || order.total,
+                          order.pricingCurrency
+                        )
+                      : order.pricingAmount || order.total}
                   </p>
                 </div>
               </div>
@@ -780,11 +779,9 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               <div className="text-xs text-muted-foreground">{t('order.total')}</div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-foreground">
-                  {order.pricingCurrency === 'USD' ? '$' : ''}
-                  {order.pricingAmount || order.total}{' '}
-                  {order.pricingCurrency && order.pricingCurrency !== 'USD'
-                    ? order.pricingCurrency
-                    : ''}
+                  {order.pricingCurrency
+                    ? formatCurrencyPrice(order.pricingAmount || order.total, order.pricingCurrency)
+                    : order.pricingAmount || order.total}
                 </p>
               </div>
             </div>

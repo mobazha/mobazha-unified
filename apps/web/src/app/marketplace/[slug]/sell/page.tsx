@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { useCurrency } from '@mobazha/core';
 
 // Types
 interface SellerProfile {
@@ -23,6 +24,7 @@ interface SellerProfile {
 export default function MarketplaceSellPage() {
   const params = useParams();
   const router = useRouter();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const slug = params.slug as string;
 
   const [isApplying, setIsApplying] = useState(false);
@@ -250,7 +252,9 @@ export default function MarketplaceSellPage() {
                         <p className="text-sm font-medium text-foreground line-clamp-1">
                           {product.title}
                         </p>
-                        <p className="text-sm text-emerald-600">${product.price}</p>
+                        <p className="text-sm text-emerald-600">
+                          {formatCurrencyPrice(product.price, 'USD')}
+                        </p>
                         {selectedProducts.includes(product.id) && (
                           <div className="mt-2 flex items-center gap-1 text-emerald-600 text-sm">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

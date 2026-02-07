@@ -98,7 +98,7 @@ const placeholderProducts: DisplayProduct[] = [
     title: 'Smart Watch Pro - Health & Fitness Tracker',
     imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
     price: 199.99,
-    currency: '$',
+    currency: 'USD',
     originalPrice: 249.99,
     vendorName: 'FitTech',
     rating: 4.7,

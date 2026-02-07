@@ -3,7 +3,13 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { VStack, HStack } from '@/components/layouts';
-import { useI18n, getOrderStatusInfo, getOrderStatusColor, type OrderState } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getOrderStatusInfo,
+  getOrderStatusColor,
+  type OrderState,
+} from '@mobazha/core';
 import { formatOrderDate } from './utils';
 
 export interface OrderSummaryProps {
@@ -38,6 +44,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   className = '',
 }) => {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const statusInfo = getOrderStatusInfo(state);
   const statusColors = getOrderStatusColor(state);
 
@@ -80,21 +87,21 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       <VStack gap="sm" className="mb-4">
         <HStack justify="between">
           <span className="text-sm text-muted-foreground">{t('order.subtotal')}</span>
-          <span className="text-sm text-foreground">
-            {subtotal} {currency}
-          </span>
+          <span className="text-sm text-foreground">{formatCurrencyPrice(subtotal, currency)}</span>
         </HStack>
         <HStack justify="between">
           <span className="text-sm text-muted-foreground">{t('order.shipping')}</span>
           <span className="text-sm text-foreground">
-            {shipping === '0' || !shipping ? t('order.free') : `${shipping} ${currency}`}
+            {shipping === '0' || !shipping
+              ? t('order.free')
+              : formatCurrencyPrice(shipping, currency)}
           </span>
         </HStack>
         {moderatorFee && moderatorFee !== '0' && (
           <HStack justify="between">
             <span className="text-sm text-muted-foreground">{t('order.moderatorFee')}</span>
             <span className="text-sm text-foreground">
-              {moderatorFee} {currency}
+              {formatCurrencyPrice(moderatorFee, currency)}
             </span>
           </HStack>
         )}
@@ -105,7 +112,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         <HStack justify="between" align="center">
           <span className="text-base font-medium text-foreground">{t('order.total')}</span>
           <span className="text-xl font-bold text-foreground">
-            {total} {currency}
+            {formatCurrencyPrice(total, currency)}
           </span>
         </HStack>
       </div>

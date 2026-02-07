@@ -16,6 +16,7 @@ import {
   useChatStore,
   ordersApi,
   useOrderAction,
+  fromMinimalUnit,
 } from '@mobazha/core';
 import type { OrderListItem } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
@@ -52,22 +53,6 @@ function mapOrderState(state: string): Order['status'] {
     PROCESSING_ERROR: 'pending',
   };
   return stateMap[state] || 'pending';
-}
-
-// 格式化价格金额（从最小单位转换为标准显示值）
-function formatPriceAmount(total: OrderListItem['total']): string {
-  if (!total) return '0.00';
-
-  // 处理两种可能的格式
-  // 格式1: { amount, currency: { code, divisibility } } - 后端实际格式
-  // 格式2: { amount, currencyCode } - 简化格式
-  const amount = total.amount || 0;
-  const divisibility =
-    (total as { currency?: { divisibility?: number } }).currency?.divisibility ?? 2;
-
-  // 将最小单位转换为标准单位
-  const normalAmount = amount / Math.pow(10, divisibility);
-  return normalAmount.toFixed(2);
 }
 
 // 获取价格的货币代码
@@ -111,9 +96,11 @@ function transformOrderListItem(item: OrderListItem): Order {
   const vendorId = item.vendorID || (itemAny.vendorId as string) || '';
   const buyerId = item.buyerID || (itemAny.buyerId as string) || '';
 
-  // 获取格式化后的价格和货币
-  const formattedPrice = formatPriceAmount(item.total);
+  // 获取格式化后的价格和货币（使用 core 的 fromMinimalUnit 进行最小单位 → 标准单位转换）
   const currency = getPriceCurrency(item.total) || item.paymentCoin || 'USD';
+  const formattedPrice = item.total
+    ? String(fromMinimalUnit(item.total.amount || 0, currency))
+    : '0';
 
   return {
     id: orderId,
