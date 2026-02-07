@@ -2635,6 +2635,73 @@ export const zh: TranslationResource = {
     localPickup: '本地自提',
     localPickupDesc: '顾客到店自取（免费）',
   },
+
+  emptyState: {
+    noProducts: {
+      title: '暂无商品',
+      description: '您还没有创建任何商品。开始创建您的第一个商品吧！',
+      createProduct: '创建商品',
+      browseMarket: '浏览市场',
+    },
+    emptyCart: {
+      title: '购物车是空的',
+      description: '您的购物车中还没有商品。快去挑选您喜欢的商品吧！',
+      startShopping: '开始购物',
+    },
+    noMessages: {
+      title: '暂无消息',
+      description: '您还没有任何对话记录。开始与卖家或买家聊天吧！',
+      startChat: '开始聊天',
+    },
+    noNotifications: {
+      title: '暂无通知',
+      description: '您目前没有任何通知。当有新消息或订单更新时，我们会通知您。',
+    },
+    noOrders: {
+      allTitle: '暂无订单',
+      purchasesTitle: '暂无购买记录',
+      salesTitle: '暂无销售记录',
+      allDescription: '您还没有任何订单记录。',
+      purchasesDescription: '您还没有购买过任何商品。快去看看有什么好东西吧！',
+      salesDescription: '您还没有任何销售记录。继续推广您的商品吧！',
+      browseProducts: '浏览商品',
+    },
+    noSearchResults: {
+      title: '未找到结果',
+      descriptionWithQuery: '没有找到与 "{{query}}" 相关的结果。请尝试其他关键词。',
+      description: '没有找到匹配的结果。请尝试调整搜索条件。',
+      clearSearch: '清除搜索',
+    },
+    noFollowers: {
+      followersTitle: '暂无关注者',
+      followingTitle: '暂未关注任何人',
+      followersDescription: '还没有人关注您。分享您的店铺来获得更多关注者吧！',
+      followingDescription: '您还没有关注任何卖家。发现并关注您感兴趣的卖家吧！',
+    },
+    noFavorites: {
+      title: '暂无收藏',
+      description: '您还没有收藏任何商品。浏览并收藏您喜欢的商品吧！',
+      browseProducts: '浏览商品',
+    },
+    emptyWallet: {
+      title: '钱包余额为零',
+      description: '您的钱包目前没有余额。充值以开始交易。',
+      deposit: '充值',
+    },
+    noStore: {
+      title: '还没有店铺',
+      description: '您还没有设置店铺。创建您的店铺，开始销售商品吧！',
+      setupStore: '设置店铺',
+    },
+    noHistory: {
+      title: '暂无历史记录',
+      description: '您还没有任何浏览或活动记录。',
+    },
+    noDisputes: {
+      title: '暂无争议案件',
+      description: '目前没有需要处理的争议案件。',
+    },
+  },
 };
 
 export default zh;

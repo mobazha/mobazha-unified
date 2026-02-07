@@ -1874,6 +1874,74 @@ export interface TranslationResource {
     localPickup?: string;
     localPickupDesc?: string;
   };
+
+  // 空状态组件
+  emptyState?: {
+    noProducts?: {
+      title: string;
+      description: string;
+      createProduct: string;
+      browseMarket: string;
+    };
+    emptyCart?: {
+      title: string;
+      description: string;
+      startShopping: string;
+    };
+    noMessages?: {
+      title: string;
+      description: string;
+      startChat: string;
+    };
+    noNotifications?: {
+      title: string;
+      description: string;
+    };
+    noOrders?: {
+      allTitle: string;
+      purchasesTitle: string;
+      salesTitle: string;
+      allDescription: string;
+      purchasesDescription: string;
+      salesDescription: string;
+      browseProducts: string;
+    };
+    noSearchResults?: {
+      title: string;
+      descriptionWithQuery: string;
+      description: string;
+      clearSearch: string;
+    };
+    noFollowers?: {
+      followersTitle: string;
+      followingTitle: string;
+      followersDescription: string;
+      followingDescription: string;
+    };
+    noFavorites?: {
+      title: string;
+      description: string;
+      browseProducts: string;
+    };
+    emptyWallet?: {
+      title: string;
+      description: string;
+      deposit: string;
+    };
+    noStore?: {
+      title: string;
+      description: string;
+      setupStore: string;
+    };
+    noHistory?: {
+      title: string;
+      description: string;
+    };
+    noDisputes?: {
+      title: string;
+      description: string;
+    };
+  };
 }
 
 // i18n 上下文类型
