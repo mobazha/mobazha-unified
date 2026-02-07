@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import {
@@ -57,6 +57,7 @@ interface OrderDetails {
   };
   memo?: string;
   subtotal: number;
+  shipping: number;
   total: number;
   currency: string;
   paymentAddress?: string;
@@ -247,13 +248,15 @@ export default function PaymentPage() {
         const totalFromUrl = urlAmount ? parseFloat(urlAmount) : 0;
         const totalFromOrderOpen =
           orderAmount > 0 ? orderAmount / Math.pow(10, pricingDivisibility) : 0;
-        const calculatedTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const calculatedSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const finalTotal =
           totalFromUrl > 0
             ? totalFromUrl
             : totalFromOrderOpen > 0
               ? totalFromOrderOpen
-              : calculatedTotal;
+              : calculatedSubtotal;
+        // 运费 = 总价 - 商品小计（如果总价大于小计则差额为运费）
+        const shippingAmount = Math.max(0, finalTotal - calculatedSubtotal);
 
         // 获取卖家 profile（包括名称和头像）
         const vendorPeerID = vendorInfo?.peerID || urlVendorPeerID || '';
@@ -298,7 +301,8 @@ export default function PaymentPage() {
             postalCode: shippingInfo?.postalCode || '',
           },
           memo,
-          subtotal: finalTotal,
+          subtotal: calculatedSubtotal,
+          shipping: shippingAmount,
           total: finalTotal,
           currency: items[0]?.currency || urlCurrency || pricingCurrency,
           // RWA 相关
@@ -346,6 +350,7 @@ export default function PaymentPage() {
               postalCode: '',
             },
             subtotal: priceNum,
+            shipping: 0,
             total: priceNum,
             currency: urlCurrency || 'USD',
             isRwaToken: urlIsRwaToken,
@@ -382,68 +387,13 @@ export default function PaymentPage() {
     urlImage,
   ]);
 
-  // 计算仲裁员费用
-  const moderatorFee = React.useMemo(() => {
-    if (!paymentProtectionEnabled || !paymentModerator?.fee || !orderDetails) return 0;
-    const { fee } = paymentModerator;
-    const subtotal = orderDetails.subtotal;
-
-    if (fee.feeType === 'percentage' && fee.percentage !== undefined) {
-      return subtotal * (fee.percentage / 100);
-    } else if (fee.feeType === 'fixed' && fee.fixedFee) {
-      return parseFloat(String(fee.fixedFee.amount)) || 0;
-    } else if (fee.feeType === 'percentage_plus_fixed') {
-      const percentageFee = fee.percentage !== undefined ? subtotal * (fee.percentage / 100) : 0;
-      const fixedFee = fee.fixedFee ? parseFloat(String(fee.fixedFee.amount)) || 0 : 0;
-      return percentageFee + fixedFee;
-    }
-    return 0;
-  }, [paymentProtectionEnabled, paymentModerator, orderDetails]);
-
-  const totalWithFee = (orderDetails?.total || 0) + moderatorFee;
+  // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入
+  const totalWithFee = orderDetails?.total || 0;
 
   // Mock exchange rate (TODO: 从 API 获取)
   const exchangeRate = 2500;
   const cryptoAmount = totalWithFee / exchangeRate;
   const nativeSymbol = 'ETH'; // TODO: 根据选择的支付方式确定
-
-  // 获取支付信息（支付地址和金额）
-  // 与桌面端一致：使用 orderConfirmation.paymentAddress 或 paymentSent.address
-  const paymentInfo = useMemo(() => {
-    if (!rawOrder) return null;
-
-    const contract = rawOrder.contract as any;
-    const orderConfirmation = contract?.orderConfirmation;
-    const paymentSent = contract?.paymentSent;
-
-    // 支付地址：优先使用卖家确认的地址，回退到已发送的支付地址
-    const paymentAddress = orderConfirmation?.paymentAddress || paymentSent?.address;
-    // 支付金额：使用卖家确认的金额
-    const paymentAmount = orderConfirmation?.requestedAmount;
-    // 支付币种：从 paymentSent 或 orderOpen 获取
-    const paymentCoin =
-      paymentSent?.coin || contract?.orderOpen?.pricingCoin || selectedTokenId || 'ETH';
-
-    return {
-      address: paymentAddress,
-      amount: paymentAmount,
-      coin: paymentCoin,
-    };
-  }, [rawOrder, selectedTokenId]);
-
-  // 获取代币精度（用于支付计算）
-  const getTokenDecimals = useCallback((coin: string): number => {
-    const upperCoin = (coin || '').toUpperCase();
-    // 主流稳定币精度映射
-    if (upperCoin.includes('USDT') || upperCoin.includes('USDC')) {
-      return 6;
-    }
-    if (upperCoin.includes('DAI')) {
-      return 18;
-    }
-    // ETH 和其他原生代币默认 18 位
-    return 18;
-  }, []);
 
   // 执行支付
   const handlePayment = useCallback(async () => {
@@ -840,6 +790,30 @@ export default function PaymentPage() {
                       <VStack gap="sm" className="border-b border-border pb-3 mb-3">
                         <HStack justify="between">
                           <span className="text-xs sm:text-sm text-muted-foreground">
+                            {t('payment.subtotal')}
+                          </span>
+                          <span className="font-medium text-foreground text-xs sm:text-sm">
+                            {renderPairedPrice(orderDetails.subtotal, orderDetails.currency, {
+                              isMinimalUnit: false,
+                            })}
+                          </span>
+                        </HStack>
+
+                        {orderDetails.shipping > 0 && (
+                          <HStack justify="between">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
+                              {t('payment.shipping')}
+                            </span>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">
+                              {renderPairedPrice(orderDetails.shipping, orderDetails.currency, {
+                                isMinimalUnit: false,
+                              })}
+                            </span>
+                          </HStack>
+                        )}
+
+                        <HStack justify="between">
+                          <span className="text-xs sm:text-sm text-muted-foreground">
                             {t('payment.orderTotal')}
                           </span>
                           <span className="font-medium text-foreground text-xs sm:text-sm">
@@ -848,19 +822,6 @@ export default function PaymentPage() {
                             })}
                           </span>
                         </HStack>
-
-                        {paymentProtectionEnabled && paymentModerator && moderatorFee > 0 && (
-                          <HStack justify="between">
-                            <span className="text-xs sm:text-sm text-muted-foreground">
-                              {t('payment.moderatorFee')}
-                            </span>
-                            <span className="font-medium text-foreground text-xs sm:text-sm">
-                              {renderPairedPrice(moderatorFee, orderDetails.currency, {
-                                isMinimalUnit: false,
-                              })}
-                            </span>
-                          </HStack>
-                        )}
                       </VStack>
 
                       <HStack justify="between" className="mb-4">

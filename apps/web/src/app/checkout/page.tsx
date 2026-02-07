@@ -33,6 +33,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 /** Checkout 配送区域 */
 interface CheckoutShippingZone {
+  id?: string; // ShippingZone.id（新模型有值，旧模型无）
   name: string;
   regions: string[];
   rates: CheckoutShippingRate[];
@@ -41,6 +42,7 @@ interface CheckoutShippingZone {
 
 /** Checkout 配送费率 */
 interface CheckoutShippingRate {
+  id?: string; // ShippingRate.id（新模型有值，旧模型无）
   name: string;
   /** 价格（最小单位） */
   price: number;
@@ -77,10 +79,12 @@ interface CheckoutItem {
  */
 function profileToCheckoutZones(profile: ShippingProfile): CheckoutShippingZone[] {
   return (profile.zones || []).map(zone => ({
+    id: zone.id,
     name: zone.name,
     regions: zone.regions || [],
     currency: zone.rates?.[0]?.currency || 'USD',
     rates: (zone.rates || []).map(rate => ({
+      id: rate.id,
       name: rate.name,
       price: parseInt(rate.price, 10) || 0,
       currency: rate.currency,
@@ -222,9 +226,9 @@ export default function CheckoutPage() {
   }, [defaultAddress]);
 
   // 运费选择状态（物理商品用）
-  // key: itemId, value: { zoneName, rateName }
+  // key: itemId, value: { zoneName, rateName, zoneId?, rateId? }
   const [selectedShipping, setSelectedShipping] = useState<
-    Record<string, { zoneName: string; rateName: string }>
+    Record<string, { zoneName: string; rateName: string; zoneId?: string; rateId?: string }>
   >({});
 
   // 使用 ref 跟踪 selectedShipping 的最新值，避免 useEffect 中的循环依赖
@@ -329,6 +333,8 @@ export default function CheckoutPage() {
                 [productData.slug]: {
                   zoneName: firstZone.name,
                   rateName: firstRate.name,
+                  zoneId: firstZone.id,
+                  rateId: firstRate.id,
                 },
               });
             }
@@ -412,7 +418,10 @@ export default function CheckoutPage() {
     const currentShipping = selectedShippingRef.current;
 
     // 一次性计算所有需要更新的项
-    const updates: Record<string, { zoneName: string; rateName: string } | null> = {};
+    const updates: Record<
+      string,
+      { zoneName: string; rateName: string; zoneId?: string; rateId?: string } | null
+    > = {};
     let hasChanges = false;
 
     checkoutItems.forEach(item => {
@@ -433,6 +442,8 @@ export default function CheckoutPage() {
         updates[item.id] = {
           zoneName: availableZone.name,
           rateName: availableZone.rates[0].name,
+          zoneId: availableZone.id,
+          rateId: availableZone.rates[0].id,
         };
         hasChanges = true;
       } else if (currentSelection) {
@@ -517,7 +528,7 @@ export default function CheckoutPage() {
             listingHash: string;
             quantity: number;
             memo?: string;
-            shipping?: { name: string; service: string };
+            shipping?: { name: string; service: string; zoneId?: string; rateId?: string };
           } = {
             listingHash: item.listingHash || item.id,
             quantity: item.quantity,
@@ -525,13 +536,16 @@ export default function CheckoutPage() {
           };
 
           // 物理商品需要添加配送选项
-          // zoneName → shipping.name, rateName → shipping.service（后端兼容两种模型）
+          // zoneName → shipping.name, rateName → shipping.service
+          // zoneId/rateId 用于精确匹配（新版模型有 ID，旧版没有）
           if (item.contractType === 'PHYSICAL_GOOD') {
             const shippingSelection = selectedShipping[item.id];
             if (shippingSelection) {
               itemData.shipping = {
                 name: shippingSelection.zoneName,
                 service: shippingSelection.rateName,
+                ...(shippingSelection.zoneId && { zoneId: shippingSelection.zoneId }),
+                ...(shippingSelection.rateId && { rateId: shippingSelection.rateId }),
               };
             }
           }
@@ -803,6 +817,8 @@ export default function CheckoutPage() {
                                                   [item.id]: {
                                                     zoneName: zone.name,
                                                     rateName: rate.name,
+                                                    zoneId: zone.id,
+                                                    rateId: rate.id,
                                                   },
                                                 }));
                                               }}
