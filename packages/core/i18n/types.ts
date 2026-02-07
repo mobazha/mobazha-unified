@@ -1707,6 +1707,7 @@ export interface TranslationResource {
     defaultProfileSet?: string;
     setAsDefault?: string;
     orUseTemplate?: string;
+    cannotDeleteDefault?: string;
     addOptionToProfile?: string;
     viewOptions?: string;
     option?: string;
@@ -1797,6 +1798,8 @@ export interface TranslationResource {
     noZones?: string;
     noZonesDesc?: string;
     viewZones?: string;
+    unnamedZone?: string;
+    deleteZoneTitle?: string;
     // 运费费率
     shippingRates?: string;
     rate?: string;

@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useI18n, fromMinimalUnit, formatPrice, getAllZones, getAllRates } from '@mobazha/core';
 import type { ShippingProfile } from '@mobazha/core';
 import {
@@ -263,16 +264,28 @@ export function ShippingProfileCard({
                 <Check className="w-4 h-4" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDelete}
-              disabled={disabled || profile.isDefault}
-              title={t('common.delete') || 'Delete'}
-              className={cn(profile.isDefault && 'cursor-not-allowed')}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={cn(profile.isDefault && 'cursor-not-allowed')}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onDelete}
+                      disabled={disabled || profile.isDefault}
+                      className={cn(profile.isDefault && 'pointer-events-none')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {profile.isDefault
+                    ? t('shipping.cannotDeleteDefault') || 'Default profile cannot be deleted'
+                    : t('common.delete') || 'Delete'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </HStack>
         </HStack>
       </div>

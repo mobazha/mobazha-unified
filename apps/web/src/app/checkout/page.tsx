@@ -20,8 +20,35 @@ import {
   useI18n,
   useShippingAddresses,
 } from '@mobazha/core';
-import type { Product, UserProfile, DisplayAddress, ShippingOption } from '@mobazha/core';
+import type {
+  Product,
+  UserProfile,
+  DisplayAddress,
+  ShippingOption,
+  ShippingProfile,
+} from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
+
+// ============== Checkout 配送类型（基于新版 Zone/Rate 模型） ==============
+
+/** Checkout 配送区域 */
+interface CheckoutShippingZone {
+  name: string;
+  regions: string[];
+  rates: CheckoutShippingRate[];
+  currency: string;
+}
+
+/** Checkout 配送费率 */
+interface CheckoutShippingRate {
+  name: string;
+  /** 价格（最小单位） */
+  price: number;
+  currency: string;
+  estimatedDelivery?: string;
+  /** 续件费（最小单位），仅旧版 ShippingOption 转换时有值 */
+  additionalItemPrice?: number;
+}
 
 // Types
 interface CheckoutItem {
@@ -41,8 +68,44 @@ interface CheckoutItem {
   rwaTradeMode?: number;
   rwaEscrowTimeoutSeconds?: number;
   cryptoListingCurrencyCode?: string;
-  // 运费选项（物理商品）
-  shippingOptions?: ShippingOption[];
+  // 配送区域（物理商品，统一使用新版 Zone/Rate 模型）
+  shippingZones?: CheckoutShippingZone[];
+}
+
+/**
+ * 将 ShippingProfile（新模型）转换为 Checkout 配送区域
+ */
+function profileToCheckoutZones(profile: ShippingProfile): CheckoutShippingZone[] {
+  return (profile.zones || []).map(zone => ({
+    name: zone.name,
+    regions: zone.regions || [],
+    currency: zone.rates?.[0]?.currency || 'USD',
+    rates: (zone.rates || []).map(rate => ({
+      name: rate.name,
+      price: parseInt(rate.price, 10) || 0,
+      currency: rate.currency,
+      estimatedDelivery: rate.estimatedDelivery,
+    })),
+  }));
+}
+
+/**
+ * 将旧版 ShippingOption[] 转换为 Checkout 配送区域
+ * 映射: option → zone, service → rate
+ */
+function legacyOptionsToCheckoutZones(options: ShippingOption[]): CheckoutShippingZone[] {
+  return options.map(option => ({
+    name: option.name,
+    regions: option.regions || [],
+    currency: option.currency || 'USD',
+    rates: (option.services || []).map(service => ({
+      name: service.name,
+      price: service.firstFreight ?? service.price ?? 0,
+      currency: option.currency || 'USD',
+      estimatedDelivery: service.estimatedDelivery,
+      additionalItemPrice: service.renewalUnitPrice ?? service.additionalItemPrice ?? 0,
+    })),
+  }));
 }
 
 /**
@@ -78,64 +141,13 @@ function toOrderAddress(addr: DisplayAddress) {
 }
 
 /**
- * 获取运费价格
- * API 返回的实际字段是 firstFreight，但某些情况下可能使用 price
+ * 检查配送区域是否适用于某个国家
  */
-function getShippingPrice(service: ShippingOption['services'][0], option?: ShippingOption): number {
-  // 本地自提免运费
-  if (option?.type === 'LOCAL_PICKUP') {
-    return 0;
-  }
-
-  // 优先使用 firstFreight（API 实际返回的字段）
-  if (service.firstFreight !== undefined && service.firstFreight !== null) {
-    return service.firstFreight;
-  }
-
-  // 兼容 price 字段
-  if (service.price !== undefined && service.price !== null) {
-    return service.price;
-  }
-
-  return 0;
-}
-
-/**
- * 获取续件费
- */
-function getAdditionalItemPrice(service: ShippingOption['services'][0]): number {
-  // 优先使用 renewalUnitPrice
-  if (service.renewalUnitPrice !== undefined && service.renewalUnitPrice > 0) {
-    return service.renewalUnitPrice;
-  }
-
-  // 兼容 additionalItemPrice 字段
-  if (service.additionalItemPrice !== undefined && service.additionalItemPrice > 0) {
-    return service.additionalItemPrice;
-  }
-
-  return 0;
-}
-
-/**
- * 检查运费选项是否适用于某个国家
- * @param option 运费选项
- * @param countryCode 国家代码 (ISO 3166-1 alpha-2)
- * @returns 是否适用
- */
-function isShippingOptionAvailable(
-  option: ShippingOption,
-  countryCode: string | undefined
-): boolean {
-  // 如果没有国家代码，显示所有选项
+function isZoneAvailable(zone: CheckoutShippingZone, countryCode: string | undefined): boolean {
   if (!countryCode) return true;
-
-  // 如果没有配置 regions 或为空数组，视为全球可用
-  if (!option.regions || option.regions.length === 0) return true;
-
-  // 检查是否包含 "ALL" 或用户国家代码
+  if (!zone.regions || zone.regions.length === 0) return true;
   const upperCountry = countryCode.toUpperCase();
-  return option.regions.some(
+  return zone.regions.some(
     region => region.toUpperCase() === 'ALL' || region.toUpperCase() === upperCountry
   );
 }
@@ -154,7 +166,7 @@ function isShippingOptionAvailable(
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { renderPairedPrice, fromMinimalUnit } = useCurrency();
+  const { renderPairedPrice } = useCurrency();
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -209,10 +221,10 @@ export default function CheckoutPage() {
     }
   }, [defaultAddress]);
 
-  // 运费选项状态（物理商品用）
-  // key: itemId, value: { optionName, serviceName }
+  // 运费选择状态（物理商品用）
+  // key: itemId, value: { zoneName, rateName }
   const [selectedShipping, setSelectedShipping] = useState<
-    Record<string, { optionName: string; serviceName: string }>
+    Record<string, { zoneName: string; rateName: string }>
   >({});
 
   // 使用 ref 跟踪 selectedShipping 的最新值，避免 useEffect 中的循环依赖
@@ -294,25 +306,29 @@ export default function CheckoutPage() {
             rwaTradeMode: productData.metadata?.rwaTradeMode,
             rwaEscrowTimeoutSeconds: productData.metadata?.rwaEscrowTimeoutSeconds,
             cryptoListingCurrencyCode: productData.item?.cryptoListingCurrencyCode,
-            // 运费选项（物理商品）
-            shippingOptions: productData.shippingOptions,
+            // 配送区域（物理商品）- 统一转为新版 Zone/Rate 模型
+            shippingZones: productData.shippingProfile
+              ? profileToCheckoutZones(productData.shippingProfile)
+              : productData.shippingOptions
+                ? legacyOptionsToCheckoutZones(productData.shippingOptions)
+                : undefined,
           };
 
           setCheckoutItems([item]);
 
-          // 如果是物理商品且有运费选项，自动选择第一个
+          // 如果是物理商品且有配送区域，自动选择第一个
           if (
             productData.metadata?.contractType === 'PHYSICAL_GOOD' &&
-            productData.shippingOptions &&
-            productData.shippingOptions.length > 0
+            item.shippingZones &&
+            item.shippingZones.length > 0
           ) {
-            const firstOption = productData.shippingOptions[0];
-            const firstService = firstOption.services?.[0];
-            if (firstOption && firstService) {
+            const firstZone = item.shippingZones[0];
+            const firstRate = firstZone.rates?.[0];
+            if (firstZone && firstRate) {
               setSelectedShipping({
                 [productData.slug]: {
-                  optionName: firstOption.name,
-                  serviceName: firstService.name,
+                  zoneName: firstZone.name,
+                  rateName: firstRate.name,
                 },
               });
             }
@@ -352,26 +368,19 @@ export default function CheckoutPage() {
   const shippingTotal = useMemo(() => {
     return checkoutItems.reduce((sum, item) => {
       if (item.contractType !== 'PHYSICAL_GOOD') return sum;
-      if (!item.shippingOptions || item.shippingOptions.length === 0) return sum;
+      if (!item.shippingZones || item.shippingZones.length === 0) return sum;
       const selection = selectedShipping[item.id];
       if (!selection) return sum;
-      const selectedOption = item.shippingOptions.find(
-        option => option.name === selection.optionName
-      );
-      const selectedService = selectedOption?.services.find(
-        service => service.name === selection.serviceName
-      );
-      if (!selectedService) return sum;
-      // 运费数据是最小单位（如 cents），需要转换为标准单位（如 dollars）
-      const currency = selectedOption?.currency || item.currency;
-      const shippingPriceRaw = getShippingPrice(selectedService, selectedOption);
-      const additionalPriceRaw = getAdditionalItemPrice(selectedService);
-      const shippingPrice = fromMinimalUnit(shippingPriceRaw, currency);
-      const additionalPrice = fromMinimalUnit(additionalPriceRaw, currency);
+      const selectedZone = item.shippingZones.find(z => z.name === selection.zoneName);
+      const selectedRate = selectedZone?.rates.find(r => r.name === selection.rateName);
+      if (!selectedRate) return sum;
+      // 运费数据已经是最小单位（如 cents），保持最小单位与 subtotal 一致
+      const shippingPrice = selectedRate.price;
+      const additionalPrice = selectedRate.additionalItemPrice || 0;
       const extraItems = Math.max(item.quantity - 1, 0);
       return sum + shippingPrice + additionalPrice * extraItems;
     }, 0);
-  }, [checkoutItems, selectedShipping, fromMinimalUnit]);
+  }, [checkoutItems, selectedShipping]);
 
   const total = subtotal + shippingTotal; // 下单阶段不计算仲裁费，仲裁费在支付阶段计算
 
@@ -395,7 +404,7 @@ export default function CheckoutPage() {
     return address?.country;
   }, [selectedAddress, apiAddresses]);
 
-  // 当地址改变时，重新选择适用的运费选项
+  // 当地址改变时，重新选择适用的配送区域
   useEffect(() => {
     if (!selectedCountryCode) return;
 
@@ -403,35 +412,31 @@ export default function CheckoutPage() {
     const currentShipping = selectedShippingRef.current;
 
     // 一次性计算所有需要更新的项
-    const updates: Record<string, { optionName: string; serviceName: string } | null> = {};
+    const updates: Record<string, { zoneName: string; rateName: string } | null> = {};
     let hasChanges = false;
 
     checkoutItems.forEach(item => {
-      if (item.contractType !== 'PHYSICAL_GOOD' || !item.shippingOptions) return;
+      if (item.contractType !== 'PHYSICAL_GOOD' || !item.shippingZones) return;
 
       const currentSelection = currentShipping[item.id];
       if (currentSelection) {
-        const currentOption = item.shippingOptions.find(
-          opt => opt.name === currentSelection.optionName
-        );
-        // 如果当前选项适用于新地址，不需要重新选择
-        if (currentOption && isShippingOptionAvailable(currentOption, selectedCountryCode)) {
+        const currentZone = item.shippingZones.find(z => z.name === currentSelection.zoneName);
+        // 如果当前区域适用于新地址，不需要重新选择
+        if (currentZone && isZoneAvailable(currentZone, selectedCountryCode)) {
           return;
         }
       }
 
-      // 重新选择第一个适用的运费选项
-      const availableOption = item.shippingOptions.find(opt =>
-        isShippingOptionAvailable(opt, selectedCountryCode)
-      );
-      if (availableOption && availableOption.services?.[0]) {
+      // 重新选择第一个适用的配送区域
+      const availableZone = item.shippingZones.find(z => isZoneAvailable(z, selectedCountryCode));
+      if (availableZone && availableZone.rates?.[0]) {
         updates[item.id] = {
-          optionName: availableOption.name,
-          serviceName: availableOption.services[0].name,
+          zoneName: availableZone.name,
+          rateName: availableZone.rates[0].name,
         };
         hasChanges = true;
       } else if (currentSelection) {
-        // 如果没有适用的选项且之前有选择，标记为需要删除
+        // 如果没有适用的区域且之前有选择，标记为需要删除
         updates[item.id] = null;
         hasChanges = true;
       }
@@ -459,15 +464,13 @@ export default function CheckoutPage() {
     return rwaItem?.rwaTradeMode;
   }, [checkoutItems]);
 
-  // 检查物理商品是否都选择了运费选项
+  // 检查物理商品是否都选择了配送方式
   const hasAllShippingSelected = useMemo(() => {
     return checkoutItems.every(item => {
-      // 非物理商品不需要运费选项
       if (item.contractType !== 'PHYSICAL_GOOD') return true;
-      // Bug Fix: 物理商品必须有运费选项配置，否则视为配置错误
-      if (!item.shippingOptions || item.shippingOptions.length === 0) return false;
+      if (!item.shippingZones || item.shippingZones.length === 0) return false;
       const selection = selectedShipping[item.id];
-      return selection && selection.optionName && selection.serviceName;
+      return selection && selection.zoneName && selection.rateName;
     });
   }, [checkoutItems, selectedShipping]);
 
@@ -521,13 +524,14 @@ export default function CheckoutPage() {
             memo: orderNote || undefined, // 订单备注放在 items 里
           };
 
-          // 物理商品需要添加运费选项
+          // 物理商品需要添加配送选项
+          // zoneName → shipping.name, rateName → shipping.service（后端兼容两种模型）
           if (item.contractType === 'PHYSICAL_GOOD') {
             const shippingSelection = selectedShipping[item.id];
             if (shippingSelection) {
               itemData.shipping = {
-                name: shippingSelection.optionName,
-                service: shippingSelection.serviceName,
+                name: shippingSelection.zoneName,
+                service: shippingSelection.rateName,
               };
             }
           }
@@ -745,14 +749,12 @@ export default function CheckoutPage() {
                   </Card>
                 )}
 
-                {/* Shipping Option - 仅物理商品且有运费选项时显示 */}
+                {/* Shipping Method - 仅物理商品且有配送区域时显示 */}
                 {checkoutItems.some(
                   item =>
                     item.contractType === 'PHYSICAL_GOOD' &&
-                    item.shippingOptions &&
-                    item.shippingOptions.some(opt =>
-                      isShippingOptionAvailable(opt, selectedCountryCode)
-                    )
+                    item.shippingZones &&
+                    item.shippingZones.some(z => isZoneAvailable(z, selectedCountryCode))
                 ) && (
                   <Card>
                     <CardContent className="p-4 sm:p-6">
@@ -764,29 +766,26 @@ export default function CheckoutPage() {
                           .filter(
                             item =>
                               item.contractType === 'PHYSICAL_GOOD' &&
-                              item.shippingOptions &&
-                              item.shippingOptions.some(opt =>
-                                isShippingOptionAvailable(opt, selectedCountryCode)
-                              )
+                              item.shippingZones &&
+                              item.shippingZones.some(z => isZoneAvailable(z, selectedCountryCode))
                           )
                           .map(item => (
                             <div key={item.id} className="space-y-2">
                               {item
-                                .shippingOptions!.filter(option =>
-                                  isShippingOptionAvailable(option, selectedCountryCode)
+                                .shippingZones!.filter(zone =>
+                                  isZoneAvailable(zone, selectedCountryCode)
                                 )
-                                .map(option => (
-                                  <div key={option.name} className="space-y-1.5">
-                                    {option.services.map(service => {
+                                .map(zone => (
+                                  <div key={zone.name} className="space-y-1.5">
+                                    {zone.rates.map(rate => {
                                       const isSelected =
-                                        selectedShipping[item.id]?.optionName === option.name &&
-                                        selectedShipping[item.id]?.serviceName === service.name;
-                                      // 运费数据是最小单位，renderPairedPrice 会自动转换
-                                      const currency = option.currency || item.currency;
-                                      const shippingPrice = getShippingPrice(service, option);
+                                        selectedShipping[item.id]?.zoneName === zone.name &&
+                                        selectedShipping[item.id]?.rateName === rate.name;
+                                      const currency =
+                                        rate.currency || zone.currency || item.currency;
                                       return (
                                         <label
-                                          key={`${option.name}-${service.name}`}
+                                          key={`${zone.name}-${rate.name}`}
                                           className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                                             isSelected
                                               ? 'border-primary bg-primary/5'
@@ -802,8 +801,8 @@ export default function CheckoutPage() {
                                                 setSelectedShipping(prev => ({
                                                   ...prev,
                                                   [item.id]: {
-                                                    optionName: option.name,
-                                                    serviceName: service.name,
+                                                    zoneName: zone.name,
+                                                    rateName: rate.name,
                                                   },
                                                 }));
                                               }}
@@ -811,19 +810,19 @@ export default function CheckoutPage() {
                                             />
                                             <div>
                                               <p className="text-sm font-medium text-foreground">
-                                                {option.name} - {service.name}
+                                                {zone.name} - {rate.name}
                                               </p>
-                                              {service.estimatedDelivery && (
+                                              {rate.estimatedDelivery && (
                                                 <p className="text-xs text-muted-foreground">
-                                                  {service.estimatedDelivery}
+                                                  {rate.estimatedDelivery}
                                                 </p>
                                               )}
                                             </div>
                                           </div>
                                           <span className="text-sm font-semibold text-foreground">
-                                            {shippingPrice === 0
+                                            {rate.price === 0
                                               ? t('checkout.free') || 'Free'
-                                              : renderPairedPrice(shippingPrice, currency)}
+                                              : renderPairedPrice(rate.price, currency)}
                                           </span>
                                         </label>
                                       );

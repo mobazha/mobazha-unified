@@ -21,7 +21,6 @@ import {
   useShippingOptions,
   useShippingProfiles,
   createEmptyProfile,
-  generateId,
 } from '@mobazha/core';
 import type {
   ShippingOptionConfig,
@@ -49,7 +48,7 @@ function EmptyState({
   onSelectTemplate,
   onCreateProfile,
 }: {
-  onSelectTemplate: (option: ShippingOptionConfig) => void;
+  onSelectTemplate: (zone: ShippingZone) => void;
   onCreateProfile: () => void;
 }) {
   const { t } = useI18n();
@@ -357,24 +356,9 @@ export default function ShippingOptionsPage() {
     }
   }, [migrateToProfiles, toast, t]);
 
-  // 处理模板选择（创建带模板的档案）- 转换为新的 Zone 格式
+  // 处理模板选择 - 直接接收 ShippingZone
   const handleSelectTemplate = useCallback(
-    async (option: ShippingOptionConfig) => {
-      // 转换 ShippingOptionConfig 为 ShippingZone
-      const zone: ShippingZone = {
-        id: generateId(),
-        name: option.name,
-        regions: option.regions || [],
-        rates:
-          option.services?.map(service => ({
-            id: generateId(),
-            name: service.name,
-            price: service.firstFreight || '0',
-            currency: option.currency || 'USD',
-            estimatedDelivery: service.estimatedDelivery || '',
-          })) || [],
-      };
-
+    async (zone: ShippingZone) => {
       if (!isUsingProfiles) {
         const newProfile = createEmptyProfile(true);
         newProfile.name = t('shipping.defaultProfileName') || 'Default Shipping';
@@ -388,14 +372,7 @@ export default function ShippingOptionsPage() {
     [isUsingProfiles, addProfile, t]
   );
 
-  // 添加运费选项到档案（旧版，保留用于传统选项）
-  const handleAddOption = useCallback((profileId: string) => {
-    setSelectedProfileId(profileId);
-    setEditingOption(null);
-    setShowForm(true);
-  }, []);
-
-  // 添加配送区域到档案（新版）
+  // 添加配送区域到档案
   const handleAddZone = useCallback((profileId: string) => {
     setSelectedProfileId(profileId);
     setEditingZone(null);
@@ -601,7 +578,7 @@ export default function ShippingOptionsPage() {
             ? t('shipping.shippingProfiles') || 'Shipping Profiles'
             : t('settingsExtended.shippingOptions') || 'Shipping Options'}
         </h1>
-        {isUsingProfiles && profiles.length > 0 && (
+        {isUsingProfiles && (
           <Button onClick={handleCreateProfile} size="sm">
             <Plus className="w-4 h-4 mr-1" />
             {t('shipping.addProfile') || 'Add Profile'}
@@ -618,69 +595,76 @@ export default function ShippingOptionsPage() {
       {isLoading ? (
         <LoadingSkeleton />
       ) : isUsingProfiles ? (
-        // 配送档案模式
-        profiles.length === 0 ? (
-          <EmptyState
-            onSelectTemplate={handleSelectTemplate}
-            onCreateProfile={handleCreateProfile}
-          />
-        ) : (
-          <VStack gap="lg">
-            {profiles.map(profile => {
-              const isExpanded = expandedProfiles.has(profile.profileId);
-              return (
-                <div key={profile.profileId} className="space-y-0">
-                  <ShippingProfileCard
-                    profile={profile}
-                    onRename={async newName => {
-                      return await updateProfile(profile.profileId, { ...profile, name: newName });
-                    }}
-                    onDelete={() => handleDeleteProfileClick(profile)}
-                    onSetDefault={() => handleSetDefaultProfile(profile.profileId)}
-                    disabled={isSaving}
-                    expanded={isExpanded}
-                    onToggleExpand={() => toggleProfileExpand(profile.profileId)}
-                  />
-                  {/* 档案内的配送区域 - 可展开/折叠 */}
-                  {isExpanded && (
-                    <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
-                      {(profile.zones?.length || 0) > 0 ? (
-                        (profile.zones || []).map(zone => (
-                          <ShippingZoneCard
-                            key={zone.id}
-                            zone={zone}
-                            onEdit={() => {
-                              setSelectedProfileId(profile.profileId);
-                              setEditingZone(zone);
-                              setShowZoneForm(true);
-                            }}
-                            onDelete={() => handleDeleteZoneClick(zone, profile.profileId)}
-                            disabled={isSaving}
-                          />
-                        ))
-                      ) : (
+        <VStack gap="lg">
+          {profiles.map(profile => {
+            const isExpanded = expandedProfiles.has(profile.profileId);
+            return (
+              <div key={profile.profileId} className="space-y-0">
+                <ShippingProfileCard
+                  profile={profile}
+                  onRename={async newName => {
+                    return await updateProfile(profile.profileId, { ...profile, name: newName });
+                  }}
+                  onDelete={() => handleDeleteProfileClick(profile)}
+                  onSetDefault={() => handleSetDefaultProfile(profile.profileId)}
+                  disabled={isSaving}
+                  expanded={isExpanded}
+                  onToggleExpand={() => toggleProfileExpand(profile.profileId)}
+                />
+                {/* 档案内的配送区域 - 可展开/折叠 */}
+                {isExpanded && (
+                  <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
+                    {(profile.zones?.length || 0) > 0 ? (
+                      (profile.zones || []).map(zone => (
+                        <ShippingZoneCard
+                          key={zone.id}
+                          zone={zone}
+                          onEdit={() => {
+                            setSelectedProfileId(profile.profileId);
+                            setEditingZone(zone);
+                            setShowZoneForm(true);
+                          }}
+                          onDelete={() => handleDeleteZoneClick(zone, profile.profileId)}
+                          disabled={isSaving}
+                        />
+                      ))
+                    ) : (
+                      <div className="space-y-3">
                         <p className="text-sm text-muted-foreground py-2">
                           {t('shipping.noZonesDesc') ||
                             'Add shipping zones to define delivery regions and rates'}
                         </p>
-                      )}
-                      {/* 添加配送区域按钮 - 放在展开区域内 */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full border-dashed"
-                        onClick={() => handleAddZone(profile.profileId)}
-                      >
-                        <Plus className="w-3.5 h-3.5 mr-1" />
-                        {t('shipping.addZone') || 'Add Shipping Zone'}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </VStack>
-        )
+                        {/* 模板快捷入口 */}
+                        <div className="pt-1">
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {t('shipping.orUseTemplate') || 'Or start with a template:'}
+                          </p>
+                          <ShippingTemplateSelector
+                            currency="USD"
+                            onSelect={option => {
+                              setSelectedProfileId(profile.profileId);
+                              handleSelectTemplate(option);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {/* 添加配送区域按钮 - 放在展开区域内 */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-dashed"
+                      onClick={() => handleAddZone(profile.profileId)}
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      {t('shipping.addZone') || 'Add Shipping Zone'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </VStack>
       ) : // 传统模式
       legacyOptions.length === 0 ? (
         <EmptyState onSelectTemplate={handleSelectTemplate} onCreateProfile={handleCreateProfile} />

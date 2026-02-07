@@ -2,21 +2,21 @@
 
 /**
  * ShippingTemplateSelector - 运费预设模板选择器
- * 提供快速预设模板帮助卖家快速配置常见运费方案
+ * 直接生成 ShippingZone 格式，用于新版配送档案系统
  */
 
 import React from 'react';
 import { Package, Globe, MapPin, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n, type ShippingOptionConfig } from '@mobazha/core';
+import { useI18n, generateId, type ShippingZone } from '@mobazha/core';
 
 // 预设模板类型
 export type ShippingTemplateType =
   | 'domestic_standard'
   | 'worldwide_flat'
-  | 'local_pickup'
-  | 'express';
+  | 'express'
+  | 'local_pickup';
 
 // 预设模板数据
 export interface ShippingTemplate {
@@ -24,33 +24,27 @@ export interface ShippingTemplate {
   icon: React.ComponentType<{ className?: string }>;
   labelKey: string;
   descKey: string;
-  createOption: (currency: string) => ShippingOptionConfig;
+  createZone: (currency: string) => ShippingZone;
 }
 
-// 预设模板配置
+// 预设模板配置 — 直接生成 ShippingZone
 export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
   {
     id: 'domestic_standard',
     icon: Package,
     labelKey: 'shippingTemplates.domesticStandard',
     descKey: 'shippingTemplates.domesticStandardDesc',
-    createOption: (currency: string): ShippingOptionConfig => ({
+    createZone: (currency: string): ShippingZone => ({
+      id: generateId(),
       name: currency === 'CNY' ? '国内标准快递' : 'Domestic Standard',
-      type: 'FIXED_PRICE',
-      currency,
-      serviceType: 'FIRST_RENEWAL_FEE',
       regions: currency === 'CNY' ? ['CN'] : ['US'],
-      services: [
+      rates: [
         {
+          id: generateId(),
           name: currency === 'CNY' ? '普通快递' : 'Standard',
+          price: currency === 'CNY' ? '1000' : '500', // ¥10 or $5
+          currency,
           estimatedDelivery: '3-5 days',
-          startWeight: 0,
-          endWeight: 0,
-          firstWeight: 1000, // 1kg
-          firstFreight: currency === 'CNY' ? '1000' : '500', // ¥10 or $5
-          renewalUnitWeight: 1000, // 1kg
-          renewalUnitPrice: currency === 'CNY' ? '300' : '200', // ¥3 or $2 per kg
-          registrationFee: '0',
         },
       ],
     }),
@@ -60,23 +54,17 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: Globe,
     labelKey: 'shippingTemplates.worldwideFlat',
     descKey: 'shippingTemplates.worldwideFlatDesc',
-    createOption: (currency: string): ShippingOptionConfig => ({
+    createZone: (currency: string): ShippingZone => ({
+      id: generateId(),
       name: currency === 'CNY' ? '全球统一运费' : 'Worldwide Flat Rate',
-      type: 'FIXED_PRICE',
-      currency,
-      serviceType: 'SAME_WEIGHT_SAME_FEE',
       regions: ['ALL'],
-      services: [
+      rates: [
         {
+          id: generateId(),
           name: currency === 'CNY' ? '国际快递' : 'International',
+          price: currency === 'CNY' ? '9900' : '1500', // ¥99 or $15
+          currency,
           estimatedDelivery: '7-14 days',
-          startWeight: 0,
-          endWeight: 10000, // up to 10kg
-          firstWeight: 0,
-          firstFreight: currency === 'CNY' ? '9900' : '1500', // ¥99 or $15
-          renewalUnitWeight: 0,
-          renewalUnitPrice: '0',
-          registrationFee: '0',
         },
       ],
     }),
@@ -86,23 +74,17 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: Truck,
     labelKey: 'shippingTemplates.express',
     descKey: 'shippingTemplates.expressDesc',
-    createOption: (currency: string): ShippingOptionConfig => ({
+    createZone: (currency: string): ShippingZone => ({
+      id: generateId(),
       name: currency === 'CNY' ? '特快专递' : 'Express Shipping',
-      type: 'FIXED_PRICE',
-      currency,
-      serviceType: 'FIRST_RENEWAL_FEE',
       regions: currency === 'CNY' ? ['CN'] : ['US'],
-      services: [
+      rates: [
         {
+          id: generateId(),
           name: currency === 'CNY' ? '次日达' : 'Express',
+          price: currency === 'CNY' ? '2000' : '1500', // ¥20 or $15
+          currency,
           estimatedDelivery: '1-2 days',
-          startWeight: 0,
-          endWeight: 0,
-          firstWeight: 1000,
-          firstFreight: currency === 'CNY' ? '2000' : '1500', // ¥20 or $15
-          renewalUnitWeight: 1000,
-          renewalUnitPrice: currency === 'CNY' ? '500' : '500', // ¥5 or $5 per kg
-          registrationFee: '0',
         },
       ],
     }),
@@ -112,23 +94,17 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
     icon: MapPin,
     labelKey: 'shippingTemplates.localPickup',
     descKey: 'shippingTemplates.localPickupDesc',
-    createOption: (currency: string): ShippingOptionConfig => ({
+    createZone: (currency: string): ShippingZone => ({
+      id: generateId(),
       name: currency === 'CNY' ? '本地自提' : 'Local Pickup',
-      type: 'LOCAL_PICKUP',
-      currency,
-      serviceType: 'SAME_WEIGHT_SAME_FEE',
       regions: ['ALL'],
-      services: [
+      rates: [
         {
+          id: generateId(),
           name: currency === 'CNY' ? '门店自提' : 'Store Pickup',
+          price: '0',
+          currency,
           estimatedDelivery: currency === 'CNY' ? '即时可取' : 'Ready for pickup',
-          startWeight: 0,
-          endWeight: 0,
-          firstWeight: 0,
-          firstFreight: '0',
-          renewalUnitWeight: 0,
-          renewalUnitPrice: '0',
-          registrationFee: '0',
         },
       ],
     }),
@@ -137,7 +113,7 @@ export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
 
 interface ShippingTemplateSelectorProps {
   currency: string;
-  onSelect: (option: ShippingOptionConfig) => void;
+  onSelect: (zone: ShippingZone) => void;
   className?: string;
 }
 
@@ -166,7 +142,7 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
             <Card
               key={template.id}
               className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => onSelect(template.createOption(currency))}
+              onClick={() => onSelect(template.createZone(currency))}
             >
               <CardContent className="p-3">
                 <div className="flex items-start gap-3">
@@ -194,24 +170,18 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
           size="sm"
           className="text-xs text-muted-foreground"
           onClick={() => {
-            // 创建一个空模板让用户自定义
+            // 创建一个空 zone 让用户自定义
             onSelect({
+              id: generateId(),
               name: '',
-              type: 'FIXED_PRICE',
-              currency,
-              serviceType: 'SAME_WEIGHT_SAME_FEE',
               regions: [],
-              services: [
+              rates: [
                 {
+                  id: generateId(),
                   name: '',
+                  price: '0',
+                  currency,
                   estimatedDelivery: '',
-                  startWeight: 0,
-                  endWeight: 0,
-                  firstWeight: 0,
-                  firstFreight: '0',
-                  renewalUnitWeight: 0,
-                  renewalUnitPrice: '0',
-                  registrationFee: '0',
                 },
               ],
             });
