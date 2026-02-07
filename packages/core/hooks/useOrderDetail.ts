@@ -12,11 +12,10 @@ import { useMemo, useEffect, useState } from 'react';
 import { useOrder } from './useOrders';
 import { useUserStore } from '../stores/userStore';
 import { transformCoreOrder } from '../utils/transforms/orderTransform';
-import { getProfile } from '../services/api/profile';
+import { fetchProfileWithCache } from '../services/profileCache';
 import { getImageUrl } from '../services/api/config';
 import type { Order as CoreOrder } from '../types/order';
 import type { DisplayOrder } from '../types/orderDisplay';
-import type { UserProfile } from '../types/user';
 
 /**
  * useOrderDetail Hook 返回值
@@ -32,32 +31,6 @@ export interface UseOrderDetailReturn {
   error: string | null;
   /** 重新获取数据 */
   refetch: () => void;
-}
-
-/**
- * 缓存的 profile 数据
- */
-const profileCache = new Map<string, UserProfile | null>();
-
-/**
- * 获取 profile，带缓存
- */
-async function fetchProfileWithCache(peerID: string): Promise<UserProfile | null> {
-  if (!peerID) return null;
-
-  // 检查缓存
-  if (profileCache.has(peerID)) {
-    return profileCache.get(peerID) || null;
-  }
-
-  try {
-    const profile = await getProfile(peerID);
-    profileCache.set(peerID, profile);
-    return profile;
-  } catch {
-    profileCache.set(peerID, null);
-    return null;
-  }
 }
 
 /**

@@ -190,11 +190,28 @@ export const OrderTable = memo(function OrderTable({
                 {/* BUYER/SELLER */}
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                    {order.vendor.avatar ? (
+                      <img
+                        src={order.vendor.avatar}
+                        alt={order.vendor.name}
+                        className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                        onError={e => {
+                          // 头像加载失败时显示首字母占位
+                          const target = e.currentTarget;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-7 h-7 rounded-full bg-primary/20 items-center justify-center text-primary text-xs font-medium flex-shrink-0"
+                      style={{ display: order.vendor.avatar ? 'none' : 'flex' }}
+                    >
                       {order.vendor.name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <span className="text-sm text-foreground truncate max-w-[80px]">
-                      {truncateId(order.vendor.name || order.vendor.id, 10)}
+                      {order.vendor.name || truncateId(order.vendor.id, 10)}
                     </span>
                   </div>
                 </TableCell>
