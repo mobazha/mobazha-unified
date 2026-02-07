@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useI18n, generateId } from '@mobazha/core';
+import { useI18n, generateId, fromMinimalUnit, toMinimalUnit } from '@mobazha/core';
 import type { ShippingZone, ShippingRate, RateCondition, RateConditionType } from '@mobazha/core';
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
@@ -41,20 +41,25 @@ export function ShippingZoneForm({
 }: ShippingZoneFormProps) {
   const { t } = useI18n();
 
-  // 表单状态
+  // 将 API 的最小单位价格转为展示用金额（编辑时显示 0.1 而非 10）
+  const initialRates: ShippingRate[] = zone?.rates?.length
+    ? zone.rates.map(r => ({
+        ...r,
+        price: String(fromMinimalUnit(Number(r.price) || 0, r.currency || currency)),
+      }))
+    : [
+        {
+          id: generateId(),
+          name: '',
+          price: '0',
+          currency,
+          estimatedDelivery: '',
+        },
+      ];
+
   const [name, setName] = useState(zone?.name || '');
   const [regions, setRegions] = useState<string[]>(zone?.regions || []);
-  const [rates, setRates] = useState<ShippingRate[]>(
-    zone?.rates || [
-      {
-        id: generateId(),
-        name: '',
-        price: '0',
-        currency,
-        estimatedDelivery: '',
-      },
-    ]
-  );
+  const [rates, setRates] = useState<ShippingRate[]>(initialRates);
   // 跟踪展开的条件编辑区域
   const [expandedConditions, setExpandedConditions] = useState<Set<number>>(new Set());
 
@@ -134,14 +139,20 @@ export function ShippingZoneForm({
       id: zone?.id || generateId(),
       name: name.trim(),
       regions,
-      rates: rates.map(rate => ({
-        ...rate,
-        name: rate.name.trim() || name.trim(),
-      })),
+      rates: rates.map(rate => {
+        const cur = rate.currency || currency;
+        const priceDisplay = Number(rate.price) || 0;
+        const priceMinimal = String(toMinimalUnit(priceDisplay, cur));
+        return {
+          ...rate,
+          name: rate.name.trim() || name.trim(),
+          price: priceMinimal,
+        };
+      }),
     };
 
     await onSave(zoneData);
-  }, [zone, name, regions, rates, onSave]);
+  }, [zone, name, regions, rates, onSave, currency]);
 
   const isValid =
     name.trim() &&
@@ -203,9 +214,11 @@ export function ShippingZoneForm({
                 />
               </div>
 
-              {/* 价格 */}
+              {/* 价格（展示为日常金额，并标明货币） */}
               <div className="space-y-1">
-                <Label className="text-xs">{t('shipping.ratePrice') || 'Price'}</Label>
+                <Label className="text-xs">
+                  {t('shipping.ratePrice') || 'Price'} ({rate.currency || currency})
+                </Label>
                 <Input
                   type="number"
                   value={rate.price}
@@ -213,6 +226,7 @@ export function ShippingZoneForm({
                   placeholder="0.00"
                   min="0"
                   step="0.01"
+                  aria-label={`${t('shipping.ratePrice') || 'Price'} ${rate.currency || currency}`}
                 />
               </div>
 

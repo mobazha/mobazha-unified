@@ -2581,6 +2581,7 @@ export const en: TranslationResource = {
     zoneAdded: 'Shipping zone added',
     noZones: 'No shipping zones',
     noZonesDesc: 'Add shipping zones to define delivery regions and rates',
+    viewZones: 'View shipping zones',
     // Shipping Rates
     shippingRates: 'Shipping Rates',
     rate: 'rate',

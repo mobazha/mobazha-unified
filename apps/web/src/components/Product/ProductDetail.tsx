@@ -65,12 +65,25 @@ function getStockQuantity(product: Product): number {
 
 // 检查是否免运费
 function hasFreeShipping(product: Product): boolean {
+  // 新版 profile
+  if (product.shippingProfile?.zones?.length) {
+    return product.shippingProfile.zones.some(
+      zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
+    );
+  }
+  // 旧版兼容
   if (!product.shippingOptions) return false;
   return product.shippingOptions.some(opt => opt.services.some(svc => svc.price === 0));
 }
 
 // 获取预计送达时间
 function getEstimatedDelivery(product: Product): string | null {
+  // 新版 profile
+  if (product.shippingProfile?.zones?.length) {
+    const firstRate = product.shippingProfile.zones[0]?.rates[0];
+    return firstRate?.estimatedDelivery || null;
+  }
+  // 旧版兼容
   if (!product.shippingOptions || product.shippingOptions.length === 0) return null;
   const firstService = product.shippingOptions[0]?.services[0];
   return firstService?.estimatedDelivery || null;
@@ -1093,6 +1106,7 @@ export function ProductDetail({
             {/* Shipping Options - 仅对实物商品显示 */}
             {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
               <ShippingOptionsSection
+                shippingProfile={product.shippingProfile}
                 shippingOptions={product.shippingOptions}
                 pricingCurrency={product.metadata?.pricingCurrency?.code}
               />
