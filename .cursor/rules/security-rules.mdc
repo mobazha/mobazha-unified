@@ -1,0 +1,57 @@
+---
+description: 安全开发硬性规则 — 涉及资金、加密、用户数据的代码必须遵循
+alwaysApply: true
+---
+
+# 安全开发规则
+
+## XSS 防护
+
+- 禁止直接使用 `dangerouslySetInnerHTML`，必须通过 `sanitizeHtml()` (`packages/core/utils/htmlUtils.ts`)
+- 禁止 `eval()`、`new Function()`、`document.write()`
+- 用户输入拼接到 URL 时必须使用 `encodeURIComponent()`
+
+```tsx
+// ❌ 禁止
+<div dangerouslySetInnerHTML={{ __html: userContent }} />
+
+// ✅ 必须
+import { sanitizeHtml } from '@mobazha/core';
+<div dangerouslySetInnerHTML={{ __html: sanitizeHtml(userContent) }} />
+```
+
+## 金额与精度
+
+- 金额计算必须使用 `BigNumber`（`bignumber.js`），禁止原生浮点运算
+- 禁止 `toFixed()` 用于计算（仅允许用于最终显示）
+- 链上金额必须使用 `toMinimalUnit()` / `fromMinimalUnit()` 转换
+
+```tsx
+// ❌ 禁止
+const total = price * quantity;
+const fee = amount.toFixed(2);
+
+// ✅ 必须
+import BigNumber from 'bignumber.js';
+const total = new BigNumber(price).times(quantity);
+```
+
+## 密钥与敏感数据
+
+- 禁止在 `localStorage` / `sessionStorage` 存储私钥、助记词、API 密钥
+- 禁止在前端代码中硬编码合约地址以外的任何密钥
+- 助记词操作仅通过后端 API（`wallet.getMnemonic()` / `wallet.restoreWallet()`）
+- 日志中禁止输出敏感数据（私钥、助记词、token）
+
+## 地址与输入验证
+
+- 链上地址必须使用 `ethers.getAddress()` 进行规范化和校验
+- 用户输入的地址在提交前必须调用 `validateAddress()` API
+- 金额输入必须验证：非负、非 NaN、不超过余额、精度合规
+
+## 智能合约交互
+
+- 合约调用前必须检查钱包连接状态和正确的链
+- 交易发送前必须做 gas 估算（`estimateGas()`）
+- 所有合约操作必须有 try/catch 错误处理
+- Escrow 操作必须二次确认（UI 层面）

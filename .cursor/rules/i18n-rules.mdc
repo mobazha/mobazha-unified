@@ -1,0 +1,43 @@
+---
+description: 国际化硬性规则 — 所有用户可见文本必须使用 i18n
+globs:
+  - "apps/web/src/**/*.tsx"
+  - "apps/web/src/**/*.ts"
+  - "packages/ui/**/*.tsx"
+---
+
+# 国际化规则
+
+## 严格禁止
+
+- 禁止在 JSX 中硬编码用户可见的中文、英文或其他语言文本
+- 禁止在组件中直接写死错误提示、占位符、按钮文本
+- 禁止在条件判断中用语言分支（如 `currency === 'CNY' ? '中文' : 'English'`）
+
+```tsx
+// ❌ 禁止
+<Button>提交订单</Button>
+<p>No items found</p>
+placeholder="请输入搜索内容"
+{currency === 'CNY' ? '国内快递' : 'Standard Shipping'}
+
+// ✅ 必须
+<Button>{t('order.submit')}</Button>
+<p>{t('common.noItems')}</p>
+placeholder={t('search.placeholder')}
+{t(`shipping.templates.${templateKey}`)}
+```
+
+## 翻译 Key 规范
+
+- 使用点分隔的层级命名：`模块.功能.描述`
+- 示例：`order.status.completed`、`wallet.send.confirm`、`settings.general.title`
+- 新增 key 必须同时添加到 `packages/core/i18n/locales/en.ts`
+
+## 允许的例外
+
+- 技术性标识（如链名 "Ethereum"、"BSC"）
+- 货币代码（"BTC"、"ETH"）
+- 组件内部的 `data-testid` 值
+- `console.log` / `console.error` 的调试信息
+- 仅用于开发环境的文本
