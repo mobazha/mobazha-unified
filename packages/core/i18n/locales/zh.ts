@@ -2153,6 +2153,7 @@ export const zh: TranslationResource = {
       variants: '变体',
       policies: '政策',
       coupons: '优惠券',
+      other: '其他设置',
     },
 
     // 基本信息
@@ -2201,7 +2202,9 @@ export const zh: TranslationResource = {
     enterTag: '输入标签...',
     category: '分类',
     categoryHelper: '用于组织您的店铺',
+    categoryDesc: '添加分类帮助组织您的店铺，买家可以按分类筛选商品。',
     enterCategory: '输入分类...',
+    createCategory: '创建 "{{name}}"',
 
     // 物流
     shippingOptions: '物流选项',
@@ -2220,6 +2223,7 @@ export const zh: TranslationResource = {
     // 变体
     variants: '变体',
     variantsHelper: '添加额外的尺寸、颜色、材质等',
+    variantsDesc: '添加不同的尺寸、颜色、材质等选项供买家选择。',
     addVariant: '添加变体',
 
     // 政策
@@ -2233,6 +2237,7 @@ export const zh: TranslationResource = {
 
     // 优惠券
     coupons: '优惠券',
+    couponsDesc: '创建折扣码为您的买家提供优惠活动。',
     addCoupon: '添加优惠券',
 
     // RWA 代币
@@ -2375,6 +2380,30 @@ export const zh: TranslationResource = {
     // 预览
     preview: '预览',
     productTitle: '商品标题',
+
+    // 发布
+    publish: '发布',
+    saveDraft: '保存草稿',
+
+    // NSFW
+    nsfwLabel: '成人内容',
+    nsfwDesc: '此商品包含成人内容（NSFW、18+）',
+
+    // 处理时间
+    processingTime: '处理时间',
+    processingTimePlaceholder: '例如：1-3 个工作日',
+    processingTimeHelper: '发货前准备订单所需的时间',
+
+    // 克隆
+    cloneListing: '克隆商品',
+    loadingCloneData: '正在加载商品数据...',
+    cloneNotFound: '商品不存在或无法访问',
+    cloneFailed: '加载商品数据失败',
+
+    // 配送档案
+    shippingProfile: '配送方案',
+    selectShippingProfile: '为此商品选择配送方案',
+    manageProfiles: '管理配送方案',
 
     // 操作和状态
     validationFailed: '请修正错误后再提交',

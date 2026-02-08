@@ -2195,6 +2195,7 @@ export const en: TranslationResource = {
       variants: 'Variants',
       policies: 'Policies',
       coupons: 'Coupons',
+      other: 'Other Settings',
     },
 
     // Basic Info
@@ -2244,7 +2245,9 @@ export const en: TranslationResource = {
     enterTag: 'Enter #tags...',
     category: 'Category',
     categoryHelper: 'For organizing your store',
+    categoryDesc: 'Add categories to help organize your store. Buyers can filter by category.',
     enterCategory: 'Enter a category...',
+    createCategory: 'Create "{{name}}"',
 
     // Shipping
     shippingOptions: 'Shipping Options',
@@ -2264,6 +2267,8 @@ export const en: TranslationResource = {
     // Variants
     variants: 'Variants',
     variantsHelper: 'Add additional sizes, colors, materials, etc',
+    variantsDesc:
+      'Add options like different sizes, colors, or materials for buyers to choose from.',
     addVariant: 'Add Variant',
 
     // Policies
@@ -2277,6 +2282,7 @@ export const en: TranslationResource = {
 
     // Coupons
     coupons: 'Coupons',
+    couponsDesc: 'Create discount codes to offer promotions to your buyers.',
     addCoupon: 'Add Coupon',
 
     // RWA Token
@@ -2425,6 +2431,30 @@ export const en: TranslationResource = {
     // Preview
     preview: 'Preview',
     productTitle: 'Product Title',
+
+    // Publish
+    publish: 'Publish',
+    saveDraft: 'Save as Draft',
+
+    // NSFW
+    nsfwLabel: 'Mature Content',
+    nsfwDesc: 'This listing contains adult content (NSFW, 18+)',
+
+    // Processing Time
+    processingTime: 'Processing Time',
+    processingTimePlaceholder: 'e.g., 1-3 business days',
+    processingTimeHelper: 'Time needed to prepare the order before shipping',
+
+    // Clone
+    cloneListing: 'Clone Listing',
+    loadingCloneData: 'Loading listing data...',
+    cloneNotFound: 'Listing not found or cannot be accessed',
+    cloneFailed: 'Failed to load listing data',
+
+    // Shipping Profile
+    shippingProfile: 'Shipping Profile',
+    selectShippingProfile: 'Select a shipping profile for this listing',
+    manageProfiles: 'Manage Profiles',
 
     // Actions & Status
     validationFailed: 'Please fix the errors before submitting',
