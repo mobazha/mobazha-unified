@@ -13,6 +13,7 @@ import type {
   Image,
 } from '../types';
 import { productsApi } from '../services/api';
+import { mergeSkus } from '../utils/variantUtils';
 
 /**
  * 表单数据结构
@@ -81,14 +82,17 @@ export interface VariantOption {
 }
 
 /**
- * SKU 项
+ * SKU 项（Shopify 风格绝对定价）
  */
 export interface SkuItem {
   productID: string;
   selections: { option: string; variant: string }[];
-  quantity: number;
-  surcharge: number;
+  price: string; // 变体绝对价格
+  compareAtPrice: string; // 划线价
+  quantity: number; // 库存数量，-1 表示无限
   images: Image[];
+  barcode: string; // 条码
+  weight: number; // 变体重量（克）
 }
 
 /**
@@ -136,9 +140,12 @@ export const initialFormData: ListingFormData = {
     {
       productID: '',
       selections: [],
+      price: '',
+      compareAtPrice: '',
       quantity: -1,
-      surcharge: 0,
       images: [],
+      barcode: '',
+      weight: 0,
     },
   ],
   inventoryTracking: false,
@@ -375,7 +382,16 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         description: opt.description,
         variants: opt.variants,
       }));
-      (data.item as Record<string, unknown>).skus = formData.skus;
+      (data.item as Record<string, unknown>).skus = formData.skus.map(sku => ({
+        productID: sku.productID,
+        selections: sku.selections,
+        price: sku.price || undefined,
+        compareAtPrice: sku.compareAtPrice || undefined,
+        quantity: sku.quantity === -1 ? '-1' : String(sku.quantity),
+        images: sku.images,
+        barcode: sku.barcode || undefined,
+        weight: sku.weight || undefined,
+      }));
     }
 
     // RWA Token 特定字段
@@ -397,9 +413,20 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       (data.item as Record<string, unknown>).altIntroVideoLinks = formData.altIntroVideoLinks;
     }
 
-    // 优惠券
+    // 优惠券（Shopify 风格扁平结构，Coupon 接口已对齐 proto）
     if (formData.coupons.length > 0) {
-      data.coupons = formData.coupons;
+      data.coupons = formData.coupons.map(c => ({
+        title: c.title,
+        discountCode: c.discountCode || undefined,
+        hash: c.hash || undefined,
+        discountType: c.discountType || 'PERCENT',
+        percentDiscount: c.discountType === 'PERCENT' ? c.percentDiscount : undefined,
+        priceDiscount: c.discountType === 'FIXED' ? c.priceDiscount : undefined,
+        usageLimit: c.usageLimit ?? 0,
+        startsAt: c.startsAt || undefined,
+        expiresAt: c.expiresAt || undefined,
+        minimumOrderAmount: c.minimumOrderAmount || undefined,
+      }));
     }
 
     // 编辑模式添加 slug
@@ -518,24 +545,21 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
   }, []);
 
   /**
-   * 添加变体选项
+   * 批量更新变体选项（同时自动合并 SKU）
    */
-  const addVariantOption = useCallback((option: VariantOption) => {
-    setFormData(prev => ({
-      ...prev,
-      options: [...prev.options, option],
-    }));
+  const updateVariantOptions = useCallback((newOptions: VariantOption[]) => {
+    setFormData(prev => {
+      const mergedSkus = mergeSkus(prev.skus, newOptions, prev.price);
+      return { ...prev, options: newOptions, skus: mergedSkus };
+    });
     setIsDirty(true);
   }, []);
 
   /**
-   * 移除变体选项
+   * 批量更新 SKU 列表
    */
-  const removeVariantOption = useCallback((index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.filter((_, i) => i !== index),
-    }));
+  const updateSkus = useCallback((newSkus: SkuItem[]) => {
+    setFormData(prev => ({ ...prev, skus: newSkus }));
     setIsDirty(true);
   }, []);
 
@@ -546,6 +570,17 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     setFormData(prev => ({
       ...prev,
       coupons: [...prev.coupons, coupon],
+    }));
+    setIsDirty(true);
+  }, []);
+
+  /**
+   * 更新优惠券（按索引）
+   */
+  const updateCoupon = useCallback((index: number, coupon: Coupon) => {
+    setFormData(prev => ({
+      ...prev,
+      coupons: prev.coupons.map((c, i) => (i === index ? coupon : c)),
     }));
     setIsDirty(true);
   }, []);
@@ -585,11 +620,12 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     removeTag,
 
     // 变体操作
-    addVariantOption,
-    removeVariantOption,
+    updateVariantOptions,
+    updateSkus,
 
     // 优惠券操作
     addCoupon,
+    updateCoupon,
     removeCoupon,
 
     // 表单操作

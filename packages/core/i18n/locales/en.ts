@@ -2271,6 +2271,63 @@ export const en: TranslationResource = {
       'Add options like different sizes, colors, or materials for buyers to choose from.',
     addVariant: 'Add Variant',
 
+    variant: {
+      // Option editor
+      optionName: 'Option name',
+      optionNamePlaceholder: 'e.g. Size, Color, Material',
+      optionValues: 'Option values',
+      addFirstValue: 'Type a value and press Enter',
+      addValuePlaceholder: 'Add another value...',
+      addValueHint: 'Separate values with Enter. e.g. Small, Medium, Large',
+      untitledOption: 'Untitled option',
+      valuesCount: 'values',
+      addOption: 'Add option',
+      addAnotherOption: 'Add another option',
+      customOption: 'Custom option',
+      chooseOption: 'Add an option to create product variants:',
+      limitHint: '{{current}} of {{maxOptions}} options used',
+      suggestedOptions: {
+        size: 'Size',
+        color: 'Color',
+        material: 'Material',
+        style: 'Style',
+      },
+
+      // Inventory table
+      variant: 'Variant',
+      price: 'Price',
+      compareAtPrice: 'Compare at',
+      quantity: 'Quantity',
+      barcode: 'Barcode',
+      weight: 'Weight',
+      unlimited: 'Unlimited',
+      skuCount: '{{count}} variant(s)',
+      basePriceHint: 'Empty = base price {{price}} {{currency}}',
+      selectedCount: '{{count}} selected',
+
+      // Accessibility
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+      removeOption: 'Remove option',
+      removeValue: 'Remove value',
+
+      // Bulk edit
+      bulkPrice: 'Set price',
+      bulkCompareAtPrice: 'Set compare at',
+      bulkQuantity: 'Set quantity',
+      bulkWeight: 'Set weight',
+      bulkApply: 'Apply',
+      bulkCancel: 'Cancel',
+
+      // Validation errors (i18n keys from variantUtils)
+      error: {
+        maxOptions: 'Maximum 3 options allowed',
+        maxValues: 'Too many values for one option',
+        duplicateOptionName: 'Option names must be unique',
+        maxCombinations: 'Too many variant combinations (max 100)',
+      },
+    },
+
     // Policies
     policies: 'Return Policy & Terms',
     returnPolicy: 'Return Policy',
@@ -2284,6 +2341,29 @@ export const en: TranslationResource = {
     coupons: 'Coupons',
     couponsDesc: 'Create discount codes to offer promotions to your buyers.',
     addCoupon: 'Add Coupon',
+
+    coupon: {
+      untitled: 'Untitled coupon',
+      off: '{{amount}} off',
+      title: 'Coupon name',
+      titlePlaceholder: 'e.g. Summer Sale, Welcome Discount',
+      discountCode: 'Discount code',
+      discountValue: 'Discount value',
+      minimumOrder: 'Minimum order amount',
+      noMinimum: 'No minimum',
+      usageLimit: 'Usage limit',
+      unlimited: 'Unlimited',
+      activeDates: 'Active dates',
+      startsAt: 'Start date',
+      expiresAt: 'End date',
+      percentDiscount: 'Percentage discount',
+      fixedDiscount: 'Fixed amount discount',
+      discountCodePlaceholder: 'e.g. SUMMER2025',
+      removeCoupon: 'Remove coupon',
+      emptyState: 'No coupons yet. Create discount codes to attract buyers.',
+      addFirst: 'Create discount',
+      addAnother: 'Add another coupon',
+    },
 
     // RWA Token
     rwaTokenDetails: 'RWA Token Details',

@@ -175,13 +175,26 @@ export interface ProductVariant {
 }
 
 /**
- * SKU
+ * SKU 选择项
+ */
+export interface SkuSelection {
+  option: string;
+  variant: string;
+}
+
+/**
+ * SKU（Shopify 风格绝对定价）
  */
 export interface ProductSku {
+  selections?: SkuSelection[];
   productID?: string;
-  surcharge?: number;
-  quantity?: number;
-  variantCombo?: number[];
+  quantity?: string;
+  price?: string; // 变体绝对价格
+  compareAtPrice?: string; // 划线价/原价（展示折扣用）
+  images?: Image[];
+  barcode?: string; // 条码（UPC/EAN/ISBN）
+  weight?: number; // 变体重量（克）
+  downloadable?: boolean;
 }
 
 /**
@@ -250,15 +263,24 @@ export interface Tax {
 }
 
 /**
- * 优惠券
+ * 优惠券折扣类型
+ */
+export type CouponDiscountType = 'PERCENT' | 'FIXED';
+
+/**
+ * 优惠券（Shopify 风格扁平结构）
  */
 export interface Coupon {
   title: string;
-  code?: string;
-  hash?: string;
-  discountCode?: string;
-  percentDiscount?: number;
-  priceDiscount?: number;
+  discountCode?: string; // 折扣码（明文）
+  hash?: string; // 折扣码哈希
+  discountType?: CouponDiscountType; // 折扣类型
+  percentDiscount?: number; // 百分比折扣（0-99）
+  priceDiscount?: string; // 固定金额折扣（最小单位）
+  usageLimit?: number; // 最大使用次数，0 = 无限
+  startsAt?: string; // 生效时间（ISO 8601）
+  expiresAt?: string; // 过期时间（ISO 8601）
+  minimumOrderAmount?: string; // 最低订单金额
 }
 
 /**

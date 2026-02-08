@@ -12,3 +12,12 @@ export { MediaSection } from './MediaSection';
 export { RwaTokenFields } from './RwaTokenFields';
 
 export { PhysicalGoodFields } from './PhysicalGoodFields';
+
+export { VariantOptionEditor } from './VariantOptionEditor';
+export type { VariantOptionEditorProps } from './VariantOptionEditor';
+
+export { VariantInventoryTable } from './VariantInventoryTable';
+export type { VariantInventoryTableProps } from './VariantInventoryTable';
+
+export { CouponEditor } from './CouponEditor';
+export type { CouponEditorProps } from './CouponEditor';
