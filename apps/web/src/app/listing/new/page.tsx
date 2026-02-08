@@ -706,8 +706,12 @@ function CreateListingContent() {
                   ref={el => {
                     sectionRefs.current.variants = el;
                   }}
+                  data-testid="variants-section"
                 >
-                  <h2 className="text-lg font-semibold text-foreground mb-1">
+                  <h2
+                    className="text-lg font-semibold text-foreground mb-1"
+                    data-testid="variants-title"
+                  >
                     {t('listing.variants')}
                   </h2>
                   <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
@@ -791,8 +795,12 @@ function CreateListingContent() {
                     ref={el => {
                       sectionRefs.current.coupons = el;
                     }}
+                    data-testid="coupons-section"
                   >
-                    <h2 className="text-lg font-semibold text-foreground mb-1">
+                    <h2
+                      className="text-lg font-semibold text-foreground mb-1"
+                      data-testid="coupons-title"
+                    >
                       {t('listing.coupons')}
                     </h2>
                     <p className="text-sm text-muted-foreground mb-4">{t('listing.couponsDesc')}</p>

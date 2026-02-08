@@ -3,11 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useI18n } from '@mobazha/core';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
+import { useToast } from '@/components/ui/use-toast';
 
 // Types
 interface Application {
@@ -117,6 +119,8 @@ const mockMembers: Member[] = [
 
 export default function MarketplaceAdminPage() {
   const params = useParams();
+  const { t } = useI18n();
+  const { toast } = useToast();
   const slug = params.slug as string;
 
   const [activeTab, setActiveTab] = useState<'applications' | 'products' | 'members' | 'settings'>(
@@ -131,14 +135,24 @@ export default function MarketplaceAdminPage() {
         app.id === appId ? { ...app, status: approved ? 'approved' : 'rejected' } : app
       )
     );
-    window.alert(approved ? 'Application approved!' : 'Application rejected');
+    toast({
+      title: approved
+        ? t('marketplace.admin.applicationApproved')
+        : t('marketplace.admin.applicationRejected'),
+      variant: approved ? 'success' : 'default',
+    });
   };
 
   const handleReviewProduct = (productId: string, approved: boolean) => {
     setPendingProducts(prev =>
       prev.map(p => (p.id === productId ? { ...p, status: approved ? 'approved' : 'rejected' } : p))
     );
-    window.alert(approved ? 'Product approved!' : 'Product rejected');
+    toast({
+      title: approved
+        ? t('marketplace.admin.productApproved')
+        : t('marketplace.admin.productRejected'),
+      variant: approved ? 'success' : 'default',
+    });
   };
 
   const pendingApplicationsCount = applications.filter(a => a.status === 'pending').length;

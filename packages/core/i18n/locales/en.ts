@@ -1381,6 +1381,16 @@ export const en: TranslationResource = {
     sortByProducts: 'Most Products',
     sortByName: 'Alphabetical',
     allCategories: 'All Categories',
+    joined: 'Successfully joined the marketplace!',
+    left: 'You have left the marketplace',
+    applicationSubmitted:
+      'Your seller application has been submitted! You will be notified once approved.',
+    admin: {
+      applicationApproved: 'Application approved',
+      applicationRejected: 'Application rejected',
+      productApproved: 'Product approved',
+      productRejected: 'Product rejected',
+    },
   },
 
   moderator: {
@@ -2588,8 +2598,9 @@ export const en: TranslationResource = {
 
     // Rich Editor
     richEditor: {
-      enterUrl: 'Enter URL:',
-      enterLinkText: 'Enter link text:',
+      enterUrl: 'URL',
+      enterLinkText: 'Link text',
+      insertLink: 'Insert Link',
     },
 
     // Short Description

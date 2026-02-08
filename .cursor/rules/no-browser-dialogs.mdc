@@ -1,0 +1,89 @@
+---
+description: 禁止使用浏览器原生对话框 - 创建或修改前端文件时应用
+globs:
+  - apps/web/src/**/*.{ts,tsx}
+  - packages/ui/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# 禁止浏览器原生对话框
+
+## 严格禁止
+
+禁止使用 `window.alert()`、`window.confirm()`、`window.prompt()` 及其无前缀形式 `alert()`、`confirm()`、`prompt()`。
+
+**原因**：
+- 阻塞主线程，用户体验差
+- 在移动端 WebView 中样式不一致、可能不可用
+- 不支持 i18n（按钮文本由浏览器决定）
+- 不支持自定义样式和品牌一致性
+
+## 替代方案
+
+### 通知/提示 → `useToast`
+
+```tsx
+// ❌ 禁止
+window.alert('操作成功');
+window.alert('文件太大');
+
+// ✅ 必须使用 toast
+import { useToast } from '@/components/ui/use-toast';
+
+const { toast } = useToast();
+
+// 成功提示
+toast({
+  title: t('common.success'),
+  description: t('listing.createSuccess'),
+  variant: 'success',
+});
+
+// 错误提示
+toast({
+  title: t('common.error'),
+  description: t('listing.digital.fileTooLarge'),
+  variant: 'destructive',
+});
+```
+
+### 确认操作 → `AlertDialog`
+
+```tsx
+// ❌ 禁止
+if (window.confirm('确定删除？')) { ... }
+
+// ✅ 必须使用 AlertDialog
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+```
+
+### 用户输入 → `Dialog` + 表单
+
+```tsx
+// ❌ 禁止
+const url = window.prompt('请输入 URL');
+
+// ✅ 必须使用自定义 Dialog
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+// 在 Dialog 内部使用 Input 组件收集用户输入
+```
+
+## 允许的例外
+
+- `console.log` / `console.error` 中的调试信息（不属于对话框）
+- 仅在开发环境的临时调试代码（必须在提交前移除）

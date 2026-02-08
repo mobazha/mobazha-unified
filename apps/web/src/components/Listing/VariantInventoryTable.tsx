@@ -212,7 +212,7 @@ export function VariantInventoryTable({
 
       {/* 库存表格 */}
       <div className="rounded-lg border overflow-x-auto">
-        <Table>
+        <Table data-testid="variant-inventory-table">
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableHead className="w-10">

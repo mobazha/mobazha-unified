@@ -17,56 +17,45 @@ test.describe('Listing - Variant Management', () => {
 
   test('should show variant section for physical goods', async ({ page }) => {
     // 物理商品应显示变体区域
-    const variantSection = page.locator('text=Variants, text=变体').first();
+    const variantSection = page.locator('[data-testid="variants-section"]');
     await expect(variantSection).toBeVisible();
   });
 
   test('should show suggested option buttons initially', async ({ page }) => {
     // 应显示预设选项建议（颜色、尺寸等）
-    const sizeButton = page.locator('button:has-text("Size"), button:has-text("尺寸")').first();
-    const colorButton = page.locator('button:has-text("Color"), button:has-text("颜色")').first();
+    const variantSection = page.locator('[data-testid="variants-section"]');
+    await expect(variantSection).toBeVisible();
 
-    // 至少一个建议按钮可见（取决于语言）
-    const hasSuggestion =
-      (await sizeButton.isVisible().catch(() => false)) ||
-      (await colorButton.isVisible().catch(() => false));
-    expect(hasSuggestion).toBeTruthy();
+    // 检查建议按钮（Size, Color 等）
+    const sizeButton = page.locator('[data-testid*="variant-suggest-"]').first();
+    await expect(sizeButton).toBeVisible();
   });
 
   test('should add variant option with values', async ({ page }) => {
-    // 点击尺寸选项或自定义选项
-    const sizeBtn = page.locator('button:has-text("Size"), button:has-text("尺寸")').first();
-    const customBtn = page.locator('button:has-text("Custom"), button:has-text("自定义")').first();
+    // 点击第一个建议按钮或自定义选项按钮
+    const suggestButton = page.locator('[data-testid*="variant-suggest-"]').first();
+    const customButton = page.locator('[data-testid="variant-custom-option"]');
 
-    if (await sizeBtn.isVisible().catch(() => false)) {
-      await sizeBtn.click();
-    } else if (await customBtn.isVisible().catch(() => false)) {
-      await customBtn.click();
+    if (await suggestButton.isVisible().catch(() => false)) {
+      await suggestButton.click();
+    } else if (await customButton.isVisible().catch(() => false)) {
+      await customButton.click();
     }
 
-    // 应出现选项编辑区域
-    await expect(
-      page.locator('input[placeholder*="value"], input[placeholder*="值"]').first()
-    ).toBeVisible();
+    // 应出现选项值输入框
+    const valueInput = page.locator('[data-testid="variant-value-input"]').first();
+    await expect(valueInput).toBeVisible();
   });
 
   test('should display inventory table after adding variants', async ({ page }) => {
     // 添加一个选项
-    const addBtn = page
-      .locator(
-        'button:has-text("Size"), button:has-text("尺寸"), button:has-text("Add option"), button:has-text("添加选项")'
-      )
-      .first();
-    if (await addBtn.isVisible().catch(() => false)) {
-      await addBtn.click();
+    const suggestButton = page.locator('[data-testid*="variant-suggest-"]').first();
+    if (await suggestButton.isVisible().catch(() => false)) {
+      await suggestButton.click();
     }
 
     // 添加变体值
-    const valueInput = page
-      .locator(
-        'input[placeholder*="value"], input[placeholder*="值"], input[placeholder*="Enter"], input[placeholder*="回车"]'
-      )
-      .first();
+    const valueInput = page.locator('[data-testid="variant-value-input"]').first();
     if (await valueInput.isVisible().catch(() => false)) {
       await valueInput.fill('Small');
       await valueInput.press('Enter');
@@ -74,7 +63,7 @@ test.describe('Listing - Variant Management', () => {
       await valueInput.press('Enter');
 
       // 库存表格应出现
-      const table = page.locator('table').first();
+      const table = page.locator('[data-testid="variant-inventory-table"]');
       await expect(table).toBeVisible({ timeout: 5000 });
     }
   });
@@ -87,60 +76,45 @@ test.describe('Listing - Coupon Management', () => {
   });
 
   test('should show coupon section', async ({ page }) => {
-    const couponSection = page.locator('text=Coupons, text=优惠券').first();
+    const couponSection = page.locator('[data-testid="coupons-section"]');
     await expect(couponSection).toBeVisible();
   });
 
   test('should show empty state initially', async ({ page }) => {
-    // 应显示空状态引导
-    const emptyState = page.locator('text=No coupons, text=暂无优惠券').first();
-    const isVisible = await emptyState.isVisible().catch(() => false);
     // 空状态或添加按钮应可见
-    if (!isVisible) {
-      const addBtn = page
-        .locator(
-          'button:has-text("Create discount"), button:has-text("创建优惠券"), button:has-text("Add Coupon"), button:has-text("添加优惠券")'
-        )
-        .first();
-      await expect(addBtn).toBeVisible();
-    }
+    const emptyState = page.locator('[data-testid="coupon-empty-state"]');
+    const addFirstBtn = page.locator('[data-testid="coupon-add-first"]');
+
+    const hasEmptyState =
+      (await emptyState.isVisible().catch(() => false)) ||
+      (await addFirstBtn.isVisible().catch(() => false));
+    expect(hasEmptyState).toBeTruthy();
   });
 
   test('should add a coupon with discount code', async ({ page }) => {
     // 点击创建优惠券
-    const addBtn = page
-      .locator(
-        'button:has-text("Create discount"), button:has-text("创建优惠券"), button:has-text("Add Coupon"), button:has-text("添加优惠券")'
-      )
-      .first();
+    const addBtn = page.locator('[data-testid="coupon-add-first"]');
     if (await addBtn.isVisible().catch(() => false)) {
       await addBtn.click();
 
-      // 应显示优惠券表单
-      const titleInput = page
-        .locator('input[placeholder*="Summer"], input[placeholder*="促销"]')
-        .first();
+      // 应显示优惠券标题输入框
+      const titleInput = page.locator('[data-testid="coupon-title-input"]').first();
       await expect(titleInput).toBeVisible({ timeout: 5000 });
     }
   });
 
   test('should toggle between percent and fixed discount', async ({ page }) => {
     // 添加一个优惠券
-    const addBtn = page
-      .locator(
-        'button:has-text("Create discount"), button:has-text("创建优惠券"), button:has-text("Add Coupon"), button:has-text("添加优惠券")'
-      )
-      .first();
+    const addBtn = page.locator('[data-testid="coupon-add-first"]');
     if (await addBtn.isVisible().catch(() => false)) {
       await addBtn.click();
 
-      // 找到固定金额按钮（带 $ 图标的按钮）
-      const fixedBtn = page
-        .locator('button')
-        .filter({ has: page.locator('svg') })
-        .last();
-      if (await fixedBtn.isVisible().catch(() => false)) {
-        await fixedBtn.click();
+      // 点击固定金额切换按钮
+      const fixedToggle = page.locator('[data-testid="coupon-fixed-toggle"]').first();
+      if (await fixedToggle.isVisible().catch(() => false)) {
+        await fixedToggle.click();
+        // 验证已按下
+        await expect(fixedToggle).toHaveAttribute('aria-pressed', 'true');
       }
     }
   });

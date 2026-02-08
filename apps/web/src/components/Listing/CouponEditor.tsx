@@ -133,6 +133,7 @@ function CouponForm({
                 onChange={e => updateField('title', e.target.value)}
                 placeholder={t('listing.coupon.titlePlaceholder')}
                 className="h-9"
+                data-testid="coupon-title-input"
               />
             </div>
             <div>
@@ -145,6 +146,7 @@ function CouponForm({
                 onChange={e => updateField('discountCode', e.target.value.toUpperCase())}
                 placeholder={t('listing.coupon.discountCodePlaceholder')}
                 className="h-9 font-mono uppercase"
+                data-testid="coupon-code-input"
               />
             </div>
           </div>
@@ -162,6 +164,7 @@ function CouponForm({
                   onClick={() => updateField('discountType', 'PERCENT')}
                   aria-label={t('listing.coupon.percentDiscount')}
                   aria-pressed={coupon.discountType !== 'FIXED'}
+                  data-testid="coupon-percent-toggle"
                   className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${
                     coupon.discountType !== 'FIXED'
                       ? 'bg-primary text-primary-foreground'
@@ -175,6 +178,7 @@ function CouponForm({
                   onClick={() => updateField('discountType', 'FIXED')}
                   aria-label={t('listing.coupon.fixedDiscount')}
                   aria-pressed={coupon.discountType === 'FIXED'}
+                  data-testid="coupon-fixed-toggle"
                   className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 border-l ${
                     coupon.discountType === 'FIXED'
                       ? 'bg-primary text-primary-foreground'
@@ -359,14 +363,29 @@ export function CouponEditor({
           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted/50 flex items-center justify-center">
             <Tag className="w-5 h-5 text-muted-foreground" />
           </div>
-          <p className="text-sm text-muted-foreground mb-3">{t('listing.coupon.emptyState')}</p>
-          <Button type="button" variant="outline" size="sm" onClick={handleAdd}>
+          <p className="text-sm text-muted-foreground mb-3" data-testid="coupon-empty-state">
+            {t('listing.coupon.emptyState')}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAdd}
+            data-testid="coupon-add-first"
+          >
             <Plus className="w-4 h-4 mr-1.5" />
             {t('listing.coupon.addFirst')}
           </Button>
         </div>
       ) : (
-        <Button type="button" variant="outline" size="sm" onClick={handleAdd} className="mt-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAdd}
+          className="mt-3"
+          data-testid="coupon-add-another"
+        >
           <Plus className="w-4 h-4 mr-1.5" />
           {t('listing.coupon.addAnother')}
         </Button>

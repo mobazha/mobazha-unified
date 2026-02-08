@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
-import { useCurrency } from '@mobazha/core';
+import { useCurrency, useI18n } from '@mobazha/core';
+import { useToast } from '@/components/ui/use-toast';
 
 // Types
 interface SellerProfile {
@@ -25,6 +26,8 @@ export default function MarketplaceSellPage() {
   const params = useParams();
   const router = useRouter();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { t } = useI18n();
+  const { toast } = useToast();
   const slug = params.slug as string;
 
   const [isApplying, setIsApplying] = useState(false);
@@ -67,12 +70,18 @@ export default function MarketplaceSellPage() {
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      window.alert(
-        'Your seller application has been submitted! You will be notified once approved.'
-      );
+      toast({
+        title: t('common.success'),
+        description: t('marketplace.applicationSubmitted'),
+        variant: 'success',
+      });
       router.push(`/marketplace/${slug}`);
     } catch (error) {
-      window.alert('Failed to submit application: ' + (error as Error).message);
+      toast({
+        title: t('common.error'),
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setIsApplying(false);
     }

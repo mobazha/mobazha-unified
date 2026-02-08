@@ -190,6 +190,7 @@ const OptionItem = React.memo(function OptionItem({
               onChange={e => onUpdate({ ...option, name: e.target.value })}
               placeholder={t('listing.variant.optionNamePlaceholder')}
               className="h-9"
+              data-testid="variant-option-name-input"
             />
           </div>
 
@@ -228,6 +229,7 @@ const OptionItem = React.memo(function OptionItem({
                     : t('listing.variant.addValuePlaceholder')
                 }
                 className="flex-1 min-w-[120px] bg-transparent border-none shadow-none outline-none text-sm placeholder:text-muted-foreground/60 py-1 h-auto"
+                data-testid="variant-value-input"
               />
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -361,6 +363,7 @@ export function VariantOptionEditor({
                       size="sm"
                       onClick={() => addOption(name)}
                       className="h-8"
+                      data-testid={`variant-suggest-${nameKey.split('.').pop()}`}
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" />
                       {name}
@@ -373,6 +376,7 @@ export function VariantOptionEditor({
                   size="sm"
                   onClick={() => addOption('')}
                   className="h-8 border-dashed"
+                  data-testid="variant-custom-option"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1" />
                   {t('listing.variant.customOption')}
@@ -380,7 +384,13 @@ export function VariantOptionEditor({
               </div>
             </>
           ) : (
-            <Button type="button" variant="outline" size="sm" onClick={() => addOption('')}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => addOption('')}
+              data-testid="variant-add-option"
+            >
               <Plus className="w-4 h-4 mr-1.5" />
               {t('listing.variant.addAnotherOption')}
             </Button>
