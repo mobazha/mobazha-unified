@@ -1,0 +1,48 @@
+---
+description: 修改核心模块时自动提醒查阅功能文档
+globs:
+  - "packages/core/hooks/useListingForm.ts"
+  - "packages/core/hooks/useStoreCategories.ts"
+  - "packages/core/hooks/useProducts.ts"
+  - "apps/web/src/app/listing/**"
+  - "apps/web/src/components/Listing/**"
+  - "packages/core/hooks/useShippingProfiles.ts"
+  - "packages/core/types/shippingConfig.ts"
+  - "apps/web/src/components/Shipping/**"
+  - "apps/web/src/app/settings/store/shipping/**"
+  - "packages/core/hooks/useWallet.ts"
+  - "packages/core/services/payment/**"
+  - "packages/core/providers/AppKitProvider.tsx"
+  - "packages/core/services/auth/accountBinding.ts"
+  - "packages/core/types/account.ts"
+  - "apps/web/src/app/settings/account/**"
+  - "packages/core/i18n/**"
+  - "packages/core/hooks/useI18n.ts"
+  - "packages/core/theme/**"
+  - "apps/web/src/components/ui/**"
+---
+
+# 功能文档提醒
+
+当前文件所属模块有详细设计文档，修改前请先查阅以确保一致性。
+
+## 模块 → 文档映射
+
+| 模块关键词 | 文档路径 |
+|-----------|---------|
+| Listing / 商品 / useListingForm | `docs/features/listing-module.md` |
+| Shipping / 配送 / useShippingProfiles | `docs/features/shipping-profiles.md` |
+| Wallet / 钱包 / useWallet / payment | `docs/features/wallet-integration.md` |
+| Account / 账号绑定 / accountBinding | `docs/features/account-binding.md` |
+| i18n / useI18n / locales | `docs/features/i18n.md` |
+| Theme / useTheme / 主题 | `docs/features/theme-system.md` |
+| UI 组件 / components/ui | `docs/features/ui-components.md` |
+
+## 修改后同步更新文档
+
+如果你的修改涉及以下任何一项，请同步更新对应的 feature doc：
+- 新增/移除/重命名文件
+- 修改数据结构或类型定义
+- 修改 Hook 的公开 API（参数、返回值）
+- 修改 API 端点
+- 新增翻译键
