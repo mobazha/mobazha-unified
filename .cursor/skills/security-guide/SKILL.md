@@ -188,3 +188,8 @@ await walletApi.restoreWallet(mnemonic); // 立即使用，不存储
 - [ ] 敏感数据是否只在内存中处理，不持久化？
 - [ ] 合约调用是否有 try/catch？
 - [ ] 钱包操作前是否检查了连接状态和链 ID？
+
+## 相关功能文档
+
+- **[钱包集成](../../docs/features/wallet-integration.md)** — useWallet 安全注意事项、合约交互模式
+- **[账号绑定](../../docs/features/account-binding.md)** — OAuth 多账号绑定、Casdoor 认证流程

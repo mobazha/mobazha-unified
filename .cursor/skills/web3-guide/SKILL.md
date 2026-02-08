@@ -212,3 +212,7 @@ const balance = await contract.balanceOf(ownerAddress, tokenId);
 - [ ] 金额是否正确处理精度（`parseUnits` / `formatUnits`）？
 - [ ] 是否有完善的错误处理（用户拒绝、余额不足等）？
 - [ ] 事件监听是否在组件卸载时清理？
+
+## 相关功能文档
+
+- **[钱包集成](../../docs/features/wallet-integration.md)** — useWallet Hook 完整 API、AppKit 配置、Escrow 合约、支持的链列表

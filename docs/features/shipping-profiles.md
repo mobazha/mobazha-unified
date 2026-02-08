@@ -1,7 +1,7 @@
 # Shipping Profiles 配送档案系统设计文档
 
-> 版本: 1.0  
-> 最后更新: 2026-02-03  
+> 版本: 1.2  
+> 最后更新: 2026-02-08  
 > 状态: 已实现
 
 ## 1. 概述
@@ -166,7 +166,7 @@ func ConvertShippingProfileToProto(profile *ShippingProfile) *pb.ShippingProfile
 #### 3.2.1 类型定义
 
 ```typescript
-// packages/core/types/shipping.ts
+// packages/core/types/shippingConfig.ts
 export interface ShippingProfile {
   profileId: string;
   name: string;
@@ -206,7 +206,7 @@ export interface RateCondition {
 
 | 文件路径                                            | 说明                                 |
 | --------------------------------------------------- | ------------------------------------ |
-| `packages/core/types/shipping.ts`                   | 类型定义                             |
+| `packages/core/types/shippingConfig.ts`             | 类型定义                             |
 | `packages/core/types/product.ts`                    | Product 类型（包含 shippingProfile） |
 | `packages/core/hooks/useShippingProfiles.ts`        | 配送档案管理 Hook                    |
 | `packages/core/hooks/useListingForm.ts`             | Listing 表单 Hook                    |
@@ -225,6 +225,10 @@ export interface RateCondition {
 | `RegionSelector`           | `RegionSelector.tsx`           | 地区选择器                            |
 | `ShippingProfileSelector`  | `ShippingProfileSelector.tsx`  | 配送档案选择器（用于 Listing 编辑）   |
 | `ShippingTemplateSelector` | `ShippingTemplateSelector.tsx` | 运费模板快速选择                      |
+| `ServiceEditor`            | `ServiceEditor.tsx`            | 配送服务编辑器                        |
+| `ShippingComparison`       | `ShippingComparison.tsx`       | 配送方案对比                          |
+| `ShippingOptionCard`       | `ShippingOptionCard.tsx`       | 配送选项卡片                          |
+| `ShippingOptionForm`       | `ShippingOptionForm.tsx`       | 配送选项表单（创建/编辑配送选项）     |
 
 #### 3.2.3 Hook 使用示例
 
