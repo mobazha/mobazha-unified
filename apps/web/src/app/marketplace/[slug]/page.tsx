@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/ProductCard';
 import { useChatStore, useI18n } from '@mobazha/core';
 import { ExternalLink } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 // Types
 interface Marketplace {
@@ -244,6 +245,7 @@ export default function MarketplaceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { t } = useI18n();
+  const { toast } = useToast();
   // slug is used for routing, params.slug is available
   void params.slug;
 
@@ -274,12 +276,12 @@ export default function MarketplaceDetailPage() {
 
   const handleJoinMarketplace = () => {
     setIsMember(true);
-    window.alert('Successfully joined the marketplace!');
+    toast({ title: t('common.success'), description: t('marketplace.joined'), variant: 'success' });
   };
 
   const handleLeaveMarketplace = () => {
     setIsMember(false);
-    window.alert('You have left the marketplace');
+    toast({ title: t('common.success'), description: t('marketplace.left') });
   };
 
   return (

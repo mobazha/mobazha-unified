@@ -1351,6 +1351,15 @@ export const zh: TranslationResource = {
     sortByProducts: '商品最多',
     sortByName: '按字母排序',
     allCategories: '全部分类',
+    joined: '已成功加入市场！',
+    left: '已离开市场',
+    applicationSubmitted: '您的卖家申请已提交！审核通过后将通知您。',
+    admin: {
+      applicationApproved: '申请已通过',
+      applicationRejected: '申请已拒绝',
+      productApproved: '商品已通过',
+      productRejected: '商品已拒绝',
+    },
   },
 
   moderator: {
@@ -2536,8 +2545,9 @@ export const zh: TranslationResource = {
 
     // 富文本编辑器
     richEditor: {
-      enterUrl: '请输入链接地址：',
-      enterLinkText: '请输入链接文字：',
+      enterUrl: '链接地址',
+      enterLinkText: '链接文字',
+      insertLink: '插入链接',
     },
 
     // 短描述

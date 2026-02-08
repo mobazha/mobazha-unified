@@ -5,6 +5,7 @@ import { Upload, X, File, GripVertical } from 'lucide-react';
 import { useI18n, getGatewayUrl } from '@mobazha/core';
 import type { DigitalFile } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 
 interface DigitalFileSectionProps {
   files: DigitalFile[];
@@ -33,6 +34,7 @@ export function DigitalFileSection({
   className = '',
 }: DigitalFileSectionProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback(
@@ -44,7 +46,11 @@ export function DigitalFileSection({
 
       for (const file of Array.from(selectedFiles)) {
         if (file.size > MAX_FILE_SIZE) {
-          window.alert(`${file.name} ${t('listing.digital.fileTooLarge')}`);
+          toast({
+            title: t('common.error'),
+            description: `${file.name} ${t('listing.digital.fileTooLarge')}`,
+            variant: 'destructive',
+          });
           continue;
         }
 
@@ -80,7 +86,7 @@ export function DigitalFileSection({
         fileInputRef.current.value = '';
       }
     },
-    [files, onFilesChange, t]
+    [files, onFilesChange, t, toast]
   );
 
   const removeFile = useCallback(

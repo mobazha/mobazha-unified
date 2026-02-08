@@ -13,6 +13,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import type { Image } from '@mobazha/core';
+import { useToast } from '@/components/ui/use-toast';
 import { useI18n, getGatewayUrl } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ export function MediaSection({
   className = '',
 }: MediaSectionProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -163,7 +165,11 @@ export function MediaSection({
 
       const file = files[0];
       if (file.size > maxVideoSize * 1024 * 1024) {
-        window.alert(t('listing.videoTooLarge'));
+        toast({
+          title: t('common.error'),
+          description: t('listing.videoTooLarge'),
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -190,7 +196,7 @@ export function MediaSection({
 
       setIsUploading(false);
     },
-    [maxVideoSize, onVideoChange, t]
+    [maxVideoSize, onVideoChange, t, toast]
   );
 
   // 添加外部视频链接
