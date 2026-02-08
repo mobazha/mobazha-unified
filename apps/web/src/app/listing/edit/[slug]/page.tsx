@@ -53,6 +53,9 @@ import {
   MediaSection,
   RwaTokenFields,
   PhysicalGoodFields,
+  VariantOptionEditor,
+  VariantInventoryTable,
+  CouponEditor,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
 
@@ -120,35 +123,66 @@ export default function EditListingPage() {
   const initialFormData = useMemo(() => {
     if (!listing) return undefined;
 
+    const item = listing.item;
     return {
       slug: listing.slug,
-      title: listing.item.title || '',
-      description: listing.item.description || '',
-      price: listing.item.price?.toString() || '',
+      title: item.title || '',
+      description: item.description || '',
+      price: item.price?.toString() || '',
       pricingCurrency: listing.metadata.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
       contractType: listing.metadata.contractType,
-      condition: listing.item.condition || 'NEW',
-      grams: listing.item.grams || 0,
-      blockchain: (listing.item.blockchain as BlockchainNetwork) || 'ETH',
-      tokenAddress: listing.item.tokenAddress || '',
-      tokenStandard: listing.item.tokenStandard || '',
-      cryptoListingCurrencyCode: listing.item.cryptoListingCurrencyCode || '',
-      minQuantity: listing.item.minQuantity || 1,
-      maxQuantity: listing.item.maxQuantity || 100,
+      condition: item.condition || 'NEW',
+      grams: item.grams || 0,
+      blockchain: (item.blockchain as BlockchainNetwork) || 'ETH',
+      tokenAddress: item.tokenAddress || '',
+      tokenStandard: item.tokenStandard || '',
+      cryptoListingCurrencyCode: item.cryptoListingCurrencyCode || '',
+      minQuantity: item.minQuantity || 1,
+      maxQuantity: item.maxQuantity || 100,
       acceptedCurrencies:
         listing.metadata.acceptedCurrencies?.map((c: string | { code: string }) =>
           typeof c === 'string' ? c : c.code
         ) || [],
-      images: listing.item.images || [],
-      introVideo: listing.item.introVideo || '',
-      altIntroVideoLinks: listing.item.altIntroVideoLinks || [],
-      tags: listing.item.tags || [],
-      categories: listing.item.categories || [],
+      images: item.images || [],
+      introVideo: item.introVideo || '',
+      altIntroVideoLinks: item.altIntroVideoLinks || [],
+      tags: item.tags || [],
+      categories: item.categories || [],
       shippingProfile: listing.shippingProfile,
+      // 变体选项
+      options: (item.options || []).map(opt => ({
+        name: opt.name,
+        description: opt.description,
+        variants: (opt.variants || []).map(v => ({ name: v.name, image: v.image })),
+      })),
+      // SKU（Shopify 风格绝对定价）
+      skus: (item.skus || []).map(sku => ({
+        productID: sku.productID || '',
+        selections: (sku.selections || []).map(s => ({ option: s.option, variant: s.variant })),
+        price: sku.price || '',
+        compareAtPrice: sku.compareAtPrice || '',
+        quantity: sku.quantity ? parseInt(sku.quantity, 10) : -1,
+        images: sku.images || [],
+        barcode: sku.barcode || '',
+        weight: sku.weight || 0,
+      })),
+      // 优惠券
+      coupons: (listing.coupons || []).map(c => ({
+        title: c.title,
+        discountCode: c.discountCode,
+        hash: c.hash,
+        discountType: c.discountType || 'PERCENT',
+        percentDiscount: c.percentDiscount,
+        priceDiscount: c.priceDiscount,
+        usageLimit: c.usageLimit,
+        startsAt: c.startsAt,
+        expiresAt: c.expiresAt,
+        minimumOrderAmount: c.minimumOrderAmount,
+      })),
       termsAndConditions: listing.termsAndConditions || '',
       refundPolicy: listing.refundPolicy || '',
-      nsfw: listing.item.nsfw || false,
-      processingTime: listing.item.processingTime || '',
+      nsfw: item.nsfw || false,
+      processingTime: item.processingTime || '',
     } as Partial<ListingFormData>;
   }, [listing]);
 
@@ -161,6 +195,11 @@ export default function EditListingPage() {
     changeContractType,
     addTag,
     removeTag,
+    updateVariantOptions,
+    updateSkus,
+    addCoupon,
+    updateCoupon,
+    removeCoupon,
     validate,
     submit,
     reset,
@@ -660,12 +699,22 @@ export default function EditListingPage() {
                     sectionRefs.current.variants = el;
                   }}
                 >
-                  <h2 className="text-lg font-semibold text-foreground mb-4">
+                  <h2 className="text-lg font-semibold text-foreground mb-1">
                     {t('listing.variants')}
                   </h2>
-                  <Button type="button" variant="outline">
-                    {t('listing.addVariant')}
-                  </Button>
+                  <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
+
+                  <VariantOptionEditor options={formData.options} onChange={updateVariantOptions} />
+
+                  {formData.skus.length > 0 && formData.skus[0]?.selections?.length > 0 && (
+                    <VariantInventoryTable
+                      skus={formData.skus}
+                      onChange={updateSkus}
+                      pricingCurrency={formData.pricingCurrency}
+                      basePrice={formData.price}
+                      className="mt-6"
+                    />
+                  )}
                 </Card>
               )}
 
@@ -710,7 +759,7 @@ export default function EditListingPage() {
                   </Card>
                 )}
 
-              {/* 优惠券 */}
+              {/* 优惠券 - Shopify 风格 */}
               {formData.contractType !== 'RWA_TOKEN' &&
                 formData.contractType !== 'CRYPTOCURRENCY' && (
                   <Card
@@ -719,12 +768,18 @@ export default function EditListingPage() {
                       sectionRefs.current.coupons = el;
                     }}
                   >
-                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-1">
                       {t('listing.coupons')}
                     </h2>
-                    <Button type="button" variant="outline">
-                      {t('listing.addCoupon')}
-                    </Button>
+                    <p className="text-sm text-muted-foreground mb-4">{t('listing.couponsDesc')}</p>
+
+                    <CouponEditor
+                      coupons={formData.coupons}
+                      onAdd={addCoupon}
+                      onUpdate={updateCoupon}
+                      onRemove={removeCoupon}
+                      pricingCurrency={formData.pricingCurrency}
+                    />
                   </Card>
                 )}
 

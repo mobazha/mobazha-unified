@@ -48,6 +48,9 @@ import {
   MediaSection,
   RwaTokenFields,
   PhysicalGoodFields,
+  VariantOptionEditor,
+  VariantInventoryTable,
+  CouponEditor,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
 
@@ -144,6 +147,36 @@ function convertProductToFormData(product: Product): Partial<ListingFormData> {
     tags: item.tags || [],
     categories: item.categories || [],
     shippingProfile: product.shippingProfile,
+    // 变体选项
+    options: (item.options || []).map(opt => ({
+      name: opt.name,
+      description: opt.description,
+      variants: (opt.variants || []).map(v => ({ name: v.name, image: v.image })),
+    })),
+    // SKU（Shopify 风格绝对定价）
+    skus: (item.skus || []).map(sku => ({
+      productID: sku.productID || '',
+      selections: (sku.selections || []).map(s => ({ option: s.option, variant: s.variant })),
+      price: sku.price || '',
+      compareAtPrice: sku.compareAtPrice || '',
+      quantity: sku.quantity ? parseInt(sku.quantity, 10) : -1,
+      images: sku.images || [],
+      barcode: sku.barcode || '',
+      weight: sku.weight || 0,
+    })),
+    // 优惠券（Shopify 风格扁平结构）
+    coupons: (product.coupons || []).map(c => ({
+      title: c.title,
+      discountCode: c.discountCode,
+      hash: c.hash,
+      discountType: c.discountType || 'PERCENT',
+      percentDiscount: c.percentDiscount,
+      priceDiscount: c.priceDiscount,
+      usageLimit: c.usageLimit,
+      startsAt: c.startsAt,
+      expiresAt: c.expiresAt,
+      minimumOrderAmount: c.minimumOrderAmount,
+    })),
     termsAndConditions: product.termsAndConditions || '',
     refundPolicy: product.refundPolicy || '',
     nsfw: item.nsfw || false,
@@ -209,6 +242,11 @@ function CreateListingContent() {
     changeContractType,
     addTag,
     removeTag,
+    updateVariantOptions,
+    updateSkus,
+    addCoupon,
+    updateCoupon,
+    removeCoupon,
     validate,
     submit,
     reset,
@@ -685,13 +723,24 @@ function CreateListingContent() {
                     sectionRefs.current.variants = el;
                   }}
                 >
-                  <h2 className="text-lg font-semibold text-foreground mb-4">
+                  <h2 className="text-lg font-semibold text-foreground mb-1">
                     {t('listing.variants')}
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-3">{t('listing.variantsDesc')}</p>
-                  <Button type="button" variant="outline">
-                    {t('listing.addVariant')}
-                  </Button>
+                  <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
+
+                  {/* 变体选项编辑器 */}
+                  <VariantOptionEditor options={formData.options} onChange={updateVariantOptions} />
+
+                  {/* 变体库存表格 - 有 SKU 时显示 */}
+                  {formData.skus.length > 0 && formData.skus[0]?.selections?.length > 0 && (
+                    <VariantInventoryTable
+                      skus={formData.skus}
+                      onChange={updateSkus}
+                      pricingCurrency={formData.pricingCurrency}
+                      basePrice={formData.price}
+                      className="mt-6"
+                    />
+                  )}
                 </Card>
               )}
 
@@ -736,7 +785,7 @@ function CreateListingContent() {
                   </Card>
                 )}
 
-              {/* 优惠券 */}
+              {/* 优惠券 - Shopify 风格 */}
               {formData.contractType !== 'RWA_TOKEN' &&
                 formData.contractType !== 'CRYPTOCURRENCY' && (
                   <Card
@@ -745,13 +794,18 @@ function CreateListingContent() {
                       sectionRefs.current.coupons = el;
                     }}
                   >
-                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-1">
                       {t('listing.coupons')}
                     </h2>
-                    <p className="text-sm text-muted-foreground mb-3">{t('listing.couponsDesc')}</p>
-                    <Button type="button" variant="outline">
-                      {t('listing.addCoupon')}
-                    </Button>
+                    <p className="text-sm text-muted-foreground mb-4">{t('listing.couponsDesc')}</p>
+
+                    <CouponEditor
+                      coupons={formData.coupons}
+                      onAdd={addCoupon}
+                      onUpdate={updateCoupon}
+                      onRemove={removeCoupon}
+                      pricingCurrency={formData.pricingCurrency}
+                    />
                   </Card>
                 )}
 

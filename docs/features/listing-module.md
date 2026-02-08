@@ -1,8 +1,8 @@
 # Listing 商品模块设计文档
 
-> 版本: 1.1  
+> 版本: 2.0  
 > 最后更新: 2026-02-08  
-> 状态: 已实现
+> 状态: 已实现（含 Shopify 风格变体/优惠券）
 
 ## 1. 概述
 
@@ -109,14 +109,17 @@ productsApi.createListing / updateListing
 
 ### 3.2 组件
 
-| 文件路径                                                  | 说明                                   |
-| --------------------------------------------------------- | -------------------------------------- |
-| `apps/web/src/components/Listing/ProductTypeSelector.tsx` | 商品类型选择器                         |
-| `apps/web/src/components/Listing/BasicInfoSection.tsx`    | 基本信息区块（标题、描述、价格、成色） |
-| `apps/web/src/components/Listing/MediaSection.tsx`        | 图片/视频上传区块                      |
-| `apps/web/src/components/Listing/RwaTokenFields.tsx`      | RWA 代币专用字段                       |
-| `apps/web/src/components/Listing/PhysicalGoodFields.tsx`  | 物理商品配送档案选择                   |
-| `apps/web/src/components/ui/TokenInput.tsx`               | 通用 Token/Chip 输入组件               |
+| 文件路径                                                    | 说明                                      |
+| ----------------------------------------------------------- | ----------------------------------------- |
+| `apps/web/src/components/Listing/ProductTypeSelector.tsx`   | 商品类型选择器                            |
+| `apps/web/src/components/Listing/BasicInfoSection.tsx`      | 基本信息区块（标题、描述、价格、成色）    |
+| `apps/web/src/components/Listing/MediaSection.tsx`          | 图片/视频上传区块                         |
+| `apps/web/src/components/Listing/RwaTokenFields.tsx`        | RWA 代币专用字段                          |
+| `apps/web/src/components/Listing/PhysicalGoodFields.tsx`    | 物理商品配送档案选择                      |
+| `apps/web/src/components/Listing/VariantOptionEditor.tsx`   | 变体选项编辑器（Shopify 风格折叠/建议）   |
+| `apps/web/src/components/Listing/VariantInventoryTable.tsx` | 变体库存表格（inline 编辑 + 批量操作）    |
+| `apps/web/src/components/Listing/CouponEditor.tsx`          | 优惠券编辑器（Shopify 风格折扣码/有效期） |
+| `apps/web/src/components/ui/TokenInput.tsx`                 | 通用 Token/Chip 输入组件                  |
 
 ### 3.3 Hooks
 
@@ -126,6 +129,12 @@ productsApi.createListing / updateListing
 | `packages/core/hooks/useStoreCategories.ts` | 从店铺商品提取已有分类   |
 | `packages/core/hooks/useProducts.ts`        | 商品列表/详情获取        |
 
+### 3.6 工具函数
+
+| 文件路径                              | 说明                                       |
+| ------------------------------------- | ------------------------------------------ |
+| `packages/core/utils/variantUtils.ts` | 笛卡尔积、SKU 合并、验证、Shopify 限制常量 |
+
 ### 3.4 API
 
 | 文件路径                                 | 说明               |
@@ -134,10 +143,10 @@ productsApi.createListing / updateListing
 
 ### 3.5 类型
 
-| 文件路径                                | 说明                                         |
-| --------------------------------------- | -------------------------------------------- |
-| `packages/core/types/product.ts`        | Product、ProductItem、ProductListItem 等类型 |
-| `packages/core/hooks/useListingForm.ts` | ListingFormData 表单数据接口                 |
+| 文件路径                                | 说明                                                 |
+| --------------------------------------- | ---------------------------------------------------- |
+| `packages/core/types/product.ts`        | Product、ProductSku、Coupon、SkuSelection 等类型     |
+| `packages/core/hooks/useListingForm.ts` | ListingFormData、SkuItem、VariantOption 表单数据接口 |
 
 ## 4. 关键数据结构
 
@@ -184,7 +193,39 @@ interface ListingFormData {
 }
 ```
 
-### 4.2 API 请求格式
+### 4.2 SkuItem（变体库存项，Shopify 风格绝对定价）
+
+```typescript
+interface SkuItem {
+  productID: string;
+  selections: { option: string; variant: string }[];
+  price: string; // 变体绝对价格（不填则使用基础价格）
+  compareAtPrice: string; // 划线价/原价（展示折扣用）
+  quantity: number; // 库存数量，-1 = 无限
+  images: Image[];
+  barcode: string; // 条码（UPC/EAN/ISBN）
+  weight: number; // 变体重量（克），覆盖 item.grams
+}
+```
+
+### 4.3 Coupon（优惠券，Shopify 风格扁平结构）
+
+```typescript
+interface Coupon {
+  title: string;
+  discountCode?: string; // 折扣码（明文）
+  hash?: string; // 折扣码哈希
+  discountType?: 'PERCENT' | 'FIXED'; // 折扣类型
+  percentDiscount?: number; // 百分比折扣（0-99）
+  priceDiscount?: string; // 固定金额折扣
+  usageLimit?: number; // 最大使用次数，0 = 无限
+  startsAt?: string; // 生效时间（ISO 8601）
+  expiresAt?: string; // 过期时间（ISO 8601）
+  minimumOrderAmount?: string; // 最低订单金额
+}
+```
+
+### 4.4 API 请求格式
 
 `buildRequestData()`（`useListingForm` 内部函数，不对外暴露）将 `ListingFormData` 转换为后端 `Product` 格式：
 
@@ -193,17 +234,111 @@ interface ListingFormData {
 - `images` -> `item.images`（IPFS hash）
 - `tags` -> `item.tags`
 - `categories` -> `item.categories`
+- `options` -> `item.options`（变体选项）
+- `skus` -> `item.skus`（SKU 列表，quantity 转 string）
+- `coupons` -> `coupons`（按 discountType 只发 percentDiscount 或 priceDiscount）
 - `shippingProfile` -> `shippingProfile`（完整配送档案对象）
 - `contractType` -> `metadata.contractType`
 - `condition` -> `metadata.condition`
 
-## 5. TokenInput 组件
+## 5. 变体管理（Shopify 风格）
 
 ### 5.1 概述
 
+变体系统参考 Shopify 实现，采用 **选项 + 笛卡尔积** 模型：
+
+- 最多 3 个选项（如颜色、尺寸、材质）
+- 每个选项可有多个值
+- 自动生成所有组合的 SKU
+- 每个 SKU 有独立的 **绝对价格**（非加价/surcharge）
+
+### 5.2 数据流
+
+```
+VariantOptionEditor (编辑选项)
+  → updateVariantOptions(newOptions)
+    → mergeSkus(currentSkus, newOptions, basePrice)
+      → 笛卡尔积生成新组合
+      → 保留已有 SKU 的用户输入
+      → 为新组合创建默认 SKU
+    → 同步更新 formData.options + formData.skus
+  → VariantInventoryTable (编辑 SKU 属性)
+    → updateSkus(newSkus)
+```
+
+### 5.3 组件: VariantOptionEditor
+
+- **初始状态**: 显示 Shopify 风格预设选项建议（尺寸、颜色、材质、款式）+ 自定义按钮
+- **折叠式编辑**: 每个选项可展开/折叠，折叠时显示值数量和值摘要
+- **Chip 输入**: 变体值以 chip 形式展示，支持回车添加、点击删除
+- **排序**: 上下箭头调整选项顺序
+- **验证**: 超过限制时显示错误（最多 3 选项、100 组合、名称不重复）
+
+### 5.4 组件: VariantInventoryTable
+
+- **Inline 编辑**: 表格内直接编辑价格、划线价、库存、条码、重量
+- **批量编辑**: Checkbox 多选 → 批量设置字段值（Shopify bulk editor 模式）
+- **价格逻辑**: SKU 价格留空时使用基础价格，placeholder 显示基础价格
+- **无限库存**: 库存留空或 -1 = 无限（显示 ∞）
+
+### 5.5 工具: variantUtils.ts
+
+| 函数                       | 说明                                  |
+| -------------------------- | ------------------------------------- |
+| `generateCartesianProduct` | 选项组合笛卡尔积生成                  |
+| `getSkuKey`                | SKU 唯一键（基于排序后的 selections） |
+| `mergeSkus`                | 智能合并 SKU（保留用户输入+增删组合） |
+| `createDefaultSku`         | 创建默认 SKU                          |
+| `validateVariantOptions`   | 验证 Shopify 限制                     |
+| `getVariantLabel`          | 生成变体标签（如 "Red / S"）          |
+
+### 5.6 Shopify 限制常量
+
+| 常量                       | 值  | 说明           |
+| -------------------------- | --- | -------------- |
+| `MAX_VARIANT_OPTIONS`      | 3   | 最大选项数     |
+| `MAX_VARIANT_COMBINATIONS` | 100 | 最大组合数     |
+| `MAX_OPTION_VALUES`        | 100 | 单选项最大值数 |
+
+## 6. 优惠券管理（Shopify 风格）
+
+### 6.1 概述
+
+优惠券系统参考 Shopify Discount 功能，采用扁平结构，支持百分比折扣和固定金额折扣。
+
+### 6.2 组件: CouponEditor
+
+- **折叠式管理**: 每个优惠券可展开编辑，折叠时显示折扣码和折扣金额摘要
+- **折扣类型切换**: Segmented control 切换百分比/固定金额（% / $ 图标）
+- **折扣码**: 自动转大写，类 Shopify 体验
+- **有效期**: 开始/结束 datetime-local 选择器
+- **限制设置**: 最低订单金额 + 最大使用次数
+- **空状态**: 无优惠券时显示引导 CTA
+
+### 6.3 后端对齐
+
+Proto 定义（`listing.proto`）中的 `Coupon` 已从 `oneof` 结构改为扁平字段：
+
+| Proto 字段           | 说明         | 类型             |
+| -------------------- | ------------ | ---------------- |
+| `title`              | 优惠券名称   | string           |
+| `hash`               | 折扣码哈希   | string           |
+| `discountCode`       | 折扣码明文   | string           |
+| `discountType`       | 折扣类型     | PERCENT \| FIXED |
+| `percentDiscount`    | 百分比折扣   | float            |
+| `priceDiscount`      | 固定金额折扣 | string           |
+| `usageLimit`         | 最大使用次数 | int32            |
+| `startsAt`           | 生效时间     | Timestamp        |
+| `expiresAt`          | 过期时间     | Timestamp        |
+| `minimumOrderAmount` | 最低订单金额 | string           |
+
+## 7. TokenInput 组件
+
+### 7.1 概述
+
 通用的 Token/Chip 输入组件，同时用于标签和分类输入。
 
-### 5.2 Props
+### 7.2 Props
 
 ```typescript
 interface TokenInputProps {
@@ -219,14 +354,14 @@ interface TokenInputProps {
 }
 ```
 
-### 5.3 使用场景
+### 7.3 使用场景
 
 | 场景     | suggestions  | prefix |  normalize  |    createLabel    |
 | -------- | :----------: | :----: | :---------: | :---------------: |
 | 标签输入 |      -       |  `#`   | 小写+连字符 |         -         |
 | 分类输入 | 店铺已有分类 |   -    |      -      | `创建 "{{name}}"` |
 
-### 5.4 交互行为
+### 7.4 交互行为
 
 - **添加**: Enter / 逗号键添加 token
 - **删除**: Backspace 键删除最后一个 token，点击 x 删除指定 token
@@ -235,7 +370,7 @@ interface TokenInputProps {
 - **过滤**: 输入时自动过滤建议列表，排除已选中项
 - **创建**: 输入值不在建议列表中时，显示"创建新项"选项
 
-### 5.5 标签规范化规则
+### 7.5 标签规范化规则
 
 ```typescript
 // 来源：桌面端 Selectize.js 配置
@@ -248,9 +383,9 @@ input
   .replace(/^-|-$/g, ''); // 去除首尾连字符
 ```
 
-## 6. 分类自动补全
+## 8. 分类自动补全
 
-### 6.1 数据来源
+### 8.1 数据来源
 
 ```
 useStoreCategories Hook
@@ -260,7 +395,7 @@ useStoreCategories Hook
   └── 返回 string[]
 ```
 
-### 6.2 闭环流程
+### 8.2 闭环流程
 
 ```
 创建/编辑页输入分类
@@ -273,7 +408,7 @@ useStoreCategories Hook
 
 **关键**: 分类是自由文本，不依赖预定义分类表。一致性通过自动补全建议来维护。
 
-### 6.3 相关文件
+### 8.3 相关文件
 
 | 文件路径                                          | 说明                   |
 | ------------------------------------------------- | ---------------------- |
@@ -282,7 +417,7 @@ useStoreCategories Hook
 | `apps/web/src/components/store/FilterSidebar.tsx` | 桌面端分类筛选侧边栏   |
 | `apps/web/src/components/store/FilterSheet.tsx`   | 移动端分类筛选抽屉     |
 
-## 7. 接口依赖
+## 9. 接口依赖
 
 | 端点                        | 方法   | 说明                 |
 | --------------------------- | ------ | -------------------- |
@@ -293,29 +428,30 @@ useStoreCategories Hook
 | `/ob/listings`              | GET    | 获取当前用户商品列表 |
 | `/ob/listingindex/{peerID}` | GET    | 获取指定店铺商品索引 |
 
-## 8. i18n 翻译键
+## 10. i18n 翻译键
 
 所有翻译键位于 `listing` 命名空间下。主要分组：
 
-| 分组     | 前缀                           | 示例                              |
-| -------- | ------------------------------ | --------------------------------- |
-| 页面标题 | `listing.create/edit`          | `listing.createListing`           |
-| 商品类型 | `listing.types.*`              | `listing.types.physicalGood`      |
-| 导航标签 | `listing.tabs.*`               | `listing.tabs.general`            |
-| 基本信息 | `listing.title/desc/price`     | `listing.titlePlaceholder`        |
-| 成色选项 | `listing.conditions.*`         | `listing.conditions.new`          |
-| 媒体     | `listing.photos/video`         | `listing.photosHelper`            |
-| 标签分类 | `listing.tags/category`        | `listing.enterTag`                |
-| 物流     | `listing.shipping*`            | `listing.shippingProfile`         |
-| 变体     | `listing.variants*`            | `listing.addVariant`              |
-| 政策     | `listing.returnPolicy/terms`   | `listing.returnPolicyPlaceholder` |
-| 优惠券   | `listing.coupons*`             | `listing.addCoupon`               |
-| RWA      | `listing.rwa*`                 | `listing.blockchain`              |
-| 操作状态 | `listing.create/update/delete` | `listing.createSuccess`           |
+| 分组     | 前缀                           | 示例                               |
+| -------- | ------------------------------ | ---------------------------------- |
+| 页面标题 | `listing.create/edit`          | `listing.createListing`            |
+| 商品类型 | `listing.types.*`              | `listing.types.physicalGood`       |
+| 导航标签 | `listing.tabs.*`               | `listing.tabs.general`             |
+| 基本信息 | `listing.title/desc/price`     | `listing.titlePlaceholder`         |
+| 成色选项 | `listing.conditions.*`         | `listing.conditions.new`           |
+| 媒体     | `listing.photos/video`         | `listing.photosHelper`             |
+| 标签分类 | `listing.tags/category`        | `listing.enterTag`                 |
+| 物流     | `listing.shipping*`            | `listing.shippingProfile`          |
+| 变体     | `listing.variant.*`            | `listing.variant.optionName`       |
+| 变体错误 | `listing.variant.error.*`      | `listing.variant.error.maxOptions` |
+| 政策     | `listing.returnPolicy/terms`   | `listing.returnPolicyPlaceholder`  |
+| 优惠券   | `listing.coupon.*`             | `listing.coupon.discountCode`      |
+| RWA      | `listing.rwa*`                 | `listing.blockchain`               |
+| 操作状态 | `listing.create/update/delete` | `listing.createSuccess`            |
 
-## 9. 扩展指南
+## 11. 扩展指南
 
-### 9.1 添加新的商品类型
+### 11.1 添加新的商品类型
 
 1. 在 `packages/core/types/product.ts` 中扩展 `ContractType`
 2. 在 `ProductTypeSelector` 组件中添加新选项
@@ -323,7 +459,7 @@ useStoreCategories Hook
 4. 在 `useListingForm.ts` 内部的 `buildRequestData()` 函数中处理新类型的数据转换
 5. 添加对应的 i18n 翻译
 
-### 9.2 添加新的表单区块
+### 11.2 添加新的表单区块
 
 1. 创建新的 Section 组件（如 `NewSection.tsx`）
 2. 在 `TabKey` 类型和 `tabs` 数组中添加新 tab
@@ -331,7 +467,7 @@ useStoreCategories Hook
 4. 在 `sectionRefs` 初始值中添加新 key
 5. 按需配置 `showFor` 控制显示条件
 
-### 9.3 给 TokenInput 添加新功能
+### 11.3 给 TokenInput 添加新功能
 
 | 需求              | 实现方式                                                     |
 | ----------------- | ------------------------------------------------------------ |
@@ -340,7 +476,7 @@ useStoreCategories Hook
 | 分组建议          | 扩展 `suggestions` 为 `{ group: string; items: string[] }[]` |
 | 自定义 token 渲染 | 添加 `renderToken` prop                                      |
 
-### 9.4 分类系统升级路径
+### 11.4 分类系统升级路径
 
 当前分类是自由文本。未来可能的升级路径：
 
@@ -348,7 +484,25 @@ useStoreCategories Hook
 2. **层级分类** - 实现 `parentId` 支持树形分类（`ProductCategory.parentId` 类型已预留）
 3. **服务端分类 API** - `getCategories()` 从后端获取，替代客户端提取
 
-## 10. 迁移状态
+## 12. 测试
+
+### 12.1 单元测试
+
+| 文件路径                                             | 说明                     |
+| ---------------------------------------------------- | ------------------------ |
+| `packages/core/__tests__/utils/variantUtils.test.ts` | 笛卡尔积、SKU 合并、验证 |
+
+运行：`cd packages/core && npx vitest run __tests__/utils/variantUtils.test.ts`
+
+### 12.2 E2E 测试
+
+| 文件路径                                | 说明                         |
+| --------------------------------------- | ---------------------------- |
+| `apps/web/e2e/listing-variants.spec.ts` | 变体/优惠券创建编辑 E2E 测试 |
+
+运行：`cd apps/web && npx playwright test listing-variants`
+
+## 13. 迁移状态
 
 - [x] 单页表单布局（替代向导）
 - [x] 创建页实现
@@ -358,13 +512,14 @@ useStoreCategories Hook
 - [x] useStoreCategories Hook
 - [x] 配送档案集成 (Shopify 模式)
 - [x] i18n 完整覆盖（en/zh）
-- [ ] 变体管理完整实现
-- [ ] 优惠券管理完整实现
-- [ ] 商品克隆功能完善
-- [ ] 单元测试
-- [ ] E2E 测试
+- [x] 变体管理完整实现（Shopify 风格绝对定价）
+- [x] 优惠券管理完整实现（Shopify 风格扁平结构）
+- [x] 商品克隆功能完善（含 options/skus/coupons）
+- [x] 单元测试（variantUtils）
+- [x] E2E 测试框架（listing-variants.spec.ts）
+- [x] 后端 Proto 对齐（SKU/Coupon/Option 重设计）
 
-## 11. 相关文档
+## 14. 相关文档
 
 - [配送档案系统](./shipping-profiles.md) - 配送档案的详细设计
 - [Token Standard Guide](../TOKEN_STANDARD_GUIDE.md) - RWA 代币标准

@@ -2226,6 +2226,63 @@ export const zh: TranslationResource = {
     variantsDesc: '添加不同的尺寸、颜色、材质等选项供买家选择。',
     addVariant: '添加变体',
 
+    variant: {
+      // 选项编辑器
+      optionName: '选项名称',
+      optionNamePlaceholder: '如：尺寸、颜色、材质',
+      optionValues: '选项值',
+      addFirstValue: '输入值后按回车',
+      addValuePlaceholder: '添加更多值...',
+      addValueHint: '按回车分隔值。如：小、中、大',
+      untitledOption: '未命名选项',
+      valuesCount: '个值',
+      addOption: '添加选项',
+      addAnotherOption: '添加更多选项',
+      customOption: '自定义选项',
+      chooseOption: '添加选项以创建商品变体：',
+      limitHint: '已使用 {{current}}/{{maxOptions}} 个选项',
+      suggestedOptions: {
+        size: '尺寸',
+        color: '颜色',
+        material: '材质',
+        style: '款式',
+      },
+
+      // 库存表格
+      variant: '变体',
+      price: '价格',
+      compareAtPrice: '划线价',
+      quantity: '库存',
+      barcode: '条码',
+      weight: '重量',
+      unlimited: '不限',
+      skuCount: '{{count}} 个变体',
+      basePriceHint: '留空 = 基础价格 {{price}} {{currency}}',
+      selectedCount: '已选 {{count}} 项',
+
+      // 无障碍
+      moveUp: '上移',
+      moveDown: '下移',
+      removeOption: '删除选项',
+      removeValue: '删除值',
+
+      // 批量编辑
+      bulkPrice: '设置价格',
+      bulkCompareAtPrice: '设置划线价',
+      bulkQuantity: '设置库存',
+      bulkWeight: '设置重量',
+      bulkApply: '应用',
+      bulkCancel: '取消',
+
+      // 验证错误
+      error: {
+        maxOptions: '最多允许 3 个选项',
+        maxValues: '单个选项值数量过多',
+        duplicateOptionName: '选项名称不能重复',
+        maxCombinations: '变体组合过多（最多 100 个）',
+      },
+    },
+
     // 政策
     policies: '退货政策和条款',
     returnPolicy: '退货政策',
@@ -2239,6 +2296,29 @@ export const zh: TranslationResource = {
     coupons: '优惠券',
     couponsDesc: '创建折扣码为您的买家提供优惠活动。',
     addCoupon: '添加优惠券',
+
+    coupon: {
+      untitled: '未命名优惠券',
+      off: '减 {{amount}}',
+      title: '优惠券名称',
+      titlePlaceholder: '如：夏季促销、新用户优惠',
+      discountCode: '折扣码',
+      discountValue: '折扣金额',
+      minimumOrder: '最低订单金额',
+      noMinimum: '无最低限制',
+      usageLimit: '使用次数限制',
+      unlimited: '不限',
+      activeDates: '有效期',
+      startsAt: '开始日期',
+      expiresAt: '结束日期',
+      percentDiscount: '百分比折扣',
+      fixedDiscount: '固定金额折扣',
+      discountCodePlaceholder: '如 SUMMER2025',
+      removeCoupon: '删除优惠券',
+      emptyState: '暂无优惠券。创建折扣码来吸引买家。',
+      addFirst: '创建优惠券',
+      addAnother: '再添加一个',
+    },
 
     // RWA 代币
     rwaTokenDetails: 'RWA 代币详情',
