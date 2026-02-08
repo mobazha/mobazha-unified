@@ -455,6 +455,7 @@ export const en: TranslationResource = {
       refunded: 'Refunded',
       finalized: 'Finalized',
       error: 'Error',
+      unknown: 'Unknown',
     },
     // Shipping
     shippingDetails: 'Shipping Details',
