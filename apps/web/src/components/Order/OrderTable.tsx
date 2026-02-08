@@ -142,7 +142,7 @@ export const OrderTable = memo(function OrderTable({
         <TableBody>
           {orders.map(order => {
             const status = statusConfig[order.status] || {
-              labelKey: 'order.pending',
+              labelKey: 'order.statusLabels.unknown',
               variant: 'secondary' as const,
             };
             const showActions = shouldShowActions(order.rawState);

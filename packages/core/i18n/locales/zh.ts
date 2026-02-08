@@ -451,6 +451,7 @@ export const zh: TranslationResource = {
       refunded: '已退款',
       finalized: '已结算',
       error: '错误',
+      unknown: '未知',
     },
     // 发货
     shippingDetails: '发货详情',
