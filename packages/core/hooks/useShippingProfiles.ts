@@ -314,9 +314,17 @@ export function useShippingProfiles() {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
+      // 在直接 zones 和 LocationGroups 中查找并更新
       const zones = profile.zones?.map(z => (z.id === zoneId ? { ...z, ...updates } : z)) || [];
+      const locationGroups = profile.locationGroups?.map(lg => ({
+        ...lg,
+        zones: lg.zones?.map(z => (z.id === zoneId ? { ...z, ...updates } : z)),
+      }));
 
-      return updateProfile(profileId, { zones });
+      return updateProfile(profileId, {
+        zones,
+        ...(locationGroups && { locationGroups }),
+      });
     },
     [profiles, updateProfile]
   );
@@ -326,32 +334,50 @@ export function useShippingProfiles() {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
+      // 在直接 zones 和 LocationGroups 中查找并删除
       const zones = profile.zones?.filter(z => z.id !== zoneId) || [];
+      const locationGroups = profile.locationGroups?.map(lg => ({
+        ...lg,
+        zones: lg.zones?.filter(z => z.id !== zoneId),
+      }));
 
-      return updateProfile(profileId, { zones });
+      return updateProfile(profileId, {
+        zones,
+        ...(locationGroups && { locationGroups }),
+      });
     },
     [profiles, updateProfile]
   );
 
   // ============== 费率操作 ==============
 
+  /** 在 zones 数组中对匹配 zoneId 的 zone 执行变换 */
+  const mapZones = (
+    zones: ShippingZone[] | undefined,
+    zoneId: string,
+    fn: (z: ShippingZone) => ShippingZone
+  ) => zones?.map(z => (z.id === zoneId ? fn(z) : z)) || [];
+
   const addRate = useCallback(
     async (profileId: string, zoneId: string, rate: ShippingRate) => {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
-      const zones =
-        profile.zones?.map(z => {
-          if (z.id === zoneId) {
-            return {
-              ...z,
-              rates: [...z.rates, { ...rate, id: rate.id || generateId() }],
-            };
-          }
-          return z;
-        }) || [];
+      const addRateToZone = (z: ShippingZone) => ({
+        ...z,
+        rates: [...z.rates, { ...rate, id: rate.id || generateId() }],
+      });
 
-      return updateProfile(profileId, { zones });
+      const zones = mapZones(profile.zones, zoneId, addRateToZone);
+      const locationGroups = profile.locationGroups?.map(lg => ({
+        ...lg,
+        zones: mapZones(lg.zones, zoneId, addRateToZone),
+      }));
+
+      return updateProfile(profileId, {
+        zones,
+        ...(locationGroups && { locationGroups }),
+      });
     },
     [profiles, updateProfile]
   );
@@ -361,18 +387,21 @@ export function useShippingProfiles() {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
-      const zones =
-        profile.zones?.map(z => {
-          if (z.id === zoneId) {
-            return {
-              ...z,
-              rates: z.rates.map(r => (r.id === rateId ? { ...r, ...updates } : r)),
-            };
-          }
-          return z;
-        }) || [];
+      const updateRateInZone = (z: ShippingZone) => ({
+        ...z,
+        rates: z.rates.map(r => (r.id === rateId ? { ...r, ...updates } : r)),
+      });
 
-      return updateProfile(profileId, { zones });
+      const zones = mapZones(profile.zones, zoneId, updateRateInZone);
+      const locationGroups = profile.locationGroups?.map(lg => ({
+        ...lg,
+        zones: mapZones(lg.zones, zoneId, updateRateInZone),
+      }));
+
+      return updateProfile(profileId, {
+        zones,
+        ...(locationGroups && { locationGroups }),
+      });
     },
     [profiles, updateProfile]
   );
@@ -382,18 +411,21 @@ export function useShippingProfiles() {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
-      const zones =
-        profile.zones?.map(z => {
-          if (z.id === zoneId) {
-            return {
-              ...z,
-              rates: z.rates.filter(r => r.id !== rateId),
-            };
-          }
-          return z;
-        }) || [];
+      const deleteRateFromZone = (z: ShippingZone) => ({
+        ...z,
+        rates: z.rates.filter(r => r.id !== rateId),
+      });
 
-      return updateProfile(profileId, { zones });
+      const zones = mapZones(profile.zones, zoneId, deleteRateFromZone);
+      const locationGroups = profile.locationGroups?.map(lg => ({
+        ...lg,
+        zones: mapZones(lg.zones, zoneId, deleteRateFromZone),
+      }));
+
+      return updateProfile(profileId, {
+        zones,
+        ...(locationGroups && { locationGroups }),
+      });
     },
     [profiles, updateProfile]
   );

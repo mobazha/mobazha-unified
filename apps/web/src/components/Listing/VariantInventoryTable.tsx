@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useState, useMemo } from 'react';
-import { Edit3, Check, X } from 'lucide-react';
-import { useI18n, getVariantLabel } from '@mobazha/core';
+import React, { useCallback, useState, useMemo, useRef, useEffect } from 'react';
+import { Edit3, Check, X, ImagePlus } from 'lucide-react';
+import { useI18n, getVariantLabel, getGatewayUrl } from '@mobazha/core';
 import type { Image } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,8 @@ export interface VariantInventoryTableProps {
   onChange: (skus: SkuItem[]) => void;
   pricingCurrency?: string;
   basePrice?: string;
+  /** Product images available for variant image selection */
+  productImages?: Image[];
   className?: string;
 }
 
@@ -53,16 +55,31 @@ export function VariantInventoryTable({
   onChange,
   pricingCurrency = 'USD',
   basePrice,
+  productImages = [],
   className,
 }: VariantInventoryTableProps) {
   const { t } = useI18n();
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [bulkEdit, setBulkEdit] = useState<BulkEditState | null>(null);
+  const [imagePickerIndex, setImagePickerIndex] = useState<number | null>(null);
+  const imagePickerRef = useRef<HTMLDivElement>(null);
+
+  // Close image picker on outside click
+  useEffect(() => {
+    if (imagePickerIndex === null) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (imagePickerRef.current && !imagePickerRef.current.contains(e.target as globalThis.Node)) {
+        setImagePickerIndex(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [imagePickerIndex]);
 
   // ─── 单个 SKU 更新 ─────────────────────
 
   const updateSku = useCallback(
-    (index: number, field: keyof SkuItem, value: string | number) => {
+    (index: number, field: keyof SkuItem, value: SkuItem[keyof SkuItem]) => {
       const updated = [...skus];
       updated[index] = { ...updated[index], [field]: value };
       onChange(updated);
@@ -201,6 +218,7 @@ export function VariantInventoryTable({
               <TableHead className="w-10">
                 <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
               </TableHead>
+              <TableHead className="font-medium w-14">{t('listing.variant.image')}</TableHead>
               <TableHead className="font-medium min-w-[140px]">
                 {t('listing.variant.variant')}
               </TableHead>
@@ -230,6 +248,71 @@ export function VariantInventoryTable({
                   {/* 选择框 */}
                   <TableCell>
                     <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(index)} />
+                  </TableCell>
+
+                  {/* 变体图片 */}
+                  <TableCell>
+                    <div
+                      className="relative"
+                      ref={imagePickerIndex === index ? imagePickerRef : undefined}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setImagePickerIndex(imagePickerIndex === index ? null : index)
+                        }
+                        className="w-10 h-10 rounded border border-border overflow-hidden flex items-center justify-center bg-muted/30 hover:border-primary/50 transition-colors"
+                        aria-label={t('listing.variant.selectImage')}
+                      >
+                        {sku.images?.[0] ? (
+                          <img
+                            src={`${getGatewayUrl()}/ob/images/${sku.images[0].tiny || sku.images[0].small || ''}`}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+                      {/* Image picker dropdown */}
+                      {imagePickerIndex === index && productImages.length > 0 && (
+                        <div className="absolute z-20 top-12 left-0 bg-background border border-border rounded-lg shadow-lg p-2 grid grid-cols-4 gap-1 min-w-[180px]">
+                          {productImages.map((img, imgIdx) => (
+                            <button
+                              key={imgIdx}
+                              type="button"
+                              onClick={() => {
+                                updateSku(index, 'images', [img]);
+                                setImagePickerIndex(null);
+                              }}
+                              className={`w-10 h-10 rounded border overflow-hidden hover:border-primary transition-colors ${
+                                sku.images?.[0]?.small === img.small
+                                  ? 'border-primary ring-1 ring-primary'
+                                  : 'border-border'
+                              }`}
+                            >
+                              <img
+                                src={`${getGatewayUrl()}/ob/images/${img.tiny || img.small || ''}`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          ))}
+                          {sku.images?.[0] && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateSku(index, 'images', []);
+                                setImagePickerIndex(null);
+                              }}
+                              className="w-10 h-10 rounded border border-border flex items-center justify-center hover:border-destructive hover:text-destructive transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* 变体名称 */}

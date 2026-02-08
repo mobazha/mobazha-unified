@@ -39,7 +39,20 @@ export interface ProductListItem {
   moderators?: string[];
   /** 商品分类 */
   categories?: string[];
+  /** 商品发布状态 */
+  status?: ListingStatus;
 }
+
+/**
+ * 商品发布状态
+ */
+export type ListingStatus = 'draft' | 'published' | 'private';
+
+export type WeightUnit = 'g' | 'kg' | 'lb' | 'oz';
+
+export type InventoryPolicy = 'deny' | 'continue';
+
+export type DimensionUnit = 'cm' | 'in';
 
 /**
  * 商品详情（完整）
@@ -58,6 +71,8 @@ export interface Product {
   moderators?: string[];
   termsAndConditions?: string;
   refundPolicy?: string;
+  /** 商品发布状态: draft/published/private */
+  status?: ListingStatus;
 }
 
 /**
@@ -126,13 +141,33 @@ export type ListingFormat = 'FIXED_PRICE' | 'AUCTION' | 'MARKET_PRICE';
 export interface ProductItem {
   title: string;
   description: string;
+  /** 短描述（用于搜索结果和商品卡片展示） */
+  shortDescription?: string;
   processingTime: string;
   price: number;
+  /** 划线价/原价（展示折扣用） */
+  regularPrice?: string;
+  /** 促销价 */
+  salePrice?: string;
   nsfw: boolean;
   tags?: string[];
   images: Image[];
   categories?: string[];
   grams?: number;
+  /** 重量单位: g/kg/lb/oz */
+  weightUnit?: WeightUnit;
+  /** 库存策略: deny(缺货拒绝下单)/continue(缺货继续销售) */
+  inventoryPolicy?: InventoryPolicy;
+  /** 包裹长度 */
+  packageLength?: number;
+  /** 包裹宽度 */
+  packageWidth?: number;
+  /** 包裹高度 */
+  packageHeight?: number;
+  /** 尺寸单位: cm/in */
+  dimensionUnit?: DimensionUnit;
+  /** 品牌名称 */
+  brand?: string;
   condition?: ProductCondition;
   options?: ProductOption[];
   skus?: ProductSku[];

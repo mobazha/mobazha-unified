@@ -21,6 +21,7 @@ import {
   useShippingOptions,
   useShippingProfiles,
   createEmptyProfile,
+  getAllZones,
 } from '@mobazha/core';
 import type {
   ShippingOptionConfig,
@@ -384,7 +385,7 @@ export default function ShippingOptionsPage() {
     [isUsingProfiles, editingOption, updateOption, addOption]
   );
 
-  // 保存配送区域（新版）
+  // 保存配送区域（新版，支持直接 zones 和 LocationGroups）
   const handleSaveZone = useCallback(
     async (zone: ShippingZone): Promise<boolean> => {
       if (!selectedProfileId) return false;
@@ -392,21 +393,43 @@ export default function ShippingOptionsPage() {
       const profile = profiles.find(p => p.profileId === selectedProfileId);
       if (!profile) return false;
 
-      const currentZones = profile.zones || [];
-      const updatedZones = editingZone
-        ? currentZones.map(z => (z.id === editingZone.id ? zone : z))
-        : [...currentZones, zone];
-
-      const success = await updateProfile(selectedProfileId, { zones: updatedZones });
-      if (success) {
-        setShowZoneForm(false);
-        setEditingZone(null);
-        toast({
-          title: t('common.success'),
-          description: editingZone ? t('shipping.zoneUpdated') : t('shipping.zoneAdded'),
+      if (editingZone) {
+        // 编辑：在直接 zones 和 LocationGroups 中查找并更新
+        let found = false;
+        const updatedZones = (profile.zones || []).map(z => {
+          if (z.id === editingZone.id) {
+            found = true;
+            return zone;
+          }
+          return z;
         });
+        const updatedLocationGroups = found
+          ? profile.locationGroups
+          : profile.locationGroups?.map(lg => ({
+              ...lg,
+              zones: lg.zones?.map(z => (z.id === editingZone.id ? zone : z)),
+            }));
+        const success = await updateProfile(selectedProfileId, {
+          zones: updatedZones,
+          ...(updatedLocationGroups && { locationGroups: updatedLocationGroups }),
+        });
+        if (success) {
+          setShowZoneForm(false);
+          setEditingZone(null);
+          toast({ title: t('common.success'), description: t('shipping.zoneUpdated') });
+        }
+        return success;
+      } else {
+        // 新增：添加到直接 zones
+        const updatedZones = [...(profile.zones || []), zone];
+        const success = await updateProfile(selectedProfileId, { zones: updatedZones });
+        if (success) {
+          setShowZoneForm(false);
+          setEditingZone(null);
+          toast({ title: t('common.success'), description: t('shipping.zoneAdded') });
+        }
+        return success;
       }
-      return success;
     },
     [selectedProfileId, profiles, editingZone, updateProfile, toast, t]
   );
@@ -426,13 +449,20 @@ export default function ShippingOptionsPage() {
     if (itemToDelete.type === 'profile') {
       success = await deleteProfile((itemToDelete.item as ShippingProfile).profileId);
     } else if (itemToDelete.type === 'zone') {
-      // 删除配送区域
+      // 删除配送区域（在直接 zones 和 LocationGroups 中查找）
       if (selectedProfileId) {
         const profile = profiles.find(p => p.profileId === selectedProfileId);
         if (profile) {
           const zoneToDelete = itemToDelete.item as ShippingZone;
           const updatedZones = (profile.zones || []).filter(z => z.id !== zoneToDelete.id);
-          success = await updateProfile(selectedProfileId, { zones: updatedZones });
+          const updatedLocationGroups = profile.locationGroups?.map(lg => ({
+            ...lg,
+            zones: lg.zones?.filter(z => z.id !== zoneToDelete.id),
+          }));
+          success = await updateProfile(selectedProfileId, {
+            zones: updatedZones,
+            ...(updatedLocationGroups && { locationGroups: updatedLocationGroups }),
+          });
         }
       }
     } else if (itemToDelete.type === 'location') {
@@ -600,8 +630,8 @@ export default function ShippingOptionsPage() {
                 {/* 档案内的配送区域 - 可展开/折叠 */}
                 {isExpanded && (
                   <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
-                    {(profile.zones?.length || 0) > 0 ? (
-                      (profile.zones || []).map(zone => (
+                    {getAllZones(profile).length > 0 ? (
+                      getAllZones(profile).map(zone => (
                         <ShippingZoneCard
                           key={zone.id}
                           zone={zone}

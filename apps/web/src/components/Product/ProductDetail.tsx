@@ -21,6 +21,7 @@ import {
   sanitizeHtml,
 } from '@mobazha/core';
 import type { Product, ProductRating, UserProfile } from '@mobazha/core';
+import { getAllZones as getAllShippingZones } from '@mobazha/core';
 import {
   getProductWithDedup,
   getProfileWithDedup,
@@ -65,11 +66,14 @@ function getStockQuantity(product: Product): number {
 
 // 检查是否免运费
 function hasFreeShipping(product: Product): boolean {
-  // 新版 profile
-  if (product.shippingProfile?.zones?.length) {
-    return product.shippingProfile.zones.some(
-      zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
-    );
+  // 新版 profile（支持直接 zones 和 LocationGroups 两种模式）
+  if (product.shippingProfile) {
+    const zones = getAllShippingZones(product.shippingProfile);
+    if (zones.length > 0) {
+      return zones.some(
+        zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
+      );
+    }
   }
   // 旧版兼容
   if (!product.shippingOptions) return false;
@@ -78,10 +82,13 @@ function hasFreeShipping(product: Product): boolean {
 
 // 获取预计送达时间
 function getEstimatedDelivery(product: Product): string | null {
-  // 新版 profile
-  if (product.shippingProfile?.zones?.length) {
-    const firstRate = product.shippingProfile.zones[0]?.rates[0];
-    return firstRate?.estimatedDelivery || null;
+  // 新版 profile（支持直接 zones 和 LocationGroups 两种模式）
+  if (product.shippingProfile) {
+    const zones = getAllShippingZones(product.shippingProfile);
+    if (zones.length > 0) {
+      const firstRate = zones[0]?.rates[0];
+      return firstRate?.estimatedDelivery || null;
+    }
   }
   // 旧版兼容
   if (!product.shippingOptions || product.shippingOptions.length === 0) return null;

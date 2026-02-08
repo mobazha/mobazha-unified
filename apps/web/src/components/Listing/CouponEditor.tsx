@@ -204,10 +204,10 @@ function CouponForm({
                     type="number"
                     step="1"
                     min="0"
-                    max="99"
+                    max="100"
                     value={coupon.percentDiscount || ''}
                     onChange={e =>
-                      updateField('percentDiscount', Math.min(99, Number(e.target.value)))
+                      updateField('percentDiscount', Math.min(100, Number(e.target.value)))
                     }
                     placeholder="0 %"
                     className="h-9"

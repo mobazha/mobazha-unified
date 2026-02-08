@@ -2153,6 +2153,7 @@ export const zh: TranslationResource = {
       variants: '变体',
       policies: '政策',
       coupons: '优惠券',
+      files: '文件',
       other: '其他设置',
     },
 
@@ -2170,7 +2171,18 @@ export const zh: TranslationResource = {
     condition: '成色',
     conditionHelper: '商品的整体状况',
     weight: '重量',
-    weightHelper: '商品重量（克）',
+    weightHelper: '用于运费计算的商品重量',
+    packageDimensions: {
+      label: '包裹尺寸',
+      length: '长',
+      width: '宽',
+      height: '高',
+      helper: '长 × 宽 × 高，用于运费计算',
+    },
+    brand: {
+      label: '品牌',
+      placeholder: '输入品牌名称',
+    },
     sku: 'SKU',
     skuPlaceholder: 'SKU、零件号、ID 等',
     skuHelper: '商品的唯一标识符',
@@ -2189,6 +2201,11 @@ export const zh: TranslationResource = {
     photos: '图片',
     photosHelper: '最多可上传 30 张图片，可拖拽排序',
     primaryPhoto: '主图',
+    imageAlt: {
+      edit: '编辑替代文本',
+      placeholder: '描述这张图片...',
+      default: '商品图片 {{index}}',
+    },
     add: '添加',
     introVideo: '介绍视频',
     externalVideoLink: '或添加外部视频链接（YouTube 等）',
@@ -2249,6 +2266,8 @@ export const zh: TranslationResource = {
       },
 
       // 库存表格
+      image: '图片',
+      selectImage: '选择变体图片',
       variant: '变体',
       price: '价格',
       compareAtPrice: '划线价',
@@ -2473,6 +2492,36 @@ export const zh: TranslationResource = {
     processingTime: '处理时间',
     processingTimePlaceholder: '例如：1-3 个工作日',
     processingTimeHelper: '发货前准备订单所需的时间',
+    processingTimeOptions: {
+      placeholder: '选择处理时间',
+      '1day': '1 个工作日',
+      '1to3days': '1-3 个工作日',
+      '3to5days': '3-5 个工作日',
+      '5to7days': '5-7 个工作日',
+      '1to2weeks': '1-2 周',
+      '2to4weeks': '2-4 周',
+      custom: '自定义',
+    },
+
+    // 退货政策模板
+    returnPolicyTemplates: {
+      placeholder: '选择退货政策模板',
+      '30dayLabel': '30 天无理由退换',
+      '30day':
+        '我们接受收货后 30 天内的退货。商品必须未使用且保持原始包装。退款将在我们收到退回商品后 5-10 个工作日内退回原支付方式。',
+      '15dayLabel': '15 天退换（需保持原包装）',
+      '15day':
+        '我们接受收货后 15 天内的退货。商品必须未使用、保持原始状态且在原始包装中。买家需承担退货运费。退款将在 5-10 个工作日内处理。',
+      noReturnLabel: '不支持退换（最终售出）',
+      noReturn: '所有销售均为最终售出，我们不接受退货或换货。请在购买前仔细查看商品详情。',
+      custom: '自定义政策',
+    },
+
+    // 库存策略
+    inventoryPolicy: {
+      label: '缺货时继续销售',
+      helper: '允许库存为零时客户仍可下单',
+    },
 
     // 克隆
     cloneListing: '克隆商品',
@@ -2484,6 +2533,42 @@ export const zh: TranslationResource = {
     shippingProfile: '配送方案',
     selectShippingProfile: '为此商品选择配送方案',
     manageProfiles: '管理配送方案',
+
+    // 富文本编辑器
+    richEditor: {
+      enterUrl: '请输入链接地址：',
+      enterLinkText: '请输入链接文字：',
+    },
+
+    // 短描述
+    shortDescription: '短描述',
+    shortDescriptionPlaceholder: '简短的商品摘要，用于搜索结果和商品卡片',
+    shortDescriptionHelper: '最多 250 字。显示在搜索结果和商品卡片中。',
+
+    // 划线价
+    compareAtPrice: '划线价',
+    compareAtPriceHelper: '原价，将以删除线形式显示折扣',
+    discount: '省 {{percent}}%',
+
+    // 条码
+    barcode: '条码',
+    barcodePlaceholder: 'UPC、EAN、ISBN...',
+    barcodeHelper: '商品条码，用于库存追踪',
+
+    // 数字商品文件
+    digital: {
+      title: '数字文件',
+      description: '上传买家购买后将收到的文件。',
+      uploadFiles: '点击上传文件',
+      uploadHint: '拖拽或点击选择文件（单文件最大 500MB）',
+      fileTooLarge: '超过 500MB 文件大小限制',
+    },
+
+    // 状态
+    statusDraft: '草稿',
+    statusPublished: '已发布',
+    statusPrivate: '私密',
+    draftSaved: '草稿保存成功！',
 
     // 操作和状态
     validationFailed: '请修正错误后再提交',
