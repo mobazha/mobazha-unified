@@ -27,6 +27,7 @@ import type {
   ShippingOption,
   ShippingProfile,
 } from '@mobazha/core';
+import { getAllZones } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
 // ============== Checkout 配送类型（基于新版 Zone/Rate 模型） ==============
@@ -78,7 +79,8 @@ interface CheckoutItem {
  * 将 ShippingProfile（新模型）转换为 Checkout 配送区域
  */
 function profileToCheckoutZones(profile: ShippingProfile): CheckoutShippingZone[] {
-  return (profile.zones || []).map(zone => ({
+  // 使用 getAllZones 统一获取直接 zones 和 LocationGroups 中的 zones
+  return getAllZones(profile).map(zone => ({
     id: zone.id,
     name: zone.name,
     regions: zone.regions || [],

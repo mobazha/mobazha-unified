@@ -10,6 +10,7 @@ import {
   Video,
   Link as LinkIcon,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 import type { Image } from '@mobazha/core';
 import { useI18n, getGatewayUrl } from '@mobazha/core';
@@ -55,6 +56,7 @@ export function MediaSection({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [newVideoLink, setNewVideoLink] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [editingAltIndex, setEditingAltIndex] = useState<number | null>(null);
 
   // 上传图片
   const handleImageUpload = useCallback(
@@ -132,6 +134,16 @@ export function MediaSection({
       setDraggedIndex(null);
     },
     [draggedIndex, images, onImagesChange]
+  );
+
+  // 更新图片 alt 文本
+  const handleAltChange = useCallback(
+    (index: number, alt: string) => {
+      const newImages = [...images];
+      newImages[index] = { ...newImages[index], alt };
+      onImagesChange(newImages);
+    },
+    [images, onImagesChange]
   );
 
   // 获取图片 URL
@@ -229,7 +241,7 @@ export function MediaSection({
             >
               <img
                 src={getImageUrl(image)}
-                alt={`Product ${index + 1}`}
+                alt={image.alt || t('listing.imageAlt.default', { index: index + 1 })}
                 className="w-full h-full object-cover"
               />
 
@@ -247,10 +259,46 @@ export function MediaSection({
                 <X className="w-3 h-3" />
               </button>
 
+              {/* Alt text 编辑按钮 */}
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  setEditingAltIndex(editingAltIndex === index ? null : index);
+                }}
+                className={`absolute bottom-1 right-1 p-1 rounded transition-opacity text-xs ${
+                  image.alt
+                    ? 'bg-primary/80 text-white opacity-80 hover:opacity-100'
+                    : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                }`}
+                title={t('listing.imageAlt.edit')}
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+
               {/* 主图标记 */}
               {index === 0 && (
                 <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded">
                   {t('listing.primaryPhoto')}
+                </div>
+              )}
+
+              {/* Alt text 编辑输入 */}
+              {editingAltIndex === index && (
+                <div className="absolute inset-x-0 bottom-0 bg-black/80 p-1.5">
+                  <input
+                    type="text"
+                    value={image.alt || ''}
+                    onChange={e => handleAltChange(index, e.target.value)}
+                    onBlur={() => setEditingAltIndex(null)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') setEditingAltIndex(null);
+                    }}
+                    onMouseDown={e => e.stopPropagation()}
+                    placeholder={t('listing.imageAlt.placeholder')}
+                    className="w-full text-xs px-1.5 py-1 bg-white/90 text-foreground rounded border-0 focus:outline-none focus:ring-1 focus:ring-primary"
+                    autoFocus
+                  />
                 </div>
               )}
             </div>

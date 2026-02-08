@@ -4,3 +4,4 @@
  */
 
 export { transformCoreOrder, mapOrderState } from './orderTransform';
+export { convertProductToFormData } from './productTransform';

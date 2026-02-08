@@ -16,6 +16,7 @@ import {
   Image as ImageIcon,
   Settings2,
   Truck,
+  Download,
 } from 'lucide-react';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
@@ -30,17 +31,10 @@ import {
   useStoreCategories,
   getGatewayUrl,
   productDataService,
+  convertProductToFormData,
   DEFAULT_LOCAL_CURRENCY,
 } from '@mobazha/core';
-import type {
-  ContractType,
-  ProductCondition,
-  BlockchainNetwork,
-  Image,
-  ShippingProfile,
-  ListingFormData,
-  Product,
-} from '@mobazha/core';
+import type { ContractType, Image, ShippingProfile, ListingFormData } from '@mobazha/core';
 
 import {
   ProductTypeSelector,
@@ -51,6 +45,9 @@ import {
   VariantOptionEditor,
   VariantInventoryTable,
   CouponEditor,
+  DigitalFileSection,
+  ProcessingTimeSelect,
+  ReturnPolicySelector,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
 
@@ -63,6 +60,7 @@ type TabKey =
   | 'category'
   | 'shipping'
   | 'variants'
+  | 'files'
   | 'policies'
   | 'coupons'
   | 'other';
@@ -92,6 +90,12 @@ const tabs: TabItem[] = [
     showFor: ['PHYSICAL_GOOD'],
   },
   {
+    key: 'files',
+    labelKey: 'listing.tabs.files',
+    icon: <Download className="w-4 h-4" />,
+    showFor: ['DIGITAL_GOOD'],
+  },
+  {
     key: 'policies',
     labelKey: 'listing.tabs.policies',
     icon: <FileText className="w-4 h-4" />,
@@ -110,79 +114,6 @@ const tabs: TabItem[] = [
     showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
   },
 ];
-
-// ─── 商品数据 → 表单数据转换 ───────────────────────
-
-function convertProductToFormData(product: Product): Partial<ListingFormData> {
-  const item = product.item;
-  const metadata = product.metadata;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const metadataAny = metadata as any;
-  // 克隆时不复制 rwaListingId，确保克隆的商品会创建新的延迟 Listing
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { rwaListingId: _ignored, ...cleanMetadata } = metadataAny;
-
-  return {
-    title: item.title || '',
-    description: item.description || '',
-    price: item.price?.toString() || '',
-    pricingCurrency: metadata.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
-    contractType: cleanMetadata.contractType as ContractType,
-    condition: (item.condition as ProductCondition) || 'NEW',
-    grams: item.grams || 0,
-    blockchain: (item.blockchain as BlockchainNetwork) || 'ETH',
-    tokenAddress: item.tokenAddress || '',
-    tokenStandard: item.tokenStandard || '',
-    cryptoListingCurrencyCode: item.cryptoListingCurrencyCode || '',
-    minQuantity: item.minQuantity || 1,
-    maxQuantity: item.maxQuantity || 100,
-    acceptedCurrencies:
-      cleanMetadata.acceptedCurrencies?.map((c: string | { code: string }) =>
-        typeof c === 'string' ? c : c.code
-      ) || [],
-    images: item.images || [],
-    introVideo: item.introVideo || '',
-    altIntroVideoLinks: item.altIntroVideoLinks || [],
-    tags: item.tags || [],
-    categories: item.categories || [],
-    shippingProfile: product.shippingProfile,
-    // 变体选项
-    options: (item.options || []).map(opt => ({
-      name: opt.name,
-      description: opt.description,
-      variants: (opt.variants || []).map(v => ({ name: v.name, image: v.image })),
-    })),
-    // SKU（Shopify 风格绝对定价）
-    skus: (item.skus || []).map(sku => ({
-      productID: sku.productID || '',
-      selections: (sku.selections || []).map(s => ({ option: s.option, variant: s.variant })),
-      price: sku.price || '',
-      compareAtPrice: sku.compareAtPrice || '',
-      quantity: sku.quantity ? parseInt(sku.quantity, 10) : -1,
-      images: sku.images || [],
-      barcode: sku.barcode || '',
-      weight: sku.weight || 0,
-    })),
-    // 优惠券（Shopify 风格扁平结构）
-    coupons: (product.coupons || []).map(c => ({
-      title: c.title,
-      discountCode: c.discountCode,
-      hash: c.hash,
-      discountType: c.discountType || 'PERCENT',
-      percentDiscount: c.percentDiscount,
-      priceDiscount: c.priceDiscount,
-      usageLimit: c.usageLimit,
-      startsAt: c.startsAt,
-      expiresAt: c.expiresAt,
-      minimumOrderAmount: c.minimumOrderAmount,
-    })),
-    termsAndConditions: product.termsAndConditions || '',
-    refundPolicy: product.refundPolicy || '',
-    nsfw: item.nsfw || false,
-    processingTime: item.processingTime || '',
-  };
-}
 
 // ─── 主要内容组件 ─────────────────────────────────
 
@@ -209,7 +140,7 @@ function CreateListingContent() {
       try {
         const product = await productDataService.getProduct(slug);
         if (product) {
-          const formData = convertProductToFormData(product);
+          const formData = convertProductToFormData(product, { isClone: true });
           setCloneData(formData);
         } else {
           setLoadError(t('listing.cloneNotFound'));
@@ -249,6 +180,7 @@ function CreateListingContent() {
     removeCoupon,
     validate,
     submit,
+    submitDraft,
     reset,
   } = useListingForm(initialData);
 
@@ -273,6 +205,7 @@ function CreateListingContent() {
     category: null,
     shipping: null,
     variants: null,
+    files: null,
     policies: null,
     coupons: null,
     other: null,
@@ -359,7 +292,7 @@ function CreateListingContent() {
     [updateField]
   );
 
-  // 提交表单
+  // 提交表单（发布）
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
       e?.preventDefault();
@@ -392,6 +325,25 @@ function CreateListingContent() {
     },
     [validate, submit, toast, t, router]
   );
+
+  // 保存草稿
+  const handleSaveDraft = useCallback(async () => {
+    const result = await submitDraft();
+
+    if ('error' in result) {
+      toast({
+        title: t('common.error'),
+        description: result.error,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: t('common.success'),
+        description: t('listing.draftSaved'),
+      });
+      router.push('/settings/store');
+    }
+  }, [submitDraft, toast, t, router]);
 
   // 获取图片URL用于预览
   const getPreviewImageUrl = useCallback((image: Image) => {
@@ -467,6 +419,14 @@ function CreateListingContent() {
               <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
                 <X className="w-4 h-4 mr-1" />
                 {t('common.cancel')}
+              </Button>
+              <Button variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-1" />
+                )}
+                {t('listing.saveDraft')}
               </Button>
               <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (
@@ -565,18 +525,42 @@ function CreateListingContent() {
               {formData.contractType !== 'RWA_TOKEN' && (
                 <BasicInfoSection
                   title={formData.title}
+                  shortDescription={formData.shortDescription}
                   description={formData.description}
                   price={formData.price}
+                  compareAtPrice={formData.compareAtPrice}
                   pricingCurrency={formData.pricingCurrency}
                   contractType={formData.contractType}
                   condition={formData.condition}
                   grams={formData.grams}
+                  weightUnit={formData.weightUnit}
+                  barcode={formData.skus[0]?.barcode}
                   onTitleChange={v => updateField('title', v)}
+                  onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
                   onPriceChange={v => updateField('price', v)}
+                  onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
                   onGramsChange={v => updateField('grams', v)}
+                  onWeightUnitChange={v => updateField('weightUnit', v)}
+                  packageLength={formData.packageLength}
+                  packageWidth={formData.packageWidth}
+                  packageHeight={formData.packageHeight}
+                  dimensionUnit={formData.dimensionUnit}
+                  brand={formData.brand}
+                  onPackageLengthChange={v => updateField('packageLength', v)}
+                  onPackageWidthChange={v => updateField('packageWidth', v)}
+                  onPackageHeightChange={v => updateField('packageHeight', v)}
+                  onDimensionUnitChange={v => updateField('dimensionUnit', v)}
+                  onBrandChange={v => updateField('brand', v)}
+                  onBarcodeChange={v => {
+                    const newSkus = [...formData.skus];
+                    if (newSkus[0]) {
+                      newSkus[0] = { ...newSkus[0], barcode: v };
+                      updateField('skus', newSkus);
+                    }
+                  }}
                   errors={errors}
                 />
               )}
@@ -738,10 +722,26 @@ function CreateListingContent() {
                       onChange={updateSkus}
                       pricingCurrency={formData.pricingCurrency}
                       basePrice={formData.price}
+                      productImages={formData.images}
                       className="mt-6"
                     />
                   )}
                 </Card>
+              )}
+
+              {/* 数字商品文件 - 仅数字商品 */}
+              {formData.contractType === 'DIGITAL_GOOD' && (
+                <div
+                  ref={el => {
+                    sectionRefs.current.files = el;
+                  }}
+                >
+                  <DigitalFileSection
+                    files={formData.digitalFiles}
+                    onFilesChange={files => updateField('digitalFiles', files)}
+                    errors={errors}
+                  />
+                </div>
               )}
 
               {/* 退货政策和条款 */}
@@ -761,11 +761,9 @@ function CreateListingContent() {
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">
                           {t('listing.returnPolicy')}
                         </label>
-                        <textarea
+                        <ReturnPolicySelector
                           value={formData.refundPolicy}
-                          onChange={e => updateField('refundPolicy', e.target.value)}
-                          rows={3}
-                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          onChange={(val: string) => updateField('refundPolicy', val)}
                           placeholder={t('listing.returnPolicyPlaceholder')}
                         />
                       </div>
@@ -825,14 +823,46 @@ function CreateListingContent() {
                       <label className="block text-sm font-medium text-muted-foreground mb-1.5">
                         {t('listing.processingTime')}
                       </label>
-                      <Input
+                      <ProcessingTimeSelect
                         value={formData.processingTime}
-                        onChange={e => updateField('processingTime', e.target.value)}
-                        placeholder={t('listing.processingTimePlaceholder')}
+                        onChange={(val: string) => updateField('processingTime', val)}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         {t('listing.processingTimeHelper')}
                       </p>
+                    </div>
+                    {/* 库存策略 */}
+                    <div className="mt-4 flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium text-foreground">
+                          {t('listing.inventoryPolicy.label')}
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {t('listing.inventoryPolicy.helper')}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={formData.inventoryPolicy === 'continue'}
+                        onClick={() =>
+                          updateField(
+                            'inventoryPolicy',
+                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
+                          )
+                        }
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            formData.inventoryPolicy === 'continue'
+                              ? 'translate-x-6'
+                              : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </Card>
                 )}
@@ -843,10 +873,10 @@ function CreateListingContent() {
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => router.back()}
+                    onClick={handleSaveDraft}
                     disabled={isSubmitting}
                   >
-                    {t('common.cancel')}
+                    {t('listing.saveDraft')}
                   </Button>
                   <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>
                     {isSubmitting ? (

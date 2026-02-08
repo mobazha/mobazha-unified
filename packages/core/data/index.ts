@@ -42,6 +42,15 @@ export {
   type PaymentChainConfig,
 } from './tokens';
 
+// 预定义商品分类
+export {
+  CATEGORY_GROUPS,
+  PREDEFINED_CATEGORIES,
+  getCategoriesByGroup,
+  isPredefinedCategory,
+  type CategoryGroup,
+} from './categories';
+
 // RWA 预定义资产数据
 export {
   assetTypes,

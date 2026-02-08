@@ -11,6 +11,10 @@ import type {
   Coupon,
   BlockchainNetwork,
   Image,
+  ListingStatus,
+  WeightUnit,
+  InventoryPolicy,
+  DimensionUnit,
 } from '../types';
 import { productsApi } from '../services/api';
 import { mergeSkus } from '../utils/variantUtils';
@@ -22,14 +26,24 @@ export interface ListingFormData {
   // 基础信息
   slug?: string;
   title: string;
+  shortDescription: string;
   description: string;
   price: string;
+  compareAtPrice: string;
   pricingCurrency: string;
   contractType: ContractType;
+  status: ListingStatus;
 
   // 物理商品字段
   condition?: ProductCondition;
   grams?: number;
+  weightUnit: WeightUnit;
+  inventoryPolicy: InventoryPolicy;
+  packageLength?: number;
+  packageWidth?: number;
+  packageHeight?: number;
+  dimensionUnit: DimensionUnit;
+  brand?: string;
 
   // RWA Token 字段
   blockchain?: BlockchainNetwork;
@@ -56,6 +70,9 @@ export interface ListingFormData {
   options: VariantOption[];
   skus: SkuItem[];
   inventoryTracking: boolean;
+
+  // 数字商品文件
+  digitalFiles: DigitalFile[];
 
   // 可选功能
   optionalFeatures: OptionalFeature[];
@@ -96,6 +113,18 @@ export interface SkuItem {
 }
 
 /**
+ * 数字商品下载文件
+ */
+export interface DigitalFile {
+  /** 文件 ID (IPFS hash or upload ID) */
+  file: string;
+  /** 文件名 */
+  name: string;
+  /** 文件大小（字节） */
+  size?: number;
+}
+
+/**
  * 可选功能
  */
 export interface OptionalFeature {
@@ -116,12 +145,22 @@ export interface FormErrors {
  */
 export const initialFormData: ListingFormData = {
   title: '',
+  shortDescription: '',
   description: '',
   price: '',
+  compareAtPrice: '',
   pricingCurrency: 'USD',
   contractType: 'PHYSICAL_GOOD',
+  status: 'published',
   condition: 'NEW',
   grams: 0,
+  weightUnit: 'g',
+  inventoryPolicy: 'deny',
+  packageLength: undefined,
+  packageWidth: undefined,
+  packageHeight: undefined,
+  dimensionUnit: 'cm',
+  brand: '',
   blockchain: 'ETH',
   tokenAddress: '',
   tokenStandard: '',
@@ -149,6 +188,7 @@ export const initialFormData: ListingFormData = {
     },
   ],
   inventoryTracking: false,
+  digitalFiles: [],
   optionalFeatures: [],
   coupons: [],
   termsAndConditions: '',
@@ -303,62 +343,96 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
 
   /**
    * 验证表单
+   * @param isDraft - 草稿模式使用宽松验证（仅需标题）
    */
-  const validate = useCallback((): boolean => {
-    const newErrors: FormErrors = {};
+  const validate = useCallback(
+    (isDraft = false): boolean => {
+      const newErrors: FormErrors = {};
 
-    // 必填字段验证
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required';
-    }
-
-    if (formData.images.length === 0) {
-      newErrors.images = 'At least one image is required';
-    }
-
-    // 物理商品特定验证
-    if (formData.contractType === 'PHYSICAL_GOOD') {
-      if (!formData.condition) {
-        newErrors.condition = 'Condition is required';
+      // 草稿模式：仅需标题
+      if (isDraft) {
+        if (!formData.title.trim()) {
+          newErrors.title = 'Title is required';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
       }
-    }
 
-    // RWA Token 特定验证
-    if (formData.contractType === 'RWA_TOKEN') {
-      if (!formData.blockchain) {
-        newErrors.blockchain = 'Blockchain is required';
+      // 必填字段验证
+      if (!formData.title.trim()) {
+        newErrors.title = 'Title is required';
       }
-      if (!formData.cryptoListingCurrencyCode) {
-        newErrors.cryptoListingCurrencyCode = 'Token selection is required';
-      }
-      if (!formData.acceptedCurrencies || formData.acceptedCurrencies.length === 0) {
-        newErrors.acceptedCurrencies = 'At least one payment currency is required';
-      }
-    }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
+      if (!formData.price || parseFloat(formData.price) <= 0) {
+        newErrors.price = 'Valid price is required';
+      }
+
+      if (formData.images.length === 0) {
+        newErrors.images = 'At least one image is required';
+      }
+
+      // 划线价验证: 必须 > 售价
+      if (formData.compareAtPrice) {
+        const compareAt = parseFloat(formData.compareAtPrice);
+        const price = parseFloat(formData.price);
+        if (compareAt > 0 && price > 0 && compareAt <= price) {
+          newErrors.compareAtPrice = 'Compare at price must be greater than price';
+        }
+      }
+
+      // 物理商品特定验证
+      if (formData.contractType === 'PHYSICAL_GOOD') {
+        if (!formData.condition) {
+          newErrors.condition = 'Condition is required';
+        }
+      }
+
+      // RWA Token 特定验证
+      if (formData.contractType === 'RWA_TOKEN') {
+        if (!formData.blockchain) {
+          newErrors.blockchain = 'Blockchain is required';
+        }
+        if (!formData.cryptoListingCurrencyCode) {
+          newErrors.cryptoListingCurrencyCode = 'Token selection is required';
+        }
+        if (!formData.acceptedCurrencies || formData.acceptedCurrencies.length === 0) {
+          newErrors.acceptedCurrencies = 'At least one payment currency is required';
+        }
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    },
+    [formData]
+  );
 
   /**
    * 构建 API 请求数据
    */
   const buildRequestData = useCallback(() => {
+    const itemData: Record<string, unknown> = {
+      title: formData.title,
+      description: formData.description,
+      price: parseFloat(formData.price) || 0,
+      nsfw: formData.nsfw,
+      tags: formData.tags,
+      images: formData.images,
+      categories: formData.categories,
+      processingTime: formData.processingTime,
+    };
+
+    // Short description
+    if (formData.shortDescription) {
+      itemData.shortDescription = formData.shortDescription;
+    }
+
+    // Compare at price (maps to regularPrice in proto)
+    if (formData.compareAtPrice) {
+      itemData.regularPrice = formData.compareAtPrice;
+    }
+
     const data: Record<string, unknown> = {
-      item: {
-        title: formData.title,
-        description: formData.description,
-        price: parseFloat(formData.price) || 0,
-        nsfw: formData.nsfw,
-        tags: formData.tags,
-        images: formData.images,
-        categories: formData.categories,
-        processingTime: formData.processingTime,
-      },
+      item: itemData,
       metadata: {
         contractType: formData.contractType,
         format: 'FIXED_PRICE',
@@ -368,21 +442,14 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         },
         acceptedCurrencies: formData.acceptedCurrencies || ['BTC', 'ETH'],
       },
+      status: formData.status || 'published',
       termsAndConditions: formData.termsAndConditions,
       refundPolicy: formData.refundPolicy,
     };
 
-    // 物理商品特定字段
-    if (formData.contractType === 'PHYSICAL_GOOD') {
-      (data.item as Record<string, unknown>).condition = formData.condition;
-      (data.item as Record<string, unknown>).grams = formData.grams;
-      data.shippingProfile = formData.shippingProfile;
-      (data.item as Record<string, unknown>).options = formData.options.map(opt => ({
-        name: opt.name,
-        description: opt.description,
-        variants: opt.variants,
-      }));
-      (data.item as Record<string, unknown>).skus = formData.skus.map(sku => ({
+    // Build SKU array for all product types (non-variant products use default SKU)
+    const buildSkuArray = () =>
+      formData.skus.map(sku => ({
         productID: sku.productID,
         selections: sku.selections,
         price: sku.price || undefined,
@@ -392,6 +459,62 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         barcode: sku.barcode || undefined,
         weight: sku.weight || undefined,
       }));
+
+    // 物理商品特定字段
+    if (formData.contractType === 'PHYSICAL_GOOD') {
+      (data.item as Record<string, unknown>).condition = formData.condition;
+      (data.item as Record<string, unknown>).grams = formData.grams;
+      if (formData.weightUnit && formData.weightUnit !== 'g') {
+        (data.item as Record<string, unknown>).weightUnit = formData.weightUnit;
+      }
+      if (formData.inventoryPolicy && formData.inventoryPolicy !== 'deny') {
+        (data.item as Record<string, unknown>).inventoryPolicy = formData.inventoryPolicy;
+      }
+      // Package dimensions (only send non-zero values)
+      if (formData.packageLength && formData.packageLength > 0) {
+        (data.item as Record<string, unknown>).packageLength = formData.packageLength;
+      }
+      if (formData.packageWidth && formData.packageWidth > 0) {
+        (data.item as Record<string, unknown>).packageWidth = formData.packageWidth;
+      }
+      if (formData.packageHeight && formData.packageHeight > 0) {
+        (data.item as Record<string, unknown>).packageHeight = formData.packageHeight;
+      }
+      if (formData.dimensionUnit && formData.dimensionUnit !== 'cm') {
+        (data.item as Record<string, unknown>).dimensionUnit = formData.dimensionUnit;
+      }
+      // Brand
+      if (formData.brand) {
+        (data.item as Record<string, unknown>).brand = formData.brand;
+      }
+      data.shippingProfile = formData.shippingProfile;
+      (data.item as Record<string, unknown>).options = formData.options.map(opt => ({
+        name: opt.name,
+        description: opt.description,
+        variants: opt.variants,
+      }));
+      (data.item as Record<string, unknown>).skus = buildSkuArray();
+    } else if (formData.contractType === 'DIGITAL_GOOD') {
+      // Digital goods: send SKU with downloadable flag and downloads
+      const skuData: Record<string, unknown> = {
+        productID: formData.skus[0]?.productID || '',
+        selections: [],
+        quantity:
+          formData.skus[0]?.quantity === -1 ? '-1' : String(formData.skus[0]?.quantity || -1),
+        barcode: formData.skus[0]?.barcode || undefined,
+        downloadable: formData.digitalFiles.length > 0,
+        downloads: formData.digitalFiles.map(f => ({
+          name: f.name,
+          file: f.file,
+        })),
+      };
+      (data.item as Record<string, unknown>).skus = [skuData];
+    } else {
+      // Non-physical products: still send default SKU for barcode tracking
+      const defaultSku = formData.skus[0];
+      if (defaultSku && (defaultSku.barcode || defaultSku.quantity !== -1)) {
+        (data.item as Record<string, unknown>).skus = buildSkuArray();
+      }
     }
 
     // RWA Token 特定字段
@@ -438,9 +561,12 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
   }, [formData]);
 
   /**
-   * 提交表单
+   * 提交表单（发布）
    */
   const submit = useCallback(async (): Promise<{ slug: string } | { error: string }> => {
+    // Ensure status is 'published' when submitting normally
+    setFormData(prev => ({ ...prev, status: 'published' }));
+
     if (!validate()) {
       return { error: 'Validation failed' };
     }
@@ -449,6 +575,8 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
 
     try {
       const requestData = buildRequestData();
+      // Override status to published
+      requestData.status = 'published';
 
       if (isEditMode) {
         const result = await productsApi.updateListing(requestData);
@@ -467,6 +595,45 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       }
     } catch (err) {
       return { error: err instanceof Error ? err.message : 'Failed to save listing' };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [validate, buildRequestData, isEditMode, formData.slug]);
+
+  /**
+   * 保存为草稿（宽松验证）
+   */
+  const submitDraft = useCallback(async (): Promise<{ slug: string } | { error: string }> => {
+    setFormData(prev => ({ ...prev, status: 'draft' }));
+
+    if (!validate(true)) {
+      return { error: 'Title is required for draft' };
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const requestData = buildRequestData();
+      // Override status to draft
+      requestData.status = 'draft';
+
+      if (isEditMode) {
+        const result = await productsApi.updateListing(requestData);
+        if ('error' in result) {
+          return result;
+        }
+        setIsDirty(false);
+        return { slug: formData.slug! };
+      } else {
+        const result = await productsApi.createListing(requestData);
+        if ('error' in result) {
+          return result;
+        }
+        setIsDirty(false);
+        return result;
+      }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to save draft' };
     } finally {
       setIsSubmitting(false);
     }
@@ -631,6 +798,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     // 表单操作
     validate,
     submit,
+    submitDraft,
     reset,
   };
 }

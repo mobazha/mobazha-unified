@@ -39,6 +39,8 @@ export interface Image {
   large: string;
   original: string;
   filename?: string;
+  /** Alt text for accessibility and SEO */
+  alt?: string;
 }
 
 /**

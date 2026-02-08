@@ -1383,6 +1383,17 @@ export interface TranslationResource {
     conditionHelper: string;
     weight: string;
     weightHelper: string;
+    packageDimensions: {
+      label: string;
+      length: string;
+      width: string;
+      height: string;
+      helper: string;
+    };
+    brand: {
+      label: string;
+      placeholder: string;
+    };
     sku: string;
     skuPlaceholder: string;
     skuHelper: string;
@@ -1397,6 +1408,11 @@ export interface TranslationResource {
     photos: string;
     photosHelper: string;
     primaryPhoto: string;
+    imageAlt: {
+      edit: string;
+      placeholder: string;
+      default: string;
+    };
     add: string;
     introVideo: string;
     externalVideoLink: string;
@@ -1447,6 +1463,8 @@ export interface TranslationResource {
         material: string;
         style: string;
       };
+      image: string;
+      selectImage: string;
       variant: string;
       price: string;
       compareAtPrice: string;
@@ -1624,6 +1642,27 @@ export interface TranslationResource {
     publish: string;
     saveDraft?: string;
 
+    // Short Description
+    shortDescription?: string;
+    shortDescriptionPlaceholder?: string;
+    shortDescriptionHelper?: string;
+
+    // Compare At Price
+    compareAtPrice?: string;
+    compareAtPriceHelper?: string;
+    discount?: string;
+
+    // Barcode
+    barcode?: string;
+    barcodePlaceholder?: string;
+    barcodeHelper?: string;
+
+    // Status
+    statusDraft?: string;
+    statusPublished?: string;
+    statusPrivate?: string;
+    draftSaved?: string;
+
     // NSFW
     nsfwLabel: string;
     nsfwDesc: string;
@@ -1632,6 +1671,34 @@ export interface TranslationResource {
     processingTime: string;
     processingTimePlaceholder: string;
     processingTimeHelper: string;
+    processingTimeOptions: {
+      placeholder: string;
+      '1day': string;
+      '1to3days': string;
+      '3to5days': string;
+      '5to7days': string;
+      '1to2weeks': string;
+      '2to4weeks': string;
+      custom: string;
+    };
+
+    // Return Policy Templates
+    returnPolicyTemplates: {
+      placeholder: string;
+      '30dayLabel': string;
+      '30day': string;
+      '15dayLabel': string;
+      '15day': string;
+      noReturnLabel: string;
+      noReturn: string;
+      custom: string;
+    };
+
+    // Inventory Policy
+    inventoryPolicy: {
+      label: string;
+      helper: string;
+    };
 
     // Clone
     cloneListing?: string;

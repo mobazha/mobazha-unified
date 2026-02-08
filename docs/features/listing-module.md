@@ -1,8 +1,8 @@
 # Listing 商品模块设计文档
 
-> 版本: 2.0  
+> 版本: 3.0  
 > 最后更新: 2026-02-08  
-> 状态: 已实现（含 Shopify 风格变体/优惠券）
+> 状态: 已实现（Shopify 风格全功能 — 含变体/优惠券/状态/尺寸/品牌/分类增强）
 
 ## 1. 概述
 
@@ -20,13 +20,13 @@ Listing 模块是 Mobazha 去中心化市场的核心功能，负责商品的创
 
 ### 1.3 支持的商品类型
 
-| 类型     | ContractType     | 特殊字段                             |
-| -------- | ---------------- | ------------------------------------ |
-| 物理商品 | `PHYSICAL_GOOD`  | 成色、重量、配送档案、变体           |
-| 数字商品 | `DIGITAL_GOOD`   | 无额外字段                           |
-| 服务     | `SERVICE`        | 无额外字段                           |
-| RWA 代币 | `RWA_TOKEN`      | 区块链、代币地址、交易模式、接受币种 |
-| 加密货币 | `CRYPTOCURRENCY` | 加密货币代码                         |
+| 类型     | ContractType     | 特殊字段                                                     |
+| -------- | ---------------- | ------------------------------------------------------------ |
+| 物理商品 | `PHYSICAL_GOOD`  | 成色、重量(含单位)、包裹尺寸、品牌、库存策略、配送档案、变体 |
+| 数字商品 | `DIGITAL_GOOD`   | 数字文件（下载交付）                                         |
+| 服务     | `SERVICE`        | 无额外字段                                                   |
+| RWA 代币 | `RWA_TOKEN`      | 区块链、代币地址、交易模式、接受币种                         |
+| 加密货币 | `CRYPTOCURRENCY` | 加密货币代码                                                 |
 
 ## 2. 架构设计
 
@@ -94,6 +94,7 @@ productsApi.createListing / updateListing
 | 分类            |       v       |      v       |    v    |     v     |       v        |
 | 物流 (配送档案) |       v       |      -       |    -    |     -     |       -        |
 | 变体            |       v       |      -       |    -    |     -     |       -        |
+| 数字文件        |       -       |      v       |    -    |     -     |       -        |
 | 退货政策/条款   |       v       |      v       |    v    |     -     |       -        |
 | 优惠券          |       v       |      v       |    v    |     -     |       -        |
 | 其他设置        |       v       |      v       |    v    |     -     |       -        |
@@ -109,31 +110,33 @@ productsApi.createListing / updateListing
 
 ### 3.2 组件
 
-| 文件路径                                                    | 说明                                      |
-| ----------------------------------------------------------- | ----------------------------------------- |
-| `apps/web/src/components/Listing/ProductTypeSelector.tsx`   | 商品类型选择器                            |
-| `apps/web/src/components/Listing/BasicInfoSection.tsx`      | 基本信息区块（标题、描述、价格、成色）    |
-| `apps/web/src/components/Listing/MediaSection.tsx`          | 图片/视频上传区块                         |
-| `apps/web/src/components/Listing/RwaTokenFields.tsx`        | RWA 代币专用字段                          |
-| `apps/web/src/components/Listing/PhysicalGoodFields.tsx`    | 物理商品配送档案选择                      |
-| `apps/web/src/components/Listing/VariantOptionEditor.tsx`   | 变体选项编辑器（Shopify 风格折叠/建议）   |
-| `apps/web/src/components/Listing/VariantInventoryTable.tsx` | 变体库存表格（inline 编辑 + 批量操作）    |
-| `apps/web/src/components/Listing/CouponEditor.tsx`          | 优惠券编辑器（Shopify 风格折扣码/有效期） |
-| `apps/web/src/components/ui/TokenInput.tsx`                 | 通用 Token/Chip 输入组件                  |
+| 文件路径                                                    | 说明                                                              |
+| ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| `apps/web/src/components/Listing/ProductTypeSelector.tsx`   | 商品类型选择器                                                    |
+| `apps/web/src/components/Listing/BasicInfoSection.tsx`      | 基本信息区块（标题、描述、价格、成色、重量/单位、包裹尺寸、品牌） |
+| `apps/web/src/components/Listing/MediaSection.tsx`          | 图片/视频上传区块（含图片 Alt Text 编辑）                         |
+| `apps/web/src/components/Listing/DigitalFileSection.tsx`    | 数字商品文件上传/管理                                             |
+| `apps/web/src/components/Listing/RwaTokenFields.tsx`        | RWA 代币专用字段                                                  |
+| `apps/web/src/components/Listing/PhysicalGoodFields.tsx`    | 物理商品配送档案选择                                              |
+| `apps/web/src/components/Listing/VariantOptionEditor.tsx`   | 变体选项编辑器（Shopify 风格折叠/建议）                           |
+| `apps/web/src/components/Listing/VariantInventoryTable.tsx` | 变体库存表格（inline 编辑 + 批量操作）                            |
+| `apps/web/src/components/Listing/CouponEditor.tsx`          | 优惠券编辑器（Shopify 风格折扣码/有效期）                         |
+| `apps/web/src/components/ui/TokenInput.tsx`                 | 通用 Token/Chip 输入组件                                          |
 
 ### 3.3 Hooks
 
-| 文件路径                                    | 说明                     |
-| ------------------------------------------- | ------------------------ |
-| `packages/core/hooks/useListingForm.ts`     | 表单状态管理、验证、提交 |
-| `packages/core/hooks/useStoreCategories.ts` | 从店铺商品提取已有分类   |
-| `packages/core/hooks/useProducts.ts`        | 商品列表/详情获取        |
+| 文件路径                                    | 说明                      |
+| ------------------------------------------- | ------------------------- |
+| `packages/core/hooks/useListingForm.ts`     | 表单状态管理、验证、提交  |
+| `packages/core/hooks/useStoreCategories.ts` | 店铺分类 + 预定义分类合并 |
+| `packages/core/hooks/useProducts.ts`        | 商品列表/详情获取         |
 
-### 3.6 工具函数
+### 3.6 工具函数与数据
 
 | 文件路径                              | 说明                                       |
 | ------------------------------------- | ------------------------------------------ |
 | `packages/core/utils/variantUtils.ts` | 笛卡尔积、SKU 合并、验证、Shopify 限制常量 |
+| `packages/core/data/categories.ts`    | 预定义商品分类常量（按分组组织）           |
 
 ### 3.4 API
 
@@ -143,10 +146,10 @@ productsApi.createListing / updateListing
 
 ### 3.5 类型
 
-| 文件路径                                | 说明                                                 |
-| --------------------------------------- | ---------------------------------------------------- |
-| `packages/core/types/product.ts`        | Product、ProductSku、Coupon、SkuSelection 等类型     |
-| `packages/core/hooks/useListingForm.ts` | ListingFormData、SkuItem、VariantOption 表单数据接口 |
+| 文件路径                                | 说明                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| `packages/core/types/product.ts`        | Product、ProductSku、Coupon、WeightUnit、InventoryPolicy、DimensionUnit 等类型 |
+| `packages/core/hooks/useListingForm.ts` | ListingFormData、SkuItem、VariantOption、DigitalFile 表单数据接口              |
 
 ## 4. 关键数据结构
 
@@ -154,15 +157,29 @@ productsApi.createListing / updateListing
 
 ```typescript
 interface ListingFormData {
+  // 基础信息
   slug?: string;
   title: string;
+  shortDescription: string;
   description: string;
   price: string;
+  compareAtPrice: string; // 划线价
   pricingCurrency: string;
   contractType: ContractType;
+  status: ListingStatus; // 'draft' | 'published' | 'private'
+
+  // 物理商品字段
   condition?: ProductCondition;
   grams?: number;
-  // RWA 专用
+  weightUnit: WeightUnit; // 'g' | 'kg' | 'lb' | 'oz'
+  inventoryPolicy: InventoryPolicy; // 'deny' | 'continue'
+  packageLength?: number;
+  packageWidth?: number;
+  packageHeight?: number;
+  dimensionUnit: DimensionUnit; // 'cm' | 'in'
+  brand?: string;
+
+  // RWA Token 字段
   blockchain?: BlockchainNetwork;
   tokenAddress?: string;
   tokenStandard?: string;
@@ -170,19 +187,27 @@ interface ListingFormData {
   minQuantity?: number;
   maxQuantity?: number;
   acceptedCurrencies?: string[];
+
   // 媒体
-  images: Image[];
+  images: Image[]; // Image 含 alt 字段
   introVideo?: string;
   altIntroVideoLinks?: string[];
+
   // 分类 & 标签
   tags: string[];
   categories: string[];
-  // 配送
+
+  // 配送档案
   shippingProfile?: ShippingProfile;
-  // 变体
+
+  // 变体和库存
   options: VariantOption[];
   skus: SkuItem[];
   inventoryTracking: boolean;
+
+  // 数字商品文件
+  digitalFiles: DigitalFile[];
+
   // 其他
   optionalFeatures: OptionalFeature[];
   coupons: Coupon[];
@@ -216,7 +241,7 @@ interface Coupon {
   discountCode?: string; // 折扣码（明文）
   hash?: string; // 折扣码哈希
   discountType?: 'PERCENT' | 'FIXED'; // 折扣类型
-  percentDiscount?: number; // 百分比折扣（0-99）
+  percentDiscount?: number; // 百分比折扣（0-100，100 = 免费）
   priceDiscount?: string; // 固定金额折扣
   usageLimit?: number; // 最大使用次数，0 = 无限
   startsAt?: string; // 生效时间（ISO 8601）
@@ -230,16 +255,27 @@ interface Coupon {
 `buildRequestData()`（`useListingForm` 内部函数，不对外暴露）将 `ListingFormData` 转换为后端 `Product` 格式：
 
 - `title` -> `item.title`
-- `price` -> `item.pricingCurrency + item.price`（带格式化）
-- `images` -> `item.images`（IPFS hash）
+- `shortDescription` -> `item.shortDescription`（非空时发送）
+- `description` -> `item.description`
+- `price` -> `item.price`（parseFloat）
+- `compareAtPrice` -> `item.regularPrice`（非空时发送）
+- `images` -> `item.images`（IPFS hash，含 alt 字段）
 - `tags` -> `item.tags`
 - `categories` -> `item.categories`
-- `options` -> `item.options`（变体选项）
+- `options` -> `item.options`（变体选项，仅物理商品）
 - `skus` -> `item.skus`（SKU 列表，quantity 转 string）
+- `condition` -> `item.condition`（仅物理商品）
+- `grams` -> `item.grams`（仅物理商品）
+- `weightUnit` -> `item.weightUnit`（非默认 'g' 时发送）
+- `inventoryPolicy` -> `item.inventoryPolicy`（非默认 'deny' 时发送）
+- `packageLength/Width/Height` -> `item.packageLength/Width/Height`（大于 0 时发送）
+- `dimensionUnit` -> `item.dimensionUnit`（非默认 'cm' 时发送）
+- `brand` -> `item.brand`（非空时发送）
 - `coupons` -> `coupons`（按 discountType 只发 percentDiscount 或 priceDiscount）
-- `shippingProfile` -> `shippingProfile`（完整配送档案对象）
+- `shippingProfile` -> `shippingProfile`（完整配送档案对象，仅物理商品）
+- `status` -> `status`（'draft' / 'published' / 'private'）
 - `contractType` -> `metadata.contractType`
-- `condition` -> `metadata.condition`
+- `pricingCurrency` -> `metadata.pricingCurrency`
 
 ## 5. 变体管理（Shopify 风格）
 
@@ -387,12 +423,18 @@ input
 
 ### 8.1 数据来源
 
+分类建议由两个来源合并而成：
+
+1. **预定义分类** - `packages/core/data/categories.ts` 中按分组组织的通用电商分类（Electronics、Fashion、Home 等）
+2. **店铺已有分类** - 从卖家自己的商品列表中提取
+
 ```
 useStoreCategories Hook
-  └── useUserStore → peerID
-  └── productsApi.getStoreListingIndex(peerID)
-  └── flatMap(product.categories) → Set 去重 → sort()
-  └── 返回 string[]
+  ├── 预定义分类: PREDEFINED_CATEGORIES (from packages/core/data/categories.ts)
+  ├── 店铺分类: useUserStore → peerID → productsApi.getStoreListingIndex(peerID)
+  │             → flatMap(product.categories) → Set 去重 → sort()
+  └── 合并: storeCategories ∪ PREDEFINED_CATEGORIES → Set 去重 → sort()
+  └── 返回 { categories, storeCategories, isLoading }
 ```
 
 ### 8.2 闭环流程
@@ -403,19 +445,20 @@ useStoreCategories Hook
   → 店铺页面 useMemo 提取
   → FilterSidebar 左侧展示为筛选项
   → useStoreCategories 获取
-  → 下次创建/编辑时作为建议
+  → 下次创建/编辑时作为建议（合并预定义分类）
 ```
 
-**关键**: 分类是自由文本，不依赖预定义分类表。一致性通过自动补全建议来维护。
+**关键**: 分类是自由文本，通过预定义分类和自动补全建议来维护一致性。店铺自有分类在合并列表中优先显示。
 
 ### 8.3 相关文件
 
-| 文件路径                                          | 说明                   |
-| ------------------------------------------------- | ---------------------- |
-| `packages/core/hooks/useStoreCategories.ts`       | 提取店铺已有分类       |
-| `apps/web/src/app/store/[peerId]/page.tsx`        | 店铺页面分类提取和筛选 |
-| `apps/web/src/components/store/FilterSidebar.tsx` | 桌面端分类筛选侧边栏   |
-| `apps/web/src/components/store/FilterSheet.tsx`   | 移动端分类筛选抽屉     |
+| 文件路径                                          | 说明                              |
+| ------------------------------------------------- | --------------------------------- |
+| `packages/core/data/categories.ts`                | 预定义分类常量（分组 + 扁平列表） |
+| `packages/core/hooks/useStoreCategories.ts`       | 店铺分类 + 预定义分类合并         |
+| `apps/web/src/app/store/[peerId]/page.tsx`        | 店铺页面分类提取和筛选            |
+| `apps/web/src/components/store/FilterSidebar.tsx` | 桌面端分类筛选侧边栏              |
+| `apps/web/src/components/store/FilterSheet.tsx`   | 移动端分类筛选抽屉                |
 
 ## 9. 接口依赖
 
@@ -440,12 +483,16 @@ useStoreCategories Hook
 | 基本信息 | `listing.title/desc/price`     | `listing.titlePlaceholder`         |
 | 成色选项 | `listing.conditions.*`         | `listing.conditions.new`           |
 | 媒体     | `listing.photos/video`         | `listing.photosHelper`             |
+| 图片Alt  | `listing.imageAlt.*`           | `listing.imageAlt.edit`            |
 | 标签分类 | `listing.tags/category`        | `listing.enterTag`                 |
 | 物流     | `listing.shipping*`            | `listing.shippingProfile`          |
 | 变体     | `listing.variant.*`            | `listing.variant.optionName`       |
 | 变体错误 | `listing.variant.error.*`      | `listing.variant.error.maxOptions` |
 | 政策     | `listing.returnPolicy/terms`   | `listing.returnPolicyPlaceholder`  |
 | 优惠券   | `listing.coupon.*`             | `listing.coupon.discountCode`      |
+| 库存策略 | `listing.inventoryPolicy.*`    | `listing.inventoryPolicy.label`    |
+| 包裹尺寸 | `listing.packageDimensions.*`  | `listing.packageDimensions.label`  |
+| 品牌     | `listing.brand.*`              | `listing.brand.label`              |
 | RWA      | `listing.rwa*`                 | `listing.blockchain`               |
 | 操作状态 | `listing.create/update/delete` | `listing.createSuccess`            |
 
@@ -478,11 +525,12 @@ useStoreCategories Hook
 
 ### 11.4 分类系统升级路径
 
-当前分类是自由文本。未来可能的升级路径：
+当前分类是自由文本 + 预定义分类建议。未来可能的升级路径：
 
-1. **预定义分类 + 自由文本** - 添加平台级分类目录，同时保留自由输入
+1. ~~**预定义分类 + 自由文本**~~ ✅ 已实现（`packages/core/data/categories.ts`）
 2. **层级分类** - 实现 `parentId` 支持树形分类（`ProductCategory.parentId` 类型已预留）
-3. **服务端分类 API** - `getCategories()` 从后端获取，替代客户端提取
+3. **服务端分类 API** - `getCategories()` 从后端获取，替代客户端预定义常量
+4. **分组展示** - 在 TokenInput 下拉中按 `CATEGORY_GROUPS` 分组展示建议
 
 ## 12. 测试
 
@@ -513,11 +561,26 @@ useStoreCategories Hook
 - [x] 配送档案集成 (Shopify 模式)
 - [x] i18n 完整覆盖（en/zh）
 - [x] 变体管理完整实现（Shopify 风格绝对定价）
-- [x] 优惠券管理完整实现（Shopify 风格扁平结构）
+- [x] 优惠券管理完整实现（Shopify 风格扁平结构，支持 100% 折扣）
 - [x] 商品克隆功能完善（含 options/skus/coupons）
 - [x] 单元测试（variantUtils）
 - [x] E2E 测试框架（listing-variants.spec.ts）
 - [x] 后端 Proto 对齐（SKU/Coupon/Option 重设计）
+- [x] 商品状态管理（draft/published/private + 草稿/发布双按钮）
+- [x] 短描述 + 产品级划线价（compareAtPrice）
+- [x] 非变体 SKU/Barcode 字段
+- [x] 富文本编辑器（RichTextEditor 替代 textarea）
+- [x] 数字商品文件交付（DigitalFileSection）
+- [x] 变体图片关联（VariantInventoryTable 图片列）
+- [x] 处理时间结构化选择 + 退货政策模板
+- [x] 重量单位选择（g/kg/lb/oz，Proto Item.weightUnit）
+- [x] 库存策略（deny/continue，Proto Item.inventoryPolicy）
+- [x] 图片 Alt Text（Proto Image.alt + MediaSection 编辑 UI）
+- [x] 包裹尺寸（Proto Item.packageLength/Width/Height/dimensionUnit）
+- [x] 品牌字段（Proto Item.brand）
+- [x] 预定义分类 + 店铺分类合并建议
+- [x] 价格输入货币符号前缀
+- [x] 后端验证常量化（ListingStatus/WeightUnit/InventoryPolicy/DimensionUnit 公共常量）
 
 ## 14. 相关文档
 

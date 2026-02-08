@@ -32,6 +32,9 @@ export * from './shippingValidation';
 // 变体工具
 export * from './variantUtils';
 
+// 价格工具
+export * from './priceUtils';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

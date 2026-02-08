@@ -22,6 +22,7 @@ import {
   isValidShippingRegion,
 } from '@mobazha/core';
 import type { ShippingOption, ShippingProfile } from '@mobazha/core';
+import { getAllZones } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
 export interface ShippingOptionsSectionProps {
@@ -54,7 +55,7 @@ const ProfileShippingView = memo(function ProfileShippingView({
   const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
 
-  const zones = useMemo(() => profile.zones || [], [profile.zones]);
+  const zones = useMemo(() => getAllZones(profile), [profile]);
 
   /** 获取地区本地化名称 */
   const getRegionDisplayName = useCallback(
@@ -514,8 +515,8 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
   pricingCurrency = 'USD',
   className,
 }: ShippingOptionsSectionProps) {
-  // 优先使用新版 ShippingProfile
-  const hasProfile = shippingProfile && shippingProfile.zones && shippingProfile.zones.length > 0;
+  // 优先使用新版 ShippingProfile（支持直接 zones 和 LocationGroups 两种模式）
+  const hasProfile = shippingProfile && getAllZones(shippingProfile).length > 0;
 
   if (hasProfile) {
     return (

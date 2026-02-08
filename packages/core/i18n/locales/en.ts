@@ -2195,6 +2195,7 @@ export const en: TranslationResource = {
       variants: 'Variants',
       policies: 'Policies',
       coupons: 'Coupons',
+      files: 'Files',
       other: 'Other Settings',
     },
 
@@ -2213,7 +2214,18 @@ export const en: TranslationResource = {
     condition: 'Condition',
     conditionHelper: 'The overall condition of your listing',
     weight: 'Weight',
-    weightHelper: 'Item weight in grams',
+    weightHelper: 'Item weight for shipping calculations',
+    packageDimensions: {
+      label: 'Package Dimensions',
+      length: 'Length',
+      width: 'Width',
+      height: 'Height',
+      helper: 'Length × Width × Height for shipping rate calculation',
+    },
+    brand: {
+      label: 'Brand',
+      placeholder: 'Enter brand name',
+    },
     sku: 'SKU',
     skuPlaceholder: 'SKU, Part Number, ID, etc',
     skuHelper: 'A unique identifier for your listing',
@@ -2232,6 +2244,11 @@ export const en: TranslationResource = {
     photos: 'Photos',
     photosHelper: 'Include up to 30 photos. Drag to reorder.',
     primaryPhoto: 'PRIMARY PHOTO',
+    imageAlt: {
+      edit: 'Edit alt text',
+      placeholder: 'Describe this image...',
+      default: 'Product image {{index}}',
+    },
     add: 'Add',
     introVideo: 'Introduction Video',
     externalVideoLink: 'Or add external video link (YouTube, etc.)',
@@ -2294,6 +2311,8 @@ export const en: TranslationResource = {
       },
 
       // Inventory table
+      image: 'Image',
+      selectImage: 'Select variant image',
       variant: 'Variant',
       price: 'Price',
       compareAtPrice: 'Compare at',
@@ -2524,6 +2543,37 @@ export const en: TranslationResource = {
     processingTime: 'Processing Time',
     processingTimePlaceholder: 'e.g., 1-3 business days',
     processingTimeHelper: 'Time needed to prepare the order before shipping',
+    processingTimeOptions: {
+      placeholder: 'Select processing time',
+      '1day': '1 business day',
+      '1to3days': '1-3 business days',
+      '3to5days': '3-5 business days',
+      '5to7days': '5-7 business days',
+      '1to2weeks': '1-2 weeks',
+      '2to4weeks': '2-4 weeks',
+      custom: 'Custom',
+    },
+
+    // Return Policy Templates
+    returnPolicyTemplates: {
+      placeholder: 'Select a return policy template',
+      '30dayLabel': '30-day returns',
+      '30day':
+        'We accept returns within 30 days of delivery. Items must be unused and in their original packaging. Refunds will be issued to the original payment method within 5-10 business days after we receive the returned item.',
+      '15dayLabel': '15-day returns (original packaging required)',
+      '15day':
+        'We accept returns within 15 days of delivery. Items must be unused, in original condition, and in their original packaging. Buyer is responsible for return shipping costs. Refunds will be processed within 5-10 business days.',
+      noReturnLabel: 'No returns (final sale)',
+      noReturn:
+        'All sales are final. We do not accept returns or exchanges. Please review the product details carefully before purchasing.',
+      custom: 'Custom policy',
+    },
+
+    // Inventory Policy
+    inventoryPolicy: {
+      label: 'Continue selling when out of stock',
+      helper: 'Allow customers to purchase even when inventory is zero',
+    },
 
     // Clone
     cloneListing: 'Clone Listing',
@@ -2535,6 +2585,42 @@ export const en: TranslationResource = {
     shippingProfile: 'Shipping Profile',
     selectShippingProfile: 'Select a shipping profile for this listing',
     manageProfiles: 'Manage Profiles',
+
+    // Rich Editor
+    richEditor: {
+      enterUrl: 'Enter URL:',
+      enterLinkText: 'Enter link text:',
+    },
+
+    // Short Description
+    shortDescription: 'Short Description',
+    shortDescriptionPlaceholder: 'Brief summary for search results and product cards',
+    shortDescriptionHelper: 'Max 250 characters. Shown in search results and product cards.',
+
+    // Compare At Price
+    compareAtPrice: 'Compare at Price',
+    compareAtPriceHelper: 'Original price shown with strikethrough to display discount',
+    discount: '{{percent}}% off',
+
+    // Barcode
+    barcode: 'Barcode',
+    barcodePlaceholder: 'UPC, EAN, ISBN...',
+    barcodeHelper: 'Product barcode for inventory tracking',
+
+    // Digital Files
+    digital: {
+      title: 'Digital Files',
+      description: 'Upload files that buyers will receive after purchase.',
+      uploadFiles: 'Click to upload files',
+      uploadHint: 'Drag and drop or click to select files (max 500MB each)',
+      fileTooLarge: 'exceeds the 500MB file size limit',
+    },
+
+    // Status
+    statusDraft: 'Draft',
+    statusPublished: 'Published',
+    statusPrivate: 'Private',
+    draftSaved: 'Draft saved successfully!',
 
     // Actions & Status
     validationFailed: 'Please fix the errors before submitting',

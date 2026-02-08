@@ -197,13 +197,24 @@ export function isUsingLocationGroups(profile: ShippingProfile): boolean {
 }
 
 /**
- * 获取档案的所有区域（无论是简化模式还是完整模式）
+ * 获取档案的所有区域（合并直接 zones 和 LocationGroups 中的 zones）
+ * 与后端 getAllZonesFromProfile 保持一致
  */
 export function getAllZones(profile: ShippingProfile): ShippingZone[] {
-  if (isUsingLocationGroups(profile)) {
-    return profile.locationGroups?.flatMap(lg => lg.zones) ?? [];
+  const zones: ShippingZone[] = [];
+  // 先添加直接 zones
+  if (profile.zones?.length) {
+    zones.push(...profile.zones);
   }
-  return profile.zones ?? [];
+  // 再添加 LocationGroups 中的 zones
+  if (profile.locationGroups?.length) {
+    for (const lg of profile.locationGroups) {
+      if (lg.zones?.length) {
+        zones.push(...lg.zones);
+      }
+    }
+  }
+  return zones;
 }
 
 /**
