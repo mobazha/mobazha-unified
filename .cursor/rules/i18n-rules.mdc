@@ -1,5 +1,6 @@
 ---
 description: 国际化硬性规则 — 所有用户可见文本必须使用 i18n
+alwaysApply: true
 globs:
   - "apps/web/src/**/*.tsx"
   - "apps/web/src/**/*.ts"

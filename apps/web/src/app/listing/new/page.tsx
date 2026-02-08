@@ -1,139 +1,369 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  X,
+  Eye,
+  Tag,
+  FolderTree,
+  Gift,
+  FileText,
+  Loader2,
+  Image as ImageIcon,
+  Settings2,
+  Truck,
+} from 'lucide-react';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, productDataService } from '@mobazha/core';
-import type { Product, ContractType, ProductCondition, BlockchainNetwork } from '@mobazha/core';
-import { CreateListingWizard } from '@/components/Listing';
-import type { WizardFormData } from '@/components/Listing/wizard/types';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui';
+import {
+  useListingForm,
+  useI18n,
+  useCurrency,
+  useStoreCategories,
+  getGatewayUrl,
+  productDataService,
+  DEFAULT_LOCAL_CURRENCY,
+} from '@mobazha/core';
+import type {
+  ContractType,
+  ProductCondition,
+  BlockchainNetwork,
+  Image,
+  ShippingProfile,
+  ListingFormData,
+  Product,
+} from '@mobazha/core';
 
-/**
- * 将商品数据转换为向导表单数据，用于克隆商品
- * 注意：会清除 rwaListingId 以确保克隆的商品会创建新的延迟 Listing
- */
-function convertProductToFormData(product: Product): Partial<WizardFormData> {
+import {
+  ProductTypeSelector,
+  BasicInfoSection,
+  MediaSection,
+  RwaTokenFields,
+  PhysicalGoodFields,
+} from '@/components/Listing';
+import { TokenInput } from '@/components/ui/TokenInput';
+
+// ─── 左侧导航标签定义 ───────────────────────────
+
+type TabKey =
+  | 'general'
+  | 'photos'
+  | 'tags'
+  | 'category'
+  | 'shipping'
+  | 'variants'
+  | 'policies'
+  | 'coupons'
+  | 'other';
+
+interface TabItem {
+  key: TabKey;
+  labelKey: string;
+  icon: React.ReactNode;
+  showFor?: ContractType[];
+}
+
+const tabs: TabItem[] = [
+  { key: 'general', labelKey: 'listing.tabs.general', icon: <FileText className="w-4 h-4" /> },
+  { key: 'photos', labelKey: 'listing.tabs.photos', icon: <ImageIcon className="w-4 h-4" /> },
+  { key: 'tags', labelKey: 'listing.tabs.tags', icon: <Tag className="w-4 h-4" /> },
+  { key: 'category', labelKey: 'listing.tabs.category', icon: <FolderTree className="w-4 h-4" /> },
+  {
+    key: 'shipping',
+    labelKey: 'listing.tabs.shipping',
+    icon: <Truck className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD'],
+  },
+  {
+    key: 'variants',
+    labelKey: 'listing.tabs.variants',
+    icon: <Gift className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD'],
+  },
+  {
+    key: 'policies',
+    labelKey: 'listing.tabs.policies',
+    icon: <FileText className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
+  },
+  {
+    key: 'coupons',
+    labelKey: 'listing.tabs.coupons',
+    icon: <Gift className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
+  },
+  {
+    key: 'other',
+    labelKey: 'listing.tabs.other',
+    icon: <Settings2 className="w-4 h-4" />,
+    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
+  },
+];
+
+// ─── 商品数据 → 表单数据转换 ───────────────────────
+
+function convertProductToFormData(product: Product): Partial<ListingFormData> {
   const item = product.item;
   const metadata = product.metadata;
 
-  // 从 metadata 中提取 acceptedCurrencies（清除 rwaListingId）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const metadataAny = metadata as any;
-  // 故意不复制 rwaListingId，确保克隆的商品会创建新的延迟 Listing
+  // 克隆时不复制 rwaListingId，确保克隆的商品会创建新的延迟 Listing
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { rwaListingId: _ignored, ...cleanMetadata } = metadataAny;
 
   return {
-    // 商品类型
+    title: item.title || '',
+    description: item.description || '',
+    price: item.price?.toString() || '',
+    pricingCurrency: metadata.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
     contractType: cleanMetadata.contractType as ContractType,
-
-    // RWA 相关
+    condition: (item.condition as ProductCondition) || 'NEW',
+    grams: item.grams || 0,
     blockchain: (item.blockchain as BlockchainNetwork) || 'ETH',
     tokenAddress: item.tokenAddress || '',
-    tokenStandard: item.tokenStandard as WizardFormData['tokenStandard'],
-    tokenId: '',
-    slotId: '',
+    tokenStandard: item.tokenStandard || '',
     cryptoListingCurrencyCode: item.cryptoListingCurrencyCode || '',
+    minQuantity: item.minQuantity || 1,
+    maxQuantity: item.maxQuantity || 100,
     acceptedCurrencies:
       cleanMetadata.acceptedCurrencies?.map((c: string | { code: string }) =>
         typeof c === 'string' ? c : c.code
       ) || [],
-    minQuantity: item.minQuantity || 1,
-    maxQuantity: item.maxQuantity || 100,
-    rwaTradeMode: cleanMetadata.rwaTradeMode === 1 ? 'confirm_required' : 'instant',
-    escrowTimeoutMinutes: Math.floor(
-      (cleanMetadata.rwaEscrowTimeoutSeconds || cleanMetadata.escrowTimeoutSeconds || 86400) / 60
-    ),
-
-    // 基本信息
-    title: item.title || '',
-    description: item.description || '',
-    price: item.price?.toString() || '',
-    pricingCurrency: metadata.pricingCurrency?.code || 'USD',
-    condition: (item.condition as ProductCondition) || 'NEW',
-    grams: item.grams || 0,
-    nsfw: item.nsfw || false,
-
-    // 媒体
     images: item.images || [],
     introVideo: item.introVideo || '',
-
-    // 物流
-    shippingOptions: product.shippingOptions || [],
-
-    // 标签和分类
+    altIntroVideoLinks: item.altIntroVideoLinks || [],
     tags: item.tags || [],
     categories: item.categories || [],
-
-    // 政策
+    shippingProfile: product.shippingProfile,
     termsAndConditions: product.termsAndConditions || '',
     refundPolicy: product.refundPolicy || '',
-
-    // 处理时间
+    nsfw: item.nsfw || false,
     processingTime: item.processingTime || '',
   };
 }
 
-/**
- * 创建商品页面 - 向导式体验
- */
+// ─── 主要内容组件 ─────────────────────────────────
+
 function CreateListingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { toast } = useToast();
 
-  // 获取克隆参数（如果有）
+  // 克隆参数
   const cloneSlug = searchParams.get('clone');
 
-  // 克隆数据状态
-  const [cloneData, setCloneData] = useState<Partial<WizardFormData> | null>(null);
+  // 克隆数据加载状态
+  const [cloneData, setCloneData] = useState<Partial<ListingFormData> | null>(null);
   const [isLoadingClone, setIsLoadingClone] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // 加载克隆商品数据
-  const loadCloneData = useCallback(async (slug: string) => {
-    setIsLoadingClone(true);
-    setLoadError(null);
-    try {
-      const product = await productDataService.getProduct(slug);
-      if (product) {
-        const formData = convertProductToFormData(product);
-        setCloneData(formData);
-      } else {
-        setLoadError('商品不存在或无法访问');
+  const loadCloneData = useCallback(
+    async (slug: string) => {
+      setIsLoadingClone(true);
+      setLoadError(null);
+      try {
+        const product = await productDataService.getProduct(slug);
+        if (product) {
+          const formData = convertProductToFormData(product);
+          setCloneData(formData);
+        } else {
+          setLoadError(t('listing.cloneNotFound'));
+        }
+      } catch (error) {
+        console.error('Failed to load clone data:', error);
+        setLoadError(error instanceof Error ? error.message : t('listing.cloneFailed'));
+      } finally {
+        setIsLoadingClone(false);
       }
-    } catch (error) {
-      console.error('加载克隆商品失败:', error);
-      setLoadError(error instanceof Error ? error.message : '加载商品失败');
-    } finally {
-      setIsLoadingClone(false);
-    }
-  }, []);
+    },
+    [t]
+  );
 
-  // 当有 cloneSlug 时加载数据
   useEffect(() => {
     if (cloneSlug) {
       loadCloneData(cloneSlug);
     }
   }, [cloneSlug, loadCloneData]);
 
-  const handleSuccess = useCallback(
-    (slug: string) => {
-      router.push(`/product/${slug}`);
+  // 初始表单数据
+  const initialData = useMemo(() => cloneData || undefined, [cloneData]);
+
+  // 使用 useListingForm hook
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    updateField,
+    changeContractType,
+    addTag,
+    removeTag,
+    validate,
+    submit,
+    reset,
+  } = useListingForm(initialData);
+
+  // 当克隆数据加载完成后重置表单
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    }
+  }, [initialData, reset]);
+
+  // 当前激活的标签
+  const [activeTab, setActiveTab] = useState<TabKey>('general');
+
+  // 店铺已有分类（用于自动补全建议）
+  const { categories: storeCategories } = useStoreCategories();
+
+  // Section refs for scroll navigation
+  const sectionRefs = useRef<Record<TabKey, HTMLDivElement | null>>({
+    general: null,
+    photos: null,
+    tags: null,
+    category: null,
+    shipping: null,
+    variants: null,
+    policies: null,
+    coupons: null,
+    other: null,
+  });
+
+  // 根据商品类型过滤显示的标签
+  const visibleTabs = useMemo(() => {
+    return tabs.filter(tab => {
+      if (!tab.showFor) return true;
+      return tab.showFor.includes(formData.contractType);
+    });
+  }, [formData.contractType]);
+
+  // 滚动到指定区域
+  const scrollToSection = useCallback((key: TabKey) => {
+    setActiveTab(key);
+    const ref = sectionRefs.current[key];
+    if (ref) {
+      ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  // 标签规范化函数（小写、空格转连字符、去除 #）
+  const normalizeTag = useCallback((input: string) => {
+    return input
+      .trim()
+      .toLowerCase()
+      .replace(/#/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-|-$/g, '');
+  }, []);
+
+  // 标签变化处理（通过 addTag/removeTag 保持与 useListingForm 同步）
+  const handleTagsChange = useCallback(
+    (newTags: string[]) => {
+      // 找出新增的标签
+      const added = newTags.filter(t => !formData.tags.includes(t));
+      // 找出被移除的标签
+      const removed = formData.tags.filter(t => !newTags.includes(t));
+      added.forEach(t => addTag(t));
+      removed.forEach(t => removeTag(t));
     },
-    [router]
+    [formData.tags, addTag, removeTag]
   );
 
-  // 合并初始数据
-  const initialData = useMemo(() => {
-    return cloneData || undefined;
-  }, [cloneData]);
+  // 分类变化处理
+  const handleCategoriesChange = useCallback(
+    (newCategories: string[]) => {
+      updateField('categories', newCategories);
+    },
+    [updateField]
+  );
 
-  // 如果正在加载克隆数据，显示加载状态
+  // 处理图片变化
+  const handleImagesChange = useCallback(
+    (images: Image[]) => {
+      updateField('images', images);
+    },
+    [updateField]
+  );
+
+  // 处理视频变化
+  const handleVideoChange = useCallback(
+    (video: string) => {
+      updateField('introVideo', video);
+    },
+    [updateField]
+  );
+
+  // 处理外部视频链接变化
+  const handleAltVideoLinksChange = useCallback(
+    (links: string[]) => {
+      updateField('altIntroVideoLinks', links);
+    },
+    [updateField]
+  );
+
+  // 处理配送档案变化
+  const handleShippingProfileChange = useCallback(
+    (profile: ShippingProfile | null) => {
+      updateField('shippingProfile', profile || undefined);
+    },
+    [updateField]
+  );
+
+  // 提交表单
+  const handleSubmit = useCallback(
+    async (e?: React.FormEvent) => {
+      e?.preventDefault();
+
+      if (!validate()) {
+        toast({
+          title: t('common.error'),
+          description: t('listing.validationFailed'),
+          variant: 'destructive',
+        });
+        // 滚动到第一个错误字段
+        return;
+      }
+
+      const result = await submit();
+
+      if ('error' in result) {
+        toast({
+          title: t('common.error'),
+          description: result.error,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t('common.success'),
+          description: t('listing.createSuccess'),
+        });
+        router.push(`/product/${result.slug}`);
+      }
+    },
+    [validate, submit, toast, t, router]
+  );
+
+  // 获取图片URL用于预览
+  const getPreviewImageUrl = useCallback((image: Image) => {
+    const hash = image.small || image.medium || image.original;
+    if (!hash) return '';
+    return `${getGatewayUrl()}/ob/images/${hash}`;
+  }, []);
+
+  // ─── 加载状态 ─────────────────────────────────
+
   if (cloneSlug && isLoadingClone) {
     return (
       <>
@@ -151,7 +381,6 @@ function CreateListingContent() {
     );
   }
 
-  // 如果加载克隆数据失败，显示错误
   if (cloneSlug && loadError) {
     return (
       <>
@@ -171,18 +400,21 @@ function CreateListingContent() {
     );
   }
 
+  // ─── 主要渲染 ─────────────────────────────────
+
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-muted/30 py-8">
-        <Container>
-          {/* 页面标题栏 */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Link href="/settings/store">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
+      <main className="min-h-screen bg-muted/30 py-6">
+        <Container size="xl">
+          {/* 页面头部 */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/settings/store"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
@@ -191,10 +423,392 @@ function CreateListingContent() {
                 <p className="text-sm text-muted-foreground">{t('listing.createListingDesc')}</p>
               </div>
             </div>
+
+            {/* 操作按钮 */}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+                <X className="w-4 h-4 mr-1" />
+                {t('common.cancel')}
+              </Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-1" />
+                )}
+                {t('listing.publish')}
+              </Button>
+            </div>
           </div>
 
-          {/* 向导式创建组件 */}
-          <CreateListingWizard initialData={initialData} onSuccess={handleSuccess} />
+          {/* 主体布局 - 左侧导航 + 右侧表单 */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* 左侧导航 - 桌面端 */}
+            <div className="hidden lg:block lg:col-span-2">
+              <div className="sticky top-24 space-y-1">
+                {visibleTabs.map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => scrollToSection(tab.key)}
+                    className={`
+                      w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
+                      ${
+                        activeTab === tab.key
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }
+                    `}
+                  >
+                    {tab.icon}
+                    {t(tab.labelKey)}
+                  </button>
+                ))}
+
+                {/* 预览卡片 */}
+                <div className="mt-6 pt-6 border-t border-border">
+                  <h3 className="text-sm font-medium text-foreground mb-3">
+                    {t('listing.preview')}
+                  </h3>
+                  <Card className="overflow-hidden">
+                    <div className="aspect-square bg-muted">
+                      {formData.images[0] ? (
+                        <img
+                          src={getPreviewImageUrl(formData.images[0])}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          <Eye className="w-6 h-6" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-medium text-foreground text-sm line-clamp-2">
+                        {formData.title || t('listing.productTitle')}
+                      </h4>
+                      <p className="text-primary font-bold mt-1">
+                        {formData.price
+                          ? formatCurrencyPrice(
+                              formData.price,
+                              formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY
+                            )
+                          : formatCurrencyPrice(
+                              0,
+                              formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY
+                            )}
+                      </p>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </div>
+
+            {/* 主内容区域 */}
+            <div className="lg:col-span-10 space-y-6">
+              {/* 商品类型选择 */}
+              <Card
+                className="p-6"
+                ref={el => {
+                  sectionRefs.current.general = el;
+                }}
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  {t('listing.productType')}
+                </h2>
+                <ProductTypeSelector
+                  value={formData.contractType}
+                  onChange={changeContractType}
+                  disabled={isSubmitting}
+                />
+              </Card>
+
+              {/* 基础信息 - 非 RWA Token */}
+              {formData.contractType !== 'RWA_TOKEN' && (
+                <BasicInfoSection
+                  title={formData.title}
+                  description={formData.description}
+                  price={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  contractType={formData.contractType}
+                  condition={formData.condition}
+                  grams={formData.grams}
+                  onTitleChange={v => updateField('title', v)}
+                  onDescriptionChange={v => updateField('description', v)}
+                  onPriceChange={v => updateField('price', v)}
+                  onCurrencyChange={v => updateField('pricingCurrency', v)}
+                  onConditionChange={v => updateField('condition', v)}
+                  onGramsChange={v => updateField('grams', v)}
+                  errors={errors}
+                />
+              )}
+
+              {/* RWA Token 专用字段 */}
+              {formData.contractType === 'RWA_TOKEN' && (
+                <>
+                  <Card className="p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.basicInfo')}
+                    </h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.title')} <span className="text-destructive">*</span>
+                        </label>
+                        <Input
+                          value={formData.title}
+                          onChange={e => updateField('title', e.target.value)}
+                          placeholder={t('listing.titlePlaceholder')}
+                          maxLength={140}
+                          className={errors.title ? 'border-destructive' : ''}
+                        />
+                        {errors.title && (
+                          <p className="text-destructive text-sm mt-1">{errors.title}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.description')}
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={e => updateField('description', e.target.value)}
+                          rows={4}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={t('listing.descriptionPlaceholder')}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <RwaTokenFields
+                    blockchain={formData.blockchain || 'ETH'}
+                    tokenAddress={formData.tokenAddress}
+                    cryptoListingCurrencyCode={formData.cryptoListingCurrencyCode}
+                    price={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    minQuantity={formData.minQuantity || 1}
+                    maxQuantity={formData.maxQuantity || 100}
+                    acceptedCurrencies={formData.acceptedCurrencies || ['ETHUSDT']}
+                    onBlockchainChange={v => updateField('blockchain', v)}
+                    onTokenAddressChange={v => updateField('tokenAddress', v)}
+                    onCryptoListingCurrencyCodeChange={v =>
+                      updateField('cryptoListingCurrencyCode', v)
+                    }
+                    onPriceChange={v => updateField('price', v)}
+                    onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                    onMinQuantityChange={v => updateField('minQuantity', v)}
+                    onMaxQuantityChange={v => updateField('maxQuantity', v)}
+                    onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                    errors={errors}
+                  />
+                </>
+              )}
+
+              {/* 图片/视频上传 */}
+              <div
+                ref={el => {
+                  sectionRefs.current.photos = el;
+                }}
+              >
+                <MediaSection
+                  images={formData.images}
+                  introVideo={formData.introVideo}
+                  altIntroVideoLinks={formData.altIntroVideoLinks}
+                  onImagesChange={handleImagesChange}
+                  onVideoChange={handleVideoChange}
+                  onAltVideoLinksChange={handleAltVideoLinksChange}
+                  errors={errors}
+                />
+              </div>
+
+              {/* 标签 */}
+              <Card
+                className="p-6"
+                ref={el => {
+                  sectionRefs.current.tags = el;
+                }}
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-2">{t('listing.tags')}</h2>
+                <p className="text-sm text-muted-foreground mb-3">{t('listing.tagsDesc')}</p>
+                <TokenInput
+                  tokens={formData.tags}
+                  onTokensChange={handleTagsChange}
+                  placeholder={t('listing.enterTag')}
+                  prefix="#"
+                  normalize={normalizeTag}
+                  tokenClassName="bg-primary/10 text-primary"
+                />
+                <p className="text-xs text-muted-foreground mt-2">{t('listing.tagsHelper')}</p>
+              </Card>
+
+              {/* 分类 */}
+              <Card
+                className="p-6"
+                ref={el => {
+                  sectionRefs.current.category = el;
+                }}
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-2">
+                  {t('listing.category')}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-3">{t('listing.categoryDesc')}</p>
+                <TokenInput
+                  tokens={formData.categories}
+                  onTokensChange={handleCategoriesChange}
+                  suggestions={storeCategories}
+                  placeholder={t('listing.enterCategory')}
+                  createLabel={t('listing.createCategory')}
+                />
+              </Card>
+
+              {/* 物流选项 - 仅物理商品 */}
+              {formData.contractType === 'PHYSICAL_GOOD' && (
+                <div
+                  ref={el => {
+                    sectionRefs.current.shipping = el;
+                  }}
+                >
+                  <PhysicalGoodFields
+                    shippingProfile={formData.shippingProfile}
+                    onShippingProfileChange={handleShippingProfileChange}
+                    errors={errors}
+                  />
+                </div>
+              )}
+
+              {/* 变体管理 - 仅物理商品 */}
+              {formData.contractType === 'PHYSICAL_GOOD' && (
+                <Card
+                  className="p-6"
+                  ref={el => {
+                    sectionRefs.current.variants = el;
+                  }}
+                >
+                  <h2 className="text-lg font-semibold text-foreground mb-4">
+                    {t('listing.variants')}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-3">{t('listing.variantsDesc')}</p>
+                  <Button type="button" variant="outline">
+                    {t('listing.addVariant')}
+                  </Button>
+                </Card>
+              )}
+
+              {/* 退货政策和条款 */}
+              {formData.contractType !== 'RWA_TOKEN' &&
+                formData.contractType !== 'CRYPTOCURRENCY' && (
+                  <Card
+                    className="p-6"
+                    ref={el => {
+                      sectionRefs.current.policies = el;
+                    }}
+                  >
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.policies')}
+                    </h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.returnPolicy')}
+                        </label>
+                        <textarea
+                          value={formData.refundPolicy}
+                          onChange={e => updateField('refundPolicy', e.target.value)}
+                          rows={3}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={t('listing.returnPolicyPlaceholder')}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.termsAndConditions')}
+                        </label>
+                        <textarea
+                          value={formData.termsAndConditions}
+                          onChange={e => updateField('termsAndConditions', e.target.value)}
+                          rows={3}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={t('listing.termsPlaceholder')}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+              {/* 优惠券 */}
+              {formData.contractType !== 'RWA_TOKEN' &&
+                formData.contractType !== 'CRYPTOCURRENCY' && (
+                  <Card
+                    className="p-6"
+                    ref={el => {
+                      sectionRefs.current.coupons = el;
+                    }}
+                  >
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.coupons')}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-3">{t('listing.couponsDesc')}</p>
+                    <Button type="button" variant="outline">
+                      {t('listing.addCoupon')}
+                    </Button>
+                  </Card>
+                )}
+
+              {/* 其他设置 - 处理时间 */}
+              {formData.contractType !== 'RWA_TOKEN' &&
+                formData.contractType !== 'CRYPTOCURRENCY' && (
+                  <Card
+                    className="p-6"
+                    ref={el => {
+                      sectionRefs.current.other = el;
+                    }}
+                  >
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.tabs.other')}
+                    </h2>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                        {t('listing.processingTime')}
+                      </label>
+                      <Input
+                        value={formData.processingTime}
+                        onChange={e => updateField('processingTime', e.target.value)}
+                        placeholder={t('listing.processingTimePlaceholder')}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t('listing.processingTimeHelper')}
+                      </p>
+                    </div>
+                  </Card>
+                )}
+
+              {/* 移动端底部固定操作栏 */}
+              <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-50">
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => router.back()}
+                    disabled={isSubmitting}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-1" />
+                    )}
+                    {t('listing.publish')}
+                  </Button>
+                </div>
+              </div>
+
+              {/* 底部间距（为移动端固定栏留空） */}
+              <div className="h-20 lg:hidden" />
+            </div>
+          </div>
         </Container>
       </main>
       <Footer />
@@ -202,9 +816,8 @@ function CreateListingContent() {
   );
 }
 
-/**
- * 加载状态组件
- */
+// ─── 加载状态组件 ───────────────────────────────────
+
 function LoadingState() {
   return (
     <>
@@ -221,9 +834,8 @@ function LoadingState() {
   );
 }
 
-/**
- * 创建商品页面
- */
+// ─── 页面入口 ──────────────────────────────────────
+
 export default function CreateListingPage() {
   return (
     <Suspense fallback={<LoadingState />}>

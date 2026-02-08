@@ -1369,6 +1369,7 @@ export interface TranslationResource {
       variants: string;
       policies: string;
       coupons: string;
+      other: string;
     };
     basicInfo: string;
     title: string;
@@ -1407,7 +1408,9 @@ export interface TranslationResource {
     enterTag: string;
     category: string;
     categoryHelper: string;
+    categoryDesc?: string;
     enterCategory: string;
+    createCategory?: string;
     shippingOptions: string;
     shippingOptionsHelper: string;
     manageShippingOptions: string;
@@ -1422,6 +1425,7 @@ export interface TranslationResource {
     free: string;
     variants: string;
     variantsHelper: string;
+    variantsDesc: string;
     addVariant: string;
     policies: string;
     returnPolicy: string;
@@ -1431,6 +1435,7 @@ export interface TranslationResource {
     termsPlaceholder: string;
     termsHelper: string;
     coupons: string;
+    couponsDesc: string;
     addCoupon: string;
     rwaTokenDetails: string;
     blockchain: string;
@@ -1546,6 +1551,30 @@ export interface TranslationResource {
       rarity?: string;
       mintedAt?: string;
     };
+    // Publish
+    publish: string;
+    saveDraft?: string;
+
+    // NSFW
+    nsfwLabel: string;
+    nsfwDesc: string;
+
+    // Processing Time
+    processingTime: string;
+    processingTimePlaceholder: string;
+    processingTimeHelper: string;
+
+    // Clone
+    cloneListing?: string;
+    loadingCloneData?: string;
+    cloneNotFound?: string;
+    cloneFailed?: string;
+
+    // Shipping Profile
+    shippingProfile?: string;
+    selectShippingProfile?: string;
+    manageProfiles?: string;
+
     preview: string;
     productTitle: string;
     validationFailed: string;

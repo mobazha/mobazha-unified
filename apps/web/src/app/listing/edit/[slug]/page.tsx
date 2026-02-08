@@ -34,8 +34,10 @@ import {
   useListing,
   useI18n,
   useCurrency,
+  useStoreCategories,
   getGatewayUrl,
   productsApi,
+  DEFAULT_LOCAL_CURRENCY,
 } from '@mobazha/core';
 import type {
   ContractType,
@@ -52,6 +54,7 @@ import {
   RwaTokenFields,
   PhysicalGoodFields,
 } from '@/components/Listing';
+import { TokenInput } from '@/components/ui/TokenInput';
 
 // 左侧导航标签
 type TabKey =
@@ -119,25 +122,29 @@ export default function EditListingPage() {
 
     return {
       slug: listing.slug,
-      title: listing.item.title,
-      description: listing.item.description,
+      title: listing.item.title || '',
+      description: listing.item.description || '',
       price: listing.item.price?.toString() || '',
-      pricingCurrency: listing.metadata.pricingCurrency?.code || 'USD',
+      pricingCurrency: listing.metadata.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
       contractType: listing.metadata.contractType,
-      condition: listing.item.condition,
-      grams: listing.item.grams,
-      blockchain: listing.item.blockchain as BlockchainNetwork,
-      tokenAddress: listing.item.tokenAddress,
-      cryptoListingCurrencyCode: listing.item.cryptoListingCurrencyCode,
-      minQuantity: listing.item.minQuantity,
-      maxQuantity: listing.item.maxQuantity,
-      acceptedCurrencies: listing.metadata.acceptedCurrencies,
+      condition: listing.item.condition || 'NEW',
+      grams: listing.item.grams || 0,
+      blockchain: (listing.item.blockchain as BlockchainNetwork) || 'ETH',
+      tokenAddress: listing.item.tokenAddress || '',
+      tokenStandard: listing.item.tokenStandard || '',
+      cryptoListingCurrencyCode: listing.item.cryptoListingCurrencyCode || '',
+      minQuantity: listing.item.minQuantity || 1,
+      maxQuantity: listing.item.maxQuantity || 100,
+      acceptedCurrencies:
+        listing.metadata.acceptedCurrencies?.map((c: string | { code: string }) =>
+          typeof c === 'string' ? c : c.code
+        ) || [],
       images: listing.item.images || [],
-      introVideo: listing.item.introVideo,
-      altIntroVideoLinks: listing.item.altIntroVideoLinks,
+      introVideo: listing.item.introVideo || '',
+      altIntroVideoLinks: listing.item.altIntroVideoLinks || [],
       tags: listing.item.tags || [],
       categories: listing.item.categories || [],
-      shippingOptions: listing.shippingOptions || [],
+      shippingProfile: listing.shippingProfile,
       termsAndConditions: listing.termsAndConditions || '',
       refundPolicy: listing.refundPolicy || '',
       nsfw: listing.item.nsfw || false,
@@ -168,9 +175,11 @@ export default function EditListingPage() {
 
   // 当前激活的标签
   const [activeTab, setActiveTab] = useState<TabKey>('general');
-  const [currentTag, setCurrentTag] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 店铺已有分类（用于自动补全建议）
+  const { categories: storeCategories } = useStoreCategories();
 
   // Section refs for scroll navigation
   const sectionRefs = useRef<Record<TabKey, HTMLDivElement | null>>({
@@ -201,13 +210,35 @@ export default function EditListingPage() {
     }
   }, []);
 
-  // 处理标签添加
-  const handleAddTag = useCallback(() => {
-    if (currentTag.trim()) {
-      addTag(currentTag.trim());
-      setCurrentTag('');
-    }
-  }, [currentTag, addTag]);
+  // 标签规范化函数
+  const normalizeTag = useCallback((input: string) => {
+    return input
+      .trim()
+      .toLowerCase()
+      .replace(/#/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-|-$/g, '');
+  }, []);
+
+  // 标签变化处理
+  const handleTagsChange = useCallback(
+    (newTags: string[]) => {
+      const added = newTags.filter(t => !formData.tags.includes(t));
+      const removed = formData.tags.filter(t => !newTags.includes(t));
+      added.forEach(t => addTag(t));
+      removed.forEach(t => removeTag(t));
+    },
+    [formData.tags, addTag, removeTag]
+  );
+
+  // 分类变化处理
+  const handleCategoriesChange = useCallback(
+    (newCategories: string[]) => {
+      updateField('categories', newCategories);
+    },
+    [updateField]
+  );
 
   // 处理图片变化
   const handleImagesChange = useCallback(
@@ -433,8 +464,14 @@ export default function EditListingPage() {
                       </h4>
                       <p className="text-primary font-bold mt-1">
                         {formData.price
-                          ? formatCurrencyPrice(formData.price, formData.pricingCurrency || 'USD')
-                          : formatCurrencyPrice(0, formData.pricingCurrency || 'USD')}
+                          ? formatCurrencyPrice(
+                              formData.price,
+                              formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY
+                            )
+                          : formatCurrencyPrice(
+                              0,
+                              formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY
+                            )}
                       </p>
                     </div>
                   </Card>
@@ -567,41 +604,17 @@ export default function EditListingPage() {
                   sectionRefs.current.tags = el;
                 }}
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4">{t('listing.tags')}</h2>
-                <div className="flex gap-2 mb-3">
-                  <Input
-                    value={currentTag}
-                    onChange={e => setCurrentTag(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                    placeholder={t('listing.enterTag')}
-                    className="flex-1"
-                  />
-                  <Button type="button" variant="outline" onClick={handleAddTag}>
-                    {t('common.add')}
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                    >
-                      #{tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="w-4 h-4 rounded-full hover:bg-primary/20 flex items-center justify-center"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                <h2 className="text-lg font-semibold text-foreground mb-2">{t('listing.tags')}</h2>
+                <p className="text-sm text-muted-foreground mb-3">{t('listing.tagsDesc')}</p>
+                <TokenInput
+                  tokens={formData.tags}
+                  onTokensChange={handleTagsChange}
+                  placeholder={t('listing.enterTag')}
+                  prefix="#"
+                  normalize={normalizeTag}
+                  tokenClassName="bg-primary/10 text-primary"
+                />
+                <p className="text-xs text-muted-foreground mt-2">{t('listing.tagsHelper')}</p>
               </Card>
 
               {/* 分类 */}
@@ -611,13 +624,16 @@ export default function EditListingPage() {
                   sectionRefs.current.category = el;
                 }}
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4">
+                <h2 className="text-lg font-semibold text-foreground mb-2">
                   {t('listing.category')}
                 </h2>
-                <Input
-                  value={formData.categories[0] || ''}
-                  onChange={e => updateField('categories', e.target.value ? [e.target.value] : [])}
+                <p className="text-sm text-muted-foreground mb-3">{t('listing.categoryDesc')}</p>
+                <TokenInput
+                  tokens={formData.categories}
+                  onTokensChange={handleCategoriesChange}
+                  suggestions={storeCategories}
                   placeholder={t('listing.enterCategory')}
+                  createLabel={t('listing.createCategory')}
                 />
               </Card>
 
