@@ -41,9 +41,12 @@ CSS variables:
 <div className="touch-feedback-bg">List item</div>
 ```
 
-## Long Press
+## Long Press (计划中 — 尚未实现)
+
+> **注意**：`useLongPress` hook 尚未在项目中实现。以下为计划中的 API 设计，请勿在代码中引用。
 
 ```tsx
+// 计划中的 API（未实现）
 import { useLongPress } from '@/hooks/useLongPress';
 
 function Component() {
@@ -58,9 +61,12 @@ function Component() {
 }
 ```
 
-## Swipe Gestures
+## Swipe Gestures (计划中 — 尚未实现)
+
+> **注意**：项目尚未封装 Swipe 手势 hook。以下为原生实现参考，实际使用时建议先封装为 `useSwipe` hook。
 
 ```tsx
+// 参考实现（建议封装后再使用）
 const handleTouchStart = e => {
   setStartX(e.touches[0].clientX);
 };

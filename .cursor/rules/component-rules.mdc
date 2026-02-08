@@ -44,5 +44,27 @@ alwaysApply: false
 - 图标与文字：`gap-2`
 - 内容不紧贴卡片边界
 
+## 微交互反馈
+
+- 按钮操作后必须有视觉反馈（成功 toast / 按钮状态变化 / 图标动画）
+- 收藏/取消收藏需要即时的图标状态变化
+- 加入购物车需有明确的确认提示（toast 或 badge 动画）
+- 表单提交成功/失败必须有视觉反馈，不能静默
+
+## 表单验证
+
+- 首次验证时机：`on blur`（用户离开输入框时）
+- 后续验证时机：`on change`（首次错误后实时更新）
+- 错误消息显示在输入框下方，使用 `text-destructive`
+- 提交按钮在表单无效时应 `disabled` 或显示错误摘要
+- 移动端输入框应设置 `inputMode`（如 `numeric`、`email`）和 `enterKeyHint`
+
+## 动效与可访问性
+
+- 所有动画必须使用 `transition-*` 或项目工具类（`touch-feedback` 等）
+- 必须支持 `prefers-reduced-motion`：关键动画提供静态替代
+- 禁止纯装饰性的持续动画（如无限旋转的装饰元素）
+
 > 详细间距表、测试示例、交互模式请参考 `.cursor/skills/component-dev/` skill。
 > 移动端/桌面端 UX 规范请参考 `.cursor/skills/mobile-ux-guide/` 和 `.cursor/skills/desktop-ux-guide/`。
+> 动效系统请参考 `.cursor/skills/motion-design/` skill。

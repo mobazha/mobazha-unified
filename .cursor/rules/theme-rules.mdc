@@ -63,13 +63,31 @@ globs:
 | 按钮主色 | `bg-primary text-primary-foreground` |
 | 按钮 hover | `hover:bg-primary/90` |
 
-### 语义颜色（可保留）
-| 用途 | 允许使用 |
-|-----|---------|
-| 错误/删除 | `text-destructive`, `bg-destructive`, `hover:text-destructive` |
-| 警告 | `text-amber-*`, `bg-amber-*`（需配合 dark: 变体确保对比度） |
-| 成功 | 使用 `text-primary` 替代 `text-green-*` |
-| 在线状态 | `bg-primary` 替代 `bg-emerald-500` |
+### 表面层级（Elevation）
+| 层级 | 类名 | 使用场景 |
+|------|------|---------|
+| 底层 | `bg-background` | 页面背景 |
+| 卡片层 | `bg-card` | 卡片、对话框、弹出面板 |
+| 悬浮层 | `bg-muted` | 下拉菜单、Tooltip、Popover |
+| 强调层 | `bg-primary/10` | 选中状态、高亮区域、活跃标签 |
+| 操作层 | `bg-primary` | 主按钮、CTA 区域 |
+
+### 语义颜色
+| 用途 | 推荐类名 | 说明 |
+|-----|---------|------|
+| 错误/删除 | `text-destructive`, `bg-destructive` | 删除确认、表单错误 |
+| 警告 | `text-amber-*`, `bg-amber-*` | 需配合 `dark:` 变体确保对比度 |
+| 成功 | `text-success`, `bg-success/10` | 订单完成、支付成功、验证通过 |
+| 信息 | `text-info`, `bg-info/10` | 提示、帮助文本、状态说明 |
+| 在线状态 | `bg-primary` | 替代 `bg-emerald-500` |
+
+### 色彩层级选择
+| 需求 | 选择 | 示例场景 |
+|------|------|---------|
+| 核心操作/品牌色 | `primary` | CTA 按钮、价格、链接、选中态 |
+| 辅助信息/次要操作 | `secondary` | 次要按钮、标签、徽章 |
+| 装饰/点缀 | `accent` | 特殊标记、渐变装饰 |
+| 文字层级 | `foreground` > `muted-foreground` > `muted-foreground/50` | 标题 > 正文 > 辅助说明 |
 
 ## 修复示例
 
