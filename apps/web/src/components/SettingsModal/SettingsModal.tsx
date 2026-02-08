@@ -34,10 +34,7 @@ import {
   THEME_INFO,
   useI18n,
   useUserStore,
-  useLocalCurrency,
-  FIAT_CURRENCIES,
-  CRYPTO_CURRENCIES,
-  getPopularCurrencies,
+  useCurrencySelection,
   isHosted,
   startCasdoorLogin,
   getAllCountries,
@@ -46,6 +43,7 @@ import {
   useShippingOptions,
 } from '@mobazha/core';
 import type { CurrencyInfo } from '@mobazha/core';
+import { SUPPORTED_LANGUAGES } from '@mobazha/core';
 import {
   X,
   Check,
@@ -62,22 +60,10 @@ import {
   Truck,
 } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 // 国家列表从 @mobazha/core 动态获取，支持本地化和智能排序
-
-// Languages data
-const languages = [
-  { code: 'en', name: 'English (English, America)' },
-  { code: 'zh', name: '中文 (Chinese)' },
-  { code: 'es', name: 'Español (Spanish)' },
-  { code: 'fr', name: 'Français (French)' },
-  { code: 'de', name: 'Deutsch (German)' },
-  { code: 'ja', name: '日本語 (Japanese)' },
-  { code: 'ko', name: '한국어 (Korean)' },
-  { code: 'ru', name: 'Русский (Russian)' },
-  { code: 'pt', name: 'Português (Portuguese)' },
-  { code: 'it', name: 'Italiano (Italian)' },
-];
+// 语言列表使用 @mobazha/core 中的 SUPPORTED_LANGUAGES
 
 const acceptedCoins = [
   { symbol: 'BTC', name: 'Bitcoin', enabled: true },
@@ -268,12 +254,19 @@ const RadioOption = ({ value, label, checked, onChange, name }: RadioOptionProps
 
 // General Tab Content
 const GeneralTabContent: React.FC = () => {
-  const { t } = useI18n();
+  const { t, language, setLanguage } = useI18n();
   const { toast } = useToast();
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
-  const { localCurrency, setLocalCurrency } = useLocalCurrency();
-
-  const [language, setLanguage] = useState('en');
+  const {
+    currencySections,
+    selectedCurrencyInfo,
+    searchQuery: currencySearchQuery,
+    setSearchQuery: setCurrencySearchQuery,
+    localCurrency,
+    setLocalCurrency,
+    getDisplayName: getCurrencyDisplayName,
+    getFlag: getCurrencyFlag,
+  } = useCurrencySelection();
   const [country, setCountry] = useState('US');
   const [showMatureContent, setShowMatureContent] = useState(false);
   const [soundNotifications, setSoundNotifications] = useState(true);
@@ -283,7 +276,6 @@ const GeneralTabContent: React.FC = () => {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [currencySearchQuery, setCurrencySearchQuery] = useState('');
   const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -315,30 +307,6 @@ const GeneralTabContent: React.FC = () => {
   const selectedCountryName = useMemo(() => {
     return getCountryName(country, language) || country;
   }, [country, language]);
-
-  const currencyOptions = useMemo(() => {
-    const popular = getPopularCurrencies();
-    const all = [...FIAT_CURRENCIES, ...CRYPTO_CURRENCIES];
-
-    if (currencySearchQuery.trim()) {
-      const query = currencySearchQuery.toLowerCase();
-      return all.filter(
-        c =>
-          c.code.toLowerCase().includes(query) ||
-          c.name.toLowerCase().includes(query) ||
-          c.symbol.toLowerCase().includes(query)
-      );
-    }
-
-    const popularCodes = new Set(popular.map(p => p.code));
-    const otherCurrencies = all.filter(c => !popularCodes.has(c.code));
-
-    return [...popular, ...otherCurrencies];
-  }, [currencySearchQuery]);
-
-  const selectedCurrencyInfo = useMemo(() => {
-    return currencyOptions.find(c => c.code === localCurrency) || currencyOptions[0];
-  }, [localCurrency, currencyOptions]);
 
   const handleTestSound = () => {
     toast({
@@ -380,7 +348,7 @@ const GeneralTabContent: React.FC = () => {
             className="w-full justify-between"
             onClick={() => setShowLanguageModal(true)}
           >
-            {languages.find(l => l.code === language)?.name || language}
+            {SUPPORTED_LANGUAGES.find(l => l.code === language)?.name || language}
             <svg
               className="w-4 h-4 opacity-50"
               fill="none"
@@ -444,7 +412,8 @@ const GeneralTabContent: React.FC = () => {
             className="w-full justify-between"
             onClick={() => setShowCurrencyModal(true)}
           >
-            {selectedCurrencyInfo?.name} ({selectedCurrencyInfo?.code})
+            {selectedCurrencyInfo ? getCurrencyDisplayName(selectedCurrencyInfo.code) : ''} (
+            {selectedCurrencyInfo?.code})
             <svg
               className="w-4 h-4 opacity-50"
               fill="none"
@@ -620,7 +589,7 @@ const GeneralTabContent: React.FC = () => {
           </DialogHeader>
           <ScrollArea className="max-h-[400px]">
             <div className="space-y-1">
-              {languages.map(l => (
+              {SUPPORTED_LANGUAGES.map(l => (
                 <button
                   key={l.code}
                   onClick={() => {
@@ -699,29 +668,52 @@ const GeneralTabContent: React.FC = () => {
             className="mb-4"
           />
           <ScrollArea className="max-h-[400px]">
-            <div className="space-y-1">
-              {currencyOptions.map((c: CurrencyInfo) => (
-                <button
-                  key={c.code}
-                  onClick={() => {
-                    setLocalCurrency(c.code);
-                    setShowCurrencyModal(false);
-                    setCurrencySearchQuery('');
-                  }}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors ${
-                    localCurrency === c.code ? 'bg-primary/10' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{c.symbol}</span>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">{c.code}</p>
-                      <p className="text-xs text-muted-foreground">{c.name}</p>
-                    </div>
+            <div>
+              {currencySections.map((section, sectionIdx) => (
+                <div key={section.label}>
+                  {sectionIdx > 0 && <div className="mx-3 border-t border-border" />}
+                  <div className="px-3 pt-3 pb-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">{section.label}</p>
                   </div>
-                  {localCurrency === c.code && <Check className="w-4 h-4 text-primary" />}
-                </button>
+                  {section.items.map((c: CurrencyInfo) => (
+                    <button
+                      key={c.code}
+                      onClick={() => {
+                        setLocalCurrency(c.code);
+                        setShowCurrencyModal(false);
+                        setCurrencySearchQuery('');
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-surface-hover transition-colors ${
+                        localCurrency === c.code ? 'bg-primary/10' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {c.type === 'crypto' ? (
+                          <TokenIcon token={c.code} size={20} className="shrink-0" />
+                        ) : getCurrencyFlag(c.code) ? (
+                          <span className="w-5 text-center text-base shrink-0 leading-none">
+                            {getCurrencyFlag(c.code)}
+                          </span>
+                        ) : (
+                          <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0">
+                            {c.code.slice(0, 2)}
+                          </span>
+                        )}
+                        <span className="text-sm truncate">{getCurrencyDisplayName(c.code)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        <span className="text-xs text-muted-foreground font-mono">{c.code}</span>
+                        {localCurrency === c.code && <Check className="w-4 h-4 text-primary" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               ))}
+              {currencySections.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  {t('common.noResults')}
+                </div>
+              )}
             </div>
           </ScrollArea>
         </DialogContent>
@@ -1605,7 +1597,7 @@ const ModerationTabContent: React.FC = () => {
       {/* Languages */}
       <FormField label={t('settingsModal.languages')} required>
         <div className="flex flex-wrap gap-2">
-          {languages.slice(0, 6).map(lang => (
+          {SUPPORTED_LANGUAGES.slice(0, 6).map(lang => (
             <label
               key={lang.code}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${

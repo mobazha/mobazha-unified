@@ -1463,3 +1463,71 @@ export function getPopularCurrencies(): CurrencyInfo[] {
     .map(code => getCurrencyByCode(code))
     .filter((c): c is CurrencyInfo => c !== undefined);
 }
+
+/**
+ * 获取本地化的货币显示名称
+ * 法币使用 Intl.DisplayNames API 获取本地化名称
+ * 加密货币使用原始英文名称（全球通用）
+ *
+ * @param code 货币代码 (如 'USD', 'BTC')
+ * @param locale 语言代码 (如 'en', 'zh', 'ja')
+ * @returns 本地化的货币名称（纯文字，不含国旗 emoji）
+ */
+export function getCurrencyDisplayName(code: string, locale: string): string {
+  const currency = getCurrencyByCode(code);
+
+  // 加密货币使用原始英文名称（全球通用）
+  if (currency?.type === 'crypto') {
+    return currency.name;
+  }
+
+  // 法币使用 Intl.DisplayNames 获取本地化名称
+  try {
+    const displayNames = new Intl.DisplayNames([locale], { type: 'currency' });
+    const localizedName = displayNames.of(code);
+    if (localizedName) {
+      return localizedName;
+    }
+  } catch {
+    // Intl.DisplayNames 不可用时 fallback 到原始名称
+  }
+
+  // fallback: 去掉原始名称中的 emoji 前缀，只返回文字部分
+  const nameStr = currency?.name || code;
+  const spaceIndex = nameStr.indexOf(' ');
+  if (spaceIndex > 0) {
+    const prefix = nameStr.slice(0, spaceIndex);
+    // 如果前缀不含 ASCII 字母，说明是 emoji 前缀
+    if (!/[a-zA-Z]/.test(prefix)) {
+      return nameStr.slice(spaceIndex + 1);
+    }
+  }
+  return nameStr;
+}
+
+/**
+ * 从货币代码生成国旗 emoji
+ * 大多数法币代码的前两位字母对应 ISO 3166 国家代码
+ * 某些国旗在部分系统上不可渲染（如 macOS 中国区的 🇹🇼），需要 UI 层处理 fallback
+ */
+const PROBLEMATIC_FLAG_CODES = new Set(['TWD']);
+
+export function getCurrencyFlag(code: string): string | null {
+  const currency = getCurrencyByCode(code);
+  if (!currency || currency.type === 'crypto') return null;
+
+  // 特殊处理：EUR 没有单一国家
+  if (code === 'EUR') return '🇪🇺';
+  // XAF, XOF 等特殊货币没有对应国旗
+  if (code.startsWith('X')) return null;
+  // 跳过已知不可渲染的国旗
+  if (PROBLEMATIC_FLAG_CODES.has(code)) return null;
+
+  // 从货币代码前两位生成国旗 emoji
+  const countryCode = code.slice(0, 2).toUpperCase();
+  try {
+    return String.fromCodePoint(...countryCode.split('').map(c => 0x1f1e6 + c.charCodeAt(0) - 65));
+  } catch {
+    return null;
+  }
+}

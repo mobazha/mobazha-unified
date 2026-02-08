@@ -13,6 +13,8 @@ export {
   isFiatCurrency,
   getBaseRateSymbol,
   getPopularCurrencies,
+  getCurrencyDisplayName,
+  getCurrencyFlag,
 } from './currencies';
 
 // Token 和 Chain 配置
