@@ -62,6 +62,7 @@ export * from './useRole';
 
 // 货币相关
 export * from './useCurrency';
+export * from './useCurrencySelection';
 
 // 认证仲裁员相关
 export * from './useVerifiedModerators';

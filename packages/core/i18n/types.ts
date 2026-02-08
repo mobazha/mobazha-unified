@@ -24,6 +24,17 @@ export const LOCALE_INFO: Record<Locale, { name: string; nativeName: string; fla
   pt: { name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷' },
 };
 
+/**
+ * 支持的语言列表（用于 UI 语言选择器）
+ * 自动从 LOCALE_INFO 生成，使用 "原生名称 (英文名称)" 格式
+ */
+export const SUPPORTED_LANGUAGES: { code: Locale; name: string }[] = SUPPORTED_LOCALES.map(
+  code => ({
+    code,
+    name: `${LOCALE_INFO[code].nativeName} (${LOCALE_INFO[code].name})`,
+  })
+);
+
 // 翻译键类型 - 使用点号分隔的路径
 export type TranslationKey = string;
 

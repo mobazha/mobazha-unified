@@ -19,31 +19,19 @@ import {
   useTheme,
   THEME_INFO,
   useI18n,
-  useLocalCurrency,
-  FIAT_CURRENCIES,
-  CRYPTO_CURRENCIES,
-  getPopularCurrencies,
+  useCurrencySelection,
   useNotificationStore,
   testNotificationSound,
   getAllCountries,
   getCountryName,
   POPULAR_COUNTRIES,
 } from '@mobazha/core';
-import type { CurrencyInfo, Locale } from '@mobazha/core';
+import type { CurrencyInfo } from '@mobazha/core';
+import { SUPPORTED_LANGUAGES } from '@mobazha/core';
 import { ChevronLeft, Check, Volume2 } from 'lucide-react';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
 
-// Languages data
-const languages: { code: Locale; name: string }[] = [
-  { code: 'en', name: 'English' },
-  { code: 'zh', name: '中文' },
-  { code: 'es', name: 'Español' },
-  { code: 'fr', name: 'Français' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'ja', name: '日本語' },
-  { code: 'ko', name: '한국어' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'pt', name: 'Português' },
-];
+// 语言列表使用 @mobazha/core 中的 SUPPORTED_LANGUAGES
 
 interface SettingItemProps {
   title: string;
@@ -125,7 +113,16 @@ export default function GeneralSettingsPage() {
   const { t, language, setLanguage } = useI18n();
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
   const { toast } = useToast();
-  const { localCurrency, setLocalCurrency } = useLocalCurrency();
+  const {
+    currencySections,
+    selectedCurrencyInfo,
+    searchQuery: currencySearchQuery,
+    setSearchQuery: setCurrencySearchQuery,
+    localCurrency,
+    setLocalCurrency,
+    getDisplayName: getCurrencyDisplayName,
+    getFlag: getCurrencyFlag,
+  } = useCurrencySelection();
 
   // 声音设置 from store
   const { soundEnabled, ttsEnabled, volume, setSoundEnabled, setTtsEnabled, setVolume } =
@@ -137,7 +134,6 @@ export default function GeneralSettingsPage() {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
-  const [currencySearchQuery, setCurrencySearchQuery] = useState('');
   const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [localVolume, setLocalVolume] = useState(Math.round(volume * 100));
 
@@ -160,30 +156,6 @@ export default function GeneralSettingsPage() {
     },
     [setVolume]
   );
-
-  // 获取货币列表
-  const currencyOptions = useMemo(() => {
-    const popular = getPopularCurrencies();
-    const all = [...FIAT_CURRENCIES, ...CRYPTO_CURRENCIES];
-
-    if (currencySearchQuery.trim()) {
-      const query = currencySearchQuery.toLowerCase();
-      return all.filter(
-        c =>
-          c.code.toLowerCase().includes(query) ||
-          c.name.toLowerCase().includes(query) ||
-          c.symbol.toLowerCase().includes(query)
-      );
-    }
-
-    const popularCodes = new Set(popular.map(p => p.code));
-    const otherCurrencies = all.filter(c => !popularCodes.has(c.code));
-    return [...popular, ...otherCurrencies];
-  }, [currencySearchQuery]);
-
-  const selectedCurrencyInfo = useMemo(() => {
-    return currencyOptions.find(c => c.code === localCurrency) || currencyOptions[0];
-  }, [localCurrency, currencyOptions]);
 
   // 获取国家列表（智能排序：热门国家优先）
   const countryOptions = useMemo(() => {
@@ -218,7 +190,7 @@ export default function GeneralSettingsPage() {
     );
   }, [countryOptions, countrySearchQuery]);
 
-  const selectedLanguageInfo = languages.find(l => l.code === language);
+  const selectedLanguageInfo = SUPPORTED_LANGUAGES.find(l => l.code === language);
 
   return (
     <div>
@@ -249,7 +221,11 @@ export default function GeneralSettingsPage() {
         />
         <SettingItem
           title={t('settings.currency')}
-          value={`${selectedCurrencyInfo?.symbol || ''} ${selectedCurrencyInfo?.code || ''}`}
+          value={
+            selectedCurrencyInfo
+              ? `${getCurrencyDisplayName(selectedCurrencyInfo.code)} (${selectedCurrencyInfo.code})`
+              : ''
+          }
           onClick={() => setShowCurrencyModal(true)}
         />
       </SettingGroup>
@@ -313,7 +289,7 @@ export default function GeneralSettingsPage() {
             <DialogTitle>{t('settings.language')}</DialogTitle>
           </DialogHeader>
           <ScrollArea className="flex-1 -mx-6 px-6">
-            {languages.map(l => (
+            {SUPPORTED_LANGUAGES.map(l => (
               <button
                 key={l.code}
                 onClick={() => {
@@ -397,33 +373,51 @@ export default function GeneralSettingsPage() {
             />
           </div>
           <ScrollArea className="flex-1 -mx-6 px-6 max-h-[50vh]">
-            {currencyOptions.map((c: CurrencyInfo) => (
-              <button
-                key={c.code}
-                onClick={() => {
-                  setLocalCurrency(c.code);
-                  setShowCurrencyModal(false);
-                  setCurrencySearchQuery('');
-                  toast({
-                    title: t('settings.currency'),
-                    description: `${t('settingsExtended.currencyUpdated')}: ${c.name} (${c.symbol})`,
-                  });
-                }}
-                className={`w-full p-4 text-left hover:bg-surface-hover flex justify-between items-center ${
-                  localCurrency === c.code ? 'bg-primary/10' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-medium w-10">{c.symbol}</span>
-                  <div>
-                    <span className="text-foreground">{c.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">({c.code})</span>
-                  </div>
+            {currencySections.map((section, sectionIdx) => (
+              <div key={section.label}>
+                {sectionIdx > 0 && <div className="mx-3 border-t border-border" />}
+                <div className="px-3 pt-3 pb-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">{section.label}</p>
                 </div>
-                {localCurrency === c.code && <Check className="w-5 h-5 text-primary" />}
-              </button>
+                {section.items.map((c: CurrencyInfo) => (
+                  <button
+                    key={c.code}
+                    onClick={() => {
+                      setLocalCurrency(c.code);
+                      setShowCurrencyModal(false);
+                      setCurrencySearchQuery('');
+                      toast({
+                        title: t('settings.currency'),
+                        description: `${t('settingsExtended.currencyUpdated')}: ${getCurrencyDisplayName(c.code)} (${c.code})`,
+                      });
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 hover:bg-surface-hover transition-colors ${
+                      localCurrency === c.code ? 'bg-primary/10' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {c.type === 'crypto' ? (
+                        <TokenIcon token={c.code} size={20} className="shrink-0" />
+                      ) : getCurrencyFlag(c.code) ? (
+                        <span className="w-5 text-center text-base shrink-0 leading-none">
+                          {getCurrencyFlag(c.code)}
+                        </span>
+                      ) : (
+                        <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0">
+                          {c.code.slice(0, 2)}
+                        </span>
+                      )}
+                      <span className="text-sm truncate">{getCurrencyDisplayName(c.code)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className="text-xs text-muted-foreground font-mono">{c.code}</span>
+                      {localCurrency === c.code && <Check className="w-5 h-5 text-primary" />}
+                    </div>
+                  </button>
+                ))}
+              </div>
             ))}
-            {currencyOptions.length === 0 && (
+            {currencySections.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">{t('common.noResults')}</div>
             )}
           </ScrollArea>
