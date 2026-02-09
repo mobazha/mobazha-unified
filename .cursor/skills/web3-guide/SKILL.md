@@ -213,6 +213,49 @@ const balance = await contract.balanceOf(ownerAddress, tokenId);
 - [ ] 是否有完善的错误处理（用户拒绝、余额不足等）？
 - [ ] 事件监听是否在组件卸载时清理？
 
+## 后端智能合约源码（bsc-smart-contracts）
+
+### EVM 合约
+
+| 合约              | 路径                                 | 说明             |
+| ----------------- | ------------------------------------ | ---------------- |
+| Escrow            | `contracts/escrow/MobazhaEscrow.sol` | 托管合约         |
+| EscrowSpec        | `contracts/escrow/EscrowSpec.md`     | Escrow 功能规范  |
+| RWA Marketplace   | `contracts/rwa-marketplace/`         | RWA 市场合约     |
+| Broadway Token    | `contracts/broadway/`                | 演出票务 RWA     |
+| Group Marketplace | `contracts/marketplace/`             | 群组集市验证合约 |
+| Deploy Scripts    | `migrations/` + `scripts/`           | 部署脚本         |
+
+### Solana 程序
+
+| 程序   | 路径                             | 说明               |
+| ------ | -------------------------------- | ------------------ |
+| Escrow | `solana_anchor/programs/escrow/` | Solana Escrow 程序 |
+| RWA    | `solana_anchor/programs/rwa/`    | Solana RWA 程序    |
+| 测试   | `solana_anchor/tests/`           | Anchor 测试        |
+
+### Go Binding 生成
+
+mobazha3.0 通过 `abigen` 生成 Go binding 与合约交互：
+
+```bash
+# 从 ABI 生成 Go binding
+abigen --abi=MobazhaEscrow.abi --pkg=escrow --out=escrow.go
+
+# Go binding 位置: mobazha3.0/pkg/contracts/
+```
+
+### Go 后端合约交互
+
+mobazha3.0 中的合约调用模式：
+
+```go
+// pkg/contracts/ — Go binding 文件
+// internal/multiwallet/ — 多链钱包管理，负责签名和发送交易
+// pkg/wallet/ — 钱包接口定义
+```
+
 ## 相关功能文档
 
 - **[钱包集成](../../docs/features/wallet-integration.md)** — useWallet Hook 完整 API、AppKit 配置、Escrow 合约、支持的链列表
+- **bsc-smart-contracts** 各合约目录下的 README.md — 合约详细说明
