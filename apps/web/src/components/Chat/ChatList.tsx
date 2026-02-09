@@ -325,6 +325,7 @@ export const ChatList: React.FC<ChatListProps> = ({
               onClick={onNewChat}
               className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-all duration-200"
               aria-label={t('chat.newMessage')}
+              data-testid="chat-new-btn"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -365,7 +366,10 @@ export const ChatList: React.FC<ChatListProps> = ({
       </div>
 
       {/* Room List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+      <div
+        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+        data-testid="chat-conversation-list"
+      >
         {isLoading ? (
           <VStack gap="none" className="p-2">
             {[...Array(5)].map((_, i) => (
@@ -522,6 +526,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         <button
           onClick={onNewChat}
           className="w-full flex items-center justify-center gap-2.5 py-3 px-5 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 active:from-primary/90 text-white rounded-xl transition-all duration-300 text-[13px] font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0"
+          data-testid="chat-new-btn"
         >
           <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

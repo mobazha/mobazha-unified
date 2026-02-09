@@ -149,6 +149,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       <div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
+          data-testid={`settings-nav-${item.id}`}
           className={cn(
             'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
             isActive || isChildActive
@@ -187,6 +188,7 @@ const SidebarNavItemLink: React.FC<SidebarNavItemLinkProps> = ({ item, depth = 0
   return (
     <Link
       href={item.href}
+      data-testid={`settings-nav-${item.id}`}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
         isActive
@@ -217,7 +219,7 @@ export const SettingsSidebar: React.FC = () => {
   };
 
   return (
-    <nav className="p-4 space-y-1">
+    <nav className="p-4 space-y-1" data-testid="settings-sidebar">
       <h2 className="text-lg font-semibold mb-4 px-3">{t('settings.title')}</h2>
       {sidebarItems.map(item => (
         <SidebarNavItem

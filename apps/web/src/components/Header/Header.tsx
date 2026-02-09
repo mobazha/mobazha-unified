@@ -68,7 +68,10 @@ export const Header: React.FC = () => {
 
   // 移动端隐藏顶部 Header，使用底部 MobileNav 导航
   return (
-    <header className="hidden md:block sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border">
+    <header
+      className="hidden md:block sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border"
+      data-testid="header"
+    >
       <Container size="xl">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -78,7 +81,11 @@ export const Header: React.FC = () => {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="flex flex-1 max-w-xl mx-8">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-1 max-w-xl mx-8"
+            data-testid="header-search-form"
+          >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -88,6 +95,7 @@ export const Header: React.FC = () => {
                   setSearchQuery(e.target.value)
                 }
                 className="w-full pl-10"
+                data-testid="header-search-input"
               />
             </div>
           </form>
@@ -95,7 +103,7 @@ export const Header: React.FC = () => {
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="flex items-center">
             {/* 市场入口 */}
-            <Link href="/marketplace">
+            <Link href="/marketplace" data-testid="header-marketplace-link">
               <Button
                 variant="ghost"
                 size="sm"
@@ -118,6 +126,7 @@ export const Header: React.FC = () => {
                   className="hover:bg-primary/10 hover:text-primary transition-colors relative"
                   onClick={openChatDrawer}
                   aria-label="Open messages"
+                  data-testid="header-messages-btn"
                 >
                   <MessageCircle className="h-5 w-5" />
                   {totalUnread > 0 && (
@@ -128,7 +137,7 @@ export const Header: React.FC = () => {
                 </Button>
 
                 {/* 购物车图标 + 数量徽章 */}
-                <Link href="/cart" className="relative">
+                <Link href="/cart" className="relative" data-testid="header-cart-link">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -158,6 +167,7 @@ export const Header: React.FC = () => {
                   <button
                     className="h-8 w-8 p-0 hover:opacity-80 transition-opacity focus:outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-full"
                     aria-label="Open user menu"
+                    data-testid="header-user-menu-trigger"
                   >
                     <Avatar
                       src={getImageUrl(profile.avatarHashes?.small)}
@@ -182,6 +192,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem
                     onClick={() => router.push(`/store/${profile.peerID}`)}
                     className="cursor-pointer"
+                    data-testid="header-menu-my-store"
                   >
                     <Store className="mr-2 h-4 w-4" />
                     {t('userMenu.myStore')}
@@ -189,6 +200,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem
                     onClick={() => router.push('/listing/new')}
                     className="cursor-pointer"
+                    data-testid="header-menu-create-listing"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     {t('userMenu.createListing')}
@@ -199,6 +211,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem
                     onClick={() => router.push('/orders?tab=sales')}
                     className="cursor-pointer"
+                    data-testid="header-menu-sales"
                   >
                     <Package className="mr-2 h-4 w-4" />
                     {t('userMenu.sales')}
@@ -206,6 +219,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem
                     onClick={() => router.push('/orders?tab=purchases')}
                     className="cursor-pointer"
+                    data-testid="header-menu-purchases"
                   >
                     <ShoppingBag className="mr-2 h-4 w-4" />
                     {t('userMenu.purchases')}
@@ -223,6 +237,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem
                     onClick={() => openSettings('general')}
                     className="cursor-pointer"
+                    data-testid="header-menu-settings"
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     {t('userMenu.settings')}
@@ -238,6 +253,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer text-destructive focus:text-destructive"
+                    data-testid="header-menu-logout"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     {t('userMenu.logout')}
@@ -249,6 +265,7 @@ export const Header: React.FC = () => {
                 variant="default"
                 size="sm"
                 className="gap-2"
+                data-testid="header-login-btn"
                 onClick={() => {
                   // hosted 模式直接跳转 Casdoor，无需中间页
                   if (isHosted()) {

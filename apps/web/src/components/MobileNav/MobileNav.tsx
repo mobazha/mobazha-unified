@@ -212,6 +212,7 @@ export const MobileNav: React.FC = () => {
                 <button
                   key={`chat-${index}`}
                   onClick={openChatDrawer}
+                  data-testid="mobile-nav-chat"
                   className={`relative flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                     active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
                   }`}
@@ -245,6 +246,7 @@ export const MobileNav: React.FC = () => {
               <Link
                 key={item.href}
                 href={item.href!}
+                data-testid={`mobile-nav-${item.labelKey.split('.').pop()}`}
                 className={`relative flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                   active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}

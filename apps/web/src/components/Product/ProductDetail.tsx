@@ -499,7 +499,7 @@ export function ProductDetail({
   const category = product.item.categories?.[0] || '';
 
   return (
-    <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''}>
+    <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
       {/* 弹框模式顶部商家栏 - 不使用 sticky，避免遮挡图片 */}
       {isModal && vendor && (
         <div className="bg-background border-b border-border px-4 py-3 pr-14">
@@ -628,6 +628,7 @@ export function ProductDetail({
                       key={index}
                       onClick={() => setSelectedImage(index)}
                       aria-label={`View image ${index + 1}`}
+                      data-testid={`product-detail-thumbnail-${index}`}
                       className={`flex-shrink-0 ${isModal ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
                         selectedImage === index
                           ? 'border-primary ring-2 ring-primary/20'
@@ -860,6 +861,7 @@ export function ProductDetail({
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={stock === 0}
                     aria-label="Decrease quantity"
+                    data-testid="product-detail-qty-decrease"
                     className={cn(
                       'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
                       stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
@@ -874,6 +876,7 @@ export function ProductDetail({
                     value={quantity}
                     disabled={stock === 0}
                     aria-label="Quantity"
+                    data-testid="product-detail-qty-input"
                     onChange={e => {
                       const val = parseInt(e.target.value, 10);
                       if (!isNaN(val) && val >= 1) {
@@ -899,6 +902,7 @@ export function ProductDetail({
                     onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                     disabled={stock === 0}
                     aria-label="Increase quantity"
+                    data-testid="product-detail-qty-increase"
                     className={cn(
                       'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
                       stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
@@ -925,6 +929,7 @@ export function ProductDetail({
                   )}
                   onClick={handleAddToCart}
                   disabled={addingToCart || stock === 0}
+                  data-testid="product-detail-add-to-cart"
                 >
                   {addingToCart ? (
                     <span className="flex items-center gap-2">
@@ -963,6 +968,7 @@ export function ProductDetail({
                   )}
                   onClick={handleBuyNow}
                   disabled={stock === 0}
+                  data-testid="product-detail-buy-now"
                 >
                   {t('product.buyNow')}
                 </Button>
@@ -1284,6 +1290,7 @@ export function ProductDetail({
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
             onClick={() => setIsImagePreviewOpen(false)}
             aria-label="Close image preview"
+            data-testid="product-detail-preview-close"
           >
             <svg
               className="w-6 h-6 text-white"
@@ -1324,6 +1331,7 @@ export function ProductDetail({
                   setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
                 }}
                 aria-label="Previous image"
+                data-testid="product-detail-preview-prev"
               >
                 <svg
                   className="w-6 h-6 text-white"
@@ -1346,6 +1354,7 @@ export function ProductDetail({
                   setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
                 }}
                 aria-label="Next image"
+                data-testid="product-detail-preview-next"
               >
                 <svg
                   className="w-6 h-6 text-white"

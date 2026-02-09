@@ -395,7 +395,7 @@ function CreateListingContent() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-muted/30 py-6">
+      <main className="min-h-screen bg-muted/30 py-6" data-testid="listing-form-new">
         <Container size="xl">
           {/* 页面头部 */}
           <div className="flex items-center justify-between mb-6">
@@ -416,11 +416,21 @@ function CreateListingContent() {
 
             {/* 操作按钮 */}
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
+                data-testid="listing-form-cancel"
+              >
                 <X className="w-4 h-4 mr-1" />
                 {t('common.cancel')}
               </Button>
-              <Button variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
+              <Button
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+                data-testid="listing-form-save-draft"
+              >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
@@ -428,7 +438,11 @@ function CreateListingContent() {
                 )}
                 {t('listing.saveDraft')}
               </Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                data-testid="listing-form-publish"
+              >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
@@ -448,6 +462,7 @@ function CreateListingContent() {
                   <button
                     key={tab.key}
                     onClick={() => scrollToSection(tab.key)}
+                    data-testid={`listing-form-tab-${tab.key}`}
                     className={`
                       w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
                       ${
@@ -518,6 +533,7 @@ function CreateListingContent() {
                   value={formData.contractType}
                   onChange={changeContractType}
                   disabled={isSubmitting}
+                  data-testid="listing-form-type-selector"
                 />
               </Card>
 
@@ -883,10 +899,16 @@ function CreateListingContent() {
                     className="flex-1"
                     onClick={handleSaveDraft}
                     disabled={isSubmitting}
+                    data-testid="listing-form-save-draft"
                   >
                     {t('listing.saveDraft')}
                   </Button>
-                  <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>
+                  <Button
+                    className="flex-1"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    data-testid="listing-form-publish"
+                  >
                     {isSubmitting ? (
                       <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                     ) : (

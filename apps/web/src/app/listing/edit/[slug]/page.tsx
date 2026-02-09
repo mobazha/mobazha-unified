@@ -388,7 +388,7 @@ export default function EditListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-testid="listing-form-edit">
       <Header />
 
       <main className="py-6">
@@ -412,18 +412,28 @@ export default function EditListingPage() {
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={isSubmitting || isDeleting}
                 className="text-destructive hover:text-destructive"
+                data-testid="listing-form-delete"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
                 {t('common.delete')}
               </Button>
-              <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
+                data-testid="listing-form-cancel"
+              >
                 <X className="w-4 h-4 mr-1" />
                 {t('common.cancel')}
               </Button>
               <Button variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
                 {t('listing.saveDraft')}
               </Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                data-testid="listing-form-publish"
+              >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
@@ -885,7 +895,12 @@ export default function EditListingPage() {
             >
               {t('common.cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              data-testid="listing-form-delete-confirm"
+            >
               {isDeleting ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
               ) : (

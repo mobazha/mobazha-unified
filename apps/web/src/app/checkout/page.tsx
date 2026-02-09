@@ -643,7 +643,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-testid="checkout-page">
       <Header />
 
       <main className="py-4 sm:py-8 pb-24 sm:pb-8">
@@ -654,6 +654,7 @@ export default function CheckoutPage() {
               onClick={() => router.back()}
               aria-label="Go back"
               className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors touch-feedback"
+              data-testid="checkout-back-btn"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -867,6 +868,7 @@ export default function CheckoutPage() {
                       rows={3}
                       className="w-full px-3 py-2 rounded-md sm:rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
                       placeholder={t('checkout.orderNotePlaceholder')}
+                      data-testid="checkout-order-notes"
                     />
                   </CardContent>
                 </Card>
@@ -953,6 +955,7 @@ export default function CheckoutPage() {
                                 disabled={item.quantity <= 1}
                                 aria-label="Decrease quantity"
                                 className="w-8 h-8 flex items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                data-testid="checkout-qty-decrease"
                               >
                                 <svg
                                   className="w-4 h-4"
@@ -979,11 +982,13 @@ export default function CheckoutPage() {
                                   }
                                 }}
                                 className="w-14 h-8 text-center font-medium text-foreground border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                data-testid="checkout-qty-input"
                               />
                               <button
                                 onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                                 aria-label="Increase quantity"
                                 className="w-8 h-8 flex items-center justify-center rounded-md border border-border hover:bg-muted transition-colors"
+                                data-testid="checkout-qty-increase"
                               >
                                 <svg
                                   className="w-4 h-4"
@@ -1060,6 +1065,7 @@ export default function CheckoutPage() {
                         !hasAllShippingSelected ||
                         checkoutItems.length === 0
                       }
+                      data-testid="checkout-submit-btn"
                     >
                       {isSubmitting ? (
                         <HStack gap="sm" align="center" justify="center">
@@ -1140,6 +1146,7 @@ export default function CheckoutPage() {
                 !hasAllShippingSelected
               }
               className="min-w-[140px]"
+              data-testid="checkout-submit-btn-mobile"
             >
               {isSubmitting ? (
                 <HStack gap="xs" align="center">
