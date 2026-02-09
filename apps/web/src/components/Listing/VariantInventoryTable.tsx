@@ -341,7 +341,7 @@ export function VariantInventoryTable({
                       min="0"
                       value={sku.compareAtPrice}
                       onChange={e => updateSku(index, 'compareAtPrice', e.target.value)}
-                      placeholder="—"
+                      placeholder={t('listing.variants.dashPlaceholder')}
                       className="h-8 text-sm"
                     />
                   </TableCell>
@@ -357,7 +357,7 @@ export function VariantInventoryTable({
                         const parsed = val === '' ? -1 : parseInt(val, 10);
                         if (!isNaN(parsed)) updateSku(index, 'quantity', parsed);
                       }}
-                      placeholder="∞"
+                      placeholder={t('listing.variants.unlimitedPlaceholder')}
                       className="h-8 text-sm"
                     />
                   </TableCell>
@@ -367,7 +367,7 @@ export function VariantInventoryTable({
                     <Input
                       value={sku.barcode}
                       onChange={e => updateSku(index, 'barcode', e.target.value)}
-                      placeholder="UPC/EAN"
+                      placeholder={t('listing.variants.barcodePlaceholder')}
                       className="h-8 text-sm"
                     />
                   </TableCell>
@@ -383,7 +383,7 @@ export function VariantInventoryTable({
                         const parsed = val === '' ? 0 : parseInt(val, 10);
                         if (!isNaN(parsed)) updateSku(index, 'weight', parsed);
                       }}
-                      placeholder="0"
+                      placeholder={t('listing.variants.weightPlaceholder')}
                       className="h-8 text-sm"
                     />
                   </TableCell>

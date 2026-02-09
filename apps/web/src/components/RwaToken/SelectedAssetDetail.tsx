@@ -23,7 +23,7 @@ export function SelectedAssetDetail({ asset, className = '' }: SelectedAssetDeta
   const isErc3525 = asset.tokenStandard === 'ERC3525';
 
   return (
-    <Card className={cn('p-5 border-2 border-success bg-success/8', className)}>
+    <Card className={cn('p-4 border-2 border-success bg-success/8', className)}>
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
         <CheckCircle className="w-5 h-5 text-success" />

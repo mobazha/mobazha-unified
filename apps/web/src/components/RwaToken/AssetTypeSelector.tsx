@@ -70,7 +70,7 @@ export function AssetTypeSelector({
               onClick={() => handleSelect(type.code)}
               disabled={disabled}
               className={cn(
-                'relative p-5 rounded-xl border-2 text-left transition-all duration-200',
+                'relative p-4 rounded-xl border-2 text-left transition-all duration-200',
                 isSelected
                   ? 'border-primary bg-primary/5 shadow-md'
                   : 'border-border hover:border-primary/50 hover:bg-muted/50',

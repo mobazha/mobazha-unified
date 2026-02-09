@@ -316,7 +316,7 @@ export function RichTextEditor({
                 onChange={e => setLinkUrl(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLinkConfirm()}
                 className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                placeholder="https://example.com"
+                placeholder={t('common.urlPlaceholder')}
                 autoFocus
                 data-testid="link-url-input"
               />

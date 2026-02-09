@@ -102,7 +102,7 @@ function ModeratorListCard({ moderator }: { moderator: Moderator }) {
 
   return (
     <Link href={`/moderators/${moderator.id}`}>
-      <Card className="group relative p-5 border border-border/60 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 cursor-pointer">
+      <Card className="group relative p-4 border border-border/60 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 cursor-pointer">
         <HStack gap="lg" align="start">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
@@ -374,7 +374,7 @@ export default function ModeratorsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-4 p-5 border border-border/60 shadow-sm">
+              <Card className="sticky top-4 p-4 border border-border/60 shadow-sm">
                 <div className="flex items-center gap-2 pb-4 border-b border-border mb-4">
                   <Filter className="w-4 h-4 text-muted-foreground" />
                   <h3 className="font-semibold text-foreground">{t('filter.filters')}</h3>

@@ -712,7 +712,7 @@ function CreateListingContent() {
                     className="text-lg font-semibold text-foreground mb-1"
                     data-testid="variants-title"
                   >
-                    {t('listing.variants')}
+                    {t('listing.variants.title')}
                   </h2>
                   <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
 

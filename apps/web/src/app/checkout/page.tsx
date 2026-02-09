@@ -652,6 +652,7 @@ export default function CheckoutPage() {
           <HStack gap="sm" align="center" className="mb-4 sm:mb-8">
             <button
               onClick={() => router.back()}
+              aria-label="Go back"
               className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors touch-feedback"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -888,7 +889,7 @@ export default function CheckoutPage() {
                               {item.image ? (
                                 <img
                                   src={item.image}
-                                  alt=""
+                                  alt={item.title || 'Product image'}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
@@ -950,6 +951,7 @@ export default function CheckoutPage() {
                               <button
                                 onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                 disabled={item.quantity <= 1}
+                                aria-label="Decrease quantity"
                                 className="w-8 h-8 flex items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               >
                                 <svg
@@ -980,6 +982,7 @@ export default function CheckoutPage() {
                               />
                               <button
                                 onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                aria-label="Increase quantity"
                                 className="w-8 h-8 flex items-center justify-center rounded-md border border-border hover:bg-muted transition-colors"
                               >
                                 <svg

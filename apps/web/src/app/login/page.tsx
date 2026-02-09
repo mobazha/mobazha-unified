@@ -31,7 +31,7 @@ function getRedirectFromParams(searchParams: URLSearchParams): string {
  */
 function LoginPageLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
       </div>
@@ -179,7 +179,7 @@ function LoginPageContent() {
   // 托管模式初始化中：显示加载状态，避免闪烁显示登录表单
   if (isHostedInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-white text-lg">{t('login.redirectingToLogin')}</p>
@@ -192,7 +192,7 @@ function LoginPageContent() {
   // 正在处理 OAuth 回调或跳转中
   if (isProcessing || (hasOAuthCallback() && isLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-white text-lg">{t('login.loggingIn')}</p>
@@ -205,7 +205,7 @@ function LoginPageContent() {
   // VPS 模式（Basic Auth）：显示登录表单
   if (isBasic()) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
         <div className="w-full max-w-md px-8 py-10 bg-muted/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-border">
           {/* Logo & Title */}
           <div className="text-center mb-8">
@@ -313,7 +313,7 @@ function LoginPageContent() {
 
   // 托管模式但没有自动跳转（可能是用户手动访问）：显示跳转按钮
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
       <div className="w-full max-w-md px-8 py-10 bg-muted/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-border">
         {/* Logo & Title */}
         <div className="text-center mb-8">

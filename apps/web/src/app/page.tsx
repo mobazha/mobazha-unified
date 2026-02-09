@@ -176,10 +176,10 @@ export default function HomePage() {
   }, []);
 
   const categories = [
-    { name: t('homeExtended.electronics'), icon: '💻', color: 'from-blue-500 to-cyan-500' },
-    { name: t('homeExtended.digitalGoods'), icon: '📱', color: 'from-purple-500 to-pink-500' },
-    { name: t('homeExtended.services'), icon: '🛠️', color: 'from-orange-500 to-red-500' },
-    { name: t('homeExtended.digitalAssets'), icon: '💎', color: 'from-amber-500 to-yellow-500' },
+    { name: t('homeExtended.electronics'), icon: '💻', color: 'from-info to-primary' },
+    { name: t('homeExtended.digitalGoods'), icon: '📱', color: 'from-primary to-secondary' },
+    { name: t('homeExtended.services'), icon: '🛠️', color: 'from-warning to-destructive' },
+    { name: t('homeExtended.digitalAssets'), icon: '💎', color: 'from-warning to-success' },
   ];
 
   return (

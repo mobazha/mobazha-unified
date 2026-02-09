@@ -135,6 +135,14 @@
   --theme-border: #e2e8f0;
   --theme-borderLight: #f1f5f9;
 
+  /* Hero 品牌区域渐变变量 (Classic 主题) */
+  --hero-gradient-from: #0f172a;
+  --hero-gradient-via: #164e63;
+  --hero-gradient-to: #0f172a;
+  --hero-accent: #22d3ee;
+  --hero-accent-secondary: #2dd4bf;
+  --hero-glow: #06b6d4;
+
   /* Safe area insets for iOS */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
@@ -191,6 +199,14 @@
   --theme-border: #e5e5e5;
   --theme-borderLight: #f5f5f5;
   --theme-glow: rgba(0, 210, 106, 0.3);
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #0a0a0a;
+  --hero-gradient-via: #052e16;
+  --hero-gradient-to: #0a0a0a;
+  --hero-accent: #4ade80;
+  --hero-accent-secondary: #34d399;
+  --hero-glow: #22c55e;
 }
 
 [data-theme='crypto'].dark {
@@ -242,6 +258,14 @@
   --theme-textInverse: #ffffff;
   --theme-border: #cbd5e1;
   --theme-borderLight: #e2e8f0;
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #0f172a;
+  --hero-gradient-via: #1e3a5f;
+  --hero-gradient-to: #0f172a;
+  --hero-accent: #60a5fa;
+  --hero-accent-secondary: #38bdf8;
+  --hero-glow: #3b82f6;
 }
 
 [data-theme='business'].dark {
@@ -292,6 +316,14 @@
   --theme-border: #e4e4e7;
   --theme-borderLight: #f4f4f5;
   --theme-gradient: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #09090b;
+  --hero-gradient-via: #581c87;
+  --hero-gradient-to: #09090b;
+  --hero-accent: #f472b6;
+  --hero-accent-secondary: #a78bfa;
+  --hero-glow: #ec4899;
 }
 
 [data-theme='cyberpunk'].dark {
@@ -343,6 +375,14 @@
   --theme-textInverse: #ffffff;
   --theme-border: #d6d3d1;
   --theme-borderLight: #e7e5e4;
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #0c0a09;
+  --hero-gradient-via: #14532d;
+  --hero-gradient-to: #0c0a09;
+  --hero-accent: #a3e635;
+  --hero-accent-secondary: #4ade80;
+  --hero-glow: #84cc16;
 }
 
 [data-theme='nature'].dark {
@@ -392,6 +432,14 @@
   --theme-textInverse: #ffffff;
   --theme-border: #d1d5db;
   --theme-borderLight: #e5e7eb;
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #000000;
+  --hero-gradient-via: #78350f;
+  --hero-gradient-to: #000000;
+  --hero-accent: #fbbf24;
+  --hero-accent-secondary: #facc15;
+  --hero-glow: #f59e0b;
 }
 
 [data-theme='luxury'].dark {
@@ -801,5 +849,17 @@ body {
   font-size: 18px;
   @media (min-width: 768px) {
     font-size: 20px;
+  }
+}
+
+/* ===== 减弱动画支持 (prefers-reduced-motion) ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

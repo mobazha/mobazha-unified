@@ -80,9 +80,9 @@ export function getRoleColor(role: string): string {
     case 'vendor':
       return 'text-primary';
     case 'buyer':
-      return 'text-blue-600';
+      return 'text-info';
     case 'moderator':
-      return 'text-purple-600';
+      return 'text-secondary-foreground';
     default:
       return 'text-muted-foreground';
   }

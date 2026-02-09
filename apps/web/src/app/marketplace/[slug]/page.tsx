@@ -291,7 +291,11 @@ export default function MarketplaceDetailPage() {
       <main>
         {/* Banner */}
         <div className="relative h-40 sm:h-56 md:h-72">
-          <img src={marketplace.banner} alt="" className="w-full h-full object-cover" />
+          <img
+            src={marketplace.banner}
+            alt={`${marketplace.name} banner`}
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
 

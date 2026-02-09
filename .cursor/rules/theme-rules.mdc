@@ -112,10 +112,10 @@ globs:
 ## 特殊情况
 
 ### 允许保留的设计性颜色
-1. **Hero 区块**的深色渐变背景（设计意图明确，如 `from-slate-900 via-emerald-900`）
+1. **Hero 区块**必须使用 `--hero-*` CSS 变量（参见 `brand-theme-rules.mdc`），不允许硬编码颜色
 2. **登录页面**等专门的深色主题页面
 3. **星级评分**的金色 `text-amber-500`（语义明确）
-4. **品牌强调色**如 `text-emerald-300`、`bg-emerald-400` 用于 Hero 徽章等品牌元素
+4. **深色背景区域**的 `text-white` / `text-white/*`（文字可见性需求）
 
 ### 深色背景区域的文字颜色
 在 Hero、登录页等深色背景区域，文字颜色应使用 `text-white` 及其透明度变体，而不是 `text-slate-*`：

@@ -112,14 +112,14 @@ export default function MarketplaceSellPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Marketplace
+            {t('marketplace.sell.backToMarketplace')}
           </Link>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Become a Seller</h1>
-            <p className="text-muted-foreground">
-              Complete your seller profile to start listing products in this marketplace
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              {t('marketplace.sell.title')}
+            </h1>
+            <p className="text-muted-foreground">{t('marketplace.sell.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -127,36 +127,38 @@ export default function MarketplaceSellPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Seller Profile */}
               <Card>
-                <h2 className="text-xl font-bold text-foreground mb-6">Seller Profile</h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">
+                  {t('marketplace.sell.sellerProfile')}
+                </h2>
 
                 <VStack gap="lg">
                   <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Bio *
+                      {t('marketplace.sell.bioLabel')}
                     </label>
                     <textarea
                       value={profile.bio}
                       onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
                       rows={4}
                       className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      placeholder="Tell buyers about yourself and what you sell..."
+                      placeholder={t('marketplace.sell.bioPlaceholder')}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Location
+                        {t('marketplace.sell.locationLabel')}
                       </label>
                       <Input
                         value={profile.location}
                         onChange={e => setProfile(prev => ({ ...prev, location: e.target.value }))}
-                        placeholder="City, Country"
+                        placeholder={t('marketplace.sell.locationPlaceholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Contact Email
+                        {t('marketplace.sell.emailLabel')}
                       </label>
                       <Input
                         type="email"
@@ -164,7 +166,7 @@ export default function MarketplaceSellPage() {
                         onChange={e =>
                           setProfile(prev => ({ ...prev, contactEmail: e.target.value }))
                         }
-                        placeholder="seller@example.com"
+                        placeholder={t('marketplace.sell.emailPlaceholder')}
                       />
                     </div>
                   </div>
@@ -172,17 +174,17 @@ export default function MarketplaceSellPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Website (Optional)
+                        {t('marketplace.sell.websiteLabel')}
                       </label>
                       <Input
                         value={profile.website}
                         onChange={e => setProfile(prev => ({ ...prev, website: e.target.value }))}
-                        placeholder="https://..."
+                        placeholder={t('marketplace.sell.websitePlaceholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Business Type
+                        {t('marketplace.sell.businessTypeLabel')}
                       </label>
                       <Select
                         value={profile.businessType}
@@ -194,8 +196,12 @@ export default function MarketplaceSellPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="individual">Individual</SelectItem>
-                          <SelectItem value="business">Business</SelectItem>
+                          <SelectItem value="individual">
+                            {t('marketplace.sell.businessTypeIndividual')}
+                          </SelectItem>
+                          <SelectItem value="business">
+                            {t('marketplace.sell.businessTypeBusiness')}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -204,14 +210,14 @@ export default function MarketplaceSellPage() {
                   {profile.businessType === 'business' && (
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Business Name
+                        {t('marketplace.sell.businessNameLabel')}
                       </label>
                       <Input
                         value={profile.businessName}
                         onChange={e =>
                           setProfile(prev => ({ ...prev, businessName: e.target.value }))
                         }
-                        placeholder="Your business name"
+                        placeholder={t('marketplace.sell.businessNamePlaceholder')}
                       />
                     </div>
                   )}
@@ -220,25 +226,29 @@ export default function MarketplaceSellPage() {
 
               {/* Application Message */}
               <Card>
-                <h2 className="text-xl font-bold text-foreground mb-4">Application Message</h2>
+                <h2 className="text-xl font-bold text-foreground mb-4">
+                  {t('marketplace.sell.applicationMessage')}
+                </h2>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Write a message to the marketplace administrators explaining why you want to sell
-                  in this marketplace.
+                  {t('marketplace.sell.applicationMessageDesc')}
                 </p>
                 <textarea
                   value={applicationMessage}
                   onChange={e => setApplicationMessage(e.target.value)}
                   rows={4}
+                  aria-label={t('marketplace.sell.applicationMessage')}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                  placeholder="I would like to join this marketplace because..."
+                  placeholder={t('marketplace.sell.applicationPlaceholder')}
                 />
               </Card>
 
               {/* Select Products to List */}
               <Card>
-                <h2 className="text-xl font-bold text-foreground mb-4">Products to List</h2>
+                <h2 className="text-xl font-bold text-foreground mb-4">
+                  {t('marketplace.sell.productsToList')}
+                </h2>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Select existing products to list in this marketplace (you can add more later).
+                  {t('marketplace.sell.productsToListDesc')}
                 </p>
 
                 {userProducts.length > 0 ? (
@@ -273,7 +283,7 @@ export default function MarketplaceSellPage() {
                                 clipRule="evenodd"
                               />
                             </svg>
-                            Selected
+                            {t('marketplace.sell.selected')}
                           </div>
                         )}
                       </button>
@@ -281,11 +291,9 @@ export default function MarketplaceSellPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">
-                      You don&apos;t have any products yet.
-                    </p>
+                    <p className="text-muted-foreground mb-4">{t('marketplace.sell.noProducts')}</p>
                     <Link href="/listing/new">
-                      <Button variant="outline">Create Your First Product</Button>
+                      <Button variant="outline">{t('marketplace.sell.createFirstProduct')}</Button>
                     </Link>
                   </div>
                 )}
@@ -296,19 +304,25 @@ export default function MarketplaceSellPage() {
             <div className="space-y-6">
               {/* Summary Card */}
               <Card className="sticky top-4">
-                <h3 className="font-semibold text-foreground mb-4">Application Summary</h3>
+                <h3 className="font-semibold text-foreground mb-4">
+                  {t('marketplace.sell.applicationSummary')}
+                </h3>
 
                 <VStack gap="md" className="mb-6">
                   <HStack justify="between">
-                    <span className="text-muted-foreground">Products Selected</span>
+                    <span className="text-muted-foreground">
+                      {t('marketplace.sell.productsSelected')}
+                    </span>
                     <span className="font-medium text-foreground">{selectedProducts.length}</span>
                   </HStack>
                   <HStack justify="between">
-                    <span className="text-muted-foreground">Profile Complete</span>
+                    <span className="text-muted-foreground">
+                      {t('marketplace.sell.profileComplete')}
+                    </span>
                     <span
                       className={`font-medium ${profile.bio ? 'text-success' : 'text-warning'}`}
                     >
-                      {profile.bio ? 'Yes' : 'No'}
+                      {profile.bio ? t('common.yes') : t('common.no')}
                     </span>
                   </HStack>
                 </VStack>
@@ -318,35 +332,37 @@ export default function MarketplaceSellPage() {
                   onClick={handleApply}
                   disabled={isApplying || !profile.bio}
                 >
-                  {isApplying ? 'Submitting...' : 'Submit Application'}
+                  {isApplying ? t('common.submitting') : t('marketplace.sell.submitApplication')}
                 </Button>
 
                 <p className="text-xs text-muted-foreground mt-4 text-center">
-                  By applying, you agree to the marketplace&apos;s terms and conditions.
+                  {t('marketplace.sell.termsAgreement')}
                 </p>
               </Card>
 
               {/* Info Card */}
               <Card>
-                <h3 className="font-semibold text-foreground mb-4">What Happens Next?</h3>
+                <h3 className="font-semibold text-foreground mb-4">
+                  {t('marketplace.sell.whatHappensNext')}
+                </h3>
                 <VStack gap="md" className="text-sm text-muted-foreground">
                   <HStack gap="sm" align="start">
                     <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       1
                     </span>
-                    <span>Your application will be reviewed by marketplace admins</span>
+                    <span>{t('marketplace.sell.step1')}</span>
                   </HStack>
                   <HStack gap="sm" align="start">
                     <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       2
                     </span>
-                    <span>You&apos;ll receive a notification when approved</span>
+                    <span>{t('marketplace.sell.step2')}</span>
                   </HStack>
                   <HStack gap="sm" align="start">
                     <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
                       3
                     </span>
-                    <span>Start listing and selling your products!</span>
+                    <span>{t('marketplace.sell.step3')}</span>
                   </HStack>
                 </VStack>
               </Card>
