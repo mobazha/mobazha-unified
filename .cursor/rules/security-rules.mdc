@@ -1,6 +1,9 @@
 ---
-description: 安全开发硬性规则 — 涉及资金、加密、用户数据的代码必须遵循
-alwaysApply: true
+description: 安全开发硬性规则 — 涉及资金、加密、用户数据的前端代码必须遵循
+alwaysApply: false
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
 ---
 
 # 安全开发规则

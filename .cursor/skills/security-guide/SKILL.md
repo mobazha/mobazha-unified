@@ -180,7 +180,62 @@ await walletApi.restoreWallet(mnemonic); // 立即使用，不存储
 | URL       | `new URL()` + 协议白名单                                  |
 | 搜索输入  | 长度限制 + 特殊字符转义                                   |
 
+## 六、后端安全（Go / Solidity）
+
+### 6.1 Go 后端安全（mobazha_hosting / mobazha3.0 / mobazha.info）
+
+```go
+// ❌ SQL 注入风险
+query := fmt.Sprintf("SELECT * FROM users WHERE name = '%s'", userInput)
+
+// ✅ 参数化查询
+query := "SELECT * FROM users WHERE name = $1"
+db.Query(query, userInput)
+```
+
+```go
+// ❌ 日志泄露敏感数据
+log.Printf("User mnemonic: %s, token: %s", mnemonic, token)
+
+// ✅ 日志脱敏
+log.Printf("User authenticated: peerID=%s", peerID)
+```
+
+**Go 后端安全要点**：
+
+- 使用参数化查询或 SQLC（mobazha.info）防止 SQL 注入
+- JWT 中间件验证所有认证路由（mobazha_hosting `api/gateway.go`）
+- 日志禁止输出：私钥、助记词、JWT token、用户密码
+- 文件路径操作使用 `filepath.Clean()` 防止路径遍历
+- HTTP handler 必须设置合理的 `MaxBytesReader` 限制请求体大小
+
+### 6.2 智能合约安全（bsc-smart-contracts）
+
+```solidity
+// ❌ 重入攻击风险
+function withdraw(uint amount) external {
+    payable(msg.sender).transfer(amount);  // 外部调用在状态变更前
+    balances[msg.sender] -= amount;
+}
+
+// ✅ Checks-Effects-Interactions 模式
+function withdraw(uint amount) external nonReentrant {
+    require(balances[msg.sender] >= amount, "Insufficient");
+    balances[msg.sender] -= amount;  // 先变更状态
+    payable(msg.sender).transfer(amount);  // 后外部调用
+}
+```
+
+**合约安全要点**：
+
+- 使用 OpenZeppelin `ReentrancyGuard` 防止重入攻击
+- 所有数学运算使用 Solidity 0.8+ 内置溢出检查
+- Escrow 合约安全规范见 `bsc-smart-contracts/contracts/escrow/EscrowSpec.md`
+- 部署前必须通过完整测试套件：`npx hardhat test`
+
 ## 安全审查清单
+
+### 前端
 
 - [ ] 用户输入的 HTML 是否经过 `sanitizeHtml()` ？
 - [ ] 金额计算是否使用 BigNumber？
@@ -189,7 +244,21 @@ await walletApi.restoreWallet(mnemonic); // 立即使用，不存储
 - [ ] 合约调用是否有 try/catch？
 - [ ] 钱包操作前是否检查了连接状态和链 ID？
 
+### 后端 (Go)
+
+- [ ] 数据库查询是否使用参数化查询？
+- [ ] 认证路由是否经过 JWT 中间件？
+- [ ] 日志是否已脱敏（无密钥、token 泄露）？
+- [ ] 文件路径是否使用 `filepath.Clean()` 处理？
+
+### 智能合约
+
+- [ ] 是否使用 Checks-Effects-Interactions 模式？
+- [ ] 是否继承 ReentrancyGuard？
+- [ ] 状态变更函数是否 emit 事件？
+
 ## 相关功能文档
 
 - **[钱包集成](../../docs/features/wallet-integration.md)** — useWallet 安全注意事项、合约交互模式
 - **[账号绑定](../../docs/features/account-binding.md)** — OAuth 多账号绑定、Casdoor 认证流程
+- **各后端项目有独立的安全 rules**（`.cursor/rules/` 目录下）

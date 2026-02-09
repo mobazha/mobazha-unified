@@ -1,6 +1,11 @@
 ---
 description: 代码复用与架构一致性规则 - 确保跨平台统一客户端的代码质量
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "packages/**/*.ts"
+  - "packages/**/*.tsx"
+  - "apps/**/*.ts"
+  - "apps/**/*.tsx"
 ---
 
 # 代码复用与架构一致性规则

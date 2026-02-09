@@ -1,6 +1,11 @@
 ---
-description: 迁移开发规则 - 始终应用于迁移相关工作
-alwaysApply: true
+description: 迁移开发规则 - 创建或修改 mobazha-unified 前端代码时应用
+alwaysApply: false
+globs:
+  - "packages/**/*.ts"
+  - "packages/**/*.tsx"
+  - "apps/**/*.ts"
+  - "apps/**/*.tsx"
 ---
 
 # 迁移开发规则
