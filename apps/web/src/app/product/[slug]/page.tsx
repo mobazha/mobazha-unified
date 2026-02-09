@@ -14,7 +14,7 @@ function getStockQuantity(product: Product): number {
   if (!product.item.skus || product.item.skus.length === 0) {
     return 999; // 默认无限库存
   }
-  return product.item.skus.reduce((sum, sku) => sum + (sku.quantity || 0), 0);
+  return product.item.skus.reduce((sum, sku) => sum + (Number(sku.quantity) || 0), 0);
 }
 
 export default function ProductPage() {
