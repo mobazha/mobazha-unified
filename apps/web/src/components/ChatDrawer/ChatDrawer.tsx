@@ -413,6 +413,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         side="right"
         className={`${drawerWidth} p-0 transition-all duration-300 flex flex-col shadow-2xl`}
         showCloseButton={false}
+        data-testid="chat-system"
       >
         {/* Header */}
         <SheetHeader className="flex-shrink-0 px-5 py-4 bg-gradient-to-r from-card via-card to-card/95 backdrop-blur-sm relative">
@@ -506,6 +507,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 size="sm"
                 onClick={onNewChat}
                 className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-200"
+                data-testid="chat-new-btn"
               >
                 <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -547,6 +549,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 size="sm"
                 onClick={closeDrawer}
                 className="h-9 w-9 p-0 rounded-xl hover:bg-error/15 text-muted-foreground hover:text-error transition-all duration-200"
+                data-testid="chat-close-btn"
               >
                 <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path

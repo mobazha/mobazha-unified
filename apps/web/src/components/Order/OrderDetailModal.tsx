@@ -98,7 +98,7 @@ function OrderDetailError({ error, onRetry }: { error: string; onRetry: () => vo
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2">{t('order.loadOrderFailed')}</h3>
       <p className="text-sm text-muted-foreground mb-4">{error}</p>
-      <Button onClick={onRetry} size="sm">
+      <Button data-testid="order-modal-retry" onClick={onRetry} size="sm">
         {t('order.tryAgain')}
       </Button>
     </div>
@@ -155,6 +155,7 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
         </p>
         <nav className="space-y-1">
           <button
+            data-testid="order-modal-tab-summary"
             onClick={() => onTabChange('summary')}
             className={cn(
               'w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left',
@@ -174,6 +175,7 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
             {t('order.tabs.summary')}
           </button>
           <button
+            data-testid="order-modal-tab-discussion"
             onClick={() => onTabChange('discussion')}
             className={cn(
               'w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left',
@@ -186,6 +188,7 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
             {t('order.tabs.discussion')}
           </button>
           <button
+            data-testid="order-modal-tab-contract"
             onClick={() => onTabChange('contract')}
             className={cn(
               'w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left',
@@ -336,6 +339,7 @@ export const OrderDetailModal = memo(function OrderDetailModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
+        data-testid="order-detail-modal"
         className={cn('max-w-5xl max-h-[90vh] p-0 overflow-hidden flex flex-col', className)}
       >
         {/* Header */}

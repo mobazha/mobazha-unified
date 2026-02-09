@@ -162,7 +162,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
   };
 
   return (
-    <Card className="overflow-hidden active:scale-[0.995] transition-transform">
+    <Card
+      className="overflow-hidden active:scale-[0.995] transition-transform"
+      data-testid="order-card"
+    >
       {/* Header */}
       <div className="p-3 sm:p-4 bg-muted/50 border-b border-border">
         <HStack justify="between" align="center" className="flex-wrap gap-2">
@@ -204,6 +207,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             <Link
               href={`/store/${order.vendor.id}`}
               className="font-medium text-sm sm:text-base text-foreground hover:text-primary"
+              data-testid="order-card-peer-link"
             >
               {order.vendor.name}
             </Link>
@@ -266,6 +270,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
                 size="sm"
                 onClick={onContact}
                 className="whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+                data-testid="order-card-contact"
               >
                 <svg
                   className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
@@ -286,6 +291,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
                 size="sm"
                 onClick={onViewDetails}
                 className="whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+                data-testid="order-card-details"
               >
                 Details
               </Button>

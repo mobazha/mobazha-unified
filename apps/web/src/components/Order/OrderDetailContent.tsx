@@ -239,6 +239,7 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
         size="sm"
         className="w-full border-destructive text-destructive hover:bg-destructive/10 font-medium"
         onClick={onOpenDispute}
+        data-testid="order-detail-open-dispute"
       >
         {t('order.openDispute')}
       </Button>
@@ -604,7 +605,10 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   }, [coreOrder]);
 
   return (
-    <div className={cn('flex flex-col overflow-x-hidden', className)}>
+    <div
+      className={cn('flex flex-col overflow-x-hidden', className)}
+      data-testid="order-detail-content"
+    >
       {/* Scrollable Content */}
       <div
         className={cn(
@@ -628,6 +632,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               navigator.clipboard.writeText(order.orderId);
             }}
             className="text-primary hover:text-primary/80 text-xs font-medium flex items-center gap-1 touch-feedback flex-shrink-0"
+            data-testid="order-detail-copy-id"
           >
             <Copy className="w-3 h-3" />
             <span className="hidden sm:inline">{t('common.copy')}</span>
@@ -1391,6 +1396,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 onClick={handleConfirmReceipt}
                 disabled={isLoading}
                 className="touch-feedback"
+                data-testid="order-detail-confirm-receipt"
               >
                 {isLoading ? t('common.processing') : t('order.actions.complete')}
               </Button>
@@ -1405,6 +1411,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 onClick={() => setShowRefundDialog(true)}
                 disabled={isLoading}
                 className="touch-feedback"
+                data-testid="order-detail-refund"
               >
                 {t('order.refundOrder')}
               </Button>

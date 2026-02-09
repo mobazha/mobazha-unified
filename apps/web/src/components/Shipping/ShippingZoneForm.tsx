@@ -161,7 +161,7 @@ export function ShippingZoneForm({
     rates.every(r => r.price !== undefined && r.price !== '');
 
   return (
-    <VStack gap="lg" className={hideHeader ? '' : 'p-4'}>
+    <VStack gap="lg" className={hideHeader ? '' : 'p-4'} data-testid="shipping-zone-form">
       {/* 头部 - 当在 Dialog 中使用时隐藏（由 DialogHeader 提供） */}
       {!hideHeader && (
         <h3 className="text-lg font-semibold">
@@ -363,7 +363,11 @@ export function ShippingZoneForm({
         <Button variant="outline" onClick={onCancel} disabled={isSaving}>
           {t('common.cancel')}
         </Button>
-        <Button onClick={handleSave} disabled={isSaving || !isValid}>
+        <Button
+          onClick={handleSave}
+          disabled={isSaving || !isValid}
+          data-testid="shipping-form-save"
+        >
           {isSaving ? t('common.saving') : t('common.save')}
         </Button>
       </HStack>

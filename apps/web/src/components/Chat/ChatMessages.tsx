@@ -605,6 +605,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               onKeyPress={handleKeyPress}
               placeholder={t('chat.typeMessage')}
               className="w-full px-5 py-3 pr-12 text-[14px] bg-muted/40 rounded-2xl border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-muted/60 text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 shadow-sm focus:shadow-md"
+              data-testid="chat-message-input"
             />
             {/* Emoji button inside input */}
             <button className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all duration-200">
@@ -623,6 +624,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             onClick={handleSend}
             disabled={!inputValue.trim()}
             className="rounded-2xl w-11 h-11 p-0 flex items-center justify-center bg-gradient-to-br from-primary via-primary to-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:shadow-none disabled:scale-100 disabled:from-muted disabled:to-muted disabled:text-muted-foreground"
+            data-testid="chat-send-btn"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

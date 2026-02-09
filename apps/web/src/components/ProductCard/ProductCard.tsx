@@ -195,6 +195,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card
+      data-testid="product-card"
       className={cn(
         'overflow-hidden group cursor-pointer transition-all duration-200',
         'hover:shadow-lg hover:-translate-y-0.5',
@@ -324,6 +325,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div className="absolute bottom-2 left-2 z-20 flex gap-1.5 animate-in fade-in duration-150">
             {onEdit && (
               <button
+                data-testid="product-card-edit"
                 onClick={handleEditClick}
                 className={cn(
                   'w-8 h-8 rounded-md flex items-center justify-center',
@@ -352,6 +354,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
             {onDelete && (
               <button
+                data-testid="product-card-delete"
                 onClick={handleDeleteClick}
                 className={cn(
                   'w-8 h-8 rounded-md flex items-center justify-center',
