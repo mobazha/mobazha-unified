@@ -301,7 +301,6 @@ export {
   createEmptyLocationGroup,
   createEmptyShippingProfile,
   // 新版辅助函数
-  isUsingLocationGroups,
   getAllZones,
   getAllRates,
   getPriceRange,

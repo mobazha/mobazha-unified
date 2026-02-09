@@ -2205,7 +2205,6 @@ export const en: TranslationResource = {
       variants: 'Variants',
       policies: 'Policies',
       coupons: 'Coupons',
-      files: 'Files',
       other: 'Other Settings',
     },
 

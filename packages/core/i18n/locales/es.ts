@@ -1109,6 +1109,7 @@ export const es: TranslationResource = {
       variants: 'Variantes',
       policies: 'Políticas',
       coupons: 'Cupones',
+      other: 'Otros ajustes',
     },
     basicInfo: 'Información básica',
     title: 'Título',

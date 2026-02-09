@@ -1108,6 +1108,7 @@ export const ru: TranslationResource = {
       variants: 'Варианты',
       policies: 'Политики',
       coupons: 'Купоны',
+      other: 'Прочие настройки',
     },
     basicInfo: 'Основная информация',
     title: 'Заголовок',

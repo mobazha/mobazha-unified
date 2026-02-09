@@ -1108,6 +1108,7 @@ export const ko: TranslationResource = {
       variants: '변형',
       policies: '정책',
       coupons: '쿠폰',
+      other: '기타 설정',
     },
     basicInfo: '기본 정보',
     title: '제목',

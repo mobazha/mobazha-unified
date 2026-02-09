@@ -2199,7 +2199,7 @@ const ShippingContent: React.FC = () => {
       if (!isUsingProfiles) {
         const newProfile = createEmptyProfile(true);
         newProfile.name = t('shipping.defaultProfileName');
-        newProfile.zones = [zone];
+        newProfile.locationGroups[0].zones = [zone];
         await addProfile(newProfile);
       } else {
         setEditingZone(zone);
@@ -2240,24 +2240,13 @@ const ShippingContent: React.FC = () => {
       if (!profile) return false;
 
       if (editingZone) {
-        // 编辑：在直接 zones 和 LocationGroups 中查找并更新
-        let found = false;
-        const updatedZones = (profile.zones || []).map(z => {
-          if (z.id === editingZone.id) {
-            found = true;
-            return zone;
-          }
-          return z;
-        });
-        const updatedLocationGroups = found
-          ? profile.locationGroups
-          : profile.locationGroups?.map(lg => ({
-              ...lg,
-              zones: lg.zones?.map(z => (z.id === editingZone.id ? zone : z)),
-            }));
+        // 编辑：在 LocationGroups 中查找并更新
+        const updatedLocationGroups = profile.locationGroups.map(lg => ({
+          ...lg,
+          zones: lg.zones?.map(z => (z.id === editingZone.id ? zone : z)),
+        }));
         const success = await updateProfile(selectedProfileId, {
-          zones: updatedZones,
-          ...(updatedLocationGroups && { locationGroups: updatedLocationGroups }),
+          locationGroups: updatedLocationGroups,
         });
         if (success) {
           setShowZoneForm(false);
@@ -2266,9 +2255,13 @@ const ShippingContent: React.FC = () => {
         }
         return success;
       } else {
-        // 新增：添加到直接 zones
-        const updatedZones = [...(profile.zones || []), zone];
-        const success = await updateProfile(selectedProfileId, { zones: updatedZones });
+        // 新增：添加到第一个 LocationGroup
+        const updatedLocationGroups = profile.locationGroups.map((lg, idx) =>
+          idx === 0 ? { ...lg, zones: [...(lg.zones || []), zone] } : lg
+        );
+        const success = await updateProfile(selectedProfileId, {
+          locationGroups: updatedLocationGroups,
+        });
         if (success) {
           setShowZoneForm(false);
           setEditingZone(null);
@@ -2288,19 +2281,17 @@ const ShippingContent: React.FC = () => {
     if (itemToDelete.type === 'profile') {
       success = await deleteProfile((itemToDelete.item as ShippingProfile).profileId);
     } else if (itemToDelete.type === 'zone') {
-      // 删除配送区域（在直接 zones 和 LocationGroups 中查找）
+      // 删除配送区域（在 LocationGroups 中查找）
       if (selectedProfileId) {
         const profile = profiles.find(p => p.profileId === selectedProfileId);
         if (profile) {
           const zoneToDelete = itemToDelete.item as ShippingZone;
-          const updatedZones = (profile.zones || []).filter(z => z.id !== zoneToDelete.id);
-          const updatedLocationGroups = profile.locationGroups?.map(lg => ({
+          const updatedLocationGroups = profile.locationGroups.map(lg => ({
             ...lg,
             zones: lg.zones?.filter(z => z.id !== zoneToDelete.id),
           }));
           success = await updateProfile(selectedProfileId, {
-            zones: updatedZones,
-            ...(updatedLocationGroups && { locationGroups: updatedLocationGroups }),
+            locationGroups: updatedLocationGroups,
           });
         }
       }

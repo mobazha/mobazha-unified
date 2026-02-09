@@ -2162,7 +2162,6 @@ export const zh: TranslationResource = {
       variants: '变体',
       policies: '政策',
       coupons: '优惠券',
-      files: '文件',
       other: '其他设置',
     },
 

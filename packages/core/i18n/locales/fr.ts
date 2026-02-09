@@ -1112,6 +1112,7 @@ export const fr: TranslationResource = {
       variants: 'Variantes',
       policies: 'Politiques',
       coupons: 'Coupons',
+      other: 'Autres paramètres',
     },
     basicInfo: 'Informations de base',
     title: 'Titre',

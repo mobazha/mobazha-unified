@@ -1109,6 +1109,7 @@ export const ja: TranslationResource = {
       variants: 'バリエーション',
       policies: 'ポリシー',
       coupons: 'クーポン',
+      other: 'その他の設定',
     },
     basicInfo: '基本情報',
     title: 'タイトル',
