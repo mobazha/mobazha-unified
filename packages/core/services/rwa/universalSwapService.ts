@@ -29,13 +29,13 @@ export const TradeMode = {
 export type TradeModeType = (typeof TradeMode)[keyof typeof TradeMode];
 
 // 挂单状态枚举
-export const ListingStatus = {
+export const RwaListingStatus = {
   Active: 0, // 可交易
   SoldOut: 1, // 售罄
   Cancelled: 2, // 已撤销
 } as const;
 
-export type ListingStatusType = (typeof ListingStatus)[keyof typeof ListingStatus];
+export type RwaListingStatusType = (typeof RwaListingStatus)[keyof typeof RwaListingStatus];
 
 // UniversalSwap 合约 ABI - 支持 Listing（即时交易）和 Order（确认交易/延迟 Listing）双模式
 // 更新于 2026-01-17：适配延迟 Listing 设计，escrowTimeout 移至 createListing

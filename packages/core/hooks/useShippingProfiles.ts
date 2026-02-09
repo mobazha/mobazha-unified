@@ -12,7 +12,7 @@ import type {
   ShippingLocation,
   ShippingOptionConfig,
 } from '../types';
-import { createEmptyZone, createEmptyRate, generateId } from '../types';
+import { createEmptyZone, createEmptyRate, createEmptyLocationGroup, generateId } from '../types';
 import { toISOCountryCode } from '../utils/countryUtils';
 
 // 特殊地区代码（不需要转换）
@@ -45,7 +45,6 @@ function normalizeZoneRegions(zone: ShippingZone): ShippingZone {
 function normalizeProfileRegions(profile: ShippingProfile): ShippingProfile {
   return {
     ...profile,
-    zones: profile.zones?.map(normalizeZoneRegions),
     locationGroups: profile.locationGroups?.map(lg => ({
       ...lg,
       zones: lg.zones?.map(normalizeZoneRegions),
@@ -105,7 +104,13 @@ export function createEmptyProfile(isDefault = false): ShippingProfile {
     profileId: generateUUID(),
     name: '',
     isDefault,
-    zones: [],
+    locationGroups: [
+      {
+        id: generateId(),
+        locationIds: [],
+        zones: [],
+      },
+    ],
   };
 }
 
@@ -302,9 +307,15 @@ export function useShippingProfiles() {
         id: zone.id || generateId(),
       };
 
-      return updateProfile(profileId, {
-        zones: [...(profile.zones || []), newZone],
-      });
+      // 添加到第一个 LocationGroup（单仓库默认模式）
+      const locationGroups =
+        profile.locationGroups.length > 0
+          ? profile.locationGroups.map((lg, idx) =>
+              idx === 0 ? { ...lg, zones: [...(lg.zones || []), newZone] } : lg
+            )
+          : [{ ...createEmptyLocationGroup(), zones: [newZone] }];
+
+      return updateProfile(profileId, { locationGroups });
     },
     [profiles, updateProfile]
   );
@@ -314,17 +325,12 @@ export function useShippingProfiles() {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
-      // 在直接 zones 和 LocationGroups 中查找并更新
-      const zones = profile.zones?.map(z => (z.id === zoneId ? { ...z, ...updates } : z)) || [];
-      const locationGroups = profile.locationGroups?.map(lg => ({
+      const locationGroups = profile.locationGroups.map(lg => ({
         ...lg,
         zones: lg.zones?.map(z => (z.id === zoneId ? { ...z, ...updates } : z)),
       }));
 
-      return updateProfile(profileId, {
-        zones,
-        ...(locationGroups && { locationGroups }),
-      });
+      return updateProfile(profileId, { locationGroups });
     },
     [profiles, updateProfile]
   );
@@ -334,17 +340,12 @@ export function useShippingProfiles() {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
-      // 在直接 zones 和 LocationGroups 中查找并删除
-      const zones = profile.zones?.filter(z => z.id !== zoneId) || [];
-      const locationGroups = profile.locationGroups?.map(lg => ({
+      const locationGroups = profile.locationGroups.map(lg => ({
         ...lg,
         zones: lg.zones?.filter(z => z.id !== zoneId),
       }));
 
-      return updateProfile(profileId, {
-        zones,
-        ...(locationGroups && { locationGroups }),
-      });
+      return updateProfile(profileId, { locationGroups });
     },
     [profiles, updateProfile]
   );
@@ -368,16 +369,12 @@ export function useShippingProfiles() {
         rates: [...z.rates, { ...rate, id: rate.id || generateId() }],
       });
 
-      const zones = mapZones(profile.zones, zoneId, addRateToZone);
-      const locationGroups = profile.locationGroups?.map(lg => ({
+      const locationGroups = profile.locationGroups.map(lg => ({
         ...lg,
         zones: mapZones(lg.zones, zoneId, addRateToZone),
       }));
 
-      return updateProfile(profileId, {
-        zones,
-        ...(locationGroups && { locationGroups }),
-      });
+      return updateProfile(profileId, { locationGroups });
     },
     [profiles, updateProfile]
   );
@@ -392,16 +389,12 @@ export function useShippingProfiles() {
         rates: z.rates.map(r => (r.id === rateId ? { ...r, ...updates } : r)),
       });
 
-      const zones = mapZones(profile.zones, zoneId, updateRateInZone);
-      const locationGroups = profile.locationGroups?.map(lg => ({
+      const locationGroups = profile.locationGroups.map(lg => ({
         ...lg,
         zones: mapZones(lg.zones, zoneId, updateRateInZone),
       }));
 
-      return updateProfile(profileId, {
-        zones,
-        ...(locationGroups && { locationGroups }),
-      });
+      return updateProfile(profileId, { locationGroups });
     },
     [profiles, updateProfile]
   );
@@ -416,16 +409,12 @@ export function useShippingProfiles() {
         rates: z.rates.filter(r => r.id !== rateId),
       });
 
-      const zones = mapZones(profile.zones, zoneId, deleteRateFromZone);
-      const locationGroups = profile.locationGroups?.map(lg => ({
+      const locationGroups = profile.locationGroups.map(lg => ({
         ...lg,
         zones: mapZones(lg.zones, zoneId, deleteRateFromZone),
       }));
 
-      return updateProfile(profileId, {
-        zones,
-        ...(locationGroups && { locationGroups }),
-      });
+      return updateProfile(profileId, { locationGroups });
     },
     [profiles, updateProfile]
   );
@@ -502,11 +491,15 @@ export function useShippingProfiles() {
 
       const existingDefault = profiles.find(p => p.isDefault) || profiles[0];
       if (existingDefault) {
-        // 将迁移的 zones 合并到现有空 profile
+        // 将迁移的 zones 合并到现有 profile 的第一个 LocationGroup
+        const existingLG = existingDefault.locationGroups?.[0];
+        const mergedZones = [...(existingLG?.zones || []), ...zones];
         migratedProfile = {
           ...existingDefault,
           name: existingDefault.name || profileName,
-          zones: [...(existingDefault.zones || []), ...zones],
+          locationGroups: existingDefault.locationGroups.map((lg, idx) =>
+            idx === 0 ? { ...lg, zones: mergedZones } : lg
+          ),
         };
       } else {
         // 创建新 profile
@@ -514,7 +507,13 @@ export function useShippingProfiles() {
           profileId: generateUUID(),
           name: profileName,
           isDefault: true,
-          zones,
+          locationGroups: [
+            {
+              id: generateId(),
+              locationIds: [],
+              zones,
+            },
+          ],
         };
       }
 

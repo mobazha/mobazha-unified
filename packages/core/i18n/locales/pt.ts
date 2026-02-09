@@ -1108,6 +1108,7 @@ export const pt: TranslationResource = {
       variants: 'Variantes',
       policies: 'Políticas',
       coupons: 'Cupons',
+      other: 'Outras configurações',
     },
     basicInfo: 'Informações básicas',
     title: 'Título',

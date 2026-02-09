@@ -96,9 +96,9 @@ export interface LocationGroup {
 
 /**
  * 配送档案（Shopify 风格）
- * 支持两种模式：
- * - 简化模式（单一发货地点）：使用 zones 字段
- * - 完整模式（多发货地点）：使用 locationGroups 字段
+ * 所有配送区域通过 locationGroups 管理。
+ * 单仓库卖家使用一个默认 LocationGroup（locationIds 为空表示"所有地点"）。
+ * 多仓库卖家使用多个 LocationGroup，每个关联不同发货地点。
  */
 export interface ShippingProfile {
   /** 档案唯一 ID (UUID) */
@@ -107,10 +107,8 @@ export interface ShippingProfile {
   name: string;
   /** 是否为默认档案 */
   isDefault: boolean;
-  /** 配送区域列表（简化模式） */
-  zones?: ShippingZone[];
-  /** 发货地点组列表（完整模式，多仓库） */
-  locationGroups?: LocationGroup[];
+  /** 发货地点组列表（至少一个） */
+  locationGroups: LocationGroup[];
   /** 关联商品数量（只读，由后端计算） */
   listingCount?: number;
   /** 创建时间 */
@@ -177,41 +175,28 @@ export function createEmptyLocationGroup(locationIds: string[] = []): LocationGr
 
 /**
  * 创建空的配送档案
+ * 默认包含一个空的 LocationGroup（单仓库模式）
  */
 export function createEmptyShippingProfile(isDefault = false): ShippingProfile {
   return {
     profileId: generateId(),
     name: '',
     isDefault,
-    zones: [],
+    locationGroups: [createEmptyLocationGroup()],
   };
 }
 
 // ============== 辅助函数 ==============
 
 /**
- * 检查档案是否使用多仓库模式
- */
-export function isUsingLocationGroups(profile: ShippingProfile): boolean {
-  return (profile.locationGroups?.length ?? 0) > 0;
-}
-
-/**
- * 获取档案的所有区域（合并直接 zones 和 LocationGroups 中的 zones）
+ * 获取档案的所有区域（从所有 LocationGroups 中提取）
  * 与后端 getAllZonesFromProfile 保持一致
  */
 export function getAllZones(profile: ShippingProfile): ShippingZone[] {
   const zones: ShippingZone[] = [];
-  // 先添加直接 zones
-  if (profile.zones?.length) {
-    zones.push(...profile.zones);
-  }
-  // 再添加 LocationGroups 中的 zones
-  if (profile.locationGroups?.length) {
-    for (const lg of profile.locationGroups) {
-      if (lg.zones?.length) {
-        zones.push(...lg.zones);
-      }
+  for (const lg of profile.locationGroups ?? []) {
+    if (lg.zones?.length) {
+      zones.push(...lg.zones);
     }
   }
   return zones;
