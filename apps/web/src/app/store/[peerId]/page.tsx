@@ -681,7 +681,7 @@ export default function StorePage() {
             {displayHeaderHash && (
               <img
                 src={getImageUrl(displayHeaderHash) || ''}
-                alt=""
+                alt={`${store.name || peerId.slice(0, 8)} store header`}
                 className="w-full h-full object-cover"
               />
             )}

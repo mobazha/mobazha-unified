@@ -1439,7 +1439,13 @@ export interface TranslationResource {
     fixedPrice: string;
     worldwide: string;
     free: string;
-    variants: string;
+    variants: {
+      title: string;
+      dashPlaceholder: string;
+      unlimitedPlaceholder: string;
+      barcodePlaceholder: string;
+      weightPlaceholder: string;
+    };
     variantsHelper: string;
     variantsDesc: string;
     addVariant: string;

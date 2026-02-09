@@ -169,7 +169,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
   if (!profile) {
     return (
       <Card className="overflow-hidden">
-        <div className="h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800" />
+        <div className="h-20 bg-gradient-to-br from-muted to-muted/70" />
         <div className="relative px-3 pb-3">
           <div className="-mt-8 mb-2">
             <Avatar name={peerID.slice(0, 8)} size="lg" className="ring-4 ring-background" />
@@ -195,7 +195,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
         {headerUrl && (
           <img
             src={headerUrl}
-            alt=""
+            alt={`${profile.name || peerID.slice(0, 8)} profile header`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         )}

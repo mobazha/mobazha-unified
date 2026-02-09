@@ -627,13 +627,18 @@ export function ProductDetail({
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
+                      aria-label={`View image ${index + 1}`}
                       className={`flex-shrink-0 ${isModal ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
                         selectedImage === index
                           ? 'border-primary ring-2 ring-primary/20'
                           : 'border-transparent hover:border-border'
                       }`}
                     >
-                      <img src={image} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={image}
+                        alt={`${product.item.title} - Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -854,6 +859,7 @@ export function ProductDetail({
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={stock === 0}
+                    aria-label="Decrease quantity"
                     className={cn(
                       'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
                       stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
@@ -867,10 +873,21 @@ export function ProductDetail({
                     max={stock}
                     value={quantity}
                     disabled={stock === 0}
+                    aria-label="Quantity"
                     onChange={e => {
                       const val = parseInt(e.target.value, 10);
                       if (!isNaN(val) && val >= 1) {
                         setQuantity(Math.min(stock, val));
+                      }
+                    }}
+                    onKeyDown={e => {
+                      if (stock === 0) return;
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setQuantity(prev => Math.min(stock, prev + 1));
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setQuantity(prev => Math.max(1, prev - 1));
                       }
                     }}
                     className={cn(
@@ -881,6 +898,7 @@ export function ProductDetail({
                   <button
                     onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                     disabled={stock === 0}
+                    aria-label="Increase quantity"
                     className={cn(
                       'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
                       stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
@@ -1023,7 +1041,7 @@ export function ProductDetail({
               </h2>
               <div
                 className={cn(
-                  'prose prose-slate dark:prose-invert max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80',
+                  'prose dark:prose-invert max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80',
                   isModal ? 'prose-sm text-sm' : 'prose-sm sm:prose text-sm sm:text-base'
                 )}
                 dangerouslySetInnerHTML={{
@@ -1265,6 +1283,7 @@ export function ProductDetail({
           <button
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
             onClick={() => setIsImagePreviewOpen(false)}
+            aria-label="Close image preview"
           >
             <svg
               className="w-6 h-6 text-white"
@@ -1304,6 +1323,7 @@ export function ProductDetail({
                   e.stopPropagation();
                   setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
                 }}
+                aria-label="Previous image"
               >
                 <svg
                   className="w-6 h-6 text-white"
@@ -1325,6 +1345,7 @@ export function ProductDetail({
                   e.stopPropagation();
                   setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
                 }}
+                aria-label="Next image"
               >
                 <svg
                   className="w-6 h-6 text-white"
@@ -1353,13 +1374,18 @@ export function ProductDetail({
                     e.stopPropagation();
                     setSelectedImage(index);
                   }}
+                  aria-label={`View image ${index + 1}`}
                   className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${
                     selectedImage === index
                       ? 'border-white'
                       : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={image} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={image}
+                    alt={`${product.item.title} - Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>

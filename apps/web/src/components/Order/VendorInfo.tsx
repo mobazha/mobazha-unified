@@ -67,7 +67,7 @@ export const VendorInfo: React.FC<VendorInfoProps> = ({
   const displayName = party.name || party.handle || `${party.peerID.slice(0, 8)}...`;
 
   return (
-    <Card className={`p-4 sm:p-5 ${className}`}>
+    <Card className={`p-3 sm:p-4 ${className}`}>
       <HStack justify="between" align="start">
         <HStack gap="sm" align="start">
           <Avatar src={party.avatar} name={displayName} size="md" className="w-12 h-12" />

@@ -703,7 +703,7 @@ export default function EditListingPage() {
                   }}
                 >
                   <h2 className="text-lg font-semibold text-foreground mb-1">
-                    {t('listing.variants')}
+                    {t('listing.variants.title')}
                   </h2>
                   <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
 

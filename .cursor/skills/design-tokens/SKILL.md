@@ -165,6 +165,32 @@ Mobazha 项目的视觉设计基础，统一色彩、排版、间距、圆角、
 | Desktop | >= 1024px | `lg:`          | 小型笔记本     |
 | Large   | >= 1440px | `xl:` / `2xl:` | 大屏显示器     |
 
+## 八、品牌区域渐变变量
+
+Hero 等品牌展示区域使用专用 CSS 变量，每套主题有不同的配色：
+
+| 变量                      | 用途               | Classic  | Crypto      | Business | Cyberpunk  | Nature    | Luxury     |
+| ------------------------- | ------------------ | -------- | ----------- | -------- | ---------- | --------- | ---------- |
+| `--hero-gradient-from`    | 渐变起始（深色）   | slate    | black       | slate    | zinc       | stone     | black      |
+| `--hero-gradient-via`     | 渐变中间（主题色） | cyan     | green       | blue     | purple     | green     | amber      |
+| `--hero-gradient-to`      | 渐变结束（深色）   | slate    | black       | slate    | zinc       | stone     | black      |
+| `--hero-accent`           | 主强调色           | cyan-400 | green-400   | blue-400 | pink-400   | lime-400  | amber-400  |
+| `--hero-accent-secondary` | 辅强调色           | teal-400 | emerald-400 | sky-400  | violet-400 | green-400 | yellow-400 |
+| `--hero-glow`             | 光晕/阴影色        | cyan-500 | green-500   | blue-500 | pink-500   | lime-500  | amber-500  |
+
+使用示例：
+
+```tsx
+// 渐变背景
+<section className="bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
+
+// 渐变文字
+<span className="bg-gradient-to-r from-[var(--hero-accent)] to-[var(--hero-accent-secondary)] bg-clip-text text-transparent">
+
+// 光晕效果
+<div className="bg-[var(--hero-glow)]/20 rounded-full blur-3xl" />
+```
+
 ## 快速检查清单
 
 - [ ] 颜色是否使用语义变量（而非硬编码）？

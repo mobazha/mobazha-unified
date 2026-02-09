@@ -344,7 +344,11 @@ export default function MarketplaceAdminPage() {
                 <Card>
                   <HStack justify="between" align="center" className="mb-6">
                     <h2 className="text-xl font-bold text-foreground">Members</h2>
-                    <Input placeholder="Search members..." className="w-64" />
+                    <Input
+                      placeholder={t('marketplace.admin.searchPlaceholder')}
+                      aria-label="Search members"
+                      className="w-64"
+                    />
                   </HStack>
 
                   <div className="overflow-x-auto">

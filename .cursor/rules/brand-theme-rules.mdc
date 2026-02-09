@@ -1,0 +1,64 @@
+---
+description: 品牌区域主题化规则 — Hero、Landing Page 等品牌展示区域必须使用主题变量
+globs:
+  - "apps/web/src/components/Hero/**"
+  - "apps/web/src/app/page.tsx"
+  - "apps/web/src/components/Landing/**"
+---
+
+# 品牌区域主题化规则
+
+## 核心原则
+
+品牌展示区域（Hero、Landing Page、营销区块）的**装饰性/氛围性色彩必须跟随主题**。品牌的一致性来自布局、排版、动效，而非固定的某一个颜色。
+
+## 严格要求
+
+### 渐变背景
+```tsx
+// ❌ 禁止硬编码渐变
+<section className="bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900">
+
+// ✅ 使用 --hero-* CSS 变量
+<section className="bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
+```
+
+### 强调色/光晕
+```tsx
+// ❌ 禁止
+<div className="bg-emerald-500/20 rounded-full blur-3xl" />
+<span className="text-emerald-300">标签</span>
+
+// ✅ 使用变量
+<div className="bg-[var(--hero-glow)]/20 rounded-full blur-3xl" />
+<span className="text-[var(--hero-accent)]">标签</span>
+```
+
+### 渐变文字
+```tsx
+// ❌ 禁止
+<span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+
+// ✅ 使用变量
+<span className="bg-gradient-to-r from-[var(--hero-accent)] to-[var(--hero-accent-secondary)] bg-clip-text text-transparent">
+```
+
+## 可用 CSS 变量
+
+| 变量 | 用途 |
+|------|------|
+| `--hero-gradient-from` | 渐变起始色（通常为深色） |
+| `--hero-gradient-via` | 渐变中间色（主题特色色） |
+| `--hero-gradient-to` | 渐变结束色（通常为深色） |
+| `--hero-accent` | 主强调色（徽章、图标、渐变文字起始） |
+| `--hero-accent-secondary` | 辅强调色（渐变文字结束） |
+| `--hero-glow` | 光晕/阴影色 |
+
+每套主题在 `globals.css` 中定义了不同的值，无需手动处理主题切换。
+
+## 允许的例外
+
+- Logo SVG 图形：可使用固定品牌色
+- `text-white` / `text-white/*`：深色背景上的文字
+- `bg-white/*`：毛玻璃效果（`bg-white/10 backdrop-blur-sm`）
+- `border-white/*`：深色背景上的分隔线

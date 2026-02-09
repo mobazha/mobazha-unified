@@ -129,7 +129,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
           type="text"
           value={shipper}
           onChange={e => setShipper(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
           placeholder={t('order.fulfill.carrierPlaceholder')}
         />
       </div>
@@ -141,7 +141,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
           type="text"
           value={trackingNumber}
           onChange={e => setTrackingNumber(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
           placeholder={t('order.fulfill.trackingPlaceholder')}
         />
       </div>
@@ -158,7 +158,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
           type="url"
           value={fileUrl}
           onChange={e => setFileUrl(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
           placeholder={t('order.fulfill.fileUrlPlaceholder')}
         />
       </div>
@@ -170,7 +170,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
           type="text"
           value={filePassword}
           onChange={e => setFilePassword(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
           placeholder={t('order.fulfill.passwordPlaceholder')}
         />
       </div>
@@ -186,7 +186,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
         type="text"
         value={transactionID}
         onChange={e => setTransactionID(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-mono"
+        className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm font-mono"
         placeholder={t('order.fulfill.transactionPlaceholder')}
       />
       <p className="text-xs text-muted-foreground mt-1.5">{t('order.fulfill.transactionHint')}</p>
@@ -232,7 +232,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
               value={note}
               onChange={e => setNote(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm resize-none"
               placeholder={t('order.fulfill.notePlaceholder')}
             />
           </div>

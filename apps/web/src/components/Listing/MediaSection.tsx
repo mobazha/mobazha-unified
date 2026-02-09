@@ -403,7 +403,7 @@ export function MediaSection({
               <Input
                 value={newVideoLink}
                 onChange={e => setNewVideoLink(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder={t('listing.videoUrlPlaceholder')}
                 className="flex-1"
               />
               <Button

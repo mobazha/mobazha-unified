@@ -13,7 +13,7 @@ interface PageTransitionProps {
  */
 export function FadeIn({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in fade-in duration-300', className)}>
+    <div className={cn('animate-in fade-in duration-300 motion-reduce:animate-none', className)}>
       {children}
     </div>
   );
@@ -24,7 +24,12 @@ export function FadeIn({ children, className }: PageTransitionProps) {
  */
 export function SlideInUp({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in slide-in-from-bottom-4 fade-in duration-300', className)}>
+    <div
+      className={cn(
+        'animate-in slide-in-from-bottom-4 fade-in duration-300 motion-reduce:animate-none',
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -35,7 +40,12 @@ export function SlideInUp({ children, className }: PageTransitionProps) {
  */
 export function SlideInDown({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in slide-in-from-top-4 fade-in duration-300', className)}>
+    <div
+      className={cn(
+        'animate-in slide-in-from-top-4 fade-in duration-300 motion-reduce:animate-none',
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -46,7 +56,12 @@ export function SlideInDown({ children, className }: PageTransitionProps) {
  */
 export function SlideInLeft({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in slide-in-from-right-4 fade-in duration-300', className)}>
+    <div
+      className={cn(
+        'animate-in slide-in-from-right-4 fade-in duration-300 motion-reduce:animate-none',
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -57,7 +72,12 @@ export function SlideInLeft({ children, className }: PageTransitionProps) {
  */
 export function SlideInRight({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in slide-in-from-left-4 fade-in duration-300', className)}>
+    <div
+      className={cn(
+        'animate-in slide-in-from-left-4 fade-in duration-300 motion-reduce:animate-none',
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -68,7 +88,12 @@ export function SlideInRight({ children, className }: PageTransitionProps) {
  */
 export function ZoomIn({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in zoom-in-95 fade-in duration-300', className)}>
+    <div
+      className={cn(
+        'animate-in zoom-in-95 fade-in duration-300 motion-reduce:animate-none',
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -95,7 +120,10 @@ export function StaggeredList({
       {children.map((child, index) => (
         <div
           key={index}
-          className={cn('animate-in fade-in slide-in-from-bottom-2', itemClassName)}
+          className={cn(
+            'animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none',
+            itemClassName
+          )}
           style={{ animationDelay: `${index * staggerDelay}ms`, animationFillMode: 'both' }}
         >
           {child}
@@ -125,11 +153,7 @@ export function LoadingTransition({
     return <div className={className}>{skeleton}</div>;
   }
 
-  return (
-    <FadeIn className={className}>
-      {children}
-    </FadeIn>
-  );
+  return <FadeIn className={className}>{children}</FadeIn>;
 }
 
 /**
@@ -137,9 +161,13 @@ export function LoadingTransition({
  */
 export function LazyReveal({ children, className }: PageTransitionProps) {
   return (
-    <div className={cn('animate-in fade-in slide-in-from-bottom-4 duration-500', className)}>
+    <div
+      className={cn(
+        'animate-in fade-in slide-in-from-bottom-4 duration-500 motion-reduce:animate-none',
+        className
+      )}
+    >
       {children}
     </div>
   );
 }
-

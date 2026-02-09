@@ -117,6 +117,7 @@ export const Header: React.FC = () => {
                   size="icon"
                   className="hover:bg-primary/10 hover:text-primary transition-colors relative"
                   onClick={openChatDrawer}
+                  aria-label="Open messages"
                 >
                   <MessageCircle className="h-5 w-5" />
                   {totalUnread > 0 && (
@@ -132,6 +133,7 @@ export const Header: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     className="hover:bg-primary/10 hover:text-primary transition-colors"
+                    aria-label="View shopping cart"
                   >
                     <ShoppingCart className="h-5 w-5" />
                   </Button>
@@ -153,7 +155,10 @@ export const Header: React.FC = () => {
             ) : isAuthenticated && profile ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-8 w-8 p-0 hover:opacity-80 transition-opacity focus:outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-full">
+                  <button
+                    className="h-8 w-8 p-0 hover:opacity-80 transition-opacity focus:outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-full"
+                    aria-label="Open user menu"
+                  >
                     <Avatar
                       src={getImageUrl(profile.avatarHashes?.small)}
                       name={profile.name || 'User'}

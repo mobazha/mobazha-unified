@@ -59,7 +59,7 @@ function getNotificationIcon(type: string) {
     case 'moderatorRemove':
       return <UserPlus className={cn(iconClass, 'text-primary')} />;
     default:
-      return <Bell className={cn(iconClass, 'text-gray-500')} />;
+      return <Bell className={cn(iconClass, 'text-muted-foreground')} />;
   }
 }
 

@@ -266,7 +266,7 @@ export function EncryptedPrice({
   }
 
   return (
-    <span className={cn('inline-flex items-center gap-1 text-gray-400', className)}>
+    <span className={cn('inline-flex items-center gap-1 text-muted-foreground/70', className)}>
       <Lock className="w-3 h-3" />
       {currency} •••
     </span>

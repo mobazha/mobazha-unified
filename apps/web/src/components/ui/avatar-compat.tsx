@@ -102,12 +102,12 @@ export const AvatarCompat: React.FC<AvatarCompatProps> = ({
         <span
           className={cn(
             'absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background',
-            isOnline ? 'bg-green-500' : 'bg-gray-400'
+            isOnline ? 'bg-success' : 'bg-muted-foreground/40'
           )}
         />
       )}
       {verified && (
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center border-2 border-background">
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-info rounded-full flex items-center justify-center border-2 border-background">
           <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"

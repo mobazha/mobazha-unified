@@ -89,7 +89,7 @@ function getNotificationIcon(type: string): React.ReactNode {
     case 'moderatorRemove':
       return <UserPlus className={cn(iconClass, 'text-primary')} />;
     default:
-      return <Clock className={cn(iconClass, 'text-gray-500')} />;
+      return <Clock className={cn(iconClass, 'text-muted-foreground')} />;
   }
 }
 
