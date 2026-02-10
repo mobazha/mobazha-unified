@@ -54,6 +54,9 @@ const routes: RouteObject[] = [
   { path: '/login', element: lazyPage(() => import('./app/login/page')) },
   { path: '/offline', element: lazyPage(() => import('./app/offline/page')) },
 
+  // 新用户引导（需登录但不需要 profile）
+  { path: '/onboarding', element: protectedPage(() => import('./app/onboarding/page')) },
+
   // 搜索
   { path: '/search', element: lazyPage(() => import('./app/search/page')) },
 

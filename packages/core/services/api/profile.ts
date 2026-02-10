@@ -3,11 +3,13 @@
  */
 
 import type { UserProfile, UserSettings } from '../../types';
-import { get, post, put } from './client';
+import { get, post, put, ApiError } from './client';
 import { getGatewayUrl, getSearchUrl, getAuthHeaders, getHeadersWithContext } from './config';
 
 /**
  * 获取用户资料
+ *
+ * 使用共享的 get() client，确保 401 等错误被统一拦截处理。
  */
 export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   const timestamp = Date.now();
@@ -20,17 +22,13 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   }
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    if (response.status === 404) {
+    return await get<UserProfile>(url, getAuthHeaders());
+  } catch (err) {
+    // 404 表示用户不存在，返回 null
+    if (err instanceof ApiError && err.status === 404) {
       return null;
     }
-
-    return await response.json();
-  } catch {
+    // 其他错误（包括 401，已由 client 的 onUnauthorized 回调处理）
     return null;
   }
 }
@@ -47,6 +45,29 @@ export async function getMyProfile(
     return await get<UserProfile>(url, getAuthHeaders(username, password));
   } catch {
     return null;
+  }
+}
+
+/**
+ * 创建用户资料（首次，POST）
+ * 用于新用户 onboarding 流程
+ *
+ * 注意：后端 POST /v1/ob/profile 成功时返回 200 {}（空对象），
+ * 不包含 success 字段，所以只要请求不抛异常就视为成功。
+ */
+export async function createProfile(
+  profile: Partial<UserProfile>
+): Promise<{ success: boolean; error?: string }> {
+  const url = `${getGatewayUrl()}/ob/profile`;
+  try {
+    await post(url, profile, getAuthHeaders());
+    // 后端返回 200（即使 body 是 {}）即表示创建成功
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to create profile',
+    };
   }
 }
 

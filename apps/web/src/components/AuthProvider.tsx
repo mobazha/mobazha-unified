@@ -55,12 +55,20 @@ export function AuthProvider({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { isAuthenticated, restoreSession, loginWithOAuth, isLoading } = useUserStore();
+  const { isAuthenticated, restoreSession, loginWithOAuth, isLoading, needsOnboarding } =
+    useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
 
   // HMR 保护：使用 ref 避免热更新导致的重复执行
   const hasRestoredSession = useRef(false);
+
+  // 登出时重置 hasRestoredSession，确保重新登录时能正确恢复会话
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasRestoredSession.current = false;
+    }
+  }, [isAuthenticated]);
 
   // 初始化 Matrix（在用户登录后自动连接）
   useMatrixInit({
@@ -85,9 +93,16 @@ export function AuthProvider({
           if (success) {
             // OAuth 登录成功，标记会话已恢复，防止后续不必要的 restoreSession 调用
             hasRestoredSession.current = true;
-            // 获取登录前的页面路径
-            const redirectPath = getRedirectPath(searchParams);
-            router.push(redirectPath);
+
+            // 检查是否需要 onboarding（无 profile）
+            const currentState = useUserStore.getState();
+            if (currentState.needsOnboarding) {
+              router.push('/onboarding');
+            } else {
+              // 获取登录前的页面路径
+              const redirectPath = getRedirectPath(searchParams);
+              router.push(redirectPath);
+            }
           }
         }
         setIsProcessingOAuth(false);
@@ -124,10 +139,27 @@ export function AuthProvider({
 
     // 如果已认证且在登录页（且没有 OAuth 参数），重定向到目标页面
     if (isAuthenticated && pathname === '/login' && !hasOAuthCallback()) {
-      const redirectPath = getRedirectPath(searchParams);
-      router.push(redirectPath);
+      if (needsOnboarding) {
+        router.push('/onboarding');
+      } else {
+        const redirectPath = getRedirectPath(searchParams);
+        router.push(redirectPath);
+      }
     }
-  }, [isAuthenticated, isInitialized, pathname, router, isProcessingOAuth, searchParams]);
+
+    // 如果已认证、需要 onboarding 且不在 onboarding 页面，重定向
+    if (isAuthenticated && needsOnboarding && pathname !== '/onboarding' && pathname !== '/login') {
+      router.push('/onboarding');
+    }
+  }, [
+    isAuthenticated,
+    isInitialized,
+    pathname,
+    router,
+    isProcessingOAuth,
+    searchParams,
+    needsOnboarding,
+  ]);
 
   // 正在处理 OAuth 回调
   if (isProcessingOAuth) {

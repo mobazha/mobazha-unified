@@ -10,6 +10,7 @@ import {
   MobileNav,
   PWAInstall,
   ServiceWorkerProvider,
+  SessionExpiredDialog,
   SettingsDrawerProvider,
   ThemeProvider,
 } from '@/components';
@@ -118,6 +119,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                           {/* Dev tools (only in development) - 临时禁用 */}
                           {/* <DevTools /> */}
+
+                          {/* Session expired dialog (global 401 handler) */}
+                          <SessionExpiredDialog />
 
                           {/* Toast notifications */}
                           <Toaster />

@@ -154,6 +154,11 @@ export const en: TranslationResource = {
     // Environment
     testEnvironment: 'Test Environment',
     productionEnvironment: 'Production Environment',
+    // Session Expired
+    sessionExpiredTitle: 'Session Expired',
+    sessionExpiredMessage:
+      'Your session has expired or is no longer valid. Please sign in again to continue.',
+    sessionExpiredAction: 'Sign In Again',
   },
 
   home: {
@@ -2136,6 +2141,28 @@ export const en: TranslationResource = {
     removeFromList: 'Remove',
     confirmRemove: 'Confirm Removal',
     confirmRemoveMessage: 'Are you sure you want to remove this user from the whitelist?',
+  },
+
+  // Onboarding (New User Setup)
+  onboarding: {
+    welcome: 'Welcome to Mobazha',
+    tagline: 'Trade Freely. Trade Securely.',
+    setupProfile: 'Set up your profile',
+    displayName: 'Display Name',
+    displayNamePlaceholder: 'How should others call you?',
+    displayNameRequired: 'Display name is required',
+    shortBio: 'Short Bio',
+    shortBioPlaceholder: 'Tell others about yourself...',
+    country: 'Country',
+    countryPlaceholder: 'Select your country',
+    startExploring: 'Start Exploring',
+    customizeLater: 'You can customize your store later in Settings',
+    creating: 'Creating your profile...',
+    createFailed: 'Failed to create profile. Please try again.',
+    // Value propositions
+    valueDecentralized: 'Decentralized',
+    valuePrivacy: 'Privacy First',
+    valueMultiCurrency: 'Multi-Currency',
   },
 
   // User Page (Store Page)

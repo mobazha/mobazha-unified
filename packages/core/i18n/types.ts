@@ -153,6 +153,10 @@ export interface TranslationResource {
     browser?: string;
     testEnvironment?: string;
     productionEnvironment?: string;
+    // 会话过期
+    sessionExpiredTitle?: string;
+    sessionExpiredMessage?: string;
+    sessionExpiredAction?: string;
   };
 
   // 首页
@@ -1275,6 +1279,28 @@ export interface TranslationResource {
     removeFromList: string;
     confirmRemove: string;
     confirmRemoveMessage: string;
+  };
+
+  // 新用户引导
+  onboarding?: {
+    welcome: string;
+    tagline: string;
+    setupProfile: string;
+    displayName: string;
+    displayNamePlaceholder: string;
+    displayNameRequired: string;
+    shortBio: string;
+    shortBioPlaceholder: string;
+    country: string;
+    countryPlaceholder: string;
+    startExploring: string;
+    customizeLater: string;
+    creating: string;
+    createFailed: string;
+    // 价值主张
+    valueDecentralized: string;
+    valuePrivacy: string;
+    valueMultiCurrency: string;
   };
 
   // 用户页面（店铺页面）
