@@ -239,6 +239,20 @@ export function initEnvFromProcess(): void {
     };
   }
 
+  // 允许通过环境变量覆盖 Casdoor 配置（本地开发使用）
+  const casdoorUrl = process.env.NEXT_PUBLIC_CASDOOR_URL;
+  const casdoorClientId = process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID;
+  if (casdoorUrl || casdoorClientId) {
+    currentEnv = {
+      ...currentEnv,
+      casdoor: {
+        ...currentEnv.casdoor,
+        ...(casdoorUrl && { serverUrl: casdoorUrl }),
+        ...(casdoorClientId && { clientId: casdoorClientId }),
+      },
+    };
+  }
+
   // 允许通过环境变量覆盖认证模式
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE;
   if (authMode === 'hosted' || authMode === 'basic') {

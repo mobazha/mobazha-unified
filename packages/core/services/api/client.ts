@@ -7,6 +7,21 @@
 import type { ApiResponse as _ApiResponse } from '../../types';
 
 /**
+ * 401 回调注册（用于通知 userStore 触发会话过期流程）
+ * 避免 API client 直接依赖 store（防止循环依赖）
+ */
+type UnauthorizedCallback = () => void;
+let onUnauthorizedCallback: UnauthorizedCallback | null = null;
+
+/**
+ * 注册 401 未授权回调
+ * 由 userStore 初始化时调用
+ */
+export function onUnauthorized(callback: UnauthorizedCallback): void {
+  onUnauthorizedCallback = callback;
+}
+
+/**
  * 请求选项
  */
 export interface RequestOptions {
@@ -56,6 +71,10 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     const response = await fetch(url, requestInit);
 
     if (!response.ok) {
+      // 401 未授权：token 无效、过期或证书不匹配
+      if (response.status === 401 && onUnauthorizedCallback) {
+        onUnauthorizedCallback();
+      }
       throw new ApiError(`HTTP ${response.status}: ${response.statusText}`, response.status);
     }
 

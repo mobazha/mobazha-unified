@@ -25,6 +25,7 @@ import {
 import { connectWebSocket, disconnectWebSocket } from '../services/websocket';
 import { clearProfileCache } from '../services/profileCache';
 import { disableMockData } from '../config';
+import { onUnauthorized } from '../services/api/client';
 
 interface UserState {
   // 状态
@@ -38,6 +39,10 @@ interface UserState {
   authMode: 'hosted' | 'basic';
   /** 会话是否已恢复（用于防止在 token 验证前发起需要认证的请求） */
   isSessionRestored: boolean;
+  /** 是否需要 onboarding（已登录但无 profile） */
+  needsOnboarding: boolean;
+  /** 会话是否因 token 无效而过期（用于显示重新登录 Dialog） */
+  sessionExpired: boolean;
 
   // 动作
   /** Basic Auth 登录（VPS 模式） */
@@ -49,10 +54,13 @@ interface UserState {
   /** 统一登录方法（自动选择认证方式） */
   loginWithCredentials: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
+  /** 因 401 错误强制登出（token 无效/过期） */
+  forceLogout: () => void;
   restoreSession: () => Promise<boolean>;
   fetchProfile: () => Promise<void>;
   fetchSettings: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
+  createProfile: (profile: Partial<UserProfile>) => Promise<boolean>;
   updateSettings: (updates: Partial<UserSettings>) => Promise<boolean>;
   setAcceptedCoins: (coins: string[]) => Promise<boolean>;
   clearError: () => void;
@@ -71,6 +79,8 @@ export const useUserStore = create<UserState>()(
         token: null,
         authMode: getCurrentAuthMode(),
         isSessionRestored: false,
+        needsOnboarding: false,
+        sessionExpired: false,
 
         // Basic Auth 登录（VPS 模式）
         login: async (credentials: AuthCredentials) => {
@@ -172,6 +182,7 @@ export const useUserStore = create<UserState>()(
                 isLoading: false,
                 authMode: getCurrentAuthMode(),
                 isSessionRestored: true,
+                needsOnboarding: false,
               });
 
               // 连接 WebSocket
@@ -181,6 +192,7 @@ export const useUserStore = create<UserState>()(
             }
 
             // 即使获取资料失败，登录仍然成功，也要保存 casdoorId
+            // 标记需要 onboarding（无 profile）
             if (casdoorId) {
               saveUser({ id: casdoorId, name: casdoorId, casdoorId });
             }
@@ -190,6 +202,7 @@ export const useUserStore = create<UserState>()(
               isLoading: false,
               authMode: getCurrentAuthMode(),
               isSessionRestored: true,
+              needsOnboarding: true,
             });
 
             connectWebSocket();
@@ -249,6 +262,7 @@ export const useUserStore = create<UserState>()(
                 isLoading: false,
                 authMode: 'hosted',
                 isSessionRestored: true,
+                needsOnboarding: false,
               });
 
               // 连接 WebSocket
@@ -262,6 +276,7 @@ export const useUserStore = create<UserState>()(
             }
 
             // 即使获取资料失败，登录仍然成功，也要保存 casdoorId
+            // 标记需要 onboarding（无 profile）
             if (casdoorId) {
               saveUser({ id: casdoorId, name: casdoorId, casdoorId });
             }
@@ -271,6 +286,7 @@ export const useUserStore = create<UserState>()(
               isLoading: false,
               authMode: 'hosted',
               isSessionRestored: true,
+              needsOnboarding: true,
             });
 
             // 连接 WebSocket
@@ -310,6 +326,7 @@ export const useUserStore = create<UserState>()(
                 isAuthenticated: true,
                 isLoading: false,
                 isSessionRestored: true,
+                needsOnboarding: false,
               });
 
               // 连接 WebSocket
@@ -318,14 +335,17 @@ export const useUserStore = create<UserState>()(
               return true;
             }
 
-            // Token 无效
-            clearAuth();
+            // Token 有效但无 profile — 需要 onboarding
             set({
-              error: 'Token 验证失败',
+              token,
+              isAuthenticated: true,
               isLoading: false,
               isSessionRestored: true,
+              needsOnboarding: true,
             });
-            return false;
+
+            connectWebSocket();
+            return true;
           } catch (err) {
             set({
               error: err instanceof Error ? err.message : '登录失败',
@@ -354,7 +374,20 @@ export const useUserStore = create<UserState>()(
             error: null,
             token: null,
             isSessionRestored: true, // 保持为 true，因为用户主动登出是有意的
+            needsOnboarding: false,
+            sessionExpired: false,
           });
+        },
+
+        // 因 401 错误强制登出（token 无效/过期/证书不匹配等）
+        // 不立即清除状态，而是标记 sessionExpired 让 UI 显示 Dialog
+        forceLogout: () => {
+          const { sessionExpired, isAuthenticated } = get();
+          // 防止重复触发
+          if (sessionExpired || !isAuthenticated) return;
+
+          console.warn('⚠️ Session expired due to 401 error, prompting re-login');
+          set({ sessionExpired: true });
         },
 
         // 恢复会话（从存储中恢复登录状态）
@@ -397,6 +430,7 @@ export const useUserStore = create<UserState>()(
                 isAuthenticated: true,
                 isLoading: false,
                 isSessionRestored: true,
+                needsOnboarding: false,
               });
 
               // 连接 WebSocket
@@ -405,15 +439,34 @@ export const useUserStore = create<UserState>()(
               return true;
             }
 
-            // API 返回空但没有抛出错误，可能是服务器问题
-            // 保持登录状态，稍后可以重试
-            console.warn('⚠️ Failed to fetch profile, but keeping session');
+            // API 返回空但没有抛出错误 — 用户已认证但无 profile
+            // 标记需要 onboarding
+            console.warn('⚠️ No profile found, needs onboarding');
             set({
               isLoading: false,
               isSessionRestored: true,
+              needsOnboarding: true,
             });
             return true;
           } catch (error) {
+            // 区分 401 认证错误和网络错误
+            const is401 =
+              error instanceof Error &&
+              'status' in error &&
+              (error as { status?: number }).status === 401;
+
+            if (is401) {
+              // 401: token 无效（RSA 验证错误、证书不匹配等）
+              // forceLogout 已由 API client 的 onUnauthorized 回调触发
+              // 这里只需设置 session 已恢复，Dialog 会处理后续流程
+              console.warn('⚠️ Session restore failed: token invalid (401)');
+              set({
+                isLoading: false,
+                isSessionRestored: true,
+              });
+              return false;
+            }
+
             // 网络错误时不清除认证，保持当前登录状态
             // 这样 HMR 或临时网络问题不会导致用户被登出
             console.warn('⚠️ Network error during session restore, keeping session:', error);
@@ -481,6 +534,43 @@ export const useUserStore = create<UserState>()(
           } catch (err) {
             set({
               error: err instanceof Error ? err.message : '更新资料失败',
+              isLoading: false,
+            });
+            return false;
+          }
+        },
+
+        // 创建用户资料（onboarding 时使用 POST）
+        createProfile: async (profileData: Partial<UserProfile>) => {
+          set({ isLoading: true, error: null });
+
+          try {
+            const result = await profileApi.createProfile(profileData);
+
+            if (result.success) {
+              // 创建成功后重新获取完整 profile
+              const profile = await profileApi.getMyProfile();
+              if (profile) {
+                saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
+                set({
+                  profile,
+                  isLoading: false,
+                  needsOnboarding: false,
+                });
+              } else {
+                set({ isLoading: false, needsOnboarding: false });
+              }
+              return true;
+            }
+
+            set({
+              error: result.error || 'Failed to create profile',
+              isLoading: false,
+            });
+            return false;
+          } catch (err) {
+            set({
+              error: err instanceof Error ? err.message : 'Failed to create profile',
               isLoading: false,
             });
             return false;
@@ -566,9 +656,17 @@ export const useUserStore = create<UserState>()(
   )
 );
 
+// 注册 API client 的 401 拦截回调
+// 当任何 API 请求返回 401 时，触发 forceLogout 显示会话过期提示
+onUnauthorized(() => {
+  useUserStore.getState().forceLogout();
+});
+
 // 选择器
 export const selectUser = (state: UserState) => state.profile;
 export const selectIsAuthenticated = (state: UserState) => state.isAuthenticated;
 export const selectUserLoading = (state: UserState) => state.isLoading;
 export const selectUserError = (state: UserState) => state.error;
 export const selectIsSessionRestored = (state: UserState) => state.isSessionRestored;
+export const selectNeedsOnboarding = (state: UserState) => state.needsOnboarding;
+export const selectSessionExpired = (state: UserState) => state.sessionExpired;

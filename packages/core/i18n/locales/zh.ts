@@ -153,6 +153,10 @@ export const zh: TranslationResource = {
     // 环境
     testEnvironment: '测试环境',
     productionEnvironment: '生产环境',
+    // 会话过期
+    sessionExpiredTitle: '会话已过期',
+    sessionExpiredMessage: '您的会话已过期或不再有效，请重新登录以继续使用。',
+    sessionExpiredAction: '重新登录',
   },
 
   home: {
@@ -2092,6 +2096,28 @@ export const zh: TranslationResource = {
     removeFromList: '移除',
     confirmRemove: '确认移除',
     confirmRemoveMessage: '确定要从白名单中移除此用户吗？',
+  },
+
+  // 新用户引导
+  onboarding: {
+    welcome: '欢迎来到 Mobazha',
+    tagline: '自由交易，安全交易',
+    setupProfile: '设置您的资料',
+    displayName: '显示名称',
+    displayNamePlaceholder: '您希望别人怎么称呼您？',
+    displayNameRequired: '请输入显示名称',
+    shortBio: '简短介绍',
+    shortBioPlaceholder: '向其他人介绍一下自己...',
+    country: '国家',
+    countryPlaceholder: '选择您的国家',
+    startExploring: '开始探索',
+    customizeLater: '您可以稍后在设置中自定义您的店铺',
+    creating: '正在创建您的资料...',
+    createFailed: '创建资料失败，请重试。',
+    // 价值主张
+    valueDecentralized: '去中心化',
+    valuePrivacy: '隐私优先',
+    valueMultiCurrency: '多币种',
   },
 
   // 用户页面（店铺页面）
