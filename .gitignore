@@ -31,7 +31,10 @@ build/
 # Testing
 coverage/
 playwright-report/
+playwright/.auth/
 test-results/
+e2e-screenshots/
+apps/web/e2e-screenshots/
 
 # Reports (keep structure, ignore content)
 reports/*.md
