@@ -15,7 +15,7 @@
 import { test, expect } from '@playwright/test';
 
 // 只在移动端项目中运行测试（通过项目名称判断，而非浏览器名称）
-test.beforeEach(async (_fixtures, testInfo) => {
+test.beforeEach(async ({ page: _page }, testInfo) => {
   const isMobileProject = testInfo.project.name.toLowerCase().includes('mobile');
   if (!isMobileProject) {
     test.skip();

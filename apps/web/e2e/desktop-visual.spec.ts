@@ -53,7 +53,7 @@ async function waitForPageStable(page: Page): Promise<void> {
 }
 
 // 只在桌面端项目中运行测试
-test.beforeEach(async (_, testInfo) => {
+test.beforeEach(async ({ page: _page }, testInfo) => {
   const isMobileProject = testInfo.project.name.toLowerCase().includes('mobile');
   if (isMobileProject) {
     test.skip();
