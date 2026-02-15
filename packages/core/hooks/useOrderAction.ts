@@ -19,6 +19,7 @@ import { useWallet } from './useWallet';
 import { useI18n } from './useI18n';
 import { isUTXOChain } from '../data/tokens';
 import { getTransactionService } from '../services/transaction';
+import { getPaymentExecutor } from '../services/transaction/executorRegistry';
 import type { OrderInstructionsResponse } from '../services/api/orders';
 
 /**
@@ -266,26 +267,40 @@ export function useOrderAction(): UseOrderActionReturn {
               throw new Error(t('order.actions.walletSignerError'));
             }
 
-            // 初始化交易服务
-            const transactionService = getTransactionService();
-            const initResult = await transactionService.initializeWithSigner(signer);
-            if (!initResult) {
-              throw new Error(t('order.actions.transactionServiceError'));
-            }
+            // 尝试通过 executor registry 执行（优先路径）
+            const executor = getPaymentExecutor(response.paymentChain, paymentCoin);
 
-            // 验证 instructions 数据
-            const { to, data, value } = response.instructions;
-            if (!to || !data) {
-              console.error('[useOrderAction] Invalid instructions:', response.instructions);
-              throw new Error(t('order.actions.invalidInstructions'));
-            }
+            let txResult;
+            if (executor) {
+              // Registry 路径：使用链特定的执行器
+              const initResult = await executor.initialize(signer);
+              if (!initResult) {
+                throw new Error(t('order.actions.transactionServiceError'));
+              }
 
-            // 执行链上交易
-            const txResult = await transactionService.executeTransaction({
-              to,
-              data,
-              value: value || '0',
-            });
+              txResult = await executor.executeTransaction(response.instructions);
+            } else {
+              // Legacy 路径：直接使用 UnifiedTransactionService（向后兼容）
+              // 当所有链的执行器就绪后可移除此分支
+              const transactionService = getTransactionService();
+              const initResult = await transactionService.initializeWithSigner(signer);
+              if (!initResult) {
+                throw new Error(t('order.actions.transactionServiceError'));
+              }
+
+              // 验证 EVM 格式的 instructions 数据
+              const { to, data, value } = response.instructions;
+              if (!to || !data) {
+                console.error('[useOrderAction] Invalid instructions:', response.instructions);
+                throw new Error(t('order.actions.invalidInstructions'));
+              }
+
+              txResult = await transactionService.executeTransaction({
+                to,
+                data,
+                value: value || '0',
+              });
+            }
 
             if (!txResult.success || !txResult.transactionHash) {
               // 检查是否是零地址错误
