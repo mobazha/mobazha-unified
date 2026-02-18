@@ -38,6 +38,10 @@ interface NotificationState {
   currentRoomId: string | null;
   currentPage: string | null;
 
+  // Incremented when an order-state-changing notification arrives (e.g. orderFunded).
+  // Order hooks watch this to trigger refetch.
+  orderRefreshTrigger: number;
+
   // 动作：通知管理
   setNotifications: (notifications: NotificationData[]) => void;
   addNotification: (notification: NotificationData) => void;
@@ -58,6 +62,9 @@ interface NotificationState {
   // 动作：当前上下文
   setCurrentRoom: (roomId: string | null) => void;
   setCurrentPage: (page: string | null) => void;
+
+  // 动作：订单刷新
+  triggerOrderRefresh: () => void;
 
   // 选择器方法
   getNotificationsByType: (type: NotificationEventType) => NotificationData[];
@@ -88,6 +95,9 @@ export const useNotificationStore = create<NotificationState>()(
         // 当前上下文
         currentRoomId: null,
         currentPage: null,
+
+        // 订单刷新触发器
+        orderRefreshTrigger: 0,
 
         // ============ 通知管理 ============
 
@@ -168,6 +178,11 @@ export const useNotificationStore = create<NotificationState>()(
 
         setCurrentPage: page => set({ currentPage: page }),
 
+        // ============ 订单刷新 ============
+
+        triggerOrderRefresh: () =>
+          set(state => ({ orderRefreshTrigger: state.orderRefreshTrigger + 1 })),
+
         // ============ 选择器方法 ============
 
         getNotificationsByType: type => {
@@ -224,6 +239,7 @@ export const selectSoundEnabled = (state: NotificationState) => state.soundEnabl
 export const selectTtsEnabled = (state: NotificationState) => state.ttsEnabled;
 export const selectVolume = (state: NotificationState) => state.volume;
 export const selectCurrentRoomId = (state: NotificationState) => state.currentRoomId;
+export const selectOrderRefreshTrigger = (state: NotificationState) => state.orderRefreshTrigger;
 
 // ============ 获取通知设置 ============
 

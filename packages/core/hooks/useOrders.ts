@@ -2,7 +2,7 @@
  * 订单相关 Hooks
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { OrderListItem, Order } from '../types';
 import {
   ordersApi,
@@ -10,6 +10,7 @@ import {
   type OrderEstimate,
   type PurchaseResult,
 } from '../services/api/orders';
+import { useNotificationStore, selectOrderRefreshTrigger } from '../stores/notificationStore';
 
 /**
  * 订单列表过滤选项
@@ -104,6 +105,16 @@ export function usePurchases(filter?: OrdersFilter) {
     refetch();
   }, [refetch]);
 
+  const orderRefreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
+  const initialMount = useRef(true);
+  useEffect(() => {
+    if (initialMount.current) {
+      initialMount.current = false;
+      return;
+    }
+    refetch();
+  }, [orderRefreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return { orders, isLoading, isLoadingMore, error, hasMore, refetch, loadMore };
 }
 
@@ -182,6 +193,16 @@ export function useSales(filter?: OrdersFilter) {
     refetch();
   }, [refetch]);
 
+  const salesRefreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
+  const salesInitialMount = useRef(true);
+  useEffect(() => {
+    if (salesInitialMount.current) {
+      salesInitialMount.current = false;
+      return;
+    }
+    refetch();
+  }, [salesRefreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return { orders, isLoading, isLoadingMore, error, hasMore, refetch, loadMore };
 }
 
@@ -212,6 +233,16 @@ export function useOrder(orderId: string | null) {
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  const detailRefreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
+  const detailInitialMount = useRef(true);
+  useEffect(() => {
+    if (detailInitialMount.current) {
+      detailInitialMount.current = false;
+      return;
+    }
+    refetch();
+  }, [detailRefreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 标记为已读
   const markAsRead = useCallback(async () => {
