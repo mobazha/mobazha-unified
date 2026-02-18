@@ -380,6 +380,20 @@ class NotificationService {
     // 其他消息类型暂不处理
   }
 
+  private static readonly ORDER_STATE_EVENTS = new Set([
+    'orderFunded',
+    'orderConfirmation',
+    'orderDeclined',
+    'orderCancel',
+    'refund',
+    'orderFulfillment',
+    'orderCompletion',
+    'disputeOpen',
+    'disputeClose',
+    'disputeAccepted',
+    'vendorFinalizedPayment',
+  ]);
+
   /**
    * 处理通知
    */
@@ -388,6 +402,11 @@ class NotificationService {
 
     // 添加到 Store
     store.addNotification(notification);
+
+    // Order-state-changing events: trigger data refetch in order hooks
+    if (NotificationService.ORDER_STATE_EVENTS.has(notification.type)) {
+      store.triggerOrderRefresh();
+    }
 
     // 播放声音
     const soundType = eventTypeToSoundType(notification.type);
