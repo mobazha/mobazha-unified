@@ -61,7 +61,7 @@ class BasicAuthService implements IAuthService {
       const authHeader = btoa(`${username}:${password}`);
 
       // 尝试获取用户资料来验证凭据
-      const response = await fetch(`${gatewayUrl}/ob/profile`, {
+      const response = await fetch(`${gatewayUrl}/profile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

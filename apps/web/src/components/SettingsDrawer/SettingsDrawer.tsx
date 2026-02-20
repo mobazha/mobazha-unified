@@ -1694,7 +1694,7 @@ interface BlockedUser {
 
 // TODO: 集成真实 API - 替换 mock 数据
 // 参考: mobazha-desktop/frontend/backbone/utils/block.js
-// API: PUT /ob/preferences 更新 blockedNodes 数组
+// API: PUT /preferences 更新 blockedNodes 数组
 const mockBlockedUsers: BlockedUser[] = [
   {
     id: '1',

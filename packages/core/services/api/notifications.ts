@@ -384,7 +384,7 @@ export async function getNotifications(
       params.append('filter', filterTypes);
     }
 
-    const url = `${getGatewayUrl()}/ob/notifications?${params.toString()}`;
+    const url = `${getGatewayUrl()}/notifications?${params.toString()}`;
     const response = await safeRequest<BackendNotificationsResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -462,7 +462,7 @@ export async function getNotifications(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/notifications');
+  return withMockFallback(realFn, mockFn, '/notifications');
 }
 
 /**
@@ -486,7 +486,7 @@ export async function getUnreadNotificationCount(
   password?: string
 ): Promise<number> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/notifications/count`;
+    const url = `${getGatewayUrl()}/notifications/count`;
     const result = await safeRequest<{ unread: number; total: number }>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -499,7 +499,7 @@ export async function getUnreadNotificationCount(
     return mockNotifications.filter(n => !n.read).length;
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/notifications/count');
+  return withMockFallback(realFn, mockFn, '/notifications/count');
 }
 
 /**
@@ -512,7 +512,7 @@ export async function markNotificationAsRead(
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
     const encodedId = encodeURIComponent(notificationId);
-    const url = `${getGatewayUrl()}/ob/marknotificationasread/${encodedId}`;
+    const url = `${getGatewayUrl()}/marknotificationasread/${encodedId}`;
     return post<{ success: boolean }>(url, {}, getAuthHeaders(username, password));
   };
 
@@ -525,7 +525,7 @@ export async function markNotificationAsRead(
   };
 
   const encodedId = encodeURIComponent(notificationId);
-  return withMockFallback(realFn, mockFn, `/ob/marknotificationasread/${encodedId}`);
+  return withMockFallback(realFn, mockFn, `/marknotificationasread/${encodedId}`);
 }
 
 /**
@@ -537,7 +537,7 @@ export async function markAllNotificationsAsRead(
   password?: string
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/marknotificationsasread`;
+    const url = `${getGatewayUrl()}/marknotificationsasread`;
     return post<{ success: boolean }>(
       url,
       notificationIds ? { ids: notificationIds } : {},
@@ -561,7 +561,7 @@ export async function markAllNotificationsAsRead(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/marknotificationsasread');
+  return withMockFallback(realFn, mockFn, '/marknotificationsasread');
 }
 
 /**
@@ -573,7 +573,7 @@ export async function batchNotifications(
   username?: string,
   password?: string
 ): Promise<{ success: boolean }> {
-  const url = `${getGatewayUrl()}/ob/notifications/batch`;
+  const url = `${getGatewayUrl()}/notifications/batch`;
   return post(url, { action, ids: notificationIds }, getAuthHeaders(username, password));
 }
 

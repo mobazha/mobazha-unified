@@ -53,7 +53,7 @@ export default function ImportListingsPage() {
 
     setDownloading(true);
     try {
-      const url = `${getGatewayUrl()}/ob/listings/template?lang=${templateLang}`;
+      const url = `${getGatewayUrl()}/listings/template?lang=${templateLang}`;
       window.open(url, '_blank');
     } catch (error) {
       console.error('Failed to download template:', error);
@@ -170,7 +170,7 @@ export default function ImportListingsPage() {
           reject(new Error('Network error'));
         });
 
-        xhr.open('POST', `${getGatewayUrl()}/ob/listings/import`);
+        xhr.open('POST', `${getGatewayUrl()}/listings/import`);
         xhr.send(formData);
       });
 

@@ -59,7 +59,7 @@ export function DigitalFileSection({
           const formData = new FormData();
           formData.append('file', file);
 
-          const response = await fetch(`${getGatewayUrl()}/ob/images`, {
+          const response = await fetch(`${getGatewayUrl()}/images`, {
             method: 'POST',
             body: formData,
           });

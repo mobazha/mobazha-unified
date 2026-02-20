@@ -47,21 +47,20 @@ let mockCartData: Cart = {
 /**
  * 获取购物车商品数量
  */
-export async function getCartItemsCount(
-  username?: string,
-  password?: string
-): Promise<number> {
+export async function getCartItemsCount(username?: string, password?: string): Promise<number> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/carts/itemsCount`;
+    const url = `${getGatewayUrl()}/carts/itemsCount`;
     const result = await get<{ count: number }>(url, getAuthHeaders(username, password));
     return result.count;
   };
 
   const mockFn = async () => {
-    return Object.values(mockCartData).flat().reduce((sum, item) => sum + item.quantity, 0);
+    return Object.values(mockCartData)
+      .flat()
+      .reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/carts/itemsCount');
+  return withMockFallback(realFn, mockFn, '/carts/itemsCount');
 }
 
 /**
@@ -69,7 +68,7 @@ export async function getCartItemsCount(
  */
 export async function getCarts(username?: string, password?: string): Promise<Cart> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/carts`;
+    const url = `${getGatewayUrl()}/carts`;
     return safeRequest<Cart>(url, { headers: getAuthHeaders(username, password) }, {});
   };
 
@@ -77,7 +76,7 @@ export async function getCarts(username?: string, password?: string): Promise<Ca
     return mockCartData;
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/carts');
+  return withMockFallback(realFn, mockFn, '/carts');
 }
 
 /**
@@ -95,8 +94,12 @@ export async function addToCart(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/carts/${peerID}/add`;
-    return post<{ success: boolean; error?: string }>(url, item, getAuthHeaders(username, password));
+    const url = `${getGatewayUrl()}/carts/${peerID}/add`;
+    return post<{ success: boolean; error?: string }>(
+      url,
+      item,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
@@ -124,7 +127,7 @@ export async function addToCart(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/carts/${peerID}/add`);
+  return withMockFallback(realFn, mockFn, `/carts/${peerID}/add`);
 }
 
 /**
@@ -141,8 +144,12 @@ export async function updateCartItem(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/carts/${peerID}/update`;
-    return post<{ success: boolean; error?: string }>(url, item, getAuthHeaders(username, password));
+    const url = `${getGatewayUrl()}/carts/${peerID}/update`;
+    return post<{ success: boolean; error?: string }>(
+      url,
+      item,
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
@@ -163,7 +170,7 @@ export async function updateCartItem(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/carts/${peerID}/update`);
+  return withMockFallback(realFn, mockFn, `/carts/${peerID}/update`);
 }
 
 /**
@@ -176,8 +183,12 @@ export async function removeFromCart(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/carts/${peerID}/remove`;
-    return post<{ success: boolean; error?: string }>(url, { slug }, getAuthHeaders(username, password));
+    const url = `${getGatewayUrl()}/carts/${peerID}/remove`;
+    return post<{ success: boolean; error?: string }>(
+      url,
+      { slug },
+      getAuthHeaders(username, password)
+    );
   };
 
   const mockFn = async () => {
@@ -191,15 +202,18 @@ export async function removeFromCart(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/carts/${peerID}/remove`);
+  return withMockFallback(realFn, mockFn, `/carts/${peerID}/remove`);
 }
 
 /**
  * 清空购物车
  */
-export async function clearCarts(username?: string, password?: string): Promise<{ success: boolean }> {
+export async function clearCarts(
+  username?: string,
+  password?: string
+): Promise<{ success: boolean }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/carts`;
+    const url = `${getGatewayUrl()}/carts`;
     return del<{ success: boolean }>(url, getAuthHeaders(username, password));
   };
 
@@ -209,7 +223,7 @@ export async function clearCarts(username?: string, password?: string): Promise<
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/carts');
+  return withMockFallback(realFn, mockFn, '/carts');
 }
 
 /**
@@ -249,4 +263,3 @@ export const cartApi = {
   clearCarts,
   calculateCartTotal,
 };
-

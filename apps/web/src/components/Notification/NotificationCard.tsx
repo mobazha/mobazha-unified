@@ -33,8 +33,8 @@ interface NotificationCardProps {
  */
 function getImageUrl(hash?: string): string | null {
   if (!hash) return null;
-  // 使用 /v1/ob/image/ 路径（参考 API config）
-  return `/v1/ob/image/${hash}`;
+  // 使用 /v1/image/ 路径（参考 API config）
+  return `/v1/image/${hash}`;
 }
 
 /**

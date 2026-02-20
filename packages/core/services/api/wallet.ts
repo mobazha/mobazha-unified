@@ -116,7 +116,7 @@ export async function sendTransaction(
  * 注意：此 API 需要认证，未认证时会返回 401
  */
 export async function getExchangeRates(): Promise<Record<string, Record<string, number>>> {
-  const url = `${getGatewayUrl()}/ob/exchangerates`;
+  const url = `${getGatewayUrl()}/exchangerates`;
   return safeRequest<Record<string, Record<string, number>>>(
     url,
     { headers: getAuthHeaders() },
@@ -182,7 +182,7 @@ export async function getReceivingAddresses(
   username?: string,
   password?: string
 ): Promise<ReceivingAddress[]> {
-  const url = `${getGatewayUrl()}/ob/receiveaddresses`;
+  const url = `${getGatewayUrl()}/receiveaddresses`;
   return safeRequest<ReceivingAddress[]>(url, { headers: getAuthHeaders(username, password) }, []);
 }
 
@@ -196,7 +196,7 @@ export async function setReceivingAddress(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/receiveaddress`;
+  const url = `${getGatewayUrl()}/receiveaddress`;
   return post<{ success: boolean; error?: string }>(
     url,
     { coin, address, label },
@@ -212,7 +212,7 @@ export async function removeReceivingAddress(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/receiveaddress/${coin}`;
+  const url = `${getGatewayUrl()}/receiveaddress/${coin}`;
   // 使用 DELETE 方法
   return safeRequest<{ success: boolean; error?: string }>(
     url,
@@ -229,7 +229,7 @@ export async function getReceivingAddress(
   username?: string,
   password?: string
 ): Promise<ReceivingAddress | null> {
-  const url = `${getGatewayUrl()}/ob/receiveaddress/${coin}`;
+  const url = `${getGatewayUrl()}/receiveaddress/${coin}`;
   try {
     return await get<ReceivingAddress>(url, getAuthHeaders(username, password));
   } catch {
