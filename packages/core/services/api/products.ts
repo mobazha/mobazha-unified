@@ -12,6 +12,7 @@ import {
   getImageUrl,
 } from './config';
 import type { Image } from '../../types';
+import { NODE_API, SEARCH_API } from '../../config/apiPaths';
 
 // API 返回的搜索结果格式
 interface SearchResultItem {
@@ -173,7 +174,7 @@ function parseSearchResults(response: SearchApiResponse): ProductListItem[] {
  * 获取热门商品列表
  */
 export async function fetchTrendingListings(): Promise<ProductListItem[]> {
-  const url = `${getSearchUrl()}/api/listings/fresh/10`;
+  const url = `${getSearchUrl()}${SEARCH_API.LISTINGS_FRESH(10)}`;
   console.log('🔍 Fetching trending listings from:', url);
   try {
     const response = await safeRequest<SearchApiResponse>(
@@ -192,7 +193,7 @@ export async function fetchTrendingListings(): Promise<ProductListItem[]> {
  * 获取精选商品列表
  */
 export async function fetchFeaturedListings(): Promise<ProductListItem[]> {
-  const url = `${getSearchUrl()}/api/listings/hot/24/10`;
+  const url = `${getSearchUrl()}${SEARCH_API.LISTINGS_HOT(24, 10)}`;
   console.log('🔍 Fetching featured listings from:', url);
   try {
     const response = await safeRequest<SearchApiResponse>(
@@ -214,7 +215,7 @@ export async function fetchStoreListings(
   storePeerID: string,
   pageSize = 9
 ): Promise<ProductListItem[]> {
-  const url = `${getSearchUrl()}/profile/listings?peerId=${storePeerID}&pageSize=${pageSize}`;
+  const url = `${getSearchUrl()}${SEARCH_API.PROFILE_LISTINGS}?peerId=${storePeerID}&pageSize=${pageSize}`;
   return safeRequest<ProductListItem[]>(url, { headers: getHeadersWithContext() }, []);
 }
 
@@ -226,7 +227,7 @@ export async function getListingIndex(
   username?: string,
   password?: string
 ): Promise<ProductListItem[]> {
-  const url = `${getGatewayUrl()}/listings/index`;
+  const url = `${getGatewayUrl()}${NODE_API.LISTINGS_INDEX}`;
   const data = await safeRequest<ProductListItem[] | { success: false }>(
     url,
     { headers: getHeadersWithContext(username, password), timeout: 60000 },
@@ -248,7 +249,7 @@ export async function getStoreListingIndex(
   username?: string,
   password?: string
 ): Promise<ProductListItem[]> {
-  const url = `${getGatewayUrl()}/listings/index/${peerID}`;
+  const url = `${getGatewayUrl()}${NODE_API.LISTINGS_INDEX_PEER(peerID)}`;
   const data = await safeRequest<ProductListItem[] | { success: false }>(
     url,
     { headers: getHeadersWithContext(username, password), timeout: 60000 },
@@ -274,9 +275,9 @@ export async function getListing(
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/listings/${slug}?`;
+    url = `${getGatewayUrl()}${NODE_API.LISTING(slug)}?`;
   } else {
-    url = `${getGatewayUrl()}/listings/${peerID}/${slug}?usecache=true&${timestamp}`;
+    url = `${getGatewayUrl()}${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true&${timestamp}`;
   }
 
   try {
@@ -294,9 +295,9 @@ export async function getPublicListing(slug: string, peerID?: string): Promise<P
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/listings/${slug}`;
+    url = `${getGatewayUrl()}${NODE_API.LISTING(slug)}`;
   } else {
-    url = `${getGatewayUrl()}/listings/${peerID}/${slug}?usecache=true`;
+    url = `${getGatewayUrl()}${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
   }
 
   try {
@@ -327,7 +328,7 @@ export async function createListing(
   username?: string,
   password?: string
 ): Promise<{ slug: string } | { error: string }> {
-  const url = `${getGatewayUrl()}/listings`;
+  const url = `${getGatewayUrl()}${NODE_API.LISTINGS}`;
   return post(url, productDetails, getAuthHeaders(username, password));
 }
 
@@ -339,7 +340,7 @@ export async function updateListing(
   username?: string,
   password?: string
 ): Promise<{ success: boolean } | { error: string }> {
-  const url = `${getGatewayUrl()}/listings`;
+  const url = `${getGatewayUrl()}${NODE_API.LISTINGS}`;
   return put(url, productDetails, getAuthHeaders(username, password));
 }
 
@@ -351,7 +352,7 @@ export async function deleteListing(
   username?: string,
   password?: string
 ): Promise<{ success: boolean }> {
-  const url = `${getGatewayUrl()}/listings/${slug}`;
+  const url = `${getGatewayUrl()}${NODE_API.LISTING(slug)}`;
   return del(url, getAuthHeaders(username, password));
 }
 
@@ -369,13 +370,13 @@ export async function getRatingIndex(
   let url: string;
 
   if (peerID && slug) {
-    url = `${getGatewayUrl()}/ratings/index/${peerID}/${slug}?usecache=true`;
+    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX_PEER_SLUG(peerID, slug)}?usecache=true`;
   } else if (peerID) {
-    url = `${getGatewayUrl()}/ratings/index/${peerID}?usecache=true`;
+    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX_PEER(peerID)}?usecache=true`;
   } else if (slug) {
-    url = `${getGatewayUrl()}/ratings/index/${slug}`;
+    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX_SLUG(slug)}`;
   } else {
-    url = `${getGatewayUrl()}/ratings/index`;
+    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX}`;
   }
 
   return safeRequest<RatingIndex>(
@@ -399,7 +400,7 @@ export async function fetchRatings(
     return [];
   }
 
-  const url = `${getGatewayUrl()}/ratings/batch?async=false`;
+  const url = `${getGatewayUrl()}${NODE_API.RATINGS_BATCH}?async=false`;
 
   try {
     const response = await post<Array<{ id: string; rating: RatingDetail }>>(
@@ -431,7 +432,7 @@ export async function reportListing(
   slug: string,
   reason: string
 ): Promise<{ success: boolean }> {
-  const url = `${getSearchUrl()}/api/reports`;
+  const url = `${getSearchUrl()}${SEARCH_API.REPORTS}`;
   return post(url, { peerID, slug, reason, report_type: 'listing' }, getHeadersWithContext());
 }
 
@@ -480,7 +481,7 @@ export async function searchListings(
     queryParams.append('nsfw', 'true');
   }
 
-  const url = `${getSearchUrl()}/api/search?${queryParams.toString()}`;
+  const url = `${getSearchUrl()}${SEARCH_API.SEARCH}?${queryParams.toString()}`;
 
   try {
     const response = await safeRequest<SearchApiResponse>(
@@ -531,7 +532,7 @@ export async function searchProfiles(params: {
     pageSize: String(pageSize),
   });
 
-  const url = `${getSearchUrl()}/api/search/profile_m?${queryParams.toString()}`;
+  const url = `${getSearchUrl()}${SEARCH_API.SEARCH_PROFILES}?${queryParams.toString()}`;
 
   try {
     const response = await safeRequest<ProfileSearchApiResponse>(

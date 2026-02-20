@@ -5,6 +5,7 @@
 import type { UserProfile, UserSettings } from '../../types';
 import { get, post, put, ApiError } from './client';
 import { getGatewayUrl, getSearchUrl, getAuthHeaders, getHeadersWithContext } from './config';
+import { NODE_API, SEARCH_API } from '../../config/apiPaths';
 
 /**
  * 获取用户资料
@@ -16,9 +17,9 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/profiles`;
+    url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
   } else {
-    url = `${getSearchUrl()}/api/profile/raw?peerId=${peerID}&${timestamp}`;
+    url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW}?peerId=${peerID}&${timestamp}`;
   }
 
   try {
@@ -40,7 +41,7 @@ export async function getMyProfile(
   username?: string,
   password?: string
 ): Promise<UserProfile | null> {
-  const url = `${getGatewayUrl()}/profiles`;
+  const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
   try {
     return await get<UserProfile>(url, getAuthHeaders(username, password));
   } catch {
@@ -58,7 +59,7 @@ export async function getMyProfile(
 export async function createProfile(
   profile: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/profiles`;
+  const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
   try {
     await post(url, profile, getAuthHeaders());
     // 后端返回 200（即使 body 是 {}）即表示创建成功
@@ -79,7 +80,7 @@ export async function setProfile(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/profiles`;
+  const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
   return put(url, { ...profile, vendor: true }, getAuthHeaders(username, password));
 }
 
@@ -91,7 +92,7 @@ export async function setAcceptedCoins(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/preferences/currency`;
+  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES_CURRENCY}`;
   return post(url, { currencies: coins }, getAuthHeaders(username, password));
 }
 
@@ -103,7 +104,7 @@ export async function getSettings(
   username?: string,
   password?: string
 ): Promise<UserSettings | null> {
-  const url = `${getGatewayUrl()}/preferences`;
+  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
   try {
     return await get<UserSettings>(url, getAuthHeaders(username, password));
   } catch {
@@ -120,7 +121,7 @@ export async function setSettings(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/preferences`;
+  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
   return put(url, settings, getAuthHeaders(username, password));
 }
 
@@ -128,7 +129,7 @@ export async function setSettings(
  * 举报用户
  */
 export async function reportProfile(peerID: string, reason: string): Promise<{ success: boolean }> {
-  const url = `${getSearchUrl()}/api/reports`;
+  const url = `${getSearchUrl()}${SEARCH_API.REPORTS}`;
   return post(url, { peerID, reason, report_type: 'node' }, getHeadersWithContext());
 }
 
@@ -136,7 +137,7 @@ export async function reportProfile(peerID: string, reason: string): Promise<{ s
  * 获取 PeerID
  */
 export async function getPeerID(username?: string, password?: string): Promise<string | null> {
-  const url = `${getGatewayUrl()}/peerid`;
+  const url = `${getGatewayUrl()}${NODE_API.PEER_ID}`;
   try {
     const response = await get<{ peerID: string }>(url, getAuthHeaders(username, password));
     return response.peerID;
@@ -152,7 +153,7 @@ export function getAvatarUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'medium'
 ): string {
-  return `${getGatewayUrl()}/profiles/${peerID}/avatar?size=${size}`;
+  return `${getGatewayUrl()}${NODE_API.PROFILE_AVATAR(peerID)}?size=${size}`;
 }
 
 /**
@@ -162,5 +163,5 @@ export function getHeaderUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'large'
 ): string {
-  return `${getGatewayUrl()}/profiles/${peerID}/header?size=${size}`;
+  return `${getGatewayUrl()}${NODE_API.PROFILE_HEADER(peerID)}?size=${size}`;
 }

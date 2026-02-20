@@ -5,6 +5,7 @@
 import { post } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import type { Image } from '../../types';
+import { NODE_API } from '../../config/apiPaths';
 
 interface ImageUploadData {
   filename: string;
@@ -21,7 +22,7 @@ export async function uploadProductImages(
   username?: string,
   password?: string
 ): Promise<Image[]> {
-  const url = `${getGatewayUrl()}/media/product-images`;
+  const url = `${getGatewayUrl()}${NODE_API.MEDIA_PRODUCT_IMAGES}`;
   try {
     const result = await post<Image[]>(url, images, getAuthHeaders(username, password));
     return result || [];
@@ -40,7 +41,7 @@ export async function uploadImage(
   username?: string,
   password?: string
 ): Promise<Image | null> {
-  const url = `${getGatewayUrl()}/media/images`;
+  const url = `${getGatewayUrl()}${NODE_API.MEDIA_IMAGES}`;
   try {
     const result = await post<Image[]>(url, [imageData], getAuthHeaders(username, password));
     return result?.[0] || null;

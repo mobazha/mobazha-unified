@@ -4,6 +4,7 @@
  */
 
 import { getHostingUrl, getGatewayUrl, getAuthHeaders } from './config';
+import { NODE_API, HOSTING_API } from '../../config/apiPaths';
 
 // ============= 类型定义 =============
 
@@ -48,7 +49,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
  */
 export async function getMatrixConfig(): Promise<MatrixServerConfig> {
   const hostingUrl = getHostingUrl();
-  const response = await fetch(`${hostingUrl}/api/matrix/config`, {
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_CONFIG}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -62,7 +63,7 @@ export async function getMatrixConfig(): Promise<MatrixServerConfig> {
 export async function getMatrixCredentials(): Promise<MatrixCredentials | null> {
   try {
     const gatewayUrl = getGatewayUrl();
-    const response = await fetch(`${gatewayUrl}/matrix/credentials`, {
+    const response = await fetch(`${gatewayUrl}${NODE_API.MATRIX_CREDENTIALS}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -87,7 +88,7 @@ export async function saveMatrixCredentials(
 ): Promise<void> {
   try {
     const gatewayUrl = getGatewayUrl();
-    const response = await fetch(`${gatewayUrl}/matrix/credentials`, {
+    const response = await fetch(`${gatewayUrl}${NODE_API.MATRIX_CREDENTIALS}`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ matrixUserId, serverName }),
@@ -107,7 +108,7 @@ export async function saveMatrixCredentials(
 export async function getDerivedPassword(): Promise<string | null> {
   try {
     const gatewayUrl = getGatewayUrl();
-    const response = await fetch(`${gatewayUrl}/matrix/password`, {
+    const response = await fetch(`${gatewayUrl}${NODE_API.MATRIX_PASSWORD}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -138,7 +139,7 @@ export async function autoRegisterMatrix(
     body.password = password;
   }
 
-  const response = await fetch(`${hostingUrl}/api/matrix/auto-register`, {
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_AUTO_REGISTER}`, {
     method: 'POST',
     headers: {
       ...getAuthHeaders(),
@@ -161,7 +162,7 @@ export async function syncProfileToMatrix(displayName: string, avatarHash?: stri
     body.avatarHash = avatarHash;
   }
 
-  const response = await fetch(`${hostingUrl}/api/matrix/sync-profile`, {
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_SYNC_PROFILE}`, {
     method: 'POST',
     headers: {
       ...getAuthHeaders(),
@@ -192,7 +193,7 @@ export async function createStoreSpace(data: {
   isPrivate?: boolean;
 }): Promise<StoreSpaceCreateResponse> {
   const hostingUrl = getHostingUrl();
-  const response = await fetch(`${hostingUrl}/api/matrix/store/create-space`, {
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_CREATE_SPACE}`, {
     method: 'POST',
     headers: {
       ...getAuthHeaders(),
@@ -208,7 +209,7 @@ export async function createStoreSpace(data: {
  */
 export async function inviteToStoreSpace(spaceId: string, userPeerID: string): Promise<void> {
   const hostingUrl = getHostingUrl();
-  const response = await fetch(`${hostingUrl}/api/matrix/store/invite`, {
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_INVITE}`, {
     method: 'POST',
     headers: {
       ...getAuthHeaders(),
@@ -228,7 +229,7 @@ export async function kickFromStoreSpace(
   reason?: string
 ): Promise<void> {
   const hostingUrl = getHostingUrl();
-  const response = await fetch(`${hostingUrl}/api/matrix/store/kick`, {
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_KICK}`, {
     method: 'POST',
     headers: {
       ...getAuthHeaders(),

@@ -6,6 +6,7 @@ import { post, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
 import { getI18n } from '../../i18n/i18n';
+import { NODE_API } from '../../config/apiPaths';
 
 // 通知类型（简化分类）
 export type NotificationType =
@@ -384,7 +385,7 @@ export async function getNotifications(
       params.append('filter', filterTypes);
     }
 
-    const url = `${getGatewayUrl()}/notifications?${params.toString()}`;
+    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS}?${params.toString()}`;
     const response = await safeRequest<BackendNotificationsResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -486,7 +487,7 @@ export async function getUnreadNotificationCount(
   password?: string
 ): Promise<number> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/notifications/count`;
+    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS_COUNT}`;
     const result = await safeRequest<{ unread: number; total: number }>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -512,7 +513,7 @@ export async function markNotificationAsRead(
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
     const encodedId = encodeURIComponent(notificationId);
-    const url = `${getGatewayUrl()}/notifications/${encodedId}/read`;
+    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATION_READ(encodedId)}`;
     return post<{ success: boolean }>(url, {}, getAuthHeaders(username, password));
   };
 
@@ -537,7 +538,7 @@ export async function markAllNotificationsAsRead(
   password?: string
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/notifications/read`;
+    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS_READ}`;
     return post<{ success: boolean }>(
       url,
       notificationIds ? { ids: notificationIds } : {},
@@ -573,7 +574,7 @@ export async function batchNotifications(
   username?: string,
   password?: string
 ): Promise<{ success: boolean }> {
-  const url = `${getGatewayUrl()}/notifications/batch`;
+  const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS_BATCH}`;
   return post(url, { action, ids: notificationIds }, getAuthHeaders(username, password));
 }
 

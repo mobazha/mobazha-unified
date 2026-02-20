@@ -17,6 +17,9 @@ export * from './appkit';
 // 导出路由配置
 export * from './routeConfig';
 
+// 导出 API 路径常量（按后端服务分组：NODE_API / HOSTING_API / SEARCH_API）
+export { NODE_API, HOSTING_API, SEARCH_API } from './apiPaths';
+
 export interface AppConfig {
   /** Use mock data instead of real API */
   useMockData: boolean;
