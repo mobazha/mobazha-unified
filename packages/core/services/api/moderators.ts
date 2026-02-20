@@ -8,6 +8,7 @@
 
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { apiClient } from './client';
+import { NODE_API, HOSTING_API } from '../../config/apiPaths';
 
 // Types
 export interface Moderator {
@@ -240,7 +241,7 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
  * 获取用户偏好设置中的 storeModerators 列表
  */
 async function getStoreModerators(): Promise<string[]> {
-  const url = `${getGatewayUrl()}/preferences`;
+  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
 
   try {
     const response = await fetch(url, {
@@ -279,7 +280,7 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
     return [];
   }
 
-  const url = `${getGatewayUrl()}/profiles/batch`;
+  const url = `${getGatewayUrl()}${NODE_API.PROFILES_BATCH}`;
 
   try {
     const response = await fetch(url, {
@@ -407,14 +408,14 @@ export async function getModerators(
  * 获取单个仲裁员详情
  */
 export async function getModerator(moderatorId: string): Promise<Moderator> {
-  return apiClient.get<Moderator>(`/api/v1/moderators/${moderatorId}`);
+  return apiClient.get<Moderator>(HOSTING_API.MODERATOR(moderatorId));
 }
 
 /**
  * 获取仲裁员详情（通过 PeerID）
  */
 export async function getModeratorByPeerId(peerID: string): Promise<Moderator> {
-  return apiClient.get<Moderator>(`/api/v1/moderators/peer/${peerID}`);
+  return apiClient.get<Moderator>(HOSTING_API.MODERATOR_BY_PEER(peerID));
 }
 
 /**
@@ -431,21 +432,21 @@ export async function searchModerators(
  * 获取推荐仲裁员
  */
 export async function getRecommendedModerators(limit: number = 5): Promise<Moderator[]> {
-  return apiClient.get<Moderator[]>(`/api/v1/moderators/recommended?limit=${limit}`);
+  return apiClient.get<Moderator[]>(`${HOSTING_API.MODERATORS_RECOMMENDED}?limit=${limit}`);
 }
 
 /**
  * 提交争议
  */
 export async function submitDispute(submission: DisputeSubmission): Promise<Dispute> {
-  return apiClient.post<Dispute>('/api/v1/disputes', submission);
+  return apiClient.post<Dispute>(HOSTING_API.DISPUTES, submission);
 }
 
 /**
  * 获取争议详情
  */
 export async function getDispute(disputeId: string): Promise<Dispute> {
-  return apiClient.get<Dispute>(`/api/v1/disputes/${disputeId}`);
+  return apiClient.get<Dispute>(HOSTING_API.DISPUTE(disputeId));
 }
 
 /**
@@ -466,7 +467,7 @@ export async function getMyDisputes(params: {
 
   const query = queryParams.toString();
   return apiClient.get<{ disputes: Dispute[]; total: number }>(
-    `/api/v1/disputes/me${query ? `?${query}` : ''}`
+    `${HOSTING_API.DISPUTES_ME}${query ? `?${query}` : ''}`
   );
 }
 
@@ -478,7 +479,7 @@ export async function respondToDispute(
   response: string,
   evidence?: string[]
 ): Promise<Dispute> {
-  return apiClient.post<Dispute>(`/api/v1/disputes/${disputeId}/respond`, {
+  return apiClient.post<Dispute>(HOSTING_API.DISPUTE_RESPOND(disputeId), {
     response,
     evidence,
   });
@@ -492,7 +493,7 @@ export async function addDisputeEvidence(
   content: string,
   attachments?: string[]
 ): Promise<Dispute> {
-  return apiClient.post<Dispute>(`/api/v1/disputes/${disputeId}/evidence`, {
+  return apiClient.post<Dispute>(HOSTING_API.DISPUTE_EVIDENCE(disputeId), {
     content,
     attachments,
   });
@@ -502,7 +503,7 @@ export async function addDisputeEvidence(
  * 解决争议（仲裁员）
  */
 export async function resolveDispute(resolution: DisputeResolution): Promise<Dispute> {
-  return apiClient.post<Dispute>(`/api/v1/disputes/${resolution.disputeId}/resolve`, {
+  return apiClient.post<Dispute>(HOSTING_API.DISPUTE_RESOLVE(resolution.disputeId), {
     decision: resolution.decision,
     buyerPercentage: resolution.buyerPercentage,
     sellerPercentage: resolution.sellerPercentage,
@@ -535,7 +536,7 @@ export async function getModeratorReviews(
   if (params.limit) queryParams.set('limit', params.limit.toString());
 
   const query = queryParams.toString();
-  return apiClient.get(`/api/v1/moderators/${moderatorId}/reviews${query ? `?${query}` : ''}`);
+  return apiClient.get(`${HOSTING_API.MODERATOR_REVIEWS(moderatorId)}${query ? `?${query}` : ''}`);
 }
 
 /**
@@ -547,7 +548,7 @@ export async function reviewModerator(
   rating: number,
   comment: string
 ): Promise<void> {
-  return apiClient.post(`/api/v1/moderators/${moderatorId}/reviews`, {
+  return apiClient.post(HOSTING_API.MODERATOR_REVIEWS(moderatorId), {
     orderId,
     rating,
     comment,
@@ -566,7 +567,7 @@ export async function registerAsModerator(data: {
   acceptedCurrencies: string[];
   contactInfo?: Moderator['contactInfo'];
 }): Promise<Moderator> {
-  return apiClient.post<Moderator>('/api/v1/moderators/register', data);
+  return apiClient.post<Moderator>(HOSTING_API.MODERATORS_REGISTER, data);
 }
 
 /**
@@ -583,7 +584,7 @@ export async function updateModeratorProfile(
     contactInfo: Moderator['contactInfo'];
   }>
 ): Promise<Moderator> {
-  return apiClient.put<Moderator>('/api/v1/moderators/me', data);
+  return apiClient.put<Moderator>(HOSTING_API.MODERATORS_ME, data);
 }
 
 /**
@@ -591,7 +592,7 @@ export async function updateModeratorProfile(
  */
 export async function getMyModeratorProfile(): Promise<Moderator | null> {
   try {
-    return await apiClient.get<Moderator>('/api/v1/moderators/me');
+    return await apiClient.get<Moderator>(HOSTING_API.MODERATORS_ME);
   } catch {
     return null;
   }
@@ -601,5 +602,5 @@ export async function getMyModeratorProfile(): Promise<Moderator | null> {
  * 停用仲裁员身份
  */
 export async function deactivateModerator(): Promise<void> {
-  return apiClient.delete('/api/v1/moderators/me');
+  return apiClient.delete(HOSTING_API.MODERATORS_ME);
 }

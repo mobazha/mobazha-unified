@@ -3,6 +3,7 @@
  */
 
 import { getEnvConfig } from '../../config/env';
+import { NODE_API } from '../../config/apiPaths';
 import { getStoredToken } from '../auth/token';
 
 // API 端点配置
@@ -218,5 +219,5 @@ export function getImageUrl(hash: string | undefined | null): string | undefined
     return hash;
   }
   // 将 IPFS hash 转换为 gateway URL（使用 /v1/media/images/ 路径）
-  return `${getGatewayUrl()}/media/images/${hash}`;
+  return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`;
 }

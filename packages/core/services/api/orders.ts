@@ -6,6 +6,7 @@ import type { Order, OrderListItem } from '../../types';
 import { get, post, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
+import { NODE_API } from '../../config/apiPaths';
 
 // ========== 订单类型定义 ==========
 
@@ -171,7 +172,7 @@ export async function getPurchases(
   offsetId = ''
 ): Promise<OrderListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/purchases?limit=${limit}&offsetId=${offsetId}`;
+    const url = `${getGatewayUrl()}${NODE_API.PURCHASES}?limit=${limit}&offsetId=${offsetId}`;
     const response = await safeRequest<PurchasesResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -199,7 +200,7 @@ export async function getSales(
   offsetId = ''
 ): Promise<OrderListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/sales?limit=${limit}&offsetId=${offsetId}`;
+    const url = `${getGatewayUrl()}${NODE_API.SALES}?limit=${limit}&offsetId=${offsetId}`;
     const response = await safeRequest<SalesResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -231,7 +232,7 @@ export async function getOrderDetails(
   password?: string
 ): Promise<Order | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/${orderId}`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDER(orderId)}`;
     try {
       return await get<Order>(url, getAuthHeaders(username, password));
     } catch {
@@ -410,7 +411,7 @@ export async function createOrder(
   }
 
   // Real/Auto 模式：调用真实 API，失败直接抛出错误（不回退到 mock）
-  const url = `${getGatewayUrl()}/orders/purchase`;
+  const url = `${getGatewayUrl()}${NODE_API.ORDERS_PURCHASE}`;
 
   // 转换数据格式以匹配后端 API (models.Purchase)
   // 后端期望的格式：
@@ -467,7 +468,7 @@ export async function purchaseListing(
   password?: string
 ): Promise<PurchaseResult> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/purchase`;
+    const url = `${getGatewayUrl()}${NODE_API.PURCHASE}`;
     return post<PurchaseResult>(url, data, getAuthHeaders(username, password));
   };
 
@@ -499,7 +500,7 @@ export async function estimateOrderTotal(
   password?: string
 ): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/estimate`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_ESTIMATE}`;
     return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
   };
 
@@ -528,7 +529,7 @@ export async function getCheckoutBreakdown(
   password?: string
 ): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/checkout-breakdown`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_CHECKOUT_BREAKDOWN}`;
     return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
   };
 
@@ -565,7 +566,7 @@ export async function confirmOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/confirm`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_CONFIRM}`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -601,7 +602,7 @@ export async function fulfillOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/fulfill`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_FULFILL}`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -642,7 +643,7 @@ export async function completeOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/complete`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_COMPLETE}`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -707,7 +708,7 @@ export async function getCompleteInstructions(
   password?: string
 ): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/instructions/order/complete`;
+    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_COMPLETE}`;
     const response = await post<OrderInstructionsResponse>(
       url,
       params,
@@ -748,7 +749,7 @@ export async function getConfirmInstructions(
   password?: string
 ): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/instructions/order/confirm`;
+    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_CONFIRM}`;
     const response = await post<OrderInstructionsResponse>(
       url,
       params,
@@ -785,7 +786,7 @@ export async function getCancelInstructions(
   password?: string
 ): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/instructions/order/cancel`;
+    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_CANCEL}`;
     const response = await post<OrderInstructionsResponse>(
       url,
       params,
@@ -822,7 +823,7 @@ export async function getRefundInstructions(
   password?: string
 ): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/instructions/order/refund`;
+    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_REFUND}`;
     const response = await post<OrderInstructionsResponse>(
       url,
       params,
@@ -852,7 +853,7 @@ export async function cancelOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/cancel`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_CANCEL}`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -880,7 +881,7 @@ export async function refundOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/refund`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_REFUND}`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -943,7 +944,7 @@ export async function submitPayment(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/payment`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_PAYMENT}`;
     return post<{ success: boolean; error?: string }>(
       url,
       { paymentData },
@@ -974,7 +975,7 @@ export async function fundOrder(
   password?: string
 ): Promise<{ success: boolean; txid?: string; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/spend`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDERS_SPEND}`;
     return post<{ success: boolean; txid?: string; error?: string }>(
       url,
       {
@@ -1069,7 +1070,7 @@ export async function getPaymentInstructions(
   password?: string
 ): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/instructions/order/payment`;
+    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_PAYMENT}`;
     // 转换为后端期望的参数名
     const backendRequestData: Record<string, unknown> = {
       orderID: requestData.orderId,
@@ -1127,7 +1128,7 @@ export async function getPaymentRemaining(
   password?: string
 ): Promise<{ remaining?: number; paid?: number; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orders/${orderId}/payment/remaining`;
+    const url = `${getGatewayUrl()}${NODE_API.ORDER_PAYMENT_REMAINING(orderId)}`;
     return get<{ remaining?: number; paid?: number; error?: string }>(
       url,
       getAuthHeaders(username, password)
@@ -1157,7 +1158,7 @@ export async function openDispute(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/dispute/open`;
+    const url = `${getGatewayUrl()}${NODE_API.DISPUTE_OPEN}`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId, claim },
@@ -1186,7 +1187,7 @@ export async function acceptDispute(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/dispute/release`;
+    const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE}`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId },
@@ -1216,7 +1217,7 @@ export async function claimPayment(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/releaseAfterTimeout`;
+    const url = `${getGatewayUrl()}${NODE_API.RELEASE_AFTER_TIMEOUT}`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId },
@@ -1248,7 +1249,7 @@ export async function resendOrderMessage(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/resendordermessage`;
+    const url = `${getGatewayUrl()}${NODE_API.RESEND_ORDER_MESSAGE}`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId, messageType },
@@ -1273,7 +1274,7 @@ export async function markOrderAsRead(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/markorderasread`;
+    const url = `${getGatewayUrl()}${NODE_API.MARK_ORDER_AS_READ}`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId },

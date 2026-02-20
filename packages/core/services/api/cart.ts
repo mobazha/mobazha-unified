@@ -6,6 +6,7 @@ import { get, post, put, del, request, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
 import { mockProducts } from '../mock/data';
+import { NODE_API } from '../../config/apiPaths';
 
 // 购物车项类型
 export interface CartItem {
@@ -49,7 +50,7 @@ let mockCartData: Cart = {
  */
 export async function getCartItemsCount(username?: string, password?: string): Promise<number> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/count`;
+    const url = `${getGatewayUrl()}${NODE_API.CARTS_COUNT}`;
     const result = await get<{ count: number }>(url, getAuthHeaders(username, password));
     return result.count;
   };
@@ -68,7 +69,7 @@ export async function getCartItemsCount(username?: string, password?: string): P
  */
 export async function getCarts(username?: string, password?: string): Promise<Cart> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts`;
+    const url = `${getGatewayUrl()}${NODE_API.CARTS}`;
     return safeRequest<Cart>(url, { headers: getAuthHeaders(username, password) }, {});
   };
 
@@ -94,7 +95,7 @@ export async function addToCart(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/${peerID}/items`;
+    const url = `${getGatewayUrl()}${NODE_API.CART_ITEMS(peerID)}`;
     return post<{ success: boolean; error?: string }>(
       url,
       item,
@@ -142,7 +143,7 @@ export async function updateCartItem(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/${peerID}/items`;
+    const url = `${getGatewayUrl()}${NODE_API.CART_ITEMS(peerID)}`;
     return put<{ success: boolean; error?: string }>(url, item, getAuthHeaders(username, password));
   };
 
@@ -176,7 +177,7 @@ export async function removeFromCart(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/${peerID}/items`;
+    const url = `${getGatewayUrl()}${NODE_API.CART_ITEMS(peerID)}`;
     return request<{ success: boolean; error?: string }>(url, {
       method: 'DELETE',
       headers: getAuthHeaders(username, password),
@@ -205,7 +206,7 @@ export async function clearCarts(
   password?: string
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts`;
+    const url = `${getGatewayUrl()}${NODE_API.CARTS}`;
     return del<{ success: boolean }>(url, getAuthHeaders(username, password));
   };
 

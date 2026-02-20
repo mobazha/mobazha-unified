@@ -23,6 +23,7 @@ import type {
   SellerStatus,
   MarketplaceRole,
 } from '../../types/marketplace';
+import { HOSTING_API } from '../../config/apiPaths';
 
 // ============ 集市基础 API ============
 
@@ -44,28 +45,30 @@ export async function getMarketplaces(
   if (params.featured !== undefined) queryParams.set('featured', params.featured.toString());
 
   const query = queryParams.toString();
-  return apiClient.get<MarketplaceListResponse>(`/api/v1/marketplaces${query ? `?${query}` : ''}`);
+  return apiClient.get<MarketplaceListResponse>(
+    `${HOSTING_API.MARKETPLACES}${query ? `?${query}` : ''}`
+  );
 }
 
 /**
  * 获取单个集市详情
  */
 export async function getMarketplace(marketplaceId: string): Promise<Marketplace> {
-  return apiClient.get<Marketplace>(`/api/v1/marketplaces/${marketplaceId}`);
+  return apiClient.get<Marketplace>(HOSTING_API.MARKETPLACE(marketplaceId));
 }
 
 /**
  * 通过 slug 获取集市
  */
 export async function getMarketplaceBySlug(slug: string): Promise<Marketplace> {
-  return apiClient.get<Marketplace>(`/api/v1/marketplaces/slug/${slug}`);
+  return apiClient.get<Marketplace>(HOSTING_API.MARKETPLACE_BY_SLUG(slug));
 }
 
 /**
  * 创建集市
  */
 export async function createMarketplace(data: CreateMarketplaceRequest): Promise<Marketplace> {
-  return apiClient.post<Marketplace>('/api/v1/marketplaces', data);
+  return apiClient.post<Marketplace>(HOSTING_API.MARKETPLACES, data);
 }
 
 /**
@@ -75,28 +78,28 @@ export async function updateMarketplace(
   marketplaceId: string,
   data: UpdateMarketplaceRequest
 ): Promise<Marketplace> {
-  return apiClient.put<Marketplace>(`/api/v1/marketplaces/${marketplaceId}`, data);
+  return apiClient.put<Marketplace>(HOSTING_API.MARKETPLACE(marketplaceId), data);
 }
 
 /**
  * 删除集市
  */
 export async function deleteMarketplace(marketplaceId: string): Promise<void> {
-  return apiClient.delete(`/api/v1/marketplaces/${marketplaceId}`);
+  return apiClient.delete(HOSTING_API.MARKETPLACE(marketplaceId));
 }
 
 /**
  * 获取我创建/管理的集市
  */
 export async function getMyMarketplaces(): Promise<Marketplace[]> {
-  return apiClient.get<Marketplace[]>('/api/v1/marketplaces/me/owned');
+  return apiClient.get<Marketplace[]>(HOSTING_API.MARKETPLACES_ME_OWNED);
 }
 
 /**
  * 获取我加入的集市
  */
 export async function getJoinedMarketplaces(): Promise<Marketplace[]> {
-  return apiClient.get<Marketplace[]>('/api/v1/marketplaces/me/joined');
+  return apiClient.get<Marketplace[]>(HOSTING_API.MARKETPLACES_ME_JOINED);
 }
 
 /**
@@ -113,7 +116,7 @@ export async function searchMarketplaces(
  * 获取推荐集市
  */
 export async function getFeaturedMarketplaces(limit: number = 6): Promise<Marketplace[]> {
-  return apiClient.get<Marketplace[]>(`/api/v1/marketplaces/featured?limit=${limit}`);
+  return apiClient.get<Marketplace[]>(`${HOSTING_API.MARKETPLACES_FEATURED}?limit=${limit}`);
 }
 
 // ============ 成员管理 API ============
@@ -135,7 +138,7 @@ export async function getMarketplaceMembers(
 
   const query = queryParams.toString();
   return apiClient.get<{ members: MarketplaceMember[]; total: number }>(
-    `/api/v1/marketplaces/${marketplaceId}/members${query ? `?${query}` : ''}`
+    `${HOSTING_API.MARKETPLACE_MEMBERS(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }
 
@@ -143,14 +146,14 @@ export async function getMarketplaceMembers(
  * 加入集市
  */
 export async function joinMarketplace(marketplaceId: string): Promise<MarketplaceMember> {
-  return apiClient.post<MarketplaceMember>(`/api/v1/marketplaces/${marketplaceId}/join`, {});
+  return apiClient.post<MarketplaceMember>(HOSTING_API.MARKETPLACE_JOIN(marketplaceId), {});
 }
 
 /**
  * 离开集市
  */
 export async function leaveMarketplace(marketplaceId: string): Promise<void> {
-  return apiClient.post(`/api/v1/marketplaces/${marketplaceId}/leave`, {});
+  return apiClient.post(HOSTING_API.MARKETPLACE_LEAVE(marketplaceId), {});
 }
 
 /**
@@ -162,7 +165,7 @@ export async function updateMemberRole(
   role: MarketplaceRole
 ): Promise<MarketplaceMember> {
   return apiClient.put<MarketplaceMember>(
-    `/api/v1/marketplaces/${marketplaceId}/members/${memberId}/role`,
+    HOSTING_API.MARKETPLACE_MEMBER_ROLE(marketplaceId, memberId),
     { role }
   );
 }
@@ -171,7 +174,7 @@ export async function updateMemberRole(
  * 移除成员
  */
 export async function removeMember(marketplaceId: string, memberId: string): Promise<void> {
-  return apiClient.delete(`/api/v1/marketplaces/${marketplaceId}/members/${memberId}`);
+  return apiClient.delete(HOSTING_API.MARKETPLACE_MEMBER(marketplaceId, memberId));
 }
 
 // ============ 卖家申请 API ============
@@ -183,7 +186,7 @@ export async function applyAsSeller(
   data: SellerApplicationRequest
 ): Promise<MarketplaceApplication> {
   return apiClient.post<MarketplaceApplication>(
-    `/api/v1/marketplaces/${data.marketplaceId}/seller-applications`,
+    HOSTING_API.MARKETPLACE_SELLER_APPLICATIONS(data.marketplaceId),
     data
   );
 }
@@ -202,7 +205,7 @@ export async function getSellerApplications(
 
   const query = queryParams.toString();
   return apiClient.get<{ applications: MarketplaceApplication[]; total: number }>(
-    `/api/v1/marketplaces/${marketplaceId}/seller-applications${query ? `?${query}` : ''}`
+    `${HOSTING_API.MARKETPLACE_SELLER_APPLICATIONS(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }
 
@@ -215,7 +218,7 @@ export async function reviewSellerApplication(
   data: { approved: boolean; note?: string }
 ): Promise<MarketplaceApplication> {
   return apiClient.post<MarketplaceApplication>(
-    `/api/v1/marketplaces/${marketplaceId}/seller-applications/${applicationId}/review`,
+    HOSTING_API.MARKETPLACE_SELLER_APPLICATION_REVIEW(marketplaceId, applicationId),
     data
   );
 }
@@ -229,7 +232,7 @@ export async function updateSellerStatus(
   status: SellerStatus
 ): Promise<MarketplaceMember> {
   return apiClient.put<MarketplaceMember>(
-    `/api/v1/marketplaces/${marketplaceId}/sellers/${sellerId}/status`,
+    HOSTING_API.MARKETPLACE_SELLER_STATUS(marketplaceId, sellerId),
     { status }
   );
 }
@@ -258,7 +261,7 @@ export async function getMarketplaceProducts(
 
   const query = queryParams.toString();
   return apiClient.get<{ products: MarketplaceProduct[]; total: number }>(
-    `/api/v1/marketplaces/${marketplaceId}/products${query ? `?${query}` : ''}`
+    `${HOSTING_API.MARKETPLACE_PRODUCTS(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }
 
@@ -269,7 +272,7 @@ export async function listProductInMarketplace(
   data: ListProductRequest
 ): Promise<MarketplaceProduct> {
   return apiClient.post<MarketplaceProduct>(
-    `/api/v1/marketplaces/${data.marketplaceId}/products`,
+    HOSTING_API.MARKETPLACE_PRODUCTS(data.marketplaceId),
     data
   );
 }
@@ -281,7 +284,7 @@ export async function unlistProductFromMarketplace(
   marketplaceId: string,
   productId: string
 ): Promise<void> {
-  return apiClient.delete(`/api/v1/marketplaces/${marketplaceId}/products/${productId}`);
+  return apiClient.delete(HOSTING_API.MARKETPLACE_PRODUCT(marketplaceId, productId));
 }
 
 /**
@@ -293,7 +296,7 @@ export async function reviewProduct(
   data: { status: ProductApprovalStatus; reason?: string }
 ): Promise<MarketplaceProduct> {
   return apiClient.post<MarketplaceProduct>(
-    `/api/v1/marketplaces/${marketplaceId}/products/${productId}/review`,
+    HOSTING_API.MARKETPLACE_PRODUCT_REVIEW(marketplaceId, productId),
     data
   );
 }
@@ -308,7 +311,7 @@ export async function setProductFeatured(
   featuredUntil?: string
 ): Promise<MarketplaceProduct> {
   return apiClient.put<MarketplaceProduct>(
-    `/api/v1/marketplaces/${marketplaceId}/products/${productId}/featured`,
+    HOSTING_API.MARKETPLACE_PRODUCT_FEATURED(marketplaceId, productId),
     { featured, featuredUntil }
   );
 }
@@ -328,7 +331,7 @@ export async function getAnnouncements(
 
   const query = queryParams.toString();
   return apiClient.get<{ announcements: MarketplaceAnnouncement[]; total: number }>(
-    `/api/v1/marketplaces/${marketplaceId}/announcements${query ? `?${query}` : ''}`
+    `${HOSTING_API.MARKETPLACE_ANNOUNCEMENTS(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }
 
@@ -340,7 +343,7 @@ export async function createAnnouncement(
   data: { title: string; content: string; pinned?: boolean }
 ): Promise<MarketplaceAnnouncement> {
   return apiClient.post<MarketplaceAnnouncement>(
-    `/api/v1/marketplaces/${marketplaceId}/announcements`,
+    HOSTING_API.MARKETPLACE_ANNOUNCEMENTS(marketplaceId),
     data
   );
 }
@@ -354,7 +357,7 @@ export async function updateAnnouncement(
   data: { title?: string; content?: string; pinned?: boolean }
 ): Promise<MarketplaceAnnouncement> {
   return apiClient.put<MarketplaceAnnouncement>(
-    `/api/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
+    HOSTING_API.MARKETPLACE_ANNOUNCEMENT(marketplaceId, announcementId),
     data
   );
 }
@@ -366,7 +369,7 @@ export async function deleteAnnouncement(
   marketplaceId: string,
   announcementId: string
 ): Promise<void> {
-  return apiClient.delete(`/api/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`);
+  return apiClient.delete(HOSTING_API.MARKETPLACE_ANNOUNCEMENT(marketplaceId, announcementId));
 }
 
 // ============ 活动日志 API ============
@@ -385,6 +388,6 @@ export async function getActivityLogs(
 
   const query = queryParams.toString();
   return apiClient.get<{ logs: MarketplaceActivityLog[]; total: number }>(
-    `/api/v1/marketplaces/${marketplaceId}/activity${query ? `?${query}` : ''}`
+    `${HOSTING_API.MARKETPLACE_ACTIVITY(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }

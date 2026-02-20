@@ -5,6 +5,7 @@
 import { get, post, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
+import { NODE_API } from '../../config/apiPaths';
 
 // 争议状态
 export type DisputeState =
@@ -101,7 +102,7 @@ export async function getCases(
   offsetId = ''
 ): Promise<CaseListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/cases?limit=${limit}&offsetId=${offsetId}`;
+    const url = `${getGatewayUrl()}${NODE_API.CASES}?limit=${limit}&offsetId=${offsetId}`;
     return safeRequest<CaseListItem[]>(url, { headers: getAuthHeaders(username, password) }, []);
   };
 
@@ -121,7 +122,7 @@ export async function getCaseDetails(
   password?: string
 ): Promise<DisputeCase | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/cases/${orderId}`;
+    const url = `${getGatewayUrl()}${NODE_API.CASE(orderId)}`;
     try {
       return await get<DisputeCase>(url, getAuthHeaders(username, password));
     } catch {
@@ -184,7 +185,7 @@ export async function openDispute(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/dispute/open`;
+  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_OPEN}`;
   return post(url, { orderID: orderId, claim }, getAuthHeaders(username, password));
 }
 
@@ -196,7 +197,7 @@ export async function closeDispute(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/dispute/close`;
+  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_CLOSE}`;
   return post(url, { orderID: orderId }, getAuthHeaders(username, password));
 }
 
@@ -211,7 +212,7 @@ export async function resolveDispute(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/dispute/release`;
+  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE}`;
   return post(
     url,
     {
@@ -232,7 +233,7 @@ export async function acceptDisputeResolution(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/dispute/release`;
+  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE}`;
   return post(url, { orderID: orderId }, getAuthHeaders(username, password));
 }
 
@@ -244,7 +245,7 @@ export async function releaseEscrowAfterTimeout(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/dispute/releaseAfterTimeout`;
+  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT}`;
   return post(url, { orderID: orderId }, getAuthHeaders(username, password));
 }
 
@@ -263,7 +264,7 @@ export async function getReleaseFundsInstructions(
   signature?: string;
   error?: string;
 }> {
-  const url = `${getGatewayUrl()}/instructions/dispute/release`;
+  const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_DISPUTE_RELEASE}`;
   return post(
     url,
     {

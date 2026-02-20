@@ -8,6 +8,7 @@ import { del, get, post, put, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders, getHeadersWithContext } from './config';
 import { withMockFallback } from './mode';
 import { mockUsers } from '../mock/data';
+import { NODE_API } from '../../config/apiPaths';
 
 /**
  * 关注用户
@@ -17,7 +18,7 @@ export async function followUser(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/follow/${peerID}`;
+  const url = `${getGatewayUrl()}${NODE_API.FOLLOW(peerID)}`;
   return post(url, {}, getAuthHeaders(username, password));
 }
 
@@ -29,7 +30,7 @@ export async function unfollowUser(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/following/${peerID}`;
+  const url = `${getGatewayUrl()}${NODE_API.FOLLOWING_PEER(peerID)}`;
   return del(url, getAuthHeaders(username, password));
 }
 
@@ -44,8 +45,8 @@ export async function getFollowers(
   const realFn = async () => {
     const timestamp = Date.now();
     const url = peerID
-      ? `${getGatewayUrl()}/followers/${peerID}?usecache=true&${timestamp}`
-      : `${getGatewayUrl()}/followers`;
+      ? `${getGatewayUrl()}${NODE_API.FOLLOWERS_PEER(peerID)}?usecache=true&${timestamp}`
+      : `${getGatewayUrl()}${NODE_API.FOLLOWERS}`;
     return safeRequest<string[]>(url, { headers: getHeadersWithContext(username, password) }, []);
   };
 
@@ -68,8 +69,8 @@ export async function getFollowing(
   const realFn = async () => {
     const timestamp = Date.now();
     const url = peerID
-      ? `${getGatewayUrl()}/following/${peerID}?usecache=true&${timestamp}`
-      : `${getGatewayUrl()}/following`;
+      ? `${getGatewayUrl()}${NODE_API.FOLLOWING_PEER(peerID)}?usecache=true&${timestamp}`
+      : `${getGatewayUrl()}${NODE_API.FOLLOWING}`;
     return safeRequest<string[]>(url, { headers: getHeadersWithContext(username, password) }, []);
   };
 
@@ -90,7 +91,7 @@ export async function isFollowingMe(
   password?: string
 ): Promise<boolean> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/followers/${peerID}/check`;
+    const url = `${getGatewayUrl()}${NODE_API.FOLLOWERS_CHECK(peerID)}`;
     const result = await get<{ followsMe: boolean }>(url, getAuthHeaders(username, password));
     return result.followsMe;
   };
@@ -131,7 +132,7 @@ export async function fetchProfiles(
   }>
 > {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/profiles/batch`;
+    const url = `${getGatewayUrl()}${NODE_API.PROFILES_BATCH}`;
     return post<
       Array<{
         peerID: string;
@@ -169,7 +170,7 @@ let blockedNodesCache: string[] | null = null;
  */
 export async function getBlockedNodes(username?: string, password?: string): Promise<string[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/preferences`;
+    const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
     const result = await get<{ blockedNodes?: string[] }>(url, getAuthHeaders(username, password));
     blockedNodesCache = result.blockedNodes || [];
     return blockedNodesCache;
@@ -203,7 +204,7 @@ export async function blockUser(
     // 添加到屏蔽列表
     const newBlockedNodes = [...currentBlocked, peerID];
 
-    const url = `${getGatewayUrl()}/preferences`;
+    const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
     await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
 
     // 更新本地缓存
@@ -244,7 +245,7 @@ export async function unblockUser(
     // 从屏蔽列表移除
     const newBlockedNodes = currentBlocked.filter(id => id !== peerID);
 
-    const url = `${getGatewayUrl()}/preferences`;
+    const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
     await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
 
     // 更新本地缓存
