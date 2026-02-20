@@ -2,7 +2,7 @@
  * 购物车 API 服务
  */
 
-import { get, post, del, safeRequest } from './client';
+import { get, post, put, del, request, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
 import { mockProducts } from '../mock/data';
@@ -49,7 +49,7 @@ let mockCartData: Cart = {
  */
 export async function getCartItemsCount(username?: string, password?: string): Promise<number> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/itemsCount`;
+    const url = `${getGatewayUrl()}/carts/count`;
     const result = await get<{ count: number }>(url, getAuthHeaders(username, password));
     return result.count;
   };
@@ -60,7 +60,7 @@ export async function getCartItemsCount(username?: string, password?: string): P
       .reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  return withMockFallback(realFn, mockFn, '/carts/itemsCount');
+  return withMockFallback(realFn, mockFn, '/carts/count');
 }
 
 /**
@@ -94,7 +94,7 @@ export async function addToCart(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/${peerID}/add`;
+    const url = `${getGatewayUrl()}/carts/${peerID}/items`;
     return post<{ success: boolean; error?: string }>(
       url,
       item,
@@ -103,7 +103,6 @@ export async function addToCart(
   };
 
   const mockFn = async () => {
-    // Mock: 添加到本地购物车
     if (!mockCartData[peerID]) {
       mockCartData[peerID] = [];
     }
@@ -112,7 +111,6 @@ export async function addToCart(
     if (existingIndex >= 0) {
       mockCartData[peerID][existingIndex].quantity += item.quantity;
     } else {
-      // 查找商品信息
       const product = mockProducts.find(p => p.slug === item.slug);
       mockCartData[peerID].push({
         ...item,
@@ -127,7 +125,7 @@ export async function addToCart(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/carts/${peerID}/add`);
+  return withMockFallback(realFn, mockFn, `/carts/${peerID}/items`);
 }
 
 /**
@@ -144,16 +142,11 @@ export async function updateCartItem(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/${peerID}/update`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      item,
-      getAuthHeaders(username, password)
-    );
+    const url = `${getGatewayUrl()}/carts/${peerID}/items`;
+    return put<{ success: boolean; error?: string }>(url, item, getAuthHeaders(username, password));
   };
 
   const mockFn = async () => {
-    // Mock: 更新本地购物车
     if (mockCartData[peerID]) {
       const existingIndex = mockCartData[peerID].findIndex(i => i.slug === item.slug);
       if (existingIndex >= 0) {
@@ -170,7 +163,7 @@ export async function updateCartItem(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/carts/${peerID}/update`);
+  return withMockFallback(realFn, mockFn, `/carts/${peerID}/items`);
 }
 
 /**
@@ -183,16 +176,15 @@ export async function removeFromCart(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/carts/${peerID}/remove`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { slug },
-      getAuthHeaders(username, password)
-    );
+    const url = `${getGatewayUrl()}/carts/${peerID}/items`;
+    return request<{ success: boolean; error?: string }>(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(username, password),
+      body: { slug },
+    });
   };
 
   const mockFn = async () => {
-    // Mock: 从本地购物车移除
     if (mockCartData[peerID]) {
       mockCartData[peerID] = mockCartData[peerID].filter(i => i.slug !== slug);
       if (mockCartData[peerID].length === 0) {
@@ -202,7 +194,7 @@ export async function removeFromCart(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/carts/${peerID}/remove`);
+  return withMockFallback(realFn, mockFn, `/carts/${peerID}/items`);
 }
 
 /**

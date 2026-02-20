@@ -131,7 +131,7 @@ export async function fetchProfiles(
   }>
 > {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/fetchprofiles`;
+    const url = `${getGatewayUrl()}/profiles/batch`;
     return post<
       Array<{
         peerID: string;
@@ -156,7 +156,7 @@ export async function fetchProfiles(
     });
   };
 
-  return withMockFallback(realFn, mockFn, '/fetchprofiles');
+  return withMockFallback(realFn, mockFn, '/profiles/batch');
 }
 
 // ============ Block 功能 ============

@@ -16,7 +16,7 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/profile`;
+    url = `${getGatewayUrl()}/profiles`;
   } else {
     url = `${getSearchUrl()}/api/profile/raw?peerId=${peerID}&${timestamp}`;
   }
@@ -40,7 +40,7 @@ export async function getMyProfile(
   username?: string,
   password?: string
 ): Promise<UserProfile | null> {
-  const url = `${getGatewayUrl()}/profile`;
+  const url = `${getGatewayUrl()}/profiles`;
   try {
     return await get<UserProfile>(url, getAuthHeaders(username, password));
   } catch {
@@ -52,13 +52,13 @@ export async function getMyProfile(
  * 创建用户资料（首次，POST）
  * 用于新用户 onboarding 流程
  *
- * 注意：后端 POST /v1/profile 成功时返回 200 {}（空对象），
+ * 注意：后端 POST /v1/profiles 成功时返回 200 {}（空对象），
  * 不包含 success 字段，所以只要请求不抛异常就视为成功。
  */
 export async function createProfile(
   profile: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/profile`;
+  const url = `${getGatewayUrl()}/profiles`;
   try {
     await post(url, profile, getAuthHeaders());
     // 后端返回 200（即使 body 是 {}）即表示创建成功
@@ -79,7 +79,7 @@ export async function setProfile(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/profile`;
+  const url = `${getGatewayUrl()}/profiles`;
   return put(url, { ...profile, vendor: true }, getAuthHeaders(username, password));
 }
 
