@@ -121,7 +121,7 @@ export async function getCaseDetails(
   password?: string
 ): Promise<DisputeCase | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/case/${orderId}`;
+    const url = `${getGatewayUrl()}/cases/${orderId}`;
     try {
       return await get<DisputeCase>(url, getAuthHeaders(username, password));
     } catch {
@@ -172,7 +172,7 @@ export async function getCaseDetails(
     } as DisputeCase;
   };
 
-  return withMockFallback(realFn, mockFn, `/case/${orderId}`);
+  return withMockFallback(realFn, mockFn, `/cases/${orderId}`);
 }
 
 /**

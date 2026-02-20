@@ -91,7 +91,7 @@ export async function setAcceptedCoins(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/bulkupdatecurrency`;
+  const url = `${getGatewayUrl()}/preferences/currency`;
   return post(url, { currencies: coins }, getAuthHeaders(username, password));
 }
 
@@ -152,7 +152,7 @@ export function getAvatarUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'medium'
 ): string {
-  return `${getGatewayUrl()}/avatar/${peerID}?size=${size}`;
+  return `${getGatewayUrl()}/profiles/${peerID}/avatar?size=${size}`;
 }
 
 /**
@@ -162,5 +162,5 @@ export function getHeaderUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'large'
 ): string {
-  return `${getGatewayUrl()}/header/${peerID}?size=${size}`;
+  return `${getGatewayUrl()}/profiles/${peerID}/header?size=${size}`;
 }
