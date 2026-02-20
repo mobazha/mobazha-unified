@@ -40,13 +40,13 @@ export interface FullHealthReport {
 
 // 需要检查的端点
 const ENDPOINTS = [
-  { path: '/ob/profile', name: 'My Profile', auth: true },
-  { path: '/ob/listingindex', name: 'Listing Index', auth: true },
-  { path: '/ob/purchases', name: 'Purchases', auth: true },
-  { path: '/ob/sales', name: 'Sales', auth: true },
+  { path: '/profile', name: 'My Profile', auth: true },
+  { path: '/listingindex', name: 'Listing Index', auth: true },
+  { path: '/purchases', name: 'Purchases', auth: true },
+  { path: '/sales', name: 'Sales', auth: true },
   { path: '/wallet/balance', name: 'Wallet Balance', auth: true },
-  { path: '/ob/cases', name: 'Dispute Cases', auth: true },
-  { path: '/ob/notifications', name: 'Notifications', auth: true },
+  { path: '/cases', name: 'Dispute Cases', auth: true },
+  { path: '/notifications', name: 'Notifications', auth: true },
 ];
 
 /**

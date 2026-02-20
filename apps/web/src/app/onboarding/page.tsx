@@ -34,7 +34,7 @@ const ValueIcon = memo(function ValueIcon({
  * Onboarding page for new users
  *
  * Displayed when a user has authenticated but has no profile yet.
- * Collects minimal info (name required) and creates the profile via POST /v1/ob/profile.
+ * Collects minimal info (name required) and creates the profile via POST /v1/profile.
  */
 export default function OnboardingPage() {
   const router = useRouter();

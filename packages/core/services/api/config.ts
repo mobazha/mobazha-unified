@@ -34,7 +34,7 @@ export function setApiConfig(config: Partial<ApiConfig>): void {
  * 在浏览器环境下自动使用代理路径
  *
  * API 路径说明（参考移动端和桌面端）：
- * - gatewayUrl: 包含 /v1 前缀，如 /proxy/v1，用于 /v1/ob/* 接口
+ * - gatewayUrl: 包含 /v1 前缀，如 /proxy/v1，用于 /v1/* 接口
  * - searchUrl: 搜索 API，如 /proxy/info
  * - mbzGatewayUrl: MBZ Gateway，如 /proxy/info/v1
  */
@@ -77,7 +77,7 @@ export function getHostingUrl(): string {
  * 在浏览器环境下自动使用代理路径
  *
  * 注意：返回的 URL 已包含 /v1 前缀（参考移动端 gatewayAPI）
- * 用于 /v1/ob/* 接口（如 /v1/ob/profile, /v1/ob/listing）
+ * 用于 /v1/* 接口（如 /v1/profile, /v1/listing）
  */
 export function getGatewayUrl(): string {
   if (configOverrides.gatewayUrl) {
@@ -207,7 +207,7 @@ export function getHeadersWithContext(
 /**
  * 将 IPFS hash 转换为完整的图片 URL
  * 参考移动端实现: mobazha-mobile/utils/files.js
- * 图片通过 /v1/ob/image/ 路径获取，不是 /info/v1/ob/image/
+ * 图片通过 /v1/image/ 路径获取，不是 /info/v1/image/
  */
 export function getImageUrl(hash: string | undefined | null): string | undefined {
   if (!hash || hash === '') {
@@ -217,6 +217,6 @@ export function getImageUrl(hash: string | undefined | null): string | undefined
   if (hash.startsWith('http://') || hash.startsWith('https://') || hash.startsWith('/')) {
     return hash;
   }
-  // 将 IPFS hash 转换为 gateway URL（使用 /v1/ob/image/ 路径）
-  return `${getGatewayUrl()}/ob/image/${hash}`;
+  // 将 IPFS hash 转换为 gateway URL（使用 /v1/image/ 路径）
+  return `${getGatewayUrl()}/image/${hash}`;
 }

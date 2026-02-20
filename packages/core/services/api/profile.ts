@@ -16,7 +16,7 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/ob/profile`;
+    url = `${getGatewayUrl()}/profile`;
   } else {
     url = `${getSearchUrl()}/api/profile/raw?peerId=${peerID}&${timestamp}`;
   }
@@ -40,7 +40,7 @@ export async function getMyProfile(
   username?: string,
   password?: string
 ): Promise<UserProfile | null> {
-  const url = `${getGatewayUrl()}/ob/profile`;
+  const url = `${getGatewayUrl()}/profile`;
   try {
     return await get<UserProfile>(url, getAuthHeaders(username, password));
   } catch {
@@ -52,13 +52,13 @@ export async function getMyProfile(
  * 创建用户资料（首次，POST）
  * 用于新用户 onboarding 流程
  *
- * 注意：后端 POST /v1/ob/profile 成功时返回 200 {}（空对象），
+ * 注意：后端 POST /v1/profile 成功时返回 200 {}（空对象），
  * 不包含 success 字段，所以只要请求不抛异常就视为成功。
  */
 export async function createProfile(
   profile: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/profile`;
+  const url = `${getGatewayUrl()}/profile`;
   try {
     await post(url, profile, getAuthHeaders());
     // 后端返回 200（即使 body 是 {}）即表示创建成功
@@ -79,7 +79,7 @@ export async function setProfile(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/profile`;
+  const url = `${getGatewayUrl()}/profile`;
   return put(url, { ...profile, vendor: true }, getAuthHeaders(username, password));
 }
 
@@ -91,19 +91,19 @@ export async function setAcceptedCoins(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/bulkupdatecurrency`;
+  const url = `${getGatewayUrl()}/bulkupdatecurrency`;
   return post(url, { currencies: coins }, getAuthHeaders(username, password));
 }
 
 /**
  * 获取用户设置/偏好
- * 后端 API 路径: /v1/ob/preferences
+ * 后端 API 路径: /v1/preferences
  */
 export async function getSettings(
   username?: string,
   password?: string
 ): Promise<UserSettings | null> {
-  const url = `${getGatewayUrl()}/ob/preferences`;
+  const url = `${getGatewayUrl()}/preferences`;
   try {
     return await get<UserSettings>(url, getAuthHeaders(username, password));
   } catch {
@@ -113,14 +113,14 @@ export async function getSettings(
 
 /**
  * 更新用户设置/偏好
- * 后端 API 路径: /v1/ob/preferences
+ * 后端 API 路径: /v1/preferences
  */
 export async function setSettings(
   settings: Partial<UserSettings>,
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/preferences`;
+  const url = `${getGatewayUrl()}/preferences`;
   return put(url, settings, getAuthHeaders(username, password));
 }
 
@@ -136,7 +136,7 @@ export async function reportProfile(peerID: string, reason: string): Promise<{ s
  * 获取 PeerID
  */
 export async function getPeerID(username?: string, password?: string): Promise<string | null> {
-  const url = `${getGatewayUrl()}/ob/peerid`;
+  const url = `${getGatewayUrl()}/peerid`;
   try {
     const response = await get<{ peerID: string }>(url, getAuthHeaders(username, password));
     return response.peerID;
@@ -152,7 +152,7 @@ export function getAvatarUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'medium'
 ): string {
-  return `${getGatewayUrl()}/ob/avatar/${peerID}?size=${size}`;
+  return `${getGatewayUrl()}/avatar/${peerID}?size=${size}`;
 }
 
 /**
@@ -162,5 +162,5 @@ export function getHeaderUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'large'
 ): string {
-  return `${getGatewayUrl()}/ob/header/${peerID}?size=${size}`;
+  return `${getGatewayUrl()}/header/${peerID}?size=${size}`;
 }

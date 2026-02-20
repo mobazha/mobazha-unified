@@ -346,7 +346,7 @@ export default function EditListingPage() {
   const getPreviewImageUrl = useCallback((image: Image) => {
     const hash = image.small || image.medium || image.original;
     if (!hash) return '';
-    return `${getGatewayUrl()}/ob/images/${hash}`;
+    return `${getGatewayUrl()}/images/${hash}`;
   }, []);
 
   // 加载中状态

@@ -171,7 +171,7 @@ export async function getPurchases(
   offsetId = ''
 ): Promise<OrderListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/purchases?limit=${limit}&offsetId=${offsetId}`;
+    const url = `${getGatewayUrl()}/purchases?limit=${limit}&offsetId=${offsetId}`;
     const response = await safeRequest<PurchasesResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -186,7 +186,7 @@ export async function getPurchases(
     return mockOrders;
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/purchases');
+  return withMockFallback(realFn, mockFn, '/purchases');
 }
 
 /**
@@ -199,7 +199,7 @@ export async function getSales(
   offsetId = ''
 ): Promise<OrderListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/sales?limit=${limit}&offsetId=${offsetId}`;
+    const url = `${getGatewayUrl()}/sales?limit=${limit}&offsetId=${offsetId}`;
     const response = await safeRequest<SalesResponse>(
       url,
       { headers: getAuthHeaders(username, password) },
@@ -219,7 +219,7 @@ export async function getSales(
     }));
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/sales');
+  return withMockFallback(realFn, mockFn, '/sales');
 }
 
 /**
@@ -231,7 +231,7 @@ export async function getOrderDetails(
   password?: string
 ): Promise<Order | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/order/${orderId}`;
+    const url = `${getGatewayUrl()}/order/${orderId}`;
     try {
       return await get<Order>(url, getAuthHeaders(username, password));
     } catch {
@@ -311,7 +311,7 @@ export async function getOrderDetails(
     return mockOrder;
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/order/${orderId}`);
+  return withMockFallback(realFn, mockFn, `/order/${orderId}`);
 }
 
 // ========== 订单创建 API ==========
@@ -467,7 +467,7 @@ export async function purchaseListing(
   password?: string
 ): Promise<PurchaseResult> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/purchase`;
+    const url = `${getGatewayUrl()}/purchase`;
     return post<PurchaseResult>(url, data, getAuthHeaders(username, password));
   };
 
@@ -487,7 +487,7 @@ export async function purchaseListing(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/purchase');
+  return withMockFallback(realFn, mockFn, '/purchase');
 }
 
 /**
@@ -499,7 +499,7 @@ export async function estimateOrderTotal(
   password?: string
 ): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/estimatetotal`;
+    const url = `${getGatewayUrl()}/estimatetotal`;
     return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
   };
 
@@ -516,7 +516,7 @@ export async function estimateOrderTotal(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/estimatetotal');
+  return withMockFallback(realFn, mockFn, '/estimatetotal');
 }
 
 /**
@@ -528,7 +528,7 @@ export async function getCheckoutBreakdown(
   password?: string
 ): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/checkoutbreakdown`;
+    const url = `${getGatewayUrl()}/checkoutbreakdown`;
     return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
   };
 
@@ -545,7 +545,7 @@ export async function getCheckoutBreakdown(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/checkoutbreakdown');
+  return withMockFallback(realFn, mockFn, '/checkoutbreakdown');
 }
 
 // ========== 订单状态操作 API ==========
@@ -974,7 +974,7 @@ export async function fundOrder(
   password?: string
 ): Promise<{ success: boolean; txid?: string; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/orderspend`;
+    const url = `${getGatewayUrl()}/orderspend`;
     return post<{ success: boolean; txid?: string; error?: string }>(
       url,
       {
@@ -1002,7 +1002,7 @@ export async function fundOrder(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/orderspend');
+  return withMockFallback(realFn, mockFn, '/orderspend');
 }
 
 /**
@@ -1216,7 +1216,7 @@ export async function claimPayment(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/releaseAfterTimeout`;
+    const url = `${getGatewayUrl()}/releaseAfterTimeout`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId },
@@ -1233,7 +1233,7 @@ export async function claimPayment(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/releaseAfterTimeout');
+  return withMockFallback(realFn, mockFn, '/releaseAfterTimeout');
 }
 
 // ========== 其他 API ==========
@@ -1248,7 +1248,7 @@ export async function resendOrderMessage(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/resendordermessage`;
+    const url = `${getGatewayUrl()}/resendordermessage`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId, messageType },
@@ -1261,7 +1261,7 @@ export async function resendOrderMessage(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/resendordermessage');
+  return withMockFallback(realFn, mockFn, '/resendordermessage');
 }
 
 /**
@@ -1273,7 +1273,7 @@ export async function markOrderAsRead(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/markorderasread`;
+    const url = `${getGatewayUrl()}/markorderasread`;
     return post<{ success: boolean; error?: string }>(
       url,
       { orderID: orderId },
@@ -1290,7 +1290,7 @@ export async function markOrderAsRead(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/markorderasread');
+  return withMockFallback(realFn, mockFn, '/markorderasread');
 }
 
 // ========== 导出 API 对象 ==========

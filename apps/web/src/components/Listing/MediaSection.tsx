@@ -79,7 +79,7 @@ export function MediaSection({
           const formData = new FormData();
           formData.append('file', file);
 
-          const response = await fetch(`${getGatewayUrl()}/ob/images`, {
+          const response = await fetch(`${getGatewayUrl()}/images`, {
             method: 'POST',
             body: formData,
           });
@@ -153,7 +153,7 @@ export function MediaSection({
     (image: Image, size: 'tiny' | 'small' | 'medium' | 'large' | 'original' = 'small') => {
       const hash = image[size] || image.small || image.medium || image.original;
       if (!hash) return '';
-      return `${getGatewayUrl()}/ob/images/${hash}`;
+      return `${getGatewayUrl()}/images/${hash}`;
     },
     []
   );
@@ -179,7 +179,7 @@ export function MediaSection({
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`${getGatewayUrl()}/ob/images`, {
+        const response = await fetch(`${getGatewayUrl()}/images`, {
           method: 'POST',
           body: formData,
         });

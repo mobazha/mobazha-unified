@@ -17,7 +17,7 @@ export async function followUser(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/follow/${peerID}`;
+  const url = `${getGatewayUrl()}/follow/${peerID}`;
   return post(url, {}, getAuthHeaders(username, password));
 }
 
@@ -29,7 +29,7 @@ export async function unfollowUser(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/ob/unfollow/${peerID}`;
+  const url = `${getGatewayUrl()}/unfollow/${peerID}`;
   return post(url, {}, getAuthHeaders(username, password));
 }
 
@@ -44,8 +44,8 @@ export async function getFollowers(
   const realFn = async () => {
     const timestamp = Date.now();
     const url = peerID
-      ? `${getGatewayUrl()}/ob/followers/${peerID}?usecache=true&${timestamp}`
-      : `${getGatewayUrl()}/ob/followers`;
+      ? `${getGatewayUrl()}/followers/${peerID}?usecache=true&${timestamp}`
+      : `${getGatewayUrl()}/followers`;
     return safeRequest<string[]>(url, { headers: getHeadersWithContext(username, password) }, []);
   };
 
@@ -54,7 +54,7 @@ export async function getFollowers(
     return mockUsers.map(u => u.peerID);
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/followers/${peerID || 'self'}`);
+  return withMockFallback(realFn, mockFn, `/followers/${peerID || 'self'}`);
 }
 
 /**
@@ -68,8 +68,8 @@ export async function getFollowing(
   const realFn = async () => {
     const timestamp = Date.now();
     const url = peerID
-      ? `${getGatewayUrl()}/ob/following/${peerID}?usecache=true&${timestamp}`
-      : `${getGatewayUrl()}/ob/following`;
+      ? `${getGatewayUrl()}/following/${peerID}?usecache=true&${timestamp}`
+      : `${getGatewayUrl()}/following`;
     return safeRequest<string[]>(url, { headers: getHeadersWithContext(username, password) }, []);
   };
 
@@ -78,7 +78,7 @@ export async function getFollowing(
     return mockUsers.slice(0, 2).map(u => u.peerID);
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/following/${peerID || 'self'}`);
+  return withMockFallback(realFn, mockFn, `/following/${peerID || 'self'}`);
 }
 
 /**
@@ -90,7 +90,7 @@ export async function isFollowingMe(
   password?: string
 ): Promise<boolean> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/followsme/${peerID}`;
+    const url = `${getGatewayUrl()}/followsme/${peerID}`;
     const result = await get<{ followsMe: boolean }>(url, getAuthHeaders(username, password));
     return result.followsMe;
   };
@@ -100,7 +100,7 @@ export async function isFollowingMe(
     return Math.random() > 0.5;
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/followsme/${peerID}`);
+  return withMockFallback(realFn, mockFn, `/followsme/${peerID}`);
 }
 
 /**
@@ -131,13 +131,15 @@ export async function fetchProfiles(
   }>
 > {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/fetchprofiles`;
-    return post<Array<{
-      peerID: string;
-      name: string;
-      avatarHashes?: { medium?: string };
-      shortDescription?: string;
-    }>>(url, peerIDs, getAuthHeaders(username, password));
+    const url = `${getGatewayUrl()}/fetchprofiles`;
+    return post<
+      Array<{
+        peerID: string;
+        name: string;
+        avatarHashes?: { medium?: string };
+        shortDescription?: string;
+      }>
+    >(url, peerIDs, getAuthHeaders(username, password));
   };
 
   const mockFn = async () => {
@@ -154,7 +156,7 @@ export async function fetchProfiles(
     });
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/fetchprofiles');
+  return withMockFallback(realFn, mockFn, '/fetchprofiles');
 }
 
 // ============ Block 功能 ============
@@ -165,12 +167,9 @@ let blockedNodesCache: string[] | null = null;
 /**
  * 获取当前用户的屏蔽列表
  */
-export async function getBlockedNodes(
-  username?: string,
-  password?: string
-): Promise<string[]> {
+export async function getBlockedNodes(username?: string, password?: string): Promise<string[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/preferences`;
+    const url = `${getGatewayUrl()}/preferences`;
     const result = await get<{ blockedNodes?: string[] }>(url, getAuthHeaders(username, password));
     blockedNodesCache = result.blockedNodes || [];
     return blockedNodesCache;
@@ -181,7 +180,7 @@ export async function getBlockedNodes(
     return blockedNodesCache || [];
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/preferences (blockedNodes)');
+  return withMockFallback(realFn, mockFn, '/preferences (blockedNodes)');
 }
 
 /**
@@ -204,7 +203,7 @@ export async function blockUser(
     // 添加到屏蔽列表
     const newBlockedNodes = [...currentBlocked, peerID];
 
-    const url = `${getGatewayUrl()}/ob/preferences`;
+    const url = `${getGatewayUrl()}/preferences`;
     await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
 
     // 更新本地缓存
@@ -222,7 +221,7 @@ export async function blockUser(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/preferences (block ${peerID})`);
+  return withMockFallback(realFn, mockFn, `/preferences (block ${peerID})`);
 }
 
 /**
@@ -245,7 +244,7 @@ export async function unblockUser(
     // 从屏蔽列表移除
     const newBlockedNodes = currentBlocked.filter(id => id !== peerID);
 
-    const url = `${getGatewayUrl()}/ob/preferences`;
+    const url = `${getGatewayUrl()}/preferences`;
     await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
 
     // 更新本地缓存
@@ -262,7 +261,7 @@ export async function unblockUser(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/preferences (unblock ${peerID})`);
+  return withMockFallback(realFn, mockFn, `/preferences (unblock ${peerID})`);
 }
 
 /**

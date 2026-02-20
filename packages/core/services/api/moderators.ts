@@ -2,7 +2,7 @@
  * Moderators API Service
  * 仲裁员 API 服务
  *
- * 后端 API：GET /v1/ob/moderators?include=profile
+ * 后端 API：GET /v1/moderators?include=profile
  * 返回 Profile[] 数组，每个 Profile 包含 moderatorInfo 字段
  */
 
@@ -240,7 +240,7 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
  * 获取用户偏好设置中的 storeModerators 列表
  */
 async function getStoreModerators(): Promise<string[]> {
-  const url = `${getGatewayUrl()}/ob/preferences`;
+  const url = `${getGatewayUrl()}/preferences`;
 
   try {
     const response = await fetch(url, {
@@ -263,7 +263,7 @@ async function getStoreModerators(): Promise<string[]> {
 
 /**
  * 批量获取 profile 信息
- * POST /v1/ob/fetchprofiles
+ * POST /v1/fetchprofiles
  */
 /**
  * fetchprofiles API 返回的数据结构
@@ -279,7 +279,7 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
     return [];
   }
 
-  const url = `${getGatewayUrl()}/ob/fetchprofiles`;
+  const url = `${getGatewayUrl()}/fetchprofiles`;
 
   try {
     const response = await fetch(url, {
@@ -322,8 +322,8 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
  * 获取仲裁员列表
  *
  * 实现逻辑（参考桌面端）：
- * 1. 从 GET /v1/ob/preferences 获取 storeModerators 列表（peerID 数组）
- * 2. 用 POST /v1/ob/fetchprofiles 批量获取这些 peerID 的 profile 信息
+ * 1. 从 GET /v1/preferences 获取 storeModerators 列表（peerID 数组）
+ * 2. 用 POST /v1/fetchprofiles 批量获取这些 peerID 的 profile 信息
  * 3. 转换为前端 Moderator 格式
  */
 export async function getModerators(

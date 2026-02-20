@@ -22,7 +22,7 @@ interface UseModeratorsResult {
 /**
  * Hook 用于获取仲裁员列表
  *
- * 调用后端 API: GET /v1/ob/moderators?include=profile
+ * 调用后端 API: GET /v1/moderators?include=profile
  */
 export function useModerators(options: UseModeratorsOptions = {}): UseModeratorsResult {
   const { autoFetch = true, limit = 10, verified } = options;

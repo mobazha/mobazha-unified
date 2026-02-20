@@ -266,7 +266,7 @@ export function VariantInventoryTable({
                       >
                         {sku.images?.[0] ? (
                           <img
-                            src={`${getGatewayUrl()}/ob/images/${sku.images[0].tiny || sku.images[0].small || ''}`}
+                            src={`${getGatewayUrl()}/images/${sku.images[0].tiny || sku.images[0].small || ''}`}
                             alt=""
                             className="w-full h-full object-cover"
                           />
@@ -292,7 +292,7 @@ export function VariantInventoryTable({
                               }`}
                             >
                               <img
-                                src={`${getGatewayUrl()}/ob/images/${img.tiny || img.small || ''}`}
+                                src={`${getGatewayUrl()}/images/${img.tiny || img.small || ''}`}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />

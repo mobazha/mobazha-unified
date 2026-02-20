@@ -101,7 +101,7 @@ export async function getCases(
   offsetId = ''
 ): Promise<CaseListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/cases?limit=${limit}&offsetId=${offsetId}`;
+    const url = `${getGatewayUrl()}/cases?limit=${limit}&offsetId=${offsetId}`;
     return safeRequest<CaseListItem[]>(url, { headers: getAuthHeaders(username, password) }, []);
   };
 
@@ -109,7 +109,7 @@ export async function getCases(
     return mockCases;
   };
 
-  return withMockFallback(realFn, mockFn, '/ob/cases');
+  return withMockFallback(realFn, mockFn, '/cases');
 }
 
 /**
@@ -121,7 +121,7 @@ export async function getCaseDetails(
   password?: string
 ): Promise<DisputeCase | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/ob/case/${orderId}`;
+    const url = `${getGatewayUrl()}/case/${orderId}`;
     try {
       return await get<DisputeCase>(url, getAuthHeaders(username, password));
     } catch {
@@ -172,7 +172,7 @@ export async function getCaseDetails(
     } as DisputeCase;
   };
 
-  return withMockFallback(realFn, mockFn, `/ob/case/${orderId}`);
+  return withMockFallback(realFn, mockFn, `/case/${orderId}`);
 }
 
 /**
