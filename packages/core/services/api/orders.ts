@@ -231,7 +231,7 @@ export async function getOrderDetails(
   password?: string
 ): Promise<Order | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/${orderId}`;
+    const url = `${getGatewayUrl()}/orders/${orderId}`;
     try {
       return await get<Order>(url, getAuthHeaders(username, password));
     } catch {
@@ -311,7 +311,7 @@ export async function getOrderDetails(
     return mockOrder;
   };
 
-  return withMockFallback(realFn, mockFn, `/order/${orderId}`);
+  return withMockFallback(realFn, mockFn, `/orders/${orderId}`);
 }
 
 // ========== 订单创建 API ==========
@@ -410,7 +410,7 @@ export async function createOrder(
   }
 
   // Real/Auto 模式：调用真实 API，失败直接抛出错误（不回退到 mock）
-  const url = `${getGatewayUrl()}/order/purchase`;
+  const url = `${getGatewayUrl()}/orders/purchase`;
 
   // 转换数据格式以匹配后端 API (models.Purchase)
   // 后端期望的格式：
@@ -499,7 +499,7 @@ export async function estimateOrderTotal(
   password?: string
 ): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/estimatetotal`;
+    const url = `${getGatewayUrl()}/orders/estimate`;
     return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
   };
 
@@ -516,7 +516,7 @@ export async function estimateOrderTotal(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/estimatetotal');
+  return withMockFallback(realFn, mockFn, '/orders/estimate');
 }
 
 /**
@@ -528,7 +528,7 @@ export async function getCheckoutBreakdown(
   password?: string
 ): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/checkoutbreakdown`;
+    const url = `${getGatewayUrl()}/orders/checkout-breakdown`;
     return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
   };
 
@@ -545,7 +545,7 @@ export async function getCheckoutBreakdown(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/checkoutbreakdown');
+  return withMockFallback(realFn, mockFn, '/orders/checkout-breakdown');
 }
 
 // ========== 订单状态操作 API ==========
@@ -565,7 +565,7 @@ export async function confirmOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/confirm`;
+    const url = `${getGatewayUrl()}/orders/confirm`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -581,7 +581,7 @@ export async function confirmOrder(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/order/confirm');
+  return withMockFallback(realFn, mockFn, '/orders/confirm');
 }
 
 /**
@@ -601,7 +601,7 @@ export async function fulfillOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/fulfill`;
+    const url = `${getGatewayUrl()}/orders/fulfill`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -616,7 +616,7 @@ export async function fulfillOrder(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/order/fulfill');
+  return withMockFallback(realFn, mockFn, '/orders/fulfill');
 }
 
 /**
@@ -642,7 +642,7 @@ export async function completeOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/complete`;
+    const url = `${getGatewayUrl()}/orders/complete`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -657,7 +657,7 @@ export async function completeOrder(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/order/complete');
+  return withMockFallback(realFn, mockFn, '/orders/complete');
 }
 
 /**
@@ -852,7 +852,7 @@ export async function cancelOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/cancel`;
+    const url = `${getGatewayUrl()}/orders/cancel`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -867,7 +867,7 @@ export async function cancelOrder(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/order/cancel');
+  return withMockFallback(realFn, mockFn, '/orders/cancel');
 }
 
 /**
@@ -880,7 +880,7 @@ export async function refundOrder(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/refund`;
+    const url = `${getGatewayUrl()}/orders/refund`;
     // 后端成功时返回 {}，HTTP 200 即表示成功
     await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
     return { success: true };
@@ -895,7 +895,7 @@ export async function refundOrder(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/order/refund');
+  return withMockFallback(realFn, mockFn, '/orders/refund');
 }
 
 // ========== 支付相关 API ==========
@@ -943,7 +943,7 @@ export async function submitPayment(
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/payment`;
+    const url = `${getGatewayUrl()}/orders/payment`;
     return post<{ success: boolean; error?: string }>(
       url,
       { paymentData },
@@ -956,7 +956,7 @@ export async function submitPayment(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/order/payment');
+  return withMockFallback(realFn, mockFn, '/orders/payment');
 }
 
 /**
@@ -974,7 +974,7 @@ export async function fundOrder(
   password?: string
 ): Promise<{ success: boolean; txid?: string; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/orderspend`;
+    const url = `${getGatewayUrl()}/orders/spend`;
     return post<{ success: boolean; txid?: string; error?: string }>(
       url,
       {
@@ -1002,7 +1002,7 @@ export async function fundOrder(
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/orderspend');
+  return withMockFallback(realFn, mockFn, '/orders/spend');
 }
 
 /**
@@ -1127,7 +1127,7 @@ export async function getPaymentRemaining(
   password?: string
 ): Promise<{ remaining?: number; paid?: number; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/order/${orderId}/payment/remaining`;
+    const url = `${getGatewayUrl()}/orders/${orderId}/payment/remaining`;
     return get<{ remaining?: number; paid?: number; error?: string }>(
       url,
       getAuthHeaders(username, password)

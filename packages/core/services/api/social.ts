@@ -4,7 +4,7 @@
  * Follow/Unfollow、粉丝/关注列表
  */
 
-import { get, post, put, safeRequest } from './client';
+import { del, get, post, put, safeRequest } from './client';
 import { getGatewayUrl, getAuthHeaders, getHeadersWithContext } from './config';
 import { withMockFallback } from './mode';
 import { mockUsers } from '../mock/data';
@@ -29,8 +29,8 @@ export async function unfollowUser(
   username?: string,
   password?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}/unfollow/${peerID}`;
-  return post(url, {}, getAuthHeaders(username, password));
+  const url = `${getGatewayUrl()}/following/${peerID}`;
+  return del(url, getAuthHeaders(username, password));
 }
 
 /**
@@ -90,7 +90,7 @@ export async function isFollowingMe(
   password?: string
 ): Promise<boolean> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/followsme/${peerID}`;
+    const url = `${getGatewayUrl()}/followers/${peerID}/check`;
     const result = await get<{ followsMe: boolean }>(url, getAuthHeaders(username, password));
     return result.followsMe;
   };
@@ -100,7 +100,7 @@ export async function isFollowingMe(
     return Math.random() > 0.5;
   };
 
-  return withMockFallback(realFn, mockFn, `/followsme/${peerID}`);
+  return withMockFallback(realFn, mockFn, `/followers/${peerID}/check`);
 }
 
 /**

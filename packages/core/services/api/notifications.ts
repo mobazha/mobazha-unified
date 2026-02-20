@@ -512,7 +512,7 @@ export async function markNotificationAsRead(
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
     const encodedId = encodeURIComponent(notificationId);
-    const url = `${getGatewayUrl()}/marknotificationasread/${encodedId}`;
+    const url = `${getGatewayUrl()}/notifications/${encodedId}/read`;
     return post<{ success: boolean }>(url, {}, getAuthHeaders(username, password));
   };
 
@@ -525,7 +525,7 @@ export async function markNotificationAsRead(
   };
 
   const encodedId = encodeURIComponent(notificationId);
-  return withMockFallback(realFn, mockFn, `/marknotificationasread/${encodedId}`);
+  return withMockFallback(realFn, mockFn, `/notifications/${encodedId}/read`);
 }
 
 /**
@@ -537,7 +537,7 @@ export async function markAllNotificationsAsRead(
   password?: string
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}/marknotificationsasread`;
+    const url = `${getGatewayUrl()}/notifications/read`;
     return post<{ success: boolean }>(
       url,
       notificationIds ? { ids: notificationIds } : {},
@@ -561,7 +561,7 @@ export async function markAllNotificationsAsRead(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/marknotificationsasread');
+  return withMockFallback(realFn, mockFn, '/notifications/read');
 }
 
 /**

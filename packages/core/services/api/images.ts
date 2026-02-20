@@ -21,7 +21,7 @@ export async function uploadProductImages(
   username?: string,
   password?: string
 ): Promise<Image[]> {
-  const url = `${getGatewayUrl()}/productimages`;
+  const url = `${getGatewayUrl()}/media/product-images`;
   try {
     const result = await post<Image[]>(url, images, getAuthHeaders(username, password));
     return result || [];
@@ -40,7 +40,7 @@ export async function uploadImage(
   username?: string,
   password?: string
 ): Promise<Image | null> {
-  const url = `${getGatewayUrl()}/images`;
+  const url = `${getGatewayUrl()}/media/images`;
   try {
     const result = await post<Image[]>(url, [imageData], getAuthHeaders(username, password));
     return result?.[0] || null;
