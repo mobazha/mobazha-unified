@@ -226,7 +226,7 @@ export async function getListingIndex(
   username?: string,
   password?: string
 ): Promise<ProductListItem[]> {
-  const url = `${getGatewayUrl()}/listingindex`;
+  const url = `${getGatewayUrl()}/listings/index`;
   const data = await safeRequest<ProductListItem[] | { success: false }>(
     url,
     { headers: getHeadersWithContext(username, password), timeout: 60000 },
@@ -248,7 +248,7 @@ export async function getStoreListingIndex(
   username?: string,
   password?: string
 ): Promise<ProductListItem[]> {
-  const url = `${getGatewayUrl()}/listingindex/${peerID}`;
+  const url = `${getGatewayUrl()}/listings/index/${peerID}`;
   const data = await safeRequest<ProductListItem[] | { success: false }>(
     url,
     { headers: getHeadersWithContext(username, password), timeout: 60000 },
@@ -274,9 +274,9 @@ export async function getListing(
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/listing/${slug}?`;
+    url = `${getGatewayUrl()}/listings/${slug}?`;
   } else {
-    url = `${getGatewayUrl()}/listing/${peerID}/${slug}?usecache=true&${timestamp}`;
+    url = `${getGatewayUrl()}/listings/${peerID}/${slug}?usecache=true&${timestamp}`;
   }
 
   try {
@@ -294,9 +294,9 @@ export async function getPublicListing(slug: string, peerID?: string): Promise<P
   let url: string;
 
   if (!peerID) {
-    url = `${getGatewayUrl()}/listing/${slug}`;
+    url = `${getGatewayUrl()}/listings/${slug}`;
   } else {
-    url = `${getGatewayUrl()}/listing/${peerID}/${slug}?usecache=true`;
+    url = `${getGatewayUrl()}/listings/${peerID}/${slug}?usecache=true`;
   }
 
   try {
@@ -327,7 +327,7 @@ export async function createListing(
   username?: string,
   password?: string
 ): Promise<{ slug: string } | { error: string }> {
-  const url = `${getGatewayUrl()}/listing`;
+  const url = `${getGatewayUrl()}/listings`;
   return post(url, productDetails, getAuthHeaders(username, password));
 }
 
@@ -339,7 +339,7 @@ export async function updateListing(
   username?: string,
   password?: string
 ): Promise<{ success: boolean } | { error: string }> {
-  const url = `${getGatewayUrl()}/listing`;
+  const url = `${getGatewayUrl()}/listings`;
   return put(url, productDetails, getAuthHeaders(username, password));
 }
 
@@ -351,7 +351,7 @@ export async function deleteListing(
   username?: string,
   password?: string
 ): Promise<{ success: boolean }> {
-  const url = `${getGatewayUrl()}/listing/${slug}`;
+  const url = `${getGatewayUrl()}/listings/${slug}`;
   return del(url, getAuthHeaders(username, password));
 }
 
@@ -369,13 +369,13 @@ export async function getRatingIndex(
   let url: string;
 
   if (peerID && slug) {
-    url = `${getGatewayUrl()}/ratingindex/${peerID}/${slug}?usecache=true`;
+    url = `${getGatewayUrl()}/ratings/index/${peerID}/${slug}?usecache=true`;
   } else if (peerID) {
-    url = `${getGatewayUrl()}/ratingindex/${peerID}?usecache=true`;
+    url = `${getGatewayUrl()}/ratings/index/${peerID}?usecache=true`;
   } else if (slug) {
-    url = `${getGatewayUrl()}/ratingindex/${slug}`;
+    url = `${getGatewayUrl()}/ratings/index/${slug}`;
   } else {
-    url = `${getGatewayUrl()}/ratingindex`;
+    url = `${getGatewayUrl()}/ratings/index`;
   }
 
   return safeRequest<RatingIndex>(
@@ -399,7 +399,7 @@ export async function fetchRatings(
     return [];
   }
 
-  const url = `${getGatewayUrl()}/fetchratings?async=false`;
+  const url = `${getGatewayUrl()}/ratings/batch?async=false`;
 
   try {
     const response = await post<Array<{ id: string; rating: RatingDetail }>>(

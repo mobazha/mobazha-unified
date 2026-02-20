@@ -263,7 +263,7 @@ async function getStoreModerators(): Promise<string[]> {
 
 /**
  * 批量获取 profile 信息
- * POST /v1/fetchprofiles
+ * POST /v1/profiles/batch
  */
 /**
  * fetchprofiles API 返回的数据结构
@@ -279,7 +279,7 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
     return [];
   }
 
-  const url = `${getGatewayUrl()}/fetchprofiles`;
+  const url = `${getGatewayUrl()}/profiles/batch`;
 
   try {
     const response = await fetch(url, {
@@ -323,7 +323,7 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
  *
  * 实现逻辑（参考桌面端）：
  * 1. 从 GET /v1/preferences 获取 storeModerators 列表（peerID 数组）
- * 2. 用 POST /v1/fetchprofiles 批量获取这些 peerID 的 profile 信息
+ * 2. 用 POST /v1/profiles/batch 批量获取这些 peerID 的 profile 信息
  * 3. 转换为前端 Moderator 格式
  */
 export async function getModerators(
