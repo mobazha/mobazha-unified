@@ -28,6 +28,14 @@ export {
 // API 客户端
 export { ApiError, request, get, post, put, del, safeRequest } from './client';
 
+// Type-safe OpenAPI client (openapi-fetch)
+export {
+  createNodeClient,
+  createHostingClient,
+  createSearchClient,
+  onOpenApiUnauthorized,
+} from './openapi-client';
+
 // 商品 API
 export * as productsApi from './products';
 

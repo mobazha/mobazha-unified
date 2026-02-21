@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { Image } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
-import { useI18n, getGatewayUrl } from '@mobazha/core';
+import { useI18n, getGatewayUrl, imagesApi, NODE_API } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,19 +76,13 @@ export function MediaSection({
         const file = filesToUpload[i];
 
         try {
-          const formData = new FormData();
-          formData.append('file', file);
+          const base64 = await imagesApi.fileToBase64(file);
+          const result = await imagesApi.uploadProductImages([
+            { filename: file.name, image: base64 },
+          ]);
 
-          const response = await fetch(`${getGatewayUrl()}/images`, {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.hashes) {
-              newImages.push(result.hashes);
-            }
+          if (result.length > 0) {
+            newImages.push(...result);
           }
         } catch (err) {
           console.error('Failed to upload image:', err);
@@ -153,7 +147,7 @@ export function MediaSection({
     (image: Image, size: 'tiny' | 'small' | 'medium' | 'large' | 'original' = 'small') => {
       const hash = image[size] || image.small || image.medium || image.original;
       if (!hash) return '';
-      return `${getGatewayUrl()}/images/${hash}`;
+      return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`;
     },
     []
   );
@@ -176,19 +170,13 @@ export function MediaSection({
       setIsUploading(true);
 
       try {
-        const formData = new FormData();
-        formData.append('file', file);
+        const base64 = await imagesApi.fileToBase64(file);
+        const result = await imagesApi.uploadProductImages([
+          { filename: file.name, image: base64 },
+        ]);
 
-        const response = await fetch(`${getGatewayUrl()}/images`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.hashes?.original) {
-            onVideoChange(result.hashes.original);
-          }
+        if (result.length > 0 && result[0].original) {
+          onVideoChange(result[0].original);
         }
       } catch (err) {
         console.error('Failed to upload video:', err);

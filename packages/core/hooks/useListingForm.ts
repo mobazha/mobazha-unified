@@ -413,7 +413,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     const itemData: Record<string, unknown> = {
       title: formData.title,
       description: formData.description,
-      price: parseFloat(formData.price) || 0,
+      price: String(parseFloat(formData.price) || 0),
       nsfw: formData.nsfw,
       tags: formData.tags,
       images: formData.images,
@@ -436,6 +436,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       metadata: {
         contractType: formData.contractType,
         format: 'FIXED_PRICE',
+        expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         pricingCurrency: {
           code: formData.pricingCurrency,
           divisibility: 2,

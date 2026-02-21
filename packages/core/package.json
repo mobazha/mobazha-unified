@@ -33,6 +33,7 @@
     }
   },
   "scripts": {
+    "generate:api": "openapi-typescript ${OPENAPI_SPEC:-api-spec/openapi.yaml} -o types/api-generated.d.ts",
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
@@ -54,6 +55,7 @@
     "i18n-iso-countries": "^7.14.0",
     "isomorphic-dompurify": "^2.35.0",
     "matrix-js-sdk": "^39.4.0",
+    "openapi-fetch": "^0.17.0",
     "viem": "^2.44.1",
     "zustand": "^5.0.3"
   },
@@ -61,6 +63,7 @@
     "@types/dompurify": "^3.0.5",
     "@types/react": "^19.0.2",
     "jsdom": "^26.0.0",
+    "openapi-typescript": "^7.13.0",
     "react": "^19.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",

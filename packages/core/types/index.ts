@@ -310,3 +310,6 @@ export {
   createEmptyShippingService,
   createEmptyShippingOption,
 } from './shippingConfig';
+
+// OpenAPI auto-generated types (from hosting openapi.yaml)
+export type { paths as ApiPaths, components as ApiComponents } from './api-generated';
