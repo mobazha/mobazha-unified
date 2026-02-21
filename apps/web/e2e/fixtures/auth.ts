@@ -9,11 +9,13 @@
 
 import { test as base, expect, type Page, type APIRequestContext } from '@playwright/test';
 
-// Casdoor 配置（与 hosting backend 的 app.local.yaml 对应）
-const CASDOOR_URL = process.env.E2E_CASDOOR_URL || 'http://localhost:8000';
-const BACKEND_URL = process.env.E2E_BACKEND_URL || 'http://localhost:8080';
-const TEST_USERNAME = process.env.E2E_TEST_USERNAME || 'admin';
-const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || '';
+export const CASDOOR_URL = process.env.E2E_CASDOOR_URL || 'http://localhost:18000';
+export const BACKEND_URL = process.env.E2E_BACKEND_URL || 'http://localhost:18080';
+export const CASDOOR_APP = process.env.E2E_CASDOOR_APP || 'app-mobazha';
+export const CASDOOR_ORG = process.env.E2E_CASDOOR_ORG || 'mobazha';
+
+const TEST_USERNAME = process.env.E2E_TEST_USERNAME || 'testuser1';
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || '123';
 
 /**
  * Storage state file path for caching authenticated sessions.
@@ -25,7 +27,11 @@ export const AUTH_STATE_FILE = 'playwright/.auth/user.json';
  * Perform the Casdoor OAuth login flow in the browser.
  * Navigates to /login, fills Casdoor credentials, and waits for redirect back to app.
  */
-export async function performCasdoorLogin(page: Page, username?: string, password?: string): Promise<void> {
+export async function performCasdoorLogin(
+  page: Page,
+  username?: string,
+  password?: string
+): Promise<void> {
   const user = username || TEST_USERNAME;
   const pass = password || TEST_PASSWORD;
 
@@ -33,72 +39,95 @@ export async function performCasdoorLogin(page: Page, username?: string, passwor
     throw new Error('E2E_TEST_PASSWORD env var is required for auth tests');
   }
 
-  // Navigate to login page - should redirect to Casdoor
   await page.goto('/login');
+
+  await page.waitForURL(url => url.toString().includes('login/oauth/authorize'), {
+    timeout: 30000,
+  });
+
   await page.waitForLoadState('networkidle');
 
-  // Wait for Casdoor login form
-  const usernameInput = page.getByPlaceholder(/username|email|phone|用户名/i).first();
-  await usernameInput.waitFor({ state: 'visible', timeout: 15000 });
+  const usernameInput = page.locator('input[type="text"]').first();
+  await usernameInput.waitFor({ state: 'visible', timeout: 30000 });
 
-  // Fill credentials
   await usernameInput.fill(user);
-  await page.getByPlaceholder(/password|密码/i).first().fill(pass);
+  await page.locator('input[type="password"]').first().fill(pass);
 
-  // Click sign in
-  const signInBtn = page
-    .getByRole('button', { name: /sign in|登录|log in/i })
-    .first();
+  const signInBtn = page.getByRole('button', { name: /sign in|登录|log in/i }).first();
   await signInBtn.click();
 
-  // Wait for redirect back to the app (OAuth callback + token exchange)
   await page.waitForURL(
-    url => !url.toString().includes('casdoor') && !url.toString().includes(':8000'),
-    { timeout: 30000 },
+    url => {
+      const urlStr = url.toString();
+      return (
+        urlStr.includes('localhost:3000') &&
+        !urlStr.includes('login/oauth') &&
+        !urlStr.includes('code=') &&
+        !urlStr.includes('/login')
+      );
+    },
+    { timeout: 60000 }
   );
 
-  // Wait for app to settle after login
   await page.waitForLoadState('networkidle');
 }
 
 /**
- * Get a JWT token by calling the backend directly (for API-level testing within Playwright).
+ * Get a Casdoor JWT token via direct API call (type: "token").
+ * This token can be used with /api/userinfo on the hosting backend.
  */
-export async function getApiToken(request: APIRequestContext): Promise<string> {
-  const pass = TEST_PASSWORD;
+export async function getCasdoorToken(
+  request: APIRequestContext,
+  username?: string,
+  password?: string
+): Promise<string> {
+  const user = username || TEST_USERNAME;
+  const pass = password || TEST_PASSWORD;
+
   if (!pass) {
     throw new Error('E2E_TEST_PASSWORD env var is required');
   }
 
-  // Step 1: Login to Casdoor to get auth code
   const loginResp = await request.post(`${CASDOOR_URL}/api/login`, {
     data: {
-      application: process.env.E2E_CASDOOR_APP || 'app-built-in',
-      organization: process.env.E2E_CASDOOR_ORG || 'built-in',
-      username: TEST_USERNAME,
+      application: CASDOOR_APP,
+      organization: CASDOOR_ORG,
+      username: user,
       password: pass,
-      type: 'code',
+      type: 'token',
     },
   });
 
   const loginData = await loginResp.json();
   if (loginData.status !== 'ok' || !loginData.data) {
-    throw new Error(`Casdoor login failed: ${JSON.stringify(loginData)}`);
+    throw new Error(`Casdoor login failed for ${user}: ${JSON.stringify(loginData)}`);
   }
 
-  const authCode = loginData.data;
+  return loginData.data as string;
+}
 
-  // Step 2: Exchange code at hosting backend
-  const signinResp = await request.post(
-    `${BACKEND_URL}/api/signin?code=${authCode}&state=${process.env.E2E_CASDOOR_APP || 'app-built-in'}`,
-  );
+/**
+ * Get the peerID for a user by calling /api/userinfo with a Casdoor token.
+ */
+export async function getPeerID(
+  request: APIRequestContext,
+  username?: string,
+  password?: string
+): Promise<string> {
+  const token = await getCasdoorToken(request, username, password);
 
-  const signinData = await signinResp.json();
-  if (signinData.status !== 'ok' || !signinData.data) {
-    throw new Error(`Hosting signin failed: ${JSON.stringify(signinData)}`);
+  const resp = await request.get(`${BACKEND_URL}/api/userinfo`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const data = await resp.json();
+  const peerID = data?.data?.properties?.peerID;
+
+  if (!peerID) {
+    throw new Error(`No peerID found in userinfo for ${username}: ${JSON.stringify(data)}`);
   }
 
-  return signinData.data;
+  return peerID;
 }
 
 /**
@@ -107,17 +136,15 @@ export async function getApiToken(request: APIRequestContext): Promise<string> {
 /* eslint-disable react-hooks/rules-of-hooks */
 export const authenticatedTest = base.extend<{
   authedPage: Page;
-  apiToken: string;
+  casdoorToken: string;
 }>({
-  // Provide an already-authenticated page
   authedPage: async ({ page }, use) => {
     await performCasdoorLogin(page);
     await use(page);
   },
 
-  // Provide a JWT token for direct API calls
-  apiToken: async ({ request }, use) => {
-    const token = await getApiToken(request);
+  casdoorToken: async ({ request }, use) => {
+    const token = await getCasdoorToken(request);
     await use(token);
   },
 });
