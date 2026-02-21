@@ -200,15 +200,15 @@ export function BasicInfoSection({
           </div>
         </div>
 
-        {/* 价格、划线价和币种 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* 价格和划线价 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">
               {t('listing.price')} <span className="text-destructive">*</span>
             </label>
             <div className="flex gap-2">
               <div
-                className={`flex items-center flex-1 rounded-lg border bg-background focus-within:ring-2 focus-within:ring-primary/50 ${errors.price ? 'border-destructive' : 'border-border'}`}
+                className={`flex items-center flex-1 min-w-0 rounded-lg border bg-background focus-within:ring-2 focus-within:ring-primary/50 ${errors.price ? 'border-destructive' : 'border-border'}`}
               >
                 <span className="pl-3 text-muted-foreground text-sm select-none">
                   {currencySymbol}
@@ -219,12 +219,12 @@ export function BasicInfoSection({
                   min="0"
                   value={price}
                   onChange={e => onPriceChange(e.target.value)}
-                  className="flex-1 px-2 py-2.5 bg-transparent text-foreground focus:outline-none"
+                  className="flex-1 min-w-0 px-2 py-2.5 bg-transparent text-foreground focus:outline-none"
                   placeholder="0.00"
                 />
               </div>
               <Select value={pricingCurrency} onValueChange={onCurrencyChange}>
-                <SelectTrigger className="w-28">
+                <SelectTrigger className="w-28 shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -257,7 +257,7 @@ export function BasicInfoSection({
                 min="0"
                 value={compareAtPrice || ''}
                 onChange={e => onCompareAtPriceChange?.(e.target.value)}
-                className="flex-1 px-2 py-2.5 bg-transparent text-foreground focus:outline-none"
+                className="flex-1 min-w-0 px-2 py-2.5 bg-transparent text-foreground focus:outline-none"
                 placeholder="0.00"
               />
             </div>
@@ -273,9 +273,11 @@ export function BasicInfoSection({
               )}
             </div>
           </div>
+        </div>
 
-          {/* 商品状态 - 仅物理商品 */}
-          {showCondition && (
+        {/* 商品状态 - 仅物理商品 */}
+        {showCondition && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
                 {t('listing.condition')} <span className="text-destructive">*</span>
@@ -300,8 +302,8 @@ export function BasicInfoSection({
               )}
               <p className="text-xs text-muted-foreground mt-1">{t('listing.conditionHelper')}</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 重量和 SKU/Barcode - 仅物理商品 */}
         {showWeight && (
