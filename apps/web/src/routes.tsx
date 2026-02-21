@@ -270,6 +270,16 @@ const routes: RouteObject[] = [
   // 钱包
   { path: '/wallet', element: protectedPage(() => import('./app/wallet/page')) },
   { path: '/wallet/:symbol', element: protectedPage(() => import('./app/wallet/[symbol]/page')) },
+
+  // 开发工具（仅开发环境）
+  ...(process.env.NODE_ENV === 'development'
+    ? [
+        {
+          path: '/dev/api-explorer',
+          element: lazyPage(() => import('./app/dev/api-explorer/page')),
+        },
+      ]
+    : []),
 ];
 
 // 导出路由配置数组（供 main.tsx 使用）

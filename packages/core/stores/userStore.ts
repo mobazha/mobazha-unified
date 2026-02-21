@@ -26,6 +26,7 @@ import { connectWebSocket, disconnectWebSocket } from '../services/websocket';
 import { clearProfileCache } from '../services/profileCache';
 import { disableMockData } from '../config';
 import { onUnauthorized } from '../services/api/client';
+import { onOpenApiUnauthorized } from '../services/api/openapi-client';
 
 interface UserState {
   // 状态
@@ -658,9 +659,11 @@ export const useUserStore = create<UserState>()(
 
 // 注册 API client 的 401 拦截回调
 // 当任何 API 请求返回 401 时，触发 forceLogout 显示会话过期提示
-onUnauthorized(() => {
+const handleUnauthorized = () => {
   useUserStore.getState().forceLogout();
-});
+};
+onUnauthorized(handleUnauthorized);
+onOpenApiUnauthorized(handleUnauthorized);
 
 // 选择器
 export const selectUser = (state: UserState) => state.profile;

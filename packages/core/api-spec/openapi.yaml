@@ -1,0 +1,2389 @@
+openapi: '3.0.3'
+info:
+  title: Mobazha Hosting API
+  description: |
+    Mobazha SaaS Hosting platform API. This API provides:
+    - **Hosting-native endpoints** (`/api/...`): Authentication, group marketplace, encryption, relay, etc.
+    - **Node proxy endpoints** (`/v1/...`): Proxied to underlying mobazha3.0 node instances (orders, listings, profiles, etc.)
+
+    ## Authentication
+    Most endpoints require a JWT token obtained via `/api/signin` or platform-specific sign-in endpoints.
+    Pass the token in the `Authorization` header as a Bearer token.
+
+    ## Multi-tenancy
+    Each authenticated user maps to a tenant (node). The tenant context is resolved from the JWT token.
+  version: '1.0.0'
+  contact:
+    name: Mobazha Team
+    url: https://mobazha.com
+  license:
+    name: BSL-1.1
+    url: https://mariadb.com/bsl11/
+
+servers:
+  - url: /
+    description: Current server
+
+tags:
+  - name: Health
+    description: Liveness and readiness probes
+  - name: Auth
+    description: Authentication and sign-in (Casdoor, Telegram, Discord)
+  - name: Account
+    description: Multi-account linking
+  - name: Group Marketplace
+    description: Telegram/Discord group marketplace management
+  - name: Product Groups
+    description: Product group CRUD and item management
+  - name: User Groups
+    description: User group management and membership
+  - name: Product Group Auth
+    description: Product group authorization rules
+  - name: Store Access
+    description: Store access requests, settings, and whitelist
+  - name: Store Links
+    description: Short link generation and resolution
+  - name: Store Bot
+    description: Telegram bot binding for stores
+  - name: Encryption
+    description: Key synchronization and privacy (Phase 2)
+  - name: Relay
+    description: Gas-less transaction relay service
+  - name: Matrix
+    description: Matrix chat integration
+  - name: IPNS
+    description: IPNS record publishing and retrieval
+  - name: Stream
+    description: GetStream chat authentication
+  - name: Stripe
+    description: Stripe payment integration
+  - name: Node - Orders
+    description: 'Order lifecycle (proxied to mobazha3.0 node)'
+  - name: Node - Listings
+    description: 'Listing management (proxied to mobazha3.0 node)'
+  - name: Node - Profiles
+    description: 'Profile management (proxied to mobazha3.0 node)'
+  - name: Node - Wallet
+    description: 'Wallet operations (proxied to mobazha3.0 node)'
+  - name: Node - Chat
+    description: 'P2P chat (proxied to mobazha3.0 node)'
+  - name: Node - Media
+    description: 'Image and file operations (proxied to mobazha3.0 node)'
+  - name: Admin
+    description: 'Tenant lifecycle management (admin-only)'
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Casdoor or platform sign-in
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, not_ready]
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+
+    SigninRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          description: OAuth authorization code from Casdoor
+        state:
+          type: string
+      required: [code, state]
+
+    SigninResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        token:
+          type: string
+          description: JWT access token
+
+    TelegramSigninRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        first_name:
+          type: string
+        last_name:
+          type: string
+        username:
+          type: string
+        photo_url:
+          type: string
+        auth_date:
+          type: integer
+        hash:
+          type: string
+      required: [id, auth_date, hash]
+
+    ServerInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        features:
+          type: object
+
+    # Group Marketplace schemas
+    GroupMarketplace:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum: [telegram, discord]
+        chatID:
+          type: string
+        chatTitle:
+          type: string
+        chatUsername:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SellerApplyRequest:
+      type: object
+      properties:
+        userID:
+          type: string
+      required: [userID]
+
+    GroupMarketplaceSeller:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenantID:
+          type: string
+        platform:
+          type: string
+        chatID:
+          type: string
+        userID:
+          type: string
+        peerID:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        isVisible:
+          type: boolean
+        appliedAt:
+          type: string
+          format: date-time
+
+    ReviewSellerRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+      required: [status]
+
+    # Product Group schemas
+    ProductGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenantID:
+          type: string
+        userID:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateProductGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required: [name]
+
+    ProductGroupItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        productGroupID:
+          type: integer
+        listingSlug:
+          type: string
+        peerID:
+          type: string
+
+    AddProductGroupItemRequest:
+      type: object
+      properties:
+        listingSlug:
+          type: string
+        peerID:
+          type: string
+      required: [listingSlug, peerID]
+
+    # User Group schemas
+    UserGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenantID:
+          type: string
+        ownerPeerID:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    UserGroupMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        userGroupID:
+          type: integer
+        peerID:
+          type: string
+        addedAt:
+          type: string
+          format: date-time
+
+    # Store Access schemas
+    StoreAccessRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        storePeerID:
+          type: string
+        requestorPeerID:
+          type: string
+        note:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+
+    StoreAccessSettings:
+      type: object
+      properties:
+        peerID:
+          type: string
+        allowExternalApplications:
+          type: boolean
+        autoApprove:
+          type: boolean
+
+    # Store Link schemas
+    StoreShortLink:
+      type: object
+      properties:
+        shortCode:
+          type: string
+        peerID:
+          type: string
+        clickCount:
+          type: integer
+        isActive:
+          type: boolean
+
+    # Store Bot schemas
+    StoreBot:
+      type: object
+      properties:
+        id:
+          type: integer
+        peerID:
+          type: string
+        botID:
+          type: integer
+          format: int64
+        botUsername:
+          type: string
+        isActive:
+          type: boolean
+
+    StoreBotBindRequest:
+      type: object
+      properties:
+        botToken:
+          type: string
+      required: [botToken]
+
+    # Encryption schemas
+    SyncListingKeyRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+        masterKey:
+          type: string
+        isPublic:
+          type: boolean
+      required: [slug, masterKey]
+
+    SyncProductGroupKeyRequest:
+      type: object
+      properties:
+        productGroupID:
+          type: integer
+        sharedKey:
+          type: string
+        keyVersion:
+          type: integer
+      required: [productGroupID, sharedKey]
+
+    # Relay schemas
+    RelayExecuteRequest:
+      type: object
+      properties:
+        chainType:
+          type: string
+          description: 'EVM chain type: eth, bsc, polygon, etc.'
+        to:
+          type: string
+          description: Contract address
+        data:
+          type: string
+          description: Call data (hex with 0x prefix)
+        orderId:
+          type: string
+      required: [chainType, to, data]
+
+    RelayExecuteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        txHash:
+          type: string
+        error:
+          type: string
+
+    RelayStatusResponse:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        gasWalletAddress:
+          type: string
+        supportedChains:
+          type: array
+          items:
+            type: string
+
+    # Matrix schemas
+    MatrixConfig:
+      type: object
+      properties:
+        homeserverUrl:
+          type: string
+        enabled:
+          type: boolean
+
+    # IPNS schemas
+    IpnsRecord:
+      type: object
+      properties:
+        peerID:
+          type: string
+        value:
+          type: string
+        sequence:
+          type: integer
+          format: int64
+
+    # Product Group Authorization schemas
+    ProductGroupAuthorization:
+      type: object
+      properties:
+        id:
+          type: integer
+        productGroupID:
+          type: integer
+        authType:
+          type: string
+          enum: [group_marketplace, user_group]
+        groupPlatform:
+          type: string
+        groupChatID:
+          type: string
+        userGroupID:
+          type: integer
+
+    # Node proxy schemas (simplified)
+    Order:
+      type: object
+      description: Order object from mobazha3.0 node
+      properties:
+        orderId:
+          type: string
+        state:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    Listing:
+      type: object
+      description: Listing object from mobazha3.0 node
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+
+    Profile:
+      type: object
+      description: Profile object from mobazha3.0 node
+      properties:
+        peerID:
+          type: string
+        name:
+          type: string
+
+    Tenant:
+      type: object
+      description: SaaS tenant record
+      properties:
+        tenantID:
+          type: string
+        peerID:
+          type: string
+        status:
+          type: string
+          enum: [active, suspended, archived, deleted]
+        plan:
+          type: string
+        suspendReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+paths:
+  # =========================================================================
+  # Health & Observability
+  # =========================================================================
+  /healthz:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: Process is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /readyz:
+    get:
+      tags: [Health]
+      summary: Readiness probe
+      security: []
+      responses:
+        '200':
+          description: All dependencies ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: One or more dependencies not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /metrics:
+    get:
+      tags: [Health]
+      summary: Prometheus metrics
+      security: []
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  # =========================================================================
+  # Auth
+  # =========================================================================
+  /api/signin:
+    post:
+      tags: [Auth]
+      summary: Sign in via Casdoor OAuth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigninRequest'
+      responses:
+        '200':
+          description: Sign-in successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SigninResponse'
+
+  /api/telegramSignin:
+    post:
+      tags: [Auth]
+      summary: Sign in via Telegram Login Widget
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramSigninRequest'
+      responses:
+        '200':
+          description: Sign-in successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SigninResponse'
+
+  /api/telegramMiniAppSignin:
+    post:
+      tags: [Auth]
+      summary: Sign in via Telegram Mini App
+      security: []
+      responses:
+        '200':
+          description: Sign-in successful
+
+  /api/checkTelegramMiniAppUser:
+    post:
+      tags: [Auth]
+      summary: Check if Telegram Mini App user exists
+      security: []
+      responses:
+        '200':
+          description: User check result
+
+  /api/discordMiniAppSignin:
+    post:
+      tags: [Auth]
+      summary: Sign in via Discord embedded app
+      security: []
+      responses:
+        '200':
+          description: Sign-in successful
+
+  /api/discordOAuth2Token:
+    post:
+      tags: [Auth]
+      summary: Exchange Discord OAuth2 code for token
+      security: []
+      responses:
+        '200':
+          description: Token exchange successful
+
+  /api/checkDiscordUser:
+    post:
+      tags: [Auth]
+      summary: Check if Discord user exists
+      security: []
+      responses:
+        '200':
+          description: User check result
+
+  /api/v1/discord/oauth/callback:
+    get:
+      tags: [Auth]
+      summary: Discord OAuth callback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect after OAuth
+
+  /api/userinfo:
+    get:
+      tags: [Auth]
+      summary: Get current user info
+      responses:
+        '200':
+          description: User information
+
+  /api/serverInfo:
+    get:
+      tags: [Auth]
+      summary: Get server configuration info
+      security: []
+      responses:
+        '200':
+          description: Server info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerInfo'
+
+  # =========================================================================
+  # Account Binding
+  # =========================================================================
+  /api/account/linked:
+    get:
+      tags: [Account]
+      summary: Get linked accounts for current user
+      responses:
+        '200':
+          description: List of linked accounts
+
+  /api/account/unlink:
+    post:
+      tags: [Account]
+      summary: Unlink a platform account
+      responses:
+        '200':
+          description: Account unlinked
+
+  /api/account/link-url:
+    get:
+      tags: [Account]
+      summary: Get URL to link a new platform account
+      responses:
+        '200':
+          description: Link URL
+
+  /api/account/link-callback:
+    get:
+      tags: [Account]
+      summary: Callback for account linking
+      responses:
+        '200':
+          description: Linking completed
+
+  # =========================================================================
+  # IPNS
+  # =========================================================================
+  /api/ipns:
+    post:
+      tags: [IPNS]
+      summary: Publish IPNS record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IpnsRecord'
+      responses:
+        '200':
+          description: Record published
+
+  /api/ipns/{peerID}:
+    get:
+      tags: [IPNS]
+      summary: Get IPNS record for peer
+      security: []
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: IPNS record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IpnsRecord'
+        '404':
+          description: Record not found
+
+  # =========================================================================
+  # Stream
+  # =========================================================================
+  /api/stream/auth:
+    get:
+      tags: [Stream]
+      summary: Get GetStream authentication token
+      responses:
+        '200':
+          description: Stream auth token
+
+  # =========================================================================
+  # Stripe (hosting level)
+  # =========================================================================
+  /api/stripe/account/{peerID}:
+    get:
+      tags: [Stripe]
+      summary: Get Stripe account info by peerID
+      security: []
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stripe account info
+
+  # =========================================================================
+  # Group Marketplace
+  # =========================================================================
+  /api/v1/group-marketplace/{platform}:
+    post:
+      tags: [Group Marketplace]
+      summary: Register a group marketplace
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [telegram, discord]
+      responses:
+        '200':
+          description: Group marketplace created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMarketplace'
+
+  /api/v1/group-marketplace/{platform}/{chatID}:
+    get:
+      tags: [Group Marketplace]
+      summary: Get group marketplace details
+      security: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Group marketplace details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMarketplace'
+
+  /api/v1/group-marketplace/{platform}/{chatID}/sellers/apply:
+    post:
+      tags: [Group Marketplace]
+      summary: Apply as a seller in a group marketplace
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellerApplyRequest'
+      responses:
+        '200':
+          description: Application submitted
+
+  /api/v1/group-marketplace/{platform}/{chatID}/sellers:
+    get:
+      tags: [Group Marketplace]
+      summary: List sellers in a group marketplace
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of sellers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMarketplaceSeller'
+
+  /api/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review:
+    put:
+      tags: [Group Marketplace]
+      summary: Review (approve/reject) a seller application
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sellerID
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewSellerRequest'
+      responses:
+        '200':
+          description: Review submitted
+
+  /api/v1/group-marketplace/{platform}/{chatID}/listings:
+    get:
+      tags: [Group Marketplace]
+      summary: Get listings from a group marketplace
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listings in the group
+
+  /api/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups:
+    put:
+      tags: [Group Marketplace]
+      summary: Update seller's product groups in a marketplace
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sellerID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product groups updated
+
+  /api/v1/group-marketplace/{platform}/{chatID}/featured:
+    get:
+      tags: [Group Marketplace]
+      summary: Get featured sellers
+      security: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Featured sellers list
+
+  /api/v1/group-marketplace/{platform}/{chatID}/banners:
+    get:
+      tags: [Group Marketplace]
+      summary: Get banner listings
+      security: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Banner listings
+
+  /api/v1/group-marketplace/{platform}/{chatID}/search:
+    get:
+      tags: [Group Marketplace]
+      summary: Search listings in a group marketplace
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+
+  /api/v1/group-marketplace/{platform}/{chatID}/admin/featured:
+    post:
+      tags: [Group Marketplace]
+      summary: Add a featured seller (admin)
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Featured seller added
+    delete:
+      tags: [Group Marketplace]
+      summary: Remove a featured seller (admin)
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Featured seller removed
+
+  /api/v1/group-marketplace/{platform}/{chatID}/admin/banners:
+    post:
+      tags: [Group Marketplace]
+      summary: Add a banner listing (admin)
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Banner added
+    delete:
+      tags: [Group Marketplace]
+      summary: Remove a banner listing (admin)
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Banner removed
+
+  /api/v1/sellers/{userID}/group-marketplaces:
+    get:
+      tags: [Group Marketplace]
+      summary: Get group marketplaces for a seller
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Seller's group marketplaces
+
+  /api/v1/sellers/{userID}/visibility/{platform}/{chatID}:
+    put:
+      tags: [Group Marketplace]
+      summary: Update seller visibility in a marketplace
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Visibility updated
+
+  /api/v1/telegram/webhook:
+    post:
+      tags: [Group Marketplace]
+      summary: Telegram bot webhook
+      security: []
+      responses:
+        '200':
+          description: Webhook processed
+
+  /api/v1/group-marketplace/groups:
+    get:
+      tags: [Group Marketplace]
+      summary: Get user's groups
+      responses:
+        '200':
+          description: User's groups
+
+  /api/v1/group-marketplace/telegram/{chatID}/verify-member:
+    post:
+      tags: [Group Marketplace]
+      summary: Verify Telegram group membership
+      parameters:
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification result
+
+  /api/v1/group-marketplace/discord/{chatID}/verify-member:
+    post:
+      tags: [Group Marketplace]
+      summary: Verify Discord server membership
+      parameters:
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification result
+
+  /api/v1/group-marketplace/{platform}/{chatID}/check-admin:
+    post:
+      tags: [Group Marketplace]
+      summary: Check if user is admin in group
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chatID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Admin check result
+
+  # =========================================================================
+  # Product Groups
+  # =========================================================================
+  /api/v1/product-groups:
+    post:
+      tags: [Product Groups]
+      summary: Create a product group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductGroupRequest'
+      responses:
+        '200':
+          description: Product group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductGroup'
+    get:
+      tags: [Product Groups]
+      summary: List product groups
+      responses:
+        '200':
+          description: List of product groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductGroup'
+
+  /api/v1/product-groups/{groupID}:
+    put:
+      tags: [Product Groups]
+      summary: Update a product group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product group updated
+    delete:
+      tags: [Product Groups]
+      summary: Delete a product group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product group deleted
+
+  /api/v1/product-groups/{groupID}/items:
+    post:
+      tags: [Product Groups]
+      summary: Add item to product group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProductGroupItemRequest'
+      responses:
+        '200':
+          description: Item added
+    get:
+      tags: [Product Groups]
+      summary: List items in product group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product group items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductGroupItem'
+
+  /api/v1/product-groups/{groupID}/items/{slug}:
+    delete:
+      tags: [Product Groups]
+      summary: Remove item from product group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item removed
+
+  # =========================================================================
+  # Product Group Authorizations
+  # =========================================================================
+  /api/v1/product-groups/{productGroupID}/authorizations:
+    get:
+      tags: [Product Group Auth]
+      summary: List authorizations for a product group
+      parameters:
+        - name: productGroupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Authorization rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductGroupAuthorization'
+    post:
+      tags: [Product Group Auth]
+      summary: Add authorization rule to product group
+      parameters:
+        - name: productGroupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Authorization added
+
+  /api/v1/product-groups/{productGroupID}/authorizations/{authID}:
+    delete:
+      tags: [Product Group Auth]
+      summary: Remove authorization rule
+      parameters:
+        - name: productGroupID
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: authID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Authorization removed
+
+  # =========================================================================
+  # User Groups
+  # =========================================================================
+  /api/v1/user-groups:
+    get:
+      tags: [User Groups]
+      summary: List user groups
+      responses:
+        '200':
+          description: User groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserGroup'
+    post:
+      tags: [User Groups]
+      summary: Create a user group
+      responses:
+        '200':
+          description: User group created
+
+  /api/v1/user-groups/{groupID}:
+    put:
+      tags: [User Groups]
+      summary: Update a user group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [User Groups]
+      summary: Delete a user group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/user-groups/{groupID}/members:
+    get:
+      tags: [User Groups]
+      summary: List members of a user group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Group members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserGroupMember'
+    post:
+      tags: [User Groups]
+      summary: Add member to user group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Member added
+
+  /api/v1/user-groups/{groupID}/members/batch:
+    post:
+      tags: [User Groups]
+      summary: Batch add members to user group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Members added
+
+  /api/v1/user-groups/{groupID}/members/{memberID}:
+    delete:
+      tags: [User Groups]
+      summary: Remove member from user group
+      parameters:
+        - name: groupID
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Member removed
+
+  # =========================================================================
+  # Store Access
+  # =========================================================================
+  /api/v1/store-access-requests:
+    post:
+      tags: [Store Access]
+      summary: Create store access request
+      responses:
+        '200':
+          description: Request created
+    get:
+      tags: [Store Access]
+      summary: List store access requests
+      responses:
+        '200':
+          description: Access requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StoreAccessRequest'
+
+  /api/v1/store-access-requests/{requestID}:
+    put:
+      tags: [Store Access]
+      summary: Update store access request (approve/reject)
+      parameters:
+        - name: requestID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request updated
+
+  /api/v1/store-access/check:
+    get:
+      tags: [Store Access]
+      summary: Check if a peer has access to a store
+      parameters:
+        - name: storePeerID
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: requestorPeerID
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Access check result
+
+  /api/v1/store-access-settings:
+    get:
+      tags: [Store Access]
+      summary: Get store access settings
+      responses:
+        '200':
+          description: Access settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreAccessSettings'
+    put:
+      tags: [Store Access]
+      summary: Update store access settings
+      responses:
+        '200':
+          description: Settings updated
+
+  /api/v1/store-access-list:
+    get:
+      tags: [Store Access]
+      summary: List store access whitelist
+      responses:
+        '200':
+          description: Access whitelist
+    post:
+      tags: [Store Access]
+      summary: Add peer to store access whitelist
+      responses:
+        '200':
+          description: Added
+    delete:
+      tags: [Store Access]
+      summary: Remove peer from store access whitelist
+      responses:
+        '200':
+          description: Removed
+
+  # =========================================================================
+  # Store Short Links
+  # =========================================================================
+  /api/v1/store-link:
+    get:
+      tags: [Store Links]
+      summary: Get store short link for current user
+      responses:
+        '200':
+          description: Short link info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreShortLink'
+    post:
+      tags: [Store Links]
+      summary: Create store short link
+      responses:
+        '200':
+          description: Short link created
+
+  /api/v1/store-link/resolve/{shortCode}:
+    get:
+      tags: [Store Links]
+      summary: Resolve a short code to peerID
+      security: []
+      parameters:
+        - name: shortCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resolved link
+        '404':
+          description: Short code not found
+
+  /api/v1/store-link/resolve:
+    post:
+      tags: [Store Links]
+      summary: Resolve a short code (POST variant)
+      security: []
+      responses:
+        '200':
+          description: Resolved link
+
+  /api/v1/store-link/regenerate:
+    post:
+      tags: [Store Links]
+      summary: Regenerate store short link
+      responses:
+        '200':
+          description: New short link generated
+
+  # =========================================================================
+  # Store Bot
+  # =========================================================================
+  /api/v1/store-bot:
+    post:
+      tags: [Store Bot]
+      summary: Bind a Telegram bot to store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreBotBindRequest'
+      responses:
+        '200':
+          description: Bot bound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreBot'
+    get:
+      tags: [Store Bot]
+      summary: Get store bot info
+      responses:
+        '200':
+          description: Bot info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreBot'
+    delete:
+      tags: [Store Bot]
+      summary: Unbind store bot
+      responses:
+        '200':
+          description: Bot unbound
+
+  # =========================================================================
+  # Encryption (Phase 2)
+  # =========================================================================
+  /api/v1/encryption/sync-listing-key:
+    post:
+      tags: [Encryption]
+      summary: Sync listing master key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncListingKeyRequest'
+      responses:
+        '200':
+          description: Key synchronized
+
+  /api/v1/encryption/sync-product-group-key:
+    post:
+      tags: [Encryption]
+      summary: Sync product group key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncProductGroupKeyRequest'
+      responses:
+        '200':
+          description: Key synchronized
+
+  /api/v1/encryption/listings/{peerID}/{slug}/key:
+    get:
+      tags: [Encryption]
+      summary: Get listing encryption key
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listing key
+
+  /api/v1/encryption/stores/{peerID}/keys:
+    post:
+      tags: [Encryption]
+      summary: Batch get listing keys for a store
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch keys
+
+  /api/v1/encryption/profile/privacy:
+    put:
+      tags: [Encryption]
+      summary: Update profile privacy settings
+      responses:
+        '200':
+          description: Privacy updated
+
+  /api/v1/encryption/product-groups/{id}/rotate-key:
+    post:
+      tags: [Encryption]
+      summary: Rotate product group encryption key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Key rotated
+
+  # =========================================================================
+  # Relay
+  # =========================================================================
+  /api/relay/execute:
+    post:
+      tags: [Relay]
+      summary: Execute a gas-less relay transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelayExecuteRequest'
+      responses:
+        '200':
+          description: Transaction relayed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelayExecuteResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelayExecuteResponse'
+        '503':
+          description: Relay service unavailable
+
+  /api/relay/status:
+    get:
+      tags: [Relay]
+      summary: Get relay service status
+      security: []
+      responses:
+        '200':
+          description: Relay status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelayStatusResponse'
+
+  # =========================================================================
+  # Matrix
+  # =========================================================================
+  /api/matrix/config:
+    get:
+      tags: [Matrix]
+      summary: Get Matrix homeserver configuration
+      security: []
+      responses:
+        '200':
+          description: Matrix config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatrixConfig'
+
+  /api/matrix/auto-register:
+    post:
+      tags: [Matrix]
+      summary: Auto-register user on Matrix
+      responses:
+        '200':
+          description: Registration result
+
+  /api/matrix/peer-id:
+    get:
+      tags: [Matrix]
+      summary: Get peer ID for Matrix user
+      responses:
+        '200':
+          description: Peer ID
+
+  /api/matrix/store/create-space:
+    post:
+      tags: [Matrix]
+      summary: Create a Matrix space for store
+      responses:
+        '200':
+          description: Space created
+
+  /api/matrix/store/invite:
+    post:
+      tags: [Matrix]
+      summary: Invite user to store Matrix room
+      responses:
+        '200':
+          description: Invitation sent
+
+  /api/matrix/store/kick:
+    post:
+      tags: [Matrix]
+      summary: Kick user from store Matrix room
+      responses:
+        '200':
+          description: User kicked
+
+  # =========================================================================
+  # Node Proxy — Orders (proxied to mobazha3.0)
+  # =========================================================================
+  /v1/orders/purchase:
+    post:
+      tags: [Node - Orders]
+      summary: Create a new purchase order
+      description: Proxied to mobazha3.0 node
+      responses:
+        '200':
+          description: Order created
+
+  /v1/orders/confirm:
+    post:
+      tags: [Node - Orders]
+      summary: Confirm (accept) an order
+      responses:
+        '200':
+          description: Order confirmed
+
+  /v1/orders/fulfill:
+    post:
+      tags: [Node - Orders]
+      summary: Mark order as fulfilled
+      responses:
+        '200':
+          description: Order fulfilled
+
+  /v1/orders/complete:
+    post:
+      tags: [Node - Orders]
+      summary: Complete an order (release escrow)
+      responses:
+        '200':
+          description: Order completed
+
+  /v1/orders/cancel:
+    post:
+      tags: [Node - Orders]
+      summary: Cancel an order
+      responses:
+        '200':
+          description: Order cancelled
+
+  /v1/orders/refund:
+    post:
+      tags: [Node - Orders]
+      summary: Refund an order
+      responses:
+        '200':
+          description: Order refunded
+
+  /v1/orders/payment:
+    post:
+      tags: [Node - Orders]
+      summary: Submit payment for an order
+      responses:
+        '200':
+          description: Payment submitted
+
+  /v1/orders/{orderID}:
+    get:
+      tags: [Node - Orders]
+      summary: Get order details
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+
+  /v1/purchases:
+    get:
+      tags: [Node - Orders]
+      summary: List purchases
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Purchase list
+
+  /v1/sales:
+    get:
+      tags: [Node - Orders]
+      summary: List sales
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Sales list
+
+  # =========================================================================
+  # Node Proxy — Listings
+  # =========================================================================
+  /v1/listings:
+    post:
+      tags: [Node - Listings]
+      summary: Create a listing
+      responses:
+        '200':
+          description: Listing created
+    put:
+      tags: [Node - Listings]
+      summary: Update a listing
+      responses:
+        '200':
+          description: Listing updated
+
+  /v1/listings/{slug}:
+    delete:
+      tags: [Node - Listings]
+      summary: Delete a listing
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listing deleted
+
+  /v1/listings/{peerID}/{slug}:
+    get:
+      tags: [Node - Listings]
+      summary: Get a listing by peerID and slug
+      security: []
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listing details
+
+  /v1/listings/index/{peerID}:
+    get:
+      tags: [Node - Listings]
+      summary: Get listing index for a peer
+      security: []
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listing index
+
+  # =========================================================================
+  # Node Proxy — Profiles
+  # =========================================================================
+  /v1/profiles:
+    post:
+      tags: [Node - Profiles]
+      summary: Create profile
+      responses:
+        '200':
+          description: Profile created
+    put:
+      tags: [Node - Profiles]
+      summary: Update profile
+      responses:
+        '200':
+          description: Profile updated
+    get:
+      tags: [Node - Profiles]
+      summary: Get own profile
+      responses:
+        '200':
+          description: Profile
+
+  /v1/profiles/{peerID}:
+    get:
+      tags: [Node - Profiles]
+      summary: Get profile by peerID
+      security: []
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profile
+
+  # =========================================================================
+  # Node Proxy — Wallet
+  # =========================================================================
+  /v1/wallet/spend:
+    post:
+      tags: [Node - Wallet]
+      summary: Send cryptocurrency
+      responses:
+        '200':
+          description: Transaction submitted
+
+  /v1/wallet/currencies:
+    get:
+      tags: [Node - Wallet]
+      summary: Get supported currencies and balances
+      responses:
+        '200':
+          description: Currency list with balances
+
+  /v1/wallet/receivingaccountlist:
+    get:
+      tags: [Node - Wallet]
+      summary: Get receiving accounts (addresses)
+      responses:
+        '200':
+          description: Receiving accounts
+
+  # =========================================================================
+  # Node Proxy — Chat
+  # =========================================================================
+  /v1/chat/messages:
+    post:
+      tags: [Node - Chat]
+      summary: Send a chat message
+      responses:
+        '200':
+          description: Message sent
+    get:
+      tags: [Node - Chat]
+      summary: Get own chat messages
+      responses:
+        '200':
+          description: Chat messages
+
+  /v1/chat/conversations/{peerID}/messages:
+    get:
+      tags: [Node - Chat]
+      summary: Get chat messages with a peer
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat messages
+
+  /v1/chat/conversations:
+    get:
+      tags: [Node - Chat]
+      summary: Get chat conversations
+      responses:
+        '200':
+          description: Conversation list
+
+  # =========================================================================
+  # Node Proxy — Media
+  # =========================================================================
+  /v1/media/images:
+    post:
+      tags: [Node - Media]
+      summary: Upload images
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Images uploaded
+
+  /v1/media/images/{imageID}:
+    get:
+      tags: [Node - Media]
+      summary: Get image by ID
+      security: []
+      parameters:
+        - name: imageID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image data
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+
+  /v1/profiles/{peerID}/avatar/{size}:
+    get:
+      tags: [Node - Media]
+      summary: Get avatar for peer
+      security: []
+      parameters:
+        - name: peerID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [tiny, small, medium, large, original]
+      responses:
+        '200':
+          description: Avatar image
+
+  /v1/system/publish:
+    post:
+      tags: [Node - Profiles]
+      summary: Publish profile and listings to network
+      responses:
+        '200':
+          description: Published
+
+  # =========================================================================
+  # Admin — Tenant Lifecycle Management
+  # =========================================================================
+  /api/v1/admin/tenants:
+    get:
+      tags: [Admin]
+      summary: List all tenants (paginated)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, archived, deleted]
+        - name: plan
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Paginated tenant list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tenant'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — admin access required
+
+  /api/v1/admin/tenants/{id}:
+    get:
+      tags: [Admin]
+      summary: Get tenant details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          description: Tenant not found
+    delete:
+      tags: [Admin]
+      summary: Permanently delete a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [deleted]
+        '400':
+          description: Invalid state transition
+
+  /api/v1/admin/tenants/{id}/suspend:
+    post:
+      tags: [Admin]
+      summary: Suspend a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Tenant suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [suspended]
+        '400':
+          description: Invalid state transition
+
+  /api/v1/admin/tenants/{id}/activate:
+    post:
+      tags: [Admin]
+      summary: Reactivate a suspended tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [active]
+        '400':
+          description: Invalid state transition
+
+  /api/v1/admin/tenants/{id}/archive:
+    post:
+      tags: [Admin]
+      summary: Archive a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant archived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [archived]
+        '400':
+          description: Invalid state transition
+
+  /api/v1/admin/tenants/{id}/export:
+    get:
+      tags: [Admin]
+      summary: Export tenant data summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant data export
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant:
+                    $ref: '#/components/schemas/Tenant'
+                  node_running:
+                    type: boolean
+                  data_summary:
+                    type: object
+                    properties:
+                      product_groups:
+                        type: integer
+                      product_group_items:
+                        type: integer
+        '404':
+          description: Tenant not found
