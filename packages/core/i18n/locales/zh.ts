@@ -48,6 +48,7 @@ export const zh: TranslationResource = {
     share: '分享',
     download: '下载',
     upload: '上传',
+    uploading: '上传中...',
     view: '查看',
     viewAll: '查看全部',
     seeMore: '查看更多',
@@ -1130,6 +1131,11 @@ export const zh: TranslationResource = {
     avatar: '头像',
     loadAvatar: '更换头像',
     loadHeader: '更换封面',
+    coverSizeHint: '推荐：2560×720 像素，16:9 或更宽',
+    avatarSizeHint: '推荐：512×512 像素，正方形',
+    dragOrClickCover: '拖拽图片到此处或点击更换封面',
+    adjustCover: '调整封面图片',
+    adjustAvatar: '调整头像',
     // 侧边栏导航
     sidebar: {
       general: '通用',
@@ -1783,6 +1789,7 @@ export const zh: TranslationResource = {
     selectPhoto: '选择图片',
     avatarUploaded: '头像上传成功',
     uploadFailed: '上传图片失败',
+    fileTooLarge: '图片文件过大（最大 10 MB）',
     aboutDesc: '显示在您的主页上',
     aboutPlaceholder: '介绍一下您自己...',
     links: '链接',
@@ -2216,6 +2223,12 @@ export const zh: TranslationResource = {
     success: '成功',
     importComplete: '导入完成',
     error: '错误',
+  },
+
+  imageCrop: {
+    adjustImage: '调整图片',
+    zoom: '缩放',
+    rotate: '旋转',
   },
 
   // 商品创建/编辑

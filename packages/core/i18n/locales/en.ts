@@ -48,6 +48,7 @@ export const en: TranslationResource = {
     share: 'Share',
     download: 'Download',
     upload: 'Upload',
+    uploading: 'Uploading...',
     view: 'View',
     viewAll: 'View All',
     seeMore: 'See More',
@@ -1155,6 +1156,11 @@ export const en: TranslationResource = {
     avatar: 'Avatar',
     loadAvatar: 'Change Avatar',
     loadHeader: 'Change Cover',
+    coverSizeHint: 'Recommended: 2560×720 pixels, 16:9 or wider',
+    avatarSizeHint: 'Recommended: 512×512 pixels, square',
+    dragOrClickCover: 'Drag an image here or click to change cover',
+    adjustCover: 'Adjust Cover Image',
+    adjustAvatar: 'Adjust Avatar',
     // Sidebar navigation
     sidebar: {
       general: 'General',
@@ -1829,6 +1835,7 @@ export const en: TranslationResource = {
     selectPhoto: 'Select Photo',
     avatarUploaded: 'Avatar uploaded successfully',
     uploadFailed: 'Failed to upload image',
+    fileTooLarge: 'Image file is too large (max 10 MB)',
     aboutDesc: 'Displays on your Home page',
     aboutPlaceholder: 'Tell people about yourself...',
     links: 'Links',
@@ -2265,6 +2272,12 @@ export const en: TranslationResource = {
     success: 'Success',
     importComplete: 'Import completed successfully',
     error: 'Error',
+  },
+
+  imageCrop: {
+    adjustImage: 'Adjust Image',
+    zoom: 'Zoom',
+    rotate: 'Rotate',
   },
 
   // Listing Create/Edit
