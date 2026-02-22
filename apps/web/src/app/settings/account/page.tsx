@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +27,8 @@ import {
   SUPPORTED_PROVIDERS,
 } from '@mobazha/core';
 import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
-import { ChevronLeft, Link2, Unlink, AlertCircle, Check } from 'lucide-react';
+import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { Link2, Unlink, AlertCircle, Check } from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
 
 export default function AccountSettingsPage() {
@@ -228,90 +228,79 @@ export default function AccountSettingsPage() {
 
   return (
     <div>
-      {/* 移动端返回按钮 */}
-      <div className="lg:hidden mb-4">
-        <Link
-          href="/settings"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>{t('common.back')}</span>
-        </Link>
-      </div>
+      <SettingsPageHeader title={t('settings.sidebar.account')} />
 
-      <h1 className="text-lg font-semibold mb-6">{t('settings.accountBinding.title')}</h1>
-
-      {/* 错误提示 */}
-      {error && (
-        <Card className="p-4 mb-6 border-destructive bg-destructive/10">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="w-5 h-5" />
-            <p className="text-sm">{error}</p>
-          </div>
-          <Button variant="outline" size="sm" className="mt-2" onClick={loadLinkedAccounts}>
-            {t('common.retry')}
-          </Button>
-        </Card>
-      )}
-
-      {/* 已绑定账号 */}
-      <div className="mb-6">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-          {t('settings.accountBinding.linked')}
-        </h3>
-        <Card className="overflow-hidden">
-          {isLoading ? (
-            <div className="p-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-24 mb-2" />
-                  <Skeleton className="h-3 w-32" />
+      <SettingsSection description={t('settings.accountBinding.description')}>
+        <Card className="p-4 md:p-6">
+          <div className="space-y-4">
+            {error && (
+              <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive bg-destructive/10">
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-destructive">{error}</p>
+                  <Button variant="outline" size="sm" className="mt-2" onClick={loadLinkedAccounts}>
+                    {t('common.retry')}
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-24 mb-2" />
-                  <Skeleton className="h-3 w-32" />
+            )}
+
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                {t('settings.accountBinding.linked')}
+              </h4>
+              {isLoading ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-24 mb-2" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-24 mb-2" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                </div>
+              ) : linkedAccounts.length === 0 ? (
+                <div className="py-4 text-center text-muted-foreground">
+                  <p className="text-sm">{t('settings.accountBinding.noLinked')}</p>
+                  <p className="text-xs mt-1">{t('settings.accountBinding.description')}</p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  {linkedAccounts.map(renderLinkedAccountCard)}
+                </div>
+              )}
+            </div>
+
+            {availableProviders.length > 0 && (
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  {t('settings.accountBinding.available')}
+                </h4>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  {availableProviders.map(renderAvailableProviderCard)}
                 </div>
               </div>
-            </div>
-          ) : linkedAccounts.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground">
-              <p className="text-sm">{t('settings.accountBinding.noLinked')}</p>
-              <p className="text-xs mt-1">{t('settings.accountBinding.description')}</p>
-            </div>
-          ) : (
-            linkedAccounts.map(renderLinkedAccountCard)
-          )}
-        </Card>
-      </div>
+            )}
 
-      {/* 可绑定账号 */}
-      {availableProviders.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-            {t('settings.accountBinding.available')}
-          </h3>
-          <Card className="overflow-hidden">
-            {availableProviders.map(renderAvailableProviderCard)}
-          </Card>
-        </div>
-      )}
-
-      {/* 提示信息 */}
-      <Card className="p-4 bg-muted/50">
-        <div className="flex items-start gap-3">
-          <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium">{t('settings.accountBinding.keepOne')}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('settings.accountBinding.keepOneDesc')}
-            </p>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">{t('settings.accountBinding.keepOne')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('settings.accountBinding.keepOneDesc')}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </SettingsSection>
 
       {/* 解绑确认对话框 */}
       <AlertDialog open={showUnlinkDialog} onOpenChange={setShowUnlinkDialog}>

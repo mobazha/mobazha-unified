@@ -159,30 +159,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   // 处理 Report 按钮点击
   const handleReportClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onReport?.();
   };
 
-  // 处理 Block 按钮点击
   const handleBlockClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onBlock?.();
   };
 
   // 处理 Edit 按钮点击
   const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onEdit?.();
   };
 
-  // 处理 Clone 按钮点击
   const handleCloneClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onClone?.();
   };
 
-  // 处理 Delete 按钮点击
   const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onDelete?.();
   };

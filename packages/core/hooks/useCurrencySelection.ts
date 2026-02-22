@@ -56,7 +56,7 @@ export interface UseCurrencySelectionReturn {
  * 货币选择 Hook
  *
  * 封装货币列表分组（常用/法币/加密货币）、搜索过滤、选中状态等共享逻辑。
- * 供 SettingsDrawer、SettingsModal、settings/general/page.tsx 共用。
+ * 供 settings/general/page.tsx 等设置页面共用。
  */
 export function useCurrencySelection(): UseCurrencySelectionReturn {
   const { t, language } = useI18n();

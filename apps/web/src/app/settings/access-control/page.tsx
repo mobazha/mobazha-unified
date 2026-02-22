@@ -4,7 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
-import { ChevronLeft, ChevronRight, Lock, Users, Layers, Clock } from 'lucide-react';
+import { ChevronRight, Lock, Users, Layers, Clock } from 'lucide-react';
+import { SettingsPageHeader } from '@/components/SettingsLayout';
 
 interface AccessControlItemProps {
   icon: React.ReactNode;
@@ -38,33 +39,15 @@ export default function AccessControlPage() {
   const { t } = useI18n();
   const router = useRouter();
 
-  // 桌面端重定向到 privacy 页面
   React.useEffect(() => {
-    const checkAndRedirect = () => {
-      if (window.innerWidth >= 1024) {
-        router.replace('/settings/access-control/privacy');
-      }
-    };
-
-    checkAndRedirect();
-    window.addEventListener('resize', checkAndRedirect);
-    return () => window.removeEventListener('resize', checkAndRedirect);
+    if (window.innerWidth >= 1024) {
+      router.replace('/settings/access-control/privacy');
+    }
   }, [router]);
 
   return (
     <div className="lg:hidden">
-      {/* 移动端返回按钮 */}
-      <div className="mb-4">
-        <Link
-          href="/settings"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>{t('common.back')}</span>
-        </Link>
-      </div>
-
-      <h1 className="text-lg font-semibold mb-4">{t('settings.sidebar.accessControl')}</h1>
+      <SettingsPageHeader title={t('settings.sidebar.accessControl')} backHref="/settings" />
 
       <div className="bg-card rounded-lg border overflow-hidden">
         <AccessControlItem

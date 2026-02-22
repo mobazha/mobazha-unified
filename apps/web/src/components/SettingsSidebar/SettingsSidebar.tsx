@@ -183,7 +183,7 @@ interface SidebarNavItemLinkProps {
 const SidebarNavItemLink: React.FC<SidebarNavItemLinkProps> = ({ item, depth = 0 }) => {
   const { t } = useI18n();
   const pathname = usePathname();
-  const isActive = pathname === item.href;
+  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
   return (
     <Link
@@ -208,7 +208,7 @@ export const SettingsSidebar: React.FC = () => {
   const pathname = usePathname();
 
   const isItemActive = (item: SidebarItem): boolean => {
-    return pathname === item.href;
+    return pathname === item.href || pathname.startsWith(item.href + '/');
   };
 
   const isChildActive = (item: SidebarItem): boolean => {

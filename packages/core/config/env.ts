@@ -227,14 +227,17 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量覆盖 API URL
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (apiUrl) {
+    const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+    const wsHost = apiUrl.replace(/^https?:\/\//, '');
     currentEnv = {
       ...currentEnv,
       api: {
         ...currentEnv.api,
         baseUrl: apiUrl,
         gateway: `${apiUrl}/v1`,
+        websocket: `${wsProtocol}://${wsHost}/ws`,
       },
     };
   }

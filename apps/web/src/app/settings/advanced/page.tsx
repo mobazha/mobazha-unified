@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import {
@@ -17,98 +16,8 @@ import {
   useToast,
 } from '@/components/ui';
 import { useI18n, useUserStore, isHosted, startCasdoorLogin } from '@mobazha/core';
-import {
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  RefreshCw,
-  Download,
-  Upload,
-  Terminal,
-  Trash2,
-} from 'lucide-react';
-
-interface SettingItemProps {
-  title: string;
-  description?: string;
-  value?: string;
-  onClick?: () => void;
-  toggle?: boolean;
-  toggleValue?: boolean;
-  onToggle?: (value: boolean) => void;
-  danger?: boolean;
-  icon?: React.ReactNode;
-}
-
-const SettingItem = ({
-  title,
-  description,
-  value,
-  onClick,
-  toggle,
-  toggleValue,
-  onToggle,
-  danger,
-  icon,
-}: SettingItemProps) => {
-  const content = (
-    <>
-      {icon && (
-        <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${danger ? 'bg-destructive/10 text-destructive' : 'bg-muted'}`}
-        >
-          {icon}
-        </div>
-      )}
-      <div className="flex-1 text-left min-w-0">
-        <p className={`font-medium text-sm ${danger ? 'text-destructive' : ''}`}>{title}</p>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
-        )}
-      </div>
-      {toggle ? (
-        <Switch
-          checked={toggleValue}
-          onCheckedChange={val => onToggle?.(val)}
-          className="ml-3 flex-shrink-0"
-        />
-      ) : value ? (
-        <span className="text-muted-foreground text-sm ml-3 flex-shrink-0">{value}</span>
-      ) : onClick ? (
-        <ChevronRight className="w-4 h-4 text-muted-foreground ml-3 flex-shrink-0" />
-      ) : null}
-    </>
-  );
-
-  const baseClassName =
-    'w-full flex items-center p-3 hover:bg-surface-hover/50 transition-colors border-b border-border last:border-0';
-
-  if (toggle || !onClick) {
-    return <div className={baseClassName}>{content}</div>;
-  }
-
-  return (
-    <button onClick={onClick} className={`${baseClassName} active:bg-muted`}>
-      {content}
-    </button>
-  );
-};
-
-interface SettingGroupProps {
-  title?: string;
-  children: React.ReactNode;
-}
-
-const SettingGroup = ({ title, children }: SettingGroupProps) => (
-  <div className="mb-6">
-    {title && (
-      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-        {title}
-      </h3>
-    )}
-    <Card className="overflow-hidden">{children}</Card>
-  </div>
-);
+import { ChevronRight, LogOut, RefreshCw, Download, Upload, Terminal, Trash2 } from 'lucide-react';
+import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
 export default function AdvancedSettingsPage() {
   const { t } = useI18n();
@@ -149,111 +58,238 @@ export default function AdvancedSettingsPage() {
   const handleResync = () => {
     toast({
       title: t('settingsExtended.comingSoon'),
-      description: 'Transaction resync coming soon',
+      description: t('settingsExtended.resyncDesc'),
     });
   };
 
   const handleServerLogs = () => {
     toast({
       title: t('settingsExtended.comingSoon'),
-      description: 'Server logs coming soon',
+      description: t('settingsExtended.serverLogsDesc'),
     });
   };
 
   return (
     <div>
-      {/* 移动端返回按钮 */}
-      <div className="lg:hidden mb-4">
-        <Link
-          href="/settings"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>{t('common.back')}</span>
-        </Link>
-      </div>
+      <SettingsPageHeader title={t('settings.sidebar.advanced')} />
 
-      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.advanced')}</h1>
-
-      {/* Privacy */}
-      <SettingGroup title={t('settings.privacy')}>
-        <SettingItem
-          title={t('settingsExtended.analytics')}
+      <div className="divide-y divide-border">
+        {/* Privacy & Analytics */}
+        <SettingsSection
+          className="pt-0 pb-5 md:pb-8"
+          title={t('settings.privacy')}
           description={t('settingsExtended.analyticsDesc')}
-          toggle
-          toggleValue={analytics}
-          onToggle={setAnalytics}
-        />
-      </SettingGroup>
+        >
+          <Card className="p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">{t('settingsExtended.analytics')}</p>
+              </div>
+              <Switch
+                checked={analytics}
+                onCheckedChange={setAnalytics}
+                className="flex-shrink-0"
+              />
+            </div>
+          </Card>
+        </SettingsSection>
 
-      {/* Backup & Restore */}
-      <SettingGroup title={t('settings.backup')}>
-        <SettingItem
-          title={t('settingsExtended.backupWallet')}
+        {/* Backup & Restore */}
+        <SettingsSection
+          className="py-5 md:py-8"
+          title={t('settings.backup')}
           description={t('settingsExtended.backupWalletDesc')}
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleBackup}
-        />
-        <SettingItem
-          title={t('settingsExtended.backupProfile')}
-          description={t('settingsExtended.backupProfileDesc')}
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleBackup}
-        />
-        <SettingItem
-          title={t('settingsExtended.restoreProfile')}
-          description={t('settingsExtended.restoreProfileDesc')}
-          icon={<Upload className="w-4 h-4" />}
-          onClick={() => setShowRestoreDialog(true)}
-        />
-      </SettingGroup>
+        >
+          <Card className="p-4 md:p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{t('settingsExtended.backupWallet')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('settingsExtended.backupWalletDesc')}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleBackup}
+                  className="flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+                      <Download className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{t('settingsExtended.backupProfile')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('settingsExtended.backupProfileDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleBackup}
+                    className="flex items-center text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+                      <Upload className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{t('settingsExtended.restoreProfile')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('settingsExtended.restoreProfileDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowRestoreDialog(true)}
+                    className="flex items-center text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </SettingsSection>
 
-      {/* Developer */}
-      <SettingGroup title={t('settingsExtended.developer')}>
-        <SettingItem
-          title={t('settingsExtended.resyncTransactions')}
-          description={t('settingsExtended.resyncDesc')}
-          icon={<RefreshCw className="w-4 h-4" />}
-          onClick={handleResync}
-        />
-        <SettingItem
-          title={t('settingsExtended.serverLogs')}
+        {/* Developer Options */}
+        <SettingsSection
+          className="py-5 md:py-8"
+          title={t('settingsExtended.developer')}
           description={t('settingsExtended.serverLogsDesc')}
-          icon={<Terminal className="w-4 h-4" />}
-          onClick={handleServerLogs}
-        />
-      </SettingGroup>
+        >
+          <Card className="p-4 md:p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+                    <RefreshCw className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {t('settingsExtended.resyncTransactions')}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('settingsExtended.resyncDesc')}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResync}
+                  className="flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+                      <Terminal className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{t('settingsExtended.serverLogs')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('settingsExtended.serverLogsDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleServerLogs}
+                    className="flex items-center text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">{t('settings.version')}</p>
+                  <span className="text-muted-foreground text-sm">
+                    {process.env.NEXT_PUBLIC_APP_VERSION || process.env.VITE_APP_VERSION || '0.1.0'}
+                  </span>
+                </div>
+              </div>
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">{t('settingsExtended.checkForUpdates')}</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      toast({
+                        title: t('settingsExtended.upToDate'),
+                        description: t('settingsExtended.latestVersion'),
+                      })
+                    }
+                    className="flex items-center text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </SettingsSection>
 
-      {/* About */}
-      <SettingGroup title={t('settings.about')}>
-        <SettingItem title={t('settings.version')} value="1.0.0 (Build 123)" />
-        <SettingItem
-          title={t('settingsExtended.checkForUpdates')}
-          onClick={() =>
-            toast({
-              title: t('settingsExtended.upToDate'),
-              description: t('settingsExtended.latestVersion'),
-            })
-          }
-        />
-      </SettingGroup>
-
-      {/* Danger Zone */}
-      <SettingGroup title={t('settingsExtended.dangerZone')}>
-        <SettingItem
-          title={t('settings.logout')}
-          danger
-          icon={<LogOut className="w-4 h-4" />}
-          onClick={() => setShowLogoutDialog(true)}
-        />
-        <SettingItem
-          title={t('settings.deleteAccount')}
+        {/* Danger Zone */}
+        <SettingsSection
+          className="py-5 md:py-8"
+          title={t('settingsExtended.dangerZone')}
           description={t('settingsExtended.deleteAccountDesc')}
-          danger
-          icon={<Trash2 className="w-4 h-4" />}
-          onClick={() => setShowDeleteDialog(true)}
-        />
-      </SettingGroup>
+        >
+          <Card className="p-4 md:p-6">
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setShowLogoutDialog(true)}
+                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-destructive"
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
+                  <LogOut className="w-4 h-4" />
+                </div>
+                <p className="font-medium text-sm">{t('settings.logout')}</p>
+              </button>
+              <div className="border-t border-border pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-destructive"
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
+                    <Trash2 className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-sm">{t('settings.deleteAccount')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('settingsExtended.deleteAccountDesc')}
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </Card>
+        </SettingsSection>
+      </div>
 
       {/* Restore Confirmation */}
       <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
@@ -302,7 +338,16 @@ export default function AdvancedSettingsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={() => {
+                setShowDeleteDialog(false);
+                toast({
+                  title: t('settingsExtended.comingSoon'),
+                  description: t('settingsExtended.deleteAccountDesc'),
+                });
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {t('settings.deleteAccount')}
             </AlertDialogAction>
           </AlertDialogFooter>

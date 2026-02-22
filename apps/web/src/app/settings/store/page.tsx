@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,8 +13,9 @@ import {
   useToast,
 } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { HStack, VStack } from '@/components/layouts';
+import { SettingsPageHeader } from '@/components/SettingsLayout';
 
 const acceptedCoins = [
   { symbol: 'BTC', name: 'Bitcoin', enabled: true },
@@ -26,75 +26,30 @@ const acceptedCoins = [
   { symbol: 'LTC', name: 'Litecoin', enabled: false },
 ];
 
-interface SettingItemProps {
+interface SettingRowProps {
   title: string;
   description?: string;
   value?: string;
-  onClick?: () => void;
-  toggle?: boolean;
-  toggleValue?: boolean;
-  onToggle?: (value: boolean) => void;
+  onClick: () => void;
 }
 
-const SettingItem = ({
-  title,
-  description,
-  value,
-  onClick,
-  toggle,
-  toggleValue,
-  onToggle,
-}: SettingItemProps) => {
-  const content = (
-    <>
-      <div className="flex-1 text-left min-w-0">
-        <p className="font-medium text-sm">{title}</p>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
-        )}
-      </div>
-      {toggle ? (
-        <Switch
-          checked={toggleValue}
-          onCheckedChange={val => onToggle?.(val)}
-          className="ml-3 flex-shrink-0"
-        />
-      ) : value ? (
-        <span className="text-muted-foreground text-sm ml-3 flex-shrink-0">{value}</span>
-      ) : onClick ? (
-        <ChevronRight className="w-4 h-4 text-muted-foreground ml-3 flex-shrink-0" />
-      ) : null}
-    </>
-  );
-
-  const baseClassName =
-    'w-full flex items-center justify-between p-3 hover:bg-surface-hover/50 transition-colors border-b border-border last:border-0';
-
-  if (toggle || !onClick) {
-    return <div className={baseClassName}>{content}</div>;
-  }
-
-  return (
-    <button onClick={onClick} className={`${baseClassName} active:bg-muted`}>
-      {content}
-    </button>
-  );
-};
-
-interface SettingGroupProps {
-  title?: string;
-  children: React.ReactNode;
-}
-
-const SettingGroup = ({ title, children }: SettingGroupProps) => (
-  <div className="mb-6">
-    {title && (
-      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-        {title}
-      </h3>
-    )}
-    <Card className="overflow-hidden">{children}</Card>
-  </div>
+const SettingRow: React.FC<SettingRowProps> = ({ title, description, value, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full flex items-center justify-between p-3 hover:bg-surface-hover/50 active:bg-muted transition-colors border-b border-border last:border-0 text-left min-h-[44px]"
+  >
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-sm">{title}</p>
+      {description && (
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
+      )}
+    </div>
+    {value ? (
+      <span className="text-muted-foreground text-sm ml-3 flex-shrink-0">{value}</span>
+    ) : null}
+    <ChevronRight className="w-4 h-4 text-muted-foreground ml-3 flex-shrink-0" />
+  </button>
 );
 
 export default function StoreSettingsPage() {
@@ -113,50 +68,39 @@ export default function StoreSettingsPage() {
 
   const enabledCoinsCount = coins.filter(c => c.enabled).length;
 
-  const handleComingSoon = (feature: string) => {
+  const handleComingSoon = () => {
     toast({
       title: t('settingsExtended.comingSoon'),
-      description: `${feature} ${t('common.comingSoon').toLowerCase()}`,
+      description: t('settingsExtended.storePoliciesDesc'),
     });
   };
 
   return (
     <div>
-      {/* 移动端返回按钮 */}
-      <div className="lg:hidden mb-4">
-        <Link
-          href="/settings"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>{t('common.back')}</span>
-        </Link>
-      </div>
+      <SettingsPageHeader title={t('settings.sidebar.store')} />
 
-      <h1 className="text-lg font-semibold mb-6">{t('settings.sidebar.store')}</h1>
-
-      <SettingGroup title={t('settingsExtended.store')}>
-        <SettingItem
+      <Card className="overflow-hidden">
+        <SettingRow
           title={t('settingsExtended.storePolicies')}
           description={t('settingsExtended.storePoliciesDesc')}
-          onClick={() => handleComingSoon('Store Policies')}
+          onClick={handleComingSoon}
         />
-        <SettingItem
+        <SettingRow
           title={t('settingsExtended.moderators')}
           description={t('settingsExtended.moderatorsDesc')}
           onClick={() => router.push('/settings/moderation')}
         />
-        <SettingItem
+        <SettingRow
           title={t('settingsExtended.acceptedCryptocurrencies')}
           value={t('settingsExtended.selected', { count: enabledCoinsCount })}
           onClick={() => setShowCoinsModal(true)}
         />
-        <SettingItem
+        <SettingRow
           title={t('settingsExtended.shippingOptions')}
           description={t('settingsExtended.shippingOptionsDesc')}
           onClick={() => router.push('/settings/store/shipping')}
         />
-      </SettingGroup>
+      </Card>
 
       {/* Coins Modal */}
       <Dialog open={showCoinsModal} onOpenChange={setShowCoinsModal}>

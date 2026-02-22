@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +21,8 @@ import {
 } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { ChevronLeft, Plus, Ban, UserX } from 'lucide-react';
+import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { Plus, Ban, UserX } from 'lucide-react';
 
 interface BlockedUser {
   id: string;
@@ -89,59 +89,55 @@ export default function BlockedSettingsPage() {
 
   return (
     <div>
-      {/* 移动端返回按钮 */}
-      <div className="lg:hidden mb-4">
-        <Link
-          href="/settings"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>{t('common.back')}</span>
-        </Link>
-      </div>
+      <SettingsPageHeader
+        title={t('settings.sidebar.blocked')}
+        actions={
+          <Button size="sm" onClick={() => setShowAddModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('settingsModal.blockUser')}
+          </Button>
+        }
+      />
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold">{t('settings.sidebar.blocked')}</h1>
-        <Button size="sm" onClick={() => setShowAddModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('settingsModal.blockUser')}
-        </Button>
-      </div>
-
-      {blockedUsers.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Ban className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">{t('settingsModal.noBlockedUsers')}</p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {blockedUsers.map(user => (
-            <Card key={user.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar name={user.name} size="md" />
-                  <div>
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{user.peerId}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('settingsModal.blockedOn')}: {user.blockedAt}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setUnblockTarget(user)}
-                  className="text-destructive border-destructive hover:bg-destructive/10"
+      <SettingsSection description={t('settingsModal.blockedDescription')}>
+        <Card className="p-4 md:p-6">
+          {blockedUsers.length === 0 ? (
+            <div className="text-center py-4">
+              <Ban className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">{t('settingsModal.noBlockedUsers')}</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {blockedUsers.map(user => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0 [&:not(:last-child)]:border-b border-border"
                 >
-                  <UserX className="w-4 h-4 mr-2" />
-                  {t('settingsModal.unblock')}
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+                  <div className="flex items-center gap-3">
+                    <Avatar name={user.name} size="md" />
+                    <div>
+                      <p className="font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{user.peerId}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('settingsModal.blockedOn')}: {user.blockedAt}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUnblockTarget(user)}
+                    className="text-destructive border-destructive hover:bg-destructive/10"
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    {t('settingsModal.unblock')}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </SettingsSection>
 
       {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>

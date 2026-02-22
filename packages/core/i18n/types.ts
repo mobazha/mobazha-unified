@@ -62,6 +62,7 @@ export interface TranslationResource {
     accept: string;
     decline: string;
     save: string;
+    discard: string;
     delete: string;
     edit: string;
     back: string;
@@ -587,6 +588,7 @@ export interface TranslationResource {
       account: string;
       page: string;
       store: string;
+      shipping: string;
       accessControl: string;
       privacy: string;
       userGroups: string;
@@ -925,6 +927,7 @@ export interface TranslationResource {
   // 设置弹框 (Settings Modal)
   settingsModal?: {
     // General tab
+    languageAndRegion: string;
     languageDesc: string;
     helpTranslate: string;
     countryDesc: string;
@@ -940,6 +943,7 @@ export interface TranslationResource {
     soundTestDesc: string;
     settingsSaved: string;
     saveFailed: string;
+    unsavedChanges: string;
     // Page tab
     shortDescription: string;
     shortDescLimit: string;
@@ -1056,6 +1060,7 @@ export interface TranslationResource {
     copyFailed: string;
     chatIdNote: string;
     currentDevice: string;
+    deviceId: string;
     browserDevice: string;
     keyBackup: string;
     keyBackupDesc: string;
