@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useSettingsDrawer } from '../SettingsDrawer';
 import {
   useI18n,
   useUserStore,
@@ -51,7 +50,6 @@ export const Header: React.FC = () => {
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
-  const { openSettings } = useSettingsDrawer();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -235,7 +233,7 @@ export const Header: React.FC = () => {
 
                   {/* 系统操作 */}
                   <DropdownMenuItem
-                    onClick={() => openSettings('general')}
+                    onClick={() => router.push('/settings/general')}
                     className="cursor-pointer"
                     data-testid="header-menu-settings"
                   >
@@ -243,7 +241,7 @@ export const Header: React.FC = () => {
                     {t('userMenu.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => openSettings('accessControl')}
+                    onClick={() => router.push('/settings/access-control')}
                     className="cursor-pointer"
                   >
                     <Shield className="mr-2 h-4 w-4" />

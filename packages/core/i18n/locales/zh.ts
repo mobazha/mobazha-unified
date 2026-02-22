@@ -17,6 +17,7 @@ export const zh: TranslationResource = {
     save: '保存',
     saving: '保存中...',
     saveFailed: '保存失败',
+    discard: '放弃更改',
     delete: '删除',
     deleting: '删除中...',
     edit: '编辑',
@@ -1135,6 +1136,7 @@ export const zh: TranslationResource = {
       account: '账号绑定',
       page: '个人页面',
       store: '店铺',
+      shipping: '配送',
       accessControl: '访问控制',
       privacy: '隐私设置',
       userGroups: '用户组',
@@ -1665,6 +1667,7 @@ export const zh: TranslationResource = {
 
   settingsModal: {
     // General tab
+    languageAndRegion: '语言与区域',
     languageDesc: '界面显示语言',
     helpTranslate: '帮助在 Transifex 上翻译 Mobazha',
     countryDesc: '您主要居住的国家',
@@ -1680,6 +1683,7 @@ export const zh: TranslationResource = {
     soundTestDesc: '测试通知声音已播放',
     settingsSaved: '设置保存成功',
     saveFailed: '保存设置失败',
+    unsavedChanges: '有未保存的更改',
     // Blocked Users
     blockUser: '屏蔽用户',
     blockUserDesc: '输入要屏蔽的用户 Peer ID',
@@ -1800,6 +1804,7 @@ export const zh: TranslationResource = {
     copyFailed: '复制到剪贴板失败',
     chatIdNote: '其他人可以使用此 ID 在任何 Matrix 客户端（Element、FluffyChat 等）中添加您',
     currentDevice: '当前设备',
+    deviceId: '设备 ID',
     browserDevice: 'Chrome 浏览器',
     keyBackup: '密钥备份',
     keyBackupDesc: '备份加密密钥以在新设备上恢复消息历史',

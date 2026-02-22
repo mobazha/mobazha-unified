@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useI18n, useAccessControl, useUserStore, getImageUrl } from '@mobazha/core';
 import type { StoreAccessRequest, StoreAccessListItem } from '@mobazha/core';
 import { Clock, CheckCircle, XCircle, Inbox, UserPlus, Trash2, ChevronLeft } from 'lucide-react';
+import { SettingsSection } from '@/components/SettingsLayout';
 
 type TabKey = 'pending' | 'approved' | 'rejected' | 'whitelist';
 
@@ -191,246 +192,242 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
   const currentRequests = getCurrentList();
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        {showBackButton && (
-          <button onClick={onBack} className="p-2 hover:bg-muted rounded-lg transition-colors">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        )}
-        <div>
-          <h2 className="text-lg font-semibold">{t('settings.accessControl.requestsTitle')}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t('settings.accessControl.requestsDescription')}
-          </p>
-        </div>
-      </div>
-
-      {/* Tabs with count - 参考老版桌面端设计 */}
-      <div className="border-b border-border">
-        <div className="flex gap-6">
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={`relative py-3 text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-              {tab.count > 0 && (
-                <span
-                  className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${
-                    activeTab === tab.key
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              )}
-              {activeTab === tab.key && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
+    <SettingsSection description={t('settings.accessControl.requestsDescription')}>
+      <Card className="p-4 md:p-6">
+        {/* Back button (when embedded in non-settings context) */}
+        {showBackButton && onBack && (
+          <div className="flex items-center gap-3 mb-4">
+            <button onClick={onBack} className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <ChevronLeft className="w-5 h-5" />
             </button>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="p-4 animate-pulse">
-              <div className="flex gap-3">
-                <div className="w-12 h-12 rounded-full bg-muted" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-1/3" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
+        {/* Tabs with count - 参考老版桌面端设计 */}
+        <div className="border-b border-border">
+          <div className="flex gap-6">
+            {tabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className={`relative py-3 text-sm font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span
+                    className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${
+                      activeTab === tab.key
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+                {activeTab === tab.key && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="p-4 rounded-lg border border-border animate-pulse">
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 rounded-full bg-muted" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-1/3" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                  </div>
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Error */}
-      {error && (
-        <Card className="p-4 bg-destructive/10 text-destructive">
-          <p className="text-sm">{error}</p>
-        </Card>
-      )}
-
-      {/* Whitelist Tab */}
-      {!loading && activeTab === 'whitelist' && (
-        <div className="space-y-3">
-          {/* Add User Button */}
-          <Button variant="outline" onClick={() => setShowAddUserModal(true)} className="w-full">
-            <UserPlus className="w-4 h-4 mr-2" />
-            {t('storeAccess.addUser')}
-          </Button>
-
-          {/* Whitelist */}
-          {accessList.length > 0 ? (
-            accessList.map(item => (
-              <WhitelistItem
-                key={item.id}
-                item={item}
-                onRemove={handleRemoveFromList}
-                processing={processingId === item.requestorPeerID}
-                formatDate={formatDate}
-                t={t}
-              />
-            ))
-          ) : (
-            <Card className="p-8 text-center">
-              <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">{t('storeAccess.noAccessList')}</p>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Request Lists */}
-      {!loading && activeTab !== 'whitelist' && (
-        <div className="space-y-3">
-          {currentRequests.length > 0 ? (
-            currentRequests.map(req => (
-              <RequestItem
-                key={req.id}
-                request={req}
-                statusConfig={statusConfig}
-                onApprove={handleApprove}
-                onReview={() => setSelectedRequest(req)}
-                processing={processingId === req.id}
-                formatDate={formatDate}
-                t={t}
-              />
-            ))
-          ) : (
-            <Card className="p-8 text-center">
-              <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">{t('settings.accessControl.noRequests')}</p>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Review Modal */}
-      <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('settings.accessControl.reviewRequest')}</DialogTitle>
-          </DialogHeader>
-
-          {selectedRequest &&
-            (() => {
-              const profile = selectedRequest.requestorProfile;
-              const displayName = profile?.name || selectedRequest.requestorName;
-              const avatarHash =
-                profile?.avatarHashes?.small ||
-                profile?.avatarHashes?.tiny ||
-                selectedRequest.requestorAvatar;
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <Avatar
-                      src={avatarHash ? getImageUrl(avatarHash) : undefined}
-                      name={displayName || selectedRequest.requestorPeerID}
-                      size="md"
-                    />
-                    <div>
-                      <p className="font-medium">{displayName || t('common.anonymous')}</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {selectedRequest.requestorPeerID.slice(0, 12)}...
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedRequest.note && (
-                    <div className="p-3 bg-muted/30 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {t('storeAccess.requestNote')}:
-                      </p>
-                      <p className="text-sm">{selectedRequest.note}</p>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      {t('settings.accessControl.reviewNote')}
-                    </label>
-                    <textarea
-                      value={reviewNote}
-                      onChange={e => setReviewNote(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-input rounded-lg bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder={t('settings.accessControl.reviewNotePlaceholder')}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setSelectedRequest(null)}>
-                      {t('common.cancel')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleReject(selectedRequest.id, reviewNote)}
-                      disabled={processingId === selectedRequest.id}
-                      className="border-destructive text-destructive hover:bg-destructive/10"
-                    >
-                      {t('common.reject')}
-                    </Button>
-                    <Button
-                      onClick={() => handleApprove(selectedRequest.id)}
-                      disabled={processingId === selectedRequest.id}
-                    >
-                      {processingId === selectedRequest.id ? '...' : t('common.approve')}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })()}
-        </DialogContent>
-      </Dialog>
-
-      {/* Add User Modal */}
-      <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('storeAccess.addUser')}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                {t('storeAccess.peerIDLabel')}
-              </label>
-              <Input
-                value={newUserPeerID}
-                onChange={e => setNewUserPeerID(e.target.value)}
-                placeholder={t('storeAccess.peerIDPlaceholder')}
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowAddUserModal(false)}>
-                {t('common.cancel')}
-              </Button>
-              <Button
-                onClick={handleAddUser}
-                disabled={!newUserPeerID.trim() || processingId === 'adding'}
-              >
-                {processingId === 'adding' ? '...' : t('common.add')}
-              </Button>
-            </div>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="p-4 rounded-lg border border-border bg-destructive/10 text-destructive mb-4">
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Whitelist Tab */}
+        {!loading && activeTab === 'whitelist' && (
+          <div className="space-y-3">
+            {/* Add User Button */}
+            <Button variant="outline" onClick={() => setShowAddUserModal(true)} className="w-full">
+              <UserPlus className="w-4 h-4 mr-2" />
+              {t('storeAccess.addUser')}
+            </Button>
+
+            {/* Whitelist */}
+            {accessList.length > 0 ? (
+              accessList.map(item => (
+                <WhitelistItem
+                  key={item.id}
+                  item={item}
+                  onRemove={handleRemoveFromList}
+                  processing={processingId === item.requestorPeerID}
+                  formatDate={formatDate}
+                  t={t}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center rounded-lg border border-border">
+                <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{t('storeAccess.noAccessList')}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Request Lists */}
+        {!loading && activeTab !== 'whitelist' && (
+          <div className="space-y-3">
+            {currentRequests.length > 0 ? (
+              currentRequests.map(req => (
+                <RequestItem
+                  key={req.id}
+                  request={req}
+                  statusConfig={statusConfig}
+                  onApprove={handleApprove}
+                  onReview={() => setSelectedRequest(req)}
+                  processing={processingId === req.id}
+                  formatDate={formatDate}
+                  t={t}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center rounded-lg border border-border">
+                <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{t('settings.accessControl.noRequests')}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Review Modal */}
+        <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t('settings.accessControl.reviewRequest')}</DialogTitle>
+            </DialogHeader>
+
+            {selectedRequest &&
+              (() => {
+                const profile = selectedRequest.requestorProfile;
+                const displayName = profile?.name || selectedRequest.requestorName;
+                const avatarHash =
+                  profile?.avatarHashes?.small ||
+                  profile?.avatarHashes?.tiny ||
+                  selectedRequest.requestorAvatar;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Avatar
+                        src={avatarHash ? getImageUrl(avatarHash) : undefined}
+                        name={displayName || selectedRequest.requestorPeerID}
+                        size="md"
+                      />
+                      <div>
+                        <p className="font-medium">{displayName || t('common.anonymous')}</p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {selectedRequest.requestorPeerID.slice(0, 12)}...
+                        </p>
+                      </div>
+                    </div>
+
+                    {selectedRequest.note && (
+                      <div className="p-3 bg-muted/30 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t('storeAccess.requestNote')}:
+                        </p>
+                        <p className="text-sm">{selectedRequest.note}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        {t('settings.accessControl.reviewNote')}
+                      </label>
+                      <textarea
+                        value={reviewNote}
+                        onChange={e => setReviewNote(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-input rounded-lg bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                        placeholder={t('settings.accessControl.reviewNotePlaceholder')}
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setSelectedRequest(null)}>
+                        {t('common.cancel')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleReject(selectedRequest.id, reviewNote)}
+                        disabled={processingId === selectedRequest.id}
+                        className="border-destructive text-destructive hover:bg-destructive/10"
+                      >
+                        {t('common.reject')}
+                      </Button>
+                      <Button
+                        onClick={() => handleApprove(selectedRequest.id)}
+                        disabled={processingId === selectedRequest.id}
+                      >
+                        {processingId === selectedRequest.id ? '...' : t('common.approve')}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add User Modal */}
+        <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t('storeAccess.addUser')}</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t('storeAccess.peerIDLabel')}
+                </label>
+                <Input
+                  value={newUserPeerID}
+                  onChange={e => setNewUserPeerID(e.target.value)}
+                  placeholder={t('storeAccess.peerIDPlaceholder')}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowAddUserModal(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  onClick={handleAddUser}
+                  disabled={!newUserPeerID.trim() || processingId === 'adding'}
+                >
+                  {processingId === 'adding' ? '...' : t('common.add')}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </Card>
+    </SettingsSection>
   );
 };
 
@@ -461,7 +458,7 @@ const RequestItem: React.FC<RequestItemProps> = ({
     profile?.avatarHashes?.small || profile?.avatarHashes?.tiny || request.requestorAvatar;
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 md:p-6">
       <div className="flex items-start gap-4">
         <Avatar
           src={avatarHash ? getImageUrl(avatarHash) : undefined}
@@ -537,7 +534,7 @@ const WhitelistItem: React.FC<WhitelistItemProps> = ({
   const avatarHash = profile?.avatarHashes?.small || profile?.avatarHashes?.tiny;
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 md:p-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Avatar

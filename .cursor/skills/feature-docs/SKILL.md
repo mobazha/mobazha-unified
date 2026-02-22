@@ -5,7 +5,7 @@
 当用户提到以下内容时使用：
 
 - "功能文档"、"feature docs"、"功能设计"、"feature design"
-- "查看 listing/商品/钱包/配送/主题/i18n/账号绑定 的设计文档"
+- "查看 listing/商品/钱包/配送/主题/i18n/账号绑定/settings 的设计文档"
 - "这个模块是怎么设计的"
 - 开发新功能或修改现有功能时需要了解设计背景
 
@@ -17,12 +17,13 @@
 
 ### 核心功能模块
 
-| 文档         | 路径                                  | 涵盖内容                                                        | 关联 Skill                      |
-| ------------ | ------------------------------------- | --------------------------------------------------------------- | ------------------------------- |
-| **商品模块** | `docs/features/listing-module.md`     | 商品创建/编辑、表单架构、5 种商品类型、TokenInput、分类自动补全 | `component-dev`, `ecommerce-ux` |
-| **配送档案** | `docs/features/shipping-profiles.md`  | Shopify 风格的 Profile→Zone→Rate 架构、后端 Protobuf、数据迁移  | `component-dev`                 |
-| **钱包集成** | `docs/features/wallet-integration.md` | Reown AppKit、useWallet Hook、多链支持、Escrow 合约             | `web3-guide`                    |
-| **账号绑定** | `docs/features/account-binding.md`    | 多 OAuth 账号绑定（Discord/Telegram/Google 等）、Casdoor 集成   | `security-guide`                |
+| 文档              | 路径                                  | 涵盖内容                                                        | 关联 Skill                          |
+| ----------------- | ------------------------------------- | --------------------------------------------------------------- | ----------------------------------- |
+| **商品模块**      | `docs/features/listing-module.md`     | 商品创建/编辑、表单架构、5 种商品类型、TokenInput、分类自动补全 | `component-dev`, `ecommerce-ux`     |
+| **配送档案**      | `docs/features/shipping-profiles.md`  | Shopify 风格的 Profile→Zone→Rate 架构、后端 Protobuf、数据迁移  | `component-dev`                     |
+| **钱包集成**      | `docs/features/wallet-integration.md` | Reown AppKit、useWallet Hook、多链支持、Escrow 合约             | `web3-guide`                        |
+| **账号绑定**      | `docs/features/account-binding.md`    | 多 OAuth 账号绑定（Discord/Telegram/Google 等）、Casdoor 集成   | `security-guide`                    |
+| **Settings 重构** | `docs/features/settings-redesign.md`  | Shopify 风格页面模式重构、5 Phase 改造计划、AI-Ready 设计       | `component-dev`, `desktop-ux-guide` |
 
 ### 基础设施模块
 
@@ -126,3 +127,14 @@ Feature docs 提供**模块级详细设计**（具体到文件路径、数据结
 - **shadcn/ui**: `apps/web/src/components/ui/`（20+ 组件）
 - **自定义组件**: `@mobazha/ui` 包
 - **导入**: `import { Button } from '@/components/ui'`
+
+### settings-redesign.md 要点
+
+- **核心变更**: 从 SettingsDrawer 弹框模式迁移到 `/settings/*` 页面路由模式
+- **布局**: Shopify Settings Layout — `SettingsSection` 组件，左列描述(2fr) + 右列表单卡片(5fr)
+- **组件目录**: `apps/web/src/components/SettingsContent/`（各 Section 的内容组件）
+- **布局组件**: `apps/web/src/components/SettingsLayout/`（SettingsSection, SaveBar, PageHeader）
+- **Hooks**: `packages/core/hooks/use{Section}Settings.ts`（每个 Section 的业务逻辑）
+- **5 Phase 改造**: P0 基础组件 → P1 General 样板 → P2 全部迁移 → P3 切换入口+清理 → P4 打磨 → P5 AI
+- **Cursor Rule**: `.cursor/rules/settings-redesign.mdc`（改动 settings 文件时自动应用）
+- **禁止**: 在 SettingsDrawer 中新增功能、使用 `openSettings()` 弹框

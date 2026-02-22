@@ -17,6 +17,7 @@ export const en: TranslationResource = {
     save: 'Save',
     saving: 'Saving...',
     saveFailed: 'Failed to save',
+    discard: 'Discard',
     delete: 'Delete',
     deleting: 'Deleting...',
     edit: 'Edit',
@@ -1160,6 +1161,7 @@ export const en: TranslationResource = {
       account: 'Linked Accounts',
       page: 'Page',
       store: 'Store',
+      shipping: 'Shipping',
       accessControl: 'Access Control',
       privacy: 'Privacy',
       userGroups: 'User Groups',
@@ -1707,6 +1709,7 @@ export const en: TranslationResource = {
 
   settingsModal: {
     // General tab
+    languageAndRegion: 'Language & Region',
     languageDesc: 'Display interface elements in',
     helpTranslate: 'Help translate Mobazha on Transifex',
     countryDesc: 'The country you primarily reside in',
@@ -1722,6 +1725,7 @@ export const en: TranslationResource = {
     soundTestDesc: 'Test notification sound played',
     settingsSaved: 'Settings saved successfully',
     saveFailed: 'Failed to save settings',
+    unsavedChanges: 'Unsaved changes',
     // Blocked Users
     blockUser: 'Block User',
     blockUserDesc: 'Enter the Peer ID of the user you want to block',
@@ -1844,6 +1848,7 @@ export const en: TranslationResource = {
     copyFailed: 'Failed to copy to clipboard',
     chatIdNote: 'Others can add you using this ID in any Matrix client (Element, FluffyChat, etc.)',
     currentDevice: 'Current Device',
+    deviceId: 'Device ID',
     browserDevice: 'Chrome Browser',
     keyBackup: 'Key Backup',
     keyBackupDesc: 'Backup encryption keys to restore message history on new devices',

@@ -11,7 +11,6 @@ import {
   PWAInstall,
   ServiceWorkerProvider,
   SessionExpiredDialog,
-  SettingsDrawerProvider,
   ThemeProvider,
 } from '@/components';
 import { Toaster } from '@/components/ui';
@@ -104,28 +103,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <AuthProvider>
                     <ProductModalProvider>
                       <PaymentSelectorProvider>
-                        <SettingsDrawerProvider>
-                          {/* Main content with bottom padding for mobile nav */}
-                          <div className="pb-20 md:pb-0">{children}</div>
+                        {/* Main content with bottom padding for mobile nav */}
+                        <div className="pb-20 md:pb-0">{children}</div>
 
-                          {/* Mobile bottom navigation */}
-                          <MobileNav />
+                        {/* Mobile bottom navigation */}
+                        <MobileNav />
 
-                          {/* Chat floating button and drawer */}
-                          <ChatSystem />
+                        {/* Chat floating button and drawer */}
+                        <ChatSystem />
 
-                          {/* PWA install prompt */}
-                          <PWAInstall />
+                        {/* PWA install prompt */}
+                        <PWAInstall />
 
-                          {/* Dev tools (only in development) - 临时禁用 */}
-                          {/* <DevTools /> */}
+                        {/* Session expired dialog (global 401 handler) */}
+                        <SessionExpiredDialog />
 
-                          {/* Session expired dialog (global 401 handler) */}
-                          <SessionExpiredDialog />
-
-                          {/* Toast notifications */}
-                          <Toaster />
-                        </SettingsDrawerProvider>
+                        {/* Toast notifications */}
+                        <Toaster />
                       </PaymentSelectorProvider>
                     </ProductModalProvider>
                   </AuthProvider>

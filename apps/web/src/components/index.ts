@@ -54,7 +54,6 @@ export { StoreAccessGuard } from './StoreAccessGuard';
 
 // Settings Components
 export { SettingsSidebar } from './SettingsSidebar';
-export { SettingsDrawer, SettingsDrawerProvider, useSettingsDrawer } from './SettingsDrawer';
 
 // Auth Components
 export { AuthGuard } from './AuthGuard';

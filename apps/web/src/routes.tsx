@@ -142,129 +142,94 @@ const routes: RouteObject[] = [
   // RWA 仪表盘
   { path: '/rwa-dashboard', element: protectedPage(() => import('./app/rwa-dashboard/page')) },
 
-  // 设置 - 主页面
-  { path: '/settings', element: protectedPage(() => import('./app/settings/page')) },
+  // 设置 — 嵌套路由（共享 SettingsLayout 含侧边栏）
   {
-    path: '/settings/account',
-    element: protectedPage(() => import('./app/settings/account/page')),
-  },
-  {
-    path: '/settings/addresses',
-    element: protectedPage(() => import('./app/settings/addresses/page')),
-  },
-  {
-    path: '/settings/advanced',
-    element: protectedPage(() => import('./app/settings/advanced/page')),
-  },
-  {
-    path: '/settings/blocked',
-    element: protectedPage(() => import('./app/settings/blocked/page')),
-  },
-  {
-    path: '/settings/blocked-users',
-    element: protectedPage(() => import('./app/settings/blocked-users/page')),
-  },
-  {
-    path: '/settings/chat-encryption',
-    element: protectedPage(() => import('./app/settings/chat-encryption/page')),
-  },
-  {
-    path: '/settings/general',
-    element: protectedPage(() => import('./app/settings/general/page')),
-  },
-  { path: '/settings/keys', element: protectedPage(() => import('./app/settings/keys/page')) },
-  {
-    path: '/settings/moderation',
-    element: protectedPage(() => import('./app/settings/moderation/page')),
-  },
-  {
-    path: '/settings/moderator',
-    element: protectedPage(() => import('./app/settings/moderator/page')),
-  },
-  {
-    path: '/settings/page-profile',
-    element: protectedPage(() => import('./app/settings/page-profile/page')),
-  },
-  {
-    path: '/settings/privacy',
-    element: protectedPage(() => import('./app/settings/privacy/page')),
-  },
-  {
-    path: '/settings/receiving',
-    element: protectedPage(() => import('./app/settings/receiving/page')),
-  },
-  { path: '/settings/store', element: protectedPage(() => import('./app/settings/store/page')) },
-  {
-    path: '/settings/store/shipping',
-    element: protectedPage(() => import('./app/settings/store/shipping/page')),
-  },
-
-  // 设置 - 访问请求
-  {
-    path: '/settings/access-requests',
-    element: protectedPage(() => import('./app/settings/access-requests/page')),
-  },
-
-  // 设置 - 访问控制
-  {
-    path: '/settings/access-control',
-    element: protectedPage(() => import('./app/settings/access-control/page')),
-  },
-  {
-    path: '/settings/access-control/privacy',
-    element: protectedPage(() => import('./app/settings/access-control/privacy/page')),
-  },
-  {
-    path: '/settings/access-control/requests',
-    element: protectedPage(() => import('./app/settings/access-control/requests/page')),
-  },
-  {
-    path: '/settings/access-control/product-groups',
-    element: protectedPage(() => import('./app/settings/access-control/product-groups/page')),
-  },
-  {
-    path: '/settings/access-control/product-groups/:groupId',
-    element: protectedPage(
-      () => import('./app/settings/access-control/product-groups/[groupId]/page')
-    ),
-  },
-  {
-    path: '/settings/access-control/product-groups/:groupId/authorization',
-    element: protectedPage(
-      () => import('./app/settings/access-control/product-groups/[groupId]/authorization/page')
-    ),
-  },
-  {
-    path: '/settings/access-control/user-groups',
-    element: protectedPage(() => import('./app/settings/access-control/user-groups/page')),
-  },
-  {
-    path: '/settings/access-control/user-groups/:groupId/members',
-    element: protectedPage(
-      () => import('./app/settings/access-control/user-groups/[groupId]/members/page')
-    ),
-  },
-
-  // 设置 - 产品分组
-  {
-    path: '/settings/product-groups',
-    element: protectedPage(() => import('./app/settings/product-groups/page')),
-  },
-  {
-    path: '/settings/product-groups/:groupId/authorization',
-    element: protectedPage(
-      () => import('./app/settings/product-groups/[groupId]/authorization/page')
-    ),
-  },
-
-  // 设置 - 用户分组
-  {
-    path: '/settings/user-groups',
-    element: protectedPage(() => import('./app/settings/user-groups/page')),
-  },
-  {
-    path: '/settings/user-groups/:groupId/members',
-    element: protectedPage(() => import('./app/settings/user-groups/[groupId]/members/page')),
+    path: '/settings',
+    element: lazyPage(() => import('./app/settings/SettingsLayoutVite')),
+    children: [
+      { index: true, element: lazyPage(() => import('./app/settings/page')) },
+      { path: 'general', element: lazyPage(() => import('./app/settings/general/page')) },
+      { path: 'account', element: lazyPage(() => import('./app/settings/account/page')) },
+      { path: 'page-profile', element: lazyPage(() => import('./app/settings/page-profile/page')) },
+      { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
+      {
+        path: 'store/shipping',
+        element: lazyPage(() => import('./app/settings/store/shipping/page')),
+      },
+      { path: 'addresses', element: lazyPage(() => import('./app/settings/addresses/page')) },
+      { path: 'blocked', element: lazyPage(() => import('./app/settings/blocked/page')) },
+      {
+        path: 'blocked-users',
+        element: lazyPage(() => import('./app/settings/blocked-users/page')),
+      },
+      { path: 'moderation', element: lazyPage(() => import('./app/settings/moderation/page')) },
+      { path: 'moderator', element: lazyPage(() => import('./app/settings/moderator/page')) },
+      {
+        path: 'chat-encryption',
+        element: lazyPage(() => import('./app/settings/chat-encryption/page')),
+      },
+      { path: 'keys', element: lazyPage(() => import('./app/settings/keys/page')) },
+      { path: 'privacy', element: lazyPage(() => import('./app/settings/privacy/page')) },
+      { path: 'receiving', element: lazyPage(() => import('./app/settings/receiving/page')) },
+      { path: 'advanced', element: lazyPage(() => import('./app/settings/advanced/page')) },
+      {
+        path: 'access-requests',
+        element: lazyPage(() => import('./app/settings/access-requests/page')),
+      },
+      {
+        path: 'access-control',
+        element: lazyPage(() => import('./app/settings/access-control/page')),
+      },
+      {
+        path: 'access-control/privacy',
+        element: lazyPage(() => import('./app/settings/access-control/privacy/page')),
+      },
+      {
+        path: 'access-control/requests',
+        element: lazyPage(() => import('./app/settings/access-control/requests/page')),
+      },
+      {
+        path: 'access-control/product-groups',
+        element: lazyPage(() => import('./app/settings/access-control/product-groups/page')),
+      },
+      {
+        path: 'access-control/product-groups/:groupId',
+        element: lazyPage(
+          () => import('./app/settings/access-control/product-groups/[groupId]/page')
+        ),
+      },
+      {
+        path: 'access-control/product-groups/:groupId/authorization',
+        element: lazyPage(
+          () => import('./app/settings/access-control/product-groups/[groupId]/authorization/page')
+        ),
+      },
+      {
+        path: 'access-control/user-groups',
+        element: lazyPage(() => import('./app/settings/access-control/user-groups/page')),
+      },
+      {
+        path: 'access-control/user-groups/:groupId/members',
+        element: lazyPage(
+          () => import('./app/settings/access-control/user-groups/[groupId]/members/page')
+        ),
+      },
+      {
+        path: 'product-groups',
+        element: lazyPage(() => import('./app/settings/product-groups/page')),
+      },
+      {
+        path: 'product-groups/:groupId/authorization',
+        element: lazyPage(
+          () => import('./app/settings/product-groups/[groupId]/authorization/page')
+        ),
+      },
+      { path: 'user-groups', element: lazyPage(() => import('./app/settings/user-groups/page')) },
+      {
+        path: 'user-groups/:groupId/members',
+        element: lazyPage(() => import('./app/settings/user-groups/[groupId]/members/page')),
+      },
+    ],
   },
 
   // 钱包

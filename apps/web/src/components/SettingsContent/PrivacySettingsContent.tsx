@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch, useToast } from '@/components/ui';
 import { useI18n, useAccessControl, useUserStore } from '@mobazha/core';
 import { Shield, Eye, EyeOff, UserCheck, Zap, Loader2 } from 'lucide-react';
+import { SettingsSection } from '@/components/SettingsLayout';
 
 interface SettingToggleProps {
   icon: React.ReactNode;
@@ -143,73 +144,80 @@ export const PrivacySettingsContent: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Info Banner */}
-      <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 text-muted-foreground">
-        <Shield className="w-5 h-5 mt-0.5 shrink-0" />
-        <p className="text-sm">{t('settings.accessControl.privacyDescription')}</p>
-      </div>
-
+    <div className="divide-y divide-border">
       {/* Privacy Settings */}
-      <Card className="overflow-hidden">
-        <SettingToggle
-          icon={isPrivateStore ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-          title={t('settings.accessControl.privateStore')}
-          description={t('settings.accessControl.privateStoreDesc')}
-          checked={isPrivateStore}
-          onCheckedChange={setIsPrivateStore}
-        />
+      <SettingsSection
+        className="pt-0 pb-5 md:pb-8"
+        title={t('settings.accessControl.privateStore')}
+        description={t('settings.accessControl.privacyDescription')}
+      >
+        <Card className="p-4 md:p-6 overflow-hidden">
+          <SettingToggle
+            icon={isPrivateStore ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            title={t('settings.accessControl.privateStore')}
+            description={t('settings.accessControl.privateStoreDesc')}
+            checked={isPrivateStore}
+            onCheckedChange={setIsPrivateStore}
+          />
 
-        {isPrivateStore && (
-          <>
-            <SettingToggle
-              icon={<UserCheck className="w-5 h-5" />}
-              title={t('settings.accessControl.allowRequests')}
-              description={t('settings.accessControl.allowRequestsDesc')}
-              checked={allowAccessRequests}
-              onCheckedChange={setAllowAccessRequests}
-            />
-
-            {allowAccessRequests && (
+          {isPrivateStore && (
+            <>
               <SettingToggle
-                icon={<Zap className="w-5 h-5" />}
-                title={t('settings.accessControl.autoApprove')}
-                description={t('settings.accessControl.autoApproveDesc')}
-                checked={autoApproveRequests}
-                onCheckedChange={setAutoApproveRequests}
+                icon={<UserCheck className="w-5 h-5" />}
+                title={t('settings.accessControl.allowRequests')}
+                description={t('settings.accessControl.allowRequestsDesc')}
+                checked={allowAccessRequests}
+                onCheckedChange={setAllowAccessRequests}
               />
-            )}
-          </>
-        )}
-      </Card>
+
+              {allowAccessRequests && (
+                <SettingToggle
+                  icon={<Zap className="w-5 h-5" />}
+                  title={t('settings.accessControl.autoApprove')}
+                  description={t('settings.accessControl.autoApproveDesc')}
+                  checked={autoApproveRequests}
+                  onCheckedChange={setAutoApproveRequests}
+                />
+              )}
+            </>
+          )}
+
+          <div className="pt-4 border-t border-border">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !hasChanges}
+              className="w-full sm:w-auto"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t('common.saving')}
+                </>
+              ) : (
+                t('common.save')
+              )}
+            </Button>
+          </div>
+        </Card>
+      </SettingsSection>
 
       {/* Welcome Message */}
       {isPrivateStore && allowAccessRequests && (
-        <Card className="p-4">
-          <h3 className="font-medium text-sm mb-2">{t('settings.accessControl.welcomeMessage')}</h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            {t('settings.accessControl.welcomeMessageDesc')}
-          </p>
-          <Textarea
-            value={welcomeMessage}
-            onChange={e => setWelcomeMessage(e.target.value)}
-            placeholder={t('settings.accessControl.welcomeMessagePlaceholder')}
-            rows={4}
-          />
-        </Card>
+        <SettingsSection
+          className="py-5 md:py-8"
+          title={t('settings.accessControl.welcomeMessage')}
+          description={t('settings.accessControl.welcomeMessageDesc')}
+        >
+          <Card className="p-4 md:p-6">
+            <Textarea
+              value={welcomeMessage}
+              onChange={e => setWelcomeMessage(e.target.value)}
+              placeholder={t('settings.accessControl.welcomeMessagePlaceholder')}
+              rows={4}
+            />
+          </Card>
+        </SettingsSection>
       )}
-
-      {/* Save Button */}
-      <Button onClick={handleSave} disabled={isSaving || !hasChanges} className="w-full sm:w-auto">
-        {isSaving ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            {t('common.saving')}
-          </>
-        ) : (
-          t('common.save')
-        )}
-      </Button>
     </div>
   );
 };

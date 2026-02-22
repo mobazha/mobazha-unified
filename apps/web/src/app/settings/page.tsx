@@ -3,7 +3,6 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
-import { useSettingsDrawer } from '@/components/SettingsDrawer';
 import {
   Settings,
   User,
@@ -49,19 +48,17 @@ const SettingsCategory: React.FC<SettingsCategoryProps> = ({
 export default function SettingsPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { openSettings } = useSettingsDrawer();
 
-  // 桌面端：打开 Drawer 并返回首页
+  // 桌面端：跳转到 general 设置页
   useEffect(() => {
     const checkAndRedirect = () => {
       if (window.innerWidth >= 1024) {
-        openSettings('general');
-        router.replace('/');
+        router.replace('/settings/general');
       }
     };
 
     checkAndRedirect();
-  }, [router, openSettings]);
+  }, [router]);
 
   // 移动端显示分类列表（点击打开 Drawer）
   return (
@@ -73,25 +70,25 @@ export default function SettingsPage() {
           icon={<Settings className="w-5 h-5" />}
           title={t('settings.sidebar.general')}
           description={t('settingsModal.languageDesc')}
-          onClick={() => openSettings('general')}
+          onClick={() => router.push('/settings/general')}
         />
         <SettingsCategory
           icon={<Link2 className="w-5 h-5" />}
           title={t('settings.sidebar.account')}
           description={t('settings.accountBinding.description')}
-          onClick={() => openSettings('account')}
+          onClick={() => router.push('/settings/account')}
         />
         <SettingsCategory
           icon={<User className="w-5 h-5" />}
           title={t('settings.sidebar.page')}
           description={t('settingsModal.shortDescription')}
-          onClick={() => openSettings('page')}
+          onClick={() => router.push('/settings/page-profile')}
         />
         <SettingsCategory
           icon={<Store className="w-5 h-5" />}
           title={t('settings.sidebar.store')}
           description={t('settingsExtended.storePoliciesDesc')}
-          onClick={() => openSettings('store')}
+          onClick={() => router.push('/settings/store')}
         />
       </div>
 
@@ -100,7 +97,7 @@ export default function SettingsPage() {
           icon={<Shield className="w-5 h-5" />}
           title={t('settings.sidebar.accessControl')}
           description={t('settingsExtended.privateStoreDesc')}
-          onClick={() => openSettings('accessControl')}
+          onClick={() => router.push('/settings/access-control')}
         />
       </div>
 
@@ -109,24 +106,24 @@ export default function SettingsPage() {
           icon={<MapPin className="w-5 h-5" />}
           title={t('settings.sidebar.addresses')}
           description={t('settingsExtended.manageAddresses')}
-          onClick={() => openSettings('addresses')}
+          onClick={() => router.push('/settings/addresses')}
         />
         <SettingsCategory
           icon={<Ban className="w-5 h-5" />}
           title={t('settings.sidebar.blocked')}
           description={t('settingsExtended.manageBlocked')}
-          onClick={() => openSettings('blocked')}
+          onClick={() => router.push('/settings/blocked')}
         />
         <SettingsCategory
           icon={<Scale className="w-5 h-5" />}
           title={t('settings.sidebar.moderation')}
           description={t('settingsExtended.moderatorsDesc')}
-          onClick={() => openSettings('moderation')}
+          onClick={() => router.push('/settings/moderation')}
         />
         <SettingsCategory
           icon={<Lock className="w-5 h-5" />}
           title={t('settings.sidebar.chatEncryption')}
-          onClick={() => openSettings('chatEncryption')}
+          onClick={() => router.push('/settings/chat-encryption')}
         />
       </div>
 
@@ -135,7 +132,7 @@ export default function SettingsPage() {
           icon={<Wrench className="w-5 h-5" />}
           title={t('settings.sidebar.advanced')}
           description={t('settingsExtended.analyticsDesc')}
-          onClick={() => openSettings('advanced')}
+          onClick={() => router.push('/settings/advanced')}
         />
       </div>
     </div>

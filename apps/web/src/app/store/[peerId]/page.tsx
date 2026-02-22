@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { Header, Footer, useSettingsDrawer } from '@/components';
+import { Header, Footer } from '@/components';
 import {
   ProductCard,
   ProductCardSkeleton,
@@ -76,7 +76,6 @@ export default function StorePage() {
   const { toast } = useToast();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
-  const { openSettings } = useSettingsDrawer();
   const peerId = params.peerId as string;
   const {
     isAuthenticated,
@@ -791,7 +790,7 @@ export default function StorePage() {
                         <>
                           <Button
                             variant="outline"
-                            onClick={() => openSettings('page')}
+                            onClick={() => router.push('/settings/page-profile')}
                             size="sm"
                             className="touch-feedback gap-1.5"
                           >
@@ -1297,7 +1296,7 @@ export default function StorePage() {
               variant="outline"
               onClick={() => {
                 handleCloseWelcome();
-                openSettings('page');
+                router.push('/settings/page-profile');
               }}
               className="flex-1"
             >
