@@ -88,6 +88,7 @@ export interface TranslationResource {
     share: string;
     download: string;
     upload: string;
+    uploading?: string;
     view: string;
     viewAll: string;
     seeMore: string;
@@ -582,6 +583,11 @@ export interface TranslationResource {
     avatar: string;
     loadAvatar: string;
     loadHeader: string;
+    coverSizeHint?: string;
+    avatarSizeHint?: string;
+    dragOrClickCover?: string;
+    adjustCover?: string;
+    adjustAvatar?: string;
     // 侧边栏导航
     sidebar?: {
       general: string;
@@ -1001,6 +1007,7 @@ export interface TranslationResource {
     selectPhoto: string;
     avatarUploaded: string;
     uploadFailed: string;
+    fileTooLarge?: string;
     aboutDesc: string;
     aboutPlaceholder: string;
     links: string;
@@ -1396,6 +1403,12 @@ export interface TranslationResource {
     success: string;
     importComplete: string;
     error: string;
+  };
+
+  imageCrop?: {
+    adjustImage: string;
+    zoom: string;
+    rotate: string;
   };
 
   // 商品创建/编辑

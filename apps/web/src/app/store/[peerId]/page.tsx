@@ -43,7 +43,18 @@ import {
   sanitizeHtml,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
-import { Settings, Camera, Package, Lock, ShieldCheck, Plus, Upload, Ban } from 'lucide-react';
+import {
+  Settings,
+  Camera,
+  Package,
+  Lock,
+  ShieldCheck,
+  Plus,
+  Upload,
+  Ban,
+  ImageIcon,
+} from 'lucide-react';
+import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
 import {
@@ -68,6 +79,8 @@ const defaultStats = {
 };
 
 type TabType = 'about' | 'products' | 'rwa' | 'reviews' | 'following' | 'followers';
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function StorePage() {
   const params = useParams();
@@ -127,6 +140,23 @@ export default function StorePage() {
   const [headerUploading, setHeaderUploading] = useState(false);
   const [pendingAvatarHashes, setPendingAvatarHashes] = useState<Image | null>(null);
   const [pendingHeaderHashes, setPendingHeaderHashes] = useState<Image | null>(null);
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(null);
+  const [previewHeaderUrl, setPreviewHeaderUrl] = useState<string | null>(null);
+  const previewAvatarUrlRef = useRef(previewAvatarUrl);
+  previewAvatarUrlRef.current = previewAvatarUrl;
+  const previewHeaderUrlRef = useRef(previewHeaderUrl);
+  previewHeaderUrlRef.current = previewHeaderUrl;
+  useEffect(() => {
+    return () => {
+      if (previewAvatarUrlRef.current) URL.revokeObjectURL(previewAvatarUrlRef.current);
+      if (previewHeaderUrlRef.current) URL.revokeObjectURL(previewHeaderUrlRef.current);
+    };
+  }, []);
+  const [cropDialogSrc, setCropDialogSrc] = useState<string | null>(null);
+  const [cropTarget, setCropTarget] = useState<'avatar' | 'cover' | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const headerInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     shortDescription: '',
@@ -441,41 +471,116 @@ export default function StorePage() {
     setEditForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  // 头像上传处理
-  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setAvatarUploading(true);
-    try {
-      const imageHashes = await imagesApi.uploadAvatarImage(file);
-      if (imageHashes) {
-        setPendingAvatarHashes(imageHashes);
+  const openCropDialog = useCallback(
+    (file: File, target: 'avatar' | 'cover') => {
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast({
+          title: t('common.error'),
+          description: t('settingsModal.fileTooLarge'),
+          variant: 'destructive',
+        });
+        return;
       }
-    } catch (err) {
-      console.error('Failed to upload avatar:', err);
-    } finally {
-      setAvatarUploading(false);
-    }
+      const url = URL.createObjectURL(file);
+      setCropDialogSrc(url);
+      setCropTarget(target);
+    },
+    [toast, t]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>, target: 'avatar' | 'cover') => {
+      const file = e.target.files?.[0];
+      if (file) openCropDialog(file, target);
+      e.target.value = '';
+    },
+    [openCropDialog]
+  );
+
+  const handleCropComplete = useCallback(
+    async (blob: Blob) => {
+      const target = cropTarget;
+      if (!target) return;
+
+      const localUrl = URL.createObjectURL(blob);
+      if (target === 'avatar') {
+        if (previewAvatarUrl) URL.revokeObjectURL(previewAvatarUrl);
+        setPreviewAvatarUrl(localUrl);
+      } else {
+        if (previewHeaderUrl) URL.revokeObjectURL(previewHeaderUrl);
+        setPreviewHeaderUrl(localUrl);
+      }
+
+      if (cropDialogSrc) URL.revokeObjectURL(cropDialogSrc);
+      setCropDialogSrc(null);
+      setCropTarget(null);
+
+      const file = new File([blob], `${target}.jpg`, { type: 'image/jpeg' });
+      let success = false;
+      if (target === 'avatar') {
+        setAvatarUploading(true);
+        try {
+          const imageHashes = await imagesApi.uploadAvatarImage(file);
+          if (imageHashes) {
+            setPendingAvatarHashes(imageHashes);
+            success = true;
+          }
+        } catch (err) {
+          console.error('Failed to upload avatar:', err);
+        } finally {
+          setAvatarUploading(false);
+        }
+      } else {
+        setHeaderUploading(true);
+        try {
+          const imageHashes = await imagesApi.uploadHeaderImage(file);
+          if (imageHashes) {
+            setPendingHeaderHashes(imageHashes);
+            success = true;
+          }
+        } catch (err) {
+          console.error('Failed to upload header:', err);
+        } finally {
+          setHeaderUploading(false);
+        }
+      }
+
+      if (!success) {
+        toast({
+          title: t('common.error'),
+          description: t('settingsModal.uploadFailed'),
+          variant: 'destructive',
+        });
+      }
+    },
+    [cropTarget, cropDialogSrc, previewAvatarUrl, previewHeaderUrl, toast, t]
+  );
+
+  const handleCoverDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
   }, []);
 
-  // 封面上传处理
-  const handleHeaderUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setHeaderUploading(true);
-    try {
-      const imageHashes = await imagesApi.uploadHeaderImage(file);
-      if (imageHashes) {
-        setPendingHeaderHashes(imageHashes);
-      }
-    } catch (err) {
-      console.error('Failed to upload header:', err);
-    } finally {
-      setHeaderUploading(false);
-    }
+  const handleCoverDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget as HTMLElement)) return;
+    setIsDragOver(false);
   }, []);
+
+  const handleCoverDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        openCropDialog(file, 'cover');
+      }
+    },
+    [openCropDialog]
+  );
 
   // 保存编辑
   const handleSave = useCallback(async () => {
@@ -506,7 +611,10 @@ export default function StorePage() {
         setIsEditing(false);
         setPendingAvatarHashes(null);
         setPendingHeaderHashes(null);
-        // 刷新当前用户的 profile 数据
+        if (previewAvatarUrl) URL.revokeObjectURL(previewAvatarUrl);
+        if (previewHeaderUrl) URL.revokeObjectURL(previewHeaderUrl);
+        setPreviewAvatarUrl(null);
+        setPreviewHeaderUrl(null);
         await refreshCurrentUserProfile();
       }
     } finally {
@@ -517,6 +625,8 @@ export default function StorePage() {
     updateProfile,
     pendingAvatarHashes,
     pendingHeaderHashes,
+    previewAvatarUrl,
+    previewHeaderUrl,
     refreshCurrentUserProfile,
   ]);
 
@@ -535,8 +645,12 @@ export default function StorePage() {
     }
     setPendingAvatarHashes(null);
     setPendingHeaderHashes(null);
+    if (previewAvatarUrl) URL.revokeObjectURL(previewAvatarUrl);
+    if (previewHeaderUrl) URL.revokeObjectURL(previewHeaderUrl);
+    setPreviewAvatarUrl(null);
+    setPreviewHeaderUrl(null);
     setIsEditing(false);
-  }, [store]);
+  }, [store, previewAvatarUrl, previewHeaderUrl]);
 
   // 发消息
   const handleMessage = () => {
@@ -664,9 +778,11 @@ export default function StorePage() {
     );
   }
 
-  // 获取显示用的头像和封面图
-  const displayAvatarHash = pendingAvatarHashes?.medium || store.avatarHashes?.medium;
-  const displayHeaderHash = pendingHeaderHashes?.large || store.headerHashes?.large;
+  // 获取显示用的头像和封面图（优先本地预览，其次 IPFS hash）
+  const displayAvatarUrl =
+    previewAvatarUrl || getImageUrl(pendingAvatarHashes?.medium || store.avatarHashes?.medium);
+  const displayHeaderUrl =
+    previewHeaderUrl || getImageUrl(pendingHeaderHashes?.large || store.headerHashes?.large);
 
   return (
     <div className="min-h-screen bg-background">
@@ -676,35 +792,59 @@ export default function StorePage() {
         {/* Store Header */}
         <div className="relative">
           {/* Cover Image */}
-          <div className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-primary/80 to-primary/60 relative overflow-hidden">
-            {displayHeaderHash && (
+          <div
+            className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-primary/80 to-primary/60 relative overflow-hidden group"
+            onDragOver={isOwnStore ? handleCoverDragOver : undefined}
+            onDragLeave={isOwnStore ? handleCoverDragLeave : undefined}
+            onDrop={isOwnStore ? handleCoverDrop : undefined}
+          >
+            {displayHeaderUrl && (
               <img
-                src={getImageUrl(displayHeaderHash) || ''}
+                src={displayHeaderUrl}
                 alt={`${store.name || peerId.slice(0, 8)} store header`}
                 className="w-full h-full object-cover"
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
-            {/* 封面编辑按钮 - 仅自己的店铺显示，放在右上角避免与下方按钮重叠 */}
-            {isOwnStore && (
-              <label className="absolute top-4 right-4 cursor-pointer z-10">
+            {/* Drag overlay */}
+            {isOwnStore && isDragOver && (
+              <div className="absolute inset-0 bg-primary/30 border-2 border-dashed border-primary-foreground/60 flex items-center justify-center z-20 backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-2 text-white">
+                  <ImageIcon className="w-8 h-8" />
+                  <p className="text-sm font-medium">{t('settings.dragOrClickCover')}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Upload progress overlay */}
+            {headerUploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                <div className="flex flex-col items-center gap-3">
+                  <span className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent" />
+                  <p className="text-white text-sm">{t('common.uploading')}</p>
+                </div>
+              </div>
+            )}
+
+            {isOwnStore && !headerUploading && (
+              <>
                 <input
+                  ref={headerInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleHeaderUpload}
+                  onChange={e => handleFileSelect(e, 'cover')}
                   className="hidden"
-                  disabled={headerUploading}
                 />
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors">
-                  {headerUploading ? (
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
+                <button
+                  type="button"
+                  onClick={() => headerInputRef.current?.click()}
+                  className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
+                >
+                  <Camera className="h-4 w-4" />
                   {t('settings.loadHeader')}
-                </div>
-              </label>
+                </button>
+              </>
             )}
           </div>
 
@@ -716,29 +856,33 @@ export default function StorePage() {
                 {/* Avatar */}
                 <div className="relative flex-shrink-0 -mt-10 sm:-mt-12">
                   <Avatar
-                    src={getImageUrl(displayAvatarHash)}
+                    src={displayAvatarUrl}
                     name={store.name || peerId.slice(0, 8)}
                     size="xl"
                     className="ring-4 ring-background w-20 h-20 sm:w-24 sm:h-24 shadow-lg"
                   />
-                  {/* 头像编辑按钮 */}
                   {isOwnStore && (
-                    <label className="absolute -bottom-1 -right-1 cursor-pointer z-10">
+                    <>
                       <input
+                        ref={avatarInputRef}
                         type="file"
                         accept="image/*"
-                        onChange={handleAvatarUpload}
+                        onChange={e => handleFileSelect(e, 'avatar')}
                         className="hidden"
-                        disabled={avatarUploading}
                       />
-                      <div className="w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-background">
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={avatarUploading}
+                        className="absolute -bottom-1 -right-1 z-10 w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-background cursor-pointer"
+                      >
                         {avatarUploading ? (
                           <span className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent" />
                         ) : (
                           <Camera className="h-3.5 w-3.5" />
                         )}
-                      </div>
-                    </label>
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -1344,6 +1488,29 @@ export default function StorePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Image Crop Dialog */}
+      {cropDialogSrc && cropTarget && (
+        <ImageCropDialog
+          open={!!cropDialogSrc}
+          onOpenChange={open => {
+            if (!open) {
+              if (cropDialogSrc) URL.revokeObjectURL(cropDialogSrc);
+              setCropDialogSrc(null);
+              setCropTarget(null);
+            }
+          }}
+          imageSrc={cropDialogSrc}
+          aspect={cropTarget === 'cover' ? 16 / 5 : 1}
+          cropShape={cropTarget === 'avatar' ? 'round' : 'rect'}
+          title={cropTarget === 'cover' ? t('settings.adjustCover') : t('settings.adjustAvatar')}
+          sizeHint={
+            cropTarget === 'cover' ? t('settings.coverSizeHint') : t('settings.avatarSizeHint')
+          }
+          onCropComplete={handleCropComplete}
+          isUploading={cropTarget === 'cover' ? headerUploading : avatarUploading}
+        />
+      )}
     </div>
   );
 }
