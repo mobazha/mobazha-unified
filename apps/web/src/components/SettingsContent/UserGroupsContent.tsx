@@ -22,7 +22,6 @@ import {
 } from '@/components/ui';
 import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
 import { Loader2, Plus, Users, AlertCircle } from 'lucide-react';
-import { SettingsSection } from '@/components/SettingsLayout';
 
 interface UserGroupForm {
   name: string;
@@ -33,13 +32,18 @@ interface UserGroupForm {
 interface UserGroupsContentProps {
   /** 是否在 Modal 中使用（会隐藏一些链接跳转） */
   inModal?: boolean;
+  /** 在 Modal 中使用时显示描述文字（页面中由 SettingsPageHeader 负责） */
+  showDescription?: boolean;
 }
 
 /**
  * 用户组管理内容组件
  * 可在独立页面和 Modal 中复用
  */
-export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = false }) => {
+export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({
+  inModal = false,
+  showDescription = false,
+}) => {
   const { t } = useI18n();
   const router = useRouter();
   const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
@@ -131,180 +135,176 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({ inModal = 
   // 无 peerID 时显示提示
   if (!isLoadingProfile && isAuthenticated && !ownerPeerID) {
     return (
-      <SettingsSection description={t('settings.accessControl.userGroupsDesc')}>
-        <Card className="p-4 md:p-6">
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-warning" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-              {t('settings.accessControl.noPeerIDDesc')}
-            </p>
-            {!inModal && (
-              <Link href="/settings/page-profile">
-                <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
-              </Link>
-            )}
+      <Card className="p-4 md:p-6">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-warning" />
           </div>
-        </Card>
-      </SettingsSection>
+          <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+            {t('settings.accessControl.noPeerIDDesc')}
+          </p>
+          {!inModal && (
+            <Link href="/settings/page-profile">
+              <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
+            </Link>
+          )}
+        </div>
+      </Card>
     );
   }
 
   return (
     <>
-      <SettingsSection description={t('settings.accessControl.userGroupsDesc')}>
-        <Card className="p-4 md:p-6">
-          <div className="flex items-center justify-end mb-4">
-            <Button
-              size="sm"
-              onClick={() => setShowCreateModal(true)}
-              disabled={!isAuthenticated || !ownerPeerID}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t('common.create')}
-            </Button>
+      {showDescription && (
+        <p className="text-sm text-muted-foreground mb-4">
+          {t('settings.accessControl.userGroupsDesc')}
+        </p>
+      )}
+      <Card className="p-4 md:p-6">
+        <div className="flex items-center justify-end mb-4">
+          <Button
+            size="sm"
+            onClick={() => setShowCreateModal(true)}
+            disabled={!isAuthenticated || !ownerPeerID}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('common.create')}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
+        )}
+
+        {loading && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
+        )}
 
-          {error && (
-            <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
-          )}
-
-          {loading && (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          {!loading && groups.length > 0 && (
-            <div className="space-y-3">
-              {groups.map(group => (
-                <div key={group.id} className="p-4 rounded-lg border border-border">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    {/* 用户组信息 */}
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0"
-                        style={{ backgroundColor: getGroupColor(group.id) }}
-                      >
-                        {group.name.charAt(0)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold truncate">{group.name}</h3>
-                        {group.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {group.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {group.memberCount || 0} {t('common.members')}
-                        </p>
-                      </div>
+        {!loading && groups.length > 0 && (
+          <div className="space-y-3">
+            {groups.map(group => (
+              <div key={group.id} className="p-4 rounded-lg border border-border">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0"
+                      style={{ backgroundColor: getGroupColor(group.id) }}
+                    >
+                      {group.name.charAt(0)}
                     </div>
-
-                    {/* 操作按钮 */}
-                    <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-start">
-                      {inModal ? (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-xs sm:text-sm px-2 sm:px-3"
-                          onClick={() =>
-                            handleNavigate(
-                              `/settings/access-control/user-groups/${group.id}/members`
-                            )
-                          }
-                        >
-                          {t('common.members')}
-                        </Button>
-                      ) : (
-                        <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-xs sm:text-sm px-2 sm:px-3"
-                          >
-                            {t('common.members')}
-                          </Button>
-                        </Link>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold truncate">{group.name}</h3>
+                      {group.description && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {group.description}
+                        </p>
                       )}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {group.memberCount || 0} {t('common.members')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-start">
+                    {inModal ? (
                       <Button
                         size="sm"
                         variant="ghost"
                         className="text-xs sm:text-sm px-2 sm:px-3"
                         onClick={() =>
-                          setEditingGroup({
-                            ...group,
-                            description: group.description || '',
-                          })
+                          handleNavigate(`/settings/access-control/user-groups/${group.id}/members`)
                         }
                       >
-                        {t('common.edit')}
+                        {t('common.members')}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive text-xs sm:text-sm px-2 sm:px-3"
-                        onClick={() => setDeleteGroupId(group.id)}
-                      >
-                        {t('common.delete')}
-                      </Button>
-                    </div>
+                    ) : (
+                      <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs sm:text-sm px-2 sm:px-3"
+                        >
+                          {t('common.members')}
+                        </Button>
+                      </Link>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs sm:text-sm px-2 sm:px-3"
+                      onClick={() =>
+                        setEditingGroup({
+                          ...group,
+                          description: group.description || '',
+                        })
+                      }
+                    >
+                      {t('common.edit')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive text-xs sm:text-sm px-2 sm:px-3"
+                      onClick={() => setDeleteGroupId(group.id)}
+                    >
+                      {t('common.delete')}
+                    </Button>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && groups.length === 0 && (
+          <Card className="p-4 md:p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">
+                {t('settings.accessControl.noUserGroups')}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {t('settings.accessControl.noUserGroupsDesc')}
+              </p>
             </div>
-          )}
 
-          {!loading && groups.length === 0 && (
-            <Card className="p-4 md:p-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t('settings.accessControl.noUserGroups')}
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  {t('settings.accessControl.noUserGroupsDesc')}
-                </p>
-              </div>
+            <div className="bg-muted/50 rounded-lg p-4 mb-6">
+              <h4 className="font-medium text-sm mb-3">
+                {t('settings.accessControl.userGroupsHelp')}
+              </h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {t('settings.accessControl.userGroupsHelp1')}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {t('settings.accessControl.userGroupsHelp2')}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {t('settings.accessControl.userGroupsHelp3')}
+                </li>
+              </ul>
+            </div>
 
-              {/* 功能说明 */}
-              <div className="bg-muted/50 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-sm mb-3">
-                  {t('settings.accessControl.userGroupsHelp')}
-                </h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    {t('settings.accessControl.userGroupsHelp1')}
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    {t('settings.accessControl.userGroupsHelp2')}
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    {t('settings.accessControl.userGroupsHelp3')}
-                  </li>
-                </ul>
-              </div>
-
-              <div className="text-center">
-                <Button
-                  onClick={() => setShowCreateModal(true)}
-                  disabled={!isAuthenticated || !ownerPeerID}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('settings.accessControl.createFirstUserGroup')}
-                </Button>
-              </div>
-            </Card>
-          )}
-        </Card>
-      </SettingsSection>
+            <div className="text-center">
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                disabled={!isAuthenticated || !ownerPeerID}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t('settings.accessControl.createFirstUserGroup')}
+              </Button>
+            </div>
+          </Card>
+        )}
+      </Card>
 
       {/* Create/Edit Modal */}
       <Dialog

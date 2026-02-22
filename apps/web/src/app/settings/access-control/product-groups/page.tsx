@@ -12,6 +12,7 @@ export default function ProductGroupsPage() {
     <div>
       <SettingsPageHeader
         title={t('settings.sidebar.productGroups')}
+        description={t('settings.accessControl.productGroupsDesc')}
         backHref="/settings/access-control"
       />
       <ProductGroupsContent />

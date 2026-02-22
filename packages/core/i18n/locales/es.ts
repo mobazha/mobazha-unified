@@ -712,6 +712,8 @@ export const es: TranslationResource = {
     selected: '{{count}} seleccionados',
     shippingOptions: 'Opciones de Envío',
     shippingOptionsDesc: 'Configurar métodos y precios de envío',
+    paymentAndShipping: 'Pago y Envío',
+    paymentAndShippingDesc: 'Gestionar monedas aceptadas y métodos de envío',
     advanced: 'Avanzado',
     analytics: 'Analíticas',
     analyticsDesc: 'Ayuda a mejorar la app compartiendo datos anónimos de uso',

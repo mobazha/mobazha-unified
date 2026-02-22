@@ -4,18 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Switch,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  useToast,
-} from '@/components/ui';
+import { Switch, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
 import { ChevronRight } from 'lucide-react';
 import { HStack, VStack } from '@/components/layouts';
-import { SettingsPageHeader } from '@/components/SettingsLayout';
+import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
 const acceptedCoins = [
   { symbol: 'BTC', name: 'Bitcoin', enabled: true },
@@ -54,7 +47,6 @@ const SettingRow: React.FC<SettingRowProps> = ({ title, description, value, onCl
 
 export default function StoreSettingsPage() {
   const { t } = useI18n();
-  const { toast } = useToast();
   const router = useRouter();
 
   const [coins, setCoins] = useState(acceptedCoins);
@@ -68,39 +60,49 @@ export default function StoreSettingsPage() {
 
   const enabledCoinsCount = coins.filter(c => c.enabled).length;
 
-  const handleComingSoon = () => {
-    toast({
-      title: t('settingsExtended.comingSoon'),
-      description: t('settingsExtended.storePoliciesDesc'),
-    });
+  const handleStorePolicies = () => {
+    router.push('/settings/store/policies');
   };
 
   return (
     <div>
       <SettingsPageHeader title={t('settings.sidebar.store')} />
 
-      <Card className="overflow-hidden">
-        <SettingRow
+      <div className="divide-y divide-border">
+        <SettingsSection
+          className="pb-5 md:pb-8"
           title={t('settingsExtended.storePolicies')}
           description={t('settingsExtended.storePoliciesDesc')}
-          onClick={handleComingSoon}
-        />
-        <SettingRow
-          title={t('settingsExtended.moderators')}
-          description={t('settingsExtended.moderatorsDesc')}
-          onClick={() => router.push('/settings/moderation')}
-        />
-        <SettingRow
-          title={t('settingsExtended.acceptedCryptocurrencies')}
-          value={t('settingsExtended.selected', { count: enabledCoinsCount })}
-          onClick={() => setShowCoinsModal(true)}
-        />
-        <SettingRow
-          title={t('settingsExtended.shippingOptions')}
-          description={t('settingsExtended.shippingOptionsDesc')}
-          onClick={() => router.push('/settings/store/shipping')}
-        />
-      </Card>
+        >
+          <Card className="overflow-hidden">
+            <SettingRow title={t('settingsExtended.storePolicies')} onClick={handleStorePolicies} />
+            <SettingRow
+              title={t('settingsExtended.storeModerators')}
+              description={t('settingsExtended.storeModeratorsDesc')}
+              onClick={() => router.push('/settings/store/moderators')}
+            />
+          </Card>
+        </SettingsSection>
+
+        <SettingsSection
+          className="pt-5 md:pt-8"
+          title={t('settingsExtended.paymentAndShipping')}
+          description={t('settingsExtended.paymentAndShippingDesc')}
+        >
+          <Card className="overflow-hidden">
+            <SettingRow
+              title={t('settingsExtended.acceptedCryptocurrencies')}
+              value={t('settingsExtended.selected', { count: enabledCoinsCount })}
+              onClick={() => setShowCoinsModal(true)}
+            />
+            <SettingRow
+              title={t('settingsExtended.shippingOptions')}
+              description={t('settingsExtended.shippingOptionsDesc')}
+              onClick={() => router.push('/settings/store/shipping')}
+            />
+          </Card>
+        </SettingsSection>
+      </div>
 
       {/* Coins Modal */}
       <Dialog open={showCoinsModal} onOpenChange={setShowCoinsModal}>

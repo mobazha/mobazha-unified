@@ -711,6 +711,8 @@ export const ru: TranslationResource = {
     selected: 'Выбрано: {{count}}',
     shippingOptions: 'Параметры доставки',
     shippingOptionsDesc: 'Настройка способов и цен доставки',
+    paymentAndShipping: 'Оплата и Доставка',
+    paymentAndShippingDesc: 'Управление принимаемыми валютами и способами доставки',
     advanced: 'Дополнительно',
     analytics: 'Аналитика',
     analyticsDesc: 'Помогите улучшить приложение, делясь анонимными данными об использовании',

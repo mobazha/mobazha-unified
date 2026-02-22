@@ -711,6 +711,8 @@ export const ko: TranslationResource = {
     selected: '{{count}}개 선택됨',
     shippingOptions: '배송 옵션',
     shippingOptionsDesc: '배송 방법 및 가격 설정',
+    paymentAndShipping: '결제 및 배송',
+    paymentAndShippingDesc: '허용 통화 및 배송 방법 관리',
     advanced: '고급',
     analytics: '분석',
     analyticsDesc: '익명 사용 데이터를 공유하여 앱 개선에 도움',

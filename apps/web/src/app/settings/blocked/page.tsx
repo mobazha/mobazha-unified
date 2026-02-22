@@ -21,7 +21,7 @@ import {
 } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { SettingsPageHeader } from '@/components/SettingsLayout';
 import { Plus, Ban, UserX } from 'lucide-react';
 
 interface BlockedUser {
@@ -91,6 +91,7 @@ export default function BlockedSettingsPage() {
     <div>
       <SettingsPageHeader
         title={t('settings.sidebar.blocked')}
+        description={t('settingsModal.blockedDescription')}
         actions={
           <Button size="sm" onClick={() => setShowAddModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
@@ -99,45 +100,43 @@ export default function BlockedSettingsPage() {
         }
       />
 
-      <SettingsSection description={t('settingsModal.blockedDescription')}>
-        <Card className="p-4 md:p-6">
-          {blockedUsers.length === 0 ? (
-            <div className="text-center py-4">
-              <Ban className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">{t('settingsModal.noBlockedUsers')}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {blockedUsers.map(user => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0 [&:not(:last-child)]:border-b border-border"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar name={user.name} size="md" />
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{user.peerId}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t('settingsModal.blockedOn')}: {user.blockedAt}
-                      </p>
-                    </div>
+      <Card className="p-4 md:p-6">
+        {blockedUsers.length === 0 ? (
+          <div className="text-center py-4">
+            <Ban className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">{t('settingsModal.noBlockedUsers')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {blockedUsers.map(user => (
+              <div
+                key={user.id}
+                className="flex items-center justify-between py-3 first:pt-0 last:pb-0 [&:not(:last-child)]:border-b border-border"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar name={user.name} size="md" />
+                  <div>
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{user.peerId}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('settingsModal.blockedOn')}: {user.blockedAt}
+                    </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setUnblockTarget(user)}
-                    className="text-destructive border-destructive hover:bg-destructive/10"
-                  >
-                    <UserX className="w-4 h-4 mr-2" />
-                    {t('settingsModal.unblock')}
-                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </SettingsSection>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUnblockTarget(user)}
+                  className="text-destructive border-destructive hover:bg-destructive/10"
+                >
+                  <UserX className="w-4 h-4 mr-2" />
+                  {t('settingsModal.unblock')}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>

@@ -12,6 +12,7 @@ export default function UserGroupsPage() {
     <div>
       <SettingsPageHeader
         title={t('settings.sidebar.userGroups')}
+        description={t('settings.accessControl.userGroupsDesc')}
         backHref="/settings/access-control"
       />
       <UserGroupsContent />

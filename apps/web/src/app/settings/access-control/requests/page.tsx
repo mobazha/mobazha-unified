@@ -12,6 +12,7 @@ export default function AccessRequestsPage() {
     <div>
       <SettingsPageHeader
         title={t('settings.sidebar.accessRequests')}
+        description={t('settings.accessControl.requestsDescription')}
         backHref="/settings/access-control"
       />
       <AccessRequestsContent />

@@ -156,6 +156,14 @@ const routes: RouteObject[] = [
         path: 'store/shipping',
         element: lazyPage(() => import('./app/settings/store/shipping/page')),
       },
+      {
+        path: 'store/policies',
+        element: lazyPage(() => import('./app/settings/store/policies/page')),
+      },
+      {
+        path: 'store/moderators',
+        element: lazyPage(() => import('./app/settings/store/moderators/page')),
+      },
       { path: 'addresses', element: lazyPage(() => import('./app/settings/addresses/page')) },
       { path: 'blocked', element: lazyPage(() => import('./app/settings/blocked/page')) },
       {
