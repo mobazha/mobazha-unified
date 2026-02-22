@@ -711,6 +711,8 @@ export const ja: TranslationResource = {
     selected: '{{count}}件選択中',
     shippingOptions: '配送オプション',
     shippingOptionsDesc: '配送方法と料金を設定',
+    paymentAndShipping: '決済・配送',
+    paymentAndShippingDesc: '受け入れ通貨と配送方法を管理',
     advanced: '詳細設定',
     analytics: 'アナリティクス',
     analyticsDesc: '匿名の使用データを共有してアプリの改善に協力',

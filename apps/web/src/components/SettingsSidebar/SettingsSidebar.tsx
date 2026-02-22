@@ -100,9 +100,9 @@ const sidebarItems: SidebarItem[] = [
     icon: <Ban className="w-4 h-4" />,
   },
   {
-    id: 'moderation',
+    id: 'moderator',
     labelKey: 'settings.sidebar.moderation',
-    href: '/settings/moderation',
+    href: '/settings/moderator',
     icon: <Scale className="w-4 h-4" />,
   },
   {
@@ -219,7 +219,7 @@ export const SettingsSidebar: React.FC = () => {
   };
 
   return (
-    <nav className="p-4 space-y-1" data-testid="settings-sidebar">
+    <nav className="p-4 pb-8 space-y-1" data-testid="settings-sidebar">
       <h2 className="text-lg font-semibold mb-4 px-3">{t('settings.title')}</h2>
       {sidebarItems.map(item => (
         <SidebarNavItem

@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useCallback } from 'react';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -16,8 +15,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Save, Shield, DollarSign, Globe, FileText, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import { useI18n } from '@mobazha/core';
+import { AlertCircle } from 'lucide-react';
+import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { SaveBar } from '@/components/SettingsLayout/SaveBar';
 
 interface ModeratorSettings {
   isActive: boolean;
@@ -59,58 +60,39 @@ const AVAILABLE_LANGUAGES = [
 
 const AVAILABLE_CURRENCIES = ['BTC', 'ETH', 'LTC', 'USDC', 'USDT', 'SOL', 'BNB', 'MATIC'];
 
+const defaultSettings: ModeratorSettings = {
+  isActive: false,
+  shortDescription: '',
+  description: '',
+  languages: ['en'],
+  fee: {
+    feeType: 'percentage',
+    percentage: 1,
+  },
+  termsAndConditions: '',
+  acceptedCurrencies: ['BTC', 'ETH'],
+  contactInfo: {},
+};
+
 export default function ModeratorSettingsPage() {
+  const { t } = useI18n();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [settings, setSettings] = useState<ModeratorSettings>({
-    isActive: false,
-    shortDescription: '',
-    description: '',
-    languages: ['en'],
-    fee: {
-      feeType: 'percentage',
-      percentage: 1,
-    },
-    termsAndConditions: '',
-    acceptedCurrencies: ['BTC', 'ETH'],
-    contactInfo: {},
-  });
+  const [settings, setSettings] = useState<ModeratorSettings>({ ...defaultSettings });
+  const [savedSettings, setSavedSettings] = useState<ModeratorSettings>({ ...defaultSettings });
 
-  // 模拟加载现有设置
-  useEffect(() => {
-    const loadSettings = async () => {
-      // TODO: 从 API 加载仲裁人设置
-      // const profile = await moderatorsApi.getMyModeratorProfile();
-      // if (profile) {
-      //   setSettings({ ...settings, ...profile, isActive: true });
-      // }
-    };
-    loadSettings();
-  }, []);
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      // TODO: 调用 API 保存设置
-      // if (settings.isActive) {
-      //   await moderatorsApi.updateModeratorProfile(settings);
-      // } else {
-      //   await moderatorsApi.deactivateModerator();
-      // }
-      toast({
-        title: '设置已保存',
-        description: '您的仲裁人设置已成功更新',
-      });
-    } catch {
-      toast({
-        title: '保存失败',
-        description: '无法保存仲裁人设置，请稍后重试',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleSave = useCallback(() => {
+    setSavedSettings({ ...settings });
+    toast({
+      title: t('common.saved'),
+      description: t('settingsExtended.moderatorSettingsSaved'),
+    });
+  }, [settings, toast, t]);
+
+  const handleDiscard = useCallback(() => {
+    setSettings({ ...savedSettings });
+  }, [savedSettings]);
 
   const toggleLanguage = (code: string) => {
     setSettings(prev => ({
@@ -131,384 +113,345 @@ export default function ModeratorSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/settings" className="p-2 hover:bg-muted rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">仲裁人设置</h1>
-            <p className="text-muted-foreground">配置您的仲裁服务，帮助解决交易纠纷</p>
-          </div>
-        </div>
+    <div>
+      <SettingsPageHeader title={t('settings.sidebar.moderation')} />
 
-        <div className="space-y-6">
-          {/* 启用/禁用仲裁人 */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-info" />
-                  <div>
-                    <CardTitle className="text-lg">启用仲裁服务</CardTitle>
-                    <CardDescription>开启后，您将成为网络中的仲裁人</CardDescription>
-                  </div>
-                </div>
-                <Switch
-                  checked={settings.isActive}
-                  onCheckedChange={checked => setSettings(prev => ({ ...prev, isActive: checked }))}
-                />
+      <div className="divide-y divide-border">
+        {/* Enable/Disable toggle */}
+        <SettingsSection
+          className="pb-5 md:pb-8"
+          title={t('settingsExtended.enableModeration')}
+          description={t('settingsExtended.enableModerationDesc')}
+        >
+          <Card className="p-4 md:p-6">
+            <div className="flex items-center justify-between min-h-[44px]">
+              <div>
+                <p className="font-medium text-sm">{t('settingsExtended.enableModeration')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('settingsExtended.enableModerationHint')}
+                </p>
               </div>
-            </CardHeader>
+              <Switch
+                checked={settings.isActive}
+                onCheckedChange={checked => setSettings(prev => ({ ...prev, isActive: checked }))}
+              />
+            </div>
           </Card>
+        </SettingsSection>
 
-          {settings.isActive && (
-            <>
-              {/* 基本信息 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">基本信息</CardTitle>
-                  <CardDescription>向买家和卖家介绍您的仲裁服务</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        {settings.isActive && (
+          <>
+            {/* Basic info */}
+            <SettingsSection
+              className="py-5 md:py-8"
+              title={t('settingsExtended.moderatorBasicInfo')}
+              description={t('settingsExtended.moderatorBasicInfoDesc')}
+            >
+              <Card className="p-4 md:p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="shortDescription">{t('settingsExtended.shortDescription')}</Label>
+                  <Input
+                    id="shortDescription"
+                    placeholder={t('settingsExtended.shortDescriptionPlaceholder')}
+                    maxLength={160}
+                    value={settings.shortDescription}
+                    onChange={e =>
+                      setSettings(prev => ({ ...prev, shortDescription: e.target.value }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {settings.shortDescription.length}/160
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">{t('settingsExtended.detailedDescription')}</Label>
+                  <Textarea
+                    id="description"
+                    placeholder={t('settingsExtended.detailedDescriptionPlaceholder')}
+                    rows={6}
+                    value={settings.description}
+                    onChange={e => setSettings(prev => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+              </Card>
+            </SettingsSection>
+
+            {/* Fee settings */}
+            <SettingsSection
+              className="py-5 md:py-8"
+              title={t('settingsExtended.feeSettings')}
+              description={t('settingsExtended.feeSettingsDesc')}
+            >
+              <Card className="p-4 md:p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label>{t('settingsExtended.feeType')}</Label>
+                  <Select
+                    value={settings.fee.feeType}
+                    onValueChange={(value: 'percentage' | 'fixed' | 'fixed_plus_percentage') =>
+                      setSettings(prev => ({
+                        ...prev,
+                        fee: { ...prev.fee, feeType: value },
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">
+                        {t('settingsExtended.feePercentage')}
+                      </SelectItem>
+                      <SelectItem value="fixed">{t('settingsExtended.feeFixed')}</SelectItem>
+                      <SelectItem value="fixed_plus_percentage">
+                        {t('settingsExtended.feeFixedPlusPercentage')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {(settings.fee.feeType === 'percentage' ||
+                  settings.fee.feeType === 'fixed_plus_percentage') && (
                   <div className="space-y-2">
-                    <Label htmlFor="shortDescription">简短描述</Label>
+                    <Label htmlFor="percentage">{t('settingsExtended.percentageLabel')}</Label>
                     <Input
-                      id="shortDescription"
-                      placeholder="简要描述您的仲裁服务（最多 160 字符）"
-                      maxLength={160}
-                      value={settings.shortDescription}
+                      id="percentage"
+                      type="number"
+                      min="0"
+                      max="50"
+                      step="0.1"
+                      value={settings.fee.percentage}
                       onChange={e =>
-                        setSettings(prev => ({ ...prev, shortDescription: e.target.value }))
+                        setSettings(prev => ({
+                          ...prev,
+                          fee: {
+                            ...prev.fee,
+                            percentage: parseFloat(e.target.value) || 0,
+                          },
+                        }))
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      {settings.shortDescription.length}/160 字符
+                      {t('settingsExtended.percentageHint', {
+                        percentage: settings.fee.percentage,
+                      })}
                     </p>
                   </div>
+                )}
 
+                {(settings.fee.feeType === 'fixed' ||
+                  settings.fee.feeType === 'fixed_plus_percentage') && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fixedAmount">{t('settingsExtended.fixedAmount')}</Label>
+                      <Input
+                        id="fixedAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={settings.fee.fixedFee?.amount || 0}
+                        onChange={e =>
+                          setSettings(prev => ({
+                            ...prev,
+                            fee: {
+                              ...prev.fee,
+                              fixedFee: {
+                                ...prev.fee.fixedFee,
+                                amount: parseFloat(e.target.value) || 0,
+                                currency: prev.fee.fixedFee?.currency || 'USD',
+                              },
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('settingsExtended.currency')}</Label>
+                      <Select
+                        value={settings.fee.fixedFee?.currency || 'USD'}
+                        onValueChange={value =>
+                          setSettings(prev => ({
+                            ...prev,
+                            fee: {
+                              ...prev.fee,
+                              fixedFee: {
+                                ...prev.fee.fixedFee,
+                                amount: prev.fee.fixedFee?.amount || 0,
+                                currency: value,
+                              },
+                            },
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="CNY">CNY</SelectItem>
+                          <SelectItem value="BTC">BTC</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </SettingsSection>
+
+            {/* Languages and currencies */}
+            <SettingsSection
+              className="py-5 md:py-8"
+              title={t('settingsExtended.languagesAndCurrencies')}
+              description={t('settingsExtended.languagesAndCurrenciesDesc')}
+            >
+              <Card className="p-4 md:p-6 space-y-6">
+                <div className="space-y-2">
+                  <Label>{t('settingsExtended.supportedLanguages')}</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_LANGUAGES.map(lang => (
+                      <Badge
+                        key={lang.code}
+                        variant={settings.languages.includes(lang.code) ? 'default' : 'outline'}
+                        className="cursor-pointer"
+                        onClick={() => toggleLanguage(lang.code)}
+                      >
+                        {lang.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  {settings.languages.length === 0 && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {t('settingsExtended.selectAtLeastOneLanguage')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t('settingsExtended.acceptedCryptocurrencies')}</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_CURRENCIES.map(currency => (
+                      <Badge
+                        key={currency}
+                        variant={
+                          settings.acceptedCurrencies.includes(currency) ? 'default' : 'outline'
+                        }
+                        className="cursor-pointer"
+                        onClick={() => toggleCurrency(currency)}
+                      >
+                        {currency}
+                      </Badge>
+                    ))}
+                  </div>
+                  {settings.acceptedCurrencies.length === 0 && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {t('settingsExtended.selectAtLeastOneCurrency')}
+                    </p>
+                  )}
+                </div>
+              </Card>
+            </SettingsSection>
+
+            {/* Terms and conditions */}
+            <SettingsSection
+              className="py-5 md:py-8"
+              title={t('settingsExtended.moderatorTerms')}
+              description={t('settingsExtended.moderatorTermsDesc')}
+            >
+              <Card className="p-4 md:p-6">
+                <Textarea
+                  placeholder={t('settingsExtended.moderatorTermsPlaceholder')}
+                  rows={8}
+                  value={settings.termsAndConditions}
+                  onChange={e =>
+                    setSettings(prev => ({ ...prev, termsAndConditions: e.target.value }))
+                  }
+                />
+              </Card>
+            </SettingsSection>
+
+            {/* Contact info */}
+            <SettingsSection
+              className="pt-5 md:pt-8"
+              title={t('settingsExtended.contactInfo')}
+              description={t('settingsExtended.contactInfoDesc')}
+            >
+              <Card className="p-4 md:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="description">详细描述</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="详细介绍您的仲裁经验、专业领域和服务承诺..."
-                      rows={6}
-                      value={settings.description}
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="moderator@example.com"
+                      value={settings.contactInfo.email || ''}
                       onChange={e =>
-                        setSettings(prev => ({ ...prev, description: e.target.value }))
+                        setSettings(prev => ({
+                          ...prev,
+                          contactInfo: { ...prev.contactInfo, email: e.target.value },
+                        }))
                       }
                     />
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* 费率设置 */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <DollarSign className="w-5 h-5 text-success" />
-                    <div>
-                      <CardTitle className="text-lg">费率设置</CardTitle>
-                      <CardDescription>设置您的仲裁服务收费标准</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>费率类型</Label>
-                    <Select
-                      value={settings.fee.feeType}
-                      onValueChange={(value: 'percentage' | 'fixed' | 'fixed_plus_percentage') =>
+                    <Label htmlFor="website">{t('settingsExtended.website')}</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      placeholder="https://..."
+                      value={settings.contactInfo.website || ''}
+                      onChange={e =>
                         setSettings(prev => ({
                           ...prev,
-                          fee: { ...prev.fee, feeType: value },
+                          contactInfo: { ...prev.contactInfo, website: e.target.value },
                         }))
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">按比例收费</SelectItem>
-                        <SelectItem value="fixed">固定费用</SelectItem>
-                        <SelectItem value="fixed_plus_percentage">固定 + 比例</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
-
-                  {(settings.fee.feeType === 'percentage' ||
-                    settings.fee.feeType === 'fixed_plus_percentage') && (
-                    <div className="space-y-2">
-                      <Label htmlFor="percentage">比例 (%)</Label>
-                      <Input
-                        id="percentage"
-                        type="number"
-                        min="0"
-                        max="50"
-                        step="0.1"
-                        value={settings.fee.percentage}
-                        onChange={e =>
-                          setSettings(prev => ({
-                            ...prev,
-                            fee: { ...prev.fee, percentage: parseFloat(e.target.value) || 0 },
-                          }))
-                        }
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        争议金额的 {settings.fee.percentage}% 作为仲裁费用
-                      </p>
-                    </div>
-                  )}
-
-                  {(settings.fee.feeType === 'fixed' ||
-                    settings.fee.feeType === 'fixed_plus_percentage') && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fixedAmount">固定金额</Label>
-                        <Input
-                          id="fixedAmount"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={settings.fee.fixedFee?.amount || 0}
-                          onChange={e =>
-                            setSettings(prev => ({
-                              ...prev,
-                              fee: {
-                                ...prev.fee,
-                                fixedFee: {
-                                  ...prev.fee.fixedFee,
-                                  amount: parseFloat(e.target.value) || 0,
-                                  currency: prev.fee.fixedFee?.currency || 'USD',
-                                },
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>货币</Label>
-                        <Select
-                          value={settings.fee.fixedFee?.currency || 'USD'}
-                          onValueChange={value =>
-                            setSettings(prev => ({
-                              ...prev,
-                              fee: {
-                                ...prev.fee,
-                                fixedFee: {
-                                  ...prev.fee.fixedFee,
-                                  amount: prev.fee.fixedFee?.amount || 0,
-                                  currency: value,
-                                },
-                              },
-                            }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">EUR</SelectItem>
-                            <SelectItem value="CNY">CNY</SelectItem>
-                            <SelectItem value="BTC">BTC</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* 语言和货币 */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-primary" />
-                    <div>
-                      <CardTitle className="text-lg">语言和货币</CardTitle>
-                      <CardDescription>设置您支持的语言和接受的加密货币</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label>支持的语言</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {AVAILABLE_LANGUAGES.map(lang => (
-                        <Badge
-                          key={lang.code}
-                          variant={settings.languages.includes(lang.code) ? 'default' : 'outline'}
-                          className="cursor-pointer"
-                          onClick={() => toggleLanguage(lang.code)}
-                        >
-                          {lang.name}
-                        </Badge>
-                      ))}
-                    </div>
-                    {settings.languages.length === 0 && (
-                      <p className="text-xs text-error flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        请至少选择一种语言
-                      </p>
-                    )}
+                    <Label htmlFor="twitter">Twitter</Label>
+                    <Input
+                      id="twitter"
+                      placeholder="@username"
+                      value={settings.contactInfo.social?.twitter || ''}
+                      onChange={e =>
+                        setSettings(prev => ({
+                          ...prev,
+                          contactInfo: {
+                            ...prev.contactInfo,
+                            social: { ...prev.contactInfo.social, twitter: e.target.value },
+                          },
+                        }))
+                      }
+                    />
                   </div>
-
                   <div className="space-y-2">
-                    <Label>接受的加密货币</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {AVAILABLE_CURRENCIES.map(currency => (
-                        <Badge
-                          key={currency}
-                          variant={
-                            settings.acceptedCurrencies.includes(currency) ? 'default' : 'outline'
-                          }
-                          className="cursor-pointer"
-                          onClick={() => toggleCurrency(currency)}
-                        >
-                          {currency}
-                        </Badge>
-                      ))}
-                    </div>
-                    {settings.acceptedCurrencies.length === 0 && (
-                      <p className="text-xs text-error flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        请至少选择一种货币
-                      </p>
-                    )}
+                    <Label htmlFor="telegram">Telegram</Label>
+                    <Input
+                      id="telegram"
+                      placeholder="@username"
+                      value={settings.contactInfo.social?.telegram || ''}
+                      onChange={e =>
+                        setSettings(prev => ({
+                          ...prev,
+                          contactInfo: {
+                            ...prev.contactInfo,
+                            social: { ...prev.contactInfo.social, telegram: e.target.value },
+                          },
+                        }))
+                      }
+                    />
                   </div>
-                </CardContent>
+                </div>
               </Card>
-
-              {/* 条款和条件 */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-warning" />
-                    <div>
-                      <CardTitle className="text-lg">条款和条件</CardTitle>
-                      <CardDescription>
-                        设置您的仲裁服务条款，用户选择您时将看到这些内容
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea
-                    placeholder="请输入您的仲裁服务条款...
-
-例如：
-1. 争议提交后 48 小时内开始审理
-2. 双方需提供完整的交易证据
-3. 仲裁决定为最终裁决
-4. ..."
-                    rows={10}
-                    value={settings.termsAndConditions}
-                    onChange={e =>
-                      setSettings(prev => ({ ...prev, termsAndConditions: e.target.value }))
-                    }
-                  />
-                </CardContent>
-              </Card>
-
-              {/* 联系方式 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">联系方式（可选）</CardTitle>
-                  <CardDescription>提供额外的联系方式，方便用户联系您</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="moderator@example.com"
-                        value={settings.contactInfo.email || ''}
-                        onChange={e =>
-                          setSettings(prev => ({
-                            ...prev,
-                            contactInfo: { ...prev.contactInfo, email: e.target.value },
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="website">网站</Label>
-                      <Input
-                        id="website"
-                        type="url"
-                        placeholder="https://..."
-                        value={settings.contactInfo.website || ''}
-                        onChange={e =>
-                          setSettings(prev => ({
-                            ...prev,
-                            contactInfo: { ...prev.contactInfo, website: e.target.value },
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="twitter">Twitter</Label>
-                      <Input
-                        id="twitter"
-                        placeholder="@username"
-                        value={settings.contactInfo.social?.twitter || ''}
-                        onChange={e =>
-                          setSettings(prev => ({
-                            ...prev,
-                            contactInfo: {
-                              ...prev.contactInfo,
-                              social: { ...prev.contactInfo.social, twitter: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="telegram">Telegram</Label>
-                      <Input
-                        id="telegram"
-                        placeholder="@username"
-                        value={settings.contactInfo.social?.telegram || ''}
-                        onChange={e =>
-                          setSettings(prev => ({
-                            ...prev,
-                            contactInfo: {
-                              ...prev.contactInfo,
-                              social: { ...prev.contactInfo.social, telegram: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {/* 保存按钮 */}
-          <div className="flex justify-end gap-4">
-            <Link href="/settings">
-              <Button variant="outline">取消</Button>
-            </Link>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? (
-                <>保存中...</>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  保存设置
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+            </SettingsSection>
+          </>
+        )}
       </div>
+
+      <SaveBar isDirty={isDirty} isLoading={false} onSave={handleSave} onDiscard={handleDiscard} />
     </div>
   );
 }

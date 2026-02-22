@@ -25,29 +25,109 @@ globs:
 - 新代码必须写在 Settings Pages 体系中
 - 禁止在 SettingsDrawer 中新增功能
 
-## 布局规范
+## 页面类型分类
 
-### 每个设置页面必须使用 SettingsSection 两列布局
+设置子页面分为三种类型，必须根据类型选择正确的布局：
+
+### 1. 表单配置型（使用 SettingsSection 两列布局）
+
+主要内容是表单控件（输入框、开关、下拉选择等），适合左列放标题+描述、右列放表单卡片。
+
+**适用页面**：General、Page Profile、Store（导航入口）、Store Policies、Privacy、Moderator（自身仲裁设置）、Chat Encryption、Advanced
 
 ```tsx
-// ✅ 正确：使用 SettingsSection
+// ✅ 正确：表单配置型使用 SettingsSection 两列布局
 <SettingsSection
   title={t('settings.general.localeTitle')}
   description={t('settings.general.localeDesc')}
 >
-  <Card className="p-6">
-    <VStack gap="md">
-      <FormField label={t('settings.general.language')}>
-        <Select ... />
-      </FormField>
-    </VStack>
+  <Card className="p-4 md:p-6">
+    <FormField label={t('settings.general.language')}>
+      <Select ... />
+    </FormField>
   </Card>
 </SettingsSection>
+```
 
-// ❌ 错误：直接堆砌表单
-<div>
-  <h2>通用设置</h2>
-  <Select ... />
+### 2. 列表管理型（全宽布局，不使用 SettingsSection）
+
+主要内容是列表/表格/Tab 切换（用户组、地址列表、屏蔽列表等），内容需要占满宽度。描述文字放在 `SettingsPageHeader` 的 `description` prop 中。
+
+**适用页面**：User Groups、Product Groups、Access Requests、Account、Addresses、Blocked、Store Shipping、Store Moderators
+
+```tsx
+// ✅ 正确：列表管理型使用全宽布局
+<SettingsPageHeader
+  title={t('settings.sidebar.addresses')}
+  description={t('settingsModal.addressesDescription')}
+  actions={<Button>添加</Button>}
+/>
+<Card className="p-4 md:p-6">
+  {/* 列表内容直接全宽展示 */}
+</Card>
+
+// ❌ 错误：列表管理型使用 SettingsSection 两列布局（导致内容区太窄）
+<SettingsSection
+  title={t('settings.sidebar.addresses')}
+  description={t('settingsModal.addressesDescription')}
+>
+  <Card>...</Card>
+</SettingsSection>
+```
+
+### 3. 导航入口型（使用 SettingsSection 按逻辑分组）
+
+页面主要是跳转链接（如 Store 页面），用 SettingsSection 按逻辑分组：
+
+```tsx
+// ✅ 正确：导航入口型分组 + 两列布局
+<div className="divide-y divide-border">
+  <SettingsSection
+    className="pb-5 md:pb-8"
+    title={t('settingsExtended.storePolicies')}
+    description={t('settingsExtended.storePoliciesDesc')}
+  >
+    <Card className="overflow-hidden">
+      <SettingRow title="..." onClick={...} />
+    </Card>
+  </SettingsSection>
+</div>
+```
+
+## 布局规范
+
+### 表单配置型页面的 SettingsSection title 必须填写
+
+对于使用 `SettingsSection` 的页面，必须提供 `title` 和 `description`。左列留空会导致桌面端视觉不平衡。
+
+```tsx
+// ✅ 正确：提供 title
+<SettingsSection
+  title={t('settings.general.localeTitle')}
+  description={t('settings.general.localeDesc')}
+>
+  <Card>...</Card>
+</SettingsSection>
+
+// ❌ 错误：省略 title 导致左列空白
+<SettingsSection description={t('...')}>
+  <Card>...</Card>
+</SettingsSection>
+```
+
+### 列表管理型页面如有多个区块，使用小标题分隔
+
+```tsx
+// ✅ 正确：全宽布局 + 小标题
+<SettingsPageHeader title="..." description="..." />
+<Card>...主列表...</Card>
+
+<div className="mt-6">
+  <div className="mb-4">
+    <h2 className="text-base font-semibold">{t('...')}</h2>
+    <p className="text-sm text-muted-foreground mt-1">{t('...')}</p>
+  </div>
+  <Card>...次要区块...</Card>
 </div>
 ```
 

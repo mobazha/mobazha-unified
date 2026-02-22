@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { useI18n, useAccessControl, useUserStore, getImageUrl } from '@mobazha/core';
 import type { StoreAccessRequest, StoreAccessListItem } from '@mobazha/core';
 import { Clock, CheckCircle, XCircle, Inbox, UserPlus, Trash2, ChevronLeft } from 'lucide-react';
-import { SettingsSection } from '@/components/SettingsLayout';
 
 type TabKey = 'pending' | 'approved' | 'rejected' | 'whitelist';
 
@@ -18,6 +17,8 @@ interface AccessRequestsContentProps {
   showBackButton?: boolean;
   /** 返回回调 */
   onBack?: () => void;
+  /** 在 Modal 中使用时显示描述文字（页面中由 SettingsPageHeader 负责） */
+  showDescription?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ interface AccessRequestsContentProps {
 export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
   showBackButton = false,
   onBack,
+  showDescription = false,
 }) => {
   const { t, formatRelativeTime } = useI18n();
   const { profile } = useUserStore();
@@ -192,9 +194,13 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
   const currentRequests = getCurrentList();
 
   return (
-    <SettingsSection description={t('settings.accessControl.requestsDescription')}>
+    <>
+      {showDescription && (
+        <p className="text-sm text-muted-foreground mb-4">
+          {t('settings.accessControl.requestsDescription')}
+        </p>
+      )}
       <Card className="p-4 md:p-6">
-        {/* Back button (when embedded in non-settings context) */}
         {showBackButton && onBack && (
           <div className="flex items-center gap-3 mb-4">
             <button onClick={onBack} className="p-2 hover:bg-muted rounded-lg transition-colors">
@@ -203,7 +209,6 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </div>
         )}
 
-        {/* Tabs with count - 参考老版桌面端设计 */}
         <div className="border-b border-border">
           <div className="flex gap-6">
             {tabs.map(tab => (
@@ -236,7 +241,6 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </div>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -253,23 +257,19 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="p-4 rounded-lg border border-border bg-destructive/10 text-destructive mb-4">
             <p className="text-sm">{error}</p>
           </div>
         )}
 
-        {/* Whitelist Tab */}
         {!loading && activeTab === 'whitelist' && (
           <div className="space-y-3">
-            {/* Add User Button */}
             <Button variant="outline" onClick={() => setShowAddUserModal(true)} className="w-full">
               <UserPlus className="w-4 h-4 mr-2" />
               {t('storeAccess.addUser')}
             </Button>
 
-            {/* Whitelist */}
             {accessList.length > 0 ? (
               accessList.map(item => (
                 <WhitelistItem
@@ -290,7 +290,6 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </div>
         )}
 
-        {/* Request Lists */}
         {!loading && activeTab !== 'whitelist' && (
           <div className="space-y-3">
             {currentRequests.length > 0 ? (
@@ -315,7 +314,6 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </div>
         )}
 
-        {/* Review Modal */}
         <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -393,7 +391,6 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </DialogContent>
         </Dialog>
 
-        {/* Add User Modal */}
         <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -427,7 +424,7 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </DialogContent>
         </Dialog>
       </Card>
-    </SettingsSection>
+    </>
   );
 };
 

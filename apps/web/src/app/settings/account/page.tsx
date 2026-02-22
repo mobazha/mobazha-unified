@@ -27,7 +27,7 @@ import {
   SUPPORTED_PROVIDERS,
 } from '@mobazha/core';
 import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
-import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { SettingsPageHeader } from '@/components/SettingsLayout';
 import { Link2, Unlink, AlertCircle, Check } from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
 
@@ -228,79 +228,80 @@ export default function AccountSettingsPage() {
 
   return (
     <div>
-      <SettingsPageHeader title={t('settings.sidebar.account')} />
+      <SettingsPageHeader
+        title={t('settings.sidebar.account')}
+        description={t('settings.accountBinding.description')}
+      />
 
-      <SettingsSection description={t('settings.accountBinding.description')}>
-        <Card className="p-4 md:p-6">
-          <div className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive bg-destructive/10">
-                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-destructive">{error}</p>
-                  <Button variant="outline" size="sm" className="mt-2" onClick={loadLinkedAccounts}>
-                    {t('common.retry')}
-                  </Button>
+      <Card className="p-4 md:p-6">
+        <div className="space-y-4">
+          {error && (
+            <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive bg-destructive/10">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-destructive">{error}</p>
+                <Button variant="outline" size="sm" className="mt-2" onClick={loadLinkedAccounts}>
+                  {t('common.retry')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              {t('settings.accountBinding.linked')}
+            </h4>
+            {isLoading ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
                 </div>
               </div>
+            ) : linkedAccounts.length === 0 ? (
+              <div className="py-4 text-center text-muted-foreground">
+                <p className="text-sm">{t('settings.accountBinding.noLinked')}</p>
+                <p className="text-xs mt-1">{t('settings.accountBinding.description')}</p>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border overflow-hidden">
+                {linkedAccounts.map(renderLinkedAccountCard)}
+              </div>
             )}
+          </div>
 
+          {availableProviders.length > 0 && (
             <div>
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                {t('settings.accountBinding.linked')}
+                {t('settings.accountBinding.available')}
               </h4>
-              {isLoading ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-10 h-10 rounded-full" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-10 h-10 rounded-full" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </div>
-                </div>
-              ) : linkedAccounts.length === 0 ? (
-                <div className="py-4 text-center text-muted-foreground">
-                  <p className="text-sm">{t('settings.accountBinding.noLinked')}</p>
-                  <p className="text-xs mt-1">{t('settings.accountBinding.description')}</p>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-border overflow-hidden">
-                  {linkedAccounts.map(renderLinkedAccountCard)}
-                </div>
-              )}
+              <div className="rounded-lg border border-border overflow-hidden">
+                {availableProviders.map(renderAvailableProviderCard)}
+              </div>
             </div>
+          )}
 
-            {availableProviders.length > 0 && (
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                  {t('settings.accountBinding.available')}
-                </h4>
-                <div className="rounded-lg border border-border overflow-hidden">
-                  {availableProviders.map(renderAvailableProviderCard)}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium">{t('settings.accountBinding.keepOne')}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('settings.accountBinding.keepOneDesc')}
-                </p>
-              </div>
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+            <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium">{t('settings.accountBinding.keepOne')}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('settings.accountBinding.keepOneDesc')}
+              </p>
             </div>
           </div>
-        </Card>
-      </SettingsSection>
+        </div>
+      </Card>
 
       {/* 解绑确认对话框 */}
       <AlertDialog open={showUnlinkDialog} onOpenChange={setShowUnlinkDialog}>

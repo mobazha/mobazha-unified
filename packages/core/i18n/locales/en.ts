@@ -1619,6 +1619,14 @@ export const en: TranslationResource = {
     selected: '{{count}} selected',
     shippingOptions: 'Shipping Options',
     shippingOptionsDesc: 'Configure shipping methods and prices',
+    paymentAndShipping: 'Payment & Shipping',
+    paymentAndShippingDesc: 'Manage accepted currencies and shipping methods',
+    storePoliciesSaved: 'Store policies have been saved',
+    termsDesc: 'Set terms and conditions that apply to all purchases in your store',
+    termsPlaceholder:
+      'Enter your store terms and conditions, e.g. payment terms, dispute resolution process, liability limitations...',
+    storeModerators: 'Store Moderators',
+    storeModeratorsDesc: 'Select moderators to handle disputes for your store transactions',
     advanced: 'Advanced',
     analytics: 'Analytics',
     analyticsDesc: 'Help improve the app by sharing anonymous usage data',
@@ -1694,6 +1702,50 @@ export const en: TranslationResource = {
     // Shipping
     addShipping: 'Add Shipping Option',
     addShippingHint: 'Add shipping options to enable physical product delivery',
+    // Moderator (be a moderator) settings
+    enableModeration: 'Enable Moderation Service',
+    enableModerationDesc: 'Toggle your availability as a dispute moderator on the network',
+    enableModerationHint: 'When enabled, you become a moderator that buyers and sellers can choose',
+    moderatorBasicInfo: 'Basic Information',
+    moderatorBasicInfoDesc: 'Introduce your moderation service to buyers and sellers',
+    shortDescription: 'Short Description',
+    shortDescriptionPlaceholder: 'Briefly describe your moderation service (max 160 characters)',
+    detailedDescription: 'Detailed Description',
+    detailedDescriptionPlaceholder:
+      'Describe your mediation experience, expertise areas, and service commitments...',
+    feeSettings: 'Fee Settings',
+    feeSettingsDesc: 'Set your moderation service pricing',
+    feeType: 'Fee Type',
+    feePercentage: 'Percentage',
+    feeFixed: 'Fixed Fee',
+    feeFixedPlusPercentage: 'Fixed + Percentage',
+    percentageLabel: 'Percentage (%)',
+    percentageHint: '{{percentage}}% of the dispute amount as moderation fee',
+    fixedAmount: 'Fixed Amount',
+    currency: 'Currency',
+    languagesAndCurrencies: 'Languages & Currencies',
+    languagesAndCurrenciesDesc: 'Set languages you support and currencies you accept',
+    supportedLanguages: 'Supported Languages',
+    selectAtLeastOneLanguage: 'Please select at least one language',
+    selectAtLeastOneCurrency: 'Please select at least one currency',
+    moderatorTerms: 'Terms and Conditions',
+    moderatorTermsDesc:
+      'Set your moderation service terms; users will see these when selecting you',
+    moderatorTermsPlaceholder: 'Enter your moderation service terms...',
+    contactInfo: 'Contact Information',
+    contactInfoDesc: 'Provide additional ways for users to reach you (optional)',
+    website: 'Website',
+    moderatorSettingsSaved: 'Your moderator settings have been saved',
+    // Store moderators
+    moderatorDetails: 'Moderator Details',
+    moderatorDetailsDesc: 'Detailed information about the selected moderator',
+    rating: 'Rating',
+    disputes: 'Disputes',
+    successRate: 'Success Rate',
+    avgResolution: 'Avg Resolution',
+    removeModerator: 'Remove Moderator',
+    removeModeratorDesc: 'Are you sure you want to remove {{name}} from your store moderators?',
+    remove: 'Remove',
   },
 
   userMenu: {
@@ -2656,6 +2708,21 @@ export const en: TranslationResource = {
       noReturn:
         'All sales are final. We do not accept returns or exchanges. Please review the product details carefully before purchasing.',
       custom: 'Custom policy',
+    },
+
+    // Terms & Conditions Templates
+    termsTemplates: {
+      placeholder: 'Select a terms template',
+      standardLabel: 'Standard transaction terms',
+      standard:
+        'By placing an order, you agree to the following terms:\n\n1. Payment: All payments are made via cryptocurrency through escrow. Funds are released to the seller upon buyer confirmation of delivery or after the dispute window expires.\n\n2. Disputes: If you are unsatisfied with your order, you may open a dispute within the escrow protection period. A mutually agreed moderator will review the case and make a binding decision.\n\n3. Shipping: The seller is responsible for shipping the item as described. Tracking information should be provided when available.\n\n4. Liability: The seller makes no warranties beyond what is explicitly stated in the listing description. All items are sold as described.\n\n5. Privacy: Transaction details are stored on a peer-to-peer network. No personal data is shared with third parties beyond what is necessary to complete the transaction.',
+      digitalLabel: 'Digital goods terms',
+      digital:
+        'By purchasing digital goods from this store, you agree to the following:\n\n1. Delivery: Digital items will be delivered via encrypted message or download link after payment confirmation. Delivery is typically within 24 hours.\n\n2. No Returns: Due to the nature of digital goods, all sales are final once the digital content has been delivered and accessed.\n\n3. License: Unless otherwise stated, you receive a personal, non-transferable license to use the digital content. Redistribution or resale is prohibited.\n\n4. Disputes: If the delivered content does not match the listing description, you may open a dispute within the escrow protection period.\n\n5. Support: The seller will provide reasonable support for issues related to accessing or using the purchased digital content.',
+      handmadeLabel: 'Handmade / custom items terms',
+      handmade:
+        'By ordering handmade or custom items, you agree to the following:\n\n1. Production Time: Handmade and custom items require additional production time as stated in the listing. Please allow the specified timeframe before expecting shipment.\n\n2. Variations: Handmade items may have slight variations in color, size, or appearance. These are inherent to handcrafted goods and are not considered defects.\n\n3. Customization: Custom orders are made to your specifications. Please review all details carefully before confirming. Changes after production begins may not be possible.\n\n4. Returns: Due to the personalized nature of custom items, returns are only accepted if the item is significantly different from what was agreed upon.\n\n5. Disputes: If the received item does not match the agreed specifications, you may open a dispute within the escrow protection period.',
+      custom: 'Custom terms',
     },
 
     // Inventory Policy

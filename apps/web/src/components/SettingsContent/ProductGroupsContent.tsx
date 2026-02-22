@@ -29,7 +29,6 @@ import {
   type ProductGroup,
 } from '@mobazha/core';
 import { Loader2, Plus, Layers, AlertCircle } from 'lucide-react';
-import { SettingsSection } from '@/components/SettingsLayout';
 
 interface ProductGroupForm {
   name: string;
@@ -40,13 +39,18 @@ interface ProductGroupForm {
 interface ProductGroupsContentProps {
   /** 是否在 Modal 中使用（会隐藏一些链接跳转） */
   inModal?: boolean;
+  /** 在 Modal 中使用时显示描述文字（页面中由 SettingsPageHeader 负责） */
+  showDescription?: boolean;
 }
 
 /**
  * 产品组管理内容组件
  * 可在独立页面和 Modal 中复用
  */
-export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inModal = false }) => {
+export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({
+  inModal = false,
+  showDescription = false,
+}) => {
   const { t } = useI18n();
   const router = useRouter();
   const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
@@ -142,191 +146,191 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({ inMo
   // 无 peerID 时显示提示
   if (!isLoadingProfile && isAuthenticated && !ownerPeerID) {
     return (
-      <SettingsSection description={t('settings.accessControl.productGroupsDesc')}>
-        <Card className="p-4 md:p-6">
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-warning" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-              {t('settings.accessControl.noPeerIDDesc')}
-            </p>
-            {!inModal && (
-              <Link href="/settings/page-profile">
-                <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
-              </Link>
-            )}
+      <Card className="p-4 md:p-6">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-warning" />
           </div>
-        </Card>
-      </SettingsSection>
+          <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+            {t('settings.accessControl.noPeerIDDesc')}
+          </p>
+          {!inModal && (
+            <Link href="/settings/page-profile">
+              <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
+            </Link>
+          )}
+        </div>
+      </Card>
     );
   }
 
   return (
     <>
-      <SettingsSection description={t('settings.accessControl.productGroupsDesc')}>
-        <Card className="p-4 md:p-6">
-          <div className="flex items-center justify-end mb-4">
-            <Button
-              size="sm"
-              onClick={() => setShowCreateModal(true)}
-              disabled={!isAuthenticated || !userID}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t('common.create')}
-            </Button>
+      {showDescription && (
+        <p className="text-sm text-muted-foreground mb-4">
+          {t('settings.accessControl.productGroupsDesc')}
+        </p>
+      )}
+      <Card className="p-4 md:p-6">
+        <div className="flex items-center justify-end mb-4">
+          <Button
+            size="sm"
+            onClick={() => setShowCreateModal(true)}
+            disabled={!isAuthenticated || !userID}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('common.create')}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
+        )}
+
+        {loading && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
+        )}
 
-          {error && (
-            <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
-          )}
-
-          {loading && (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          {!loading && groups.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {groups.map(group => (
-                <div key={group.id} className="p-4 rounded-lg border border-border">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: getGroupColor(group.id) }}
-                      >
-                        {group.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{group.name}</h3>
-                        <span className="text-xs px-2 py-0.5 rounded-full text-primary bg-primary/10">
-                          {group.itemCount || 0} {t('common.items')}
-                        </span>
-                      </div>
+        {!loading && groups.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {groups.map(group => (
+              <div key={group.id} className="p-4 rounded-lg border border-border">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: getGroupColor(group.id) }}
+                    >
+                      {group.name.charAt(0)}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
+                    <div>
+                      <h3 className="font-semibold">{group.name}</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full text-primary bg-primary/10">
+                        {group.itemCount || 0} {t('common.items')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setEditingGroup({
+                          ...group,
+                          description: group.description || '',
+                        })
+                      }
+                    >
+                      {t('common.edit')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive"
+                      onClick={() => setDeleteGroupId(group.id)}
+                    >
+                      {t('common.delete')}
+                    </Button>
+                  </div>
+                </div>
+
+                {group.description && (
+                  <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
+                )}
+
+                <div className="pt-3 border-t border-border space-y-2">
+                  {inModal ? (
+                    <>
+                      <button
                         onClick={() =>
-                          setEditingGroup({
-                            ...group,
-                            description: group.description || '',
-                          })
+                          handleNavigate(`/settings/access-control/product-groups/${group.id}`)
                         }
+                        className="block text-sm text-primary hover:underline text-left"
                       >
-                        {t('common.edit')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive"
-                        onClick={() => setDeleteGroupId(group.id)}
+                        {t('settings.accessControl.manageProducts')} →
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleNavigate(
+                            `/settings/access-control/product-groups/${group.id}/authorization`
+                          )
+                        }
+                        className="block text-sm text-info hover:underline text-left"
                       >
-                        {t('common.delete')}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {group.description && (
-                    <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
+                        {t('settings.accessControl.configureAccess')} →
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/settings/access-control/product-groups/${group.id}`}
+                        className="block text-sm text-primary hover:underline"
+                      >
+                        {t('settings.accessControl.manageProducts')} →
+                      </Link>
+                      <Link
+                        href={`/settings/access-control/product-groups/${group.id}/authorization`}
+                        className="block text-sm text-info hover:underline"
+                      >
+                        {t('settings.accessControl.configureAccess')} →
+                      </Link>
+                    </>
                   )}
-
-                  <div className="pt-3 border-t border-border space-y-2">
-                    {inModal ? (
-                      <>
-                        <button
-                          onClick={() =>
-                            handleNavigate(`/settings/access-control/product-groups/${group.id}`)
-                          }
-                          className="block text-sm text-primary hover:underline text-left"
-                        >
-                          {t('settings.accessControl.manageProducts')} →
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleNavigate(
-                              `/settings/access-control/product-groups/${group.id}/authorization`
-                            )
-                          }
-                          className="block text-sm text-info hover:underline text-left"
-                        >
-                          {t('settings.accessControl.configureAccess')} →
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link
-                          href={`/settings/access-control/product-groups/${group.id}`}
-                          className="block text-sm text-primary hover:underline"
-                        >
-                          {t('settings.accessControl.manageProducts')} →
-                        </Link>
-                        <Link
-                          href={`/settings/access-control/product-groups/${group.id}/authorization`}
-                          className="block text-sm text-info hover:underline"
-                        >
-                          {t('settings.accessControl.configureAccess')} →
-                        </Link>
-                      </>
-                    )}
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && groups.length === 0 && (
+          <Card className="p-4 md:p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Layers className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">
+                {t('settings.accessControl.noProductGroups')}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {t('settings.accessControl.noProductGroupsDesc')}
+              </p>
             </div>
-          )}
 
-          {!loading && groups.length === 0 && (
-            <Card className="p-4 md:p-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Layers className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t('settings.accessControl.noProductGroups')}
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  {t('settings.accessControl.noProductGroupsDesc')}
-                </p>
-              </div>
+            <div className="bg-muted/50 rounded-lg p-4 mb-6">
+              <h4 className="font-medium text-sm mb-3">
+                {t('settings.accessControl.productGroupsHelp')}
+              </h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {t('settings.accessControl.productGroupsHelp1')}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {t('settings.accessControl.productGroupsHelp2')}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {t('settings.accessControl.productGroupsHelp3')}
+                </li>
+              </ul>
+            </div>
 
-              {/* 功能说明 */}
-              <div className="bg-muted/50 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-sm mb-3">
-                  {t('settings.accessControl.productGroupsHelp')}
-                </h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    {t('settings.accessControl.productGroupsHelp1')}
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    {t('settings.accessControl.productGroupsHelp2')}
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    {t('settings.accessControl.productGroupsHelp3')}
-                  </li>
-                </ul>
-              </div>
-
-              <div className="text-center">
-                <Button
-                  onClick={() => setShowCreateModal(true)}
-                  disabled={!isAuthenticated || !userID}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('settings.accessControl.createFirstProductGroup')}
-                </Button>
-              </div>
-            </Card>
-          )}
-        </Card>
-      </SettingsSection>
+            <div className="text-center">
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                disabled={!isAuthenticated || !userID}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t('settings.accessControl.createFirstProductGroup')}
+              </Button>
+            </div>
+          </Card>
+        )}
+      </Card>
 
       {/* Create/Edit Modal */}
       <Dialog

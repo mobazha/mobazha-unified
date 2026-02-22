@@ -838,6 +838,13 @@ export interface TranslationResource {
     selected: string;
     shippingOptions: string;
     shippingOptionsDesc: string;
+    paymentAndShipping: string;
+    paymentAndShippingDesc: string;
+    storePoliciesSaved?: string;
+    termsDesc?: string;
+    termsPlaceholder?: string;
+    storeModerators?: string;
+    storeModeratorsDesc?: string;
     advanced: string;
     analytics: string;
     analyticsDesc: string;
@@ -910,6 +917,46 @@ export interface TranslationResource {
     // Shipping
     addShipping?: string;
     addShippingHint?: string;
+    enableModeration?: string;
+    enableModerationDesc?: string;
+    enableModerationHint?: string;
+    moderatorBasicInfo?: string;
+    moderatorBasicInfoDesc?: string;
+    shortDescription?: string;
+    shortDescriptionPlaceholder?: string;
+    detailedDescription?: string;
+    detailedDescriptionPlaceholder?: string;
+    feeSettings?: string;
+    feeSettingsDesc?: string;
+    feeType?: string;
+    feePercentage?: string;
+    feeFixed?: string;
+    feeFixedPlusPercentage?: string;
+    percentageLabel?: string;
+    percentageHint?: string;
+    fixedAmount?: string;
+    currency?: string;
+    languagesAndCurrencies?: string;
+    languagesAndCurrenciesDesc?: string;
+    supportedLanguages?: string;
+    selectAtLeastOneLanguage?: string;
+    selectAtLeastOneCurrency?: string;
+    moderatorTerms?: string;
+    moderatorTermsDesc?: string;
+    moderatorTermsPlaceholder?: string;
+    contactInfo?: string;
+    contactInfoDesc?: string;
+    website?: string;
+    moderatorSettingsSaved?: string;
+    moderatorDetails?: string;
+    moderatorDetailsDesc?: string;
+    rating?: string;
+    disputes?: string;
+    successRate?: string;
+    avgResolution?: string;
+    removeModerator?: string;
+    removeModeratorDesc?: string;
+    remove?: string;
   };
 
   // 用户菜单
@@ -1728,6 +1775,17 @@ export interface TranslationResource {
       '15day': string;
       noReturnLabel: string;
       noReturn: string;
+      custom: string;
+    };
+
+    termsTemplates?: {
+      placeholder: string;
+      standardLabel: string;
+      standard: string;
+      digitalLabel: string;
+      digital: string;
+      handmadeLabel: string;
+      handmade: string;
       custom: string;
     };
 

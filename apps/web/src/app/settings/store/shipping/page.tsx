@@ -30,7 +30,7 @@ import type {
 } from '@mobazha/core';
 import { Plus, Truck, FolderOpen, Sparkles, ArrowRight, MapPin } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
-import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { SettingsPageHeader } from '@/components/SettingsLayout';
 import {
   ShippingOptionCard,
   ShippingOptionForm,
@@ -573,6 +573,7 @@ export default function ShippingOptionsPage() {
         title={
           isUsingProfiles ? t('shipping.shippingProfiles') : t('settingsExtended.shippingOptions')
         }
+        description={t('settingsExtended.shippingOptionsDesc')}
         backHref="/settings/store"
         actions={
           isUsingProfiles ? (
@@ -584,124 +585,115 @@ export default function ShippingOptionsPage() {
         }
       />
 
-      <div className="divide-y divide-border">
+      <div className="space-y-6 md:space-y-8">
         {/* Shipping Profiles / Options Section */}
-        <SettingsSection
-          className="pt-0 pb-5 md:pb-8"
-          title={
-            isUsingProfiles ? t('shipping.shippingProfiles') : t('settingsExtended.shippingOptions')
-          }
-          description={t('settingsExtended.shippingOptionsDesc')}
-        >
-          <>
-            {/* 迁移提示 - 如果有传统运费选项但还没迁移到档案模式 */}
-            {!isUsingProfiles && legacyOptions.length > 0 && (
-              <MigrationBanner onMigrate={handleMigrate} isLoading={isSaving} />
-            )}
+        <div>
+          {!isUsingProfiles && legacyOptions.length > 0 && (
+            <MigrationBanner onMigrate={handleMigrate} isLoading={isSaving} />
+          )}
 
-            {isLoading ? (
-              <LoadingSkeleton />
-            ) : isUsingProfiles ? (
-              <VStack gap="lg">
-                {profiles.map(profile => {
-                  const isExpanded = expandedProfiles.has(profile.profileId);
-                  return (
-                    <div key={profile.profileId} className="space-y-0">
-                      <ShippingProfileCard
-                        profile={profile}
-                        onRename={async newName => {
-                          return await updateProfile(profile.profileId, {
-                            ...profile,
-                            name: newName,
-                          });
-                        }}
-                        onDelete={() => handleDeleteProfileClick(profile)}
-                        onSetDefault={() => handleSetDefaultProfile(profile.profileId)}
-                        disabled={isSaving}
-                        expanded={isExpanded}
-                        onToggleExpand={() => toggleProfileExpand(profile.profileId)}
-                      />
-                      {isExpanded && (
-                        <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
-                          {getAllZones(profile).length > 0 ? (
-                            getAllZones(profile).map(zone => (
-                              <ShippingZoneCard
-                                key={zone.id}
-                                zone={zone}
-                                onEdit={() => {
-                                  setSelectedProfileId(profile.profileId);
-                                  setEditingZone(zone);
-                                  setShowZoneForm(true);
-                                }}
-                                onDelete={() => handleDeleteZoneClick(zone, profile.profileId)}
-                                disabled={isSaving}
-                              />
-                            ))
-                          ) : (
-                            <div className="space-y-3">
-                              <p className="text-sm text-muted-foreground py-2">
-                                {t('shipping.noZonesDesc')}
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : isUsingProfiles ? (
+            <VStack gap="lg">
+              {profiles.map(profile => {
+                const isExpanded = expandedProfiles.has(profile.profileId);
+                return (
+                  <div key={profile.profileId} className="space-y-0">
+                    <ShippingProfileCard
+                      profile={profile}
+                      onRename={async newName => {
+                        return await updateProfile(profile.profileId, {
+                          ...profile,
+                          name: newName,
+                        });
+                      }}
+                      onDelete={() => handleDeleteProfileClick(profile)}
+                      onSetDefault={() => handleSetDefaultProfile(profile.profileId)}
+                      disabled={isSaving}
+                      expanded={isExpanded}
+                      onToggleExpand={() => toggleProfileExpand(profile.profileId)}
+                    />
+                    {isExpanded && (
+                      <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4 animate-in slide-in-from-top-2 duration-200">
+                        {getAllZones(profile).length > 0 ? (
+                          getAllZones(profile).map(zone => (
+                            <ShippingZoneCard
+                              key={zone.id}
+                              zone={zone}
+                              onEdit={() => {
+                                setSelectedProfileId(profile.profileId);
+                                setEditingZone(zone);
+                                setShowZoneForm(true);
+                              }}
+                              onDelete={() => handleDeleteZoneClick(zone, profile.profileId)}
+                              disabled={isSaving}
+                            />
+                          ))
+                        ) : (
+                          <div className="space-y-3">
+                            <p className="text-sm text-muted-foreground py-2">
+                              {t('shipping.noZonesDesc')}
+                            </p>
+                            <div className="pt-1">
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {t('shipping.orUseTemplate')}
                               </p>
-                              <div className="pt-1">
-                                <p className="text-xs text-muted-foreground mb-2">
-                                  {t('shipping.orUseTemplate')}
-                                </p>
-                                <ShippingTemplateSelector
-                                  currency="USD"
-                                  onSelect={option => {
-                                    setSelectedProfileId(profile.profileId);
-                                    handleSelectTemplate(option);
-                                  }}
-                                />
-                              </div>
+                              <ShippingTemplateSelector
+                                currency="USD"
+                                onSelect={option => {
+                                  setSelectedProfileId(profile.profileId);
+                                  handleSelectTemplate(option);
+                                }}
+                              />
                             </div>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-dashed"
-                            onClick={() => handleAddZone(profile.profileId)}
-                          >
-                            <Plus className="w-3.5 h-3.5 mr-1" />
-                            {t('shipping.addZone')}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </VStack>
-            ) : legacyOptions.length === 0 ? (
-              <EmptyState
-                onSelectTemplate={handleSelectTemplate}
-                onCreateProfile={handleCreateProfile}
-              />
-            ) : (
-              <VStack gap="md">
-                {legacyOptions.map(option => (
-                  <ShippingOptionCard
-                    key={option.id || option.name}
-                    option={option}
-                    onEdit={() => {
-                      setEditingOption(option);
-                      setShowForm(true);
-                    }}
-                    onDelete={() => handleDeleteLegacyOption(option)}
-                    disabled={isSaving}
-                  />
-                ))}
-              </VStack>
-            )}
-          </>
-        </SettingsSection>
+                          </div>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-dashed"
+                          onClick={() => handleAddZone(profile.profileId)}
+                        >
+                          <Plus className="w-3.5 h-3.5 mr-1" />
+                          {t('shipping.addZone')}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </VStack>
+          ) : legacyOptions.length === 0 ? (
+            <EmptyState
+              onSelectTemplate={handleSelectTemplate}
+              onCreateProfile={handleCreateProfile}
+            />
+          ) : (
+            <VStack gap="md">
+              {legacyOptions.map(option => (
+                <ShippingOptionCard
+                  key={option.id || option.name}
+                  option={option}
+                  onEdit={() => {
+                    setEditingOption(option);
+                    setShowForm(true);
+                  }}
+                  onDelete={() => handleDeleteLegacyOption(option)}
+                  disabled={isSaving}
+                />
+              ))}
+            </VStack>
+          )}
+        </div>
 
         {/* 发货地点管理区域 - 仅在档案模式下显示 */}
         {isUsingProfiles && (
-          <SettingsSection
-            className="py-5 md:py-8"
-            title={t('shipping.shippingLocations')}
-            description={t('shipping.noLocationsDesc')}
-          >
+          <div>
+            <div className="mb-4">
+              <h2 className="text-base font-semibold">{t('shipping.shippingLocations')}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t('shipping.noLocationsDesc')}</p>
+            </div>
             <div className="space-y-4">
               <div className="flex justify-end">
                 <Button onClick={handleAddLocation} size="sm" variant="outline">
@@ -736,7 +728,7 @@ export default function ShippingOptionsPage() {
                 </VStack>
               )}
             </div>
-          </SettingsSection>
+          </div>
         )}
       </div>
 
