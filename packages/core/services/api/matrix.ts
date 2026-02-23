@@ -3,8 +3,9 @@
  * 与 Hosting 后端交互获取 Matrix 配置和凭据
  */
 
-import { getHostingUrl, getGatewayUrl, getAuthHeaders } from './config';
+import { getHostingUrl, getAuthHeaders } from './config';
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
+import { authGet, authPost } from './helpers';
 
 // ============= 类型定义 =============
 
@@ -62,15 +63,7 @@ export async function getMatrixConfig(): Promise<MatrixServerConfig> {
  */
 export async function getMatrixCredentials(): Promise<MatrixCredentials | null> {
   try {
-    const gatewayUrl = getGatewayUrl();
-    const response = await fetch(`${gatewayUrl}${NODE_API.MATRIX_CREDENTIALS}`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return response.json();
+    return await authGet<MatrixCredentials>(NODE_API.MATRIX_CREDENTIALS);
   } catch (error) {
     console.warn('[Matrix API] Failed to get credentials:', error);
     return null;
@@ -87,15 +80,7 @@ export async function saveMatrixCredentials(
   serverName: string
 ): Promise<void> {
   try {
-    const gatewayUrl = getGatewayUrl();
-    const response = await fetch(`${gatewayUrl}${NODE_API.MATRIX_CREDENTIALS}`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ matrixUserId, serverName }),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to save credentials: ${response.status}`);
-    }
+    await authPost(NODE_API.MATRIX_CREDENTIALS, { matrixUserId, serverName });
   } catch (error) {
     console.warn('[Matrix API] Failed to save credentials:', error);
   }
@@ -107,15 +92,7 @@ export async function saveMatrixCredentials(
  */
 export async function getDerivedPassword(): Promise<string | null> {
   try {
-    const gatewayUrl = getGatewayUrl();
-    const response = await fetch(`${gatewayUrl}${NODE_API.MATRIX_PASSWORD}`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    const data = await response.json();
+    const data = await authGet<{ password: string }>(NODE_API.MATRIX_PASSWORD);
     return data.password;
   } catch (error) {
     console.warn('[Matrix API] Failed to get password:', error);

@@ -3,9 +3,11 @@
  */
 
 import type { UserProfile, UserSettings } from '../../types';
-import { get, post, put, ApiError } from './client';
-import { getGatewayUrl, getSearchUrl, getAuthHeaders, getHeadersWithContext } from './config';
+import { get, post, ApiError } from './client';
+import { getGatewayUrl, getBuyerGatewayUrl, getSearchUrl, getAuthHeaders } from './config';
+import { isStandaloneMode } from '../../config/env';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
+import { authGet, authPost, authPut, publicGet, searchPost } from './helpers';
 
 /**
  * 获取用户资料
@@ -13,23 +15,20 @@ import { NODE_API, SEARCH_API } from '../../config/apiPaths';
  * 使用共享的 get() client，确保 401 等错误被统一拦截处理。
  */
 export async function getProfile(peerID?: string): Promise<UserProfile | null> {
-  const timestamp = Date.now();
-  let url: string;
-
-  if (!peerID) {
-    url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
-  } else {
-    url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW}?peerId=${peerID}&${timestamp}`;
-  }
-
   try {
+    if (!peerID) {
+      return await publicGet<UserProfile>(NODE_API.PROFILES);
+    }
+    if (isStandaloneMode()) {
+      return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
+    }
+    const timestamp = Date.now();
+    const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW}?peerId=${peerID}&${timestamp}`;
     return await get<UserProfile>(url, getAuthHeaders());
   } catch (err) {
-    // 404 表示用户不存在，返回 null
     if (err instanceof ApiError && err.status === 404) {
       return null;
     }
-    // 其他错误（包括 401，已由 client 的 onUnauthorized 回调处理）
     return null;
   }
 }
@@ -37,13 +36,25 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
 /**
  * 获取自己的资料
  */
-export async function getMyProfile(
-  username?: string,
-  password?: string
-): Promise<UserProfile | null> {
-  const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
+export async function getMyProfile(): Promise<UserProfile | null> {
   try {
-    return await get<UserProfile>(url, getAuthHeaders(username, password));
+    return await authGet<UserProfile>(NODE_API.PROFILES);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 获取买家自己的资料（独立站模式）
+ *
+ * 独立站买家通过 Casdoor 登录后，需要从 SaaS 平台获取自己的 profile（含 peerID）。
+ * 使用 getBuyerGatewayUrl() 路由到 SaaS → /buyer-api/v1/profile。
+ * JWT Bearer token 由 getAuthHeaders() 自动附加。
+ */
+export async function getBuyerProfile(): Promise<UserProfile | null> {
+  const url = `${getBuyerGatewayUrl()}${NODE_API.PROFILES}`;
+  try {
+    return await get<UserProfile>(url, getAuthHeaders());
   } catch {
     return null;
   }
@@ -59,10 +70,29 @@ export async function getMyProfile(
 export async function createProfile(
   profile: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
+  try {
+    await authPost(NODE_API.PROFILES, profile);
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to create profile',
+    };
+  }
+}
+
+/**
+ * 创建买家资料（独立站模式，POST）
+ *
+ * 独立站买家通过 Casdoor 登录后，profile 存储在 SaaS 平台。
+ * 使用 getBuyerGatewayUrl() 路由到 SaaS → /buyer-api/v1/profiles。
+ */
+export async function createBuyerProfile(
+  profile: Partial<UserProfile>
+): Promise<{ success: boolean; error?: string }> {
+  const url = `${getBuyerGatewayUrl()}${NODE_API.PROFILES}`;
   try {
     await post(url, profile, getAuthHeaders());
-    // 后端返回 200（即使 body 是 {}）即表示创建成功
     return { success: true };
   } catch (err) {
     return {
@@ -76,37 +106,27 @@ export async function createProfile(
  * 更新用户资料
  */
 export async function setProfile(
-  profile: Partial<UserProfile>,
-  username?: string,
-  password?: string
+  profile: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
-  return put(url, { ...profile, vendor: true }, getAuthHeaders(username, password));
+  return authPut(NODE_API.PROFILES, { ...profile, vendor: true });
 }
 
 /**
  * 设置接受的币种
  */
 export async function setAcceptedCoins(
-  coins: string[],
-  username?: string,
-  password?: string
+  coins: string[]
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES_CURRENCY}`;
-  return post(url, { currencies: coins }, getAuthHeaders(username, password));
+  return authPost(NODE_API.PREFERENCES_CURRENCY, { currencies: coins });
 }
 
 /**
  * 获取用户设置/偏好
  * 后端 API 路径: /v1/preferences
  */
-export async function getSettings(
-  username?: string,
-  password?: string
-): Promise<UserSettings | null> {
-  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
+export async function getSettings(): Promise<UserSettings | null> {
   try {
-    return await get<UserSettings>(url, getAuthHeaders(username, password));
+    return await authGet<UserSettings>(NODE_API.PREFERENCES);
   } catch {
     return null;
   }
@@ -117,29 +137,24 @@ export async function getSettings(
  * 后端 API 路径: /v1/preferences
  */
 export async function setSettings(
-  settings: Partial<UserSettings>,
-  username?: string,
-  password?: string
+  settings: Partial<UserSettings>
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
-  return put(url, settings, getAuthHeaders(username, password));
+  return authPut(NODE_API.PREFERENCES, settings);
 }
 
 /**
  * 举报用户
  */
 export async function reportProfile(peerID: string, reason: string): Promise<{ success: boolean }> {
-  const url = `${getSearchUrl()}${SEARCH_API.REPORTS}`;
-  return post(url, { peerID, reason, report_type: 'node' }, getHeadersWithContext());
+  return searchPost(SEARCH_API.REPORTS, { peerID, reason, report_type: 'node' });
 }
 
 /**
  * 获取 PeerID
  */
-export async function getPeerID(username?: string, password?: string): Promise<string | null> {
-  const url = `${getGatewayUrl()}${NODE_API.PEER_ID}`;
+export async function getPeerID(): Promise<string | null> {
   try {
-    const response = await get<{ peerID: string }>(url, getAuthHeaders(username, password));
+    const response = await authGet<{ peerID: string }>(NODE_API.PEER_ID);
     return response.peerID;
   } catch {
     return null;

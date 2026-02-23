@@ -52,20 +52,28 @@ class WebSocketService {
   private messageHandlers: Set<MessageHandler> = new Set();
   private statusHandlers: Set<StatusHandler> = new Set();
   private lastMessageTime = 0;
+  private wsUrlOverride: string | null = null;
 
   constructor(config: WebSocketConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
   /**
+   * Override the WebSocket base URL. Used by standalone buyers to route
+   * through /buyer-api/ws to the SaaS platform instead of the local node.
+   * Pass null to reset to the default env-based URL.
+   */
+  setBaseUrl(url: string | null): void {
+    this.wsUrlOverride = url;
+  }
+
+  /**
    * 获取 WebSocket URL（带 token）
    */
   private getWebSocketUrl(): string {
-    const env = getEnvConfig();
     const token = getStoredToken();
-    const baseUrl = env.api.websocket;
+    const baseUrl = this.wsUrlOverride ?? getEnvConfig().api.websocket;
 
-    // Token 作为 URL 参数传递给后端进行路由
     const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '?Gateway=true';
 
     return `${baseUrl}${tokenParam}`;
@@ -319,6 +327,15 @@ export async function connectWebSocket(): Promise<boolean> {
  */
 export function disconnectWebSocket(): void {
   wsService?.disconnect();
+}
+
+/**
+ * Override the WebSocket base URL (convenience wrapper).
+ * Standalone buyers use this to route through /buyer-api/ws to SaaS.
+ * Pass null to reset to the default URL.
+ */
+export function setWebSocketBaseUrl(url: string | null): void {
+  getWebSocketService().setBaseUrl(url);
 }
 
 /**

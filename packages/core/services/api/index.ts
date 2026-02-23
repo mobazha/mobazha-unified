@@ -4,13 +4,17 @@ export {
   getApiConfig,
   getHostingUrl,
   getGatewayUrl,
+  getBuyerGatewayUrl,
+  getBuyerWebSocketUrl,
+  getSellerWebSocketUrl,
+  getMyGatewayUrl,
   getSearchUrl,
   getMbzGatewayUrl,
-  setAuthCredentials,
-  clearAuthCredentials,
   setGroupContext,
   getHeadersWithContext,
   getImageUrl,
+  setStandaloneBuyerAuth,
+  isStandaloneBuyerAuth,
 } from './config';
 
 // API 模式管理
@@ -27,6 +31,22 @@ export {
 
 // API 客户端
 export { ApiError, request, get, post, put, del, safeRequest } from './client';
+
+// 三层 API helpers（推荐使用，自动处理路由和认证）
+export {
+  authGet,
+  authPost,
+  authPut,
+  authDel,
+  authSafeGet,
+  authRequest,
+  publicGet,
+  publicPost,
+  publicSafeGet,
+  searchGet,
+  searchPost,
+  searchSafeGet,
+} from './helpers';
 
 // Type-safe OpenAPI client (openapi-fetch)
 export {

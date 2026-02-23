@@ -2,10 +2,9 @@
  * 争议/仲裁 API 服务
  */
 
-import { get, post, safeRequest } from './client';
-import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
 import { NODE_API } from '../../config/apiPaths';
+import { authGet, authPost, authSafeGet } from './helpers';
 
 // 争议状态
 export type DisputeState =
@@ -95,15 +94,9 @@ const mockCases: CaseListItem[] = [
 /**
  * 获取仲裁案件列表
  */
-export async function getCases(
-  username?: string,
-  password?: string,
-  limit = '',
-  offsetId = ''
-): Promise<CaseListItem[]> {
+export async function getCases(limit = '', offsetId = ''): Promise<CaseListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.CASES}?limit=${limit}&offsetId=${offsetId}`;
-    return safeRequest<CaseListItem[]>(url, { headers: getAuthHeaders(username, password) }, []);
+    return authSafeGet<CaseListItem[]>(`${NODE_API.CASES}?limit=${limit}&offsetId=${offsetId}`, []);
   };
 
   const mockFn = async () => {
@@ -116,15 +109,10 @@ export async function getCases(
 /**
  * 获取案件详情
  */
-export async function getCaseDetails(
-  orderId: string,
-  username?: string,
-  password?: string
-): Promise<DisputeCase | null> {
+export async function getCaseDetails(orderId: string): Promise<DisputeCase | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.CASE(orderId)}`;
     try {
-      return await get<DisputeCase>(url, getAuthHeaders(username, password));
+      return await authGet<DisputeCase>(NODE_API.CASE(orderId));
     } catch {
       return null;
     }
@@ -181,24 +169,16 @@ export async function getCaseDetails(
  */
 export async function openDispute(
   orderId: string,
-  claim: string,
-  username?: string,
-  password?: string
+  claim: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_OPEN}`;
-  return post(url, { orderID: orderId, claim }, getAuthHeaders(username, password));
+  return authPost(NODE_API.DISPUTE_OPEN, { orderID: orderId, claim });
 }
 
 /**
  * 关闭争议（撤回）
  */
-export async function closeDispute(
-  orderId: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_CLOSE}`;
-  return post(url, { orderID: orderId }, getAuthHeaders(username, password));
+export async function closeDispute(orderId: string): Promise<{ success: boolean; error?: string }> {
+  return authPost(NODE_API.DISPUTE_CLOSE, { orderID: orderId });
 }
 
 /**
@@ -208,45 +188,32 @@ export async function resolveDispute(
   orderId: string,
   buyerPercentage: number,
   vendorPercentage: number,
-  resolution: string,
-  username?: string,
-  password?: string
+  resolution: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE}`;
-  return post(
-    url,
-    {
-      orderID: orderId,
-      buyerPercentage,
-      vendorPercentage,
-      resolution,
-    },
-    getAuthHeaders(username, password)
-  );
+  return authPost(NODE_API.DISPUTE_RELEASE, {
+    orderID: orderId,
+    buyerPercentage,
+    vendorPercentage,
+    resolution,
+  });
 }
 
 /**
  * 接受裁决 - 释放托管资金
  */
 export async function acceptDisputeResolution(
-  orderId: string,
-  username?: string,
-  password?: string
+  orderId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE}`;
-  return post(url, { orderID: orderId }, getAuthHeaders(username, password));
+  return authPost(NODE_API.DISPUTE_RELEASE, { orderID: orderId });
 }
 
 /**
  * 超时后释放资金（无需双方同意）
  */
 export async function releaseEscrowAfterTimeout(
-  orderId: string,
-  username?: string,
-  password?: string
+  orderId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT}`;
-  return post(url, { orderID: orderId }, getAuthHeaders(username, password));
+  return authPost(NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT, { orderID: orderId });
 }
 
 /**
@@ -256,25 +223,18 @@ export async function getReleaseFundsInstructions(
   orderId: string,
   buyerPercentage: number,
   vendorPercentage: number,
-  resolution: string,
-  username?: string,
-  password?: string
+  resolution: string
 ): Promise<{
   instructions?: string;
   signature?: string;
   error?: string;
 }> {
-  const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_DISPUTE_RELEASE}`;
-  return post(
-    url,
-    {
-      orderID: orderId,
-      buyerPercentage,
-      vendorPercentage,
-      resolution,
-    },
-    getAuthHeaders(username, password)
-  );
+  return authPost(NODE_API.INSTRUCTIONS_DISPUTE_RELEASE, {
+    orderID: orderId,
+    buyerPercentage,
+    vendorPercentage,
+    resolution,
+  });
 }
 
 /**

@@ -2,7 +2,7 @@
  * API 配置
  */
 
-import { getEnvConfig } from '../../config/env';
+import { getEnvConfig, isStandaloneMode } from '../../config/env';
 import { NODE_API } from '../../config/apiPaths';
 import { getStoredToken } from '../auth/token';
 
@@ -125,50 +125,99 @@ export function getMbzGatewayUrl(): string {
 }
 
 /**
- * 认证凭据（保留 Basic Auth 支持，向后兼容）
+ * 获取买家 API URL（独立站模式专用）
+ *
+ * 独立站模式下，买家写操作（下单、消息、查看购买记录）通过 SaaS 平台路由。
+ * Caddy 将 /buyer-api/* 转发到 SaaS hosting（strip prefix 后变为 /v1/*）。
+ * 非独立站模式下，直接复用 getGatewayUrl()（所有请求走同一网关）。
  */
-let authCredentials: { username: string; password: string } | null = null;
-
-/**
- * 设置认证凭据（Basic Auth）
- * @deprecated 推荐使用 Token 认证
- */
-export function setAuthCredentials(username: string, password: string): void {
-  authCredentials = { username, password };
+export function getBuyerGatewayUrl(): string {
+  if (!isStandaloneMode()) {
+    return getGatewayUrl();
+  }
+  if (shouldUseProxy()) {
+    return '/buyer-api/v1';
+  }
+  return getGatewayUrl();
 }
 
 /**
- * 清除认证凭据
+ * 获取买家 WebSocket URL（独立站模式专用）
+ *
+ * 独立站买家的 WebSocket 需连接到 SaaS 平台（业务数据在 SaaS 侧）。
+ * Caddy 将 /buyer-api/ws 转发到 SaaS hosting（strip prefix 后变为 /ws）。
+ * 非独立站模式下返回默认 env.api.websocket（与卖家相同）。
  */
-export function clearAuthCredentials(): void {
-  authCredentials = null;
+export function getBuyerWebSocketUrl(): string {
+  if (!isStandaloneMode() || !shouldUseProxy()) {
+    return getEnvConfig().api.websocket;
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/buyer-api/ws`;
+}
+
+/**
+ * 获取卖家 WebSocket URL（独立站模式专用）
+ *
+ * 独立站卖家的 WebSocket 需连接到本地节点（通过 Caddy 代理的 /ws）。
+ * 非独立站模式下返回默认 env.api.websocket。
+ */
+export function getSellerWebSocketUrl(): string {
+  if (!isStandaloneMode() || !shouldUseProxy()) {
+    return getEnvConfig().api.websocket;
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws`;
+}
+
+/**
+ * 独立站买家标志（由 userStore 在登录/恢复会话时设置）。
+ * API 层通过此标志判断是否将"用户自己的数据"请求路由到 SaaS，
+ * 避免 API 模块直接依赖 store（防止循环依赖）。
+ */
+let _standaloneBuyerAuth = false;
+
+export function setStandaloneBuyerAuth(value: boolean): void {
+  _standaloneBuyerAuth = value;
+}
+
+export function isStandaloneBuyerAuth(): boolean {
+  return _standaloneBuyerAuth && isStandaloneMode();
+}
+
+/**
+ * 获取当前用户"自己的数据"的 Gateway URL。
+ *
+ * 公共店铺数据（listings、profiles、exchange rates）始终从独立站节点读取（getGatewayUrl）。
+ * 用户私有数据（preferences、notifications、orders、chat）根据角色路由：
+ *   - 独立站买家 → SaaS（getBuyerGatewayUrl）
+ *   - 其他模式 → 本地网关（getGatewayUrl）
+ */
+export function getMyGatewayUrl(): string {
+  if (isStandaloneBuyerAuth()) {
+    return getBuyerGatewayUrl();
+  }
+  return getGatewayUrl();
 }
 
 /**
  * 获取认证 Headers
- * 优先使用 Bearer Token，其次使用 Basic Auth
+ * 从 stored token 获取认证信息（Bearer 或 Basic）
  */
-export function getAuthHeaders(username?: string, password?: string): Record<string, string> {
+export function getAuthHeaders(): Record<string, string> {
   const baseHeaders = { 'Content-Type': 'application/json' };
 
-  // 优先使用 Bearer Token
   const token = getStoredToken();
   if (token) {
+    if (token.startsWith('basic:')) {
+      return {
+        ...baseHeaders,
+        Authorization: `Basic ${token.slice(6)}`,
+      };
+    }
     return {
       ...baseHeaders,
       Authorization: `Bearer ${token}`,
-    };
-  }
-
-  // 兼容 Basic Auth（用于测试或特殊场景）
-  const user = username ?? authCredentials?.username;
-  const pass = password ?? authCredentials?.password;
-
-  if (user && pass) {
-    const encoded = btoa(`${user}:${pass}`);
-    return {
-      ...baseHeaders,
-      Authorization: `Basic ${encoded}`,
     };
   }
 
@@ -190,12 +239,9 @@ export function setGroupContext(context: Record<string, string>): void {
 /**
  * 获取包含群组上下文的 Headers
  */
-export function getHeadersWithContext(
-  username?: string,
-  password?: string
-): Record<string, string> {
+export function getHeadersWithContext(): Record<string, string> {
   return {
-    ...getAuthHeaders(username, password),
+    ...getAuthHeaders(),
     ...groupContext,
   };
 }

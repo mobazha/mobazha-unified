@@ -6,9 +6,9 @@
  * 返回 Profile[] 数组，每个 Profile 包含 moderatorInfo 字段
  */
 
-import { getGatewayUrl, getAuthHeaders } from './config';
 import { apiClient } from './client';
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
+import { authGet, publicPost } from './helpers';
 
 // Types
 export interface Moderator {
@@ -241,20 +241,8 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
  * 获取用户偏好设置中的 storeModerators 列表
  */
 async function getStoreModerators(): Promise<string[]> {
-  const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
-
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response?.ok) {
-      console.warn('Failed to fetch preferences:', response?.statusText);
-      return [];
-    }
-
-    const preferences = await response.json();
+    const preferences = await authGet<{ storeModerators?: string[] }>(NODE_API.PREFERENCES);
     return preferences.storeModerators || [];
   } catch (error) {
     console.warn('Error fetching store moderators:', error);
@@ -280,23 +268,9 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
     return [];
   }
 
-  const url = `${getGatewayUrl()}${NODE_API.PROFILES_BATCH}`;
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(peerIDs),
-    });
+    const data = await publicPost<FetchProfilesResponse[]>(NODE_API.PROFILES_BATCH, peerIDs);
 
-    if (!response?.ok) {
-      console.warn('Failed to fetch profiles:', response?.statusText);
-      return [];
-    }
-
-    const data = await response.json();
-
-    // API 返回的是 { id, peerID, profile } 的数组，需要提取 profile 字段
     if (!Array.isArray(data)) {
       return [];
     }
@@ -304,7 +278,6 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
     return data
       .map((item: FetchProfilesResponse) => {
         if (item.profile) {
-          // 确保 peerID 存在
           return {
             ...item.profile,
             peerID: item.profile.peerID || item.peerID,

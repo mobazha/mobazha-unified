@@ -5,6 +5,7 @@
 // ApiResponse type imported but used only for documentation
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ApiResponse as _ApiResponse } from '../../types';
+import { isStandaloneBuyerAuth, getBuyerGatewayUrl } from './config';
 
 /**
  * 401 回调注册（用于通知 userStore 触发会话过期流程）
@@ -71,9 +72,14 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     const response = await fetch(url, requestInit);
 
     if (!response.ok) {
-      // 401 未授权：token 无效、过期或证书不匹配
       if (response.status === 401 && onUnauthorizedCallback) {
-        onUnauthorizedCallback();
+        // In standalone buyer mode, a 401 from the local node means the
+        // request hit a private seller route — not a buyer token issue.
+        // Only trigger forceLogout when the buyer's own SaaS token is rejected.
+        const isLocalNodeReject = isStandaloneBuyerAuth() && !url.startsWith(getBuyerGatewayUrl());
+        if (!isLocalNodeReject) {
+          onUnauthorizedCallback();
+        }
       }
       throw new ApiError(`HTTP ${response.status}: ${response.statusText}`, response.status);
     }

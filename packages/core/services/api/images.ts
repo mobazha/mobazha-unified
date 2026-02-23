@@ -2,10 +2,9 @@
  * 图片上传 API 服务
  */
 
-import { post } from './client';
-import { getGatewayUrl, getAuthHeaders } from './config';
 import type { Image } from '../../types';
 import { NODE_API } from '../../config/apiPaths';
+import { authPost } from './helpers';
 
 interface ImageUploadData {
   filename: string;
@@ -17,14 +16,9 @@ interface ImageUploadData {
  * @param images - 图片数据数组
  * @returns 上传后的图片哈希数组
  */
-export async function uploadProductImages(
-  images: ImageUploadData[],
-  username?: string,
-  password?: string
-): Promise<Image[]> {
-  const url = `${getGatewayUrl()}${NODE_API.MEDIA_PRODUCT_IMAGES}`;
+export async function uploadProductImages(images: ImageUploadData[]): Promise<Image[]> {
   try {
-    const result = await post<Image[]>(url, images, getAuthHeaders(username, password));
+    const result = await authPost<Image[]>(NODE_API.MEDIA_PRODUCT_IMAGES, images);
     return result || [];
   } catch {
     return [];
@@ -36,14 +30,9 @@ export async function uploadProductImages(
  * @param imageData - 图片数据
  * @returns 上传后的图片哈希
  */
-export async function uploadImage(
-  imageData: ImageUploadData,
-  username?: string,
-  password?: string
-): Promise<Image | null> {
-  const url = `${getGatewayUrl()}${NODE_API.MEDIA_IMAGES}`;
+export async function uploadImage(imageData: ImageUploadData): Promise<Image | null> {
   try {
-    const result = await post<Image[]>(url, [imageData], getAuthHeaders(username, password));
+    const result = await authPost<Image[]>(NODE_API.MEDIA_IMAGES, [imageData]);
     return result?.[0] || null;
   } catch {
     return null;
@@ -72,20 +61,12 @@ export function fileToBase64(file: File): Promise<string> {
  * @param file - 文件对象
  * @returns 上传后的图片哈希
  */
-export async function uploadAvatarImage(
-  file: File,
-  username?: string,
-  password?: string
-): Promise<Image | null> {
+export async function uploadAvatarImage(file: File): Promise<Image | null> {
   const base64 = await fileToBase64(file);
-  return uploadImage(
-    {
-      filename: 'avatarImage',
-      image: base64,
-    },
-    username,
-    password
-  );
+  return uploadImage({
+    filename: 'avatarImage',
+    image: base64,
+  });
 }
 
 /**
@@ -93,18 +74,10 @@ export async function uploadAvatarImage(
  * @param file - 文件对象
  * @returns 上传后的图片哈希
  */
-export async function uploadHeaderImage(
-  file: File,
-  username?: string,
-  password?: string
-): Promise<Image | null> {
+export async function uploadHeaderImage(file: File): Promise<Image | null> {
   const base64 = await fileToBase64(file);
-  return uploadImage(
-    {
-      filename: 'headerImage',
-      image: base64,
-    },
-    username,
-    password
-  );
+  return uploadImage({
+    filename: 'headerImage',
+    image: base64,
+  });
 }

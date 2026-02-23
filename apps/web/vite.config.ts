@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => {
       'process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID': JSON.stringify(
         env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || ''
       ),
+      'process.env.NEXT_PUBLIC_SAAS_URL': JSON.stringify(env.NEXT_PUBLIC_SAAS_URL || ''),
     },
     resolve: {
       alias: [

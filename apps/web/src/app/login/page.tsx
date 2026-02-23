@@ -12,6 +12,7 @@ import {
   setLoginRedirectPath,
   isHosted,
   isBasic,
+  isStandalone,
 } from '@mobazha/core';
 
 /**
@@ -65,7 +66,8 @@ export default function LoginPage() {
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, loginWithOAuth, isAuthenticated, isLoading, error } = useUserStore();
+  const { login, loginWithOAuth, loginStandalone, isAuthenticated, isLoading, error } =
+    useUserStore();
   const { t } = useI18n();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -197,6 +199,103 @@ function LoginPageContent() {
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-white text-lg">{t('login.loggingIn')}</p>
           <p className="text-white/60 text-sm mt-2">{t('login.pleaseWait')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 独立站模式：同时显示卖家 BasicAuth 和买家 Casdoor 入口
+  if (isStandalone()) {
+    const handleStandaloneBuyerLogin = async () => {
+      setLocalError('');
+      const success = await loginStandalone();
+      if (success) {
+        const redirectPath = getRedirectFromParams(searchParams);
+        router.push(redirectPath);
+      }
+    };
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
+        <div className="w-full max-w-md px-8 py-10 bg-muted/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-border">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
+            <p className="text-white/60">{t('login.subtitle')}</p>
+            <span className="inline-block mt-2 px-3 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+              {t('login.standaloneMode', { defaultValue: 'Standalone Store' })}
+            </span>
+          </div>
+
+          {(error || localError) && (
+            <div className="mb-6 p-3 bg-error/20 border border-error/20 rounded-lg">
+              <p className="text-sm text-error">{error || localError}</p>
+            </div>
+          )}
+
+          {/* Seller: BasicAuth login */}
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-white/60 mb-3 uppercase tracking-wider">
+              {t('login.sellerAdmin', { defaultValue: 'Store Admin' })}
+            </h3>
+            <form onSubmit={handleBasicLogin} className="space-y-3">
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder={t('login.username')}
+                autoComplete="username"
+              />
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder={t('login.password')}
+                autoComplete="current-password"
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              >
+                {isLoading
+                  ? t('login.loggingIn')
+                  : t('login.loginAsAdmin', { defaultValue: 'Login as Admin' })}
+              </button>
+            </form>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-border" />
+            <span className="px-4 text-white/40 text-sm">
+              {t('login.or', { defaultValue: 'or' })}
+            </span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          {/* Buyer: Casdoor popup login */}
+          <div>
+            <h3 className="text-sm font-medium text-white/60 mb-3 uppercase tracking-wider">
+              {t('login.buyerLogin', { defaultValue: 'Buyer' })}
+            </h3>
+            <button
+              type="button"
+              onClick={handleStandaloneBuyerLogin}
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            >
+              {t('login.loginWithMobazha', { defaultValue: 'Login with Mobazha Account' })}
+            </button>
+            <p className="text-xs text-white/40 mt-2 text-center">
+              {t('login.buyerLoginHint', {
+                defaultValue: 'Login to place orders and chat with the seller',
+              })}
+            </p>
+          </div>
         </div>
       </div>
     );

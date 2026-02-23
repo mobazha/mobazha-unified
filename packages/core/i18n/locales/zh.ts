@@ -155,6 +155,14 @@ export const zh: TranslationResource = {
     // 环境
     testEnvironment: '测试环境',
     productionEnvironment: '生产环境',
+    // 独立站模式
+    standaloneMode: '独立站模式',
+    sellerAdmin: '店铺管理',
+    loginAsAdmin: '管理员登录',
+    or: '或',
+    buyerLogin: '买家入口',
+    loginWithMobazha: '使用 Mobazha 账号登录',
+    buyerLoginHint: '登录后可下单购物并与卖家沟通',
     // 会话过期
     sessionExpiredTitle: '会话已过期',
     sessionExpiredMessage: '您的会话已过期或不再有效，请重新登录以继续使用。',

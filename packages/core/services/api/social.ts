@@ -4,54 +4,49 @@
  * Follow/Unfollow、粉丝/关注列表
  */
 
-import { del, get, post, put, safeRequest } from './client';
-import { getGatewayUrl, getAuthHeaders, getHeadersWithContext } from './config';
 import { withMockFallback } from './mode';
 import { mockUsers } from '../mock/data';
 import { NODE_API } from '../../config/apiPaths';
+import {
+  authGet,
+  authPost,
+  authPut,
+  authDel,
+  authSafeGet,
+  publicSafeGet,
+  publicPost,
+} from './helpers';
 
 /**
  * 关注用户
  */
-export async function followUser(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.FOLLOW(peerID)}`;
-  return post(url, {}, getAuthHeaders(username, password));
+export async function followUser(peerID: string): Promise<{ success: boolean; error?: string }> {
+  return authPost(NODE_API.FOLLOW(peerID), {});
 }
 
 /**
  * 取消关注用户
  */
-export async function unfollowUser(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.FOLLOWING_PEER(peerID)}`;
-  return del(url, getAuthHeaders(username, password));
+export async function unfollowUser(peerID: string): Promise<{ success: boolean; error?: string }> {
+  return authDel(NODE_API.FOLLOWING_PEER(peerID));
 }
 
 /**
  * 获取粉丝列表
  */
-export async function getFollowers(
-  peerID?: string,
-  username?: string,
-  password?: string
-): Promise<string[]> {
+export async function getFollowers(peerID?: string): Promise<string[]> {
   const realFn = async () => {
     const timestamp = Date.now();
-    const url = peerID
-      ? `${getGatewayUrl()}${NODE_API.FOLLOWERS_PEER(peerID)}?usecache=true&${timestamp}`
-      : `${getGatewayUrl()}${NODE_API.FOLLOWERS}`;
-    return safeRequest<string[]>(url, { headers: getHeadersWithContext(username, password) }, []);
+    if (peerID) {
+      return publicSafeGet<string[]>(
+        `${NODE_API.FOLLOWERS_PEER(peerID)}?usecache=true&${timestamp}`,
+        []
+      );
+    }
+    return authSafeGet<string[]>(NODE_API.FOLLOWERS, []);
   };
 
   const mockFn = async () => {
-    // Mock: 返回一些模拟的 peerID
     return mockUsers.map(u => u.peerID);
   };
 
@@ -61,21 +56,19 @@ export async function getFollowers(
 /**
  * 获取关注列表
  */
-export async function getFollowing(
-  peerID?: string,
-  username?: string,
-  password?: string
-): Promise<string[]> {
+export async function getFollowing(peerID?: string): Promise<string[]> {
   const realFn = async () => {
     const timestamp = Date.now();
-    const url = peerID
-      ? `${getGatewayUrl()}${NODE_API.FOLLOWING_PEER(peerID)}?usecache=true&${timestamp}`
-      : `${getGatewayUrl()}${NODE_API.FOLLOWING}`;
-    return safeRequest<string[]>(url, { headers: getHeadersWithContext(username, password) }, []);
+    if (peerID) {
+      return publicSafeGet<string[]>(
+        `${NODE_API.FOLLOWING_PEER(peerID)}?usecache=true&${timestamp}`,
+        []
+      );
+    }
+    return authSafeGet<string[]>(NODE_API.FOLLOWING, []);
   };
 
   const mockFn = async () => {
-    // Mock: 返回一些模拟的 peerID
     return mockUsers.slice(0, 2).map(u => u.peerID);
   };
 
@@ -85,14 +78,9 @@ export async function getFollowing(
 /**
  * 检查用户是否关注我
  */
-export async function isFollowingMe(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<boolean> {
+export async function isFollowingMe(peerID: string): Promise<boolean> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.FOLLOWERS_CHECK(peerID)}`;
-    const result = await get<{ followsMe: boolean }>(url, getAuthHeaders(username, password));
+    const result = await authGet<{ followsMe: boolean }>(NODE_API.FOLLOWERS_CHECK(peerID));
     return result.followsMe;
   };
 
@@ -107,23 +95,15 @@ export async function isFollowingMe(
 /**
  * 检查是否已关注用户
  */
-export async function isFollowing(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<boolean> {
-  const following = await getFollowing(undefined, username, password);
+export async function isFollowing(peerID: string): Promise<boolean> {
+  const following = await getFollowing(undefined);
   return following.includes(peerID);
 }
 
 /**
  * 批量获取用户资料
  */
-export async function fetchProfiles(
-  peerIDs: string[],
-  username?: string,
-  password?: string
-): Promise<
+export async function fetchProfiles(peerIDs: string[]): Promise<
   Array<{
     peerID: string;
     name: string;
@@ -132,15 +112,14 @@ export async function fetchProfiles(
   }>
 > {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.PROFILES_BATCH}`;
-    return post<
+    return publicPost<
       Array<{
         peerID: string;
         name: string;
         avatarHashes?: { medium?: string };
         shortDescription?: string;
       }>
-    >(url, peerIDs, getAuthHeaders(username, password));
+    >(NODE_API.PROFILES_BATCH, peerIDs);
   };
 
   const mockFn = async () => {
@@ -168,10 +147,9 @@ let blockedNodesCache: string[] | null = null;
 /**
  * 获取当前用户的屏蔽列表
  */
-export async function getBlockedNodes(username?: string, password?: string): Promise<string[]> {
+export async function getBlockedNodes(): Promise<string[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
-    const result = await get<{ blockedNodes?: string[] }>(url, getAuthHeaders(username, password));
+    const result = await authGet<{ blockedNodes?: string[] }>(NODE_API.PREFERENCES);
     blockedNodesCache = result.blockedNodes || [];
     return blockedNodesCache;
   };
@@ -187,14 +165,10 @@ export async function getBlockedNodes(username?: string, password?: string): Pro
 /**
  * 屏蔽用户
  */
-export async function blockUser(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function blockUser(peerID: string): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     // 先获取当前屏蔽列表
-    const currentBlocked = blockedNodesCache || (await getBlockedNodes(username, password));
+    const currentBlocked = blockedNodesCache || (await getBlockedNodes());
 
     // 如果已经屏蔽，直接返回
     if (currentBlocked.includes(peerID)) {
@@ -204,8 +178,7 @@ export async function blockUser(
     // 添加到屏蔽列表
     const newBlockedNodes = [...currentBlocked, peerID];
 
-    const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
-    await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
+    await authPut(NODE_API.PREFERENCES, { blockedNodes: newBlockedNodes });
 
     // 更新本地缓存
     blockedNodesCache = newBlockedNodes;
@@ -214,7 +187,6 @@ export async function blockUser(
   };
 
   const mockFn = async () => {
-    // Mock: 添加到本地缓存
     if (!blockedNodesCache) blockedNodesCache = [];
     if (!blockedNodesCache.includes(peerID)) {
       blockedNodesCache.push(peerID);
@@ -228,25 +200,17 @@ export async function blockUser(
 /**
  * 取消屏蔽用户
  */
-export async function unblockUser(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function unblockUser(peerID: string): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    // 先获取当前屏蔽列表
-    const currentBlocked = blockedNodesCache || (await getBlockedNodes(username, password));
+    const currentBlocked = blockedNodesCache || (await getBlockedNodes());
 
-    // 如果没有屏蔽，直接返回
     if (!currentBlocked.includes(peerID)) {
       return { success: true };
     }
 
-    // 从屏蔽列表移除
     const newBlockedNodes = currentBlocked.filter(id => id !== peerID);
 
-    const url = `${getGatewayUrl()}${NODE_API.PREFERENCES}`;
-    await put(url, { blockedNodes: newBlockedNodes }, getAuthHeaders(username, password));
+    await authPut(NODE_API.PREFERENCES, { blockedNodes: newBlockedNodes });
 
     // 更新本地缓存
     blockedNodesCache = newBlockedNodes;
@@ -268,18 +232,14 @@ export async function unblockUser(
 /**
  * 检查用户是否被屏蔽
  */
-export async function isBlocked(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<boolean> {
+export async function isBlocked(peerID: string): Promise<boolean> {
   // 优先使用缓存
   if (blockedNodesCache !== null) {
     return blockedNodesCache.includes(peerID);
   }
 
   // 没有缓存则获取
-  const blockedNodes = await getBlockedNodes(username, password);
+  const blockedNodes = await getBlockedNodes();
   return blockedNodes.includes(peerID);
 }
 

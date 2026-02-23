@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
-import { useI18n, productDataService, isMockMode, getImageUrl } from '@mobazha/core';
+import { useI18n, productDataService, isMockMode, getImageUrl, isStandalone } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { getListingsWithDedup } from '@/utils/requestDedup';
 
@@ -131,26 +131,38 @@ export default function HomePage() {
       console.log(`📦 Fetching products (${mockMode ? 'Mock' : 'Real API'} mode)`);
 
       try {
-        // 使用去重函数防止重复请求
-        const [trending, featured] = await Promise.all([
-          getListingsWithDedup('trending', () => productDataService.getTrendingProducts()),
-          getListingsWithDedup('featured', () => productDataService.getFeaturedProducts()),
-        ]);
+        let trending: ProductListItem[];
+        let featured: ProductListItem[];
+
+        if (isStandalone()) {
+          // 独立站模式：从本地节点获取商品，无搜索服务
+          const localListings = (await getListingsWithDedup('local-store', () =>
+            productDataService.getMyListings()
+          )) as ProductListItem[];
+          trending = localListings;
+          featured = localListings.slice(0, 4);
+        } else {
+          // SaaS/Hosted 模式：从搜索服务获取
+          const [t, f] = await Promise.all([
+            getListingsWithDedup('trending', () => productDataService.getTrendingProducts()),
+            getListingsWithDedup('featured', () => productDataService.getFeaturedProducts()),
+          ]);
+          trending = t as ProductListItem[];
+          featured = f as ProductListItem[];
+        }
 
         if (isCancelled) return;
 
-        // 标记已加载
         loadedRef.current = true;
 
-        if ((trending as ProductListItem[]).length > 0) {
-          setTrendingProducts((trending as ProductListItem[]).map(convertToDisplayProduct));
+        if (trending.length > 0) {
+          setTrendingProducts(trending.map(convertToDisplayProduct));
         } else {
-          // 如果 API 返回空数据，使用占位数据
           setTrendingProducts(placeholderProducts);
         }
 
-        if ((featured as ProductListItem[]).length > 0) {
-          setFeaturedProducts((featured as ProductListItem[]).map(convertToDisplayProduct));
+        if (featured.length > 0) {
+          setFeaturedProducts(featured.map(convertToDisplayProduct));
         } else {
           setFeaturedProducts(placeholderProducts.slice(0, 4));
         }
