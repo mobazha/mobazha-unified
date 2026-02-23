@@ -70,6 +70,16 @@ export default defineConfig(({ mode }) => {
           target: apiBase,
           changeOrigin: true,
         },
+        '/ws': {
+          target: apiBase,
+          changeOrigin: true,
+          ws: true,
+        },
+        '/buyer-api': {
+          target: env.NEXT_PUBLIC_SAAS_URL || apiBase,
+          changeOrigin: true,
+          ws: true,
+        },
         '/info': {
           target: apiBase,
           changeOrigin: true,
