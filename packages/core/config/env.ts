@@ -9,7 +9,7 @@
  * - hosted: 托管模式，使用 Mobazha 中心化 Casdoor 认证
  * - basic: VPS 模式，使用简单的用户名/密码 Basic Auth
  */
-export type AuthMode = 'hosted' | 'basic';
+export type AuthMode = 'hosted' | 'basic' | 'standalone';
 
 /**
  * 认证配置
@@ -21,6 +21,11 @@ export interface AuthConfig {
   basic?: {
     /** 可选预设用户名 */
     username?: string;
+  };
+  /** Standalone 模式配置（独立站买家认证） */
+  standalone?: {
+    /** SaaS 平台 URL（用于 popup OAuth 登录） */
+    saasUrl: string;
   };
 }
 
@@ -208,6 +213,13 @@ export function isBasicAuthMode(): boolean {
 }
 
 /**
+ * 判断是否为独立站模式（买家 popup OAuth）
+ */
+export function isStandaloneMode(): boolean {
+  return currentEnv.auth.mode === 'standalone';
+}
+
+/**
  * 从环境变量初始化配置
  */
 export function initEnvFromProcess(): void {
@@ -258,7 +270,7 @@ export function initEnvFromProcess(): void {
 
   // 允许通过环境变量覆盖认证模式
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE;
-  if (authMode === 'hosted' || authMode === 'basic') {
+  if (authMode === 'hosted' || authMode === 'basic' || authMode === 'standalone') {
     currentEnv = {
       ...currentEnv,
       auth: {
@@ -278,6 +290,20 @@ export function initEnvFromProcess(): void {
         basic: {
           ...currentEnv.auth.basic,
           username: basicUsername,
+        },
+      },
+    };
+  }
+
+  // Standalone 模式: SaaS URL 配置
+  const saasUrl = process.env.NEXT_PUBLIC_SAAS_URL;
+  if (saasUrl) {
+    currentEnv = {
+      ...currentEnv,
+      auth: {
+        ...currentEnv.auth,
+        standalone: {
+          saasUrl,
         },
       },
     };

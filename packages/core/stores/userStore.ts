@@ -1,9 +1,10 @@
 /**
  * 用户状态管理
  *
- * 支持两种认证模式：
+ * 支持三种认证模式：
  * - hosted: 托管模式（Casdoor OAuth2）
  * - basic: VPS 模式（Basic Auth）
+ * - standalone: 独立站模式（Popup OAuth）
  */
 
 import { create } from 'zustand';
@@ -37,7 +38,7 @@ interface UserState {
   error: string | null;
   token: string | null;
   /** 当前认证模式 */
-  authMode: 'hosted' | 'basic';
+  authMode: 'hosted' | 'basic' | 'standalone';
   /** 会话是否已恢复（用于防止在 token 验证前发起需要认证的请求） */
   isSessionRestored: boolean;
   /** 是否需要 onboarding（已登录但无 profile） */
@@ -54,6 +55,8 @@ interface UserState {
   loginWithToken: (token: string) => Promise<boolean>;
   /** 统一登录方法（自动选择认证方式） */
   loginWithCredentials: (credentials: LoginCredentials) => Promise<boolean>;
+  /** 独立站 Popup OAuth 登录 */
+  loginStandalone: () => Promise<boolean>;
   logout: () => void;
   /** 因 401 错误强制登出（token 无效/过期） */
   forceLogout: () => void;
@@ -211,6 +214,54 @@ export const useUserStore = create<UserState>()(
           } catch (err) {
             set({
               error: err instanceof Error ? err.message : '登录失败',
+              isLoading: false,
+              isSessionRestored: true,
+            });
+            clearAuth();
+            return false;
+          }
+        },
+
+        // 独立站 Popup OAuth 登录
+        loginStandalone: async () => {
+          set({ isLoading: true, error: null });
+
+          try {
+            const authService = await getAuthService();
+            const result = await authService.login();
+
+            if (!result.success || !result.token) {
+              set({
+                error: result.error || 'Authentication failed',
+                isLoading: false,
+              });
+              return false;
+            }
+
+            saveToken(result.token);
+            disableMockData();
+
+            const claims = parseJwtToken(result.token);
+            const casdoorId = claims?.sub || claims?.name;
+
+            if (casdoorId) {
+              saveUser({ id: casdoorId, name: casdoorId, casdoorId });
+            }
+
+            set({
+              token: result.token,
+              isAuthenticated: true,
+              isLoading: false,
+              authMode: 'standalone',
+              isSessionRestored: true,
+              needsOnboarding: false,
+            });
+
+            connectWebSocket();
+            return true;
+          } catch (err) {
+            set({
+              error: err instanceof Error ? err.message : 'Authentication failed',
               isLoading: false,
               isSessionRestored: true,
             });
