@@ -17,6 +17,25 @@ description: Look up Mobazha backend API endpoints, request/response formats, an
 - **mobazha_hosting**: Hosting gateway — user management, group marketplace
 - **mobazha3.0**: Core P2P node — orders, products, wallets
 
+## Frontend API Layer
+
+API 服务文件通过三层 helpers（`packages/core/services/api/helpers.ts`）统一路由，
+不直接调用 `getGatewayUrl()` / `getAuthHeaders()`。
+
+| 层      | 函数前缀  | 路由目标                         | 用途                                            |
+| ------- | --------- | -------------------------------- | ----------------------------------------------- |
+| Layer 1 | `auth*`   | `getMyGatewayUrl()` — 按角色路由 | 认证端点（orders, wallet, chat, notifications） |
+| Layer 2 | `public*` | `getGatewayUrl()` — 始终本地节点 | 公开数据（listings, profiles, exchange rates）  |
+| Layer 3 | `search*` | `getSearchUrl()` — 搜索服务      | 搜索/发现（trending, featured）                 |
+
+**认证**：`getAuthHeaders()` 从 `getStoredToken()` 获取 token（Bearer 或 `basic:` 前缀）。
+已移除 `authCredentials` 和 `username/password` 参数。
+
+**独立站角色路由**：`getMyGatewayUrl()` 对独立站买家返回 `getBuyerGatewayUrl()`（→ SaaS），
+其他角色返回 `getGatewayUrl()`（→ 本地节点）。
+
+**mobazha3.0 后端**：Auth 中间件按路由粒度应用（`auth()` 闭包），公开路由无需认证。
+
 ## Backend Source Locations
 
 ### mobazha3.0 (Core Node — P2P)
