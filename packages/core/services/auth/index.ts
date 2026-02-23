@@ -1,9 +1,10 @@
 /**
  * 认证服务导出
  *
- * 支持两种认证模式：
+ * 支持三种认证模式：
  * - hosted: 托管模式，使用 Mobazha 中心化 Casdoor OAuth2 认证
  * - basic: VPS 模式，使用简单的用户名/密码 Basic Auth
+ * - standalone: 独立站模式，买家通过 popup OAuth 登录
  */
 
 // ============ 统一认证服务（推荐使用） ============
@@ -15,6 +16,7 @@ export {
   needsLoginForm,
   isHosted,
   isBasic,
+  isStandalone,
   // 类型
   type IAuthService,
   type LoginCredentials,
@@ -24,6 +26,7 @@ export {
 // 具体实现（通常不需要直接使用）
 export { hostedAuthService } from './hostedAuth';
 export { basicAuthService } from './basicAuth';
+export { standaloneAuthService } from './standaloneAuth';
 
 // ============ Casdoor OAuth2 认证（托管模式底层） ============
 

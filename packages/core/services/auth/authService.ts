@@ -1,12 +1,19 @@
 /**
  * 统一认证服务
  *
- * 支持两种认证模式：
+ * 支持三种认证模式：
  * - hosted: 托管模式，使用 Mobazha 中心化 Casdoor OAuth2 认证
  * - basic: VPS 模式，使用简单的用户名/密码 Basic Auth
+ * - standalone: 独立站模式，买家通过 popup OAuth 登录
  */
 
-import { getAuthMode, isHostedMode, isBasicAuthMode, type AuthMode } from '../../config/env';
+import {
+  getAuthMode,
+  isHostedMode,
+  isBasicAuthMode,
+  isStandaloneMode,
+  type AuthMode,
+} from '../../config/env';
 
 /**
  * 登录凭据（用于 Basic Auth 模式）
@@ -65,6 +72,7 @@ export interface IAuthService {
 // 延迟导入以避免循环依赖
 let hostedAuthService: IAuthService | null = null;
 let basicAuthService: IAuthService | null = null;
+let _standaloneAuthService: IAuthService | null = null;
 
 async function getHostedAuthService(): Promise<IAuthService> {
   if (!hostedAuthService) {
@@ -82,12 +90,23 @@ async function getBasicAuthService(): Promise<IAuthService> {
   return basicAuthService;
 }
 
+async function getStandaloneAuthService(): Promise<IAuthService> {
+  if (!_standaloneAuthService) {
+    const module = await import('./standaloneAuth');
+    _standaloneAuthService = module.standaloneAuthService;
+  }
+  return _standaloneAuthService;
+}
+
 /**
  * 获取当前认证服务实例（根据配置的认证模式）
  */
 export async function getAuthService(): Promise<IAuthService> {
   if (isHostedMode()) {
     return getHostedAuthService();
+  }
+  if (isStandaloneMode()) {
+    return getStandaloneAuthService();
   }
   return getBasicAuthService();
 }
@@ -118,4 +137,11 @@ export function isHosted(): boolean {
  */
 export function isBasic(): boolean {
   return isBasicAuthMode();
+}
+
+/**
+ * 同步判断是否为独立站模式
+ */
+export function isStandalone(): boolean {
+  return isStandaloneMode();
 }
