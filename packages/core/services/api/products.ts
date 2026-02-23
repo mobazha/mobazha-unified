@@ -3,16 +3,19 @@
  */
 
 import type { Product, ProductListItem, RatingIndex, RatingDetail } from '../../types';
-import { get, post, put, del, safeRequest } from './client';
-import {
-  getGatewayUrl,
-  getSearchUrl,
-  getHeadersWithContext,
-  getAuthHeaders,
-  getImageUrl,
-} from './config';
+import { getImageUrl } from './config';
 import type { Image } from '../../types';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
+import {
+  authPost,
+  authPut,
+  authDel,
+  publicGet,
+  publicSafeGet,
+  publicPost,
+  searchSafeGet,
+  searchPost,
+} from './helpers';
 
 // API 返回的搜索结果格式
 interface SearchResultItem {
@@ -174,14 +177,8 @@ function parseSearchResults(response: SearchApiResponse): ProductListItem[] {
  * 获取热门商品列表
  */
 export async function fetchTrendingListings(): Promise<ProductListItem[]> {
-  const url = `${getSearchUrl()}${SEARCH_API.LISTINGS_FRESH(10)}`;
-  console.log('🔍 Fetching trending listings from:', url);
   try {
-    const response = await safeRequest<SearchApiResponse>(
-      url,
-      { headers: getHeadersWithContext() },
-      {}
-    );
+    const response = await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(10), {});
     return parseSearchResults(response);
   } catch (error) {
     console.error('Failed to fetch trending listings:', error);
@@ -193,14 +190,8 @@ export async function fetchTrendingListings(): Promise<ProductListItem[]> {
  * 获取精选商品列表
  */
 export async function fetchFeaturedListings(): Promise<ProductListItem[]> {
-  const url = `${getSearchUrl()}${SEARCH_API.LISTINGS_HOT(24, 10)}`;
-  console.log('🔍 Fetching featured listings from:', url);
   try {
-    const response = await safeRequest<SearchApiResponse>(
-      url,
-      { headers: getHeadersWithContext() },
-      {}
-    );
+    const response = await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_HOT(24, 10), {});
     return parseSearchResults(response);
   } catch (error) {
     console.error('Failed to fetch featured listings:', error);
@@ -215,22 +206,19 @@ export async function fetchStoreListings(
   storePeerID: string,
   pageSize = 9
 ): Promise<ProductListItem[]> {
-  const url = `${getSearchUrl()}${SEARCH_API.PROFILE_LISTINGS}?peerId=${storePeerID}&pageSize=${pageSize}`;
-  return safeRequest<ProductListItem[]>(url, { headers: getHeadersWithContext() }, []);
+  return searchSafeGet<ProductListItem[]>(
+    `${SEARCH_API.PROFILE_LISTINGS}?peerId=${storePeerID}&pageSize=${pageSize}`,
+    []
+  );
 }
 
 /**
  * 获取商品索引（自己的商品）
  * 超时时间增加到 60 秒，因为网关 API 有时响应较慢
  */
-export async function getListingIndex(
-  username?: string,
-  password?: string
-): Promise<ProductListItem[]> {
-  const url = `${getGatewayUrl()}${NODE_API.LISTINGS_INDEX}`;
-  const data = await safeRequest<ProductListItem[] | { success: false }>(
-    url,
-    { headers: getHeadersWithContext(username, password), timeout: 60000 },
+export async function getListingIndex(): Promise<ProductListItem[]> {
+  const data = await publicSafeGet<ProductListItem[] | { success: false }>(
+    NODE_API.LISTINGS_INDEX,
     []
   );
 
@@ -244,15 +232,9 @@ export async function getListingIndex(
  * 获取其他店铺的商品索引
  * 超时时间增加到 60 秒，因为网关 API 有时响应较慢
  */
-export async function getStoreListingIndex(
-  peerID: string,
-  username?: string,
-  password?: string
-): Promise<ProductListItem[]> {
-  const url = `${getGatewayUrl()}${NODE_API.LISTINGS_INDEX_PEER(peerID)}`;
-  const data = await safeRequest<ProductListItem[] | { success: false }>(
-    url,
-    { headers: getHeadersWithContext(username, password), timeout: 60000 },
+export async function getStoreListingIndex(peerID: string): Promise<ProductListItem[]> {
+  const data = await publicSafeGet<ProductListItem[] | { success: false }>(
+    NODE_API.LISTINGS_INDEX_PEER(peerID),
     []
   );
 
@@ -265,23 +247,14 @@ export async function getStoreListingIndex(
 /**
  * 获取商品详情
  */
-export async function getListing(
-  slug: string,
-  peerID?: string,
-  username?: string,
-  password?: string
-): Promise<Product | null> {
+export async function getListing(slug: string, peerID?: string): Promise<Product | null> {
   const timestamp = Date.now();
-  let url: string;
-
-  if (!peerID) {
-    url = `${getGatewayUrl()}${NODE_API.LISTING(slug)}?`;
-  } else {
-    url = `${getGatewayUrl()}${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true&${timestamp}`;
-  }
+  const path = !peerID
+    ? `${NODE_API.LISTING(slug)}?`
+    : `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true&${timestamp}`;
 
   try {
-    return await get<Product>(url, getHeadersWithContext(username, password));
+    return await publicGet<Product>(path);
   } catch {
     return null;
   }
@@ -292,16 +265,12 @@ export async function getListing(
  * 注意：移除了时间戳参数以支持请求去重缓存
  */
 export async function getPublicListing(slug: string, peerID?: string): Promise<Product | null> {
-  let url: string;
-
-  if (!peerID) {
-    url = `${getGatewayUrl()}${NODE_API.LISTING(slug)}`;
-  } else {
-    url = `${getGatewayUrl()}${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
-  }
+  const path = !peerID
+    ? NODE_API.LISTING(slug)
+    : `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
 
   try {
-    const data = await get<{ listing?: Product } & Product>(url, getHeadersWithContext());
+    const data = await publicGet<{ listing?: Product } & Product>(path);
     const listing = data.listing ?? data;
 
     // 转换数据格式以适配前端
@@ -324,36 +293,25 @@ export async function getPublicListing(slug: string, peerID?: string): Promise<P
  * 创建商品
  */
 export async function createListing(
-  productDetails: Partial<Product>,
-  username?: string,
-  password?: string
+  productDetails: Partial<Product>
 ): Promise<{ slug: string } | { error: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.LISTINGS}`;
-  return post(url, productDetails, getAuthHeaders(username, password));
+  return authPost(NODE_API.LISTINGS, productDetails);
 }
 
 /**
  * 更新商品
  */
 export async function updateListing(
-  productDetails: Partial<Product>,
-  username?: string,
-  password?: string
+  productDetails: Partial<Product>
 ): Promise<{ success: boolean } | { error: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.LISTINGS}`;
-  return put(url, productDetails, getAuthHeaders(username, password));
+  return authPut(NODE_API.LISTINGS, productDetails);
 }
 
 /**
  * 删除商品
  */
-export async function deleteListing(
-  slug: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean }> {
-  const url = `${getGatewayUrl()}${NODE_API.LISTING(slug)}`;
-  return del(url, getAuthHeaders(username, password));
+export async function deleteListing(slug: string): Promise<{ success: boolean }> {
+  return authDel(NODE_API.LISTING(slug));
 }
 
 /**
@@ -361,29 +319,20 @@ export async function deleteListing(
  * 注意：移除了时间戳参数以支持请求去重缓存
  * 返回评价统计信息和评价 ID 列表
  */
-export async function getRatingIndex(
-  peerID?: string,
-  slug?: string,
-  username?: string,
-  password?: string
-): Promise<RatingIndex> {
-  let url: string;
+export async function getRatingIndex(peerID?: string, slug?: string): Promise<RatingIndex> {
+  let path: string;
 
   if (peerID && slug) {
-    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX_PEER_SLUG(peerID, slug)}?usecache=true`;
+    path = `${NODE_API.RATINGS_INDEX_PEER_SLUG(peerID, slug)}?usecache=true`;
   } else if (peerID) {
-    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX_PEER(peerID)}?usecache=true`;
+    path = `${NODE_API.RATINGS_INDEX_PEER(peerID)}?usecache=true`;
   } else if (slug) {
-    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX_SLUG(slug)}`;
+    path = NODE_API.RATINGS_INDEX_SLUG(slug);
   } else {
-    url = `${getGatewayUrl()}${NODE_API.RATINGS_INDEX}`;
+    path = NODE_API.RATINGS_INDEX;
   }
 
-  return safeRequest<RatingIndex>(
-    url,
-    { headers: getHeadersWithContext(username, password) },
-    { count: 0, average: 0, ratings: [] }
-  );
+  return publicSafeGet<RatingIndex>(path, { count: 0, average: 0, ratings: [] });
 }
 
 /**
@@ -391,22 +340,15 @@ export async function getRatingIndex(
  * 通过评价 ID 列表获取完整的评价信息
  * @param ratingIDs - 评价 CID 字符串数组
  */
-export async function fetchRatings(
-  ratingIDs: string[],
-  username?: string,
-  password?: string
-): Promise<RatingDetail[]> {
+export async function fetchRatings(ratingIDs: string[]): Promise<RatingDetail[]> {
   if (!ratingIDs || ratingIDs.length === 0) {
     return [];
   }
 
-  const url = `${getGatewayUrl()}${NODE_API.RATINGS_BATCH}?async=false`;
-
   try {
-    const response = await post<Array<{ id: string; rating: RatingDetail }>>(
-      url,
-      ratingIDs,
-      getHeadersWithContext(username, password)
+    const response = await publicPost<Array<{ id: string; rating: RatingDetail }>>(
+      `${NODE_API.RATINGS_BATCH}?async=false`,
+      ratingIDs
     );
 
     // API 返回格式: [{ id: "xxx", rating: {...} }, ...]
@@ -432,8 +374,7 @@ export async function reportListing(
   slug: string,
   reason: string
 ): Promise<{ success: boolean }> {
-  const url = `${getSearchUrl()}${SEARCH_API.REPORTS}`;
-  return post(url, { peerID, slug, reason, report_type: 'listing' }, getHeadersWithContext());
+  return searchPost(SEARCH_API.REPORTS, { peerID, slug, reason, report_type: 'listing' });
 }
 
 /**
@@ -481,12 +422,9 @@ export async function searchListings(
     queryParams.append('nsfw', 'true');
   }
 
-  const url = `${getSearchUrl()}${SEARCH_API.SEARCH}?${queryParams.toString()}`;
-
   try {
-    const response = await safeRequest<SearchApiResponse>(
-      url,
-      { headers: getHeadersWithContext() },
+    const response = await searchSafeGet<SearchApiResponse>(
+      `${SEARCH_API.SEARCH}?${queryParams.toString()}`,
       {}
     );
 
@@ -532,12 +470,9 @@ export async function searchProfiles(params: {
     pageSize: String(pageSize),
   });
 
-  const url = `${getSearchUrl()}${SEARCH_API.SEARCH_PROFILES}?${queryParams.toString()}`;
-
   try {
-    const response = await safeRequest<ProfileSearchApiResponse>(
-      url,
-      { headers: getHeadersWithContext() },
+    const response = await searchSafeGet<ProfileSearchApiResponse>(
+      `${SEARCH_API.SEARCH_PROFILES}?${queryParams.toString()}`,
       {}
     );
 

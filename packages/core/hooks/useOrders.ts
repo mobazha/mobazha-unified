@@ -42,7 +42,7 @@ export function usePurchases(filter?: OrdersFilter) {
     setError(null);
 
     try {
-      const result = await ordersApi.getPurchases(undefined, undefined, String(pageSize), '');
+      const result = await ordersApi.getPurchases(String(pageSize), '');
       // 客户端过滤（可选）
       let filteredOrders = result;
       if (filter?.states && filter.states.length > 0) {
@@ -70,12 +70,7 @@ export function usePurchases(filter?: OrdersFilter) {
     setIsLoadingMore(true);
     try {
       const lastOrderId = orders[orders.length - 1]?.orderID || '';
-      const result = await ordersApi.getPurchases(
-        undefined,
-        undefined,
-        String(pageSize),
-        lastOrderId
-      );
+      const result = await ordersApi.getPurchases(String(pageSize), lastOrderId);
 
       if (result.length === 0) {
         setHasMore(false);
@@ -135,7 +130,7 @@ export function useSales(filter?: OrdersFilter) {
     setError(null);
 
     try {
-      const result = await ordersApi.getSales(undefined, undefined, String(pageSize), '');
+      const result = await ordersApi.getSales(String(pageSize), '');
       // 客户端过滤
       let filteredOrders = result;
       if (filter?.states && filter.states.length > 0) {
@@ -163,7 +158,7 @@ export function useSales(filter?: OrdersFilter) {
     setIsLoadingMore(true);
     try {
       const lastOrderId = orders[orders.length - 1]?.orderID || '';
-      const result = await ordersApi.getSales(undefined, undefined, String(pageSize), lastOrderId);
+      const result = await ordersApi.getSales(String(pageSize), lastOrderId);
 
       if (result.length === 0) {
         setHasMore(false);

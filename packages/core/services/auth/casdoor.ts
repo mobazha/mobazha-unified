@@ -343,8 +343,13 @@ export function parseJwtToken(token: string): CasdoorClaims | null {
 
 /**
  * 检查 Token 是否过期
+ * Basic Auth tokens (basic:...) 没有过期概念，始终返回 false
  */
 export function isTokenExpired(token: string): boolean {
+  if (token.startsWith('basic:')) {
+    return false;
+  }
+
   const claims = parseJwtToken(token);
   if (!claims) {
     return true;

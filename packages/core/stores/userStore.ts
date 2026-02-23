@@ -10,7 +10,7 @@
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
 import type { UserProfile, UserSettings, AuthCredentials } from '../types';
-import { profileApi, setAuthCredentials, clearAuthCredentials } from '../services/api';
+import { profileApi } from '../services/api';
 import {
   handleOAuthCallback,
   saveToken,
@@ -23,8 +23,14 @@ import {
   parseJwtToken,
   type LoginCredentials,
 } from '../services/auth';
-import { connectWebSocket, disconnectWebSocket } from '../services/websocket';
+import { connectWebSocket, disconnectWebSocket, setWebSocketBaseUrl } from '../services/websocket';
+import {
+  getBuyerWebSocketUrl,
+  getSellerWebSocketUrl,
+  setStandaloneBuyerAuth,
+} from '../services/api';
 import { clearProfileCache } from '../services/profileCache';
+import { isStandaloneMode } from '../config/env';
 import { disableMockData } from '../config';
 import { onUnauthorized } from '../services/api/client';
 import { onOpenApiUnauthorized } from '../services/api/openapi-client';
@@ -91,24 +97,19 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true, error: null });
 
           try {
-            // 设置认证凭据
-            setAuthCredentials(credentials.username, credentials.password);
+            const basicToken = `basic:${btoa(`${credentials.username}:${credentials.password}`)}`;
+            saveToken(basicToken);
 
-            // 获取用户资料验证登录
-            const profile = await profileApi.getMyProfile(
-              credentials.username,
-              credentials.password
-            );
+            const profile = await profileApi.getMyProfile();
 
             if (profile) {
-              // 生成 Basic Auth token
-              const basicToken = `basic:${btoa(`${credentials.username}:${credentials.password}`)}`;
-              saveToken(basicToken);
               saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
 
               // 切换到真实 API 模式
               disableMockData();
               console.log('🔄 Basic Auth login successful, switched to real API mode');
+
+              setStandaloneBuyerAuth(false);
 
               set({
                 profile,
@@ -119,7 +120,9 @@ export const useUserStore = create<UserState>()(
                 isSessionRestored: true,
               });
 
-              // 连接 WebSocket
+              if (isStandaloneMode()) {
+                setWebSocketBaseUrl(getSellerWebSocketUrl());
+              }
               connectWebSocket();
 
               return true;
@@ -130,14 +133,14 @@ export const useUserStore = create<UserState>()(
               isLoading: false,
               isSessionRestored: true,
             });
-            clearAuthCredentials();
+            clearAuth();
             return false;
           } catch (err) {
             set({
               error: err instanceof Error ? err.message : '登录失败',
               isLoading: false,
             });
-            clearAuthCredentials();
+            clearAuth();
             return false;
           }
         },
@@ -222,7 +225,7 @@ export const useUserStore = create<UserState>()(
           }
         },
 
-        // 独立站 Popup OAuth 登录
+        // 独立站 Popup OAuth 登录（买家通过 Casdoor 认证）
         loginStandalone: async () => {
           set({ isLoading: true, error: null });
 
@@ -244,19 +247,42 @@ export const useUserStore = create<UserState>()(
             const claims = parseJwtToken(result.token);
             const casdoorId = claims?.sub || claims?.name;
 
-            if (casdoorId) {
-              saveUser({ id: casdoorId, name: casdoorId, casdoorId });
+            // 从 SaaS 获取买家 profile（含 peerID），用于 isOwnStore 判断
+            const buyerProfile = await profileApi.getBuyerProfile();
+
+            setStandaloneBuyerAuth(true);
+
+            if (buyerProfile) {
+              saveUser({
+                id: buyerProfile.peerID,
+                name: buyerProfile.name || buyerProfile.peerID,
+                casdoorId,
+              });
+              set({
+                profile: buyerProfile,
+                token: result.token,
+                isAuthenticated: true,
+                isLoading: false,
+                authMode: 'standalone',
+                isSessionRestored: true,
+                needsOnboarding: false,
+              });
+            } else {
+              // Profile 不可用（首次用户或 SaaS 不可达），用 casdoorId 作为降级
+              if (casdoorId) {
+                saveUser({ id: casdoorId, name: casdoorId, casdoorId });
+              }
+              set({
+                token: result.token,
+                isAuthenticated: true,
+                isLoading: false,
+                authMode: 'standalone',
+                isSessionRestored: true,
+                needsOnboarding: !buyerProfile,
+              });
             }
 
-            set({
-              token: result.token,
-              isAuthenticated: true,
-              isLoading: false,
-              authMode: 'standalone',
-              isSessionRestored: true,
-              needsOnboarding: false,
-            });
-
+            setWebSocketBaseUrl(getBuyerWebSocketUrl());
             connectWebSocket();
             return true;
           } catch (err) {
@@ -411,13 +437,12 @@ export const useUserStore = create<UserState>()(
 
         // 登出
         logout: () => {
-          // 断开 WebSocket
           disconnectWebSocket();
+          setWebSocketBaseUrl(null);
+          setStandaloneBuyerAuth(false);
 
-          // 清除 profile 缓存
           clearProfileCache();
 
-          clearAuthCredentials();
           clearAuth();
           set({
             profile: null,
@@ -472,9 +497,14 @@ export const useUserStore = create<UserState>()(
           // 这样即使后续 API 请求失败（如网络问题），用户仍保持登录
           set({ isLoading: true, token, isAuthenticated: true });
 
+          const isStandaloneBuyer = get().authMode === 'standalone' && isStandaloneMode();
+          const isBasicSeller = get().authMode === 'basic';
+          setStandaloneBuyerAuth(isStandaloneBuyer);
+
           try {
-            // 尝试获取用户资料验证 Token 有效性
-            const profile = await profileApi.getMyProfile();
+            const profile = isStandaloneBuyer
+              ? await profileApi.getBuyerProfile()
+              : await profileApi.getMyProfile();
 
             if (profile) {
               set({
@@ -485,7 +515,11 @@ export const useUserStore = create<UserState>()(
                 needsOnboarding: false,
               });
 
-              // 连接 WebSocket
+              if (isStandaloneBuyer) {
+                setWebSocketBaseUrl(getBuyerWebSocketUrl());
+              } else if (isBasicSeller && isStandaloneMode()) {
+                setWebSocketBaseUrl(getSellerWebSocketUrl());
+              }
               connectWebSocket();
 
               return true;
@@ -526,7 +560,11 @@ export const useUserStore = create<UserState>()(
               isLoading: false,
               isSessionRestored: true,
             });
-            // 仍然尝试连接 WebSocket
+            if (isStandaloneBuyer) {
+              setWebSocketBaseUrl(getBuyerWebSocketUrl());
+            } else if (isBasicSeller && isStandaloneMode()) {
+              setWebSocketBaseUrl(getSellerWebSocketUrl());
+            }
             connectWebSocket();
             return true;
           }
@@ -537,7 +575,10 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true });
 
           try {
-            const profile = await profileApi.getMyProfile();
+            const isBuyer = get().authMode === 'standalone' && isStandaloneMode();
+            const profile = isBuyer
+              ? await profileApi.getBuyerProfile()
+              : await profileApi.getMyProfile();
             set({ profile, isLoading: false });
           } catch (err) {
             set({
@@ -596,12 +637,18 @@ export const useUserStore = create<UserState>()(
         createProfile: async (profileData: Partial<UserProfile>) => {
           set({ isLoading: true, error: null });
 
+          const { authMode } = get();
+          const isStandaloneBuyer = authMode === 'standalone';
+
           try {
-            const result = await profileApi.createProfile(profileData);
+            const result = isStandaloneBuyer
+              ? await profileApi.createBuyerProfile(profileData)
+              : await profileApi.createProfile(profileData);
 
             if (result.success) {
-              // 创建成功后重新获取完整 profile
-              const profile = await profileApi.getMyProfile();
+              const profile = isStandaloneBuyer
+                ? await profileApi.getBuyerProfile()
+                : await profileApi.getMyProfile();
               if (profile) {
                 saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
                 set({

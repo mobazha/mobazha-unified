@@ -156,6 +156,14 @@ export const en: TranslationResource = {
     // Environment
     testEnvironment: 'Test Environment',
     productionEnvironment: 'Production Environment',
+    // Standalone mode
+    standaloneMode: 'Standalone Store',
+    sellerAdmin: 'Store Admin',
+    loginAsAdmin: 'Login as Admin',
+    or: 'or',
+    buyerLogin: 'Buyer',
+    loginWithMobazha: 'Login with Mobazha Account',
+    buyerLoginHint: 'Login to place orders and chat with the seller',
     // Session Expired
     sessionExpiredTitle: 'Session Expired',
     sessionExpiredMessage:

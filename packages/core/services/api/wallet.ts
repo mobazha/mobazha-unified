@@ -10,21 +10,15 @@ import type {
   SendTransactionResponse,
   CryptoType,
 } from '../../types';
-import { get, post, safeRequest } from './client';
-import { getGatewayUrl, getAuthHeaders } from './config';
 import { NODE_API } from '../../config/apiPaths';
+import { authGet, authPost, authSafeGet, authRequest } from './helpers';
 
 /**
  * 获取钱包余额
  */
-export async function getBalance(
-  coin: CryptoType,
-  username?: string,
-  password?: string
-): Promise<WalletBalance | null> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_BALANCE(coin)}`;
+export async function getBalance(coin: CryptoType): Promise<WalletBalance | null> {
   try {
-    return await get<WalletBalance>(url, getAuthHeaders(username, password));
+    return await authGet<WalletBalance>(NODE_API.WALLET_BALANCE(coin));
   } catch {
     return null;
   }
@@ -33,42 +27,23 @@ export async function getBalance(
 /**
  * 获取所有币种余额
  */
-export async function getAllBalances(
-  username?: string,
-  password?: string
-): Promise<Record<string, WalletBalance>> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_BALANCE_ALL}`;
-  return safeRequest<Record<string, WalletBalance>>(
-    url,
-    { headers: getAuthHeaders(username, password) },
-    {}
-  );
+export async function getAllBalances(): Promise<Record<string, WalletBalance>> {
+  return authSafeGet<Record<string, WalletBalance>>(NODE_API.WALLET_BALANCE_ALL, {});
 }
 
 /**
  * 获取交易历史
  */
-export async function getTransactions(
-  coin: CryptoType,
-  limit = 20,
-  username?: string,
-  password?: string
-): Promise<Transaction[]> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_TRANSACTIONS(coin)}?limit=${limit}`;
-  return safeRequest<Transaction[]>(url, { headers: getAuthHeaders(username, password) }, []);
+export async function getTransactions(coin: CryptoType, limit = 20): Promise<Transaction[]> {
+  return authSafeGet<Transaction[]>(`${NODE_API.WALLET_TRANSACTIONS(coin)}?limit=${limit}`, []);
 }
 
 /**
  * 获取钱包地址
  */
-export async function getAddress(
-  coin: CryptoType,
-  username?: string,
-  password?: string
-): Promise<string | null> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_ADDRESS(coin)}`;
+export async function getAddress(coin: CryptoType): Promise<string | null> {
   try {
-    const response = await get<{ address: string }>(url, getAuthHeaders(username, password));
+    const response = await authGet<{ address: string }>(NODE_API.WALLET_ADDRESS(coin));
     return response.address;
   } catch {
     return null;
@@ -78,15 +53,9 @@ export async function getAddress(
 /**
  * 获取交易费用估算
  */
-export async function estimateFee(
-  coin: CryptoType,
-  amount: number,
-  username?: string,
-  password?: string
-): Promise<FeeEstimate | null> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_ESTIMATE_FEE(coin)}?amount=${amount}`;
+export async function estimateFee(coin: CryptoType, amount: number): Promise<FeeEstimate | null> {
   try {
-    return await get<FeeEstimate>(url, getAuthHeaders(username, password));
+    return await authGet<FeeEstimate>(`${NODE_API.WALLET_ESTIMATE_FEE(coin)}?amount=${amount}`);
   } catch {
     return null;
   }
@@ -96,11 +65,8 @@ export async function estimateFee(
  * 发送交易
  */
 export async function sendTransaction(
-  request: SendTransactionRequest,
-  username?: string,
-  password?: string
+  request: SendTransactionRequest
 ): Promise<SendTransactionResponse> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_SPEND}`;
   const body = {
     coinType: request.currency,
     address: request.address,
@@ -109,7 +75,7 @@ export async function sendTransaction(
     memo: request.memo,
     spendAll: request.spendAll ?? false,
   };
-  return post<SendTransactionResponse>(url, body, getAuthHeaders(username, password));
+  return authPost<SendTransactionResponse>(NODE_API.WALLET_SPEND, body);
 }
 
 /**
@@ -117,21 +83,15 @@ export async function sendTransaction(
  * 注意：此 API 需要认证，未认证时会返回 401
  */
 export async function getExchangeRates(): Promise<Record<string, Record<string, number>>> {
-  const url = `${getGatewayUrl()}${NODE_API.EXCHANGE_RATES}`;
-  return safeRequest<Record<string, Record<string, number>>>(
-    url,
-    { headers: getAuthHeaders() },
-    {}
-  );
+  return authSafeGet<Record<string, Record<string, number>>>(NODE_API.EXCHANGE_RATES, {});
 }
 
 /**
  * 检查钱包是否已创建
  */
-export async function hasWallet(username?: string, password?: string): Promise<boolean> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_STATUS}`;
+export async function hasWallet(): Promise<boolean> {
   try {
-    const response = await get<{ status: string }>(url, getAuthHeaders(username, password));
+    const response = await authGet<{ status: string }>(NODE_API.WALLET_STATUS);
     return response.status === 'ready';
   } catch {
     return false;
@@ -141,10 +101,9 @@ export async function hasWallet(username?: string, password?: string): Promise<b
 /**
  * 获取助记词
  */
-export async function getMnemonic(username?: string, password?: string): Promise<string | null> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_MNEMONIC}`;
+export async function getMnemonic(): Promise<string | null> {
   try {
-    const response = await get<{ mnemonic: string }>(url, getAuthHeaders(username, password));
+    const response = await authGet<{ mnemonic: string }>(NODE_API.WALLET_MNEMONIC);
     return response.mnemonic;
   } catch {
     return null;
@@ -155,12 +114,9 @@ export async function getMnemonic(username?: string, password?: string): Promise
  * 从助记词恢复钱包
  */
 export async function restoreWallet(
-  mnemonic: string,
-  username?: string,
-  password?: string
+  mnemonic: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_RESTORE}`;
-  return post(url, { mnemonic }, getAuthHeaders(username, password));
+  return authPost(NODE_API.WALLET_RESTORE, { mnemonic });
 }
 
 // ========== 收款地址管理 ==========
@@ -179,12 +135,8 @@ export interface ReceivingAddress {
 /**
  * 获取所有收款地址
  */
-export async function getReceivingAddresses(
-  username?: string,
-  password?: string
-): Promise<ReceivingAddress[]> {
-  const url = `${getGatewayUrl()}${NODE_API.RECEIVE_ADDRESSES}`;
-  return safeRequest<ReceivingAddress[]>(url, { headers: getAuthHeaders(username, password) }, []);
+export async function getReceivingAddresses(): Promise<ReceivingAddress[]> {
+  return authSafeGet<ReceivingAddress[]>(NODE_API.RECEIVE_ADDRESSES, []);
 }
 
 /**
@@ -193,46 +145,32 @@ export async function getReceivingAddresses(
 export async function setReceivingAddress(
   coin: CryptoType,
   address: string,
-  label?: string,
-  username?: string,
-  password?: string
+  label?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.RECEIVE_ADDRESS}`;
-  return post<{ success: boolean; error?: string }>(
-    url,
-    { coin, address, label },
-    getAuthHeaders(username, password)
-  );
+  return authPost<{ success: boolean; error?: string }>(NODE_API.RECEIVE_ADDRESS, {
+    coin,
+    address,
+    label,
+  });
 }
 
 /**
  * 删除外部收款地址
  */
 export async function removeReceivingAddress(
-  coin: CryptoType,
-  username?: string,
-  password?: string
+  coin: CryptoType
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.RECEIVE_ADDRESS_COIN(coin)}`;
-  // 使用 DELETE 方法
-  return safeRequest<{ success: boolean; error?: string }>(
-    url,
-    { method: 'DELETE', headers: getAuthHeaders(username, password) },
-    { success: false }
-  );
+  return authRequest<{ success: boolean; error?: string }>(NODE_API.RECEIVE_ADDRESS_COIN(coin), {
+    method: 'DELETE',
+  });
 }
 
 /**
  * 获取特定币种的收款地址
  */
-export async function getReceivingAddress(
-  coin: CryptoType,
-  username?: string,
-  password?: string
-): Promise<ReceivingAddress | null> {
-  const url = `${getGatewayUrl()}${NODE_API.RECEIVE_ADDRESS_COIN(coin)}`;
+export async function getReceivingAddress(coin: CryptoType): Promise<ReceivingAddress | null> {
   try {
-    return await get<ReceivingAddress>(url, getAuthHeaders(username, password));
+    return await authGet<ReceivingAddress>(NODE_API.RECEIVE_ADDRESS_COIN(coin));
   } catch {
     return null;
   }
@@ -243,18 +181,12 @@ export async function getReceivingAddress(
  */
 export async function validateAddress(
   coin: CryptoType,
-  address: string,
-  username?: string,
-  password?: string
+  address: string
 ): Promise<{ valid: boolean; error?: string }> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_VALIDATE(coin)}`;
   try {
-    const response = await post<{ valid: boolean; error?: string }>(
-      url,
-      { address },
-      getAuthHeaders(username, password)
-    );
-    return response;
+    return await authPost<{ valid: boolean; error?: string }>(NODE_API.WALLET_VALIDATE(coin), {
+      address,
+    });
   } catch {
     return { valid: false, error: '验证失败' };
   }
@@ -268,7 +200,7 @@ export async function validateAddress(
 export interface ReceivingAccount {
   id: number;
   name: string;
-  chainType: string; // ethereum, solana, stripe 等
+  chainType: string;
   address: string;
   activeTokens: string[];
   inactiveTokens: string[];
@@ -282,12 +214,8 @@ export interface ReceivingAccount {
 /**
  * 获取所有收款账户列表
  */
-export async function getReceivingAccounts(
-  username?: string,
-  password?: string
-): Promise<ReceivingAccount[]> {
-  const url = `${getGatewayUrl()}${NODE_API.WALLET_RECEIVING_ACCOUNT_LIST}`;
-  return safeRequest<ReceivingAccount[]>(url, { headers: getAuthHeaders(username, password) }, []);
+export async function getReceivingAccounts(): Promise<ReceivingAccount[]> {
+  return authSafeGet<ReceivingAccount[]>(NODE_API.WALLET_RECEIVING_ACCOUNT_LIST, []);
 }
 
 // ========== 导出 API 对象 ==========

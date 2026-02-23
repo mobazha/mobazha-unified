@@ -163,12 +163,7 @@ export const orderDataService = {
     if (isMockMode()) {
       return mockServices.orders.getPurchases() as unknown as Order[];
     }
-    return (await ordersApi.getPurchases(
-      undefined,
-      undefined,
-      limit,
-      offsetId
-    )) as unknown as Order[];
+    return (await ordersApi.getPurchases(limit, offsetId)) as unknown as Order[];
   },
 
   /**
@@ -178,7 +173,7 @@ export const orderDataService = {
     if (isMockMode()) {
       return mockServices.orders.getSales() as unknown as Order[];
     }
-    return (await ordersApi.getSales(undefined, undefined, limit, offsetId)) as unknown as Order[];
+    return (await ordersApi.getSales(limit, offsetId)) as unknown as Order[];
   },
 
   /**

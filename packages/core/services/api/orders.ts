@@ -3,10 +3,9 @@
  */
 
 import type { Order, OrderListItem } from '../../types';
-import { get, post, safeRequest } from './client';
-import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
 import { NODE_API } from '../../config/apiPaths';
+import { authGet, authPost, authSafeGet } from './helpers';
 
 // ========== 订单类型定义 ==========
 
@@ -165,20 +164,12 @@ interface SalesResponse {
 /**
  * 获取购买订单列表
  */
-export async function getPurchases(
-  username?: string,
-  password?: string,
-  limit = '',
-  offsetId = ''
-): Promise<OrderListItem[]> {
+export async function getPurchases(limit = '', offsetId = ''): Promise<OrderListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.PURCHASES}?limit=${limit}&offsetId=${offsetId}`;
-    const response = await safeRequest<PurchasesResponse>(
-      url,
-      { headers: getAuthHeaders(username, password) },
+    const response = await authSafeGet<PurchasesResponse>(
+      `${NODE_API.PURCHASES}?limit=${limit}&offsetId=${offsetId}`,
       { purchases: [] }
     );
-    // 从包装对象中提取数组
     return response.purchases || [];
   };
 
@@ -193,20 +184,12 @@ export async function getPurchases(
 /**
  * 获取销售订单列表
  */
-export async function getSales(
-  username?: string,
-  password?: string,
-  limit = '',
-  offsetId = ''
-): Promise<OrderListItem[]> {
+export async function getSales(limit = '', offsetId = ''): Promise<OrderListItem[]> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.SALES}?limit=${limit}&offsetId=${offsetId}`;
-    const response = await safeRequest<SalesResponse>(
-      url,
-      { headers: getAuthHeaders(username, password) },
+    const response = await authSafeGet<SalesResponse>(
+      `${NODE_API.SALES}?limit=${limit}&offsetId=${offsetId}`,
       { sales: [] }
     );
-    // 从包装对象中提取数组
     return response.sales || [];
   };
 
@@ -226,15 +209,10 @@ export async function getSales(
 /**
  * 获取订单详情
  */
-export async function getOrderDetails(
-  orderId: string,
-  username?: string,
-  password?: string
-): Promise<Order | null> {
+export async function getOrderDetails(orderId: string): Promise<Order | null> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDER(orderId)}`;
     try {
-      return await get<Order>(url, getAuthHeaders(username, password));
+      return await authGet<Order>(NODE_API.ORDER(orderId));
     } catch {
       return null;
     }
@@ -386,11 +364,7 @@ export interface PaymentInstructionsResult {
  * 注意：此函数不使用 mock fallback，失败时直接抛出错误
  * 因为创建订单是关键操作，不应该静默使用假数据
  */
-export async function createOrder(
-  data: CreateOrderData,
-  username?: string,
-  password?: string
-): Promise<CreateOrderResult> {
+export async function createOrder(data: CreateOrderData): Promise<CreateOrderResult> {
   const mode = getApiMode();
 
   // Mock 模式使用 mock 数据（仅用于开发测试）
@@ -411,8 +385,6 @@ export async function createOrder(
   }
 
   // Real/Auto 模式：调用真实 API，失败直接抛出错误（不回退到 mock）
-  const url = `${getGatewayUrl()}${NODE_API.ORDERS_PURCHASE}`;
-
   // 转换数据格式以匹配后端 API (models.Purchase)
   // 后端期望的格式：
   // - 没有 vendorId（从 listingHash 解析）
@@ -456,20 +428,15 @@ export async function createOrder(
     }
   }
 
-  return post<CreateOrderResult>(url, apiData, getAuthHeaders(username, password));
+  return authPost<CreateOrderResult>(NODE_API.ORDERS_PURCHASE, apiData);
 }
 
 /**
  * 创建购买订单（传统方法，包含支付币种）
  */
-export async function purchaseListing(
-  data: PurchaseData,
-  username?: string,
-  password?: string
-): Promise<PurchaseResult> {
+export async function purchaseListing(data: PurchaseData): Promise<PurchaseResult> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.PURCHASE}`;
-    return post<PurchaseResult>(url, data, getAuthHeaders(username, password));
+    return authPost<PurchaseResult>(NODE_API.PURCHASE, data);
   };
 
   const mockFn = async () => {
@@ -494,14 +461,9 @@ export async function purchaseListing(
 /**
  * 估算订单总价
  */
-export async function estimateOrderTotal(
-  data: PurchaseData,
-  username?: string,
-  password?: string
-): Promise<OrderEstimate> {
+export async function estimateOrderTotal(data: PurchaseData): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_ESTIMATE}`;
-    return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
+    return authPost<OrderEstimate>(NODE_API.ORDERS_ESTIMATE, data);
   };
 
   const mockFn = async () => {
@@ -523,14 +485,9 @@ export async function estimateOrderTotal(
 /**
  * 获取结账明细
  */
-export async function getCheckoutBreakdown(
-  data: PurchaseData,
-  username?: string,
-  password?: string
-): Promise<OrderEstimate> {
+export async function getCheckoutBreakdown(data: PurchaseData): Promise<OrderEstimate> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_CHECKOUT_BREAKDOWN}`;
-    return post<OrderEstimate>(url, data, getAuthHeaders(username, password));
+    return authPost<OrderEstimate>(NODE_API.ORDERS_CHECKOUT_BREAKDOWN, data);
   };
 
   const mockFn = async () => {
@@ -555,20 +512,14 @@ export async function getCheckoutBreakdown(
  * 确认订单（卖家）
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function confirmOrder(
-  payload: {
-    orderID: string;
-    reject?: boolean;
-    transactionID?: string;
-    payoutAddress?: string;
-  },
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function confirmOrder(payload: {
+  orderID: string;
+  reject?: boolean;
+  transactionID?: string;
+  payoutAddress?: string;
+}): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_CONFIRM}`;
-    // 后端成功时返回 {}，HTTP 200 即表示成功
-    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    await authPost<Record<string, unknown>>(NODE_API.ORDERS_CONFIRM, payload);
     return { success: true };
   };
 
@@ -589,22 +540,16 @@ export async function confirmOrder(
  * 发货（卖家）
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function fulfillOrder(
-  payload: {
-    orderID: string;
-    physicalDelivery?: { shipper: string; trackingNumber: string };
-    digitalDelivery?: { url?: string; password?: string };
-    note?: string;
-    itemIndex?: number;
-    receivingAccountID?: number;
-  },
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function fulfillOrder(payload: {
+  orderID: string;
+  physicalDelivery?: { shipper: string; trackingNumber: string };
+  digitalDelivery?: { url?: string; password?: string };
+  note?: string;
+  itemIndex?: number;
+  receivingAccountID?: number;
+}): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_FULFILL}`;
-    // 后端成功时返回 {}，HTTP 200 即表示成功
-    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    await authPost<Record<string, unknown>>(NODE_API.ORDERS_FULFILL, payload);
     return { success: true };
   };
 
@@ -624,28 +569,22 @@ export async function fulfillOrder(
  * 完成订单（买家）
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function completeOrder(
-  payload: {
-    orderID: string;
-    txID?: string;
-    ratings?: Array<{
-      slug: string;
-      overall: number;
-      quality?: number;
-      description?: number;
-      deliverySpeed?: number;
-      customerService?: number;
-      review?: string;
-    }>;
-    anonymous?: boolean;
-  },
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function completeOrder(payload: {
+  orderID: string;
+  txID?: string;
+  ratings?: Array<{
+    slug: string;
+    overall: number;
+    quality?: number;
+    description?: number;
+    deliverySpeed?: number;
+    customerService?: number;
+    review?: string;
+  }>;
+  anonymous?: boolean;
+}): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_COMPLETE}`;
-    // 后端成功时返回 {}，HTTP 200 即表示成功
-    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    await authPost<Record<string, unknown>>(NODE_API.ORDERS_COMPLETE, payload);
     return { success: true };
   };
 
@@ -699,22 +638,12 @@ export interface CompleteInstructionsResponse {
  * @param params.initiatorAddress - 发起者钱包地址
  * @returns 指令响应，包含是否需要链上交易以及交易指令
  */
-export async function getCompleteInstructions(
-  params: {
-    orderID: string;
-    initiatorAddress: string;
-  },
-  username?: string,
-  password?: string
-): Promise<OrderInstructionsResponse> {
+export async function getCompleteInstructions(params: {
+  orderID: string;
+  initiatorAddress: string;
+}): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_COMPLETE}`;
-    const response = await post<OrderInstructionsResponse>(
-      url,
-      params,
-      getAuthHeaders(username, password)
-    );
-    return response;
+    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_COMPLETE, params);
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
@@ -738,24 +667,14 @@ export async function getCompleteInstructions(
  * @param params.payoutAddress - 卖家收款地址（接受订单时使用）
  * @returns 指令响应，包含是否需要链上交易以及交易指令
  */
-export async function getConfirmInstructions(
-  params: {
-    orderID: string;
-    reject: boolean;
-    initiatorAddress: string;
-    payoutAddress?: string;
-  },
-  username?: string,
-  password?: string
-): Promise<OrderInstructionsResponse> {
+export async function getConfirmInstructions(params: {
+  orderID: string;
+  reject: boolean;
+  initiatorAddress: string;
+  payoutAddress?: string;
+}): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_CONFIRM}`;
-    const response = await post<OrderInstructionsResponse>(
-      url,
-      params,
-      getAuthHeaders(username, password)
-    );
-    return response;
+    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_CONFIRM, params);
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
@@ -777,22 +696,12 @@ export async function getConfirmInstructions(
  * @param params.initiatorAddress - 发起者钱包地址
  * @returns 指令响应，包含是否需要链上交易以及交易指令
  */
-export async function getCancelInstructions(
-  params: {
-    orderID: string;
-    initiatorAddress: string;
-  },
-  username?: string,
-  password?: string
-): Promise<OrderInstructionsResponse> {
+export async function getCancelInstructions(params: {
+  orderID: string;
+  initiatorAddress: string;
+}): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_CANCEL}`;
-    const response = await post<OrderInstructionsResponse>(
-      url,
-      params,
-      getAuthHeaders(username, password)
-    );
-    return response;
+    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_CANCEL, params);
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
@@ -814,22 +723,12 @@ export async function getCancelInstructions(
  * @param params.initiatorAddress - 发起者钱包地址
  * @returns 指令响应，包含是否需要链上交易以及交易指令
  */
-export async function getRefundInstructions(
-  params: {
-    orderID: string;
-    initiatorAddress: string;
-  },
-  username?: string,
-  password?: string
-): Promise<OrderInstructionsResponse> {
+export async function getRefundInstructions(params: {
+  orderID: string;
+  initiatorAddress: string;
+}): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_REFUND}`;
-    const response = await post<OrderInstructionsResponse>(
-      url,
-      params,
-      getAuthHeaders(username, password)
-    );
-    return response;
+    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_REFUND, params);
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
@@ -847,15 +746,12 @@ export async function getRefundInstructions(
  * 取消订单
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function cancelOrder(
-  payload: { orderID: string; transactionID?: string },
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function cancelOrder(payload: {
+  orderID: string;
+  transactionID?: string;
+}): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_CANCEL}`;
-    // 后端成功时返回 {}，HTTP 200 即表示成功
-    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    await authPost<Record<string, unknown>>(NODE_API.ORDERS_CANCEL, payload);
     return { success: true };
   };
 
@@ -875,15 +771,12 @@ export async function cancelOrder(
  * 退款订单
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function refundOrder(
-  payload: { orderID: string; transactionID?: string },
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function refundOrder(payload: {
+  orderID: string;
+  transactionID?: string;
+}): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_REFUND}`;
-    // 后端成功时返回 {}，HTTP 200 即表示成功
-    await post<Record<string, unknown>>(url, payload, getAuthHeaders(username, password));
+    await authPost<Record<string, unknown>>(NODE_API.ORDERS_REFUND, payload);
     return { success: true };
   };
 
@@ -939,17 +832,10 @@ export interface SubmitPaymentData {
  * 提交支付
  */
 export async function submitPayment(
-  paymentData: SubmitPaymentData,
-  username?: string,
-  password?: string
+  paymentData: SubmitPaymentData
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_PAYMENT}`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { paymentData },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; error?: string }>(NODE_API.ORDERS_PAYMENT, { paymentData });
   };
 
   const mockFn = async () => {
@@ -963,32 +849,23 @@ export async function submitPayment(
 /**
  * 支付订单
  */
-export async function fundOrder(
-  payload: {
-    coin: string;
-    address: string;
-    amount: number;
-    orderId: string;
-    memo?: string;
-  },
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; txid?: string; error?: string }> {
+export async function fundOrder(payload: {
+  coin: string;
+  address: string;
+  amount: number;
+  orderId: string;
+  memo?: string;
+}): Promise<{ success: boolean; txid?: string; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDERS_SPEND}`;
-    return post<{ success: boolean; txid?: string; error?: string }>(
-      url,
-      {
-        coinType: payload.coin,
-        orderID: payload.orderId,
-        address: payload.address,
-        amount: payload.amount,
-        feeLevel: 'ECONOMIC',
-        memo: payload.memo,
-        requireAssociateOrder: true,
-      },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; txid?: string; error?: string }>(NODE_API.ORDERS_SPEND, {
+      coinType: payload.coin,
+      orderID: payload.orderId,
+      address: payload.address,
+      amount: payload.amount,
+      feeLevel: 'ECONOMIC',
+      memo: payload.memo,
+      requireAssociateOrder: true,
+    });
   };
 
   const mockFn = async () => {
@@ -1058,25 +935,18 @@ export interface PaymentInstructionsResponse {
  * 为了与前端代码风格保持一致，这里接受 orderId 和 coin，
  * 然后在内部转换为后端期望的格式
  */
-export async function getPaymentInstructions(
-  requestData: {
-    orderId: string;
-    coin: string;
-    amount?: number; // 支付金额（最小单位）
-    payerAddress?: string; // 付款人地址
-    moderator?: string; // 仲裁人 peerID
-  },
-  username?: string,
-  password?: string
-): Promise<PaymentInstructionsResponse> {
+export async function getPaymentInstructions(requestData: {
+  orderId: string;
+  coin: string;
+  amount?: number; // 支付金额（最小单位）
+  payerAddress?: string; // 付款人地址
+  moderator?: string; // 仲裁人 peerID
+}): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.INSTRUCTIONS_ORDER_PAYMENT}`;
-    // 转换为后端期望的参数名
     const backendRequestData: Record<string, unknown> = {
       orderID: requestData.orderId,
       coinType: requestData.coin,
     };
-    // 添加可选参数
     if (requestData.amount !== undefined) {
       backendRequestData.amount = requestData.amount;
     }
@@ -1086,10 +956,9 @@ export async function getPaymentInstructions(
     if (requestData.moderator) {
       backendRequestData.moderator = requestData.moderator;
     }
-    return post<PaymentInstructionsResponse>(
-      url,
-      backendRequestData,
-      getAuthHeaders(username, password)
+    return authPost<PaymentInstructionsResponse>(
+      NODE_API.INSTRUCTIONS_ORDER_PAYMENT,
+      backendRequestData
     );
   };
 
@@ -1123,15 +992,11 @@ export async function getPaymentInstructions(
  * 获取剩余支付金额
  */
 export async function getPaymentRemaining(
-  orderId: string,
-  username?: string,
-  password?: string
+  orderId: string
 ): Promise<{ remaining?: number; paid?: number; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.ORDER_PAYMENT_REMAINING(orderId)}`;
-    return get<{ remaining?: number; paid?: number; error?: string }>(
-      url,
-      getAuthHeaders(username, password)
+    return authGet<{ remaining?: number; paid?: number; error?: string }>(
+      NODE_API.ORDER_PAYMENT_REMAINING(orderId)
     );
   };
 
@@ -1153,17 +1018,13 @@ export async function getPaymentRemaining(
  */
 export async function openDispute(
   orderId: string,
-  claim: string,
-  username?: string,
-  password?: string
+  claim: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.DISPUTE_OPEN}`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId, claim },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_OPEN, {
+      orderID: orderId,
+      claim,
+    });
   };
 
   const mockFn = async () => {
@@ -1182,17 +1043,12 @@ export async function openDispute(
  * 接受争议裁决
  */
 export async function acceptDispute(
-  orderId: string,
-  username?: string,
-  password?: string
+  orderId: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.DISPUTE_RELEASE}`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_RELEASE, {
+      orderID: orderId,
+    });
   };
 
   const mockFn = async () => {
@@ -1211,18 +1067,11 @@ export async function acceptDispute(
  * 认领过期资金（卖家）
  * 当订单超时后，卖家可以认领资金
  */
-export async function claimPayment(
-  orderId: string,
-  username?: string,
-  password?: string
-): Promise<{ success: boolean; error?: string }> {
+export async function claimPayment(orderId: string): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.RELEASE_AFTER_TIMEOUT}`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; error?: string }>(NODE_API.RELEASE_AFTER_TIMEOUT, {
+      orderID: orderId,
+    });
   };
 
   const mockFn = async () => {
@@ -1244,17 +1093,13 @@ export async function claimPayment(
  */
 export async function resendOrderMessage(
   orderId: string,
-  messageType: string,
-  username?: string,
-  password?: string
+  messageType: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.RESEND_ORDER_MESSAGE}`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId, messageType },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; error?: string }>(NODE_API.RESEND_ORDER_MESSAGE, {
+      orderID: orderId,
+      messageType,
+    });
   };
 
   const mockFn = async () => {
@@ -1269,17 +1114,12 @@ export async function resendOrderMessage(
  * 标记订单为已读
  */
 export async function markOrderAsRead(
-  orderId: string,
-  username?: string,
-  password?: string
+  orderId: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.MARK_ORDER_AS_READ}`;
-    return post<{ success: boolean; error?: string }>(
-      url,
-      { orderID: orderId },
-      getAuthHeaders(username, password)
-    );
+    return authPost<{ success: boolean; error?: string }>(NODE_API.MARK_ORDER_AS_READ, {
+      orderID: orderId,
+    });
   };
 
   const mockFn = async () => {

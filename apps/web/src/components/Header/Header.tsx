@@ -25,6 +25,7 @@ import {
   selectTotalUnreadCount,
   getImageUrl,
   isHosted,
+  isStandalone,
   startCasdoorLogin,
 } from '@mobazha/core';
 import {
@@ -47,10 +48,14 @@ import { WalletConnectButton } from '../Wallet';
 export const Header: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
-  const { isAuthenticated, profile, isLoading, logout } = useUserStore();
+  const { isAuthenticated, profile, isLoading, logout, authMode } = useUserStore();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const standaloneMode = isStandalone();
+  const isSeller = standaloneMode && authMode === 'basic';
+  const isBuyer = standaloneMode && authMode === 'standalone';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,38 +83,43 @@ export const Header: React.FC = () => {
             <span className="font-bold text-xl text-foreground">Mobazha</span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <form
-            onSubmit={handleSearch}
-            className="flex flex-1 max-w-xl mx-8"
-            data-testid="header-search-form"
-          >
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('search.placeholder')}
-                value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setSearchQuery(e.target.value)
-                }
-                className="w-full pl-10"
-                data-testid="header-search-input"
-              />
-            </div>
-          </form>
+          {/* Search Bar - Desktop (hidden in standalone mode) */}
+          {!standaloneMode && (
+            <form
+              onSubmit={handleSearch}
+              className="flex flex-1 max-w-xl mx-8"
+              data-testid="header-search-form"
+            >
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('search.placeholder')}
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setSearchQuery(e.target.value)
+                  }
+                  className="w-full pl-10"
+                  data-testid="header-search-input"
+                />
+              </div>
+            </form>
+          )}
+          {standaloneMode && <div className="flex-1" />}
 
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="flex items-center">
-            {/* 市场入口 */}
-            <Link href="/marketplace" data-testid="header-marketplace-link">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                {t('footer.marketplace')}
-              </Button>
-            </Link>
+            {/* 市场入口 (hidden in standalone mode) */}
+            {!standaloneMode && (
+              <Link href="/marketplace" data-testid="header-marketplace-link">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  {t('footer.marketplace')}
+                </Button>
+              </Link>
+            )}
 
             {/* 已登录用户显示：通知、消息、购物车、钱包连接 */}
             {isAuthenticated && (
@@ -186,67 +196,81 @@ export const Header: React.FC = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
-                  {/* 主要操作 */}
-                  <DropdownMenuItem
-                    onClick={() => router.push(`/store/${profile.peerID}`)}
-                    className="cursor-pointer"
-                    data-testid="header-menu-my-store"
-                  >
-                    <Store className="mr-2 h-4 w-4" />
-                    {t('userMenu.myStore')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/listing/new')}
-                    className="cursor-pointer"
-                    data-testid="header-menu-create-listing"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('userMenu.createListing')}
-                  </DropdownMenuItem>
+                  {/* 主要操作 — 买家跳过卖家管理项 */}
+                  {!isBuyer && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => router.push(`/store/${profile.peerID}`)}
+                        className="cursor-pointer"
+                        data-testid="header-menu-my-store"
+                      >
+                        <Store className="mr-2 h-4 w-4" />
+                        {t('userMenu.myStore')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/listing/new')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-create-listing"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t('userMenu.createListing')}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+
+                  {/* 订单管理 — 卖家看 Sales，买家看 Purchases */}
+                  {!isBuyer && (
+                    <DropdownMenuItem
+                      onClick={() => router.push('/orders?tab=sales')}
+                      className="cursor-pointer"
+                      data-testid="header-menu-sales"
+                    >
+                      <Package className="mr-2 h-4 w-4" />
+                      {t('userMenu.sales')}
+                    </DropdownMenuItem>
+                  )}
+                  {!isSeller && (
+                    <DropdownMenuItem
+                      onClick={() => router.push('/orders?tab=purchases')}
+                      className="cursor-pointer"
+                      data-testid="header-menu-purchases"
+                    >
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      {t('userMenu.purchases')}
+                    </DropdownMenuItem>
+                  )}
+                  {!isBuyer && (
+                    <DropdownMenuItem
+                      onClick={() => router.push('/rwa-dashboard')}
+                      className="cursor-pointer"
+                    >
+                      <PieChart className="mr-2 h-4 w-4" />
+                      {t('userMenu.rwaAssets')}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
 
-                  {/* 订单管理 */}
-                  <DropdownMenuItem
-                    onClick={() => router.push('/orders?tab=sales')}
-                    className="cursor-pointer"
-                    data-testid="header-menu-sales"
-                  >
-                    <Package className="mr-2 h-4 w-4" />
-                    {t('userMenu.sales')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/orders?tab=purchases')}
-                    className="cursor-pointer"
-                    data-testid="header-menu-purchases"
-                  >
-                    <ShoppingBag className="mr-2 h-4 w-4" />
-                    {t('userMenu.purchases')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/rwa-dashboard')}
-                    className="cursor-pointer"
-                  >
-                    <PieChart className="mr-2 h-4 w-4" />
-                    {t('userMenu.rwaAssets')}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-
-                  {/* 系统操作 */}
-                  <DropdownMenuItem
-                    onClick={() => router.push('/settings/general')}
-                    className="cursor-pointer"
-                    data-testid="header-menu-settings"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t('userMenu.settings')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/settings/access-control')}
-                    className="cursor-pointer"
-                  >
-                    <Shield className="mr-2 h-4 w-4" />
-                    {t('settings.sidebar.accessControl')}
-                  </DropdownMenuItem>
+                  {/* 系统操作 — 买家无需 settings/access-control */}
+                  {!isBuyer && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/settings/general')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-settings"
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        {t('userMenu.settings')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/settings/access-control')}
+                        className="cursor-pointer"
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        {t('settings.sidebar.accessControl')}
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}

@@ -2,11 +2,10 @@
  * 通知 API 服务
  */
 
-import { post, safeRequest } from './client';
-import { getGatewayUrl, getAuthHeaders } from './config';
 import { withMockFallback } from './mode';
 import { getI18n } from '../../i18n/i18n';
 import { NODE_API } from '../../config/apiPaths';
+import { authPost, authSafeGet } from './helpers';
 
 // 通知类型（简化分类）
 export type NotificationType =
@@ -367,11 +366,9 @@ export async function getNotifications(
     limit?: number;
     offsetId?: string;
     filter?: NotificationFilter;
-    username?: string;
-    password?: string;
   } = {}
 ): Promise<NotificationsResult> {
-  const { limit = 20, offsetId = '', filter = 'all', username, password } = options;
+  const { limit = 20, offsetId = '', filter = 'all' } = options;
 
   const realFn = async () => {
     const params = new URLSearchParams();
@@ -385,49 +382,48 @@ export async function getNotifications(
       params.append('filter', filterTypes);
     }
 
-    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS}?${params.toString()}`;
-    const response = await safeRequest<BackendNotificationsResponse>(
-      url,
-      { headers: getAuthHeaders(username, password) },
+    const response = await authSafeGet<BackendNotificationsResponse>(
+      `${NODE_API.NOTIFICATIONS}?${params.toString()}`,
       { unread: 0, total: 0, notifications: [] }
     );
 
-    // 转换后端格式到前端格式
-    const notifications = (response.notifications || []).map((record, index): Notification => {
-      const notif = record.notification || {};
-      // 确保 ID 唯一：优先使用后端 notificationID（大小写敏感），再兜底 type-timestamp-index
-      const uniqueId =
-        notif.notificationID ||
-        notif.notificationId ||
-        `${record.type}-${record.timestamp}-${index}`;
-      return {
-        id: uniqueId,
-        type: record.type,
-        title: generateNotificationTitle(record.type, notif),
-        message: generateNotificationMessage(record.type, notif),
-        read: record.read,
-        timestamp: record.timestamp,
-        data: {
-          orderId: notif.orderID || notif.orderId,
-          peerID: notif.peerID || notif.peerId,
-          txid: notif.txid,
-          caseId: notif.caseId,
-          slug: notif.slug,
-          thumbnail: notif.thumbnail,
-          avatarHashes: notif.avatarHashes,
-          productTitle: notif.title,
-          price: notif.price,
-          vendorHandle: notif.vendorHandle,
-          vendorId: notif.vendorId || notif.vendorID,
-          buyerHandle: notif.buyerHandle,
-          buyerId: notif.buyerId || notif.buyerID,
-          disputerHandle: notif.disputerHandle,
-          disputerId: notif.disputerID,
-          disputeeHandle: notif.disputeeHandle,
-          disputeeId: notif.disputeeID,
-        },
-      };
-    });
+    const notifications = (response.notifications || []).map(
+      (record: BackendNotificationRecord, index: number): Notification => {
+        const notif = record.notification || {};
+        // 确保 ID 唯一：优先使用后端 notificationID（大小写敏感），再兜底 type-timestamp-index
+        const uniqueId =
+          notif.notificationID ||
+          notif.notificationId ||
+          `${record.type}-${record.timestamp}-${index}`;
+        return {
+          id: uniqueId,
+          type: record.type,
+          title: generateNotificationTitle(record.type, notif),
+          message: generateNotificationMessage(record.type, notif),
+          read: record.read,
+          timestamp: record.timestamp,
+          data: {
+            orderId: notif.orderID || notif.orderId,
+            peerID: notif.peerID || notif.peerId,
+            txid: notif.txid,
+            caseId: notif.caseId,
+            slug: notif.slug,
+            thumbnail: notif.thumbnail,
+            avatarHashes: notif.avatarHashes,
+            productTitle: notif.title,
+            price: notif.price,
+            vendorHandle: notif.vendorHandle,
+            vendorId: notif.vendorId || notif.vendorID,
+            buyerHandle: notif.buyerHandle,
+            buyerId: notif.buyerId || notif.buyerID,
+            disputerHandle: notif.disputerHandle,
+            disputerId: notif.disputerID,
+            disputeeHandle: notif.disputeeHandle,
+            disputeeId: notif.disputeeID,
+          },
+        };
+      }
+    );
 
     const lastNotif = notifications[notifications.length - 1];
     return {
@@ -469,28 +465,18 @@ export async function getNotifications(
 /**
  * 获取通知列表（简化版，兼容旧接口）
  */
-export async function getNotificationsList(
-  limit = 20,
-  offsetId = '',
-  username?: string,
-  password?: string
-): Promise<Notification[]> {
-  const result = await getNotifications({ limit, offsetId, username, password });
+export async function getNotificationsList(limit = 20, offsetId = ''): Promise<Notification[]> {
+  const result = await getNotifications({ limit, offsetId });
   return result.notifications;
 }
 
 /**
  * 获取未读通知数量
  */
-export async function getUnreadNotificationCount(
-  username?: string,
-  password?: string
-): Promise<number> {
+export async function getUnreadNotificationCount(): Promise<number> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS_COUNT}`;
-    const result = await safeRequest<{ unread: number; total: number }>(
-      url,
-      { headers: getAuthHeaders(username, password) },
+    const result = await authSafeGet<{ unread: number; total: number }>(
+      NODE_API.NOTIFICATIONS_COUNT,
       { unread: 0, total: 0 }
     );
     return result.unread;
@@ -507,14 +493,11 @@ export async function getUnreadNotificationCount(
  * 标记单个通知为已读
  */
 export async function markNotificationAsRead(
-  notificationId: string,
-  username?: string,
-  password?: string
+  notificationId: string
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
     const encodedId = encodeURIComponent(notificationId);
-    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATION_READ(encodedId)}`;
-    return post<{ success: boolean }>(url, {}, getAuthHeaders(username, password));
+    return authPost<{ success: boolean }>(NODE_API.NOTIFICATION_READ(encodedId), {});
   };
 
   const mockFn = async () => {
@@ -533,16 +516,12 @@ export async function markNotificationAsRead(
  * 批量标记通知为已读
  */
 export async function markAllNotificationsAsRead(
-  notificationIds?: string[],
-  username?: string,
-  password?: string
+  notificationIds?: string[]
 ): Promise<{ success: boolean }> {
   const realFn = async () => {
-    const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS_READ}`;
-    return post<{ success: boolean }>(
-      url,
-      notificationIds ? { ids: notificationIds } : {},
-      getAuthHeaders(username, password)
+    return authPost<{ success: boolean }>(
+      NODE_API.NOTIFICATIONS_READ,
+      notificationIds ? { ids: notificationIds } : {}
     );
   };
 
@@ -570,12 +549,9 @@ export async function markAllNotificationsAsRead(
  */
 export async function batchNotifications(
   action: 'read' | 'delete',
-  notificationIds: string[],
-  username?: string,
-  password?: string
+  notificationIds: string[]
 ): Promise<{ success: boolean }> {
-  const url = `${getGatewayUrl()}${NODE_API.NOTIFICATIONS_BATCH}`;
-  return post(url, { action, ids: notificationIds }, getAuthHeaders(username, password));
+  return authPost(NODE_API.NOTIFICATIONS_BATCH, { action, ids: notificationIds });
 }
 
 /**
