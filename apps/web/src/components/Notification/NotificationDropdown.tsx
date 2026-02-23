@@ -172,7 +172,7 @@ function NotificationItem({
             {data.thumbnail?.small && (
               <div className="relative w-6 h-6 rounded overflow-hidden bg-muted flex-shrink-0">
                 <img
-                  src={`/v1/image/${data.thumbnail.small}`}
+                  src={`/v1/media/images/${data.thumbnail.small}`}
                   alt={data.productTitle}
                   className="w-full h-full object-cover"
                   onError={e => {
