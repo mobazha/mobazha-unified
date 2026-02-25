@@ -62,6 +62,19 @@ interface TGThemeParams {
   destructive_text_color?: string;
 }
 
+interface TGWebApp {
+  initData: string;
+  themeParams: TGThemeParams;
+  MainButton: TGMainButton;
+  BackButton: TGBackButton;
+  HapticFeedback: TGHapticFeedback;
+  ready: () => void;
+  expand: () => void;
+  close: () => void;
+  setHeaderColor: (color: string) => void;
+  setBackgroundColor: (color: string) => void;
+}
+
 // ---------------------------------------------------------------------------
 // Context value
 // ---------------------------------------------------------------------------
@@ -98,10 +111,9 @@ interface TGMiniAppProviderProps {
   children: React.ReactNode;
 }
 
-function initWebApp() {
+function initWebApp(): TGWebApp | null {
   if (typeof window === 'undefined') return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wa = (window as any).Telegram?.WebApp;
+  const wa = (window as unknown as { Telegram?: { WebApp?: TGWebApp } }).Telegram?.WebApp;
   if (!wa?.initData) return null;
   wa.ready?.();
   wa.expand?.();
@@ -109,8 +121,7 @@ function initWebApp() {
 }
 
 export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [webApp] = useState<any>(initWebApp);
+  const [webApp] = useState<TGWebApp | null>(initWebApp);
 
   const expand = useCallback(() => webApp?.expand?.(), [webApp]);
   const close = useCallback(() => webApp?.close?.(), [webApp]);
