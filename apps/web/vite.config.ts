@@ -1,6 +1,23 @@
 import { defineConfig, loadEnv } from 'vite';
+import type { ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+
+/**
+ * Strip WWW-Authenticate header from proxy responses so the browser
+ * doesn't show its native Basic Auth dialog. The frontend handles
+ * 401 responses programmatically via its own login UI.
+ */
+function withStripWwwAuth(opts: ProxyOptions): ProxyOptions {
+  return {
+    ...opts,
+    configure: (proxy, _options) => {
+      proxy.on('proxyRes', proxyRes => {
+        delete proxyRes.headers['www-authenticate'];
+      });
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   // 加载 .env.local 等环境文件中的 NEXT_PUBLIC_* 变量
@@ -66,10 +83,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3001,
       proxy: {
-        '/v1': {
+        '/v1': withStripWwwAuth({
           target: apiBase,
           changeOrigin: true,
-        },
+        }),
         '/ws': {
           target: apiBase,
           changeOrigin: true,
@@ -79,15 +96,16 @@ export default defineConfig(({ mode }) => {
           target: env.NEXT_PUBLIC_SAAS_URL || apiBase,
           changeOrigin: true,
           ws: true,
+          rewrite: (path: string) => path.replace(/^\/buyer-api/, ''),
         },
-        '/info': {
+        '/info': withStripWwwAuth({
           target: apiBase,
           changeOrigin: true,
-        },
-        '/api': {
+        }),
+        '/api': withStripWwwAuth({
           target: apiBase,
           changeOrigin: true,
-        },
+        }),
       },
     },
     // 优化依赖预构建

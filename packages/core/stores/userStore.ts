@@ -10,7 +10,8 @@
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
 import type { UserProfile, UserSettings, AuthCredentials } from '../types';
-import { profileApi } from '../services/api';
+import { profileApi, authGet, ApiError } from '../services/api';
+import { NODE_API } from '../config/apiPaths';
 import {
   handleOAuthCallback,
   saveToken,
@@ -92,7 +93,7 @@ export const useUserStore = create<UserState>()(
         needsOnboarding: false,
         sessionExpired: false,
 
-        // Basic Auth 登录（VPS 模式）
+        // Basic Auth 登录（VPS / standalone 卖家模式）
         login: async (credentials: AuthCredentials) => {
           set({ isLoading: true, error: null });
 
@@ -100,44 +101,46 @@ export const useUserStore = create<UserState>()(
             const basicToken = `basic:${btoa(`${credentials.username}:${credentials.password}`)}`;
             saveToken(basicToken);
 
+            // 先用 /v1/preferences 验证凭据（该端点不依赖 profile 是否存在）
+            await authGet<UserSettings>(NODE_API.PREFERENCES);
+
+            // 凭据有效 → 切换到真实 API 模式
+            disableMockData();
+            console.warn('🔄 Basic Auth login successful, switched to real API mode');
+            setStandaloneBuyerAuth(false);
+
+            // 尝试获取 profile（新节点可能尚未创建，返回 null）
             const profile = await profileApi.getMyProfile();
 
             if (profile) {
               saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
-
-              // 切换到真实 API 模式
-              disableMockData();
-              console.log('🔄 Basic Auth login successful, switched to real API mode');
-
-              setStandaloneBuyerAuth(false);
-
-              set({
-                profile,
-                token: basicToken,
-                isAuthenticated: true,
-                isLoading: false,
-                authMode: 'basic',
-                isSessionRestored: true,
-              });
-
-              if (isStandaloneMode()) {
-                setWebSocketBaseUrl(getSellerWebSocketUrl());
-              }
-              connectWebSocket();
-
-              return true;
             }
 
             set({
-              error: '登录失败',
+              profile,
+              token: basicToken,
+              isAuthenticated: true,
               isLoading: false,
+              authMode: 'basic',
               isSessionRestored: true,
+              needsOnboarding: !profile,
             });
-            clearAuth();
-            return false;
+
+            if (isStandaloneMode()) {
+              setWebSocketBaseUrl(getSellerWebSocketUrl());
+            }
+            connectWebSocket();
+
+            return true;
           } catch (err) {
+            const msg =
+              err instanceof ApiError && err.status === 401
+                ? '用户名或密码错误'
+                : err instanceof Error
+                  ? err.message
+                  : '登录失败';
             set({
-              error: err instanceof Error ? err.message : '登录失败',
+              error: msg,
               isLoading: false,
             });
             clearAuth();
