@@ -242,11 +242,12 @@ export default function CartPage() {
                                         )
                                       }
                                       disabled={item.quantity <= 1}
-                                      className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-muted disabled:opacity-40 touch-feedback rounded-l"
+                                      className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-muted disabled:opacity-40 touch-feedback rounded-l"
+                                      aria-label={t('cart.decreaseQuantity')}
                                     >
-                                      <Minus className="w-3 h-3" />
+                                      <Minus className="w-3.5 h-3.5" />
                                     </button>
-                                    <span className="w-7 sm:w-8 text-center font-medium text-xs sm:text-sm text-foreground">
+                                    <span className="w-8 text-center font-medium text-xs sm:text-sm text-foreground">
                                       {item.quantity}
                                     </span>
                                     <button
@@ -257,9 +258,10 @@ export default function CartPage() {
                                           item.quantity + 1
                                         )
                                       }
-                                      className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-muted touch-feedback rounded-r"
+                                      className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-muted touch-feedback rounded-r"
+                                      aria-label={t('cart.increaseQuantity')}
                                     >
-                                      <Plus className="w-3 h-3" />
+                                      <Plus className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
 
@@ -267,7 +269,7 @@ export default function CartPage() {
                                     onClick={() =>
                                       removeItem(item.listing.slug, item.listing.vendorPeerID)
                                     }
-                                    className="text-muted-foreground hover:text-destructive touch-feedback p-1"
+                                    className="text-muted-foreground hover:text-destructive touch-feedback p-2.5"
                                     aria-label={t('cart.remove')}
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -294,8 +296,8 @@ export default function CartPage() {
                         </span>
                       </div>
                       <Button
-                        size="sm"
-                        className="touch-feedback h-8 px-4 text-xs sm:text-sm"
+                        size="default"
+                        className="touch-feedback h-10 px-5 text-sm"
                         onClick={() => handleCheckout(group)}
                       >
                         {t('cart.checkout')}
