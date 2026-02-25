@@ -9,7 +9,7 @@
  * 4. 填写基本信息（标题、价格）
  * 5. 上传商品图片
  * 6. 点击发布
- * 7. 验证重定向到商品详情页
+ * 7. 验证重定向到商品编辑页
  */
 
 import { test, expect } from '@playwright/test';
@@ -90,16 +90,20 @@ test.describe('Create Service Listing', () => {
     await expect(publishBtn).toBeEnabled();
     await publishBtn.click();
 
-    // ── Step 7: Wait for redirect to product detail page ──
-    console.log('Step 7: Wait for redirect to product page');
+    // ── Step 7: Wait for redirect to listing edit page ──
+    console.log('Step 7: Wait for redirect to edit page');
     await page.waitForURL(
-      url => url.pathname.includes('/product/') && !url.pathname.includes('/listing/new'),
+      url => url.pathname.includes('/listing/edit/') && !url.pathname.includes('/listing/new'),
       { timeout: 30000 }
     );
 
     const finalUrl = page.url();
-    expect(finalUrl).toMatch(/\/product\/.+/);
-    console.log('Success! Product URL:', finalUrl);
+    expect(finalUrl).toMatch(/\/listing\/edit\/.+/);
+    console.log('Success! Edit URL:', finalUrl);
+
+    // Verify the Preview button is available on the edit page
+    const previewBtn = page.getByTestId('listing-form-preview');
+    await expect(previewBtn).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({ path: 'e2e-screenshots/service-listing-created.png', fullPage: true });
   });
