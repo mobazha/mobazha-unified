@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -187,13 +188,14 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('notifications.title')} />
 
       <main className="py-4 sm:py-8">
         <Container size="md">
-          {/* Page Header */}
+          {/* Page Header — hidden on mobile where MobilePageHeader is shown */}
           <HStack justify="between" align="center" className="mb-4 sm:mb-6">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+              <h1 className="hidden lg:block text-xl sm:text-2xl font-bold text-foreground">
                 {t('notifications.title')}
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -263,15 +265,15 @@ export default function NotificationsPage() {
                     !notification.read && 'ring-1 ring-primary/20'
                   )}
                 >
-                  <div className="relative">
+                  <div className="relative group">
                     {renderNotificationCard(notification)}
-                    {/* Delete button */}
                     <button
                       onClick={e => {
                         e.stopPropagation();
                         handleDeleteNotification(notification.id);
                       }}
-                      className="absolute top-3 right-3 p-1.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 touch-feedback"
+                      aria-label={t('common.delete')}
+                      className="absolute top-3 right-3 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 touch-feedback"
                     >
                       <svg
                         className="w-4 h-4"

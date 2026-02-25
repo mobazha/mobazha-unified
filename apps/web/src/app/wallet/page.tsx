@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -79,6 +80,7 @@ export default function WalletPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('nav.wallet')} />
 
       <main className="py-4 sm:py-8">
         <Container size="sm">

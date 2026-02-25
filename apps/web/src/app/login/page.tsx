@@ -217,10 +217,10 @@ function LoginPageContent() {
 
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
-        <div className="w-full max-w-md px-8 py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
-            <p className="text-white/70">{t('login.subtitle')}</p>
+        <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
+            <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
             <span className="inline-block mt-2 px-3 py-1 bg-primary/20 text-[var(--hero-accent)] text-xs rounded-full">
               {t('login.standaloneMode', { defaultValue: 'Standalone Store' })}
             </span>
@@ -308,11 +308,11 @@ function LoginPageContent() {
   if (isBasic()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
-        <div className="w-full max-w-md px-8 py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+        <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
           {/* Logo & Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
-            <p className="text-white/70">{t('login.subtitle')}</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
+            <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
             <span className="inline-block mt-2 px-3 py-1 bg-success/20 text-success text-xs rounded-full">
               {t('login.vpsMode')}
             </span>
@@ -419,11 +419,11 @@ function LoginPageContent() {
   // 托管模式但没有自动跳转（可能是用户手动访问）：显示跳转按钮
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
-      <div className="w-full max-w-md px-8 py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+      <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
         {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
-          <p className="text-white/70">{t('login.subtitle')}</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
+          <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
           <span className="inline-block mt-2 px-3 py-1 bg-primary/20 text-[var(--hero-accent)] text-xs rounded-full">
             {t('login.hostedMode')}
           </span>

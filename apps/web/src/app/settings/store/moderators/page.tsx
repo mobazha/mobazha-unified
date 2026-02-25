@@ -130,7 +130,8 @@ export default function StoreModeratorsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-3 right-3 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label={t('settingsExtended.removeModerator')}
+                className="absolute top-3 right-3 text-destructive hover:text-destructive md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 onClick={e => {
                   e.stopPropagation();
                   setRemoveTarget(moderator);

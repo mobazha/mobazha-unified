@@ -398,24 +398,26 @@ function CreateListingContent() {
       <main className="min-h-screen bg-muted/30 py-6" data-testid="listing-form-new">
         <Container size="xl">
           {/* 页面头部 */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between mb-4 lg:mb-6">
+            <div className="flex items-center gap-2 lg:gap-3">
               <Link
                 href="/settings/store"
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-lg lg:text-2xl font-bold text-foreground">
                   {cloneSlug ? t('listing.cloneListing') : t('listing.createListing')}
                 </h1>
-                <p className="text-sm text-muted-foreground">{t('listing.createListingDesc')}</p>
+                <p className="text-sm text-muted-foreground hidden lg:block">
+                  {t('listing.createListingDesc')}
+                </p>
               </div>
             </div>
 
-            {/* 操作按钮 */}
-            <div className="flex items-center gap-2">
+            {/* Desktop action buttons - hidden on mobile (mobile has fixed bottom bar) */}
+            <div className="hidden lg:flex items-center gap-2">
               <Button
                 variant="outline"
                 onClick={() => router.back()}
@@ -892,7 +894,7 @@ function CreateListingContent() {
                 )}
 
               {/* 移动端底部固定操作栏 */}
-              <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-50">
+              <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] z-50">
                 <div className="flex gap-3">
                   <Button
                     variant="outline"

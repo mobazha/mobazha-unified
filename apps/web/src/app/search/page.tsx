@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo, Suspense } from 'reac
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -403,6 +404,7 @@ function SearchPageContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('nav.search')} />
 
       <main className="py-4 sm:py-8">
         <Container size="xl">

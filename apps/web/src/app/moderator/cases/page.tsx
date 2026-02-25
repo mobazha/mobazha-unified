@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Header, Footer } from '@/components';
+import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { useI18n } from '@mobazha/core';
+import { ClipboardList, ChevronRight } from 'lucide-react';
 
-// Types
 interface DisputeCase {
   caseId: string;
   orderId: string;
@@ -18,23 +19,14 @@ interface DisputeCase {
   coin: string;
   title: string;
   thumbnail: string;
-  buyer: {
-    peerID: string;
-    name: string;
-    avatar?: string;
-  };
-  seller: {
-    peerID: string;
-    name: string;
-    avatar?: string;
-  };
+  buyer: { peerID: string; name: string; avatar?: string };
+  seller: { peerID: string; name: string; avatar?: string };
   claim: string;
   buyerOpened: boolean;
   read: boolean;
   unreadMessages: number;
 }
 
-// Mock data
 const mockCases: DisputeCase[] = [
   {
     caseId: 'CASE-001',
@@ -118,22 +110,17 @@ const stateColors: Record<string, string> = {
   DECIDED: 'bg-info',
 };
 
-const stateLabels: Record<string, string> = {
-  OPEN: 'Open',
-  PENDING: 'Pending',
-  RESOLVED: 'Resolved',
-  EXPIRED: 'Expired',
-  DECIDED: 'Decided',
-};
+type FilterKey = 'all' | 'open' | 'pending' | 'resolved';
+type SortKey = 'newest' | 'oldest' | 'amount';
 
 export default function ModeratorCasesPage() {
+  const { t } = useI18n();
   const [cases, setCases] = useState<DisputeCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'open' | 'pending' | 'resolved'>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount'>('newest');
+  const [filter, setFilter] = useState<FilterKey>('all');
+  const [sortBy, setSortBy] = useState<SortKey>('newest');
 
   useEffect(() => {
-    // Simulate loading
     const loadCases = async () => {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -142,6 +129,13 @@ export default function ModeratorCasesPage() {
     };
     loadCases();
   }, []);
+
+  const stateLabel = (state: string) => {
+    const key = state.toLowerCase() as 'open' | 'pending' | 'resolved' | 'expired' | 'decided';
+    return t(`moderation.${key}`);
+  };
+
+  const filterLabel = (f: FilterKey) => t(`moderation.${f}`);
 
   const filteredCases = cases
     .filter(c => {
@@ -164,13 +158,12 @@ export default function ModeratorCasesPage() {
       }
     });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-  };
 
   const stats = {
     total: cases.length,
@@ -182,54 +175,55 @@ export default function ModeratorCasesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('moderation.title')} />
 
-      <main className="py-8">
+      <main className="py-4 md:py-8">
         <Container size="xl">
-          {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Moderation Cases</h1>
-            <p className="text-muted-foreground">
-              Review and resolve disputes between buyers and sellers
-            </p>
+          {/* Page Header - desktop only */}
+          <div className="hidden lg:block mb-8">
+            <h1 className="text-2xl font-bold text-foreground mb-1">{t('moderation.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('moderation.description')}</p>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card className="text-center">
-              <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-              <p className="text-sm text-muted-foreground">Total Cases</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-8">
+            <Card className="text-center py-3 md:py-4">
+              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {t('moderation.totalCases')}
+              </p>
             </Card>
-            <Card className="text-center">
-              <p className="text-3xl font-bold text-error">{stats.open}</p>
-              <p className="text-sm text-muted-foreground">Open</p>
+            <Card className="text-center py-3 md:py-4">
+              <p className="text-2xl md:text-3xl font-bold text-error">{stats.open}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">{t('moderation.open')}</p>
             </Card>
-            <Card className="text-center">
-              <p className="text-3xl font-bold text-warning">{stats.pending}</p>
-              <p className="text-sm text-muted-foreground">Pending</p>
+            <Card className="text-center py-3 md:py-4">
+              <p className="text-2xl md:text-3xl font-bold text-warning">{stats.pending}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">{t('moderation.pending')}</p>
             </Card>
-            <Card className="text-center">
-              <p className="text-3xl font-bold text-success">{stats.resolved}</p>
-              <p className="text-sm text-muted-foreground">Resolved</p>
+            <Card className="text-center py-3 md:py-4">
+              <p className="text-2xl md:text-3xl font-bold text-success">{stats.resolved}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">{t('moderation.resolved')}</p>
             </Card>
           </div>
 
           {/* Filters */}
-          <Card className="mb-6">
-            <HStack justify="between" className="flex-wrap gap-4">
-              <HStack gap="sm" className="flex-wrap">
+          <Card className="mb-4 md:mb-6 p-3 md:p-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 {(['all', 'open', 'pending', 'resolved'] as const).map(status => (
                   <button
                     key={status}
                     onClick={() => setFilter(status)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-h-[36px] ${
                       filter === status
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80 active:bg-muted/60'
                     }`}
                   >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {filterLabel(status)}
                     {status !== 'all' && (
-                      <span className="ml-2 text-xs opacity-75">
+                      <span className="ml-1.5 text-xs opacity-75">
                         (
                         {status === 'open'
                           ? stats.open
@@ -241,67 +235,57 @@ export default function ModeratorCasesPage() {
                     )}
                   </button>
                 ))}
-              </HStack>
+              </div>
 
               <HStack gap="sm" align="center">
-                <span className="text-sm text-muted-foreground">Sort:</span>
-                <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
-                  <SelectTrigger className="w-32">
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  {t('moderation.sort')}:
+                </span>
+                <Select value={sortBy} onValueChange={value => setSortBy(value as SortKey)}>
+                  <SelectTrigger className="w-28 h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="oldest">Oldest</SelectItem>
-                    <SelectItem value="amount">Amount</SelectItem>
+                    <SelectItem value="newest">{t('moderation.sortNewest')}</SelectItem>
+                    <SelectItem value="oldest">{t('moderation.sortOldest')}</SelectItem>
+                    <SelectItem value="amount">{t('moderation.sortAmount')}</SelectItem>
                   </SelectContent>
                 </Select>
               </HStack>
-            </HStack>
+            </div>
           </Card>
 
           {/* Cases List */}
           {isLoading ? (
             <VStack gap="md">
               {[1, 2, 3].map(i => (
-                <Card key={i} className="animate-pulse">
-                  <div className="h-24 bg-muted rounded" />
+                <Card key={i} className="animate-pulse p-4">
+                  <div className="h-20 bg-muted rounded" />
                 </Card>
               ))}
             </VStack>
           ) : filteredCases.length === 0 ? (
-            <Card className="text-center py-16">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">No cases found</h3>
-              <p className="text-muted-foreground">
-                {filter !== 'all'
-                  ? 'Try changing the filter to see more cases.'
-                  : 'You have no moderation cases at this time.'}
+            <Card className="text-center py-12 md:py-16">
+              <ClipboardList className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-base font-semibold text-foreground mb-2">
+                {t('moderation.noCasesFound')}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {filter !== 'all' ? t('moderation.noCasesFilterHint') : t('moderation.noCasesDesc')}
               </p>
             </Card>
           ) : (
-            <VStack gap="md">
+            <VStack gap="sm" className="md:gap-3">
               {filteredCases.map(caseItem => (
                 <Link key={caseItem.caseId} href={`/moderator/cases/${caseItem.orderId}`}>
                   <Card
-                    className={`transition-all hover:shadow-lg ${!caseItem.read ? 'border-l-4 border-l-primary' : ''}`}
+                    className={`p-3 md:p-4 transition-all hover:shadow-md active:bg-surface-hover ${
+                      !caseItem.read ? 'border-l-4 border-l-primary' : ''
+                    }`}
                   >
-                    <HStack gap="lg" align="start" className="flex-wrap md:flex-nowrap">
+                    <div className="flex gap-3">
                       {/* Thumbnail */}
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                      <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                         <img
                           src={caseItem.thumbnail}
                           alt={caseItem.title}
@@ -311,97 +295,87 @@ export default function ModeratorCasesPage() {
 
                       {/* Main Info */}
                       <div className="flex-1 min-w-0">
-                        <HStack justify="between" align="start" className="mb-2">
-                          <div>
-                            <HStack gap="sm" align="center" className="mb-1">
-                              <h3 className="font-semibold text-foreground truncate">
-                                Case #{caseItem.caseId}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h3 className="text-sm font-semibold text-foreground">
+                                {t('moderation.caseNumber', { id: caseItem.caseId })}
                               </h3>
                               <span
-                                className={`px-2 py-0.5 rounded text-xs font-medium text-white ${stateColors[caseItem.state]}`}
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium text-white ${stateColors[caseItem.state]}`}
                               >
-                                {stateLabels[caseItem.state]}
+                                {stateLabel(caseItem.state)}
                               </span>
                               {caseItem.unreadMessages > 0 && (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-error text-error-foreground">
-                                  {caseItem.unreadMessages} new
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-error text-error-foreground">
+                                  {t('moderation.newMessages', { count: caseItem.unreadMessages })}
                                 </span>
                               )}
-                            </HStack>
-                            <p className="text-sm text-muted-foreground line-clamp-1">
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                               {caseItem.title}
                             </p>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p className="font-bold text-foreground">
+                            <p className="text-sm font-bold text-foreground">
                               {caseItem.total} {caseItem.coin}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-[10px] text-muted-foreground">
                               {formatDate(caseItem.timestamp)}
                             </p>
                           </div>
-                        </HStack>
+                        </div>
 
-                        {/* Claim */}
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          <span className="font-medium text-muted-foreground">Claim:</span>{' '}
+                        {/* Claim - hidden on small mobile */}
+                        <p className="hidden sm:block text-xs text-muted-foreground line-clamp-1 mb-2">
+                          <span className="font-medium">{t('moderation.claim')}:</span>{' '}
                           {caseItem.claim}
                         </p>
 
                         {/* Parties */}
-                        <HStack gap="lg" className="text-sm">
-                          <HStack gap="sm" align="center">
+                        <div className="flex gap-3 md:gap-6 text-xs">
+                          <div className="flex items-center gap-1.5 min-w-0">
                             <Avatar
                               src={caseItem.buyer.avatar}
                               name={caseItem.buyer.name}
                               size="sm"
+                              className="w-5 h-5"
                             />
-                            <div>
-                              <span className="text-muted-foreground">Buyer:</span>{' '}
-                              <span className="font-medium text-foreground">
-                                {caseItem.buyer.name}
-                              </span>
+                            <span className="truncate">
+                              <span className="text-muted-foreground">
+                                {t('moderation.buyer')}:
+                              </span>{' '}
+                              <span className="font-medium">{caseItem.buyer.name}</span>
                               {caseItem.buyerOpened && (
-                                <span className="ml-1 text-xs text-error">(Opened)</span>
+                                <span className="text-error ml-0.5">{t('moderation.opened')}</span>
                               )}
-                            </div>
-                          </HStack>
-                          <HStack gap="sm" align="center">
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 min-w-0">
                             <Avatar
                               src={caseItem.seller.avatar}
                               name={caseItem.seller.name}
                               size="sm"
+                              className="w-5 h-5"
                             />
-                            <div>
-                              <span className="text-muted-foreground">Seller:</span>{' '}
-                              <span className="font-medium text-foreground">
-                                {caseItem.seller.name}
-                              </span>
+                            <span className="truncate">
+                              <span className="text-muted-foreground">
+                                {t('moderation.seller')}:
+                              </span>{' '}
+                              <span className="font-medium">{caseItem.seller.name}</span>
                               {!caseItem.buyerOpened && (
-                                <span className="ml-1 text-xs text-error">(Opened)</span>
+                                <span className="text-error ml-0.5">{t('moderation.opened')}</span>
                               )}
-                            </div>
-                          </HStack>
-                        </HStack>
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Action Arrow */}
-                      <div className="flex-shrink-0 hidden md:block">
-                        <svg
-                          className="w-6 h-6 text-muted-foreground"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                      {/* Arrow - desktop only */}
+                      <div className="flex-shrink-0 hidden md:flex items-center">
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
                       </div>
-                    </HStack>
+                    </div>
                   </Card>
                 </Link>
               ))}
