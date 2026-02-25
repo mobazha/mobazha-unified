@@ -35,8 +35,14 @@ function AuthProviderLoading() {
 
 const inter = Inter({ subsets: ['latin'] });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
+
 export const metadata: Metadata = {
-  title: 'Mobazha - Decentralized Marketplace',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Mobazha - Decentralized Marketplace',
+    template: '%s | Mobazha',
+  },
   description: 'Shop and grow with cryptos - A decentralized peer-to-peer marketplace',
   manifest: '/manifest.json',
   icons: {
@@ -45,6 +51,19 @@ export const metadata: Metadata = {
       { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Mobazha',
+    title: 'Mobazha - Decentralized Marketplace',
+    description: 'Shop and grow with cryptos - A decentralized peer-to-peer marketplace',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Mobazha' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mobazha - Decentralized Marketplace',
+    description: 'Shop and grow with cryptos - A decentralized peer-to-peer marketplace',
+    images: ['/og-default.png'],
   },
   appleWebApp: {
     capable: true,

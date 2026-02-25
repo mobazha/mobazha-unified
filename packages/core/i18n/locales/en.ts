@@ -104,6 +104,23 @@ export const en: TranslationResource = {
     selected: 'selected',
   },
 
+  share: {
+    copyLink: 'Copy Link',
+    linkCopied: 'Link copied!',
+    shareToTwitter: 'Share to Twitter/X',
+    shareToTelegram: 'Share to Telegram',
+    shareProduct: 'Share product',
+  },
+
+  review: {
+    summary: 'Rating summary',
+    noReviews: 'No reviews yet',
+    anonymous: 'Anonymous Buyer',
+    averageRating: 'Average rating',
+    outOf5: 'out of 5',
+    basedOn: 'Based on {{count}} reviews',
+  },
+
   validation: {
     required: 'This field is required',
     titleRequired: 'Title is required',
@@ -697,6 +714,7 @@ export const en: TranslationResource = {
       zeroAddressError:
         'This order has incomplete payment configuration (zero address). The vendor may need to update their payment settings and re-ship the order.',
       reviewComingSoon: 'Review feature is coming soon.',
+      reviewSubmitted: 'Your review has been submitted. Thank you!',
       error: 'Error',
       // ActionSheet & Copy actions
       orderIdUnavailable: 'Order ID unavailable',
@@ -769,6 +787,18 @@ export const en: TranslationResource = {
         description:
           'Are you sure you want to confirm receipt of this order? This will release the funds to the seller and mark the order as complete.',
       },
+    },
+    // Write review
+    review: {
+      title: 'Leave a Review',
+      rateExperience: 'How was your experience?',
+      reviewLabel: 'Write a review (optional)',
+      reviewPlaceholder: 'Share your experience with this product...',
+      anonymous: 'Post anonymously',
+      submit: 'Submit Review',
+      skip: 'Skip for Now',
+      confirmTitle: 'Confirm Receipt & Review',
+      confirmDesc: 'Would you like to leave a review before completing this order?',
     },
     // Accept modal
     accept: {
@@ -1350,7 +1380,9 @@ export const en: TranslationResource = {
   errors: {
     generic: 'Something went wrong',
     network: 'Network error. Please check your connection.',
-    notFound: 'Not found',
+    notFound: 'Page Not Found',
+    notFoundDesc:
+      "The page you're looking for doesn't exist or has been moved. Try searching or go back to the homepage.",
     unauthorized: 'Please log in to continue',
     forbidden: 'Access denied',
     serverError: 'Server error. Please try again later.',
@@ -1403,6 +1435,94 @@ export const en: TranslationResource = {
     careers: 'Careers',
     contact: 'Contact',
     allRightsReserved: 'All rights reserved.',
+  },
+
+  policies: {
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    shipping: 'Shipping Policy',
+    returns: 'Returns & Refunds',
+    shippingTitle: 'Shipping Policy',
+    shippingIntro: 'This page describes the shipping policies for this store.',
+    shippingProcessing: 'Processing Time',
+    shippingProcessingDesc:
+      'Orders are typically processed within 1-3 business days after payment confirmation on the blockchain.',
+    shippingMethods: 'Shipping Methods',
+    shippingMethodsDesc:
+      'Available shipping methods and estimated delivery times are displayed on each product listing and at checkout.',
+    shippingTracking: 'Order Tracking',
+    shippingTrackingDesc:
+      'Once your order is shipped, you will receive a tracking number via the order messaging system.',
+    shippingInternational: 'International Shipping',
+    shippingInternationalDesc:
+      "International orders may be subject to customs duties and import taxes. These charges are the buyer's responsibility.",
+    returnsTitle: 'Returns & Refund Policy',
+    returnsIntro: 'We want you to be completely satisfied with your purchase.',
+    returnsEligibility: 'Return Eligibility',
+    returnsEligibilityDesc:
+      'Items may be returned within the timeframe specified in the product listing. The item must be in its original condition.',
+    returnsProcess: 'Return Process',
+    returnsProcessDesc:
+      'To initiate a return, contact the seller through the order messaging system. The seller will provide return instructions.',
+    returnsRefunds: 'Refunds',
+    returnsRefundsDesc:
+      'Refunds are processed through the escrow system. Once the return is confirmed, funds are released back to the buyer.',
+    returnsDisputes: 'Disputes',
+    returnsDisputesDesc:
+      'If you and the seller cannot reach an agreement, you can open a dispute. A moderator will review the case and make a decision.',
+    privacyTitle: 'Privacy Policy',
+    privacyIntro:
+      'Your privacy is important to us. This policy explains how we handle your information.',
+    privacyCollection: 'Information We Collect',
+    privacyCollectionDesc:
+      'Mobazha is a decentralized platform. We minimize data collection by design. Transaction data is stored on the blockchain and IPFS network.',
+    privacyUsage: 'How We Use Information',
+    privacyUsageDesc:
+      'Information is used solely for order fulfillment, communication between buyers and sellers, and platform functionality.',
+    privacySharing: 'Information Sharing',
+    privacySharingDesc:
+      'We do not sell or share your personal information with third parties. Transaction data on the blockchain is publicly visible by nature.',
+    privacySecurity: 'Data Security',
+    privacySecurityDesc:
+      'We use encryption and secure protocols to protect your data. Your private keys are stored locally and never transmitted to our servers.',
+    termsTitle: 'Terms of Service',
+    termsIntro: 'By using Mobazha, you agree to these terms.',
+    termsUse: 'Acceptable Use',
+    termsUseDesc:
+      'You agree to use Mobazha in compliance with all applicable laws. Prohibited items and activities are not allowed on the platform.',
+    termsEscrow: 'Escrow & Payments',
+    termsEscrowDesc:
+      'All cryptocurrency payments are processed through smart contract escrow. Funds are held securely until the buyer confirms receipt or a dispute is resolved.',
+    termsDisputes: 'Dispute Resolution',
+    termsDisputesDesc:
+      'Disputes are resolved by community moderators. Their decisions are final and binding within the escrow system.',
+    termsLiability: 'Limitation of Liability',
+    termsLiabilityDesc:
+      'Mobazha is a decentralized platform and does not control transactions between buyers and sellers. Use the platform at your own risk.',
+    lastUpdated: 'Last updated',
+    backToStore: 'Back to Store',
+  },
+
+  trust: {
+    buyerProtection: 'Buyer Protection',
+    buyerProtectionDesc: 'Your payment is protected until you confirm receipt',
+    escrowProtected: 'Payment Protected',
+    escrowDesc: 'Your funds are held securely until you confirm delivery',
+    disputeResolution: 'Dispute Resolution',
+    disputeDesc: 'Independent moderators available if issues arise',
+    cryptoPayment: 'Secure Payment',
+    cryptoPaymentDesc: 'Encrypted and verified transactions',
+    sellerRating: 'Seller rating',
+    reviews: '{{count}} reviews',
+    sales: '{{count}} sales',
+    memberSince: 'Member since',
+    escrow: {
+      paid: 'Paid',
+      confirmed: 'Confirmed',
+      shipped: 'Shipped',
+      delivered: 'Delivered',
+      released: 'Released',
+    },
   },
 
   marketplace: {

@@ -78,103 +78,165 @@ export const Footer: React.FC = () => {
       { label: 'GitHub', href: 'https://github.com/mobazha', external: true },
     ],
     legal: [
-      { label: t('settings.privacyPolicy'), href: '/settings/privacy' },
-      { label: t('settings.termsOfService'), href: '/settings' },
+      { label: t('policies.privacyPolicy'), href: '/policies/privacy' },
+      { label: t('policies.termsOfService'), href: '/policies/terms' },
     ],
   };
 
   return (
-    <footer className="hidden md:block bg-muted border-t border-border pt-16 pb-8">
-      <Container size="xl">
-        {/* Main Footer Content */}
-        <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
-          {/* Brand */}
-          <div className="col-span-2 sm:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-3">
-              <MobazhaLogo size={36} className="text-primary" />
-              <span className="font-bold text-xl text-foreground">Mobazha</span>
+    <footer className="bg-muted border-t border-border">
+      {/* Mobile Footer — compact */}
+      <div className="md:hidden px-4 py-6">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <MobazhaLogo size={24} className="text-primary" />
+          <span className="font-semibold text-sm text-foreground">Mobazha</span>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4">
+          {footerLinks.legal.map(link => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              {link.label}
             </Link>
-            <p className="text-sm text-muted-foreground mb-1 italic">{t('footer.slogan')}</p>
-            <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
-            <HStack gap="sm">
-              {socialLinks.map(social => (
+          ))}
+          <Link
+            href="/policies/shipping"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            {t('policies.shipping')}
+          </Link>
+          <Link
+            href="/policies/returns"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            {t('policies.returns')}
+          </Link>
+        </div>
+        <HStack gap="sm" className="justify-center mb-3">
+          {socialLinks.map(social => (
+            <a
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-background transition-colors text-muted-foreground hover:text-primary"
+              aria-label={social.label}
+            >
+              {social.icon}
+            </a>
+          ))}
+        </HStack>
+        <p className="text-xs text-muted-foreground text-center">
+          © {new Date().getFullYear()} Mobazha
+        </p>
+      </div>
+
+      {/* Desktop Footer — full */}
+      <div className="hidden md:block pt-16 pb-8">
+        <Container size="xl">
+          <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
+            {/* Brand */}
+            <div className="col-span-2 sm:col-span-1">
+              <Link href="/" className="flex items-center gap-2 mb-3">
+                <MobazhaLogo size={36} className="text-primary" />
+                <span className="font-bold text-xl text-foreground">Mobazha</span>
+              </Link>
+              <p className="text-sm text-muted-foreground mb-1 italic">{t('footer.slogan')}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
+              <HStack gap="sm">
+                {socialLinks.map(social => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg hover:bg-background transition-colors text-muted-foreground hover:text-primary"
+                    aria-label={social.label}
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </HStack>
+            </div>
+
+            {/* Links */}
+            <VStack gap="sm" align="start">
+              <h4 className="font-semibold text-foreground mb-2">{t('footer.marketplace')}</h4>
+              {footerLinks.marketplace.map(link => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </VStack>
+
+            <VStack gap="sm" align="start">
+              <h4 className="font-semibold text-foreground mb-2">{t('footer.resources')}</h4>
+              {footerLinks.resources.map(link => (
                 <a
-                  key={social.label}
-                  href={social.href}
+                  key={link.label}
+                  href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg hover:bg-background transition-colors text-muted-foreground hover:text-primary"
-                  aria-label={social.label}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {social.icon}
+                  {link.label}
                 </a>
               ))}
+            </VStack>
+
+            <VStack gap="sm" align="start">
+              <h4 className="font-semibold text-foreground mb-2">{t('footer.community')}</h4>
+              {footerLinks.community.map(link => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </VStack>
+          </Grid>
+
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Mobazha. {t('footer.allRightsReserved')}
+            </p>
+            <HStack gap="md">
+              {footerLinks.legal.map(link => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                href="/policies/shipping"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {t('policies.shipping')}
+              </Link>
+              <Link
+                href="/policies/returns"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {t('policies.returns')}
+              </Link>
             </HStack>
           </div>
-
-          {/* Links */}
-          <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-foreground mb-2">{t('footer.marketplace')}</h4>
-            {footerLinks.marketplace.map(link => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </VStack>
-
-          <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-foreground mb-2">{t('footer.resources')}</h4>
-            {footerLinks.resources.map(link => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
-          </VStack>
-
-          <VStack gap="sm" align="start">
-            <h4 className="font-semibold text-foreground mb-2">{t('footer.community')}</h4>
-            {footerLinks.community.map(link => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
-          </VStack>
-        </Grid>
-
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Mobazha. {t('footer.allRightsReserved')}
-          </p>
-          <HStack gap="md">
-            {footerLinks.legal.map(link => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </HStack>
-        </div>
-      </Container>
+        </Container>
+      </div>
     </footer>
   );
 };

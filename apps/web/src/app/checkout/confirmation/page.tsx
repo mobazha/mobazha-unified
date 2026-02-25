@@ -35,9 +35,9 @@ function ConfirmationContent() {
             <CardContent className="p-6 sm:p-8">
               <VStack gap="lg" align="center" className="text-center">
                 {/* Success icon */}
-                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-emerald-600 dark:text-emerald-400"
+                    className="w-8 h-8 text-success"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

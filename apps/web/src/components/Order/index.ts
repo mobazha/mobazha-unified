@@ -97,6 +97,9 @@ export type { FulfillOrderDialogProps } from './FulfillOrderDialog';
 export { OrderConfirmDialog } from './OrderConfirmDialog';
 export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDialog';
 
+// Review
+export { WriteReviewDialog } from './WriteReviewDialog';
+
 // Selectors
 export { ReceivingAccountSelector } from './ReceivingAccountSelector';
 export type { ReceivingAccountSelectorProps } from './ReceivingAccountSelector';

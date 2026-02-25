@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, useCartStore } from '@mobazha/core';
+import { useI18n, useCartStore, useChatStore } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 
 export interface ProductBottomBarProps {
@@ -37,6 +37,7 @@ export function ProductBottomBar({
 
   const addCartItem = useCartStore(state => state.addItem);
   const cartItemCount = useCartStore(state => state.getItemCount());
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
@@ -81,12 +82,9 @@ export function ProductBottomBar({
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [product, quantity, router]);
 
-  // 跳转到消息
   const handleMessage = useCallback(() => {
-    if (product?.vendorID?.peerID) {
-      router.push(`/chat/${product.vendorID.peerID}`);
-    }
-  }, [product, router]);
+    openChatDrawer();
+  }, [openChatDrawer]);
 
   // 跳转到购物车
   const handleGoToCart = useCallback(() => {

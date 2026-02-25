@@ -49,12 +49,18 @@ export function TransactionOverlay({
   if (step === 'idle') return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card shadow-xl p-6 sm:p-8">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+      data-testid="transaction-overlay"
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl border border-border bg-card shadow-xl p-6 sm:p-8"
+        data-testid={`tx-step-${step}`}
+      >
         {step === 'confirming' && (
           <VStack gap="md" align="center" className="text-center">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <Loader2 className="w-8 h-8 text-primary animate-spin motion-reduce:animate-none" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
@@ -71,7 +77,7 @@ export function TransactionOverlay({
           <VStack gap="md" align="center" className="text-center">
             <div className="relative w-16 h-16">
               <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin motion-reduce:animate-none" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24">
                   <path
@@ -108,7 +114,7 @@ export function TransactionOverlay({
         {step === 'completing' && (
           <VStack gap="md" align="center" className="text-center">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <Loader2 className="w-8 h-8 text-primary animate-spin motion-reduce:animate-none" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">{t('payment.completing')}</h2>
@@ -119,8 +125,8 @@ export function TransactionOverlay({
 
         {step === 'success' && (
           <VStack gap="md" align="center" className="text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-success" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">{t('payment.success')}</h2>
