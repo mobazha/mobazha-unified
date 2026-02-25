@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container } from '@/components/layouts';
 import { ProductDetail, ProductBottomBar } from '@/components/Product';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useUserStore } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 
 // 获取库存数量（从 SKU 计算）
@@ -26,12 +26,17 @@ export default function ProductPage() {
   const slug = params.slug as string;
   const peerID = searchParams.get('peerID') || undefined;
 
-  // 状态管理 - 用于底部操作栏
-  // 商品数据由 ProductDetail 组件加载后通过回调传递
+  const { isAuthenticated, profile: currentUserProfile } = useUserStore();
+
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, _setQuantity] = useState(1);
   const [isWishlist, setIsWishlist] = useState(false);
   void _setQuantity; // Reserved for future use - quantity control in bottom bar
+
+  const isOwnProduct =
+    isAuthenticated &&
+    !!product?.vendorID?.peerID &&
+    currentUserProfile?.peerID === product.vendorID.peerID;
 
   // 计算库存
   const stock = useMemo(() => {
@@ -87,6 +92,7 @@ export default function ProductPage() {
         product={product}
         quantity={quantity}
         stock={stock}
+        isOwnProduct={isOwnProduct}
         isWishlist={isWishlist}
         onToggleWishlist={handleToggleWishlist}
       />

@@ -16,6 +16,7 @@ import {
   getImageUrl,
   useI18n,
   useCurrency,
+  useUserStore,
   universalSwapService,
   decodeHtmlEntities,
   sanitizeHtml,
@@ -145,6 +146,13 @@ export function ProductDetail({
     status?: string;
   } | null>(null);
   void _isWishlist; // Reserved for future wishlist feature
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const { isAuthenticated, profile: currentUserProfile } = useUserStore();
+  const isOwnProduct =
+    isAuthenticated &&
+    !!product?.vendorID?.peerID &&
+    currentUserProfile?.peerID === product.vendorID.peerID;
 
   // 存储回调函数的 ref，避免在依赖数组中引用
   const onProductLoadedRef = useRef(onProductLoaded);
@@ -407,6 +415,25 @@ export function ProductDetail({
 
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [product, quantity, isModal, onClose, router]);
+
+  const handleCopyLink = useCallback(async () => {
+    if (!product) return;
+    const url = `${window.location.origin}/product/${product.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }, [product]);
 
   // 切换收藏 (reserved for future use)
   const _handleToggleWishlist = useCallback(() => {
@@ -823,169 +850,246 @@ export function ProductDetail({
             {/* Verified Moderator Badge */}
             <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
 
-            {/* Quantity & Add to Cart - 桌面端显示 */}
-            <Card
-              className={cn(
-                'space-y-3 p-4 hidden lg:block',
-                stock === 0 && 'border-destructive/30 bg-destructive/5'
-              )}
-            >
-              {/* 缺货提示 - 醒目显示 */}
-              {stock === 0 && (
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <svg
-                    className="w-4 h-4 text-destructive flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            {/* Desktop action card: seller actions vs buyer purchase */}
+            {isOwnProduct ? (
+              <Card
+                className="space-y-3 p-4 hidden lg:block"
+                data-testid="product-detail-seller-actions"
+              >
+                <VStack gap="xs">
+                  <Button
+                    size="default"
+                    className="w-full touch-feedback"
+                    onClick={() => {
+                      if (isModal && onClose) onClose();
+                      router.push(`/listing/edit/${product.slug}`);
+                    }}
+                    data-testid="product-detail-edit"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    {t('product.editProduct')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="w-full touch-feedback"
+                    onClick={handleCopyLink}
+                    data-testid="product-detail-share"
+                  >
+                    {linkCopied ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        {t('product.linkCopied')}
+                      </span>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                          />
+                        </svg>
+                        {t('product.shareLink')}
+                      </>
+                    )}
+                  </Button>
+                </VStack>
+                <p className="text-xs text-center text-muted-foreground pt-1">
+                  {t('product.sellerViewHint')}
+                </p>
+              </Card>
+            ) : (
+              <Card
+                className={cn(
+                  'space-y-3 p-4 hidden lg:block',
+                  stock === 0 && 'border-destructive/30 bg-destructive/5'
+                )}
+              >
+                {stock === 0 && (
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <svg
+                      className="w-4 h-4 text-destructive flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-destructive">
+                      {t('product.outOfStock')}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {t('product.quantity')}
+                  </span>
+                  <HStack gap="sm" align="center">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={stock === 0}
+                      aria-label="Decrease quantity"
+                      data-testid="product-detail-qty-decrease"
+                      className={cn(
+                        'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                        stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                      )}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={stock}
+                      value={quantity}
+                      disabled={stock === 0}
+                      aria-label="Quantity"
+                      data-testid="product-detail-qty-input"
+                      onChange={e => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val) && val >= 1) {
+                          setQuantity(Math.min(stock, val));
+                        }
+                      }}
+                      onKeyDown={e => {
+                        if (stock === 0) return;
+                        if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setQuantity(prev => Math.min(stock, prev + 1));
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setQuantity(prev => Math.max(1, prev - 1));
+                        }
+                      }}
+                      className={cn(
+                        'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+                        stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
+                      )}
                     />
-                  </svg>
-                  <span className="text-sm font-medium text-destructive">
-                    {t('product.outOfStock')}
-                  </span>
+                    <button
+                      onClick={() => setQuantity(Math.min(stock, quantity + 1))}
+                      disabled={stock === 0}
+                      aria-label="Increase quantity"
+                      data-testid="product-detail-qty-increase"
+                      className={cn(
+                        'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                        stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                      )}
+                    >
+                      +
+                    </button>
+                  </HStack>
                 </div>
-              )}
 
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {t('product.quantity')}
-                </span>
-                <HStack gap="sm" align="center">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={stock === 0}
-                    aria-label="Decrease quantity"
-                    data-testid="product-detail-qty-decrease"
-                    className={cn(
-                      'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                      stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
-                    )}
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max={stock}
-                    value={quantity}
-                    disabled={stock === 0}
-                    aria-label="Quantity"
-                    data-testid="product-detail-qty-input"
-                    onChange={e => {
-                      const val = parseInt(e.target.value, 10);
-                      if (!isNaN(val) && val >= 1) {
-                        setQuantity(Math.min(stock, val));
-                      }
-                    }}
-                    onKeyDown={e => {
-                      if (stock === 0) return;
-                      if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        setQuantity(prev => Math.min(stock, prev + 1));
-                      } else if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setQuantity(prev => Math.max(1, prev - 1));
-                      }
-                    }}
-                    className={cn(
-                      'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-                      stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
-                    )}
-                  />
-                  <button
-                    onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                    disabled={stock === 0}
-                    aria-label="Increase quantity"
-                    data-testid="product-detail-qty-increase"
-                    className={cn(
-                      'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                      stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
-                    )}
-                  >
-                    +
-                  </button>
-                </HStack>
-              </div>
-
-              {/* 库存数量 - 仅在有库存时显示 */}
-              {stock > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {stock} {t('product.inStock')}
-                </span>
-              )}
-
-              <VStack gap="xs">
-                <Button
-                  size="default"
-                  className={cn(
-                    'w-full touch-feedback',
-                    stock === 0 && 'opacity-50 cursor-not-allowed'
-                  )}
-                  onClick={handleAddToCart}
-                  disabled={addingToCart || stock === 0}
-                  data-testid="product-detail-add-to-cart"
-                >
-                  {addingToCart ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      {t('common.loading')}
-                    </span>
-                  ) : cartSuccess ? (
-                    <span className="flex items-center gap-2">
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      {t('product.addedToCart')}
-                    </span>
-                  ) : stock === 0 ? (
-                    t('product.outOfStock')
-                  ) : (
-                    t('product.addToCart')
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className={cn(
-                    'w-full touch-feedback',
-                    stock === 0 && 'opacity-50 cursor-not-allowed'
-                  )}
-                  onClick={handleBuyNow}
-                  disabled={stock === 0}
-                  data-testid="product-detail-buy-now"
-                >
-                  {t('product.buyNow')}
-                </Button>
-              </VStack>
-
-              {/* Accepted Currencies */}
-              {acceptedCurrencies.length > 0 && (
-                <div className="pt-3 border-t border-border">
+                {stock > 0 && (
                   <span className="text-xs text-muted-foreground">
-                    {t('product.acceptedCurrencies')}:{' '}
+                    {stock} {t('product.inStock')}
                   </span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {acceptedCurrencies.join(', ')}
-                  </span>
-                </div>
-              )}
-            </Card>
+                )}
+
+                <VStack gap="xs">
+                  <Button
+                    size="default"
+                    className={cn(
+                      'w-full touch-feedback',
+                      stock === 0 && 'opacity-50 cursor-not-allowed'
+                    )}
+                    onClick={handleAddToCart}
+                    disabled={addingToCart || stock === 0}
+                    data-testid="product-detail-add-to-cart"
+                  >
+                    {addingToCart ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        {t('common.loading')}
+                      </span>
+                    ) : cartSuccess ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        {t('product.addedToCart')}
+                      </span>
+                    ) : stock === 0 ? (
+                      t('product.outOfStock')
+                    ) : (
+                      t('product.addToCart')
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className={cn(
+                      'w-full touch-feedback',
+                      stock === 0 && 'opacity-50 cursor-not-allowed'
+                    )}
+                    onClick={handleBuyNow}
+                    disabled={stock === 0}
+                    data-testid="product-detail-buy-now"
+                  >
+                    {t('product.buyNow')}
+                  </Button>
+                </VStack>
+
+                {acceptedCurrencies.length > 0 && (
+                  <div className="pt-3 border-t border-border">
+                    <span className="text-xs text-muted-foreground">
+                      {t('product.acceptedCurrencies')}:{' '}
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {acceptedCurrencies.join(', ')}
+                    </span>
+                  </div>
+                )}
+              </Card>
+            )}
 
             {/* Vendor Info - 非弹框模式显示（弹框模式已在顶部显示） */}
             {!isModal && (

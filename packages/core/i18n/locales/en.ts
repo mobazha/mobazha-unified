@@ -243,6 +243,10 @@ export const en: TranslationResource = {
     notFound: 'Product not found',
     viewStore: 'View Store',
     goToStore: 'Go to Store',
+    editProduct: 'Edit Product',
+    shareLink: 'Share Link',
+    linkCopied: 'Product link copied to clipboard',
+    sellerViewHint: 'This is how buyers see your product',
     viewPhotos: 'View {{count}} Photo(s)',
     details: 'Product Details',
     acceptedCurrencies: 'Accepted',
@@ -2301,6 +2305,7 @@ export const en: TranslationResource = {
     edit: 'Edit listing',
     clone: 'Clone listing',
     deleteListing: 'Delete listing',
+    previewProduct: 'Preview',
 
     // Product Types
     productType: 'Product Type',
