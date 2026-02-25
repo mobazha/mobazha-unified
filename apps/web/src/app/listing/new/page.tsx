@@ -320,7 +320,7 @@ function CreateListingContent() {
           title: t('common.success'),
           description: t('listing.createSuccess'),
         });
-        router.push(`/product/${result.slug}`);
+        router.push(`/listing/edit/${result.slug}`);
       }
     },
     [validate, submit, toast, t, router]

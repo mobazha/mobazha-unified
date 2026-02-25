@@ -254,7 +254,8 @@ export async function getListing(slug: string, peerID?: string): Promise<Product
     : `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true&${timestamp}`;
 
   try {
-    return await publicGet<Product>(path);
+    const data = await publicGet<{ listing?: Product } & Product>(path);
+    return data.listing ?? data;
   } catch {
     return null;
   }

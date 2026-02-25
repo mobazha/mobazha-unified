@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Truck,
   Download,
+  Eye,
 } from 'lucide-react';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
@@ -407,6 +408,15 @@ export default function EditListingPage() {
 
             {/* 操作按钮 */}
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => window.open(`/product/${slug}`, '_blank')}
+                disabled={isSubmitting}
+                data-testid="listing-form-preview"
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                {t('listing.previewProduct')}
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteDialog(true)}

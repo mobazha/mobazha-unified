@@ -28,11 +28,12 @@ export function convertProductToFormData(
   options?: { isClone?: boolean }
 ): Partial<ListingFormData> {
   const item = product.item;
+  if (!item) return {};
   const metadata = product.metadata;
 
   // 获取 acceptedCurrencies，兼容 string[] 和 { code: string }[] 两种格式
   const acceptedCurrencies =
-    metadata.acceptedCurrencies?.map((c: string | { code: string }) =>
+    metadata?.acceptedCurrencies?.map((c: string | { code: string }) =>
       typeof c === 'string' ? c : c.code
     ) || [];
 
@@ -42,9 +43,9 @@ export function convertProductToFormData(
     description: item.description || '',
     price: item.price?.toString() || '',
     compareAtPrice: item.regularPrice || '',
-    pricingCurrency: metadata.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
+    pricingCurrency: metadata?.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
     status: product.status || 'published',
-    contractType: metadata.contractType as ContractType,
+    contractType: metadata?.contractType as ContractType,
     condition: (item.condition as ProductCondition) || 'NEW',
     grams: item.grams || 0,
     weightUnit: (item.weightUnit as WeightUnit) || 'g',

@@ -14,6 +14,8 @@ export interface ProductBottomBarProps {
   quantity: number;
   /** 库存数量 */
   stock: number;
+  /** 是否是卖家自己的商品 */
+  isOwnProduct?: boolean;
   /** 是否已收藏 */
   isWishlist?: boolean;
   /** 切换收藏回调 */
@@ -26,6 +28,7 @@ export function ProductBottomBar({
   product,
   quantity,
   stock,
+  isOwnProduct = false,
   isWishlist = false,
   onToggleWishlist,
   cartItemCount = 0,
@@ -34,6 +37,7 @@ export function ProductBottomBar({
   const router = useRouter();
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // 添加到购物车
   const handleAddToCart = useCallback(async () => {
@@ -84,7 +88,50 @@ export function ProductBottomBar({
     router.push('/cart');
   }, [router]);
 
+  const handleCopyLink = useCallback(async () => {
+    if (!product) return;
+    const url = `${window.location.origin}/product/${product.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }, [product]);
+
   if (!product) return null;
+
+  if (isOwnProduct) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-3 py-2.5 z-50 lg:hidden pb-safe">
+        <HStack gap="sm" align="center">
+          <Button
+            size="sm"
+            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback"
+            onClick={() => router.push(`/listing/edit/${product.slug}`)}
+          >
+            {t('product.editProduct')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback"
+            onClick={handleCopyLink}
+          >
+            {linkCopied ? t('product.linkCopied') : t('product.shareLink')}
+          </Button>
+        </HStack>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-3 py-2.5 z-50 lg:hidden pb-safe">
@@ -133,7 +180,6 @@ export function ProductBottomBar({
               />
             </svg>
             <span className="text-[9px] text-muted-foreground leading-tight">{t('nav.cart')}</span>
-            {/* 购物车徽章 */}
             {cartItemCount > 0 && (
               <span className="absolute top-0 right-0.5 min-w-[16px] h-[16px] bg-destructive text-white text-[9px] font-medium rounded-full flex items-center justify-center px-0.5">
                 {cartItemCount > 99 ? '99+' : cartItemCount}
@@ -167,7 +213,6 @@ export function ProductBottomBar({
 
         {/* 右侧操作按钮组 */}
         <HStack gap="sm" className="flex-1">
-          {/* 添加到购物车按钮 */}
           <Button
             variant="outline"
             size="sm"
@@ -191,7 +236,6 @@ export function ProductBottomBar({
             )}
           </Button>
 
-          {/* 立即购买按钮 */}
           <Button
             size="sm"
             className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback"
