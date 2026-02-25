@@ -20,8 +20,10 @@ import {
   universalSwapService,
   decodeHtmlEntities,
   sanitizeHtml,
+  useChatStore,
+  productsApi,
 } from '@mobazha/core';
-import type { Product, ProductRating, UserProfile } from '@mobazha/core';
+import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
 import {
   getProductWithDedup,
@@ -29,9 +31,12 @@ import {
   getRatingsWithDedup,
 } from '@/utils/requestDedup';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
+import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
+import { ShareButton } from '@/components/Share';
+import { ReviewList } from '@/components/Review';
 
 // 星星评分组件
 function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {
@@ -126,13 +131,15 @@ export function ProductDetail({
   const { t } = useI18n();
   const router = useRouter();
   const { formatPrice, renderPairedPrice } = useCurrency();
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 状态管理
   const [product, setProduct] = useState<Product | null>(null);
   const [vendor, setVendor] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<ProductRating[]>([]);
+  const [ratingIndex, setRatingIndex] = useState<RatingIndex | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [ratingsLoading, setRatingsLoading] = useState(true); // 评论独立加载状态
+  const [ratingsLoading, setRatingsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -320,10 +327,20 @@ export function ProductDetail({
           productDataService.getProductRatings(slug, vendorPeerID)
         );
 
-        if (!isCancelled && Array.isArray(ratingsData)) {
-          // 标记评论数据已加载
+        if (!isCancelled) {
           loadedRatingsRef.current = ratingsKey;
-          setRatings(ratingsData as ProductRating[]);
+          if (Array.isArray(ratingsData)) {
+            setRatings(ratingsData as ProductRating[]);
+          } else if (ratingsData && typeof ratingsData === 'object' && 'count' in ratingsData) {
+            const idx = ratingsData as RatingIndex;
+            setRatingIndex(idx);
+            if (idx.ratings && idx.ratings.length > 0) {
+              const details = await productsApi.fetchRatings(idx.ratings);
+              if (!isCancelled) {
+                setRatings(details as ProductRating[]);
+              }
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to fetch ratings:', err);
@@ -360,17 +377,17 @@ export function ProductDetail({
     return { price, currency, formattedPrice, pairedPrice };
   }, [product, formatPrice, renderPairedPrice]);
 
-  // 确保 ratings 是数组
   const safeRatings = useMemo(() => {
     return Array.isArray(ratings) ? ratings : [];
   }, [ratings]);
 
-  // 计算平均评分
+  const ratingCount = ratingIndex?.count ?? safeRatings.length;
   const averageRating = useMemo(() => {
+    if (ratingIndex) return ratingIndex.average;
     if (safeRatings.length === 0) return 0;
     const sum = safeRatings.reduce((acc, r) => acc + (r.overall || 0), 0);
     return sum / safeRatings.length;
-  }, [safeRatings]);
+  }, [ratingIndex, safeRatings]);
 
   const addCartItem = useCartStore(state => state.addItem);
 
@@ -448,14 +465,13 @@ export function ProductDetail({
     // TODO: 实际的收藏 API 调用
   }, []);
 
-  // 跳转到消息 (reserved for future use)
   const _handleMessage = useCallback(() => {
     if (onMessage) {
       onMessage();
-    } else if (vendor?.peerID) {
-      router.push(`/chat/${vendor.peerID}`);
+    } else {
+      openChatDrawer();
     }
-  }, [onMessage, vendor, router]);
+  }, [onMessage, openChatDrawer]);
 
   // 跳转到购物车 (reserved for future use)
   const _handleGoToCart = useCallback(() => {
@@ -562,7 +578,7 @@ export function ProductDetail({
                 variant="outline"
                 size="sm"
                 className="h-8 px-3 text-xs"
-                onClick={() => router.push(`/chat/${vendorPeerID}`)}
+                onClick={() => openChatDrawer()}
               >
                 {t('profile.message')}
               </Button>
@@ -694,18 +710,27 @@ export function ProductDetail({
           <div className={cn('space-y-3', isModal ? 'space-y-2.5' : 'sm:space-y-4')}>
             {/* Title & Rating */}
             <div>
-              <h1
-                className={cn(
-                  'font-bold text-foreground leading-tight',
-                  isModal ? 'text-base lg:text-lg mb-1' : 'text-lg sm:text-xl lg:text-2xl mb-1.5'
+              <HStack justify="between" align="start">
+                <h1
+                  className={cn(
+                    'font-bold text-foreground leading-tight flex-1',
+                    isModal ? 'text-base lg:text-lg mb-1' : 'text-lg sm:text-xl lg:text-2xl mb-1.5'
+                  )}
+                >
+                  {decodeHtmlEntities(product.item.title)}
+                </h1>
+                {!isModal && (
+                  <ShareButton
+                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                    title={product.item.title}
+                    description={product.item.description?.substring(0, 100)}
+                  />
                 )}
-              >
-                {decodeHtmlEntities(product.item.title)}
-              </h1>
+              </HStack>
               <HStack gap="sm" align="center">
                 <StarRating rating={averageRating} size={isModal ? 'sm' : 'md'} />
                 <span className={cn('text-muted-foreground ml-1', isModal ? 'text-xs' : 'text-sm')}>
-                  {averageRating.toFixed(1)} ({safeRatings.length} {t('product.reviews')})
+                  {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
                 </span>
               </HStack>
             </div>
@@ -856,6 +881,9 @@ export function ProductDetail({
 
             {/* Verified Moderator Badge */}
             <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
+
+            {/* Buyer Protection */}
+            {!isOwnProduct && <BuyerProtectionBanner />}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (
@@ -1249,24 +1277,20 @@ export function ProductDetail({
             )}
           </div>
 
-          {/* Reviews Summary - 非弹框模式或单独展示 */}
+          {/* Reviews - 非弹框模式 */}
           {!isModal && (
             <div>
               <Card className="p-3 sm:p-4">
                 <h2 className="text-sm sm:text-base font-bold text-foreground mb-2 sm:mb-3">
                   {t('product.reviewsTitle')}
                 </h2>
-
-                {/* 评论加载状态 */}
                 {ratingsLoading ? (
                   <div className="space-y-4">
-                    {/* Rating Summary 骨架 */}
                     <div className="text-center mb-4 sm:mb-6">
                       <Skeleton className="h-10 w-16 mx-auto mb-2" />
                       <Skeleton className="h-5 w-24 mx-auto mb-2" />
                       <Skeleton className="h-4 w-20 mx-auto" />
                     </div>
-                    {/* Reviews 骨架 */}
                     {[1, 2, 3].map(i => (
                       <div key={i} className="pb-3 sm:pb-4 border-b border-border last:border-0">
                         <div className="flex items-center gap-2 mb-2">
@@ -1282,75 +1306,7 @@ export function ProductDetail({
                     ))}
                   </div>
                 ) : (
-                  <>
-                    {/* Rating Summary */}
-                    <div className="text-center mb-3 sm:mb-4">
-                      <div className="text-2xl sm:text-3xl font-bold text-foreground">
-                        {averageRating.toFixed(1)}
-                      </div>
-                      <HStack gap="xs" justify="center" className="my-1 sm:my-1.5">
-                        <StarRating rating={averageRating} size="sm" />
-                      </HStack>
-                      <p className="text-xs text-muted-foreground">
-                        {safeRatings.length} {t('product.reviews')}
-                      </p>
-                    </div>
-
-                    {/* Recent Reviews */}
-                    {safeRatings.length > 0 ? (
-                      <VStack gap="sm">
-                        {safeRatings.slice(0, 3).map(review => (
-                          <div
-                            key={review.ratingID}
-                            className="pb-3 sm:pb-4 border-b border-border last:border-0"
-                          >
-                            <HStack gap="xs" align="center" className="mb-1.5">
-                              <Avatar
-                                name={
-                                  review.buyerID?.handle ||
-                                  review.buyerID?.peerID?.slice(0, 8) ||
-                                  'Anonymous'
-                                }
-                                size="sm"
-                                className="w-6 h-6 sm:w-8 sm:h-8"
-                              />
-                              <span className="font-medium text-foreground text-sm">
-                                {review.anonymous
-                                  ? t('product.anonymous')
-                                  : review.buyerID?.handle ||
-                                    review.buyerID?.peerID?.slice(0, 8) ||
-                                    'User'}
-                              </span>
-                              <HStack gap="xs" className="ml-auto">
-                                <StarRating rating={review.overall} size="sm" />
-                              </HStack>
-                            </HStack>
-                            {review.review && (
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                {review.review}
-                              </p>
-                            )}
-                            <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-0.5">
-                              {new Date(review.timestamp).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))}
-                      </VStack>
-                    ) : (
-                      <p className="text-center text-sm text-muted-foreground py-4">
-                        {t('product.noReviews')}
-                      </p>
-                    )}
-
-                    {safeRatings.length > 3 && (
-                      <Button
-                        variant="ghost"
-                        className="w-full mt-3 sm:mt-4 text-sm touch-feedback"
-                      >
-                        {t('product.viewAllReviews')}
-                      </Button>
-                    )}
-                  </>
+                  <ReviewList ratings={safeRatings} ratingIndex={ratingIndex ?? undefined} />
                 )}
               </Card>
             </div>

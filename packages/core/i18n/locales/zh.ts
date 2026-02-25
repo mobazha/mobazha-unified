@@ -110,6 +110,23 @@ export const zh: TranslationResource = {
     priceRequired: '价格必填',
   },
 
+  share: {
+    copyLink: '复制链接',
+    linkCopied: '链接已复制！',
+    shareToTwitter: '分享到 Twitter/X',
+    shareToTelegram: '分享到 Telegram',
+    shareProduct: '分享商品',
+  },
+
+  review: {
+    summary: '评分概览',
+    noReviews: '暂无评价',
+    anonymous: '匿名买家',
+    averageRating: '平均评分',
+    outOf5: '满分 5 分',
+    basedOn: '基于 {{count}} 条评价',
+  },
+
   nav: {
     home: '首页',
     market: '市场',
@@ -680,6 +697,7 @@ export const zh: TranslationResource = {
       invalidInstructions: '从服务器收到无效的交易指令，请联系客服。',
       zeroAddressError: '此订单的支付配置不完整（零地址）。卖家可能需要更新支付设置并重新发货。',
       reviewComingSoon: '评价功能即将上线。',
+      reviewSubmitted: '您的评价已提交，感谢！',
       error: '错误',
       // ActionSheet 和复制操作
       orderIdUnavailable: '订单号不可用',
@@ -798,6 +816,16 @@ export const zh: TranslationResource = {
       confirmTitle: '确认申诉',
       confirmText: '确定要发起申诉吗？仲裁员将收到通知并介入帮助解决问题。',
       confirm: '发起申诉',
+    },
+    // 写评价弹框
+    review: {
+      title: '留下评价',
+      rateExperience: '体验如何？',
+      reviewLabel: '写评价（可选）',
+      reviewPlaceholder: '分享您对这个商品的体验...',
+      anonymous: '匿名发布',
+      submit: '提交评价',
+      skip: '暂时跳过',
     },
     // 退款模态框
     refund: {
@@ -1311,10 +1339,87 @@ export const zh: TranslationResource = {
     luxuryDesc: '黑金配色，适合高端商品和奢侈品交易',
   },
 
+  policies: {
+    privacyPolicy: '隐私政策',
+    termsOfService: '服务条款',
+    shipping: '配送政策',
+    returns: '退货退款',
+    shippingTitle: '配送政策',
+    shippingIntro: '本页介绍本店铺的配送政策。',
+    shippingProcessing: '处理时间',
+    shippingProcessingDesc: '订单通常在区块链付款确认后 1-3 个工作日内处理。',
+    shippingMethods: '配送方式',
+    shippingMethodsDesc: '每个商品详情页和结算页面会显示可用的配送方式和预计送达时间。',
+    shippingTracking: '物流追踪',
+    shippingTrackingDesc: '订单发货后，您将通过订单消息系统收到物流单号。',
+    shippingInternational: '国际配送',
+    shippingInternationalDesc: '国际订单可能需要缴纳关税和进口税，这些费用由买家承担。',
+    returnsTitle: '退货退款政策',
+    returnsIntro: '我们希望您对购买完全满意。',
+    returnsEligibility: '退货条件',
+    returnsEligibilityDesc: '商品可在商品详情中指定的时间内退货。商品必须保持原始状态。',
+    returnsProcess: '退货流程',
+    returnsProcessDesc: '如需退货，请通过订单消息系统联系卖家。卖家将提供退货说明。',
+    returnsRefunds: '退款',
+    returnsRefundsDesc: '退款通过托管系统处理。退货确认后，资金将退还给买家。',
+    returnsDisputes: '争议',
+    returnsDisputesDesc: '如果您与卖家无法达成一致，您可以发起争议。仲裁员将审查案件并做出决定。',
+    privacyTitle: '隐私政策',
+    privacyIntro: '您的隐私对我们很重要。本政策说明我们如何处理您的信息。',
+    privacyCollection: '信息收集',
+    privacyCollectionDesc:
+      'Mobazha 是去中心化平台，在设计上最大限度减少数据收集。交易数据存储在区块链和 IPFS 网络上。',
+    privacyUsage: '信息使用',
+    privacyUsageDesc: '信息仅用于订单履行、买卖双方沟通和平台功能。',
+    privacySharing: '信息共享',
+    privacySharingDesc:
+      '我们不会向第三方出售或共享您的个人信息。区块链上的交易数据本身是公开可见的。',
+    privacySecurity: '数据安全',
+    privacySecurityDesc:
+      '我们使用加密和安全协议保护您的数据。您的私钥存储在本地，永远不会传输到我们的服务器。',
+    termsTitle: '服务条款',
+    termsIntro: '使用 Mobazha 即表示您同意这些条款。',
+    termsUse: '合规使用',
+    termsUseDesc: '您同意遵守所有适用法律使用 Mobazha。平台禁止违规物品和活动。',
+    termsEscrow: '托管与支付',
+    termsEscrowDesc:
+      '所有加密货币支付通过智能合约托管处理。资金安全保管，直到买家确认收货或争议解决。',
+    termsDisputes: '争议解决',
+    termsDisputesDesc: '争议由社区仲裁员解决。他们的决定在托管系统内是最终且有约束力的。',
+    termsLiability: '责任限制',
+    termsLiabilityDesc:
+      'Mobazha 是去中心化平台，不控制买卖双方之间的交易。请自行承担使用平台的风险。',
+    lastUpdated: '最后更新',
+    backToStore: '返回店铺',
+  },
+
+  trust: {
+    buyerProtection: '买家保护',
+    buyerProtectionDesc: '在您确认收货前，您的付款受到保护',
+    escrowProtected: '支付受保护',
+    escrowDesc: '您的资金安全托管，直到您确认收货',
+    disputeResolution: '争议解决',
+    disputeDesc: '如有问题，可由独立仲裁员介入',
+    cryptoPayment: '安全支付',
+    cryptoPaymentDesc: '加密验证的安全交易',
+    sellerRating: '卖家评分',
+    reviews: '{{count}} 条评价',
+    sales: '{{count}} 笔交易',
+    memberSince: '加入时间',
+    escrow: {
+      paid: '已付款',
+      confirmed: '已确认',
+      shipped: '已发货',
+      delivered: '已送达',
+      released: '已释放',
+    },
+  },
+
   errors: {
     generic: '出错了',
     network: '网络错误，请检查连接',
     notFound: '未找到',
+    notFoundDesc: '您要找的页面不存在或已被移动。请尝试搜索或返回首页。',
     unauthorized: '请登录后继续',
     forbidden: '无权访问',
     serverError: '服务器错误，请稍后重试',

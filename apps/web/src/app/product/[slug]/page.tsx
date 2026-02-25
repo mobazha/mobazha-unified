@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container } from '@/components/layouts';
 import { ProductDetail, ProductBottomBar } from '@/components/Product';
-import { useI18n, useUserStore } from '@mobazha/core';
+import { useI18n, useUserStore, useChatStore } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 
 // 获取库存数量（从 SKU 计算）
@@ -27,6 +27,7 @@ export default function ProductPage() {
   const peerID = searchParams.get('peerID') || undefined;
 
   const { isAuthenticated, profile: currentUserProfile } = useUserStore();
+  const openChatDrawer = useChatStore(state => state.openDrawer);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, _setQuantity] = useState(1);
@@ -50,12 +51,9 @@ export default function ProductPage() {
     // TODO: 实际的收藏 API 调用
   }, []);
 
-  // 跳转到消息
   const handleMessage = useCallback(() => {
-    if (product?.vendorID?.peerID) {
-      router.push(`/chat/${product.vendorID.peerID}`);
-    }
-  }, [product, router]);
+    openChatDrawer();
+  }, [openChatDrawer]);
 
   // 跳转到购物车
   const handleCart = useCallback(() => {

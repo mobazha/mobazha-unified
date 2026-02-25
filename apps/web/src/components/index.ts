@@ -69,6 +69,16 @@ export { AppKitProvider } from './AppKitProvider';
 export { WalletConnectButton } from './Wallet';
 export type { WalletConnectButtonProps } from './Wallet';
 
+// Share Components
+export { ShareButton } from './Share';
+export type { ShareButtonProps } from './Share';
+
+// Review Components
+export { ReviewList } from './Review';
+
+// Trust Components
+export { SellerTrustBadge, EscrowStatusBar } from './Trust';
+
 // RWA Token Components
 export {
   AssetTypeSelector,

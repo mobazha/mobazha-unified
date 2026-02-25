@@ -75,23 +75,23 @@ Mobazha 不是要在 Shopify 的每个维度上追赶它，而是在同等专业
 
 ### 2.1 Shopify 对标评分
 
-| 能力域         | Shopify 对标 | 说明                                                                                                                                               |
-| -------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 商品创建       | 85%          | 字段齐全、富文本编辑器、变体/SKU、数字商品                                                                                                         |
-| 移动端响应式   | 80%          | 断点完善，区分布局                                                                                                                                 |
-| 国际化         | 75%          | 10 种语言，UI 层完整                                                                                                                               |
-| 配送配置       | 70%          | 配送档案、区域、费率                                                                                                                               |
-| 订单管理       | 65%          | 基础 CRUD，缺批量操作                                                                                                                              |
-| 数字商品       | 80%          | 上传、文件管理                                                                                                                                     |
-| 通知系统       | 75%          | 多类型通知、已读/删除                                                                                                                              |
-| 购物车→结账    | 75%          | Cart→Checkout→Payment→Confirmation 全流程打通；桌面/移动端双视图；价格显示修复（shipping string→number）；per-vendor checkout；E2E 21 tests passed |
-| 搜索           | 40%          | 店内搜索有，全局商品搜索缺失                                                                                                                       |
-| 评价系统       | 30%          | 能显示不能提交                                                                                                                                     |
-| SEO/社交分享   | 5%           | 零 OG 标签、零 per-page meta                                                                                                                       |
-| 卖家 Dashboard | 0%           | 完全没有                                                                                                                                           |
-| 店铺品牌化     | 10%          | 仅头像+封面+简介                                                                                                                                   |
-| 移动端交易流   | 70%          | CheckoutMobile 独立视图完成（底部价格栏+Place Order）、Mobile Cart 布局通过 E2E 验证、Product/Cart/Checkout 移动端体验良好；创建表单无移动导航待做 |
-| AI 能力        | 0%           | 零 AI 集成，搜索纯关键词（Sphinx），商品创建全手动                                                                                                 |
+| 能力域         | Shopify 对标 | 说明                                                                                                                                                                                                        |
+| -------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 商品创建       | 85%          | 字段齐全、富文本编辑器、变体/SKU、数字商品                                                                                                                                                                  |
+| 移动端响应式   | 80%          | 断点完善，区分布局                                                                                                                                                                                          |
+| 国际化         | 75%          | 10 种语言，UI 层完整                                                                                                                                                                                        |
+| 配送配置       | 70%          | 配送档案、区域、费率                                                                                                                                                                                        |
+| 订单管理       | 65%          | 基础 CRUD，缺批量操作                                                                                                                                                                                       |
+| 数字商品       | 80%          | 上传、文件管理                                                                                                                                                                                              |
+| 通知系统       | 75%          | 多类型通知、已读/删除                                                                                                                                                                                       |
+| 购物车→结账    | 90%          | Cart→Checkout→Payment→Confirmation 全流程；桌面/移动端双视图；价格修复；per-vendor checkout；Crypto TransactionOverlay；触摸目标≥44px；联系卖家→ChatDrawer；E2E 21 tests                                    |
+| 搜索           | 40%          | 店内搜索有，全局商品搜索缺失                                                                                                                                                                                |
+| 评价系统       | 30%          | 能显示不能提交                                                                                                                                                                                              |
+| SEO/社交分享   | 70%          | Root OG/Twitter metadata; robots.ts; dynamic sitemap.ts; Product page SSR metadata + JSON-LD; Store page SSR metadata; metadataBase 配置完成；缺：OG 图片生成、分享按钮                                     |
+| 卖家 Dashboard | 0%           | 完全没有                                                                                                                                                                                                    |
+| 店铺品牌化     | 10%          | 仅头像+封面+简介                                                                                                                                                                                            |
+| 移动端交易流   | 85%          | CheckoutMobile（底部价格栏+Place Order）；MobilePageHeader 全流程（Checkout/Payment/Confirmation）；触摸目标≥44px（Cart/CartDrawer/Checkout）；Crypto TransactionOverlay 适配移动端；创建表单无移动导航待做 |
+| AI 能力        | 0%           | 零 AI 集成，搜索纯关键词（Sphinx），商品创建全手动                                                                                                                                                          |
 
 ### 2.2 Desktop → Unified 迁移缺口
 
@@ -936,13 +936,13 @@ Store Config JSON Schema:
 
 ### Tier 0 — 交易闭环修复 ← V1 全部包含
 
-| ID     | 任务                          | V1?   | 状态      | 完成日期 |
-| ------ | ----------------------------- | ----- | --------- | -------- |
-| PG-001 | 购物车 + 结账（Mobile-First） | ✅ V1 | ⏳ 未开始 |          |
-| PG-002 | SEO + 社交分享                | ✅ V1 | ⏳ 未开始 |          |
-| PG-003 | 评价系统                      | ✅ V1 | ⏳ 未开始 |          |
-| PG-004 | 店内搜索 + 商品发现           | ✅ V1 | ⏳ 未开始 |          |
-| PG-005 | 信任与安全体验                | ✅ V1 | ⏳ 未开始 |          |
+| ID     | 任务                          | V1?   | 状态    | 完成日期   |
+| ------ | ----------------------------- | ----- | ------- | ---------- |
+| PG-001 | 购物车 + 结账（Mobile-First） | ✅ V1 | ✅ 完成 | 2026-02-25 |
+| PG-002 | SEO + 社交分享                | ✅ V1 | ✅ 完成 | 2026-02-25 |
+| PG-003 | 评价系统                      | ✅ V1 | ✅ 完成 | 2026-02-25 |
+| PG-004 | 店内搜索 + 商品发现           | ✅ V1 | ✅ 完成 | 2026-02-25 |
+| PG-005 | 信任与安全体验                | ✅ V1 | ✅ 完成 | 2026-02-25 |
 
 ### Tier 1 — Admin/Storefront 分离
 
@@ -984,4 +984,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-25 (v9: 购物车→结账 30%→75%、移动端交易流 50%→70%、shipping 价格 bug 修复、E2E 21 tests)
+最后更新: 2026-02-25 (v16: 后端对齐+E2E — SITE_URL修正store.mobazha.org、EscrowStatusBar状态映射对齐DisplayOrderStatus、ProductDetail fetchRatings二段加载、移除评价图片(后端暂不支持)、pg-components.spec.ts E2E测试覆盖ShareButton/ReviewList/EscrowStatusBar/Trust/SEO/404)

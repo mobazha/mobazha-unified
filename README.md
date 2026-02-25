@@ -94,11 +94,11 @@ pnpm install
 
 ```env
 # API 配置
-NEXT_PUBLIC_API_URL=https://api.mobazha.com
+NEXT_PUBLIC_API_URL=https://api.store.mobazha.org
 NEXT_PUBLIC_USE_MOCK_DATA=false
 
 # Matrix 配置
-NEXT_PUBLIC_MATRIX_HOMESERVER=https://matrix.mobazha.com
+NEXT_PUBLIC_MATRIX_HOMESERVER=https://matrix.mobazha.org
 
 # Web3 配置
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id

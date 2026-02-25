@@ -40,10 +40,13 @@ import {
   OrderCompleteCard,
 } from '@/components/Order';
 import { RwaAssetDetail } from '@/components/RwaToken';
+import { EscrowStatusBar } from '@/components/Trust';
 import { Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl } from '@/components/Order/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { WriteReviewDialog } from './WriteReviewDialog';
+import { ordersApi } from '@mobazha/core';
 
 // ============ Types ============
 // 从 @mobazha/core 重新导出基础类型，保持向后兼容
@@ -287,6 +290,8 @@ export const OrderDetailContent = memo(function OrderDetailContent({
   const [localOrder, setLocalOrder] = useState<DisplayOrder | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [pendingCompleteWithReview, setPendingCompleteWithReview] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [showRefundDialog, setShowRefundDialog] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState<'buyer' | 'seller' | 'split' | null>(
@@ -298,41 +303,66 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
   // ============ Action Handlers ============
 
-  const handleConfirmReceipt = useCallback(async () => {
-    setIsActionLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const updated = {
-        ...order,
-        status: 'completed' as const,
-        timeline: [
-          ...order.timeline,
-          {
-            status: 'completed',
-            timestamp: new Date().toISOString(),
-            description: t('order.timeline.orderCompleted'),
-            actor: 'buyer' as const,
-          },
-        ],
-      };
-      setLocalOrder(updated);
-      onOrderUpdate?.(updated);
-      toast({
-        title: t('order.orderCompleted'),
-        description: t('order.receiptConfirmed'),
-        variant: 'success',
-      });
-      refetch?.();
-    } catch (error) {
-      toast({
-        title: t('common.error'),
-        description: t('order.receiptConfirmFailed') + (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [order, refetch, onOrderUpdate, t, toast]);
+  const handleConfirmReceipt = useCallback(() => {
+    setPendingCompleteWithReview(true);
+    setShowReviewDialog(true);
+  }, []);
+
+  const executeCompleteOrder = useCallback(
+    async (ratings?: { overall: number; review: string; anonymous: boolean }) => {
+      setIsActionLoading(true);
+      try {
+        const payload: Parameters<typeof ordersApi.completeOrder>[0] = {
+          orderID: order.id,
+        };
+        if (ratings && ratings.overall > 0) {
+          payload.ratings = [
+            {
+              slug: order.slug || order.items[0]?.title || '',
+              overall: ratings.overall,
+              review: ratings.review || undefined,
+            },
+          ];
+          payload.anonymous = ratings.anonymous;
+        }
+        await ordersApi.completeOrder(payload);
+        const updated = {
+          ...order,
+          status: 'completed' as const,
+          timeline: [
+            ...order.timeline,
+            {
+              status: 'completed',
+              timestamp: new Date().toISOString(),
+              description: t('order.timeline.orderCompleted'),
+              actor: 'buyer' as const,
+            },
+          ],
+        };
+        setLocalOrder(updated);
+        onOrderUpdate?.(updated);
+        toast({
+          title: t('order.orderCompleted'),
+          description: ratings?.overall
+            ? t('order.actions.reviewSubmitted')
+            : t('order.receiptConfirmed'),
+          variant: 'success',
+        });
+        refetch?.();
+      } catch (error) {
+        toast({
+          title: t('common.error'),
+          description: t('order.receiptConfirmFailed') + (error as Error).message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsActionLoading(false);
+        setShowReviewDialog(false);
+        setPendingCompleteWithReview(false);
+      }
+    },
+    [order, refetch, onOrderUpdate, t, toast]
+  );
 
   const handleOpenDispute = useCallback(async () => {
     if (!disputeReason.trim()) {
@@ -509,7 +539,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           handleConfirmReceipt();
           break;
         case 'WriteReview':
-          toast({ description: t('order.actions.reviewComingSoon') });
+          setShowReviewDialog(true);
           break;
         case 'Accept':
           toast({ description: t('order.actions.accept') });
@@ -830,6 +860,11 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               </div>
             </div>
           )}
+        </div>
+
+        {/* 移动端：EscrowStatusBar */}
+        <div className="sm:hidden mt-3 mb-4 px-2">
+          <EscrowStatusBar status={displayOrder.status} />
         </div>
 
         {/* 桌面端：保留进度条 */}
@@ -1598,6 +1633,27 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Write Review Dialog */}
+      <WriteReviewDialog
+        open={showReviewDialog}
+        productTitle={order.items[0]?.title}
+        isSubmitting={isActionLoading}
+        onSubmit={data => {
+          executeCompleteOrder(data);
+        }}
+        onSkip={() => {
+          if (pendingCompleteWithReview) {
+            executeCompleteOrder();
+          } else {
+            setShowReviewDialog(false);
+          }
+        }}
+        onClose={() => {
+          setShowReviewDialog(false);
+          setPendingCompleteWithReview(false);
+        }}
+      />
     </div>
   );
 });

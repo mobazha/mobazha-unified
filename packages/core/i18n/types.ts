@@ -710,6 +710,12 @@ export interface TranslationResource {
     allRightsReserved: string;
   };
 
+  // 政策页面
+  policies?: TranslationSection;
+
+  // 信任指标
+  trust?: TranslationSection;
+
   // 市场/分类
   marketplace: TranslationSection & {
     title: string;
@@ -1831,6 +1837,25 @@ export interface TranslationResource {
     deleteConfirmTitle: string;
     deleteConfirmDesc: string;
     notFound: string;
+  };
+
+  // Share
+  share?: {
+    copyLink: string;
+    linkCopied: string;
+    shareToTwitter: string;
+    shareToTelegram: string;
+    shareProduct: string;
+  };
+
+  // Review (product reviews / ratings)
+  review?: {
+    summary: string;
+    noReviews: string;
+    anonymous: string;
+    averageRating: string;
+    outOf5: string;
+    basedOn: string;
   };
 
   // Validation messages
