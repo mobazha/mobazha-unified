@@ -2,12 +2,16 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@/components/layouts';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/components/ui/use-toast';
+import { useI18n } from '@mobazha/core';
+import { SettingsPageHeader } from '@/components/SettingsLayout';
+import { SettingsSection } from '@/components/SettingsLayout';
+import { Users, Package, ChevronRight, Check, X, Loader2, ShieldCheck } from 'lucide-react';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
-// Types
 interface PrivacySettings {
   isPrivate: boolean;
   requireApproval: boolean;
@@ -23,7 +27,6 @@ interface AccessRequest {
   status: 'pending' | 'approved' | 'rejected';
 }
 
-// Mock data
 const mockSettings: PrivacySettings = {
   isPrivate: false,
   requireApproval: false,
@@ -50,6 +53,8 @@ const mockRequests: AccessRequest[] = [
 ];
 
 export default function PrivacySettingsPage() {
+  const { t } = useI18n();
+  const { toast } = useToast();
   const [settings, setSettings] = useState<PrivacySettings>(mockSettings);
   const [requests, setRequests] = useState(mockRequests);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,9 +63,13 @@ export default function PrivacySettingsPage() {
     setIsSaving(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      window.alert('Settings saved successfully!');
+      toast({ title: t('common.success'), description: t('settingsModal.settingsSaved') });
     } catch {
-      window.alert('Failed to save settings');
+      toast({
+        title: t('common.error'),
+        description: t('settingsExtended.saveFailed'),
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
@@ -72,281 +81,183 @@ export default function PrivacySettingsPage() {
         req.id === requestId ? { ...req, status: approved ? 'approved' : 'rejected' } : req
       )
     );
-    window.alert(approved ? 'Access granted!' : 'Access denied');
+    toast({
+      title: approved ? t('settingsExtended.accessGranted') : t('settingsExtended.accessDenied'),
+    });
   };
 
-  const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
+  const pendingRequests = requests.filter(r => r.status === 'pending');
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div>
+      <SettingsPageHeader
+        title={t('settings.sidebar.privacy')}
+        description={t('settingsExtended.privacyDesc')}
+        backHref="/settings"
+      />
 
-      <main className="py-8">
-        <Container size="lg">
-          {/* Back Link */}
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+      <div className="space-y-6">
+        {/* Store Privacy Settings */}
+        <SettingsSection
+          title={t('settingsExtended.storePrivacySection')}
+          description={t('settingsExtended.storePrivacySectionDesc')}
+        >
+          <Card className="p-4 md:p-6 space-y-5">
+            {/* Private Store Toggle */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('settingsExtended.privateStoreToggle')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('settingsExtended.privateStoreToggleDesc')}
+                </p>
+              </div>
+              <Switch
+                checked={settings.isPrivate}
+                onCheckedChange={checked => setSettings(prev => ({ ...prev, isPrivate: checked }))}
               />
-            </svg>
-            Back to Settings
-          </Link>
+            </div>
 
-          <h1 className="text-3xl font-bold text-foreground mb-2">Privacy & Access Control</h1>
-          <p className="text-muted-foreground mb-8">
-            Control who can access your store and products
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Settings */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Store Privacy */}
-              <Card>
-                <h2 className="text-xl font-bold text-foreground mb-6">Store Privacy</h2>
-
-                <VStack gap="lg">
-                  {/* Private Store Toggle */}
-                  <div className="p-4 border border-border rounded-lg">
-                    <HStack justify="between" align="start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground mb-1">Private Store</h3>
-                        <p className="text-sm text-muted-foreground">
-                          When enabled, only approved users can view your store and products.
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.isPrivate}
-                          onChange={e =>
-                            setSettings(prev => ({ ...prev, isPrivate: e.target.checked }))
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-border peer-checked:bg-primary"></div>
-                      </label>
-                    </HStack>
-                  </div>
-
-                  {/* Require Approval */}
-                  {settings.isPrivate && (
-                    <div className="p-4 border border-border rounded-lg">
-                      <HStack justify="between" align="start">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1">Require Approval</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Users must request access and be approved before viewing your store.
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings.requireApproval}
-                            onChange={e =>
-                              setSettings(prev => ({
-                                ...prev,
-                                requireApproval: e.target.checked,
-                              }))
-                            }
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-border peer-checked:bg-primary"></div>
-                        </label>
-                      </HStack>
-                    </div>
-                  )}
-
-                  {/* Welcome Message */}
-                  {settings.isPrivate && (
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Welcome Message (shown to approved users)
-                      </label>
-                      <textarea
-                        value={settings.welcomeMessage}
-                        onChange={e =>
-                          setSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))
-                        }
-                        rows={3}
-                        className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      />
-                    </div>
-                  )}
-                </VStack>
-
-                <div className="mt-6 pt-6 border-t border-border">
-                  <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </Button>
+            {/* Require Approval */}
+            {settings.isPrivate && (
+              <div className="flex items-start justify-between gap-4 pt-4 border-t border-border">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{t('settingsExtended.requireApproval')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t('settingsExtended.requireApprovalDesc')}
+                  </p>
                 </div>
-              </Card>
+                <Switch
+                  checked={settings.requireApproval}
+                  onCheckedChange={checked =>
+                    setSettings(prev => ({ ...prev, requireApproval: checked }))
+                  }
+                />
+              </div>
+            )}
 
-              {/* Access Requests */}
-              {settings.isPrivate && settings.requireApproval && (
-                <Card>
-                  <HStack justify="between" align="center" className="mb-6">
-                    <h2 className="text-xl font-bold text-foreground">Access Requests</h2>
-                    {pendingRequestsCount > 0 && (
-                      <span className="px-3 py-1 bg-warning/15 text-warning rounded-full text-sm font-medium">
-                        {pendingRequestsCount} pending
-                      </span>
-                    )}
-                  </HStack>
+            {/* Welcome Message */}
+            {settings.isPrivate && (
+              <div className="pt-4 border-t border-border">
+                <label className="block text-sm font-medium mb-1.5">
+                  {t('settingsExtended.welcomeMessage')}
+                </label>
+                <textarea
+                  value={settings.welcomeMessage}
+                  onChange={e => setSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
+            )}
 
-                  {requests.filter(r => r.status === 'pending').length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No pending access requests</p>
+            <div className="pt-4 border-t border-border">
+              <Button onClick={handleSave} disabled={isSaving} size="sm">
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {t('common.save')}
+              </Button>
+            </div>
+          </Card>
+        </SettingsSection>
+
+        {/* Access Requests */}
+        {settings.isPrivate && settings.requireApproval && (
+          <SettingsSection
+            title={t('settingsExtended.accessRequests')}
+            description={t('settingsExtended.accessRequestsDesc')}
+          >
+            <Card className="p-4 md:p-6">
+              {pendingRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShieldCheck className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    {t('settingsExtended.noPendingRequests')}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingRequests.map(request => (
+                    <div
+                      key={request.id}
+                      className="flex items-start gap-3 pb-4 last:pb-0 border-b last:border-b-0 border-border"
+                    >
+                      <Avatar src={request.avatar} name={request.name} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium truncate">{request.name}</p>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          {request.message}
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            size="sm"
+                            className="h-8"
+                            onClick={() => handleReviewRequest(request.id, true)}
+                          >
+                            <Check className="w-3.5 h-3.5 mr-1" />
+                            {t('settingsExtended.approve')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8"
+                            onClick={() => handleReviewRequest(request.id, false)}
+                          >
+                            <X className="w-3.5 h-3.5 mr-1" />
+                            {t('settingsExtended.deny')}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <VStack gap="md">
-                      {requests
-                        .filter(r => r.status === 'pending')
-                        .map(request => (
-                          <div key={request.id} className="p-4 border border-border rounded-lg">
-                            <HStack justify="between" align="start" className="mb-3">
-                              <HStack gap="md" align="center">
-                                <img
-                                  src={request.avatar}
-                                  alt={request.name}
-                                  className="w-10 h-10 rounded-full bg-muted"
-                                />
-                                <div>
-                                  <p className="font-semibold text-foreground">{request.name}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {new Date(request.createdAt).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </HStack>
-                              <HStack gap="sm">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleReviewRequest(request.id, true)}
-                                >
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleReviewRequest(request.id, false)}
-                                >
-                                  Deny
-                                </Button>
-                              </HStack>
-                            </HStack>
-                            <p className="text-muted-foreground text-sm">{request.message}</p>
-                          </div>
-                        ))}
-                    </VStack>
-                  )}
-                </Card>
+                  ))}
+                </div>
               )}
-            </div>
+            </Card>
+          </SettingsSection>
+        )}
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Links */}
-              <Card>
-                <h3 className="font-semibold text-foreground mb-4">Access Management</h3>
-                <VStack gap="sm">
-                  <Link
-                    href="/settings/user-groups"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors"
-                  >
-                    <HStack gap="md" align="center">
-                      <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-info"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-muted-foreground">User Groups</span>
-                    </HStack>
-                    <svg
-                      className="w-5 h-5 text-muted-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-
-                  <Link
-                    href="/settings/product-groups"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-hover transition-colors"
-                  >
-                    <HStack gap="md" align="center">
-                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-primary"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-muted-foreground">Product Groups</span>
-                    </HStack>
-                    <svg
-                      className="w-5 h-5 text-muted-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                </VStack>
-              </Card>
-
-              {/* Info Box */}
-              <Card className="bg-primary/5 dark:bg-primary/10 border-primary/30">
-                <h3 className="font-semibold text-primary mb-2">Exclusive Store Benefits</h3>
-                <ul className="text-sm text-primary/80 space-y-2">
-                  <li>• Control who can view your products</li>
-                  <li>• Create VIP customer groups</li>
-                  <li>• Offer exclusive discounts</li>
-                  <li>• Protect premium content</li>
-                </ul>
-              </Card>
-            </div>
-          </div>
-        </Container>
-      </main>
-
-      <Footer />
+        {/* Quick Links */}
+        <SettingsSection
+          title={t('settingsExtended.accessMgmt')}
+          description={t('settingsExtended.accessMgmtDesc')}
+        >
+          <Card className="p-0 divide-y divide-border">
+            <Link
+              href="/settings/user-groups"
+              className="flex items-center gap-3 p-4 hover:bg-surface-hover transition-colors active:bg-surface-hover min-h-[56px]"
+            >
+              <div className="w-9 h-9 rounded-lg bg-info/15 flex items-center justify-center flex-shrink-0">
+                <Users className="w-4.5 h-4.5 text-info" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('settingsExtended.userGroups')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('settingsExtended.userGroupsDesc')}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            </Link>
+            <Link
+              href="/settings/product-groups"
+              className="flex items-center gap-3 p-4 hover:bg-surface-hover transition-colors active:bg-surface-hover min-h-[56px]"
+            >
+              <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <Package className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('settingsExtended.productGroups')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('settingsExtended.productGroupsDesc')}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            </Link>
+          </Card>
+        </SettingsSection>
+      </div>
     </div>
   );
 }

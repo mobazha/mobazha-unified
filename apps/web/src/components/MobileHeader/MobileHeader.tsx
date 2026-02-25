@@ -36,7 +36,8 @@ export const MobileHeader: React.FC = () => {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('search.placeholder')}
-                className="w-full h-10 pl-10 pr-3 rounded-xl border border-border bg-surface text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                enterKeyHint="search"
+                className="w-full h-11 pl-10 pr-3 rounded-xl border border-border bg-surface text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
               />
             </div>
           </form>
@@ -44,7 +45,7 @@ export const MobileHeader: React.FC = () => {
           {/* Scan Button */}
           <button
             onClick={handleScan}
-            className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-surface-hover transition-colors"
+            className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors touch-feedback"
             aria-label={t('common.scan')}
           >
             <ScanLine className="h-5 w-5 text-muted-foreground" />

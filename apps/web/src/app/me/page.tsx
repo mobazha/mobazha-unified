@@ -50,8 +50,8 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   rightElement,
 }) => {
   const content = (
-    <div className="flex items-center gap-2.5 py-2.5 px-3 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer touch-feedback">
-      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+    <div className="flex items-center gap-3 py-3 px-3 min-h-[52px] rounded-lg hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer touch-feedback">
+      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -77,7 +77,6 @@ export default function MePage() {
 
   const handleLogout = () => {
     logout();
-    // 托管模式下直接跳转 Casdoor，避免闪烁
     if (isHosted()) {
       startCasdoorLogin();
     } else {
@@ -93,9 +92,14 @@ export default function MePage() {
     }
   };
 
-  // 移动端专用页面
+  // Desktop: redirect to settings (this page is mobile-optimized)
+  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+    router.replace(isAuthenticated && profile?.peerID ? `/store/${profile.peerID}` : '/settings');
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-background md:hidden">
+    <div className="min-h-screen bg-background">
       <Header />
 
       {/* 移动端顶部标题栏 */}
@@ -245,6 +249,9 @@ export default function MePage() {
               {t('me.logout')}
             </Button>
           )}
+
+          {/* Bottom safe area for MobileNav */}
+          <div className="h-20 md:hidden" />
         </VStack>
       </Container>
 

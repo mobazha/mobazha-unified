@@ -48,15 +48,16 @@ export default function ModeratorPage() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* 头部 */}
       <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center h-14 px-4">
+        <div className="flex items-center h-14 px-4 gap-2">
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center gap-2 text-foreground touch-feedback"
+            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full text-foreground touch-feedback active:bg-muted/50"
+            aria-label={t('common.back')}
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">{t('payment.selectModerator')}</span>
           </button>
+          <span className="font-medium text-foreground">{t('payment.selectModerator')}</span>
         </div>
       </header>
 

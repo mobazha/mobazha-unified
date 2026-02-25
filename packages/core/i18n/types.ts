@@ -604,6 +604,7 @@ export interface TranslationResource {
       addresses: string;
       blocked: string;
       moderation: string;
+      receiving?: string;
       chatEncryption: string;
       advanced: string;
     };
@@ -970,6 +971,48 @@ export interface TranslationResource {
     removeModerator?: string;
     removeModeratorDesc?: string;
     remove?: string;
+    receivingDesc?: string;
+    loadFailed?: string;
+    fillRequired?: string;
+    addressExists?: string;
+    addressAdded?: string;
+    saveFailed?: string;
+    addressUpdated?: string;
+    addressDeleted?: string;
+    deleteFailed?: string;
+    addReceivingAddress?: string;
+    coin?: string;
+    selectCoin?: string;
+    label?: string;
+    labelPlaceholder?: string;
+    address?: string;
+    addressPlaceholder?: string;
+    noReceivingAddresses?: string;
+    noReceivingAddressesDesc?: string;
+    addFirstAddress?: string;
+    externalWallet?: string;
+    confirmDelete?: string;
+    deleteAddressDesc?: string;
+    aboutReceiving?: string;
+    receivingTip1?: string;
+    receivingTip2?: string;
+    receivingTip3?: string;
+    receivingTip4?: string;
+    privacyDesc?: string;
+    storePrivacySection?: string;
+    storePrivacySectionDesc?: string;
+    privateStoreToggle?: string;
+    privateStoreToggleDesc?: string;
+    requireApproval?: string;
+    requireApprovalDesc?: string;
+    welcomeMessage?: string;
+    noPendingRequests?: string;
+    accessGranted?: string;
+    accessDenied?: string;
+    approve?: string;
+    deny?: string;
+    accessMgmt?: string;
+    accessMgmtDesc?: string;
   };
 
   // 用户菜单
@@ -2251,6 +2294,31 @@ export interface TranslationResource {
       title: string;
       description: string;
     };
+  };
+
+  moderation?: {
+    title?: string;
+    description?: string;
+    totalCases?: string;
+    open?: string;
+    pending?: string;
+    resolved?: string;
+    expired?: string;
+    decided?: string;
+    all?: string;
+    sortNewest?: string;
+    sortOldest?: string;
+    sortAmount?: string;
+    sort?: string;
+    caseNumber?: string;
+    newMessages?: string;
+    claim?: string;
+    buyer?: string;
+    seller?: string;
+    opened?: string;
+    noCasesFound?: string;
+    noCasesFilterHint?: string;
+    noCasesDesc?: string;
   };
 }
 
