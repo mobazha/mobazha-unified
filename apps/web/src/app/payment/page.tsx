@@ -14,6 +14,7 @@ import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { usePaymentSelector } from '@/hooks';
 import {
   useWallet,
@@ -73,6 +74,16 @@ interface OrderDetails {
   contractType?: string;
   // 原始订单金额（最小单位，用于传统订单支付）
   rawOrderAmount?: number;
+}
+
+function buildConfirmationUrl(details: OrderDetails): string {
+  const url = new URL('/checkout/confirmation', window.location.origin);
+  url.searchParams.set('orderID', details.orderID);
+  url.searchParams.set('total', String(details.total));
+  url.searchParams.set('currency', details.currency);
+  if (details.items[0]?.title) url.searchParams.set('title', details.items[0].title);
+  if (details.vendor?.name) url.searchParams.set('vendorName', details.vendor.name);
+  return url.toString();
 }
 
 /**
@@ -589,13 +600,13 @@ export default function PaymentPage() {
         // 即使后端返回错误，交易已经发出，仍然算成功
       }
 
-      // 8. 支付成功，跳转到订单详情
+      // 8. 支付成功，跳转到订单确认页
       toast({
         title: t('payment.success'),
         description: t('payment.paymentComplete'),
       });
 
-      router.push(`/orders/${orderDetails.orderID}`);
+      router.push(buildConfirmationUrl(orderDetails));
     } catch (error) {
       console.error('[Payment] Payment failed:', error);
 
@@ -659,7 +670,7 @@ export default function PaymentPage() {
                 {t('payment.errorTitle')}
               </h2>
               <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={() => router.back()}>{t('common.goBack')}</Button>
+              <Button onClick={() => router.back()}>{t('common.back')}</Button>
             </div>
           </Container>
         </main>
@@ -691,6 +702,8 @@ export default function PaymentPage() {
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('payment.title')}</h1>
           </HStack>
+
+          <CheckoutProgressBar currentStep="payment" className="mb-6 sm:mb-8" />
 
           {/* Loading State */}
           {isLoadingOrder ? (
@@ -747,7 +760,7 @@ export default function PaymentPage() {
                     cryptoListingCurrencyCode={orderDetails.cryptoListingCurrencyCode}
                     onSuccess={() => {
                       toast({ title: t('payment.success') });
-                      router.push(`/orders/${orderDetails.orderID}`);
+                      router.push(buildConfirmationUrl(orderDetails));
                     }}
                     onCancel={() => router.back()}
                   />

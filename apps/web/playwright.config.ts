@@ -55,13 +55,28 @@ export default defineConfig({
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
     },
+    // Standalone store (port 3002)
+    {
+      name: 'standalone',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost:3002',
+      },
+    },
+    {
+      name: 'standalone-mobile',
+      use: {
+        ...devices['iPhone 12'],
+        baseURL: 'http://localhost:3002',
+      },
+    },
   ],
 
   // Run local dev server before tests
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI, // 本地总是重用已运行的服务器
+    reuseExistingServer: true,
     timeout: 120 * 1000,
   },
 });

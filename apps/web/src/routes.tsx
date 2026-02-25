@@ -91,6 +91,10 @@ const routes: RouteObject[] = [
     path: '/checkout/payment-method',
     element: protectedPage(() => import('./app/checkout/payment-method/page')),
   },
+  {
+    path: '/checkout/confirmation',
+    element: protectedPage(() => import('./app/checkout/confirmation/page')),
+  },
 
   // 商品管理
   { path: '/listing/new', element: protectedPage(() => import('./app/listing/new/page')) },

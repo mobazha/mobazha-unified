@@ -240,6 +240,7 @@ function LoginPageContent() {
             <form onSubmit={handleBasicLogin} className="space-y-3">
               <input
                 id="username"
+                data-testid="login-username"
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
@@ -249,6 +250,7 @@ function LoginPageContent() {
               />
               <input
                 id="password"
+                data-testid="login-password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -258,6 +260,7 @@ function LoginPageContent() {
               />
               <button
                 type="submit"
+                data-testid="login-submit"
                 disabled={isLoading}
                 className="w-full py-3 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
               >
@@ -330,6 +333,7 @@ function LoginPageContent() {
               </label>
               <input
                 id="username"
+                data-testid="login-username"
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
@@ -344,6 +348,7 @@ function LoginPageContent() {
               </label>
               <input
                 id="password"
+                data-testid="login-password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -354,6 +359,7 @@ function LoginPageContent() {
             </div>
             <button
               type="submit"
+              data-testid="login-submit"
               disabled={isLoading}
               className="w-full py-4 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center text-lg mt-6"
             >

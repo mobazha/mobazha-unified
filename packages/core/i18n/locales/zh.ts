@@ -95,6 +95,7 @@ export const zh: TranslationResource = {
     removing: '移除中...',
     remove: '移除',
     loginRequired: '请先登录以继续',
+    backToHome: '返回首页',
     clearAll: '清除全部',
     done: '完成',
     submitting: '提交中...',
@@ -334,6 +335,16 @@ export const zh: TranslationResource = {
 
   checkout: {
     title: '结算',
+    stepCheckout: '结账',
+    stepPayment: '支付',
+    stepConfirmation: '确认',
+    orderConfirmed: '订单已成功提交！',
+    orderConfirmedDesc: '您的订单已提交，正在处理中。',
+    orderId: '订单号',
+    item: '商品',
+    seller: '卖家',
+    viewOrder: '查看订单详情',
+    continueShopping: '继续购物',
     shippingAddress: '收货地址',
     paymentMethod: '支付方式',
     orderSummary: '订单摘要',
@@ -379,6 +390,8 @@ export const zh: TranslationResource = {
     rwaTransaction: 'RWA 代币交易',
     rwaInstantHint: '这是即时 RWA 交换。确认后，您的付款将立即兑换为代币份额。',
     rwaConfirmRequiredHint: '此交易需要卖家确认。您的付款将被锁定，直到卖家确认交易。',
+    loadFailed: '无法加载结账页面',
+    loadFailedDesc: '准备订单时出现问题，请稍后重试。',
   },
 
   // 地址管理

@@ -20,7 +20,7 @@ interface VendorGroup {
 export default function CartPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { formatPrice } = useCurrency();
+  const { renderPairedPrice } = useCurrency();
 
   const items = useCartStore(state => state.items);
   const updateQuantity = useCartStore(state => state.updateQuantity);
@@ -47,17 +47,24 @@ export default function CartPage() {
     () => items.reduce((sum, item) => sum + item.listing.price.amount * item.quantity, 0),
     [items]
   );
-  const currency = items[0]?.listing.price.currency.code ?? 'USD';
 
   const handleCheckout = useCallback(
     (group: VendorGroup) => {
-      const item = group.items[0];
-      const params = new URLSearchParams({
-        slug: item.listing.slug,
-        peerID: item.listing.vendorPeerID,
-        quantity: item.quantity.toString(),
-      });
-      router.push(`/checkout?${params.toString()}`);
+      if (group.items.length === 1) {
+        const item = group.items[0];
+        const params = new URLSearchParams({
+          slug: item.listing.slug,
+          peerID: item.listing.vendorPeerID,
+          quantity: item.quantity.toString(),
+        });
+        router.push(`/checkout?${params.toString()}`);
+      } else {
+        const vendorPeerID = group.vendorPeerID;
+        const slugs = group.items.map(i => i.listing.slug).join(',');
+        router.push(
+          `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`
+        );
+      }
     },
     [router]
   );
@@ -218,7 +225,10 @@ export default function CartPage() {
                               {/* Price & Quantity */}
                               <div className="flex items-center justify-between mt-auto pt-1">
                                 <span className="text-sm font-bold text-primary">
-                                  {formatPrice(item.listing.price.amount, currency)}
+                                  {renderPairedPrice(
+                                    item.listing.price.amount,
+                                    item.listing.price.currency.code
+                                  )}
                                 </span>
 
                                 <HStack gap="xs" align="center">
@@ -277,7 +287,10 @@ export default function CartPage() {
                       <div className="text-sm">
                         <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
                         <span className="font-bold text-foreground ml-1.5">
-                          {formatPrice(groupTotal, currency)}
+                          {renderPairedPrice(
+                            groupTotal,
+                            group.items[0]?.listing.price.currency.code ?? 'USD'
+                          )}
                         </span>
                       </div>
                       <Button
@@ -300,7 +313,9 @@ export default function CartPage() {
               <HStack justify="between" align="center">
                 <VStack gap="none">
                   <span className="text-sm text-muted-foreground">{t('cart.total')}</span>
-                  <span className="text-xl font-bold">{formatPrice(totalAmount, currency)}</span>
+                  <span className="text-xl font-bold">
+                    {renderPairedPrice(totalAmount, items[0]?.listing.price.currency.code ?? 'USD')}
+                  </span>
                 </VStack>
               </HStack>
             </Card>

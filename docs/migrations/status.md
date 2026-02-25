@@ -120,7 +120,7 @@
 ## 下一步计划
 
 1. **Professional Grade 路线图** — 前端产品专业化（详见 `docs/PROFESSIONAL_GRADE_ROADMAP.md`）
-   - Tier 0: 交易闭环修复（购物车→结账、SEO、评价、全局搜索）
+   - Tier 0: 交易闭环修复（购物车→结账、SEO、评价、店内搜索）
    - Tier 1: Admin/Storefront 分离（Dashboard、商品管理、卖家感知）
    - Tier 2: 差异化竞争力（AI Store Builder、品牌化）
    - Tier 3: 规模化运营（分析、CRM、营销）
