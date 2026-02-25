@@ -157,6 +157,7 @@ export const pt: TranslationResource = {
     empty: 'Seu carrinho está vazio',
     emptyMessage: 'Você ainda não adicionou nada ao carrinho.',
     continueShopping: 'Continuar comprando',
+    vendorStore: 'Loja',
     subtotal: 'Subtotal',
     shipping: 'Frete',
     total: 'Total',

@@ -78,8 +78,8 @@ const routes: RouteObject[] = [
   // 私有路由（需要登录）
   // ============================================
 
-  // 购物车
-  { path: '/cart', element: protectedPage(() => import('./app/cart/page')) },
+  // 购物车（公开 — 数据在 localStorage，无需登录）
+  { path: '/cart', element: lazyPage(() => import('./app/cart/page')) },
 
   // 结账流程
   { path: '/checkout', element: protectedPage(() => import('./app/checkout/page')) },

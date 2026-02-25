@@ -318,6 +318,7 @@ export const en: TranslationResource = {
     empty: 'Your cart is empty',
     emptyMessage: "Looks like you haven't added anything to your cart yet.",
     continueShopping: 'Continue Shopping',
+    vendorStore: 'Store',
     subtotal: 'Subtotal',
     shipping: 'Shipping',
     total: 'Total',

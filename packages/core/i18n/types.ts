@@ -263,6 +263,7 @@ export interface TranslationResource {
     empty: string;
     emptyMessage: string;
     continueShopping: string;
+    vendorStore: string;
     subtotal: string;
     shipping: string;
     total: string;

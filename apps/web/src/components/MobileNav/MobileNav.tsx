@@ -7,6 +7,7 @@ import {
   useChatStore,
   selectTotalUnreadCount,
   useUserStore,
+  useCartStore,
   useI18n,
   getImageUrl,
 } from '@mobazha/core';
@@ -151,7 +152,7 @@ const HIDE_NAV_PATTERNS = [
 ];
 
 // 需要登录才能显示的导航项 (使用 labelKey)
-const AUTH_REQUIRED_LABEL_KEYS = ['nav.orders', 'nav.cart', 'chat.title'];
+const AUTH_REQUIRED_LABEL_KEYS = ['nav.orders', 'chat.title'];
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
@@ -161,9 +162,7 @@ export const MobileNav: React.FC = () => {
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const { isAuthenticated, profile } = useUserStore();
 
-  // TODO: 接入真实的购物车 store
-  // 目前使用 mock 数据，后续应该从 useCartStore 获取商品总数量
-  const cartItemCount = 3; // Mock: 购物车中的商品总数量
+  const cartItemCount = useCartStore(state => state.getItemCount());
 
   // 获取用户头像 URL（和 Me 页面使用相同的方式）
   const userAvatarUrl = getImageUrl(profile?.avatarHashes?.small);

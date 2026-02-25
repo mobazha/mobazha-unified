@@ -11,6 +11,7 @@ import {
   PWAInstall,
   ServiceWorkerProvider,
   SessionExpiredDialog,
+  TGMiniAppProvider,
   ThemeProvider,
 } from '@/components';
 import { Toaster } from '@/components/ui';
@@ -96,37 +97,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className}>
         <ThemeProvider>
-          <ServiceWorkerProvider>
-            <AppKitProvider>
-              <CurrencyProvider>
-                <Suspense fallback={<AuthProviderLoading />}>
-                  <AuthProvider>
-                    <ProductModalProvider>
-                      <PaymentSelectorProvider>
-                        {/* Main content with bottom padding for mobile nav */}
-                        <div className="pb-20 md:pb-0">{children}</div>
+          <TGMiniAppProvider>
+            <ServiceWorkerProvider>
+              <AppKitProvider>
+                <CurrencyProvider>
+                  <Suspense fallback={<AuthProviderLoading />}>
+                    <AuthProvider>
+                      <ProductModalProvider>
+                        <PaymentSelectorProvider>
+                          {/* Main content with bottom padding for mobile nav */}
+                          <div className="pb-20 md:pb-0">{children}</div>
 
-                        {/* Mobile bottom navigation */}
-                        <MobileNav />
+                          {/* Mobile bottom navigation */}
+                          <MobileNav />
 
-                        {/* Chat floating button and drawer */}
-                        <ChatSystem />
+                          {/* Chat floating button and drawer */}
+                          <ChatSystem />
 
-                        {/* PWA install prompt */}
-                        <PWAInstall />
+                          {/* PWA install prompt */}
+                          <PWAInstall />
 
-                        {/* Session expired dialog (global 401 handler) */}
-                        <SessionExpiredDialog />
+                          {/* Session expired dialog (global 401 handler) */}
+                          <SessionExpiredDialog />
 
-                        {/* Toast notifications */}
-                        <Toaster />
-                      </PaymentSelectorProvider>
-                    </ProductModalProvider>
-                  </AuthProvider>
-                </Suspense>
-              </CurrencyProvider>
-            </AppKitProvider>
-          </ServiceWorkerProvider>
+                          {/* Toast notifications */}
+                          <Toaster />
+                        </PaymentSelectorProvider>
+                      </ProductModalProvider>
+                    </AuthProvider>
+                  </Suspense>
+                </CurrencyProvider>
+              </AppKitProvider>
+            </ServiceWorkerProvider>
+          </TGMiniAppProvider>
         </ThemeProvider>
       </body>
     </html>

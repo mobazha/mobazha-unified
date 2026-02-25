@@ -49,6 +49,9 @@ export type {
   PaymentProtectionCardProps,
 } from './Payment';
 
+// Platform Provider
+export { TGMiniAppProvider, useTGMiniApp } from './TGMiniAppProvider';
+
 // Access Control Components
 export { StoreAccessGuard } from './StoreAccessGuard';
 

@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, cartApi } from '@mobazha/core';
+import { useI18n, useCartStore } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 
 export interface ProductBottomBarProps {
@@ -20,8 +20,6 @@ export interface ProductBottomBarProps {
   isWishlist?: boolean;
   /** 切换收藏回调 */
   onToggleWishlist?: () => void;
-  /** 购物车商品数量 */
-  cartItemCount?: number;
 }
 
 export function ProductBottomBar({
@@ -31,37 +29,44 @@ export function ProductBottomBar({
   isOwnProduct = false,
   isWishlist = false,
   onToggleWishlist,
-  cartItemCount = 0,
 }: ProductBottomBarProps) {
   const { t } = useI18n();
   const router = useRouter();
-  const [addingToCart, setAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // 添加到购物车
-  const handleAddToCart = useCallback(async () => {
+  const addCartItem = useCartStore(state => state.addItem);
+  const cartItemCount = useCartStore(state => state.getItemCount());
+
+  const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
 
-    setAddingToCart(true);
-    setCartSuccess(false);
+    const thumbnail = product.item?.images?.[0] ?? {
+      tiny: '',
+      small: '',
+      medium: '',
+      large: '',
+      original: '',
+    };
+    const price = Number(product.item?.price) || 0;
+    const currency = product.metadata?.pricingCurrency?.code || 'USD';
+    const divisibility = product.metadata?.pricingCurrency?.divisibility ?? 2;
 
-    try {
-      const result = await cartApi.addToCart(product.vendorID.peerID, {
+    addCartItem({
+      listing: {
         slug: product.slug,
-        quantity,
-      });
+        title: product.item?.title || product.slug,
+        thumbnail,
+        price: { amount: price, currency: { code: currency, divisibility } },
+        vendorPeerID: product.vendorID.peerID,
+        vendorHandle: product.vendorID.handle,
+      },
+      quantity,
+    });
 
-      if ('success' in result && result.success) {
-        setCartSuccess(true);
-        setTimeout(() => setCartSuccess(false), 2000);
-      }
-    } catch (err) {
-      console.error('Failed to add to cart:', err);
-    } finally {
-      setAddingToCart(false);
-    }
-  }, [product, quantity]);
+    setCartSuccess(true);
+    setTimeout(() => setCartSuccess(false), 2000);
+  }, [product, quantity, addCartItem]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {
@@ -218,11 +223,9 @@ export function ProductBottomBar({
             size="sm"
             className="flex-1 rounded-lg h-9 text-xs font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
             onClick={handleAddToCart}
-            disabled={addingToCart || stock === 0}
+            disabled={stock === 0}
           >
-            {addingToCart ? (
-              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : cartSuccess ? (
+            {cartSuccess ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"

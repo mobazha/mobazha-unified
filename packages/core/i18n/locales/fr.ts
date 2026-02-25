@@ -157,6 +157,7 @@ export const fr: TranslationResource = {
     empty: 'Votre panier est vide',
     emptyMessage: "Vous n'avez encore rien ajouté à votre panier.",
     continueShopping: 'Continuer vos achats',
+    vendorStore: 'Boutique',
     subtotal: 'Sous-total',
     shipping: 'Livraison',
     total: 'Total',
