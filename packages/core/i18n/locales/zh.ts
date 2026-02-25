@@ -311,6 +311,7 @@ export const zh: TranslationResource = {
     empty: '购物车为空',
     emptyMessage: '您还没有添加任何商品到购物车。',
     continueShopping: '继续购物',
+    vendorStore: '店铺',
     subtotal: '小计',
     shipping: '运费',
     total: '合计',

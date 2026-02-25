@@ -157,6 +157,7 @@ export const es: TranslationResource = {
     empty: 'Tu carrito está vacío',
     emptyMessage: 'Aún no has añadido ningún artículo a tu carrito.',
     continueShopping: 'Continuar comprando',
+    vendorStore: 'Tienda',
     subtotal: 'Subtotal',
     shipping: 'Envío',
     total: 'Total',

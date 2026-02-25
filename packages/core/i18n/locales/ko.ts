@@ -157,6 +157,7 @@ export const ko: TranslationResource = {
     empty: '장바구니가 비어 있습니다',
     emptyMessage: '아직 장바구니에 추가된 상품이 없습니다.',
     continueShopping: '쇼핑 계속하기',
+    vendorStore: '상점',
     subtotal: '소계',
     shipping: '배송비',
     total: '총액',

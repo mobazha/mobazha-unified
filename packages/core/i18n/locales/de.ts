@@ -157,6 +157,7 @@ export const de: TranslationResource = {
     empty: 'Ihr Warenkorb ist leer',
     emptyMessage: 'Sie haben noch keine Artikel hinzugefügt.',
     continueShopping: 'Weiter einkaufen',
+    vendorStore: 'Shop',
     subtotal: 'Zwischensumme',
     shipping: 'Versand',
     total: 'Gesamt',

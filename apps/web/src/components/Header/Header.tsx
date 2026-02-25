@@ -21,6 +21,7 @@ import { LanguageSwitcher } from '../LanguageSwitcher';
 import {
   useI18n,
   useUserStore,
+  useCartStore,
   useChatStore,
   selectTotalUnreadCount,
   getImageUrl,
@@ -44,6 +45,7 @@ import {
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
 import { WalletConnectButton } from '../Wallet';
+import { CartDrawer } from '../CartDrawer';
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -52,6 +54,8 @@ export const Header: React.FC = () => {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cartOpen, setCartOpen] = useState(false);
+  const cartItemCount = useCartStore(state => state.getItemCount());
 
   const standaloneMode = isStandalone();
   const isSeller = standaloneMode && authMode === 'basic';
@@ -121,13 +125,11 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 已登录用户显示：通知、消息、购物车、钱包连接 */}
+            {/* 已登录用户：通知、消息、钱包 */}
             {isAuthenticated && (
               <>
-                {/* 通知下拉面板 */}
                 <NotificationDropdown />
 
-                {/* 消息图标 + 未读徽章 */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -143,26 +145,36 @@ export const Header: React.FC = () => {
                     </span>
                   )}
                 </Button>
-
-                {/* 购物车图标 + 数量徽章 */}
-                <Link href="/cart" className="relative" data-testid="header-cart-link">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-primary/10 hover:text-primary transition-colors"
-                    aria-label="View shopping cart"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                  </Button>
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                    3
-                  </span>
-                </Link>
-
-                {/* 钱包连接 - 使用 AppKit 原生组件，包含余额显示 */}
-                <WalletConnectButton />
               </>
             )}
+
+            {/* 购物车 — 对所有用户可见（数据在 localStorage） */}
+            <button
+              className="relative"
+              data-testid="header-cart-link"
+              onClick={() => setCartOpen(true)}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-primary/10 hover:text-primary transition-colors"
+                aria-label="View shopping cart"
+                asChild
+              >
+                <span>
+                  <ShoppingCart className="h-5 w-5" />
+                </span>
+              </Button>
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                </span>
+              )}
+            </button>
+            <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+
+            {/* 已登录：钱包连接 */}
+            {isAuthenticated && <WalletConnectButton />}
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />

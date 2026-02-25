@@ -157,6 +157,7 @@ export const ja: TranslationResource = {
     empty: 'カートは空です',
     emptyMessage: 'まだカートに商品がありません。',
     continueShopping: '買い物を続ける',
+    vendorStore: '店舗',
     subtotal: '小計',
     shipping: '送料',
     total: '合計',

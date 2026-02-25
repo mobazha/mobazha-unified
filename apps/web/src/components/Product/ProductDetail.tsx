@@ -12,11 +12,11 @@ import { cn } from '@/lib/utils';
 import {
   productDataService,
   profileApi,
-  cartApi,
   getImageUrl,
   useI18n,
   useCurrency,
   useUserStore,
+  useCartStore,
   universalSwapService,
   decodeHtmlEntities,
   sanitizeHtml,
@@ -136,7 +136,6 @@ export function ProductDetail({
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [addingToCart, setAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [_isWishlist, _setIsWishlist] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
@@ -373,29 +372,37 @@ export function ProductDetail({
     return sum / safeRatings.length;
   }, [safeRatings]);
 
-  // 添加到购物车
-  const handleAddToCart = useCallback(async () => {
+  const addCartItem = useCartStore(state => state.addItem);
+
+  const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
 
-    setAddingToCart(true);
-    setCartSuccess(false);
+    const thumbnail = product.item?.images?.[0] ?? {
+      tiny: '',
+      small: '',
+      medium: '',
+      large: '',
+      original: '',
+    };
+    const price = Number(product.item?.price) || 0;
+    const currency = product.metadata?.pricingCurrency?.code || 'USD';
+    const divisibility = product.metadata?.pricingCurrency?.divisibility ?? 2;
 
-    try {
-      const result = await cartApi.addToCart(product.vendorID.peerID, {
+    addCartItem({
+      listing: {
         slug: product.slug,
-        quantity,
-      });
+        title: product.item?.title || product.slug,
+        thumbnail,
+        price: { amount: price, currency: { code: currency, divisibility } },
+        vendorPeerID: product.vendorID.peerID,
+        vendorHandle: product.vendorID.handle,
+      },
+      quantity,
+    });
 
-      if ('success' in result && result.success) {
-        setCartSuccess(true);
-        setTimeout(() => setCartSuccess(false), 3000);
-      }
-    } catch (err) {
-      console.error('Failed to add to cart:', err);
-    } finally {
-      setAddingToCart(false);
-    }
-  }, [product, quantity]);
+    setCartSuccess(true);
+    setTimeout(() => setCartSuccess(false), 3000);
+  }, [product, quantity, addCartItem]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {
@@ -1032,15 +1039,10 @@ export function ProductDetail({
                       stock === 0 && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleAddToCart}
-                    disabled={addingToCart || stock === 0}
+                    disabled={stock === 0}
                     data-testid="product-detail-add-to-cart"
                   >
-                    {addingToCart ? (
-                      <span className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        {t('common.loading')}
-                      </span>
-                    ) : cartSuccess ? (
+                    {cartSuccess ? (
                       <span className="flex items-center gap-2">
                         <svg
                           className="w-5 h-5"

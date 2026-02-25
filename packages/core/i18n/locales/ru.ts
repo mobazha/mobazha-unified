@@ -157,6 +157,7 @@ export const ru: TranslationResource = {
     empty: 'Корзина пуста',
     emptyMessage: 'Вы ещё ничего не добавили в корзину.',
     continueShopping: 'Продолжить покупки',
+    vendorStore: 'Магазин',
     subtotal: 'Подытог',
     shipping: 'Доставка',
     total: 'Итого',
