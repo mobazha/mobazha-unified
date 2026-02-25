@@ -134,7 +134,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           </p>
                         </Link>
                         <button
-                          className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
                           onClick={() => removeItem(item.listing.slug, item.listing.vendorPeerID)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -152,7 +152,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         <div className="flex items-center border border-border rounded-md overflow-hidden">
                           <button
                             data-testid="cart-item-qty-decrease"
-                            className="w-7 h-7 flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors disabled:opacity-40"
+                            className="w-9 h-9 flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors disabled:opacity-40"
                             disabled={item.quantity <= 1}
                             onClick={() =>
                               updateQuantity(
@@ -161,9 +161,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                 item.quantity - 1
                               )
                             }
-                            aria-label="Decrease quantity"
+                            aria-label={t('cart.decreaseQuantity')}
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-3.5 h-3.5" />
                           </button>
                           <span
                             className="w-8 text-center text-sm font-medium tabular-nums border-x border-border"
@@ -172,7 +172,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             {item.quantity}
                           </span>
                           <button
-                            className="w-7 h-7 flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors"
+                            className="w-9 h-9 flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors"
                             onClick={() =>
                               updateQuantity(
                                 item.listing.slug,
@@ -180,10 +180,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                 item.quantity + 1
                               )
                             }
-                            aria-label="Increase quantity"
+                            aria-label={t('cart.increaseQuantity')}
                             data-testid="cart-item-qty-increase"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
 

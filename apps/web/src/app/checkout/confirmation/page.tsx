@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Header, Footer } from '@/components';
+import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,11 +20,12 @@ function ConfirmationContent() {
   const totalRaw = searchParams.get('total') || '';
   const currency = searchParams.get('currency') || 'USD';
   const vendorName = searchParams.get('vendorName') || '';
-  const totalMinorUnits = totalRaw ? parseInt(totalRaw, 10) : 0;
+  const totalAmount = totalRaw ? parseFloat(totalRaw) : 0;
 
   return (
     <div className="min-h-screen bg-background" data-testid="order-confirmation-page">
       <Header />
+      <MobilePageHeader title={t('checkout.orderConfirmed')} showBack={false} />
 
       <main className="py-8">
         <Container size="md">
@@ -34,9 +35,9 @@ function ConfirmationContent() {
             <CardContent className="p-6 sm:p-8">
               <VStack gap="lg" align="center" className="text-center">
                 {/* Success icon */}
-                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-green-600 dark:text-green-400"
+                    className="w-8 h-8 text-emerald-600 dark:text-emerald-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -83,13 +84,13 @@ function ConfirmationContent() {
                       <span className="text-sm text-foreground">{vendorName}</span>
                     </HStack>
                   )}
-                  {totalMinorUnits > 0 && (
+                  {totalAmount > 0 && (
                     <HStack justify="between" className="pt-2 border-t border-border">
                       <span className="text-sm font-semibold text-foreground">
                         {t('checkout.total')}
                       </span>
                       <span className="text-sm font-bold text-primary">
-                        {renderPairedPrice(totalMinorUnits, currency)}
+                        {renderPairedPrice(totalAmount, currency, { isMinimalUnit: false })}
                       </span>
                     </HStack>
                   )}
@@ -99,13 +100,13 @@ function ConfirmationContent() {
                 <VStack gap="sm" className="w-full">
                   {orderID && (
                     <Link href={`/orders/${orderID}`} className="w-full">
-                      <Button className="w-full" data-testid="view-order-btn">
+                      <Button size="lg" className="w-full" data-testid="view-order-btn">
                         {t('checkout.viewOrder')}
                       </Button>
                     </Link>
                   )}
                   <Link href="/" className="w-full">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" size="lg" className="w-full">
                       {t('checkout.continueShopping')}
                     </Button>
                   </Link>

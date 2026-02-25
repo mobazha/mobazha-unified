@@ -185,7 +185,8 @@ export function CheckoutMobile({ checkout }: Props) {
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
-                            className="w-7 h-7 flex items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-9 h-9 flex items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label={t('cart.decreaseQuantity')}
                           >
                             <svg
                               className="w-3.5 h-3.5"
@@ -206,7 +207,8 @@ export function CheckoutMobile({ checkout }: Props) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-7 h-7 flex items-center justify-center rounded-md border border-border hover:bg-muted"
+                            className="w-9 h-9 flex items-center justify-center rounded-md border border-border hover:bg-muted"
+                            aria-label={t('cart.increaseQuantity')}
                           >
                             <svg
                               className="w-3.5 h-3.5"

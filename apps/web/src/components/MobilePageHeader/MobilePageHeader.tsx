@@ -49,12 +49,12 @@ export function MobilePageHeader({
         transparent ? 'bg-transparent' : 'bg-background/95 backdrop-blur-sm border-b border-border'
       } ${className}`}
     >
-      <div className="flex items-center justify-between h-11 px-2">
-        {/* 左侧返回按钮 */}
+      <div className="flex items-center justify-between h-12 px-1">
+        {/* 左侧返回按钮 — 44px 触摸目标 */}
         {showBack ? (
           <button
             onClick={handleBack}
-            className="w-10 h-10 flex items-center justify-center text-foreground touch-feedback rounded-full active:bg-muted/50"
+            className="w-11 h-11 flex items-center justify-center text-foreground touch-feedback rounded-full active:bg-muted/50"
             aria-label={t('common.back')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,7 +67,7 @@ export function MobilePageHeader({
             </svg>
           </button>
         ) : (
-          <div className="w-10 h-10" />
+          <div className="w-11 h-11" />
         )}
 
         {/* 中间标题 */}
@@ -79,7 +79,7 @@ export function MobilePageHeader({
         {rightAction ? (
           <div className="flex items-center">{rightAction}</div>
         ) : (
-          <div className="w-10 h-10" />
+          <div className="w-11 h-11" />
         )}
       </div>
     </div>

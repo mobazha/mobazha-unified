@@ -91,6 +91,11 @@ export function createStandaloneApi(request: APIRequestContext, password: string
       return resp.json();
     },
 
+    async getListingIndex() {
+      const resp = await apiGet('/v1/listings/index');
+      return resp.json();
+    },
+
     async getListings(peerID: string) {
       const resp = await request.get(`${STANDALONE_API}/v1/listings/${peerID}`);
       return resp.json();

@@ -2,12 +2,14 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Header, Footer } from '@/components';
+import { Header, Footer, MobilePageHeader } from '@/components';
 import {
   PaymentMethodSummary,
   PaymentProtectionCard,
   CheckoutBottomBar,
+  TransactionOverlay,
 } from '@/components/Payment';
+import type { PaymentStep } from '@/components/Payment';
 import { OrderSummaryCard } from '@/components/Order';
 import { RwaPurchaseFlow } from '@/components/RwaToken';
 import { Container, HStack, VStack } from '@/components/layouts';
@@ -132,7 +134,10 @@ export default function PaymentPage() {
   const [error, setError] = useState<string | null>(null);
 
   // 支付状态
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<PaymentStep>('idle');
+  const [submittedTxHash, setSubmittedTxHash] = useState<string>();
+  const [paymentError, setPaymentError] = useState<string>();
+  const isProcessing = paymentStep !== 'idle' && paymentStep !== 'failed';
   const [paymentProtectionEnabled, setPaymentProtectionEnabled] = useState(true);
 
   // 使用支付选择器 Hook
@@ -440,7 +445,9 @@ export default function PaymentPage() {
       return;
     }
 
-    setIsProcessing(true);
+    setPaymentStep('confirming');
+    setPaymentError(undefined);
+    setSubmittedTxHash(undefined);
 
     try {
       // 1. 计算支付金额
@@ -517,12 +524,11 @@ export default function PaymentPage() {
 
       // 4. 检查是否为外部钱包支付（UTXO 链如 BTC/LTC）
       if (response.paymentType === 'external_wallet') {
-        // TODO: 显示外部钱包支付模态框
         toast({
           title: t('payment.externalWalletRequired'),
           description: t('payment.pleaseUseExternalWallet'),
         });
-        setIsProcessing(false);
+        setPaymentStep('idle');
         return;
       }
 
@@ -557,11 +563,6 @@ export default function PaymentPage() {
       // 使用已计算的支付金额（paymentAmountForApi）
       const paymentAmount = paymentAmountForApi;
 
-      toast({
-        title: t('payment.confirmInWallet'),
-        description: t('payment.pleaseConfirmTransaction'),
-      });
-
       // 执行合约支付（自动处理 ERC20 授权）
       const txResult = await transactionService.executeContractPayment(
         paymentTokenAddress,
@@ -575,62 +576,38 @@ export default function PaymentPage() {
       }
 
       const txHash = txResult.transactionHash!;
+      setSubmittedTxHash(txHash);
+      setPaymentStep('submitted');
 
-      toast({
-        title: t('payment.transactionSent'),
-        description: `${t('payment.txHash')}: ${txHash.slice(0, 10)}...`,
-      });
-
-      // 7. 通知后端支付完成（使用 /v1/order/payment API）
-      // 与移动端保持一致：直接使用后端返回的 paymentData，只添加 transactionID 和 timestamp
+      // 7. 通知后端支付完成
+      setPaymentStep('completing');
       try {
         const { paymentData: pd } = response;
         if (pd) {
-          // 后端返回的 paymentData 已包含 toAddress、orderID、coin、amount、method 等所有必要字段
           const submitData = {
             ...pd,
             transactionID: txHash,
             timestamp: new Date().toISOString(),
           };
           await ordersApi.submitPayment(submitData);
-        } else {
-          // 如果后端没有返回 paymentData，跳过提交
         }
       } catch {
-        // 即使后端返回错误，交易已经发出，仍然算成功
+        // 交易已上链，后端通知失败不影响支付结果
       }
 
       // 8. 支付成功，跳转到订单确认页
-      toast({
-        title: t('payment.success'),
-        description: t('payment.paymentComplete'),
-      });
-
+      setPaymentStep('success');
+      await new Promise(resolve => setTimeout(resolve, 1200));
       router.push(buildConfirmationUrl(orderDetails));
     } catch (error) {
       console.error('[Payment] Payment failed:', error);
 
-      // 用户取消交易的情况
-      const errorMessage = (error as Error).message || '';
-      if (
-        errorMessage.includes('rejected') ||
-        errorMessage.includes('denied') ||
-        errorMessage.includes('cancelled')
-      ) {
-        toast({
-          title: t('payment.cancelled'),
-          description: t('payment.userCancelledTransaction'),
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: t('payment.failed'),
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setIsProcessing(false);
+      const msg = (error as Error).message || '';
+      const isCancelled =
+        msg.includes('rejected') || msg.includes('denied') || msg.includes('cancelled');
+
+      setPaymentError(isCancelled ? t('payment.userCancelledTransaction') : msg);
+      setPaymentStep('failed');
     }
   }, [
     orderDetails,
@@ -650,6 +627,7 @@ export default function PaymentPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <MobilePageHeader title={t('payment.title')} />
         <main className="py-8">
           <Container size="md">
             <div className="text-center py-12">
@@ -682,26 +660,14 @@ export default function PaymentPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('payment.title')} />
 
       <main className="py-4 sm:py-8 pb-24 sm:pb-8">
         <Container size="xl">
-          {/* Page Header */}
-          <HStack gap="sm" align="center" className="mb-4 sm:mb-8">
-            <button
-              onClick={() => router.back()}
-              className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors touch-feedback"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('payment.title')}</h1>
-          </HStack>
+          {/* Desktop Page Header */}
+          <h1 className="hidden lg:block text-2xl font-bold text-foreground mb-8">
+            {t('payment.title')}
+          </h1>
 
           <CheckoutProgressBar currentStep="payment" className="mb-6 sm:mb-8" />
 
@@ -972,6 +938,21 @@ export default function PaymentPage() {
           disabled={!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)}
         />
       )}
+
+      <TransactionOverlay
+        step={paymentStep}
+        txHash={submittedTxHash}
+        tokenId={selectedTokenId || undefined}
+        errorMessage={paymentError}
+        onRetry={() => {
+          setPaymentStep('idle');
+          setPaymentError(undefined);
+        }}
+        onClose={() => {
+          setPaymentStep('idle');
+          setPaymentError(undefined);
+        }}
+      />
     </div>
   );
 }

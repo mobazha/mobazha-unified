@@ -28,10 +28,11 @@ export function legacyOptionsToCheckoutZones(options: ShippingOption[]): Checkou
     currency: option.currency || 'USD',
     rates: (option.services || []).map(service => ({
       name: service.name,
-      price: service.firstFreight ?? service.price ?? 0,
+      price: parseInt(String(service.firstFreight ?? service.price ?? 0), 10) || 0,
       currency: option.currency || 'USD',
       estimatedDelivery: service.estimatedDelivery,
-      additionalItemPrice: service.renewalUnitPrice ?? service.additionalItemPrice ?? 0,
+      additionalItemPrice:
+        parseInt(String(service.renewalUnitPrice ?? service.additionalItemPrice ?? 0), 10) || 0,
     })),
   }));
 }

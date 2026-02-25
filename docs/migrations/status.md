@@ -49,23 +49,24 @@
 
 ## Phase 3: 页面迁移 (部分完成)
 
-| 页面       | RN 源                  | Web 目标                      | 状态 | 说明      |
-| ---------- | ---------------------- | ----------------------------- | ---- | --------- |
-| 首页       | screens/Home.js        | apps/web/app/page.tsx         | ✅   | 基础结构  |
-| 店铺页     | screens/StoreDetail.js | apps/web/app/store/[peerId]   | ✅   | 基础结构  |
-| 聊天列表   | screens/Chat.js        | apps/web/app/chat/page.tsx    | ✅   | Mock 数据 |
-| 聊天详情   | screens/ChatRoom.js    | apps/web/app/chat/[roomId]    | ✅   | Mock 数据 |
-| 钱包页     | screens/Wallet.js      | apps/web/app/wallet/page.tsx  | ✅   | Mock 数据 |
-| 订单列表   | screens/Orders.js      | apps/web/app/orders/page.tsx  | ✅   | Mock 数据 |
-| 订单详情   | screens/OrderDetail.js | apps/web/app/orders/[orderId] | ✅   | Mock 数据 |
-| 商品详情   | screens/Listing.js     | apps/web/app/product/[slug]   | ✅   | 完整功能  |
-| 搜索页     | screens/Search.js      | apps/web/app/search           | ✅   | 完整功能  |
-| 设置页     | screens/Settings.js    | apps/web/app/settings         | ✅   | 完整功能  |
-| 用户资料页 | screens/Profile.js     | apps/web/app/profile          | ✅   | 完整功能  |
-| 商品创建   | screens/createListing  | apps/web/app/listing/new      | ✅   | 完整功能  |
-| 商品编辑   | screens/editListing    | apps/web/app/listing/edit     | ✅   | 完整功能  |
-| 购物车     | screens/ShoppingCart   | apps/web/app/cart             | ✅   | 完整功能  |
-| 结算页     | screens/Checkout       | apps/web/app/checkout         | ✅   | 完整功能  |
+| 页面       | RN 源                  | Web 目标                      | 状态 | 说明                                                                |
+| ---------- | ---------------------- | ----------------------------- | ---- | ------------------------------------------------------------------- |
+| 首页       | screens/Home.js        | apps/web/app/page.tsx         | ✅   | 基础结构                                                            |
+| 店铺页     | screens/StoreDetail.js | apps/web/app/store/[peerId]   | ✅   | 基础结构                                                            |
+| 聊天列表   | screens/Chat.js        | apps/web/app/chat/page.tsx    | ✅   | Mock 数据                                                           |
+| 聊天详情   | screens/ChatRoom.js    | apps/web/app/chat/[roomId]    | ✅   | Mock 数据                                                           |
+| 钱包页     | screens/Wallet.js      | apps/web/app/wallet/page.tsx  | ✅   | Mock 数据                                                           |
+| 订单列表   | screens/Orders.js      | apps/web/app/orders/page.tsx  | ✅   | Mock 数据                                                           |
+| 订单详情   | screens/OrderDetail.js | apps/web/app/orders/[orderId] | ✅   | Mock 数据                                                           |
+| 商品详情   | screens/Listing.js     | apps/web/app/product/[slug]   | ✅   | 完整功能                                                            |
+| 搜索页     | screens/Search.js      | apps/web/app/search           | ✅   | 完整功能                                                            |
+| 设置页     | screens/Settings.js    | apps/web/app/settings         | ✅   | 完整功能                                                            |
+| 用户资料页 | screens/Profile.js     | apps/web/app/profile          | ✅   | 完整功能                                                            |
+| 商品创建   | screens/createListing  | apps/web/app/listing/new      | ✅   | 完整功能                                                            |
+| 商品编辑   | screens/editListing    | apps/web/app/listing/edit     | ✅   | 完整功能                                                            |
+| 购物车     | screens/ShoppingCart   | apps/web/app/cart             | ✅   | per-vendor 分组、价格修复、E2E 通过                                 |
+| 结算页     | screens/Checkout       | apps/web/app/checkout         | ✅   | Desktop/Mobile 双视图、useCheckout hook、Progress Bar、Confirmation |
+| 支付页     | screens/Payment        | apps/web/app/payment          | ✅   | EVM 测试网支持、Progress Bar                                        |
 
 ## Phase 4: 基础设施 (已完成)
 
