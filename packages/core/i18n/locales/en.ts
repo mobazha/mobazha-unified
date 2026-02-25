@@ -95,6 +95,7 @@ export const en: TranslationResource = {
     removing: 'Removing...',
     remove: 'Remove',
     loginRequired: 'Please log in to continue',
+    backToHome: 'Back to Home',
     clearAll: 'Clear All',
     done: 'Done',
     submitting: 'Submitting...',
@@ -341,6 +342,16 @@ export const en: TranslationResource = {
 
   checkout: {
     title: 'Checkout',
+    stepCheckout: 'Checkout',
+    stepPayment: 'Payment',
+    stepConfirmation: 'Confirmation',
+    orderConfirmed: 'Order Placed Successfully!',
+    orderConfirmedDesc: 'Your order has been placed and is being processed.',
+    orderId: 'Order ID',
+    item: 'Item',
+    seller: 'Seller',
+    viewOrder: 'View Order Details',
+    continueShopping: 'Continue Shopping',
     shippingAddress: 'Shipping Address',
     paymentMethod: 'Payment Method',
     orderSummary: 'Order Summary',
@@ -388,6 +399,8 @@ export const en: TranslationResource = {
       'This is an instant RWA swap. Your payment will be exchanged for token shares immediately after confirmation.',
     rwaConfirmRequiredHint:
       'This transaction requires seller confirmation. Your payment will be locked until the seller confirms.',
+    loadFailed: 'Unable to load checkout',
+    loadFailedDesc: 'Something went wrong while preparing your order. Please try again later.',
   },
 
   // 地址管理

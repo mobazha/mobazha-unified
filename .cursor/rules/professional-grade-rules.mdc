@@ -83,7 +83,7 @@ Mobazha 正从 P2P 交易工具进化为 Web3 Shopify 专业电商平台。
 1. **Admin 路由前缀**：所有卖家管理页使用 `/admin/` 前缀
 2. **Layout 区分**：Admin 页面用 `AdminLayout`，Storefront 用现有 Layout
 3. **组件复用**：Admin 和 Storefront 共享底层组件（ProductCard、OrderCard 等），通过 props 区分行为
-4. **Desktop 迁移**：只参考业务逻辑和用户意图，交互和 API 按最佳体验重新设计
+4. **历史项目参考**：Desktop 和 Mobile App 只参考业务逻辑和用户意图，交互和 API 按最佳体验重新设计（详见 Roadmap Section 8.1a）
 5. **不在 Admin 中显示买家操作**：Admin 视图不显示 Add to Cart / Buy Now
 6. **不在 Storefront 中暴露管理功能**：非卖家不可见编辑/删除操作
 7. **UX 驱动 API**：产品未上线，如果理想 UX 需要新 API 或修改现有 API，直接设计并记录到对应 PG 任务中

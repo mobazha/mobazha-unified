@@ -29,6 +29,14 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
   const handleCheckout = useCallback(() => {
     onOpenChange(false);
+    if (items.length === 0) return;
+
+    const vendors = new Set(items.map(i => i.listing.vendorPeerID));
+    if (vendors.size > 1) {
+      router.push('/cart');
+      return;
+    }
+
     if (items.length === 1) {
       const item = items[0];
       const params = new URLSearchParams({
@@ -38,7 +46,11 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
       });
       router.push(`/checkout?${params.toString()}`);
     } else {
-      router.push('/cart');
+      const vendorPeerID = items[0].listing.vendorPeerID;
+      const slugs = items.map(i => i.listing.slug).join(',');
+      router.push(
+        `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`
+      );
     }
   }, [items, router, onOpenChange]);
 
