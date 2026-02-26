@@ -568,6 +568,8 @@ export const en: TranslationResource = {
     allOrders: 'All Orders',
     from: 'From',
     to: 'To',
+    untitledItem: 'Untitled Item',
+    fundsProtected: 'Protected amount',
     processing: 'Processing',
     manageOrders: 'Manage your purchases and sales',
     noOrdersFound: 'No orders found',

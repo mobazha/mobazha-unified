@@ -560,13 +560,14 @@ export function ProductDetail({
             >
               <Avatar
                 src={getImageUrl(vendor?.avatarHashes?.small)}
-                name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
+                name={vendor?.name || vendorPeerID || ''}
                 size="sm"
                 className="w-9 h-9 flex-shrink-0"
               />
               <div className="min-w-0">
                 <h3 className="font-semibold text-foreground text-sm truncate">
-                  {vendor?.name || vendorPeerID?.slice(0, 8)}
+                  {vendor?.name ||
+                    (vendorPeerID ? `${vendorPeerID.slice(0, 6)}…${vendorPeerID.slice(-4)}` : '')}
                 </h3>
                 <span className="text-xs text-primary hover:underline">
                   {t('product.goToStore')}

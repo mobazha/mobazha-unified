@@ -62,7 +62,11 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     '';
 
   // 使用 API 返回的卖家名称和头像
-  const vendorName = item.vendorName || item.vendorPeerID?.substring(0, 8) || 'Unknown';
+  const vendorName =
+    item.vendorName ||
+    (item.vendorPeerID
+      ? `${item.vendorPeerID.substring(0, 6)}…${item.vendorPeerID.slice(-4)}`
+      : '');
   const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
 
   return {

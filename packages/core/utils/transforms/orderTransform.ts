@@ -15,6 +15,7 @@ import type {
 } from '../../types/orderDisplay';
 import { getImageUrl } from '../../services/api/config';
 import { formatTokenAmount, getTokenById } from '../../data/tokens';
+import { formatUserName } from '../identity';
 
 // ============ Internal Types ============
 
@@ -588,13 +589,13 @@ export function transformCoreOrder(
     createdAt: timestamp,
     vendor: {
       id: vendorPeerID,
-      name: vendorHandle || (vendorPeerID ? vendorPeerID.slice(0, 12) + '...' : 'Unknown'),
+      name: formatUserName({ name: vendorHandle, peerID: vendorPeerID }, { fallback: 'Seller' }),
       avatar: '',
       peerID: vendorPeerID,
     },
     buyer: {
       id: buyerPeerID,
-      name: buyerHandle || (buyerPeerID ? buyerPeerID.slice(0, 12) + '...' : 'Unknown'),
+      name: formatUserName({ name: buyerHandle, peerID: buyerPeerID }, { fallback: 'Buyer' }),
       avatar: '',
       peerID: buyerPeerID,
     },

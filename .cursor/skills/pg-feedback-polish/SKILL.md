@@ -35,8 +35,27 @@ PG-009（独立站首页差异化）  ← 品牌着陆页，2-3 天
 身份展示优先级：
 
 1. 可读名称（store name / username）— 有名字就显示名字
-2. 截断 ID + tooltip — 无名字时显示 `Store QmY8...tRnC` 或 `User QmBu...eer1`
+2. 截断 ID + tooltip — 无名字时显示 `Store QmY8…tRnC` 或 `User QmBu…eer1`
 3. 完整 ID — 仅在用户主动点击"查看完整 ID"或"复制"时展示
+
+### 重要背景：Name 是必填项
+
+- 后端 `validateProfile` 强制 `name` 非空，onboarding 前端也有校验
+- **生产环境中 vendorName 几乎总有值**，fallback 仅面向极端边缘情况
+- **E2E 截图中的 "Unknown" 是 mock 数据质量问题**（PG-007b），非生产问题
+
+### Fallback 策略（关键：上下文相关，非一刀切）
+
+**不要盲目用空字符串替换 "Unknown"。** Fallback 是防御性编程，应选择比 "Unknown" 更有语义的替代：
+
+- **商品卡片 vendorName** → 空字符串（组件条件渲染，空=隐藏该行，卡片仍完整）
+- **通知发送者** → 空字符串（省略主语，只保留事件描述）
+- **订单列表/详情对方名** → 角色标签 `"Seller"` / `"Buyer"`（空字符串在 "From:" 后视觉上像 bug）
+- **聊天房间名** → `"Chat"`（空名房间看起来损坏）
+- **结账页卖家** → `"Seller"`（买家需要知道向谁付款）
+- **数据转换层** → peerID 截断 → 角色标签（peerID 几乎总存在，角色标签是最终兜底）
+
+详见 `.cursor/rules/identity-display-rules.mdc` 的 Fallback 策略表。
 
 ### Step 1: 创建身份工具函数
 

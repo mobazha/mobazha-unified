@@ -244,7 +244,11 @@ export default function BlockedUsersPage() {
                         {user.blockedBy === 'auto' ? 'Auto-blocked' : 'Blocked'}
                       </span>
                     </HStack>
-                    <p className="text-sm text-muted-foreground font-mono">{user.peerID}</p>
+                    <p className="text-sm text-muted-foreground font-mono">
+                      {user.peerID && user.peerID.length > 16
+                        ? `${user.peerID.slice(0, 6)}…${user.peerID.slice(-4)}`
+                        : user.peerID}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Blocked on {formatDate(user.blockedAt)}
                     </p>

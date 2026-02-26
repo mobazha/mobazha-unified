@@ -35,6 +35,9 @@ export * from './variantUtils';
 // 价格工具
 export * from './priceUtils';
 
+// 身份展示工具
+export * from './identity';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

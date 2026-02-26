@@ -45,11 +45,47 @@ import { formatUserName, truncateAddress } from '@mobazha/core/utils/identity';
 - 面向技术用户的高级设置页面（如 Advanced Settings）可以保留
 - 仲裁者列表页（Moderators）作为功能名称保留
 
+## 生产环境数据保证
+
+- **name 是必填项**：onboarding 前端校验 + 后端 `validateProfile` 强制 `len(Name) > 0`
+- **vendorName 几乎总有值**：搜索索引从 profile 同步 name，仅历史数据或索引延迟时可能为空
+- **Fallback 是防御性编程**：面向极端边缘情况（API 故障、数据竞态、历史数据），不是常规路径
+- **E2E 截图中的 "Unknown" 是 mock 数据质量问题**（PG-007b），非生产问题
+
 ## 身份展示优先级
 
 1. **可读名称**：如果有 `name` 或 `handle` 字段，优先显示
-2. **截断 ID + 前缀**：无名称时显示 `Store QmY8...tRnC` 或 `User QmBu...eer1`
+2. **截断 ID + 前缀**：无名称时显示 `Store QmY8…tRnC` 或 `User QmBu…eer1`
 3. **完整 ID**：仅在用户主动操作时展示（点击复制、查看详情等）
+
+## Fallback 策略（上下文相关，非一刀切）
+
+**核心原则**：名称不可用时的 fallback 取决于 UI 上下文。不要盲目用空字符串替换 "Unknown"。
+Fallback 仅面向极端边缘情况，但设计时应选择比 "Unknown" 更有语义的替代。
+
+| UI 上下文 | 推荐 fallback | 说明 |
+|---------|-------------|------|
+| 商品卡片 vendorName | 空字符串 / 不渲染 | 组件有条件渲染 `vendorName && (...)`，空=隐藏该行，可接受 |
+| 通知发送者 | 空字符串 | 省略主语，只保留事件描述（"Payment received" 而非 "Unknown Payment received"） |
+| 订单列表对方名 | 角色标签 `"Seller"` / `"Buyer"` | "From: " 后面必须有内容，空字符串视觉上像 bug |
+| 订单详情资料卡 | 角色标签 `"Seller"` / `"Buyer"` / `"User"` | 结构化卡片需要可见名称 |
+| 聊天房间名 | `"Chat"` | 空名称的房间看起来损坏 |
+| 结账页卖家 | `"Seller"` | 买家需要知道向谁付款 |
+| 数据转换层（订单） | 截断 peerID → 角色标签 | peerID 几乎总存在；极端情况用角色标签兜底 |
+
+```tsx
+// ✅ 商品卡片：vendorName 为空时隐藏卖家行
+{vendorName && <span>{vendorName}</span>}
+
+// ✅ 订单数据转换：peerID 截断 → 角色标签兜底
+name: formatUserName({ name: handle, peerID }, { fallback: 'Seller' })
+
+// ✅ 通知：无名称时只显示事件
+<span>{handle || ''}</span> {t('notifications.order.paymentReceived')}
+
+// ❌ 错误：所有地方统一用空字符串
+name: formatUserName(..., { fallback: '' })  // 订单列表显示 "From: " 后面空白
+```
 
 ## 通知消息规范
 

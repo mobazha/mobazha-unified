@@ -142,7 +142,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
       default:
         return {
           icon: <Check className="w-3.5 h-3.5" />,
-          title: 'Unknown',
+          title: type || 'Event',
           bgColor: 'bg-muted',
         };
     }
