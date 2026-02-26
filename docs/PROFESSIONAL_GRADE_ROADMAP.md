@@ -319,7 +319,7 @@ V1 不是全部功能做完，而是**用户可以完成核心价值闭环的最
 | V1.3 | PG-109/106（优惠券 + 订单增强）                                             | 提升运营工具                        |
 | V2.0 | Tier 2 全部（品牌化 + AI Store Builder）                                    | 差异化竞争力                        |
 
-> **PG-007（集成管理）说明**：原为 OpenClaw/Agent 集成，已扩展为统一集成管理。包括：(1) TelegramSink 后端（mobazha3.0 内置，非 hosting 专有）；(2) `/admin/settings` Integrations tab（TG 通知 + AI 配置 + Webhook 管理 UI）；(3) 通用文件配置持久化（`telegram_config.json`、`ai_config.json`）；(4) E2E 测试。后端实现已完成（TelegramSink + API handlers），前端 Admin UI 进行中。
+> **PG-007（集成管理）说明**：原为 OpenClaw/Agent 集成，已扩展为统一集成管理。包括：(1) TelegramSink 通知后端（mobazha3.0 内置，ChannelNotificationSink）；(2) `/admin/settings/integrations` Tabs 布局（Notifications tab + AI Assistant tab）；(3) AI 代理引擎（OpenAI 兼容，API Key 服务端保管，Provider 列表从 mobazha.info 远程动态加载）；(4) NodeSettings DB 持久化（GORM AutoMigrate）；(5) 15 个 E2E 测试（UI + API）。全部完成 ✅。
 
 ### 4.7 独立站产品设计指导原则
 
@@ -1001,4 +1001,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-26 (v27: PG-007.5 事件命名统一 — EventMeta.Legacy → Persistent bool，后端/前端全面迁移到 dot-separated 事件名，旧 camelCase 退役)
+最后更新: 2026-02-26 (v28: AI 集成 — 后端 AI 代理引擎 + 远程 Provider 配置 + 前端 AI Assistant Tab + 15 个 E2E 测试)
