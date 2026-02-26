@@ -91,6 +91,7 @@ export const NODE_API = {
   NOTIFICATION_CHANNEL: (id: string) => `/notifications/channels/${id}`,
   NOTIFICATION_CHANNEL_TEST: (id: string) => `/notifications/channels/${id}/test`,
   NOTIFICATION_CHANNEL_TYPES: '/notifications/channel-types',
+  NOTIFICATION_CHANNELS_DETECT_CHAT: '/notifications/channels/detect-chat',
 
   // --- Social / Follow ---
   FOLLOW: (peerID: string) => `/follow/${peerID}`,
