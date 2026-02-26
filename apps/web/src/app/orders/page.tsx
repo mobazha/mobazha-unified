@@ -93,7 +93,8 @@ function getThumbnailUrl(thumbnail: OrderListItem['thumbnail']): string {
 function transformOrderListItem(
   item: OrderListItem,
   orderType: OrderType,
-  profileMap: Map<string, ProfileDisplayInfo>
+  profileMap: Map<string, ProfileDisplayInfo>,
+  labels: { seller: string; buyer: string }
 ): Order {
   const imageUrl = getThumbnailUrl(item.thumbnail);
 
@@ -123,8 +124,8 @@ function transformOrderListItem(
     (counterpartyId
       ? `${counterpartyId.slice(0, 6)}…${counterpartyId.slice(-4)}`
       : orderType === 'purchases'
-        ? 'Seller'
-        : 'Buyer');
+        ? labels.seller
+        : labels.buyer);
   const counterpartyAvatar = profileInfo?.avatar || undefined;
 
   return {
@@ -252,11 +253,11 @@ function OrdersPageContent() {
   }, [rawOrders, orderType]);
 
   // 转换数据格式（确保 rawOrders 是数组），使用 profileMap 增强数据
+  const roleLabels = useMemo(() => ({ seller: t('order.seller'), buyer: t('order.buyer') }), [t]);
   const orders = useMemo(() => {
-    // 防御性处理：确保是数组
     const ordersArray = Array.isArray(rawOrders) ? rawOrders : [];
-    return ordersArray.map(item => transformOrderListItem(item, orderType, profileMap));
-  }, [rawOrders, orderType, profileMap]);
+    return ordersArray.map(item => transformOrderListItem(item, orderType, profileMap, roleLabels));
+  }, [rawOrders, orderType, profileMap, roleLabels]);
 
   const statusTabs: { value: OrderStatus; label: string }[] = [
     { value: 'all', label: t('order.allOrders') },

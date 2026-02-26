@@ -102,6 +102,8 @@ export const en: TranslationResource = {
     urlPlaceholder: 'https://example.com',
     selectAll: 'Select All',
     selected: 'selected',
+    user: 'User',
+    event: 'Event',
   },
 
   share: {
@@ -1026,6 +1028,7 @@ export const en: TranslationResource = {
 
   chat: {
     title: 'Messages',
+    defaultRoom: 'Chat',
     conversations: 'Conversations',
     newMessage: 'New Message',
     typeMessage: 'Type a message...',

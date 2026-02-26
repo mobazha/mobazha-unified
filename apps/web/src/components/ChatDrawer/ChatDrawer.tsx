@@ -12,10 +12,10 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { UserInfoCard, type UserInfo } from '@/components/Chat/UserInfoCard';
 
 // 转换 MatrixRoom 到 ChatRoom
-function toDisplayRoom(room: MatrixRoom): ChatRoom {
+function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
   return {
     id: room.roomId,
-    name: room.name || 'Chat',
+    name: room.name || defaultName,
     avatar: room.avatarUrl,
     rawMxcAvatarUrl: room.rawMxcAvatarUrl, // 原始 mxc URL 用于认证下载
     lastMessage: room.lastMessage?.content,
@@ -80,6 +80,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   onShareChatId,
 }) => {
   const { t } = useI18n();
+  const defaultRoomName = t('chat.defaultRoom');
 
   // 房间设置显示状态
   const [showRoomSettings, setShowRoomSettings] = useState(false);
@@ -115,7 +116,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   // 房间列表转换
   const displayRooms = useMemo(() => {
     return rooms.map(room => {
-      const displayRoom = toDisplayRoom(room);
+      const displayRoom = toDisplayRoom(room, defaultRoomName);
       // 更新在线状态
       if (room.isDirect && room.members?.length) {
         const otherMember = room.members.find(m => m.userId !== currentUserId);
@@ -125,12 +126,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       }
       return displayRoom;
     });
-  }, [rooms, userPresence, currentUserId]);
+  }, [rooms, userPresence, currentUserId, defaultRoomName]);
 
   // 邀请列表转换
   const displayInvites = useMemo(() => {
-    return invites.map(toDisplayRoom);
-  }, [invites]);
+    return invites.map(room => toDisplayRoom(room, defaultRoomName));
+  }, [invites, defaultRoomName]);
 
   // 当前房间消息
   const currentMessages = useMemo(() => {
@@ -370,7 +371,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       return (
         <ChatMessages
           roomId={currentRoomId}
-          roomName={currentRoom.name || 'Chat'}
+          roomName={currentRoom.name || t('chat.defaultRoom')}
           roomAvatar={currentRoom.avatarUrl}
           roomRawMxcAvatarUrl={currentRoom.rawMxcAvatarUrl}
           isEncrypted={currentRoom.isEncrypted}
@@ -614,7 +615,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                   )}
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-1">
-                  {currentRoom.name || 'Chat'}
+                  {currentRoom.name || t('chat.defaultRoom')}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {currentRoom.isDirect ? t('chat.directMessage') : t('chat.groupChat')}
