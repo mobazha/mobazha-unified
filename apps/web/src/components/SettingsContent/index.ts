@@ -4,3 +4,7 @@ export { ProductGroupsContent } from './ProductGroupsContent';
 export { AccessRequestsContent } from './AccessRequestsContent';
 export { SettingsReferrerBanner } from './SettingsReferrerBanner';
 export { GeneralSettingsContent } from './GeneralSettingsContent';
+export { ProfileSettingsContent } from './ProfileSettingsContent';
+export { StoreSettingsContent } from './StoreSettingsContent';
+export { StorePoliciesContent } from './StorePoliciesContent';
+export { StoreModeratorsContent } from './StoreModeratorsContent';

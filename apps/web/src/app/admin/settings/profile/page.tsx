@@ -5,12 +5,12 @@ import { useI18n } from '@mobazha/core';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 import { ProfileSettingsContent } from '@/components/SettingsContent';
 
-export default function PageSettingsPage() {
+export default function AdminProfileSettingsPage() {
   const { t } = useI18n();
 
   return (
-    <div>
-      <SettingsPageHeader title={t('settings.sidebar.page')} />
+    <div data-testid="admin-settings-profile">
+      <SettingsPageHeader title={t('settings.sidebar.page')} backHref="/admin/settings" />
       <ProfileSettingsContent />
     </div>
   );
