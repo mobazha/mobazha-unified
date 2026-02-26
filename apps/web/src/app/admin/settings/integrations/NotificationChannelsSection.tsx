@@ -315,18 +315,18 @@ export function NotificationChannelsSection() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="font-medium text-foreground">{t('admin.integrations.channels')}</h3>
-          <p className="text-sm text-muted-foreground">{t('admin.integrations.channelsDesc')}</p>
-        </div>
-        {channels.length > 0 && (
+      {!loading && channels.length > 0 && (
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-medium text-foreground">{t('admin.integrations.channels')}</h3>
+            <p className="text-sm text-muted-foreground">{t('admin.integrations.channelsDesc')}</p>
+          </div>
           <Button onClick={openAddDialog} size="sm">
             <Plus className="w-4 h-4 mr-1.5" />
             {t('admin.integrations.addChannel')}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-3">
