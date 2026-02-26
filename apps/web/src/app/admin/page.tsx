@@ -1,136 +1,231 @@
 'use client';
 
-import React from 'react';
-import { useI18n, useUserStore } from '@mobazha/core';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Package,
-  ShoppingCart,
-  DollarSign,
-  Star,
-  Plus,
-  ArrowRight,
-  TrendingUp,
-  Eye,
-} from 'lucide-react';
+  useI18n,
+  useUserStore,
+  useCurrency,
+  productDataService,
+  useSales,
+  isStandalone,
+} from '@mobazha/core';
+import type { ProductListItem } from '@mobazha/core';
+import { Package, ShoppingCart, TrendingUp, Star, Plus, Eye, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import {
+  StatCard,
+  RecentOrderRow,
+  TopProductRow,
+  EmptyState,
+  ListSkeleton,
+  getOrderCurrencyCode,
+} from '@/components/admin/dashboard';
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sublabel,
-  color = 'primary',
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  sublabel?: string;
-  color?: 'primary' | 'success' | 'warning' | 'info';
-}) {
-  const colorMap = {
-    primary: 'bg-primary/10 text-primary',
-    success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    info: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
+
+function useDashboardData() {
+  const { profile } = useUserStore();
+  const { formatPrice, localCurrency, convertToLocal } = useCurrency();
+
+  const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
+  const [ratingAvg, setRatingAvg] = useState<number | null>(null);
+  const [ratingCount, setRatingCount] = useState(0);
+
+  const {
+    orders: salesOrders,
+    isLoading: salesLoading,
+    error: salesError,
+  } = useSales({ limit: 20 });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await productDataService.getMyListings();
+        if (!cancelled) setProducts(data);
+      } catch (err) {
+        if (!cancelled)
+          setProductsError(err instanceof Error ? err.message : 'Failed to load products');
+      } finally {
+        if (!cancelled) setProductsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!profile?.peerID) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const ratings = await productDataService.getStoreRatings(profile.peerID);
+        if (!cancelled) {
+          setRatingAvg(ratings.average);
+          setRatingCount(ratings.count);
+        }
+      } catch {
+        // Ratings are non-critical; silent fallback to defaults
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.peerID]);
+
+  const recentOrders = useMemo(() => salesOrders.slice(0, 5), [salesOrders]);
+
+  const topProducts = useMemo(
+    () =>
+      [...products]
+        .sort((a, b) => {
+          const ratingDiff = (b.averageRating || 0) - (a.averageRating || 0);
+          if (ratingDiff !== 0) return ratingDiff;
+          return (b.ratingCount || 0) - (a.ratingCount || 0);
+        })
+        .slice(0, 5),
+    [products]
+  );
+
+  const totalSalesDisplay = useMemo(() => {
+    if (!salesOrders.length) return '—';
+    let total = 0;
+    for (const order of salesOrders) {
+      if (!order.total?.amount || !REVENUE_STATES.has(order.state)) continue;
+      const cc = getOrderCurrencyCode(order);
+      try {
+        total += convertToLocal(order.total.amount, cc);
+      } catch {
+        // Skip orders with unknown currencies
+      }
+    }
+    if (total <= 0) return '—';
+    return formatPrice(total, localCurrency);
+  }, [salesOrders, convertToLocal, formatPrice, localCurrency]);
+
+  return {
+    profile,
+    products,
+    productsLoading,
+    productsError,
+    salesOrders,
+    salesLoading,
+    salesError,
+    ratingAvg,
+    ratingCount,
+    recentOrders,
+    topProducts,
+    totalSalesDisplay,
   };
+}
 
+function DashboardHeader({ name }: { name: string }) {
+  const { t } = useI18n();
   return (
-    <div className="bg-card border border-border rounded-xl p-5" data-testid="admin-stat-card">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
-          {sublabel && <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>}
-        </div>
-        <div className={`p-2.5 rounded-lg ${colorMap[color]}`}>
-          <Icon className="w-5 h-5" />
-        </div>
-      </div>
+    <div className="mb-8">
+      <h1 className="text-2xl font-bold text-foreground">
+        {t('admin.dashboard.welcome', { name })}
+      </h1>
+      <p className="text-muted-foreground mt-1">{t('admin.dashboard.subtitle')}</p>
     </div>
   );
 }
 
-function EmptyState() {
-  const { t } = useI18n();
-
+function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="text-center py-16 px-4">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-        <Package className="w-8 h-8 text-primary" />
-      </div>
-      <h2 className="text-xl font-semibold text-foreground mb-2">
-        {t('admin.dashboard.emptyTitle')}
-      </h2>
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-        {t('admin.dashboard.emptyDescription')}
-      </p>
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-        <Link
-          href="/listing/new?from=admin"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          {t('admin.dashboard.createFirstProduct')}
-        </Link>
-        <Link
-          href="/admin/settings"
-          className="inline-flex items-center gap-2 px-5 py-2.5 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
-        >
-          {t('admin.dashboard.setupStore')}
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
+    <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-destructive/10 text-destructive text-sm">
+      <AlertCircle className="w-4 h-4 shrink-0" />
+      <span>{message}</span>
     </div>
   );
 }
 
 export default function AdminDashboardPage() {
   const { t } = useI18n();
-  const { profile } = useUserStore();
+  const {
+    profile,
+    products,
+    productsLoading,
+    productsError,
+    salesOrders,
+    salesLoading,
+    salesError,
+    ratingAvg,
+    ratingCount,
+    recentOrders,
+    topProducts,
+    totalSalesDisplay,
+  } = useDashboardData();
+
+  const isDataLoading = productsLoading || salesLoading;
+  const hasProducts = products.length > 0;
+  const hasOrders = salesOrders.length > 0;
+  const isEmpty = !isDataLoading && !hasProducts && !hasOrders;
+  const displayName = profile?.name || 'Seller';
+
+  const standaloneMode = useMemo(() => isStandalone(), []);
+  const storeUrl = profile?.peerID ? (standaloneMode ? '/' : `/store/${profile.peerID}`) : '/';
+
+  if (isEmpty) {
+    return (
+      <div data-testid="admin-dashboard">
+        <DashboardHeader name={displayName} />
+        <EmptyState />
+      </div>
+    );
+  }
 
   return (
     <div data-testid="admin-dashboard">
-      {/* Page header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">
-          {t('admin.dashboard.welcome', { name: profile?.name || 'Seller' })}
-        </h1>
-        <p className="text-muted-foreground mt-1">{t('admin.dashboard.subtitle')}</p>
-      </div>
+      <DashboardHeader name={displayName} />
 
-      {/* Stat cards */}
+      {productsError && <ErrorBanner message={productsError} />}
+      {salesError && <ErrorBanner message={salesError} />}
+
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          icon={DollarSign}
-          label={t('admin.dashboard.totalSales')}
-          value="—"
-          sublabel={t('admin.dashboard.allTime')}
-          color="success"
-        />
-        <StatCard
-          icon={ShoppingCart}
-          label={t('admin.dashboard.newOrders')}
-          value="—"
-          sublabel={t('admin.dashboard.last7Days')}
-          color="info"
-        />
         <StatCard
           icon={Package}
           label={t('admin.dashboard.activeProducts')}
-          value="—"
+          value={String(products.length)}
           sublabel={t('admin.dashboard.published')}
           color="primary"
+          loading={productsLoading}
+        />
+        <StatCard
+          icon={ShoppingCart}
+          label={t('admin.dashboard.totalOrders')}
+          value={String(salesOrders.length)}
+          sublabel={t('admin.dashboard.allTime')}
+          color="info"
+          loading={salesLoading}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label={t('admin.dashboard.totalSales')}
+          value={totalSalesDisplay}
+          sublabel={t('admin.dashboard.completedOrders')}
+          color="success"
+          loading={salesLoading}
         />
         <StatCard
           icon={Star}
           label={t('admin.dashboard.avgRating')}
-          value="—"
-          sublabel={t('admin.dashboard.storeRating')}
+          value={ratingAvg != null && ratingAvg > 0 ? ratingAvg.toFixed(1) : '—'}
+          sublabel={
+            ratingCount > 0
+              ? t('admin.dashboard.reviewCount', { count: ratingCount })
+              : t('admin.dashboard.noReviews')
+          }
           color="warning"
+          loading={productsLoading && ratingAvg === null}
         />
       </div>
 
-      {/* Quick actions */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <Link
           href="/listing/new?from=admin"
@@ -158,8 +253,10 @@ export default function AdminDashboardPage() {
           </div>
         </Link>
 
-        <Link
-          href={profile?.peerID ? `/store/${profile.peerID}` : '/'}
+        <a
+          href={storeUrl}
+          target={standaloneMode ? undefined : '_blank'}
+          rel="noopener noreferrer"
           className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
         >
           <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -169,12 +266,11 @@ export default function AdminDashboardPage() {
             <p className="font-medium text-foreground">{t('admin.dashboard.viewStore')}</p>
             <p className="text-sm text-muted-foreground">{t('admin.dashboard.viewStoreDesc')}</p>
           </div>
-        </Link>
+        </a>
       </div>
 
-      {/* Placeholder sections for PG-105 to fill */}
+      {/* Lists: Recent Orders + Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent orders placeholder */}
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-foreground">
@@ -184,12 +280,21 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.viewAll')}
             </Link>
           </div>
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {t('admin.dashboard.noOrdersYet')}
-          </div>
+          {salesLoading ? (
+            <ListSkeleton />
+          ) : recentOrders.length > 0 ? (
+            <div>
+              {recentOrders.map(order => (
+                <RecentOrderRow key={order.orderID} order={order} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {t('admin.dashboard.noOrdersYet')}
+            </div>
+          )}
         </div>
 
-        {/* Top products placeholder */}
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-foreground">
@@ -199,9 +304,19 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.viewAll')}
             </Link>
           </div>
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {t('admin.dashboard.noProductsYet')}
-          </div>
+          {productsLoading ? (
+            <ListSkeleton />
+          ) : topProducts.length > 0 ? (
+            <div>
+              {topProducts.map(product => (
+                <TopProductRow key={product.slug} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {t('admin.dashboard.noProductsYet')}
+            </div>
+          )}
         </div>
       </div>
     </div>

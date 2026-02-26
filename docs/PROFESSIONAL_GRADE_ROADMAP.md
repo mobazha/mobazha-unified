@@ -968,9 +968,9 @@ Store Config JSON Schema:
 | PG-101 | Admin Layout + 路由       | V1.1  | ✅ 完成   | 2026-02-26 (Layout + Sidebar + Header + 5 页面 + i18n)                              |
 | PG-102 | 商品管理页                | V1.1  | ✅ 完成   | 2026-02-26 (表格/卡片双视图 + 搜索 + 批量删除 + 行内操作 + i18n)                    |
 | PG-007 | 集成管理（TG/AI/Webhook） | V1.1  | ✅ 完成   | 2026-02-26 (后端 ChannelNotificationSink + 前端 Admin Integrations UI + i18n en/zh) |
-| PG-105 | 卖家 Dashboard + 空状态   | V1.2  | ⏳ 未开始 |                                                                                     |
+| PG-105 | 卖家 Dashboard + 空状态   | V1.2  | ✅ 完成   | 2026-02-26 (4 指标卡片实时数据 + 最近订单 + 热门商品 + 空状态引导 + 骨架屏加载)     |
 | PG-106 | 订单管理增强              | V1.3  | ⏳ 未开始 |                                                                                     |
-| PG-107 | 现有设置页迁入 Admin      | V1.2  | ⏳ 未开始 |                                                                                     |
+| PG-107 | 现有设置页迁入 Admin      | V1.2  | ✅ 完成   | 2026-02-26 (6 个 Admin 子页面 + 4 个 Content 组件提取 + hub 链接更新)               |
 | PG-108 | 卖家 Onboarding 引导      | V1.3  | ⏳ 未开始 |                                                                                     |
 | PG-109 | 结账优惠券                | V1.3  | ⏳ 未开始 |                                                                                     |
 | PG-110 | AI 商品创建助手           | ✅ V1 | ✅ 完成   | 2026-02-26 (API Route + AI Service + UI 集成)                                       |
@@ -1001,4 +1001,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-26 (v28: AI 集成 — 后端 AI 代理引擎 + 远程 Provider 配置 + 前端 AI Assistant Tab + 15 个 E2E 测试)
+最后更新: 2026-02-26 (v30: PG-105 卖家 Dashboard 数据接入 — 4 指标卡片(商品/订单/销售/评分) + 最近订单列表 + 热门商品列表 + 空状态引导 + 骨架屏)

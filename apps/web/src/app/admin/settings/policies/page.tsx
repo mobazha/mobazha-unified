@@ -5,12 +5,12 @@ import { useI18n } from '@mobazha/core';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 import { StorePoliciesContent } from '@/components/SettingsContent';
 
-export default function StorePoliciesPage() {
+export default function AdminPoliciesSettingsPage() {
   const { t } = useI18n();
 
   return (
-    <div>
-      <SettingsPageHeader title={t('settingsExtended.storePolicies')} backHref="/settings/store" />
+    <div data-testid="admin-settings-policies">
+      <SettingsPageHeader title={t('settingsExtended.storePolicies')} backHref="/admin/settings" />
       <StorePoliciesContent />
     </div>
   );

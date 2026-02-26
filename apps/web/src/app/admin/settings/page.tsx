@@ -44,37 +44,37 @@ export default function AdminSettingsPage() {
           icon={User}
           title={t('admin.settings.profile')}
           description={t('admin.settings.profileDesc')}
-          href="/settings/page-profile"
+          href="/admin/settings/profile"
         />
         <SettingsCard
           icon={Store}
           title={t('admin.settings.store')}
           description={t('admin.settings.storeDesc')}
-          href="/settings/store"
+          href="/admin/settings/store"
         />
         <SettingsCard
           icon={Shield}
           title={t('admin.settings.policies')}
           description={t('admin.settings.policiesDesc')}
-          href="/settings/store/policies"
+          href="/admin/settings/policies"
         />
         <SettingsCard
           icon={Truck}
           title={t('admin.settings.shipping')}
           description={t('admin.settings.shippingDesc')}
-          href="/settings/store/shipping"
+          href="/admin/settings/shipping"
         />
         <SettingsCard
           icon={Scale}
           title={t('admin.settings.moderators')}
           description={t('admin.settings.moderatorsDesc')}
-          href="/settings/store/moderators"
+          href="/admin/settings/moderators"
         />
         <SettingsCard
           icon={Settings}
           title={t('admin.settings.general')}
           description={t('admin.settings.generalDesc')}
-          href="/settings/general"
+          href="/admin/settings/general"
         />
         <SettingsCard
           icon={Plug}
