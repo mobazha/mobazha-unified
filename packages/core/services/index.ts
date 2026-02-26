@@ -39,3 +39,6 @@ export * from './transaction';
 
 // Profile 缓存服务
 export * from './profileCache';
+
+// AI 服务
+export * from './ai';

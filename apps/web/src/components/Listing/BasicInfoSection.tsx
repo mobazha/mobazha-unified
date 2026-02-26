@@ -3,6 +3,7 @@
 import React, { useCallback } from 'react';
 import type { ContractType, ProductCondition, WeightUnit, DimensionUnit } from '@mobazha/core';
 import { useI18n, calculateDiscountPercent } from '@mobazha/core';
+import { AiAssistButton } from './AiAssistant';
 import {
   Select,
   SelectContent,
@@ -54,6 +55,12 @@ interface BasicInfoSectionProps {
     condition?: string;
   };
   className?: string;
+  /** AI assist: callback to improve title */
+  onAiImproveTitle?: () => void;
+  /** AI assist: callback to polish description */
+  onAiPolishDescription?: () => void;
+  /** AI assist: loading action name */
+  aiLoadingAction?: string | null;
 }
 
 const currencies = [
@@ -111,6 +118,9 @@ export function BasicInfoSection({
   onBrandChange,
   errors = {},
   className = '',
+  onAiImproveTitle,
+  onAiPolishDescription,
+  aiLoadingAction,
 }: BasicInfoSectionProps) {
   const { t } = useI18n();
 
@@ -154,9 +164,18 @@ export function BasicInfoSection({
       <div className="space-y-4">
         {/* 标题 */}
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.title')} <span className="text-destructive">*</span>
-          </label>
+          <div className="flex items-center gap-2 mb-1.5">
+            <label className="text-sm font-medium text-muted-foreground">
+              {t('listing.title')} <span className="text-destructive">*</span>
+            </label>
+            {onAiImproveTitle && title.length > 0 && (
+              <AiAssistButton
+                onClick={onAiImproveTitle}
+                isLoading={aiLoadingAction === 'improve_title'}
+                label={t('ai.improveTitle', { defaultValue: 'AI Improve' })}
+              />
+            )}
+          </div>
           <input
             type="text"
             value={title}
@@ -344,7 +363,7 @@ export function BasicInfoSection({
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
                 {t('listing.packageDimensions.label')}
               </label>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-1.5 items-center">
                 <input
                   type="number"
                   min="0"
@@ -353,10 +372,10 @@ export function BasicInfoSection({
                   onChange={e =>
                     onPackageLengthChange?.(e.target.value ? Number(e.target.value) : undefined)
                   }
-                  className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="flex-1 min-w-0 px-2 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder={t('listing.packageDimensions.length')}
                 />
-                <span className="text-muted-foreground">×</span>
+                <span className="text-muted-foreground shrink-0">×</span>
                 <input
                   type="number"
                   min="0"
@@ -365,10 +384,10 @@ export function BasicInfoSection({
                   onChange={e =>
                     onPackageWidthChange?.(e.target.value ? Number(e.target.value) : undefined)
                   }
-                  className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="flex-1 min-w-0 px-2 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder={t('listing.packageDimensions.width')}
                 />
-                <span className="text-muted-foreground">×</span>
+                <span className="text-muted-foreground shrink-0">×</span>
                 <input
                   type="number"
                   min="0"
@@ -377,14 +396,14 @@ export function BasicInfoSection({
                   onChange={e =>
                     onPackageHeightChange?.(e.target.value ? Number(e.target.value) : undefined)
                   }
-                  className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="flex-1 min-w-0 px-2 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder={t('listing.packageDimensions.height')}
                 />
                 <Select
                   value={dimensionUnit}
                   onValueChange={v => onDimensionUnitChange?.(v as DimensionUnit)}
                 >
-                  <SelectTrigger className="w-20">
+                  <SelectTrigger className="w-16 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -483,9 +502,18 @@ export function BasicInfoSection({
 
         {/* 描述 - 富文本编辑器 */}
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            {t('listing.description')}
-          </label>
+          <div className="flex items-center gap-2 mb-1.5">
+            <label className="text-sm font-medium text-muted-foreground">
+              {t('listing.description')}
+            </label>
+            {onAiPolishDescription && (title.length > 0 || description.length > 0) && (
+              <AiAssistButton
+                onClick={onAiPolishDescription}
+                isLoading={aiLoadingAction === 'polish_description'}
+                label={t('ai.polishDescription', { defaultValue: 'AI Polish' })}
+              />
+            )}
+          </div>
           <RichTextEditor
             value={description}
             onChange={onDescriptionChange}

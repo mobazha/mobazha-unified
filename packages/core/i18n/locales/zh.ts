@@ -2466,7 +2466,7 @@ export const zh: TranslationResource = {
 
     // 媒体
     photos: '图片',
-    photosHelper: '最多可上传 30 张图片，可拖拽排序',
+    photosHelper: '最多可上传 30 张图片，可拖拽添加或排序',
     primaryPhoto: '主图',
     imageAlt: {
       edit: '编辑替代文本',
@@ -3265,6 +3265,21 @@ export const zh: TranslationResource = {
       title: '暂无争议案件',
       description: '目前没有需要处理的争议案件。',
     },
+  },
+
+  ai: {
+    assist: 'AI',
+    improveTitle: 'AI 优化',
+    polishDescription: 'AI 润色',
+    suggestTags: 'AI 建议',
+    generateFromImages: 'AI 自动填充',
+    generateFromImagesDesc: '从商品图片自动生成标题、描述和标签',
+    generating: '正在分析图片...',
+    generateAll: '生成所有字段',
+    applyAll: '全部应用',
+    regenerate: '重新生成',
+    notConfigured: 'AI 服务未配置，请联系管理员设置 OPENAI_API_KEY。',
+    error: '生成失败，请重试。',
   },
 
   standalone: {

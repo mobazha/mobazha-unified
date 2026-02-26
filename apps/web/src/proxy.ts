@@ -1,17 +1,63 @@
 /**
- * Next.js Proxy - 路由保护 (Next.js 16+)
+ * Next.js Proxy - API 代理 + 路由保护 (Next.js 16+)
  *
- * 注意：由于 token 存储在 localStorage 中，proxy 无法直接访问。
- * 此 proxy 主要用于：
- * 1. 检测公开路由，避免不必要的检查
- * 2. 检查 cookie 中的 auth 信息（如果启用了 cookie 认证）
- * 3. 检查 Zustand persist 的 cookie（如果配置了 cookie storage）
+ * 两个职责：
+ * 1. 代理 /v1/*, /api/*, /info/* 到后端，剥离 WWW-Authenticate header
+ *    （防止浏览器弹出原生 Basic Auth 登录框，等效于 Vite 的 withStripWwwAuth）
+ * 2. 页面路由保护（公开路由放行，私有路由检查 cookie）
  *
  * 主要的认证保护依赖客户端的 ProtectedRoute 组件和 AuthProvider。
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+
+const PROXY_PREFIXES = ['/v1/', '/api/', '/info/'];
+
+function shouldProxyToBackend(pathname: string): boolean {
+  return PROXY_PREFIXES.some(prefix => pathname.startsWith(prefix));
+}
+
+/**
+ * Proxy API requests to backend, stripping WWW-Authenticate header.
+ * Equivalent to Vite's withStripWwwAuth() helper.
+ */
+async function proxyToBackend(request: NextRequest): Promise<NextResponse> {
+  const { pathname, search } = request.nextUrl;
+  const upstream = `${API_BASE}${pathname}${search}`;
+
+  const headers = new Headers(request.headers);
+  headers.delete('host');
+  headers.set('host', new URL(API_BASE).host);
+
+  const init: RequestInit = {
+    method: request.method,
+    headers,
+    redirect: 'manual',
+  };
+
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    init.body = request.body;
+    // @ts-expect-error duplex is required for streaming request bodies in Node.js fetch
+    init.duplex = 'half';
+  }
+
+  try {
+    const response = await fetch(upstream, init);
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('www-authenticate');
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    console.error('Proxy error:', pathname, error);
+    return NextResponse.json({ error: 'Backend unavailable' }, { status: 502 });
+  }
+}
 
 /**
  * 公开路由模式列表（与 @mobazha/core/config/routeConfig.ts 保持同步）
@@ -102,11 +148,16 @@ function hasAuthCookie(request: NextRequest): boolean {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 跳过静态资源和 API 路由
+  // API 代理：/v1/*, /api/*, /info/* → 后端（剥离 WWW-Authenticate）
+  if (shouldProxyToBackend(pathname)) {
+    return proxyToBackend(request);
+  }
+
+  // 跳过静态资源和 Next.js 内部路由
   if (
     pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/') ||
-    pathname.includes('.') // 静态文件如 favicon.ico, images 等
+    pathname.startsWith('/internal/') ||
+    pathname.includes('.')
   ) {
     return NextResponse.next();
   }
@@ -136,20 +187,19 @@ export function proxy(request: NextRequest) {
 
 /**
  * Proxy 配置
- * 匹配除了以下路径外的所有请求：
- * - /_next/ (Next.js 内部路由)
- * - /api/ (API 路由)
- * - 静态文件 (带扩展名的文件)
+ * 匹配：
+ * - /v1/*, /api/*, /info/* → 代理到后端（剥离 WWW-Authenticate）
+ * - 页面路由 → 路由保护检查
+ * 排除：
+ * - /_next/ (Next.js 内部)
+ * - /internal/ (Next.js local API routes)
+ * - 静态文件
  */
 export const config = {
   matcher: [
-    /*
-     * 匹配所有请求路径，除了：
-     * - _next/static (静态文件)
-     * - _next/image (图片优化 API)
-     * - favicon.ico (favicon)
-     * - public 目录下的文件
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    '/v1/:path*',
+    '/api/:path*',
+    '/info/:path*',
+    '/((?!_next/static|_next/image|internal/|favicon.ico|.*\\..*).*)',
   ],
 };

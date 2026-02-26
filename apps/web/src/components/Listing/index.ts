@@ -27,3 +27,7 @@ export { DigitalFileSection } from './DigitalFileSection';
 export { ProcessingTimeSelect } from './ProcessingTimeSelect';
 
 export { ReturnPolicySelector } from './ReturnPolicySelector';
+
+export { AiAssistButton, AiImageGeneratePanel, useAiAssist } from './AiAssistant';
+
+export { useListingAiIntegration } from './useListingAiIntegration';

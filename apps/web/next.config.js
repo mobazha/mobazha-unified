@@ -101,30 +101,10 @@ const nextConfig = {
     ];
   },
 
-  // API 代理配置（用于本地开发）
+  // API 代理：由 src/proxy.ts 处理（替代 rewrites）
+  // proxy 代理 /v1/*, /api/*, /info/* 到后端，并剥离 WWW-Authenticate header
+  // 防止浏览器弹出原生 Basic Auth 登录框（等效于 Vite 的 withStripWwwAuth）
   // 生产环境由 nginx 处理代理
-  async rewrites() {
-    // API 后端地址
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
-
-    return [
-      // /v1/* 代理到后端 Gateway API
-      {
-        source: '/v1/:path*',
-        destination: `${apiBase}/v1/:path*`,
-      },
-      // /info/* 代理到后端 Search/Info API
-      {
-        source: '/info/:path*',
-        destination: `${apiBase}/info/:path*`,
-      },
-      // /api/* 代理到后端 Hosting API
-      {
-        source: '/api/:path*',
-        destination: `${apiBase}/api/:path*`,
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig;

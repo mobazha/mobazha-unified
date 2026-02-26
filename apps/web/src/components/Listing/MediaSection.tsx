@@ -59,6 +59,8 @@ export function MediaSection({
   const [newVideoLink, setNewVideoLink] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [editingAltIndex, setEditingAltIndex] = useState<number | null>(null);
+  const [isFileDragOver, setIsFileDragOver] = useState(false);
+  const [isVideoDragOver, setIsVideoDragOver] = useState(false);
 
   // 上传图片
   const handleImageUpload = useCallback(
@@ -187,6 +189,66 @@ export function MediaSection({
     [maxVideoSize, onVideoChange, t, toast]
   );
 
+  // 拖拽文件上传（图片区）
+  const handleFileDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes('Files')) setIsFileDragOver(true);
+  }, []);
+
+  const handleFileDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget as HTMLElement)) return;
+    setIsFileDragOver(false);
+  }, []);
+
+  const handleFileDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsFileDragOver(false);
+      const input = e.dataTransfer;
+      if (!input.files?.length) return;
+      const imageFiles = Array.from(input.files).filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length === 0) return;
+      const dt = new globalThis.DataTransfer();
+      imageFiles.forEach(f => dt.items.add(f));
+      handleImageUpload(dt.files);
+    },
+    [handleImageUpload]
+  );
+
+  // 拖拽文件上传（视频区）
+  const handleVideoDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes('Files')) setIsVideoDragOver(true);
+  }, []);
+
+  const handleVideoDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget as HTMLElement)) return;
+    setIsVideoDragOver(false);
+  }, []);
+
+  const handleVideoDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsVideoDragOver(false);
+      const input = e.dataTransfer;
+      if (!input.files?.length) return;
+      const videoFiles = Array.from(input.files).filter(f => f.type.startsWith('video/'));
+      if (videoFiles.length === 0) return;
+      const dt = new globalThis.DataTransfer();
+      dt.items.add(videoFiles[0]);
+      handleVideoUpload(dt.files);
+    },
+    [handleVideoUpload]
+  );
+
   // 添加外部视频链接
   const handleAddVideoLink = useCallback(() => {
     if (!newVideoLink.trim() || !onAltVideoLinksChange) return;
@@ -206,7 +268,12 @@ export function MediaSection({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* 图片上传区域 */}
-      <Card className="p-6">
+      <Card
+        className={`p-6 transition-colors ${isFileDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+        onDragOver={handleFileDragOver}
+        onDragLeave={handleFileDragLeave}
+        onDrop={handleFileDrop}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
             {t('listing.photos')} <span className="text-destructive">*</span>
@@ -334,7 +401,12 @@ export function MediaSection({
       </Card>
 
       {/* 视频上传区域 */}
-      <Card className="p-6">
+      <Card
+        className={`p-6 transition-colors ${isVideoDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+        onDragOver={handleVideoDragOver}
+        onDragLeave={handleVideoDragLeave}
+        onDrop={handleVideoDrop}
+      >
         <h2 className="text-lg font-semibold text-foreground mb-4">
           {t('listing.introVideo')} (mp4, &lt;{maxVideoSize}MB)
         </h2>
