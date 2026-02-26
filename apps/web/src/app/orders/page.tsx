@@ -120,7 +120,11 @@ function transformOrderListItem(
   const counterpartyName =
     profileInfo?.name ||
     counterpartyHandle ||
-    (counterpartyId ? counterpartyId.slice(0, 12) + '...' : 'Unknown');
+    (counterpartyId
+      ? `${counterpartyId.slice(0, 6)}…${counterpartyId.slice(-4)}`
+      : orderType === 'purchases'
+        ? 'Seller'
+        : 'Buyer');
   const counterpartyAvatar = profileInfo?.avatar || undefined;
 
   return {

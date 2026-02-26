@@ -145,7 +145,7 @@ export const OrderListCompact = memo(function OrderListCompact({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-foreground truncate">
-                    {item?.title || 'Unknown'}
+                    {item?.title || t('order.untitledItem')}
                   </h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-xs text-muted-foreground flex-shrink-0">

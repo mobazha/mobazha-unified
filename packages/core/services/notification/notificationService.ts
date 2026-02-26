@@ -55,9 +55,9 @@ function getDisplayName(handle?: string, peerId?: string): string {
     return `@${handle}`;
   }
   if (peerId) {
-    return `${peerId.slice(0, 8)}…`;
+    return peerId.length > 12 ? `${peerId.slice(0, 6)}…${peerId.slice(-4)}` : peerId;
   }
-  return 'Unknown';
+  return '';
 }
 
 /**

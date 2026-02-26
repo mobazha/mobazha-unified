@@ -703,7 +703,13 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 <p className="text-sm font-semibold text-foreground truncate">
                   {order.vendor.name}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{order.vendor.peerID}</p>
+                {order.vendor.peerID && (
+                  <p className="text-xs text-muted-foreground truncate font-mono">
+                    {order.vendor.peerID.length > 16
+                      ? `${order.vendor.peerID.slice(0, 6)}…${order.vendor.peerID.slice(-4)}`
+                      : order.vendor.peerID}
+                  </p>
+                )}
               </div>
             </Link>
           ) : null;

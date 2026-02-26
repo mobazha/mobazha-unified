@@ -282,7 +282,7 @@ export default function CaseDetailPage() {
                 <p className="text-2xl font-bold text-foreground">
                   {caseData.total} {caseData.coin}
                 </p>
-                <p className="text-sm text-muted-foreground">Amount in escrow</p>
+                <p className="text-sm text-muted-foreground">{t('order.fundsProtected')}</p>
               </div>
             </HStack>
 
@@ -316,7 +316,11 @@ export default function CaseDetailPage() {
                         (Buyer - Opened Dispute)
                       </span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">{caseData.buyer.peerID}</p>
+                    <p className="text-sm text-muted-foreground font-mono">
+                      {caseData.buyer.peerID && caseData.buyer.peerID.length > 16
+                        ? `${caseData.buyer.peerID.slice(0, 6)}…${caseData.buyer.peerID.slice(-4)}`
+                        : caseData.buyer.peerID}
+                    </p>
                   </div>
                 </HStack>
                 <div className="p-4 bg-error/8 border-l-4 border-error rounded">
@@ -334,7 +338,11 @@ export default function CaseDetailPage() {
                       {caseData.seller.name}
                       <span className="ml-2 text-sm font-normal text-info">(Seller)</span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">{caseData.seller.peerID}</p>
+                    <p className="text-sm text-muted-foreground font-mono">
+                      {caseData.seller.peerID && caseData.seller.peerID.length > 16
+                        ? `${caseData.seller.peerID.slice(0, 6)}…${caseData.seller.peerID.slice(-4)}`
+                        : caseData.seller.peerID}
+                    </p>
                   </div>
                 </HStack>
                 <div className="p-4 bg-info/8 border-l-4 border-info rounded">

@@ -67,7 +67,9 @@ export function ReviewList({ ratings, ratingIndex, className }: ReviewListProps)
     if (r.anonymous) return t('review.anonymous');
     const handle = r.buyerID?.handle;
     if (handle) return handle;
-    return r.buyerID?.peerID ? `${r.buyerID.peerID.slice(0, 8)}...` : t('review.anonymous');
+    return r.buyerID?.peerID
+      ? `${r.buyerID.peerID.slice(0, 6)}…${r.buyerID.peerID.slice(-4)}`
+      : t('review.anonymous');
   };
 
   const getInitial = (r: ProductRating) => {

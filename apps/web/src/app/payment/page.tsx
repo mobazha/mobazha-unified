@@ -276,7 +276,7 @@ export default function PaymentPage() {
 
         // 获取卖家 profile（包括名称和头像）
         const vendorPeerID = vendorInfo?.peerID || urlVendorPeerID || '';
-        let vendorName = vendorInfo?.handle || urlVendorName || 'Unknown';
+        let vendorName = vendorInfo?.handle || urlVendorName || 'Seller';
         let vendorAvatar: string | undefined;
 
         if (vendorPeerID) {
@@ -354,7 +354,7 @@ export default function PaymentPage() {
               },
             ],
             vendor: {
-              name: urlVendorName || 'Unknown',
+              name: urlVendorName || 'Seller',
               peerID: urlVendorPeerID || '',
             },
             shippingAddress: {

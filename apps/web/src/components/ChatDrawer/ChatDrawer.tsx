@@ -15,7 +15,7 @@ import { UserInfoCard, type UserInfo } from '@/components/Chat/UserInfoCard';
 function toDisplayRoom(room: MatrixRoom): ChatRoom {
   return {
     id: room.roomId,
-    name: room.name || 'Unknown',
+    name: room.name || 'Chat',
     avatar: room.avatarUrl,
     rawMxcAvatarUrl: room.rawMxcAvatarUrl, // 原始 mxc URL 用于认证下载
     lastMessage: room.lastMessage?.content,
@@ -370,7 +370,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       return (
         <ChatMessages
           roomId={currentRoomId}
-          roomName={currentRoom.name || 'Unknown'}
+          roomName={currentRoom.name || 'Chat'}
           roomAvatar={currentRoom.avatarUrl}
           roomRawMxcAvatarUrl={currentRoom.rawMxcAvatarUrl}
           isEncrypted={currentRoom.isEncrypted}
@@ -614,7 +614,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                   )}
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-1">
-                  {currentRoom.name || 'Unknown'}
+                  {currentRoom.name || 'Chat'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {currentRoom.isDirect ? t('chat.directMessage') : t('chat.groupChat')}

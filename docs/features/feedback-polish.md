@@ -124,11 +124,27 @@
 5. **交易地址展示优化**
    - 所有区块链地址：`truncateAddress()` + 复制按钮 + Etherscan/explorer 链接
 
+### 设计决策：Fallback 策略
+
+**重要背景**：`name` 是后端必填项（`validateProfile` 强制非空），onboarding 前端也有校验。
+生产环境中 vendorName 几乎总有值。Fallback 是**防御性编程**，仅面向极端边缘情况
+（历史数据、索引同步延迟、API 故障）。E2E 截图中的 "Unknown" 是 mock 数据质量问题（PG-007b），
+非生产问题。
+
+**名称不可用时的 fallback 是上下文相关的，不能一刀切。** 详见 `.cursor/rules/identity-display-rules.mdc`。
+
+核心判断：
+
+- 该 UI 位置是否**必须**展示名称？（如 "From: [name]"、资料卡片、结账页）→ 用角色标签 ("Seller"/"Buyer")
+- 该 UI 位置可以**省略**名称？（如商品卡片卖家行、通知前缀）→ 用空字符串/不渲染
+- 该 UI 位置必须展示**某种标识**？（如聊天房间名）→ 用功能标签 ("Chat")
+
 ### 验收标准
 
-- [ ] 所有页面无裸 Peer ID 直接渲染（grep `peerID` 展示位，全部走 `formatUserName`）
+- [ ] 所有页面无裸 Peer ID 直接渲染（grep `peerID` 展示位，全部走 `formatUserName` 或截断）
 - [ ] 通知列表无 "Unknown" 前缀
-- [ ] 订单列表和详情中 Buyer/Seller 显示可读名称
+- [ ] 订单列表和详情中 Buyer/Seller 有可读名称或角色标签兜底
+- [ ] Fallback 策略与上下文匹配（非盲目空字符串）
 - [ ] Header 无突出的 "Connect Wallet" 蓝色按钮
 - [ ] 订单详情中无裸露 "escrow" / "smart contract" 术语
 - [ ] 移动端 375px 验证通过

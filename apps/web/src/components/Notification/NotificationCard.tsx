@@ -93,12 +93,14 @@ function getNotificationIcon(type: string): React.ReactNode {
 }
 
 /**
- * 截断 Peer ID
+ * Format peer identity for notification display.
+ * Returns empty string instead of "Unknown" when no data is available.
  */
-function truncatePeerId(peerId?: string): string {
-  if (!peerId) return 'Unknown';
+function formatPeerDisplay(peerId?: string, handle?: string): string {
+  if (handle) return handle;
+  if (!peerId) return '';
   if (peerId.length <= 12) return peerId;
-  return `${peerId.slice(0, 12)}...`;
+  return `${peerId.slice(0, 8)}…${peerId.slice(-4)}`;
 }
 
 // ============ 订单通知卡片 ============
@@ -155,7 +157,7 @@ export function OrderNotificationCard({
               read ? 'text-text-secondary' : 'text-text-primary'
             )}
           >
-            {buyerHandle || truncatePeerId(buyerId)}
+            {buyerHandle || formatPeerDisplay(buyerId)}
           </span>
           <span className={cn('text-sm', read ? 'text-text-tertiary' : 'text-text-secondary')}>
             {notification.message}
@@ -262,7 +264,7 @@ export function FollowNotificationCard({
       {/* 内容 */}
       <div className="flex-1 min-w-0">
         <p className={cn('text-sm', read ? 'text-text-secondary' : 'text-text-primary')}>
-          <span className="font-medium text-primary">{handle || truncatePeerId(peerId)}</span>{' '}
+          <span className="font-medium text-primary">{handle || formatPeerDisplay(peerId)}</span>{' '}
           {type === 'follow'
             ? t('notifications.social.startedFollowing')
             : t('notifications.social.unfollowed')}
@@ -329,7 +331,7 @@ export function DisputeNotificationCard({
         </p>
         {(disputerHandle || disputerId) && (
           <p className="text-xs text-text-tertiary mt-1">
-            {t('common.by')} {disputerHandle || truncatePeerId(disputerId)}
+            {t('common.by')} {disputerHandle || formatPeerDisplay(disputerId)}
           </p>
         )}
         {orderId && <p className="text-xs text-text-tertiary">Order #{orderId.slice(0, 8)}</p>}

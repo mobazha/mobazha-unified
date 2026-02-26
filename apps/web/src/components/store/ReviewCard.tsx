@@ -73,7 +73,12 @@ export function ReviewCard({ review }: ReviewCardProps) {
   const getBuyerName = () => {
     if (review.anonymous) return t('profile.anonymous');
     if (!review.buyerID) return t('profile.anonymous');
-    return review.buyerID.handle || `${review.buyerID.peerID.slice(0, 8)}...`;
+    return (
+      review.buyerID.handle ||
+      (review.buyerID.peerID
+        ? `${review.buyerID.peerID.slice(0, 6)}…${review.buyerID.peerID.slice(-4)}`
+        : t('profile.anonymous'))
+    );
   };
 
   const thumbnailUrl = getThumbnail();

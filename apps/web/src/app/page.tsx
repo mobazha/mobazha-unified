@@ -31,7 +31,11 @@ interface DisplayProduct {
 // 转换 API 数据为 ProductSection 需要的格式
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
   // 优先使用 API 返回的卖家名称，否则使用 peerID 前 8 位
-  const vendorName = item.vendorName || item.vendorPeerID?.substring(0, 8) || 'Unknown';
+  const vendorName =
+    item.vendorName ||
+    (item.vendorPeerID
+      ? `${item.vendorPeerID.substring(0, 6)}…${item.vendorPeerID.slice(-4)}`
+      : '');
   // 使用 API 返回的卖家头像
   const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
 

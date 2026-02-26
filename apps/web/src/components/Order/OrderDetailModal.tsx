@@ -131,13 +131,16 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
           <div className="relative">
             <AvatarCompat
               src={counterparty?.avatar}
-              name={counterparty?.name || 'Unknown'}
+              name={counterparty?.name || counterparty?.peerID || 'User'}
               size="xl"
               className="mb-3 ring-2 ring-border/50 group-hover:ring-primary/50 transition-all"
             />
           </div>
           <h3 className="text-sm font-semibold text-foreground text-center group-hover:text-primary transition-colors">
-            {counterparty?.name || 'Unknown'}
+            {counterparty?.name ||
+              (counterparty?.peerID
+                ? `${counterparty.peerID.slice(0, 6)}…${counterparty.peerID.slice(-4)}`
+                : 'User')}
           </h3>
           {counterparty?.location && (
             <p className="text-xs text-muted-foreground mt-0.5">{counterparty.location}</p>
