@@ -984,4 +984,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-25 (v16: 后端对齐+E2E — SITE_URL修正store.mobazha.org、EscrowStatusBar状态映射对齐DisplayOrderStatus、ProductDetail fetchRatings二段加载、移除评价图片(后端暂不支持)、pg-components.spec.ts E2E测试覆盖ShareButton/ReviewList/EscrowStatusBar/Trust/SEO/404)
+最后更新: 2026-02-26 (v17: UX 审计 & 质量打磨 — 桌面/移动端视觉测试重建(authed/public分离+API mock数据)、settings页面布局统一(移除冗余Header/Footer)、product-groups全量i18n化、字体一致性(text-xs标准化)、触控目标44px达标、ProductCard触控友好dropdown、移动端Footer隐藏(MobileNav替代)、OrderFooter缩进修复、mockOrdersAPI method guard)

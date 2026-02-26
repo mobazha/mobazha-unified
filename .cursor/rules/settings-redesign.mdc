@@ -320,7 +320,8 @@ cd ~/dev/openbazaar/mobazha-unified/apps/web && pnpm dev:vite --port 3000
   - 子页面：单列布局、SettingsPageHeader 返回按钮、Card `p-4`、Section `py-6`
   - 触摸目标 ≥ 44px
   - 弹框全屏或底部 Sheet
-  - 底部 Footer(MobileNav) 正常显示
+  - 移动端无桌面 Footer（`hidden md:block`），底部导航由 MobileNav 提供
+  - 主内容区底部留 `pb-24 lg:pb-8` 避免被 MobileNav 遮挡
 
 ## 禁止事项
 

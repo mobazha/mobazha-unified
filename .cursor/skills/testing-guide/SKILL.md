@@ -165,6 +165,64 @@ test.describe('首页', () => {
 - 使用 `getByRole`、`getByText` 作为辅助定位
 - 每个测试必须独立，不依赖其他测试的状态
 
+### 视觉回归测试
+
+项目维护桌面端和移动端的视觉快照测试，分为 Public（公开页面）和 Authenticated（已登录页面）两组：
+
+| 测试文件                  | 设备                    | 用途                   |
+| ------------------------- | ----------------------- | ---------------------- |
+| `desktop-visual.spec.ts`  | Chromium 1280×720       | 桌面端视觉快照         |
+| `mobile-visual.spec.ts`   | Mobile Chrome (Pixel 5) | 移动端视觉快照         |
+| `ux-audit.spec.ts`        | Chromium 1280×720       | 桌面端 UX 审计（深度） |
+| `mobile-ux-audit.spec.ts` | iPhone 12 390×844       | 移动端 UX 审计         |
+
+### E2E Fixtures（`e2e/fixtures/`）
+
+| 文件                  | 职责                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| `auth.ts`             | Casdoor 登录 + Onboarding 自动完成 + `loginAndSetup()`                  |
+| `mock-api-routes.ts`  | Mock API 响应（订单/通知/搜索/商品详情/地址），确保已登录页面有数据显示 |
+| `seed-visual-data.ts` | 通过 API 创建测试商品 + 注入购物车到 localStorage                       |
+
+**已登录页面测试模式**：
+
+```typescript
+import { loginAndSetup } from './fixtures/auth';
+import { mockOrdersAPI, mockNotificationsAPI } from './fixtures/mock-api-routes';
+
+test.describe('Authenticated Pages', () => {
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage();
+    await loginAndSetup(page);
+    // 保存认证状态...
+  });
+
+  test('orders page', async ({ page }) => {
+    await mockOrdersAPI(page); // 拦截 API 返回 mock 数据
+    await page.goto('/orders/purchases');
+    await expect(page).toHaveScreenshot('orders-purchases.png');
+  });
+});
+```
+
+**Mock 最佳实践**：
+
+- Mock 函数仅拦截 GET 请求，非 GET 通过 `route.fallback()`
+- 认证状态通过 `storageState` 在测试间共享，避免重复登录
+
+### 运行视觉测试
+
+```bash
+# 桌面端
+pnpm --filter @mobazha/web exec playwright test desktop-visual --project=chromium
+
+# 移动端
+pnpm --filter @mobazha/web exec playwright test mobile-visual --project="Mobile Chrome"
+
+# 更新快照
+pnpm --filter @mobazha/web exec playwright test desktop-visual --update-snapshots
+```
+
 ## 运行命令
 
 ```bash

@@ -124,6 +124,53 @@ run().catch(console.error);
 - [描述]
 ```
 
+## Playwright 视觉回归测试（E2E）
+
+除了 puppeteer 临时截图检查外，项目有正式的 Playwright 视觉回归测试：
+
+### 测试文件
+
+| 文件 | 用途 |
+|---|---|
+| `apps/web/e2e/desktop-visual.spec.ts` | 桌面端视觉回归（1280×720） |
+| `apps/web/e2e/mobile-visual.spec.ts` | 移动端视觉回归（Pixel 5） |
+| `apps/web/e2e/ux-audit.spec.ts` | 桌面端 UX 审计（深度检查） |
+| `apps/web/e2e/mobile-ux-audit.spec.ts` | 移动端 UX 审计（深度检查） |
+
+### 测试分组
+
+测试分为两组，确保公开和已登录页面都有覆盖：
+
+- **Public Pages** — 无需登录：首页、市场、搜索、登录页、仲裁者列表
+- **Authenticated Pages** — 需登录态：购物车、结账、订单、钱包、设置、聊天等
+
+### E2E Fixtures
+
+| 文件 | 职责 |
+|---|---|
+| `e2e/fixtures/auth.ts` | `performCasdoorLogin` + `completeOnboardingIfNeeded` + `loginAndSetup` |
+| `e2e/fixtures/mock-api-routes.ts` | Mock API 响应（订单/通知/搜索/商品详情/地址等），确保页面有数据 |
+| `e2e/fixtures/seed-visual-data.ts` | 创建测试商品 + 注入购物车 localStorage 数据 |
+
+### 运行命令
+
+```bash
+# 桌面端视觉测试
+pnpm --filter @mobazha/web exec playwright test desktop-visual --project=chromium
+
+# 移动端视觉测试
+pnpm --filter @mobazha/web exec playwright test mobile-visual --project="Mobile Chrome"
+
+# 更新快照
+pnpm --filter @mobazha/web exec playwright test desktop-visual --update-snapshots
+```
+
+### Mock API 最佳实践
+
+- Mock 函数使用 `(route, request)` 签名，仅拦截 GET 请求
+- 非 GET 请求 `return route.fallback()` 让其通过
+- Mock 数据定义在 `mock-api-routes.ts` 顶部，方便维护
+
 ## 已知约束
 
 - Headless Chrome 中模态框/Drawer 动画可能需要额外等待（`sleep(1000)`）
