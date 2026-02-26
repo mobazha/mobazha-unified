@@ -101,7 +101,7 @@ export default function NotificationsPage() {
         void handleMarkAsRead(notification.id);
       }
       // 如果是消息类型，打开聊天
-      if (notification.type === 'chatMessage' || notification.type === 'message') {
+      if (notification.type === 'chat.message') {
         openChatDrawer();
       }
     },
@@ -112,30 +112,12 @@ export default function NotificationsPage() {
   const renderNotificationCard = useCallback(
     (notification: Notification) => {
       const route = getNotificationRoute(notification);
-      const isOrderType = [
-        'newOrder',
-        'orderFunded',
-        'orderPaymentReceived',
-        'orderConfirmation',
-        'orderDeclined',
-        'orderCancel',
-        'refund',
-        'orderFulfillment',
-        'orderCompletion',
-        'vendorFinalizedPayment',
-      ].includes(notification.type);
+      const isOrderType =
+        notification.type.startsWith('order.') || notification.type.startsWith('payment.');
 
-      const isFollowType = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(
-        notification.type
-      );
+      const isFollowType = notification.type.startsWith('social.');
 
-      const isDisputeType = [
-        'disputeOpen',
-        'disputeClose',
-        'disputeAccepted',
-        'caseOpen',
-        'caseUpdate',
-      ].includes(notification.type);
+      const isDisputeType = notification.type.startsWith('dispute.');
 
       if (isOrderType) {
         return (

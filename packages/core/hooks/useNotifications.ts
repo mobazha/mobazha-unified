@@ -150,10 +150,8 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
    */
   const convertApiToInternal = useCallback((apiNotifs: ApiNotification[]): NotificationData[] => {
     return apiNotifs.map(n => {
-      // 将 API 类型规范化为内部事件类型
       const eventType = normalizeNotificationType(n.type);
 
-      // 基础属性
       const base = {
         id: n.id,
         type: eventType,
@@ -161,33 +159,19 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         read: n.read,
       };
 
-      // 根据类型添加必要的属性
       if (n.data?.orderId) {
-        // 订单相关通知
         return {
           ...base,
           orderID: n.data.orderId,
         } as NotificationData;
       } else if (n.data?.peerID) {
-        // 社交相关通知（需要 peerID）
         return {
           ...base,
           peerID: n.data.peerID,
         } as NotificationData;
-      } else if (eventType === 'chatMessage' || eventType === 'systemMessage') {
-        // 系统/消息通知（peerID 可选）
-        return {
-          ...base,
-          message: n.message,
-          title: n.title,
-        } as NotificationData;
       }
 
-      // 默认返回系统通知类型（不需要 peerID）
-      return {
-        ...base,
-        type: 'systemMessage' as const,
-      } as NotificationData;
+      return base as NotificationData;
     });
   }, []);
 

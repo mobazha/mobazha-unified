@@ -7,23 +7,13 @@ import { getI18n } from '../../i18n/i18n';
 import { NODE_API } from '../../config/apiPaths';
 import { authPost, authSafeGet } from './helpers';
 
-// 通知类型（简化分类）
-export type NotificationType =
-  | 'order'
-  | 'payment'
-  | 'dispute'
-  | 'moderator'
-  | 'follow'
-  | 'message'
-  | 'system';
-
 // 后端返回的原始通知记录格式
 interface BackendNotificationRecord {
   timestamp: string;
   read: boolean;
-  type: string; // 后端返回的是详细事件类型，如 'newOrder', 'orderFunded' 等
+  type: string; // dot-separated 格式，如 'order.created', 'dispute.opened'
   notification: {
-    // 不同类型的通知有不同的字段
+    // 不同类型的通知有不同的字段，因此大部分为可选
     notificationID?: string;
     notificationId?: string;
     orderID?: string;
@@ -54,12 +44,10 @@ interface BackendNotificationRecord {
     buyerId?: string;
     buyerID?: string;
     buyerHandle?: string;
-    // 价格信息
     price?: {
       amount: number;
       currencyCode: string;
     };
-    // 争议相关
     disputerID?: string;
     disputerHandle?: string;
     disputeeID?: string;
@@ -72,15 +60,14 @@ interface BackendNotificationRecord {
 // 通知过滤器类型
 export type NotificationFilter = 'all' | 'orders' | 'followers';
 
-// 过滤器到后端类型的映射
+// 过滤器到后端类型的映射（使用 dot-separated 格式）
 export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
   all: '',
   orders:
-    'newOrder,orderPaymentReceived,orderFunded,orderConfirmation,orderDeclined,orderCancel,refund,orderFulfillment,orderCompletion,disputeOpen,disputeClose,disputeAccepted,caseOpen,caseUpdate,vendorFinalizedPayment',
-  followers: 'follow,moderatorAdd,moderatorRemove',
+    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.fulfilled,order.completed,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
+  followers: 'social.follow,social.moderator_add,social.moderator_remove',
 };
 
-// 后端返回的通知列表响应格式
 interface BackendNotificationsResponse {
   unread: number;
   total: number;
@@ -90,7 +77,7 @@ interface BackendNotificationsResponse {
 // 前端使用的通知项格式
 export interface Notification {
   id: string;
-  type: string; // 保留原始事件类型，如 'newOrder'
+  type: string; // dot-separated 格式
   title: string;
   message: string;
   read: boolean;
@@ -101,7 +88,6 @@ export interface Notification {
     txid?: string;
     caseId?: string;
     slug?: string;
-    // 商品/头像图片
     thumbnail?: {
       tiny?: string;
       small?: string;
@@ -116,18 +102,15 @@ export interface Notification {
       large?: string;
       original?: string;
     };
-    // 商品信息
     productTitle?: string;
     price?: {
       amount: number;
       currencyCode: string;
     };
-    // 用户信息
     vendorHandle?: string;
     vendorId?: string;
     buyerHandle?: string;
     buyerId?: string;
-    // 争议相关
     disputerHandle?: string;
     disputerId?: string;
     disputeeHandle?: string;
@@ -135,7 +118,6 @@ export interface Notification {
   };
 }
 
-// 分页结果
 export interface NotificationsResult {
   notifications: Notification[];
   total: number;
@@ -144,11 +126,10 @@ export interface NotificationsResult {
   lastOffsetId?: string;
 }
 
-// Mock 通知数据
 const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
-    type: 'newOrder',
+    type: 'order.created',
     title: 'New Order',
     message: 'Buyer placed an order',
     read: false,
@@ -164,7 +145,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-2',
-    type: 'orderFunded',
+    type: 'order.funded',
     title: 'Payment Received',
     message: 'Order has been funded',
     read: false,
@@ -179,7 +160,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-3',
-    type: 'follow',
+    type: 'social.follow',
     title: 'New Follower',
     message: 'Alice Chen started following you',
     read: true,
@@ -192,7 +173,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-4',
-    type: 'follow',
+    type: 'social.follow',
     title: 'New Follower',
     message: 'TechGear Store started following you',
     read: true,
@@ -204,7 +185,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-5',
-    type: 'disputeOpen',
+    type: 'dispute.opened',
     title: 'Dispute Opened',
     message: 'A dispute has been opened',
     read: false,
@@ -218,9 +199,6 @@ const mockNotifications: Notification[] = [
   },
 ];
 
-/**
- * 生成通知标题（支持 i18n）
- */
 function generateNotificationTitle(
   type: string,
   notification: BackendNotificationRecord['notification']
@@ -228,139 +206,149 @@ function generateNotificationTitle(
   const { t } = getI18n();
 
   switch (type) {
-    case 'newOrder':
+    case 'order.created':
       return t('notifications.titles.newOrder');
-    case 'orderFunded':
-    case 'orderPaymentReceived':
+    case 'order.funded':
+    case 'order.payment_received':
       return t('notifications.titles.paymentReceived');
-    case 'orderConfirmation':
+    case 'order.confirmed':
       return t('notifications.titles.orderConfirmed');
-    case 'orderDeclined':
+    case 'order.declined':
       return t('notifications.titles.orderDeclined');
-    case 'orderCancel':
+    case 'order.cancelled':
       return t('notifications.titles.orderCancelled');
-    case 'refund':
+    case 'order.refunded':
       return t('notifications.titles.refundReceived');
-    case 'orderFulfillment':
+    case 'order.fulfilled':
       return t('notifications.titles.orderFulfilled');
-    case 'orderCompletion':
+    case 'order.completed':
       return t('notifications.titles.orderCompleted');
-    case 'vendorFinalizedPayment':
+    case 'order.vendor_finalized':
       return t('notifications.titles.paymentFinalized');
-    case 'disputeOpen':
-    case 'caseOpen':
+    case 'dispute.opened':
+    case 'dispute.case_open':
       return t('notifications.titles.disputeOpened');
-    case 'disputeClose':
+    case 'dispute.closed':
       return t('notifications.titles.disputeResolved');
-    case 'disputeAccepted':
+    case 'dispute.accepted':
       return t('notifications.titles.disputeAccepted');
-    case 'caseUpdate':
+    case 'dispute.case_update':
       return t('notifications.titles.caseUpdate');
-    case 'follow':
+    case 'social.follow':
       return t('notifications.titles.newFollower');
-    case 'unfollow':
+    case 'social.unfollow':
       return t('notifications.titles.unfollowed');
-    case 'moderatorAdd':
+    case 'social.moderator_add':
       return t('notifications.titles.moderatorAdded');
-    case 'moderatorRemove':
+    case 'social.moderator_remove':
       return t('notifications.titles.moderatorRemoved');
+    case 'payment.locked':
+      return t('notifications.titles.paymentReceived');
+    case 'payment.expired':
+      return t('notifications.titles.paymentExpired', { defaultValue: 'Payment Expired' });
+    case 'payment.cancelled':
+      return t('notifications.titles.paymentCancelled', { defaultValue: 'Payment Cancelled' });
     default:
       return notification.title || type;
   }
 }
 
-/**
- * 生成通知消息（支持 i18n）
- */
 function generateNotificationMessage(
   type: string,
   notification: BackendNotificationRecord['notification']
 ): string {
   const { t } = getI18n();
   const orderId = notification.orderID || notification.orderId || '';
-  const vendorHandle = notification.vendorHandle || '';
   const buyerHandle = notification.buyerHandle || '';
   const shortOrderId = orderId ? orderId.slice(0, 8) : '';
 
   switch (type) {
-    case 'newOrder':
+    case 'order.created':
       return orderId
         ? t('notifications.messages.newOrderWithId', { orderId: shortOrderId })
         : t('notifications.messages.newOrderNoId');
-    case 'orderFunded':
-    case 'orderPaymentReceived':
+    case 'order.funded':
+    case 'order.payment_received':
       return orderId
         ? t('notifications.messages.paymentReceivedWithId', { orderId: shortOrderId })
         : t('notifications.messages.paymentReceivedNoId');
-    case 'orderConfirmation':
+    case 'order.confirmed':
       return orderId
         ? t('notifications.messages.orderConfirmedWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderConfirmedNoId');
-    case 'orderDeclined':
+    case 'order.declined':
       return orderId
         ? t('notifications.messages.orderDeclinedWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderDeclinedNoId');
-    case 'orderCancel':
+    case 'order.cancelled':
       return orderId
         ? t('notifications.messages.orderCancelledWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderCancelledNoId');
-    case 'refund':
+    case 'order.refunded':
       return orderId
         ? t('notifications.messages.refundReceivedWithId', { orderId: shortOrderId })
         : t('notifications.messages.refundReceivedNoId');
-    case 'orderFulfillment':
+    case 'order.fulfilled':
       return orderId
         ? t('notifications.messages.orderShippedWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderShippedNoId');
-    case 'orderCompletion':
+    case 'order.completed':
       return orderId
         ? t('notifications.messages.orderCompleteWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderCompleteNoId');
-    case 'vendorFinalizedPayment':
+    case 'order.vendor_finalized':
       return orderId
         ? t('notifications.messages.paymentFinalizedWithId', { orderId: shortOrderId })
         : t('notifications.messages.paymentFinalizedNoId');
-    case 'disputeOpen':
-    case 'caseOpen':
+    case 'dispute.opened':
+    case 'dispute.case_open':
       return orderId
         ? t('notifications.messages.disputeOpenedWithId', { orderId: shortOrderId })
         : t('notifications.messages.disputeOpenedNoId');
-    case 'disputeClose':
+    case 'dispute.closed':
       return orderId
         ? t('notifications.messages.disputeResolvedWithId', { orderId: shortOrderId })
         : t('notifications.messages.disputeResolvedNoId');
-    case 'disputeAccepted':
+    case 'dispute.accepted':
       return orderId
         ? t('notifications.messages.disputeAcceptedWithId', { orderId: shortOrderId })
         : t('notifications.messages.disputeAcceptedNoId');
-    case 'caseUpdate':
+    case 'dispute.case_update':
       return orderId
         ? t('notifications.messages.caseUpdateWithId', { orderId: shortOrderId })
         : t('notifications.messages.caseUpdateNoId');
-    case 'follow':
+    case 'social.follow':
       return buyerHandle
         ? t('notifications.messages.followedBy', { name: buyerHandle })
         : t('notifications.messages.followedBySomeone');
-    case 'unfollow':
+    case 'social.unfollow':
       return buyerHandle
         ? t('notifications.messages.unfollowedBy', { name: buyerHandle })
         : t('notifications.messages.unfollowedBySomeone');
-    case 'moderatorAdd':
+    case 'social.moderator_add':
       return buyerHandle
         ? t('notifications.messages.moderatorAddedBy', { name: buyerHandle })
         : t('notifications.messages.moderatorAddedBySomeone');
-    case 'moderatorRemove':
+    case 'social.moderator_remove':
       return buyerHandle
         ? t('notifications.messages.moderatorRemovedBy', { name: buyerHandle })
         : t('notifications.messages.moderatorRemovedBySomeone');
+    case 'payment.locked':
+      return orderId
+        ? t('notifications.messages.paymentReceivedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.paymentReceivedNoId');
+    case 'payment.expired':
+    case 'payment.cancelled':
+      return orderId
+        ? t('notifications.messages.orderCancelledWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderCancelledNoId');
     default:
-      return vendorHandle || buyerHandle || t('notifications.messages.defaultNotification');
+      return (
+        notification.vendorHandle || buyerHandle || t('notifications.messages.defaultNotification')
+      );
   }
 }
 
-/**
- * 获取通知列表（带分页和过滤）
- */
 export async function getNotifications(
   options: {
     limit?: number;
@@ -376,7 +364,6 @@ export async function getNotifications(
     if (offsetId) {
       params.append('offsetID', offsetId);
     }
-    // 添加 filter 参数
     const filterTypes = NOTIFICATION_FILTER_TYPES[filter];
     if (filterTypes) {
       params.append('filter', filterTypes);
@@ -390,7 +377,7 @@ export async function getNotifications(
     const notifications = (response.notifications || []).map(
       (record: BackendNotificationRecord, index: number): Notification => {
         const notif = record.notification || {};
-        // 确保 ID 唯一：优先使用后端 notificationID（大小写敏感），再兜底 type-timestamp-index
+        // 确保 ID 唯一：优先使用后端 notificationID（大小写两种），兜底 type-timestamp-index
         const uniqueId =
           notif.notificationID ||
           notif.notificationId ||
@@ -436,20 +423,16 @@ export async function getNotifications(
   };
 
   const mockFn = async () => {
-    // Mock 数据也支持过滤
     let filtered = mockNotifications;
     if (filter === 'orders') {
       filtered = mockNotifications.filter(
         n =>
-          ['order', 'payment', 'dispute'].includes(n.type) ||
-          n.type.startsWith('order') ||
-          n.type.startsWith('dispute') ||
-          n.type.startsWith('case')
+          n.type.startsWith('order.') ||
+          n.type.startsWith('dispute.') ||
+          n.type.startsWith('payment.')
       );
     } else if (filter === 'followers') {
-      filtered = mockNotifications.filter(
-        n => n.type === 'follow' || n.type === 'moderatorAdd' || n.type === 'moderatorRemove'
-      );
+      filtered = mockNotifications.filter(n => n.type.startsWith('social.'));
     }
     return {
       notifications: filtered,
@@ -462,17 +445,12 @@ export async function getNotifications(
   return withMockFallback(realFn, mockFn, '/notifications');
 }
 
-/**
- * 获取通知列表（简化版，兼容旧接口）
- */
+/** 简化版，兼容旧的只需 Notification[] 的调用方 */
 export async function getNotificationsList(limit = 20, offsetId = ''): Promise<Notification[]> {
   const result = await getNotifications({ limit, offsetId });
   return result.notifications;
 }
 
-/**
- * 获取未读通知数量
- */
 export async function getUnreadNotificationCount(): Promise<number> {
   const realFn = async () => {
     const result = await authSafeGet<{ unread: number; total: number }>(
@@ -489,9 +467,6 @@ export async function getUnreadNotificationCount(): Promise<number> {
   return withMockFallback(realFn, mockFn, '/notifications/count');
 }
 
-/**
- * 标记单个通知为已读
- */
 export async function markNotificationAsRead(
   notificationId: string
 ): Promise<{ success: boolean }> {
@@ -512,9 +487,6 @@ export async function markNotificationAsRead(
   return withMockFallback(realFn, mockFn, `/notifications/${encodedId}/read`);
 }
 
-/**
- * 批量标记通知为已读
- */
 export async function markAllNotificationsAsRead(
   notificationIds?: string[]
 ): Promise<{ success: boolean }> {
@@ -544,9 +516,6 @@ export async function markAllNotificationsAsRead(
   return withMockFallback(realFn, mockFn, '/notifications/read');
 }
 
-/**
- * 批量操作通知
- */
 export async function batchNotifications(
   action: 'read' | 'delete',
   notificationIds: string[]
@@ -554,26 +523,16 @@ export async function batchNotifications(
   return authPost(NODE_API.NOTIFICATIONS_BATCH, { action, ids: notificationIds });
 }
 
-/**
- * 获取通知的路由地址
- */
 export function getNotificationRoute(notification: Notification): string | null {
   const { type, data } = notification;
 
-  // 订单相关通知
-  if (
-    type.startsWith('order') ||
-    type === 'newOrder' ||
-    type === 'refund' ||
-    type === 'vendorFinalizedPayment'
-  ) {
+  if (type.startsWith('order.') || type.startsWith('payment.')) {
     if (data?.orderId) {
       return `/orders/${data.orderId}`;
     }
   }
 
-  // 争议相关通知
-  if (type.startsWith('dispute') || type.startsWith('case')) {
+  if (type.startsWith('dispute.')) {
     if (data?.orderId) {
       return `/orders/${data.orderId}?tab=dispute`;
     }
@@ -582,13 +541,7 @@ export function getNotificationRoute(notification: Notification): string | null 
     }
   }
 
-  // 关注相关通知
-  if (
-    type === 'follow' ||
-    type === 'unfollow' ||
-    type === 'moderatorAdd' ||
-    type === 'moderatorRemove'
-  ) {
+  if (type.startsWith('social.')) {
     if (data?.peerID) {
       return `/store/${data.peerID}`;
     }
@@ -597,9 +550,6 @@ export function getNotificationRoute(notification: Notification): string | null 
   return null;
 }
 
-/**
- * 通知 API 导出对象
- */
 export const notificationsApi = {
   getNotifications,
   getNotificationsList,

@@ -10,11 +10,13 @@ import type {
   OrderNotificationData,
   DisputeNotificationData,
   SocialNotificationData,
+  PaymentNotificationData,
 } from '../../types/notification';
 import {
   isOrderNotification,
   isDisputeNotification,
   isSocialNotification,
+  isPaymentNotification,
   eventTypeToSoundType,
 } from '../../types/notification';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -24,9 +26,6 @@ import { getI18n } from '../../i18n/i18n';
 
 // ============ 类型守卫 ============
 
-/**
- * 检查是否为通知包装消息
- */
 function isNotificationWrapper(message: unknown): message is { notification: NotificationData } {
   return (
     typeof message === 'object' &&
@@ -36,9 +35,6 @@ function isNotificationWrapper(message: unknown): message is { notification: Not
   );
 }
 
-/**
- * 检查是否为聊天消息
- */
 function isChatMessage(
   message: unknown
 ): message is { chatMessage: { messageId: string; peerID: string; subject: string } } {
@@ -47,9 +43,6 @@ function isChatMessage(
 
 // ============ 显示文本生成 ============
 
-/**
- * 获取用户显示名称
- */
 function getDisplayName(handle?: string, peerId?: string): string {
   if (handle) {
     return `@${handle}`;
@@ -60,9 +53,6 @@ function getDisplayName(handle?: string, peerId?: string): string {
   return '';
 }
 
-/**
- * 生成订单通知显示数据
- */
 function getOrderNotificationDisplay(
   notification: OrderNotificationData,
   isBuyer: boolean
@@ -80,7 +70,7 @@ function getOrderNotificationDisplay(
   let name = '';
 
   switch (type) {
-    case 'newOrder':
+    case 'order.created':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
         ? i18n.t('notifications.order.youPlacedOrder')
@@ -90,62 +80,60 @@ function getOrderNotificationDisplay(
       }
       break;
 
-    case 'orderPaymentReceived':
+    case 'order.payment_received':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
         ? i18n.t('notifications.order.yourPaymentSent')
         : i18n.t('notifications.order.sentPayment');
       break;
 
-    case 'paymentLocked':
-      name = isBuyer ? '' : buyerName;
-      text = isBuyer
-        ? i18n.t('notifications.order.paymentLocked', { defaultValue: 'Payment has been locked' })
-        : i18n.t('notifications.order.lockedPayment', { defaultValue: 'Locked payment' });
-      break;
-
-    case 'orderFunded':
+    case 'order.funded':
       text = i18n.t('notifications.order.orderFunded');
       break;
 
-    case 'orderConfirmation':
+    case 'order.confirmed':
       name = isBuyer ? vendorName : '';
       text = isBuyer
         ? i18n.t('notifications.order.acceptedYourOrder')
         : i18n.t('notifications.order.youAcceptedOrder');
       break;
 
-    case 'orderDeclined':
+    case 'order.declined':
       name = isBuyer ? vendorName : '';
       text = isBuyer
         ? i18n.t('notifications.order.declinedYourOrder')
         : i18n.t('notifications.order.youDeclinedOrder');
       break;
 
-    case 'orderCancel':
+    case 'order.cancelled':
       name = isBuyer ? '' : buyerName;
       text = isBuyer
         ? i18n.t('notifications.order.youCancelledOrder')
         : i18n.t('notifications.order.cancelledOrder');
       break;
 
-    case 'refund':
+    case 'order.refunded':
       name = isBuyer ? vendorName : '';
       text = isBuyer
         ? i18n.t('notifications.order.refundedYourOrder')
         : i18n.t('notifications.order.youRefundedOrder');
       break;
 
-    case 'orderFulfillment':
+    case 'order.fulfilled':
       name = isBuyer ? vendorName : '';
       text = isBuyer
         ? i18n.t('notifications.order.fulfilledYourOrder')
         : i18n.t('notifications.order.youFulfilledOrder');
       break;
 
-    case 'orderCompletion':
+    case 'order.completed':
       name = buyerName;
       text = i18n.t('notifications.order.completedOrder');
+      break;
+
+    case 'order.vendor_finalized':
+      name = vendorName;
+      text = i18n.t('notifications.dispute.claimedPayment');
       break;
 
     default:
@@ -155,9 +143,6 @@ function getOrderNotificationDisplay(
   return { text, route, name };
 }
 
-/**
- * 生成争议通知显示数据
- */
 function getDisputeNotificationDisplay(
   notification: DisputeNotificationData,
   currentUserId?: string
@@ -188,7 +173,7 @@ function getDisputeNotificationDisplay(
   let name = '';
 
   switch (type) {
-    case 'disputeOpen':
+    case 'dispute.opened':
       name = disputerName;
       text = i18n.t('notifications.dispute.startedDispute');
       route =
@@ -197,7 +182,7 @@ function getDisputeNotificationDisplay(
           : `/orders/sales?orderID=${caseID || orderID}`;
       break;
 
-    case 'caseOpen':
+    case 'dispute.case_open':
       // 判断当前用户是争议方还是调解员
       if (disputeeID === currentUserId) {
         name = disputerName;
@@ -210,13 +195,13 @@ function getDisputeNotificationDisplay(
       }
       break;
 
-    case 'caseUpdate':
+    case 'dispute.case_update':
       name = moderatorName;
       text = i18n.t('notifications.dispute.caseUpdated');
       route = `/orders/cases?caseID=${caseID}`;
       break;
 
-    case 'disputeClose':
+    case 'dispute.closed':
       name = otherPartyName;
       text = i18n.t('notifications.dispute.proposedOutcome');
       route =
@@ -225,16 +210,10 @@ function getDisputeNotificationDisplay(
           : `/orders/sales?orderID=${orderID}`;
       break;
 
-    case 'disputeAccepted':
+    case 'dispute.accepted':
       name = buyerAccepted ? getDisplayName(undefined, buyer) : disputeeName;
       text = i18n.t('notifications.dispute.acceptedPayout');
       route = `/orders/${buyer === otherPartyID ? 'purchases' : 'sales'}?orderID=${orderID}`;
-      break;
-
-    case 'vendorFinalizedPayment':
-      name = disputeeName;
-      text = i18n.t('notifications.dispute.claimedPayment');
-      route = `/orders/purchases?orderID=${orderID}`;
       break;
 
     default:
@@ -245,9 +224,6 @@ function getDisputeNotificationDisplay(
   return { text, route, name };
 }
 
-/**
- * 生成社交通知显示数据
- */
 function getSocialNotificationDisplay(
   notification: SocialNotificationData
 ): NotificationDisplayData {
@@ -260,19 +236,19 @@ function getSocialNotificationDisplay(
   let text = '';
 
   switch (type) {
-    case 'follow':
+    case 'social.follow':
       text = i18n.t('notifications.social.startedFollowing');
       break;
 
-    case 'unfollow':
+    case 'social.unfollow':
       text = i18n.t('notifications.social.unfollowed');
       break;
 
-    case 'moderatorAdd':
+    case 'social.moderator_add':
       text = i18n.t('notifications.social.addedAsModerator');
       break;
 
-    case 'moderatorRemove':
+    case 'social.moderator_remove':
       text = i18n.t('notifications.social.removedAsModerator');
       break;
 
@@ -283,9 +259,33 @@ function getSocialNotificationDisplay(
   return { text, route, name };
 }
 
-/**
- * 生成通知显示数据
- */
+function getPaymentNotificationDisplay(
+  notification: PaymentNotificationData
+): NotificationDisplayData {
+  const i18n = getI18n();
+  const { type, orderID } = notification;
+  const route = orderID ? `/orders/purchases?orderID=${orderID}` : '/orders';
+  let text = '';
+
+  switch (type) {
+    case 'payment.locked':
+      text = i18n.t('notifications.order.paymentLocked', {
+        defaultValue: 'Payment has been locked',
+      });
+      break;
+    case 'payment.expired':
+      text = i18n.t('notifications.payment.expired', { defaultValue: 'Payment has expired' });
+      break;
+    case 'payment.cancelled':
+      text = i18n.t('notifications.payment.cancelled', { defaultValue: 'Payment was cancelled' });
+      break;
+    default:
+      text = type;
+  }
+
+  return { text, route };
+}
+
 export function getNotificationDisplayData(
   notification: NotificationData,
   options: {
@@ -307,6 +307,10 @@ export function getNotificationDisplayData(
     return getSocialNotificationDisplay(notification);
   }
 
+  if (isPaymentNotification(notification)) {
+    return getPaymentNotificationDisplay(notification);
+  }
+
   return {
     text: (notification as NotificationData).type || 'notification',
     route: '/notifications',
@@ -315,39 +319,22 @@ export function getNotificationDisplayData(
 
 // ============ 服务类 ============
 
-/**
- * 通知服务类
- */
 class NotificationService {
   private unsubscribeWebSocket: (() => void) | null = null;
   private initialized = false;
   private currentUserId: string | null = null;
 
-  /**
-   * 初始化服务
-   */
   init(): void {
     if (this.initialized) return;
-
-    // 初始化声音服务
     soundService.init();
-
-    // 订阅 WebSocket 消息
     this.subscribeToWebSocket();
-
     this.initialized = true;
   }
 
-  /**
-   * 设置当前用户 ID
-   */
   setCurrentUserId(userId: string | null): void {
     this.currentUserId = userId;
   }
 
-  /**
-   * 订阅 WebSocket 消息
-   */
   private subscribeToWebSocket(): void {
     if (this.unsubscribeWebSocket) {
       this.unsubscribeWebSocket();
@@ -358,71 +345,52 @@ class NotificationService {
     });
   }
 
-  /**
-   * 处理 WebSocket 消息
-   */
   private handleWebSocketMessage(message: Record<string, unknown>): void {
-    // 处理通知消息
     if (isNotificationWrapper(message)) {
       this.handleNotification(message.notification);
       return;
     }
 
-    // 处理聊天消息
     if (isChatMessage(message)) {
       const { chatMessage } = message;
-      // 检查是否为订单聊天（subject 格式通常包含 order ID）
+      // subject 包含 order 关键字时判定为订单聊天（启发式规则）
       const isOrderChat = chatMessage.subject?.toLowerCase().includes('order');
       soundService.notifyChatMessage(chatMessage.peerID, isOrderChat);
       return;
     }
-
-    // 其他消息类型暂不处理
   }
 
   private static readonly ORDER_STATE_EVENTS = new Set([
-    'orderFunded',
-    'orderConfirmation',
-    'orderDeclined',
-    'orderCancel',
-    'refund',
-    'orderFulfillment',
-    'orderCompletion',
-    'disputeOpen',
-    'disputeClose',
-    'disputeAccepted',
-    'vendorFinalizedPayment',
+    'order.funded',
+    'order.confirmed',
+    'order.declined',
+    'order.cancelled',
+    'order.refunded',
+    'order.fulfilled',
+    'order.completed',
+    'order.vendor_finalized',
+    'dispute.opened',
+    'dispute.closed',
+    'dispute.accepted',
   ]);
 
-  /**
-   * 处理通知
-   */
   private handleNotification(notification: NotificationData): void {
     const store = useNotificationStore.getState();
-
-    // 添加到 Store
     store.addNotification(notification);
 
-    // Order-state-changing events: trigger data refetch in order hooks
+    // 订单状态变更事件：触发订单数据重新拉取（供 order hooks 使用）
     if (NotificationService.ORDER_STATE_EVENTS.has(notification.type)) {
       store.triggerOrderRefresh();
     }
 
-    // 播放声音
     const soundType = eventTypeToSoundType(notification.type);
     soundService.notify(soundType);
   }
 
-  /**
-   * 手动添加通知（用于测试或手动触发）
-   */
   addNotification(notification: NotificationData): void {
     this.handleNotification(notification);
   }
 
-  /**
-   * 获取通知显示数据
-   */
   getDisplayData(
     notification: NotificationData,
     options?: { isBuyer?: boolean }
@@ -433,23 +401,14 @@ class NotificationService {
     });
   }
 
-  /**
-   * 订阅通知（返回取消订阅函数）
-   */
   subscribe(): () => void {
     if (!this.initialized) {
       this.init();
     }
-
-    // 返回取消订阅函数
-    return () => {
-      // 目前不需要做什么，因为 WebSocket 订阅是全局的
-    };
+    // WebSocket 订阅是全局的，unsubscribe 目前无需额外清理
+    return () => {};
   }
 
-  /**
-   * 清理资源
-   */
   dispose(): void {
     if (this.unsubscribeWebSocket) {
       this.unsubscribeWebSocket();
@@ -460,17 +419,12 @@ class NotificationService {
   }
 }
 
-// ============ 单例导出 ============
-
-/** 通知服务单例 */
 export const notificationService = new NotificationService();
 
-/** 初始化通知服务 */
 export function initNotificationService(): void {
   notificationService.init();
 }
 
-/** 订阅通知 */
 export function subscribeToNotifications(): () => void {
   return notificationService.subscribe();
 }

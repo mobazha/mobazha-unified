@@ -113,7 +113,7 @@ const mockNotifications = [
   {
     timestamp: NOW,
     read: false,
-    type: 'newOrder',
+    type: 'order.created',
     notification: {
       notificationId: 'notif-001',
       orderId: 'QmSale001',
@@ -124,7 +124,7 @@ const mockNotifications = [
   {
     timestamp: DAY_AGO,
     read: false,
-    type: 'orderFunded',
+    type: 'order.funded',
     notification: {
       notificationId: 'notif-002',
       orderId: 'QmOrder003',
@@ -134,7 +134,7 @@ const mockNotifications = [
   {
     timestamp: DAY_AGO,
     read: true,
-    type: 'follow',
+    type: 'social.follow',
     notification: {
       notificationId: 'notif-003',
       peerId: MOCK_BUYER_PEER_ID,
@@ -143,7 +143,7 @@ const mockNotifications = [
   {
     timestamp: WEEK_AGO,
     read: true,
-    type: 'orderFulfillment',
+    type: 'order.fulfilled',
     notification: {
       notificationId: 'notif-004',
       orderId: 'QmOrder001',
@@ -153,7 +153,7 @@ const mockNotifications = [
   {
     timestamp: WEEK_AGO,
     read: true,
-    type: 'orderComplete',
+    type: 'order.completed',
     notification: {
       notificationId: 'notif-005',
       orderId: 'QmOrder002',
