@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useI18n, notificationChannelsApi } from '@mobazha/core';
-import type { ChannelConfig, ChannelTypeInfo } from '@mobazha/core';
+import type { ChannelConfig, ChannelTypeInfo, ChannelFieldSchema } from '@mobazha/core';
 import { Plus, Trash2, Send, Pencil, Bell, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,12 +29,49 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import Link from 'next/link';
+import {
+  EventFilterSection,
+  eventFilterToCategories,
+  categoriesToEventFilter,
+  formatEventFilterDisplay,
+  type EventCategory,
+} from './EventFilterSection';
+import { TelegramSetupGuide } from './TelegramSetupGuide';
+import { ChatDetector } from './ChatDetector';
+
+interface FieldMeta {
+  placeholder?: string;
+  help?: string;
+}
+
+const CHANNEL_FIELD_META: Record<string, Record<string, FieldMeta>> = {
+  telegram: {
+    bot_token: {
+      placeholder: '110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw',
+      help: 'admin.integrations.telegramBotTokenHelp',
+    },
+    chat_id: {
+      placeholder: '-1001234567890',
+      help: 'admin.integrations.telegramChatIdHelp',
+    },
+  },
+};
+
+const FALLBACK_CHANNEL_TYPES: ChannelTypeInfo[] = [
+  {
+    type: 'telegram',
+    label: 'Telegram',
+    fields: [
+      { key: 'bot_token', label: 'Bot Token', type: 'password', required: true },
+      { key: 'chat_id', label: 'Chat ID', type: 'text', required: true },
+    ],
+  },
+];
 
 interface ChannelFormData {
   type: string;
   name: string;
   enabled: boolean;
-  event_filter: string;
   settings: Record<string, string>;
 }
 
@@ -42,7 +79,6 @@ const emptyForm: ChannelFormData = {
   type: '',
   name: '',
   enabled: true,
-  event_filter: '',
   settings: {},
 };
 
@@ -59,24 +95,32 @@ export default function AdminIntegrationsPage() {
   const [form, setForm] = useState<ChannelFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
 
+  const [filterMode, setFilterMode] = useState<'all' | 'custom'>('all');
+  const [selectedCategories, setSelectedCategories] = useState<Set<EventCategory>>(new Set());
+
   const [deleteTarget, setDeleteTarget] = useState<ChannelConfig | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    let loadedChannels: ChannelConfig[] = [];
+    let loadedTypes: ChannelTypeInfo[] = [];
+
     try {
       const [ch, types] = await Promise.all([
-        notificationChannelsApi.getNotificationChannels(),
-        notificationChannelsApi.getNotificationChannelTypes(),
+        notificationChannelsApi.getNotificationChannels().catch(() => []),
+        notificationChannelsApi.getNotificationChannelTypes().catch(() => []),
       ]);
-      setChannels(ch ?? []);
-      setChannelTypes(types ?? []);
+      loadedChannels = ch ?? [];
+      loadedTypes = types && types.length > 0 ? types : FALLBACK_CHANNEL_TYPES;
     } catch {
-      toast({ variant: 'destructive', title: t('admin.integrations.saveFailed') });
-    } finally {
-      setLoading(false);
+      loadedTypes = FALLBACK_CHANNEL_TYPES;
     }
-  }, [toast]);
+
+    setChannels(loadedChannels);
+    setChannelTypes(loadedTypes);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -84,10 +128,25 @@ export default function AdminIntegrationsPage() {
 
   const selectedTypeInfo = channelTypes.find(ct => ct.type === form.type);
 
+  function getFieldMeta(channelType: string, fieldKey: string): FieldMeta {
+    return CHANNEL_FIELD_META[channelType]?.[fieldKey] ?? {};
+  }
+
+  function initFilterState(eventFilter: string) {
+    if (!eventFilter.trim()) {
+      setFilterMode('all');
+      setSelectedCategories(new Set());
+    } else {
+      setFilterMode('custom');
+      setSelectedCategories(eventFilterToCategories(eventFilter));
+    }
+  }
+
   function openAddDialog() {
     const defaultType = channelTypes[0]?.type ?? '';
     setEditingId(null);
     setForm({ ...emptyForm, type: defaultType });
+    initFilterState('');
     setDialogOpen(true);
   }
 
@@ -101,10 +160,15 @@ export default function AdminIntegrationsPage() {
       type: ch.type,
       name: ch.name,
       enabled: ch.enabled,
-      event_filter: ch.event_filter ?? '',
       settings,
     });
+    initFilterState(ch.event_filter ?? '');
     setDialogOpen(true);
+  }
+
+  function buildEventFilter(): string {
+    if (filterMode === 'all') return '';
+    return categoriesToEventFilter(selectedCategories);
   }
 
   async function handleSave() {
@@ -116,11 +180,13 @@ export default function AdminIntegrationsPage() {
         if (v) settings[k] = v;
       }
 
+      const eventFilter = buildEventFilter();
+
       if (editingId) {
         await notificationChannelsApi.updateNotificationChannel(editingId, {
           name: form.name,
           enabled: form.enabled,
-          event_filter: form.event_filter,
+          event_filter: eventFilter,
           settings,
         });
       } else {
@@ -128,7 +194,7 @@ export default function AdminIntegrationsPage() {
           type: form.type,
           name: form.name,
           enabled: form.enabled,
-          event_filter: form.event_filter,
+          event_filter: eventFilter,
           settings,
         });
       }
@@ -155,10 +221,10 @@ export default function AdminIntegrationsPage() {
       setDeleteTarget(null);
       fetchData();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Delete failed';
+      const message = err instanceof Error ? err.message : t('admin.integrations.deleteFailed');
       toast({
         variant: 'destructive',
-        title: t('admin.integrations.saveFailed'),
+        title: t('admin.integrations.deleteFailed'),
         description: message,
       });
     }
@@ -192,6 +258,54 @@ export default function AdminIntegrationsPage() {
     return channelTypes.find(ct => ct.type === type)?.label ?? type;
   }
 
+  function toggleCategory(cat: EventCategory) {
+    setSelectedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) {
+        next.delete(cat);
+      } else {
+        next.add(cat);
+      }
+      return next;
+    });
+  }
+
+  function renderFieldWithHelp(field: ChannelFieldSchema) {
+    const meta = getFieldMeta(form.type, field.key);
+    const isEditing = !!editingId;
+    const isPassword = field.type === 'password';
+    const isChatId = field.key === 'chat_id' && form.type === 'telegram';
+
+    return (
+      <div key={field.key} className="space-y-1.5">
+        <Label>
+          {field.label}
+          {field.required && <span className="text-destructive ml-0.5">*</span>}
+        </Label>
+        <div className={isChatId ? 'flex gap-2' : ''}>
+          <Input
+            type={isPassword ? 'password' : 'text'}
+            value={form.settings[field.key] ?? ''}
+            onChange={e => updateSetting(field.key, e.target.value)}
+            placeholder={
+              isEditing && isPassword
+                ? t('admin.integrations.passwordUnchanged')
+                : (meta.placeholder ?? '')
+            }
+            className={isChatId ? 'flex-1' : ''}
+          />
+          {isChatId && (
+            <ChatDetector
+              botToken={form.settings['bot_token'] ?? ''}
+              onSelectChat={chatId => updateSetting('chat_id', chatId)}
+            />
+          )}
+        </div>
+        {meta.help && <p className="text-xs text-muted-foreground">{t(meta.help)}</p>}
+      </div>
+    );
+  }
+
   return (
     <div data-testid="admin-integrations">
       <div className="mb-6">
@@ -207,14 +321,13 @@ export default function AdminIntegrationsPage() {
             <h1 className="text-2xl font-bold text-foreground">{t('admin.integrations.title')}</h1>
             <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.subtitle')}</p>
           </div>
-          <Button onClick={openAddDialog} size="sm" disabled={channelTypes.length === 0}>
+          <Button onClick={openAddDialog} size="sm">
             <Plus className="w-4 h-4 mr-1.5" />
             {t('admin.integrations.addChannel')}
           </Button>
         </div>
       </div>
 
-      {/* Channels list */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map(i => (
@@ -257,7 +370,8 @@ export default function AdminIntegrationsPage() {
                   </div>
                   <span className="text-xs text-muted-foreground mt-0.5">
                     {channelTypeLabel(ch.type)}
-                    {ch.event_filter && ` · ${ch.event_filter}`}
+                    {' · '}
+                    {formatEventFilterDisplay(ch.event_filter, t)}
                   </span>
                 </div>
               </div>
@@ -297,7 +411,7 @@ export default function AdminIntegrationsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingId ? t('admin.integrations.editChannel') : t('admin.integrations.addChannel')}
@@ -305,27 +419,38 @@ export default function AdminIntegrationsPage() {
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
+            {/* Channel type selector */}
             {!editingId && (
               <div className="space-y-1.5">
                 <Label>{t('admin.integrations.type')}</Label>
-                <Select
-                  value={form.type}
-                  onValueChange={v => setForm(prev => ({ ...prev, type: v, settings: {} }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {channelTypes.map(ct => (
-                      <SelectItem key={ct.type} value={ct.type}>
-                        {ct.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {channelTypes.length === 1 ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md text-sm">
+                    <span className="font-medium">{channelTypes[0].label}</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={form.type}
+                    onValueChange={v => setForm(prev => ({ ...prev, type: v, settings: {} }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {channelTypes.map(ct => (
+                        <SelectItem key={ct.type} value={ct.type}>
+                          {ct.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             )}
 
+            {/* Setup guide */}
+            {form.type === 'telegram' && !editingId && <TelegramSetupGuide />}
+
+            {/* Channel name */}
             <div className="space-y-1.5">
               <Label>{t('admin.integrations.name')}</Label>
               <Input
@@ -335,37 +460,18 @@ export default function AdminIntegrationsPage() {
               />
             </div>
 
-            {selectedTypeInfo?.fields.map(field => (
-              <div key={field.key} className="space-y-1.5">
-                <Label>
-                  {field.label}
-                  {field.required && <span className="text-destructive ml-0.5">*</span>}
-                </Label>
-                <Input
-                  type={field.type === 'password' ? 'password' : 'text'}
-                  value={form.settings[field.key] ?? ''}
-                  onChange={e => updateSetting(field.key, e.target.value)}
-                  placeholder={
-                    editingId && field.type === 'password'
-                      ? t('admin.integrations.passwordUnchanged')
-                      : ''
-                  }
-                />
-              </div>
-            ))}
+            {/* Dynamic fields from schema */}
+            {selectedTypeInfo?.fields.map(field => renderFieldWithHelp(field))}
 
-            <div className="space-y-1.5">
-              <Label>{t('admin.integrations.eventFilter')}</Label>
-              <Input
-                value={form.event_filter}
-                onChange={e => setForm(prev => ({ ...prev, event_filter: e.target.value }))}
-                placeholder={t('admin.integrations.eventFilterPlaceholder')}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('admin.integrations.eventFilterHelp')}
-              </p>
-            </div>
+            {/* Event filter — checkbox groups */}
+            <EventFilterSection
+              filterMode={filterMode}
+              selectedCategories={selectedCategories}
+              onFilterModeChange={setFilterMode}
+              onToggleCategory={toggleCategory}
+            />
 
+            {/* Enabled toggle */}
             <div className="flex items-center justify-between">
               <Label htmlFor="channel-enabled">{t('admin.integrations.enabled')}</Label>
               <Switch
@@ -375,6 +481,7 @@ export default function AdminIntegrationsPage() {
               />
             </div>
 
+            {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 {t('admin.integrations.cancel')}

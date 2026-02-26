@@ -58,3 +58,22 @@ export async function testNotificationChannel(id: string): Promise<{ status: str
 export async function getNotificationChannelTypes(): Promise<ChannelTypeInfo[]> {
   return authGet<ChannelTypeInfo[]>(NODE_API.NOTIFICATION_CHANNEL_TYPES);
 }
+
+export interface DetectedChat {
+  id: string;
+  title: string;
+  type: string;
+}
+
+export async function detectTelegramChats(
+  botToken: string,
+  baseUrl?: string
+): Promise<DetectedChat[]> {
+  const body: Record<string, string> = { bot_token: botToken };
+  if (baseUrl) body.base_url = baseUrl;
+  const resp = await authPost<{ chats: DetectedChat[] }>(
+    NODE_API.NOTIFICATION_CHANNELS_DETECT_CHAT,
+    body
+  );
+  return resp.chats ?? [];
+}
