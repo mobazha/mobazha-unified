@@ -14,6 +14,8 @@ import {
   isBasic,
   isStandalone,
 } from '@mobazha/core';
+import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
+import { Lock, User } from 'lucide-react';
 
 /**
  * 获取重定向路径（优先从 URL 参数获取）
@@ -219,11 +221,9 @@ function LoginPageContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
         <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
           <div className="text-center mb-6 sm:mb-8">
+            <MobazhaLogo size={56} className="text-white mx-auto mb-3" />
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
             <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
-            <span className="inline-block mt-2 px-3 py-1 bg-primary/20 text-[var(--hero-accent)] text-xs rounded-full">
-              {t('login.standaloneMode', { defaultValue: 'Standalone Store' })}
-            </span>
           </div>
 
           {(error || localError) && (
@@ -234,9 +234,12 @@ function LoginPageContent() {
 
           {/* Seller: BasicAuth login */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-white/70 mb-3 uppercase tracking-wider">
-              {t('login.sellerAdmin', { defaultValue: 'Store Admin' })}
-            </h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Lock className="w-4 h-4 text-white/70" />
+              <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider">
+                {t('login.sellerAdmin', { defaultValue: 'Store Admin' })}
+              </h3>
+            </div>
             <form onSubmit={handleBasicLogin} className="space-y-3">
               <input
                 id="username"
@@ -282,9 +285,12 @@ function LoginPageContent() {
 
           {/* Buyer: Casdoor popup login */}
           <div>
-            <h3 className="text-sm font-medium text-white/70 mb-3 uppercase tracking-wider">
-              {t('login.buyerLogin', { defaultValue: 'Buyer' })}
-            </h3>
+            <div className="flex items-center gap-2 mb-3">
+              <User className="w-4 h-4 text-white/70" />
+              <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider">
+                {t('login.buyerLogin', { defaultValue: 'Buyer' })}
+              </h3>
+            </div>
             <button
               type="button"
               onClick={handleStandaloneBuyerLogin}
@@ -299,6 +305,11 @@ function LoginPageContent() {
               })}
             </p>
           </div>
+
+          {/* Brand Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-white/40">Decentralized Commerce, Powered by Mobazha</p>
+          </div>
         </div>
       </div>
     );
@@ -311,11 +322,9 @@ function LoginPageContent() {
         <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
           {/* Logo & Title */}
           <div className="text-center mb-6 sm:mb-8">
+            <MobazhaLogo size={56} className="text-white mx-auto mb-3" />
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
             <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
-            <span className="inline-block mt-2 px-3 py-1 bg-success/20 text-success text-xs rounded-full">
-              {t('login.vpsMode')}
-            </span>
           </div>
 
           {/* Error Message */}
@@ -407,9 +416,9 @@ function LoginPageContent() {
             </button>
           </form>
 
-          {/* Environment Info */}
+          {/* Brand Footer */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-white/50">API: {envConfig.api.gateway}</p>
+            <p className="text-xs text-white/40">Decentralized Commerce, Powered by Mobazha</p>
           </div>
         </div>
       </div>
@@ -422,11 +431,9 @@ function LoginPageContent() {
       <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
         {/* Logo & Title */}
         <div className="text-center mb-6 sm:mb-8">
+          <MobazhaLogo size={56} className="text-white mx-auto mb-3" />
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
           <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
-          <span className="inline-block mt-2 px-3 py-1 bg-primary/20 text-[var(--hero-accent)] text-xs rounded-full">
-            {t('login.hostedMode')}
-          </span>
         </div>
 
         {/* Login Info */}
@@ -515,12 +522,9 @@ function LoginPageContent() {
           </div>
         </div>
 
-        {/* Environment Info */}
+        {/* Brand Footer */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-white/50">
-            {envConfig.isTestEnv ? t('login.testEnvironment') : t('login.productionEnvironment')}:{' '}
-            {envConfig.api.baseUrl}
-          </p>
+          <p className="text-xs text-white/40">Decentralized Commerce, Powered by Mobazha</p>
         </div>
       </div>
     </div>

@@ -2296,6 +2296,14 @@ export interface TranslationResource {
     };
   };
 
+  standalone?: {
+    storeName?: string;
+    allProducts?: string;
+    browseOurCollection?: string;
+    products?: string;
+    searchProducts?: string;
+  };
+
   moderation?: {
     title?: string;
     description?: string;

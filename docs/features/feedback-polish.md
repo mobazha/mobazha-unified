@@ -251,7 +251,7 @@
 
 ---
 
-## PG-009: 独立站首页差异化（V1 最小版）
+## PG-009: 独立站首页差异化（V1 最小版） — ✅ 完成 | 2026-02-26
 
 ### 用户故事
 
@@ -290,13 +290,23 @@
    - 独立站模式 → `StandaloneHomePage`
    - SaaS 模式 → 现有 `MarketplaceHomePage`
 
+### V1 实施结果
+
+**新组件**：
+
+- `StoreHero`（`components/StoreHero/StoreHero.tsx`）— 独立站 Hero，展示店铺头像/名称/简介/位置/商品数/评分/搜索框
+
+**修改**：
+
+- `app/page.tsx` — `isStandalone()` 条件分发：StoreHero vs Hero，独立站标题改为 "All Products"，隐藏 Featured/Categories 区
+
 ### 验收标准
 
-- [ ] 独立站模式首页显示卖家品牌（名称/logo/简介/商品）
-- [ ] 独立站模式首页无 "10K+ Stores" 等集市统计
-- [ ] 独立站模式首页有店内搜索框
-- [ ] SaaS 模式首页保持不变（或统计数字来自真实数据）
-- [ ] 移动端 375px 验证通过
+- [x] 独立站模式首页显示卖家品牌（名称/logo/简介/商品）
+- [x] 独立站模式首页无 "10K+ Stores" 等集市统计
+- [x] 独立站模式首页有店内搜索框
+- [x] SaaS 模式首页保持不变
+- [ ] 移动端 375px 验证通过（待 E2E 截图更新）
 
 ---
 

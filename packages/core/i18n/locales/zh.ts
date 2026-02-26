@@ -3266,6 +3266,14 @@ export const zh: TranslationResource = {
       description: '目前没有需要处理的争议案件。',
     },
   },
+
+  standalone: {
+    storeName: '店铺',
+    allProducts: '全部商品',
+    browseOurCollection: '浏览我们的商品',
+    products: '件商品',
+    searchProducts: '搜索商品...',
+  },
 };
 
 export default zh;
