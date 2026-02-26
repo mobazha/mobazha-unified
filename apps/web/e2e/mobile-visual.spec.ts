@@ -261,6 +261,36 @@ test.describe('Mobile Visual - Authenticated Admin', () => {
     await navigateAndVerify(page, '/moderator/cases');
     await expect(page).toHaveScreenshot('mobile-authed-moderator-cases.png', { fullPage: true });
   });
+
+  test('authed: admin-dashboard', async ({ page }) => {
+    await loginAndSetup(page);
+    await navigateAndVerify(page, '/admin');
+    await expect(page).toHaveScreenshot('mobile-authed-admin-dashboard.png', { fullPage: true });
+  });
+
+  test('authed: admin-products', async ({ page }) => {
+    await loginAndSetup(page);
+    await navigateAndVerify(page, '/admin/products');
+    await expect(page).toHaveScreenshot('mobile-authed-admin-products.png', { fullPage: true });
+  });
+
+  test('authed: admin-orders', async ({ page }) => {
+    await loginAndSetup(page);
+    await navigateAndVerify(page, '/admin/orders');
+    await expect(page).toHaveScreenshot('mobile-authed-admin-orders.png', { fullPage: true });
+  });
+
+  test('authed: admin-analytics', async ({ page }) => {
+    await loginAndSetup(page);
+    await navigateAndVerify(page, '/admin/analytics');
+    await expect(page).toHaveScreenshot('mobile-authed-admin-analytics.png', { fullPage: true });
+  });
+
+  test('authed: admin-settings', async ({ page }) => {
+    await loginAndSetup(page);
+    await navigateAndVerify(page, '/admin/settings');
+    await expect(page).toHaveScreenshot('mobile-authed-admin-settings.png', { fullPage: true });
+  });
 });
 
 // ─── Part 5: Mobile Bottom Nav ───

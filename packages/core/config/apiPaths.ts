@@ -86,6 +86,12 @@ export const NODE_API = {
   NOTIFICATIONS_READ: '/notifications/read',
   NOTIFICATIONS_BATCH: '/notifications/batch',
 
+  // --- Notification Channels (Telegram, Discord, etc.) ---
+  NOTIFICATION_CHANNELS: '/notifications/channels',
+  NOTIFICATION_CHANNEL: (id: string) => `/notifications/channels/${id}`,
+  NOTIFICATION_CHANNEL_TEST: (id: string) => `/notifications/channels/${id}/test`,
+  NOTIFICATION_CHANNEL_TYPES: '/notifications/channel-types',
+
   // --- Social / Follow ---
   FOLLOW: (peerID: string) => `/follow/${peerID}`,
   FOLLOWING: '/following',

@@ -102,3 +102,7 @@ export * as imagesApi from './images';
 
 // Matrix 聊天 API
 export * as matrixApi from './matrix';
+
+// 通知渠道 API (Telegram, Discord, etc.)
+export * as notificationChannelsApi from './notificationChannels';
+export type { ChannelConfig, ChannelFieldSchema, ChannelTypeInfo } from './notificationChannels';
