@@ -244,7 +244,7 @@ export default function AdminDashboardPage() {
           href="/admin/orders"
           className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
         >
-          <div className="p-3 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+          <div className="p-3 rounded-lg bg-info/10 text-info group-hover:bg-info group-hover:text-primary-foreground transition-colors">
             <ShoppingCart className="w-5 h-5" />
           </div>
           <div>
@@ -259,7 +259,7 @@ export default function AdminDashboardPage() {
           rel="noopener noreferrer"
           className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
         >
-          <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+          <div className="p-3 rounded-lg bg-success/10 text-success group-hover:bg-success group-hover:text-primary-foreground transition-colors">
             <Eye className="w-5 h-5" />
           </div>
           <div>

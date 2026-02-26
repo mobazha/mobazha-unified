@@ -115,6 +115,8 @@ export const NODE_API = {
   MEDIA_PRODUCT_IMAGES: '/media/product-images',
   MEDIA_IMAGES: '/media/images',
   MEDIA_IMAGE: (hash: string) => `/media/images/${hash}`,
+  MEDIA_AVATAR: '/media/avatar',
+  MEDIA_HEADER: '/media/header',
 
   // --- Wallet ---
   WALLET_BALANCE: (coin: string) => `/wallet/balance/${coin}`,

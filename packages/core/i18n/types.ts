@@ -2363,6 +2363,7 @@ export interface TranslationResource {
       welcome?: string;
       subtitle?: string;
       totalSales?: string;
+      totalOrders?: string;
       newOrders?: string;
       activeProducts?: string;
       avgRating?: string;
@@ -2370,6 +2371,9 @@ export interface TranslationResource {
       last7Days?: string;
       published?: string;
       storeRating?: string;
+      completedOrders?: string;
+      reviewCount?: string;
+      noReviews?: string;
       emptyTitle?: string;
       emptyDescription?: string;
       createFirstProduct?: string;
@@ -2416,6 +2420,8 @@ export interface TranslationResource {
       typeCrypto?: string;
       viewTable?: string;
       viewGrid?: string;
+      selectAll?: string;
+      selectProduct?: string;
     };
     orders?: {
       title?: string;
@@ -2424,9 +2430,25 @@ export interface TranslationResource {
       searchPlaceholder?: string;
       filterAll?: string;
       filterPending?: string;
+      filterProcessing?: string;
+      filterShipped?: string;
       filterCompleted?: string;
+      filterDisputed?: string;
+      filterCancelled?: string;
+      clearFilters?: string;
+      dateFrom?: string;
+      dateTo?: string;
       emptyTitle?: string;
       emptyDescription?: string;
+      noMatchTitle?: string;
+      noMatchDescription?: string;
+      selectAll?: string;
+      clearSelection?: string;
+      selectedCount?: string;
+      batchConfirm?: string;
+      batchConfirmSuccess?: string;
+      noPendingSelected?: string;
+      showingCount?: string;
     };
     analytics?: {
       title?: string;

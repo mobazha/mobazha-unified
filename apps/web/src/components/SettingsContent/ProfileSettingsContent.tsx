@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, imagesApi } from '@mobazha/core';
+import type { ContactInfo, SocialAccounts } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Plus, Trash2 } from 'lucide-react';
 import { SettingsSection, SaveBar } from '@/components/SettingsLayout';
@@ -37,14 +38,58 @@ const FormField = ({ label, required, description, children }: FormFieldProps) =
   </div>
 );
 
-const LINK_TYPES = [
+type LinkType = 'website' | 'email' | 'twitter' | 'instagram' | 'facebook' | 'youtube';
+
+const LINK_TYPES: { value: LinkType; label: string }[] = [
   { value: 'website', label: 'Website' },
+  { value: 'email', label: 'Email' },
   { value: 'twitter', label: 'Twitter / X' },
   { value: 'instagram', label: 'Instagram' },
   { value: 'facebook', label: 'Facebook' },
   { value: 'youtube', label: 'YouTube' },
-  { value: 'tiktok', label: 'TikTok' },
-] as const;
+];
+
+function contactInfoToLinks(ci?: ContactInfo): Array<{ type: LinkType; url: string }> {
+  const links: Array<{ type: LinkType; url: string }> = [];
+  if (ci?.website) links.push({ type: 'website', url: ci.website });
+  if (ci?.email) links.push({ type: 'email', url: ci.email });
+  if (ci?.social?.twitter) links.push({ type: 'twitter', url: ci.social.twitter });
+  if (ci?.social?.facebook) links.push({ type: 'facebook', url: ci.social.facebook });
+  if (ci?.social?.instagram) links.push({ type: 'instagram', url: ci.social.instagram });
+  if (ci?.social?.youtube) links.push({ type: 'youtube', url: ci.social.youtube });
+  return links;
+}
+
+function linksToContactInfo(links: Array<{ type: string; url: string }>): ContactInfo {
+  const social: SocialAccounts = {};
+  let website: string | undefined;
+  let email: string | undefined;
+  for (const link of links) {
+    const url = link.url.trim();
+    if (!url) continue;
+    switch (link.type) {
+      case 'website':
+        website = url;
+        break;
+      case 'email':
+        email = url;
+        break;
+      case 'twitter':
+        social.twitter = url;
+        break;
+      case 'facebook':
+        social.facebook = url;
+        break;
+      case 'instagram':
+        social.instagram = url;
+        break;
+      case 'youtube':
+        social.youtube = url;
+        break;
+    }
+  }
+  return { website, email, social };
+}
 
 export function ProfileSettingsContent() {
   const { t } = useI18n();
@@ -59,48 +104,56 @@ export function ProfileSettingsContent() {
   const [avatarUrl, setAvatarUrl] = useState(
     profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : ''
   );
-  const [isUploading, setIsUploading] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [links, setLinks] = useState<Array<{ type: string; url: string }>>([]);
+  const [links, setLinks] = useState<Array<{ type: string; url: string }>>(() =>
+    contactInfoToLinks(profile?.contactInfo)
+  );
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || '');
+      setShortDescription(profile.shortDescription || '');
+      setLocation(profile.location || '');
+      setAbout(profile.about || '');
+      setAvatarUrl(profile.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : '');
+      setLinks(contactInfoToLinks(profile.contactInfo));
+    }
+  }, [profile?.peerID]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isDirty = useMemo(() => {
     const orig = profile;
+    const origLinks = contactInfoToLinks(orig?.contactInfo);
+    const linksChanged =
+      links.length !== origLinks.length ||
+      links.some((l, i) => l.type !== origLinks[i]?.type || l.url !== origLinks[i]?.url);
     return (
       name !== (orig?.name || '') ||
       shortDescription !== (orig?.shortDescription || '') ||
       location !== (orig?.location || '') ||
-      about !== (orig?.about || '')
+      about !== (orig?.about || '') ||
+      linksChanged ||
+      !!pendingAvatarFile
     );
-  }, [name, shortDescription, location, about, profile]);
+  }, [name, shortDescription, location, about, links, pendingAvatarFile, profile]);
 
   const handleDiscard = () => {
     setName(profile?.name || '');
     setShortDescription(profile?.shortDescription || '');
     setLocation(profile?.location || '');
     setAbout(profile?.about || '');
+    setLinks(contactInfoToLinks(profile?.contactInfo));
+    setPendingAvatarFile(null);
+    setAvatarUrl(profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : '');
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
-    try {
-      const previewUrl = URL.createObjectURL(file);
-      setAvatarUrl(previewUrl);
-      toast({
-        title: t('common.success'),
-        description: t('settingsModal.avatarUploaded'),
-      });
-    } catch {
-      toast({
-        title: t('common.error'),
-        description: t('settingsModal.uploadFailed'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarUrl(previewUrl);
+    setPendingAvatarFile(file);
   };
 
   const handleAddLink = () => {
@@ -129,19 +182,49 @@ export function ProfileSettingsContent() {
 
     setIsSaving(true);
     try {
-      if (updateProfile) {
-        updateProfile({
-          name: name.trim(),
-          shortDescription: shortDescription.trim(),
-          location: location.trim(),
-          about: about.trim(),
+      const contactInfo = linksToContactInfo(links);
+
+      // Desktop pattern: profile save and avatar upload run in parallel.
+      // POST /v1/media/avatar auto-associates the avatar with the profile,
+      // so we don't need to include avatarHashes in the profile PUT.
+      const profilePromise = updateProfile({
+        name: name.trim(),
+        shortDescription: shortDescription.trim(),
+        location: location.trim(),
+        about: about.trim(),
+        contactInfo,
+      });
+
+      const avatarPromise = pendingAvatarFile
+        ? imagesApi.uploadAvatar(pendingAvatarFile)
+        : Promise.resolve(null);
+
+      const [profileSuccess, avatarHashes] = await Promise.all([profilePromise, avatarPromise]);
+
+      if (!profileSuccess) {
+        toast({
+          title: t('common.error'),
+          description: t('settingsModal.saveFailed'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (pendingAvatarFile && !avatarHashes) {
+        toast({
+          title: t('common.error'),
+          description: t('settingsModal.uploadFailed'),
+          variant: 'destructive',
         });
       }
 
-      toast({
-        title: t('common.success'),
-        description: t('settingsModal.profileSaved'),
-      });
+      // Sync avatar hashes into local store state
+      if (avatarHashes) {
+        await updateProfile({ avatarHashes });
+      }
+
+      setPendingAvatarFile(null);
+      toast({ title: t('common.success'), description: t('settingsModal.profileSaved') });
     } catch {
       toast({
         title: t('common.error'),
@@ -205,9 +288,9 @@ export function ProfileSettingsContent() {
                       variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
+                      disabled={isSaving}
                     >
-                      {isUploading ? t('common.loading') : t('settingsModal.selectPhoto')}
+                      {t('settingsModal.selectPhoto')}
                     </Button>
                     <input
                       ref={fileInputRef}

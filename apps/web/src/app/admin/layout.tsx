@@ -30,7 +30,7 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <AdminHeader onMenuClick={openMobile} />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" role="main">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">{children}</div>
         </main>
       </div>

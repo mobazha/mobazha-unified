@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ProductImageNative } from '@/components/ui/product-image';
 import {
   DropdownMenu,
@@ -105,10 +106,15 @@ export default function AdminProductsPage() {
       setProducts(data);
     } catch (err) {
       console.error('Failed to fetch products:', err);
+      toast({
+        title: t('common.error'),
+        description: t('common.loadFailedDesc'),
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t, toast]);
 
   useEffect(() => {
     fetchProducts();
@@ -170,6 +176,12 @@ export default function AdminProductsPage() {
         title: t('common.error'),
         description: t('common.saveFailed'),
         variant: 'destructive',
+      });
+    }
+    if (deleted.size > 0) {
+      toast({
+        title: t('common.success'),
+        description: t('listing.deleteSuccess'),
       });
     }
   }, [selectedSlugs, t, toast]);
@@ -354,11 +366,10 @@ export default function AdminProductsPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="w-10 px-4 py-3 text-left">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectedSlugs.size === filtered.length && filtered.length > 0}
-                      onChange={toggleSelectAll}
-                      className="rounded border-border"
+                      onCheckedChange={() => toggleSelectAll()}
+                      aria-label={t('admin.products.selectAll')}
                     />
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
@@ -377,11 +388,10 @@ export default function AdminProductsPage() {
                 {filtered.map(product => (
                   <tr key={product.slug} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedSlugs.has(product.slug)}
-                        onChange={() => toggleSelect(product.slug)}
-                        className="rounded border-border"
+                        onCheckedChange={() => toggleSelect(product.slug)}
+                        aria-label={t('admin.products.selectProduct', { title: product.title })}
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -443,11 +453,10 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div className="absolute top-2 left-2">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selectedSlugs.has(product.slug)}
-                    onChange={() => toggleSelect(product.slug)}
-                    className="rounded border-border w-4 h-4"
+                    onCheckedChange={() => toggleSelect(product.slug)}
+                    aria-label={t('admin.products.selectProduct', { title: product.title })}
                   />
                 </div>
               </div>
