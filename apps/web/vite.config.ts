@@ -1,7 +1,8 @@
 import { defineConfig, loadEnv } from 'vite';
-import type { ProxyOptions } from 'vite';
+import type { Plugin, ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import type { IncomingMessage, ServerResponse } from 'http';
 
 /**
  * Strip WWW-Authenticate header from proxy responses so the browser
@@ -19,13 +20,81 @@ function withStripWwwAuth(opts: ProxyOptions): ProxyOptions {
   };
 }
 
+function readBody(req: IncomingMessage): Promise<string> {
+  return new Promise(resolve => {
+    let data = '';
+    req.on('data', (chunk: Buffer) => {
+      data += chunk.toString();
+    });
+    req.on('end', () => resolve(data));
+  });
+}
+
+/**
+ * Vite plugin: AI proxy endpoint at /internal/ai/generate.
+ * Mirrors the Next.js API route, sharing core logic from src/server/aiHandler.ts.
+ */
+function aiProxyPlugin(): Plugin {
+  return {
+    name: 'ai-proxy',
+    configureServer(server) {
+      server.middlewares.use(
+        '/internal/ai/generate',
+        async (req: IncomingMessage, res: ServerResponse) => {
+          if (req.method !== 'POST') {
+            res.writeHead(405, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Method not allowed' }));
+            return;
+          }
+
+          const apiKey = process.env.OPENAI_API_KEY;
+          if (!apiKey) {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                error: 'AI service not configured. Set OPENAI_API_KEY environment variable.',
+              })
+            );
+            return;
+          }
+
+          let body: unknown;
+          try {
+            const raw = await readBody(req);
+            body = JSON.parse(raw);
+          } catch {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid request body' }));
+            return;
+          }
+
+          const { handleAiRequest } = await import('./src/server/aiHandler');
+          const result = await handleAiRequest(body as Parameters<typeof handleAiRequest>[0], {
+            apiKey,
+            model: process.env.OPENAI_MODEL || 'gpt-4o',
+            baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+          });
+
+          res.writeHead(result.status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result.error ? { error: result.error } : result.data));
+        }
+      );
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
-  // 加载 .env.local 等环境文件中的 NEXT_PUBLIC_* 变量
-  const env = loadEnv(mode, process.cwd(), 'NEXT_PUBLIC_');
+  // 加载 .env.local 等环境文件中的 NEXT_PUBLIC_* 和 OPENAI_* 变量
+  const env = loadEnv(mode, process.cwd(), ['NEXT_PUBLIC_', 'OPENAI_']);
   const apiBase = env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
 
+  // 注入 AI 相关环境变量到 process.env（供 aiHandler 使用）
+  if (env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = env.OPENAI_API_KEY;
+  if (env.OPENAI_MODEL) process.env.OPENAI_MODEL = env.OPENAI_MODEL;
+  if (env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL;
+
   return {
-    plugins: [react()],
+    plugins: [react(), aiProxyPlugin()],
     // 定义全局变量，兼容 Next.js 环境变量
     // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
     // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined
@@ -81,7 +150,7 @@ export default defineConfig(({ mode }) => {
       ],
     },
     server: {
-      port: 3001,
+      port: parseInt(process.env.PORT || '3001', 10),
       proxy: {
         '/v1': withStripWwwAuth({
           target: apiBase,

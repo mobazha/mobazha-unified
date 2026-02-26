@@ -2296,6 +2296,21 @@ export interface TranslationResource {
     };
   };
 
+  ai?: {
+    assist?: string;
+    improveTitle?: string;
+    polishDescription?: string;
+    suggestTags?: string;
+    generateFromImages?: string;
+    generateFromImagesDesc?: string;
+    generating?: string;
+    generateAll?: string;
+    applyAll?: string;
+    regenerate?: string;
+    notConfigured?: string;
+    error?: string;
+  };
+
   standalone?: {
     storeName?: string;
     allProducts?: string;

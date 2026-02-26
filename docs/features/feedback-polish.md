@@ -326,6 +326,54 @@ PG-009（独立站首页差异化）  ← P1，品牌着陆页，~2-3 天
 继续 PG-110（AI 商品创建）← V1 差异化
 ```
 
+### PG-110: AI 商品创建助手 — ✅ 完成 | 2026-02-26
+
+**V1 实现范围**：
+
+- 图片→AI 生成标题/描述/标签/分类（一键填充）
+- 标题 AI 改进
+- 描述 AI 润色
+- 标签/分类 AI 建议
+
+**实现内容**：
+
+| 文件                                                   | 变更                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------------------- |
+| `apps/web/src/app/internal/ai/generate/route.ts`       | **新建** Next.js API Route 代理，API Key 保留在服务端             |
+| `apps/web/src/server/aiHandler.ts`                     | **新建** 框架无关 AI handler（Next.js + Vite 共用）               |
+| `packages/core/services/ai/aiService.ts`               | **新建** 客户端 AI Service，4 个 action                           |
+| `apps/web/src/components/Listing/AiAssistant.tsx`      | **新建** AiAssistButton + AiImageGeneratePanel + useAiAssist hook |
+| `apps/web/src/components/Listing/BasicInfoSection.tsx` | 标题/描述 label 旁添加 AI 按钮                                    |
+| `apps/web/src/app/listing/new/page.tsx`                | 集成 AI hook + 图片生成面板 + 标签建议                            |
+| `apps/web/src/app/listing/edit/[slug]/page.tsx`        | 同上，编辑页面同步集成                                            |
+
+**架构设计**：
+
+- API Key（OPENAI_API_KEY）仅在服务端 Next.js API Route 中使用，不暴露给客户端
+- 支持通过 OPENAI_BASE_URL 环境变量切换到兼容 API（如 Azure OpenAI）
+- AI 响应格式为 JSON，通过 prompt 指令 + extractJson() 后处理确保输出稳定
+- 图片分析使用 GPT-4o vision（最多 4 张图片，low detail 模式控制成本）
+
+**部署配置**：
+需设置环境变量：
+
+```
+OPENAI_API_KEY=sk-...         # 必须
+OPENAI_MODEL=gpt-4o           # 可选，默认 gpt-4o
+OPENAI_BASE_URL=https://...   # 可选，默认 OpenAI 官方
+```
+
+**验收标准**：
+
+- [x] 上传图片后出现 "AI Auto-Fill" 面板
+- [x] 点击生成按钮→AI 返回标题/描述/标签
+- [x] 点击 "Apply All" 自动填充所有字段
+- [x] 标题旁 "AI Improve" 按钮可改进标题
+- [x] 描述旁 "AI Polish" 按钮可润色描述
+- [x] 标签区 "AI Suggest" 按钮可建议标签和分类
+- [x] AI 未配置时显示友好提示（503）
+- [x] 新建和编辑页面均可用
+
 总计 ~7-10 天，完成后再次征集用户反馈。
 
 ## 测试用例引用

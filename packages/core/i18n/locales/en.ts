@@ -2593,7 +2593,7 @@ export const en: TranslationResource = {
 
     // Media
     photos: 'Photos',
-    photosHelper: 'Include up to 30 photos. Drag to reorder.',
+    photosHelper: 'Include up to 30 photos. Drag files to upload, drag to reorder.',
     primaryPhoto: 'PRIMARY PHOTO',
     imageAlt: {
       edit: 'Edit alt text',
@@ -3414,6 +3414,21 @@ export const en: TranslationResource = {
     browseOurCollection: 'Browse our collection',
     products: 'Products',
     searchProducts: 'Search products...',
+  },
+
+  ai: {
+    assist: 'AI',
+    improveTitle: 'AI Improve',
+    polishDescription: 'AI Polish',
+    suggestTags: 'AI Suggest',
+    generateFromImages: 'AI Auto-Fill',
+    generateFromImagesDesc: 'Generate title, description, and tags from your product photos',
+    generating: 'Analyzing images...',
+    generateAll: 'Generate All Fields',
+    applyAll: 'Apply All',
+    regenerate: 'Regenerate',
+    notConfigured: 'AI service not configured. Ask admin to set OPENAI_API_KEY.',
+    error: 'Failed to generate. Please try again.',
   },
 
   moderation: {

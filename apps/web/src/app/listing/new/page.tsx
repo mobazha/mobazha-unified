@@ -48,6 +48,9 @@ import {
   DigitalFileSection,
   ProcessingTimeSelect,
   ReturnPolicySelector,
+  AiImageGeneratePanel,
+  AiAssistButton,
+  useListingAiIntegration,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
 
@@ -196,6 +199,16 @@ function CreateListingContent() {
 
   // 店铺已有分类（用于自动补全建议）
   const { categories: storeCategories } = useStoreCategories();
+
+  // AI 助手
+  const {
+    aiLoadingAction,
+    aiImageUrls,
+    handleAiImproveTitle,
+    handleAiPolishDescription,
+    handleAiSuggestTags,
+    handleAiApplyAll,
+  } = useListingAiIntegration({ formData, updateField, addTag });
 
   // Section refs for scroll navigation
   const sectionRefs = useRef<Record<TabKey, HTMLDivElement | null>>({
@@ -580,6 +593,9 @@ function CreateListingContent() {
                     }
                   }}
                   errors={errors}
+                  onAiImproveTitle={handleAiImproveTitle}
+                  onAiPolishDescription={handleAiPolishDescription}
+                  aiLoadingAction={aiLoadingAction}
                 />
               )}
 
@@ -662,6 +678,15 @@ function CreateListingContent() {
                 />
               </div>
 
+              {/* AI 从图片生成 */}
+              {aiImageUrls.length > 0 && (
+                <AiImageGeneratePanel
+                  imageUrls={aiImageUrls}
+                  contractType={formData.contractType}
+                  onApply={handleAiApplyAll}
+                />
+              )}
+
               {/* 标签 */}
               <Card
                 className="p-6"
@@ -669,7 +694,16 @@ function CreateListingContent() {
                   sectionRefs.current.tags = el;
                 }}
               >
-                <h2 className="text-lg font-semibold text-foreground mb-2">{t('listing.tags')}</h2>
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-lg font-semibold text-foreground">{t('listing.tags')}</h2>
+                  {formData.title.length > 0 && (
+                    <AiAssistButton
+                      onClick={handleAiSuggestTags}
+                      isLoading={aiLoadingAction === 'suggest_tags'}
+                      label={t('ai.suggestTags', { defaultValue: 'AI Suggest' })}
+                    />
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground mb-3">{t('listing.tagsDesc')}</p>
                 <TokenInput
                   tokens={formData.tags}
