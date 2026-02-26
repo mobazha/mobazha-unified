@@ -36,27 +36,30 @@ function getNotificationIcon(type: string) {
   const iconClass = 'h-4 w-4';
 
   switch (type) {
-    case 'newOrder':
+    case 'order.created':
       return <ShoppingCart className={cn(iconClass, 'text-info')} />;
-    case 'orderFunded':
-    case 'orderPaymentReceived':
+    case 'order.funded':
+    case 'order.payment_received':
+    case 'payment.locked':
       return <CreditCard className={cn(iconClass, 'text-primary')} />;
-    case 'orderConfirmation':
-    case 'orderCompletion':
+    case 'order.confirmed':
+    case 'order.completed':
       return <CheckCircle className={cn(iconClass, 'text-success')} />;
-    case 'orderDeclined':
-    case 'orderCancel':
+    case 'order.declined':
+    case 'order.cancelled':
+    case 'payment.expired':
+    case 'payment.cancelled':
       return <XCircle className={cn(iconClass, 'text-error')} />;
-    case 'orderFulfillment':
+    case 'order.fulfilled':
       return <Package className={cn(iconClass, 'text-primary')} />;
-    case 'disputeOpen':
-    case 'caseOpen':
-    case 'disputeClose':
-    case 'caseUpdate':
+    case 'dispute.opened':
+    case 'dispute.case_open':
+    case 'dispute.closed':
+    case 'dispute.case_update':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
-    case 'follow':
-    case 'moderatorAdd':
-    case 'moderatorRemove':
+    case 'social.follow':
+    case 'social.moderator_add':
+    case 'social.moderator_remove':
       return <UserPlus className={cn(iconClass, 'text-primary')} />;
     default:
       return <Bell className={cn(iconClass, 'text-muted-foreground')} />;
@@ -112,22 +115,9 @@ function NotificationItem({
   const route = getNotificationRoute(notification);
   const { data, read, timestamp, type, message } = notification;
 
-  // 是否是订单类型
-  const isOrderType = [
-    'newOrder',
-    'orderFunded',
-    'orderPaymentReceived',
-    'orderConfirmation',
-    'orderDeclined',
-    'orderCancel',
-    'refund',
-    'orderFulfillment',
-    'orderCompletion',
-    'vendorFinalizedPayment',
-  ].includes(type);
+  const isOrderType = type.startsWith('order.') || type.startsWith('payment.');
 
-  // 是否是关注类型
-  const isFollowType = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(type);
+  const isFollowType = type.startsWith('social.');
 
   const handleClick = () => {
     if (!read) {

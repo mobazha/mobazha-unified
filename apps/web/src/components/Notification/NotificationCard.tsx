@@ -64,28 +64,31 @@ function getNotificationIcon(type: string): React.ReactNode {
   const iconClass = 'h-5 w-5';
 
   switch (type) {
-    case 'newOrder':
+    case 'order.created':
       return <ShoppingCart className={cn(iconClass, 'text-info')} />;
-    case 'orderFunded':
-    case 'orderPaymentReceived':
+    case 'order.funded':
+    case 'order.payment_received':
+    case 'payment.locked':
       return <CreditCard className={cn(iconClass, 'text-primary')} />;
-    case 'orderConfirmation':
+    case 'order.confirmed':
       return <CheckCircle className={cn(iconClass, 'text-success')} />;
-    case 'orderDeclined':
-    case 'orderCancel':
+    case 'order.declined':
+    case 'order.cancelled':
+    case 'payment.expired':
+    case 'payment.cancelled':
       return <XCircle className={cn(iconClass, 'text-error')} />;
-    case 'orderFulfillment':
+    case 'order.fulfilled':
       return <Package className={cn(iconClass, 'text-primary')} />;
-    case 'orderCompletion':
+    case 'order.completed':
       return <CheckCircle className={cn(iconClass, 'text-primary')} />;
-    case 'disputeOpen':
-    case 'caseOpen':
-    case 'disputeClose':
-    case 'caseUpdate':
+    case 'dispute.opened':
+    case 'dispute.case_open':
+    case 'dispute.closed':
+    case 'dispute.case_update':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
-    case 'follow':
-    case 'moderatorAdd':
-    case 'moderatorRemove':
+    case 'social.follow':
+    case 'social.moderator_add':
+    case 'social.moderator_remove':
       return <UserPlus className={cn(iconClass, 'text-primary')} />;
     default:
       return <Clock className={cn(iconClass, 'text-muted-foreground')} />;
@@ -265,7 +268,7 @@ export function FollowNotificationCard({
       <div className="flex-1 min-w-0">
         <p className={cn('text-sm', read ? 'text-text-secondary' : 'text-text-primary')}>
           <span className="font-medium text-primary">{handle || formatPeerDisplay(peerId)}</span>{' '}
-          {type === 'follow'
+          {type === 'social.follow'
             ? t('notifications.social.startedFollowing')
             : t('notifications.social.unfollowed')}
         </p>
@@ -362,30 +365,11 @@ export function NotificationCard({
   const { type } = notification;
 
   // 根据通知类型选择合适的卡片组件
-  const isOrderNotification = [
-    'newOrder',
-    'orderFunded',
-    'orderPaymentReceived',
-    'orderConfirmation',
-    'orderDeclined',
-    'orderCancel',
-    'refund',
-    'orderFulfillment',
-    'orderCompletion',
-    'vendorFinalizedPayment',
-  ].includes(type);
+  const isOrderNotification = type.startsWith('order.') || type.startsWith('payment.');
 
-  const isFollowNotification = ['follow', 'unfollow', 'moderatorAdd', 'moderatorRemove'].includes(
-    type
-  );
+  const isFollowNotification = type.startsWith('social.');
 
-  const isDisputeNotification = [
-    'disputeOpen',
-    'disputeClose',
-    'disputeAccepted',
-    'caseOpen',
-    'caseUpdate',
-  ].includes(type);
+  const isDisputeNotification = type.startsWith('dispute.');
 
   if (isOrderNotification) {
     return (

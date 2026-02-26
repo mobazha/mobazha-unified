@@ -416,18 +416,19 @@ class SoundService {
    */
   notifyOrder(orderType: string): Promise<boolean> {
     const typeMap: Record<string, SoundNotificationType> = {
-      newOrder: 'new_order',
-      orderPaymentReceived: 'payment',
-      orderFunded: 'payment',
-      disputeOpen: 'dispute',
-      caseOpen: 'dispute',
-      caseUpdate: 'dispute',
-      disputeClose: 'dispute',
-      disputeAccepted: 'dispute',
-      vendorFinalizedPayment: 'dispute',
-      refund: 'dispute',
-      orderCompletion: 'order_complete',
-      orderFulfillment: 'order_complete',
+      'order.created': 'new_order',
+      'order.payment_received': 'payment',
+      'order.funded': 'payment',
+      'payment.locked': 'payment',
+      'dispute.opened': 'dispute',
+      'dispute.case_open': 'dispute',
+      'dispute.case_update': 'dispute',
+      'dispute.closed': 'dispute',
+      'dispute.accepted': 'dispute',
+      'order.vendor_finalized': 'dispute',
+      'order.refunded': 'dispute',
+      'order.completed': 'order_complete',
+      'order.fulfilled': 'order_complete',
     };
 
     const soundType = typeMap[orderType];

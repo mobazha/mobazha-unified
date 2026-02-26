@@ -23,8 +23,6 @@ import {
   SOUND_CONFIGS,
 } from '../../../types/notification';
 
-// ============ 类型定义测试 ============
-
 describe('Notification Types', () => {
   describe('getNotificationCategory', () => {
     it('should return "order" for order notification types', () => {
@@ -39,9 +37,9 @@ describe('Notification Types', () => {
       });
     });
 
-    it('should return "peer" for social notification types', () => {
+    it('should return "social" for social notification types', () => {
       SOCIAL_NOTIFICATION_TYPES.forEach(type => {
-        expect(getNotificationCategory(type)).toBe('peer');
+        expect(getNotificationCategory(type)).toBe('social');
       });
     });
   });
@@ -49,7 +47,7 @@ describe('Notification Types', () => {
   describe('Type Guards', () => {
     const orderNotification: OrderNotificationData = {
       id: '1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-123',
@@ -58,7 +56,7 @@ describe('Notification Types', () => {
 
     const disputeNotification: DisputeNotificationData = {
       id: '2',
-      type: 'disputeOpen',
+      type: 'dispute.opened',
       timestamp: new Date().toISOString(),
       read: false,
       caseID: 'case-123',
@@ -66,7 +64,7 @@ describe('Notification Types', () => {
 
     const socialNotification: SocialNotificationData = {
       id: '3',
-      type: 'follow',
+      type: 'social.follow',
       timestamp: new Date().toISOString(),
       read: false,
       peerID: 'peer-123',
@@ -92,81 +90,67 @@ describe('Notification Types', () => {
   });
 
   describe('eventTypeToSoundType', () => {
-    it('should map newOrder to new_order', () => {
-      expect(eventTypeToSoundType('newOrder')).toBe('new_order');
+    it('should map order.created to new_order', () => {
+      expect(eventTypeToSoundType('order.created')).toBe('new_order');
     });
 
     it('should map payment events to payment', () => {
-      expect(eventTypeToSoundType('orderPaymentReceived')).toBe('payment');
-      expect(eventTypeToSoundType('orderFunded')).toBe('payment');
+      expect(eventTypeToSoundType('order.payment_received')).toBe('payment');
+      expect(eventTypeToSoundType('order.funded')).toBe('payment');
     });
 
     it('should map dispute events to dispute', () => {
-      expect(eventTypeToSoundType('disputeOpen')).toBe('dispute');
-      expect(eventTypeToSoundType('caseOpen')).toBe('dispute');
-      expect(eventTypeToSoundType('refund')).toBe('dispute');
+      expect(eventTypeToSoundType('dispute.opened')).toBe('dispute');
+      expect(eventTypeToSoundType('dispute.case_open')).toBe('dispute');
+      expect(eventTypeToSoundType('order.refunded')).toBe('dispute');
     });
 
     it('should map completion events to order_complete', () => {
-      expect(eventTypeToSoundType('orderCompletion')).toBe('order_complete');
-      expect(eventTypeToSoundType('orderFulfillment')).toBe('order_complete');
+      expect(eventTypeToSoundType('order.completed')).toBe('order_complete');
+      expect(eventTypeToSoundType('order.fulfilled')).toBe('order_complete');
     });
 
-    it('should map follow events to chat_message (default)', () => {
-      expect(eventTypeToSoundType('follow')).toBe('chat_message');
-      expect(eventTypeToSoundType('unfollow')).toBe('chat_message');
+    it('should map social events to chat_message (default)', () => {
+      expect(eventTypeToSoundType('social.follow')).toBe('chat_message');
+      expect(eventTypeToSoundType('social.unfollow')).toBe('chat_message');
     });
   });
 
   describe('isValidNotificationEventType', () => {
     it('should return true for valid order event types', () => {
-      expect(isValidNotificationEventType('newOrder')).toBe(true);
-      expect(isValidNotificationEventType('orderPaymentReceived')).toBe(true);
-      expect(isValidNotificationEventType('orderFulfillment')).toBe(true);
+      expect(isValidNotificationEventType('order.created')).toBe(true);
+      expect(isValidNotificationEventType('order.payment_received')).toBe(true);
+      expect(isValidNotificationEventType('order.fulfilled')).toBe(true);
     });
 
     it('should return true for valid dispute event types', () => {
-      expect(isValidNotificationEventType('disputeOpen')).toBe(true);
-      expect(isValidNotificationEventType('caseOpen')).toBe(true);
+      expect(isValidNotificationEventType('dispute.opened')).toBe(true);
+      expect(isValidNotificationEventType('dispute.case_open')).toBe(true);
     });
 
     it('should return true for valid social event types', () => {
-      expect(isValidNotificationEventType('follow')).toBe(true);
-      expect(isValidNotificationEventType('unfollow')).toBe(true);
-    });
-
-    it('should return false for API category types', () => {
-      expect(isValidNotificationEventType('order')).toBe(false);
-      expect(isValidNotificationEventType('payment')).toBe(false);
-      expect(isValidNotificationEventType('dispute')).toBe(false);
-      expect(isValidNotificationEventType('message')).toBe(false);
+      expect(isValidNotificationEventType('social.follow')).toBe(true);
+      expect(isValidNotificationEventType('social.unfollow')).toBe(true);
     });
 
     it('should return false for invalid types', () => {
       expect(isValidNotificationEventType('invalid')).toBe(false);
       expect(isValidNotificationEventType('')).toBe(false);
+      expect(isValidNotificationEventType('newOrder')).toBe(false);
     });
   });
 
   describe('normalizeNotificationType', () => {
     it('should pass through valid event types unchanged', () => {
-      expect(normalizeNotificationType('newOrder')).toBe('newOrder');
-      expect(normalizeNotificationType('orderPaymentReceived')).toBe('orderPaymentReceived');
-      expect(normalizeNotificationType('disputeOpen')).toBe('disputeOpen');
-      expect(normalizeNotificationType('follow')).toBe('follow');
+      expect(normalizeNotificationType('order.created')).toBe('order.created');
+      expect(normalizeNotificationType('order.payment_received')).toBe('order.payment_received');
+      expect(normalizeNotificationType('dispute.opened')).toBe('dispute.opened');
+      expect(normalizeNotificationType('social.follow')).toBe('social.follow');
     });
 
-    it('should convert API category types to default event types', () => {
-      expect(normalizeNotificationType('order')).toBe('newOrder');
-      expect(normalizeNotificationType('payment')).toBe('orderPaymentReceived');
-      expect(normalizeNotificationType('dispute')).toBe('disputeOpen');
-      expect(normalizeNotificationType('follow')).toBe('follow');
-      expect(normalizeNotificationType('moderator')).toBe('moderatorAdd');
-    });
-
-    it('should return follow for unknown types', () => {
-      expect(normalizeNotificationType('unknown')).toBe('follow');
-      expect(normalizeNotificationType('')).toBe('follow');
+    it('should return social.follow for unknown types', () => {
+      expect(normalizeNotificationType('unknown')).toBe('social.follow');
+      expect(normalizeNotificationType('')).toBe('social.follow');
     });
   });
 
@@ -205,19 +189,15 @@ describe('Notification Types', () => {
   });
 });
 
-// ============ Store 测试 ============
-
 describe('Notification Store', () => {
-  // 动态导入以避免模块初始化问题
+  // 动态导入以避免 Zustand 模块初始化时序问题
   let useNotificationStore: typeof import('../../../stores/notificationStore').useNotificationStore;
 
   beforeEach(async () => {
-    // 清除模块缓存并重新导入
     vi.resetModules();
     const module = await import('../../../stores/notificationStore');
     useNotificationStore = module.useNotificationStore;
 
-    // 重置 store 状态
     useNotificationStore.setState({
       notifications: [],
       unreadCount: 0,
@@ -235,7 +215,7 @@ describe('Notification Store', () => {
     const store = useNotificationStore.getState();
     const notification: OrderNotificationData = {
       id: 'test-1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-123',
@@ -253,7 +233,7 @@ describe('Notification Store', () => {
     const store = useNotificationStore.getState();
     const notification: OrderNotificationData = {
       id: 'test-1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-123',
@@ -270,7 +250,7 @@ describe('Notification Store', () => {
     const store = useNotificationStore.getState();
     const notification: OrderNotificationData = {
       id: 'test-1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-123',
@@ -291,7 +271,7 @@ describe('Notification Store', () => {
 
     store.addNotification({
       id: 'test-1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-1',
@@ -299,7 +279,7 @@ describe('Notification Store', () => {
 
     store.addNotification({
       id: 'test-2',
-      type: 'follow',
+      type: 'social.follow',
       timestamp: new Date().toISOString(),
       read: false,
       peerID: 'peer-1',
@@ -318,7 +298,7 @@ describe('Notification Store', () => {
     const store = useNotificationStore.getState();
     const notification: OrderNotificationData = {
       id: 'test-1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-123',
@@ -362,7 +342,7 @@ describe('Notification Store', () => {
 
     store.addNotification({
       id: 'order-1',
-      type: 'newOrder',
+      type: 'order.created',
       timestamp: new Date().toISOString(),
       read: false,
       orderID: 'order-1',
@@ -370,7 +350,7 @@ describe('Notification Store', () => {
 
     store.addNotification({
       id: 'dispute-1',
-      type: 'disputeOpen',
+      type: 'dispute.opened',
       timestamp: new Date().toISOString(),
       read: false,
       caseID: 'case-1',
@@ -378,7 +358,7 @@ describe('Notification Store', () => {
 
     store.addNotification({
       id: 'follow-1',
-      type: 'follow',
+      type: 'social.follow',
       timestamp: new Date().toISOString(),
       read: false,
       peerID: 'peer-1',
