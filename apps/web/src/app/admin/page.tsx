@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   useI18n,
   useUserStore,
@@ -20,6 +20,7 @@ import {
   ListSkeleton,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
+import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
 
 const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
 
@@ -160,14 +161,38 @@ export default function AdminDashboardPage() {
     totalSalesDisplay,
   } = useDashboardData();
 
+  const [sessionDismissed, setSessionDismissed] = useState(false);
+
   const isDataLoading = productsLoading || salesLoading;
   const hasProducts = products.length > 0;
   const hasOrders = salesOrders.length > 0;
   const isEmpty = !isDataLoading && !hasProducts && !hasOrders;
   const displayName = profile?.name || 'Seller';
 
+  const showOnboarding = useMemo(
+    () => !sessionDismissed && isEmpty && !isOnboardingDismissed(),
+    [sessionDismissed, isEmpty]
+  );
+
+  const handleOnboardingComplete = useCallback(() => {
+    setSessionDismissed(true);
+    window.location.reload();
+  }, []);
+
+  const handleOnboardingSkip = useCallback(() => {
+    setSessionDismissed(true);
+  }, []);
+
   const standaloneMode = useMemo(() => isStandalone(), []);
   const storeUrl = profile?.peerID ? (standaloneMode ? '/' : `/store/${profile.peerID}`) : '/';
+
+  if (showOnboarding) {
+    return (
+      <div data-testid="admin-dashboard">
+        <OnboardingWizard onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} />
+      </div>
+    );
+  }
 
   if (isEmpty) {
     return (
