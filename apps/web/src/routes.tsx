@@ -266,6 +266,10 @@ const routes: RouteObject[] = [
       { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
+      {
+        path: 'settings/integrations',
+        element: lazyPage(() => import('./app/admin/settings/integrations/page')),
+      },
     ],
   },
 

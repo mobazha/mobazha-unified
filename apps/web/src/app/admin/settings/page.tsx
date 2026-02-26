@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { useI18n } from '@mobazha/core';
-import { Settings, Store, Shield, Truck, Scale, User } from 'lucide-react';
+import { Settings, Store, Shield, Truck, Scale, User, Plug } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 interface SettingsCardProps {
   icon: React.ElementType;
@@ -76,6 +75,12 @@ export default function AdminSettingsPage() {
           title={t('admin.settings.general')}
           description={t('admin.settings.generalDesc')}
           href="/settings/general"
+        />
+        <SettingsCard
+          icon={Plug}
+          title={t('admin.settings.integrations')}
+          description={t('admin.settings.integrationsDesc')}
+          href="/admin/settings/integrations"
         />
       </div>
     </div>
