@@ -1,8 +1,11 @@
 /**
  * AI Service for product listing assistance.
- * Communicates with the server-side AI proxy (/internal/ai/generate)
- * to keep API keys server-side.
+ * Communicates with the backend AI proxy (/v1/ai/generate)
+ * to keep API keys server-side. Configuration is managed via
+ * /v1/settings/ai (Admin > Integrations).
  */
+
+import { authPost } from '../api/helpers';
 
 export type AiAction =
   | 'generate_from_images'
@@ -27,33 +30,21 @@ export interface AiGenerateResponse {
   shortDescription?: string;
 }
 
-export interface AiServiceConfig {
-  endpoint?: string;
-}
-
 class AiService {
-  private endpoint: string;
-
-  constructor(config?: AiServiceConfig) {
-    this.endpoint = config?.endpoint || '/internal/ai/generate';
-  }
-
   private async request(body: AiGenerateRequest): Promise<AiGenerateResponse> {
-    const response = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new AiServiceError(
-        data.error || `AI service error (${response.status})`,
-        response.status
-      );
+    try {
+      return await authPost<AiGenerateResponse>('/v1/ai/generate', body);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as { status: number }).status;
+        const message =
+          'message' in error
+            ? String((error as { message: string }).message)
+            : `AI service error (${status})`;
+        throw new AiServiceError(message, status);
+      }
+      throw new AiServiceError(error instanceof Error ? error.message : 'AI service error', 500);
     }
-
-    return response.json();
   }
 
   /**

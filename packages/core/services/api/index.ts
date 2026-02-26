@@ -100,6 +100,10 @@ export * as matrixApi from './matrix';
 
 // 通知渠道 API (Telegram, Discord, etc.)
 export * as notificationChannelsApi from './notificationChannels';
+
+// AI Settings API
+export * as aiSettingsApi from './aiSettings';
+export type { AIConfig, AIConfigInput, AIProviderInfo, AITestConnectionResult } from './aiSettings';
 export type {
   ChannelConfig,
   ChannelFieldSchema,
