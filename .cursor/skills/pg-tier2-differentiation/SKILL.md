@@ -1,3 +1,8 @@
+---
+name: pg-tier2-differentiation
+description: 'Tier 2 差异化竞争力执行指南（PG-201~PG-206）。AI Store Builder、品牌化、AI 客服、收藏。触发词："差异化", "AI Store Builder", "Tier 2", "PG-201"~"PG-206", "AI 客服".'
+---
+
 # Tier 2: 差异化竞争力执行指南
 
 > **目标**：构建 Shopify 做不到的能力，形成 Web3 Shopify 的竞争壁垒。

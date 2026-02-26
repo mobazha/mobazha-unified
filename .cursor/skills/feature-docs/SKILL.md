@@ -1,3 +1,8 @@
+---
+name: feature-docs
+description: '功能文档索引。查阅 listing/钱包/配送/主题/i18n/账号绑定/settings 等模块的设计文档。触发词："功能文档", "feature docs", "功能设计", "这个模块是怎么设计的".'
+---
+
 # 功能文档索引（Feature Docs Index）
 
 ## 触发条件

@@ -1,3 +1,8 @@
+---
+name: pg-tier1-admin-storefront
+description: 'Tier 1 Admin/Storefront 分离执行指南（PG-101~PG-111）。Dashboard、商品管理、AI 商品助手。触发词："Admin 分离", "Tier 1", "PG-101"~"PG-111", "AI 商品".'
+---
+
 # Tier 1: Admin/Storefront 分离执行指南
 
 > **目标**：建立卖家管理后台，实现 Admin 和 Storefront 的清晰分离，引入 AI 商品创建助手。

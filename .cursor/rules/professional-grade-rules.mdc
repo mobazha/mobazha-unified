@@ -1,3 +1,14 @@
+---
+description: Professional Grade 路线图执行规范 — PG Tier 0~3 触发词协议、代码约束、验收标准
+globs:
+  - "apps/web/src/app/admin/**"
+  - "apps/web/src/components/Admin*/**"
+  - "apps/web/src/components/Product/**"
+  - "apps/web/src/app/checkout/**"
+  - "apps/web/src/app/orders/**"
+alwaysApply: false
+---
+
 # Professional Grade 路线图执行规范
 
 ## 背景
@@ -7,7 +18,8 @@ Mobazha 正从 P2P 交易工具进化为 Web3 Shopify 专业电商平台。
 
 ## 当前阶段
 
-- **Tier 0**：交易闭环修复（PG-001 ~ PG-005）
+- **Tier 0**：交易闭环修复（PG-001 ~ PG-005）✅ 已完成
+- **Tier 0.5**：反馈驱动体验打磨（PG-006 ~ PG-009）← **当前**
 - **Tier 1**：Admin 分离 + AI 商品助手 + 移动端卖家（PG-101 ~ PG-111）
 - **Tier 2**：差异化 + AI Store Builder + AI 客服（PG-201 ~ PG-206）
 - **Tier 3**：规模化 + AI 分析/营销（PG-301 ~ PG-305）
@@ -55,6 +67,15 @@ Mobazha 正从 P2P 交易工具进化为 Web3 Shopify 专业电商平台。
 2. 找到第一个未完成的 PG-00x 任务（PG-001 ~ PG-005）
 3. 读取 `.cursor/skills/pg-tier0-transaction-loop/SKILL.md`
 4. 按 skill 指南执行（注意 AI 增强层标注）
+
+### "反馈打磨"、"体验打磨"、"消灭 Unknown"、"身份人性化"、"PG-006"~"PG-009"
+
+1. 读取 `docs/features/feedback-polish.md` — 完整任务规格
+2. 读取 `docs/PROFESSIONAL_GRADE_ROADMAP.md` Section 9 → Tier 0.5 进度
+3. 找到第一个 ⏳ 的任务
+4. 读取 `.cursor/skills/pg-feedback-polish/SKILL.md`
+5. 按 skill 指南执行
+6. 完成后更新 Section 9 进度表
 
 ### "Admin 分离"、"Tier 1"、"PG-10"、"AI 商品"
 
@@ -130,6 +151,18 @@ const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
 4. **AI 增强** — 如任务有 AI 标注（🤖），AI 功能可用或至少预留接口
 5. **i18n + 主题 + 无障碍 + 类型安全** — 常规标准
 6. **骨架屏** — 数据加载有 Skeleton
+
+## 反馈驱动打磨（Tier 0.5 — 2026-02-26）
+
+基于用户反馈新增的体验打磨任务（`feedbacks/feedbacks_2026.2.26.md`）：
+
+- **PG-006**：身份人性化 + 术语抽象 — 消灭所有 "Unknown" 和裸 Peer ID
+- **PG-007b**：E2E 数据质量 + 图片 Fallback — 让截图能"说服人"
+- **PG-008**：登录页品牌化 — Casdoor logo/主题/隐藏第三方品牌
+- **PG-009**：独立站首页差异化 — `isStandalone` 模式展示卖家品牌着陆页
+
+身份展示必须遵守 `.cursor/rules/identity-display-rules.mdc` 规范。
+详细规格见 `docs/features/feedback-polish.md`。
 
 ## 已完成的基础设施（v17 UX 审计 — 2026-02-26）
 
