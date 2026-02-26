@@ -1,3 +1,8 @@
+---
+name: theme-compliance-audit
+description: '主题合规审计工具。检测硬编码颜色、暗色模式样式问题、全局 UI 一致性。触发词："主题审计", "theme audit", "检查硬编码颜色", "暗色模式样式问题", "全局 UI 检查".'
+---
+
 # 主题合规审计（Theme Compliance Audit）
 
 ## 触发条件
