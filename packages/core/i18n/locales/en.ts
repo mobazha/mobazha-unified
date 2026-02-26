@@ -3408,6 +3408,14 @@ export const en: TranslationResource = {
     },
   },
 
+  standalone: {
+    storeName: 'Store',
+    allProducts: 'All Products',
+    browseOurCollection: 'Browse our collection',
+    products: 'Products',
+    searchProducts: 'Search products...',
+  },
+
   moderation: {
     title: 'Moderation Cases',
     description: 'Review and resolve disputes between buyers and sellers',

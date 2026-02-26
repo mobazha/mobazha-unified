@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
+import { StoreHero } from '@/components/StoreHero';
 import { useI18n, productDataService, isMockMode, getImageUrl, isStandalone } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { getListingsWithDedup } from '@/utils/requestDedup';
@@ -198,6 +199,8 @@ export default function HomePage() {
     { name: t('homeExtended.digitalAssets'), icon: '💎', color: 'from-warning to-success' },
   ];
 
+  const standalone = isStandalone();
+
   return (
     <div className="min-h-screen bg-background">
       {/* 移动端显示简化搜索栏，桌面端显示完整 Header */}
@@ -205,7 +208,7 @@ export default function HomePage() {
       <Header />
 
       <main>
-        <Hero />
+        {standalone ? <StoreHero /> : <Hero />}
 
         {/* 数据来源指示器（开发模式） */}
         {process.env.NODE_ENV === 'development' && (
@@ -222,41 +225,54 @@ export default function HomePage() {
         )}
 
         <ProductSection
-          title={t('homeExtended.trendingNow')}
-          subtitle={t('homeExtended.trendingSubtitle')}
+          title={
+            standalone
+              ? t('standalone.allProducts', { defaultValue: 'All Products' })
+              : t('homeExtended.trendingNow')
+          }
+          subtitle={
+            standalone
+              ? t('standalone.browseOurCollection', { defaultValue: 'Browse our collection' })
+              : t('homeExtended.trendingSubtitle')
+          }
           products={trendingProducts}
+          showViewAll={!standalone}
           viewAllHref="/marketplace?sort=trending"
         />
 
-        <div className="bg-card">
-          <ProductSection
-            title={t('homeExtended.featuredServices')}
-            subtitle={t('homeExtended.featuredSubtitle')}
-            products={featuredProducts}
-            viewAllHref="/marketplace?category=featured"
-          />
-        </div>
-
-        {/* Categories Section */}
-        <section className="py-6 sm:py-10 lg:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-4 sm:mb-8">
-              {t('homeExtended.browseCategories')}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              {categories.map(category => (
-                <a
-                  key={category.name}
-                  href={`/marketplace?category=${category.name.toLowerCase()}`}
-                  className={`relative overflow-hidden rounded-lg sm:rounded-xl p-4 sm:p-6 bg-gradient-to-br ${category.color} text-white touch-feedback hover:scale-105 transition-transform`}
-                >
-                  <span className="text-2xl sm:text-4xl mb-1 sm:mb-2 block">{category.icon}</span>
-                  <span className="font-semibold text-sm sm:text-base">{category.name}</span>
-                </a>
-              ))}
-            </div>
+        {!standalone && (
+          <div className="bg-card">
+            <ProductSection
+              title={t('homeExtended.featuredServices')}
+              subtitle={t('homeExtended.featuredSubtitle')}
+              products={featuredProducts}
+              viewAllHref="/marketplace?category=featured"
+            />
           </div>
-        </section>
+        )}
+
+        {/* Categories Section — SaaS only */}
+        {!standalone && (
+          <section className="py-6 sm:py-10 lg:py-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-4 sm:mb-8">
+                {t('homeExtended.browseCategories')}
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                {categories.map(category => (
+                  <a
+                    key={category.name}
+                    href={`/marketplace?category=${category.name.toLowerCase()}`}
+                    className={`relative overflow-hidden rounded-lg sm:rounded-xl p-4 sm:p-6 bg-gradient-to-br ${category.color} text-white touch-feedback hover:scale-105 transition-transform`}
+                  >
+                    <span className="text-2xl sm:text-4xl mb-1 sm:mb-2 block">{category.icon}</span>
+                    <span className="font-semibold text-sm sm:text-base">{category.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
