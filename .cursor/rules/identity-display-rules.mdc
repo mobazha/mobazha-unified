@@ -1,0 +1,72 @@
+---
+description: 用户身份展示和术语抽象规范
+globs: apps/web/src/**/*.tsx,apps/web/src/**/*.ts,packages/core/**/*.ts
+alwaysApply: true
+---
+
+# 身份展示与术语抽象规范
+
+## 核心禁令
+
+### 禁止在 UI 中直接渲染裸 Peer ID 或区块链地址
+
+```tsx
+// ❌ 禁止：直接渲染 peerID
+<span>{order.buyer.peerID}</span>
+<span>{product.vendorID.peerID}</span>
+<p>Seller: {seller.peerID}</p>
+
+// ✅ 正确：通过 formatUserName 处理
+import { formatUserName, truncateAddress } from '@mobazha/core/utils/identity';
+
+<span>{formatUserName(order.buyer)}</span>
+<span>{formatUserName(product.vendorID)}</span>
+<p>Seller: {formatUserName(seller)}</p>
+
+// ✅ 正确：区块链地址使用截断 + 复制按钮
+<AddressBadge address={payment.address} />
+// 渲染为 "0x1234...cdef" + 📋复制
+```
+
+### 禁止在面向用户的 UI 文案中使用以下技术术语
+
+| 技术术语 | 用户应看到的 | 注意 |
+|---------|------------|------|
+| Escrow | "Buyer Protection" / "买家保障" | i18n key: `trust.buyerProtection` |
+| Smart Contract | 不出现 | 代码注释/变量名可以用 |
+| Peer ID | 店铺名/用户名，或 "Seller ID" / "卖家 ID" | |
+| IPFS | 不出现 | |
+| Gas Fee | "Network Fee" / "网络手续费" | i18n key: `payment.networkFee` |
+| Block Confirmation | "Confirming payment" / "支付确认中" | |
+| Moderator (争议上下文) | "Dispute Resolution" / "争议仲裁" | 仲裁者列表页可保留 Moderator |
+
+**例外**：
+- 代码变量名、API 字段名、注释中可以使用技术术语
+- 面向技术用户的高级设置页面（如 Advanced Settings）可以保留
+- 仲裁者列表页（Moderators）作为功能名称保留
+
+## 身份展示优先级
+
+1. **可读名称**：如果有 `name` 或 `handle` 字段，优先显示
+2. **截断 ID + 前缀**：无名称时显示 `Store QmY8...tRnC` 或 `User QmBu...eer1`
+3. **完整 ID**：仅在用户主动操作时展示（点击复制、查看详情等）
+
+## 通知消息规范
+
+```tsx
+// ❌ 禁止："Unknown Payment received" / "Unknown Notification"
+// ✅ 正确："Payment received for order #QmOrder0" / "Order has been shipped"
+
+// 通知标题不应包含 "Unknown" 前缀
+// 如果发送者名称不可用，直接省略主语，用事件描述即可
+```
+
+## 审查检查项
+
+修改涉及用户信息展示的组件时：
+
+- [ ] 是否使用了 `formatUserName()` 而非直接渲染 peerID？
+- [ ] 区块链地址是否使用了 `truncateAddress()` + 复制功能？
+- [ ] 面向用户的文案中是否有 Escrow/Gas/IPFS 等技术术语？
+- [ ] 通知消息是否有 "Unknown" 前缀？
+- [ ] 新增的用户可见文案是否使用了 `t()` i18n 函数？

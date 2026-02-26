@@ -923,12 +923,13 @@ Store Config JSON Schema:
 
 每个 Tier 的执行由对应的 cursor skill 驱动：
 
-| Tier   | Skill 文件                                          | 触发词                                           |
-| ------ | --------------------------------------------------- | ------------------------------------------------ |
-| Tier 0 | `.cursor/skills/pg-tier0-transaction-loop/SKILL.md` | "修复交易闭环"、"Tier 0"、"PG-00x"               |
-| Tier 1 | `.cursor/skills/pg-tier1-admin-storefront/SKILL.md` | "Admin 分离"、"Tier 1"、"PG-10x"                 |
-| Tier 2 | `.cursor/skills/pg-tier2-differentiation/SKILL.md`  | "差异化"、"Tier 2"、"AI Store Builder"、"PG-20x" |
-| Tier 3 | `.cursor/skills/pg-tier3-scale/SKILL.md`            | "规模化"、"Tier 3"、"PG-30x"                     |
+| Tier     | Skill 文件                                          | 触发词                                                                              |
+| -------- | --------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Tier 0   | `.cursor/skills/pg-tier0-transaction-loop/SKILL.md` | "修复交易闭环"、"Tier 0"、"PG-00x"                                                  |
+| Tier 0.5 | `.cursor/skills/pg-feedback-polish/SKILL.md`        | "反馈打磨"、"体验打磨"、"PG-006"~"PG-009"、"消灭 Unknown"、"身份人性化"、"登录品牌" |
+| Tier 1   | `.cursor/skills/pg-tier1-admin-storefront/SKILL.md` | "Admin 分离"、"Tier 1"、"PG-10x"                                                    |
+| Tier 2   | `.cursor/skills/pg-tier2-differentiation/SKILL.md`  | "差异化"、"Tier 2"、"AI Store Builder"、"PG-20x"                                    |
+| Tier 3   | `.cursor/skills/pg-tier3-scale/SKILL.md`            | "规模化"、"Tier 3"、"PG-30x"                                                        |
 
 ---
 
@@ -943,6 +944,19 @@ Store Config JSON Schema:
 | PG-003 | 评价系统                      | ✅ V1 | ✅ 完成 | 2026-02-25 |
 | PG-004 | 店内搜索 + 商品发现           | ✅ V1 | ✅ 完成 | 2026-02-25 |
 | PG-005 | 信任与安全体验                | ✅ V1 | ✅ 完成 | 2026-02-25 |
+
+### Tier 0.5 — 反馈驱动体验打磨 ← V1 必须完成
+
+> 来源：2026-02-26 用户反馈（`feedbacks/feedbacks_2026.2.26.md`）
+> 详细规格：`docs/features/feedback-polish.md`
+> 执行指南：`.cursor/skills/pg-feedback-polish/SKILL.md`
+
+| ID      | 任务                          | V1?   | 状态      | 完成日期 |
+| ------- | ----------------------------- | ----- | --------- | -------- |
+| PG-006  | 身份人性化 + 术语抽象         | ✅ V1 | ⏳ 未开始 |          |
+| PG-007b | E2E 数据质量 + 图片 Fallback  | ✅ V1 | ⏳ 未开始 |          |
+| PG-008  | 登录页品牌化                  | ✅ V1 | ⏳ 未开始 |          |
+| PG-009  | 独立站首页差异化（V1 最小版） | ✅ V1 | ⏳ 未开始 |          |
 
 ### Tier 1 — Admin/Storefront 分离
 
@@ -984,4 +998,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-26 (v17: UX 审计 & 质量打磨 — 桌面/移动端视觉测试重建(authed/public分离+API mock数据)、settings页面布局统一(移除冗余Header/Footer)、product-groups全量i18n化、字体一致性(text-xs标准化)、触控目标44px达标、ProductCard触控友好dropdown、移动端Footer隐藏(MobileNav替代)、OrderFooter缩进修复、mockOrdersAPI method guard)
+最后更新: 2026-02-26 (v18: 用户反馈分析 — 新增 Tier 0.5 反馈驱动体验打磨(PG-006身份人性化+术语抽象、PG-007b E2E数据质量+图片Fallback、PG-008登录品牌化、PG-009独立站首页差异化)，新增 identity-display-rules.mdc 身份展示规范，新增 pg-feedback-polish SKILL 执行指南)
