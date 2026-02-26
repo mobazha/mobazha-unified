@@ -58,10 +58,11 @@ export function AIConfigSection() {
 
   // Warn before navigating away with unsaved changes
   useEffect(() => {
+    if (!isDirty) return;
     function handleBeforeUnload(e: Event) {
-      if (isDirty) {
-        e.preventDefault();
-      }
+      e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (e as any).returnValue = '';
     }
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -332,7 +333,7 @@ export function AIConfigSection() {
                 {modelOptions.length > 0 ? (
                   <div className="space-y-1.5">
                     <Select
-                      value={model && modelOptions.includes(model) ? model : '_custom'}
+                      value={modelOptions.includes(model) ? model : '_custom'}
                       onValueChange={v => setModel(v === '_custom' ? '' : v)}
                     >
                       <SelectTrigger>
@@ -354,7 +355,7 @@ export function AIConfigSection() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {model !== '' && !modelOptions.includes(model) && (
+                    {!modelOptions.includes(model) && (
                       <Input
                         value={model}
                         onChange={e => setModel(e.target.value)}
@@ -425,7 +426,10 @@ export function AIConfigSection() {
               {t('admin.integrations.unsavedChanges')}
             </span>
           )}
-          <Button onClick={handleSave} disabled={saving || !provider}>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !provider || (enabled && !config?.has_api_key && !apiKey)}
+          >
             {saving ? t('admin.integrations.saving') : t('admin.integrations.save')}
           </Button>
         </div>
