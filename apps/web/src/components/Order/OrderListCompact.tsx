@@ -3,6 +3,7 @@
 import React, { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useI18n, useCurrency } from '@mobazha/core';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
@@ -17,6 +18,10 @@ export interface OrderListCompactProps {
   type: 'purchase' | 'sale';
   /** 查看详情回调 */
   onViewDetails: (orderId: string) => void;
+  /** 接受订单回调 */
+  onAccept?: (orderId: string, paymentCoin?: string) => void;
+  /** 拒绝订单回调 */
+  onReject?: (orderId: string, paymentCoin?: string) => void;
   className?: string;
 }
 
@@ -86,17 +91,28 @@ export const OrderListCompact = memo(function OrderListCompact({
   orders,
   type,
   onViewDetails,
+  onAccept,
+  onReject,
   className,
 }: OrderListCompactProps) {
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
 
-  // 处理行点击
   const handleRowClick = useCallback(
     (orderId: string) => {
       onViewDetails(orderId);
     },
     [onViewDetails]
+  );
+
+  const handleButtonClick = useCallback((e: React.MouseEvent, callback?: () => void) => {
+    e.stopPropagation();
+    callback?.();
+  }, []);
+
+  const shouldShowActions = useCallback(
+    (rawState?: string) => type === 'sale' && rawState === 'PENDING',
+    [type]
   );
 
   if (orders.length === 0) {
@@ -115,75 +131,101 @@ export const OrderListCompact = memo(function OrderListCompact({
           variant: 'secondary' as const,
         };
         const item = order.items[0];
+        const showActions = shouldShowActions(order.rawState);
 
         return (
           <div
             key={order.id}
-            className="flex gap-3 py-3 px-4 active:bg-muted/50 transition-colors cursor-pointer"
+            className="flex flex-col gap-2 py-3 px-4 active:bg-muted/50 transition-colors cursor-pointer"
             onClick={() => handleRowClick(order.id)}
           >
-            {/* Product Image */}
-            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              <ProductImageNative src={item?.image} alt={item?.title ?? ''} iconSize="md" />
-            </div>
+            <div className="flex gap-3">
+              <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                <ProductImageNative src={item?.image} alt={item?.title ?? ''} iconSize="md" />
+              </div>
 
-            {/* Order Info */}
-            <div className="flex-1 min-w-0 flex flex-col gap-1.5 py-0.5">
-              {/* Top: Product name + Date */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-foreground truncate">
-                    {item?.title || t('order.untitledItem')}
-                  </h3>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                      {type === 'purchase' ? t('order.from') : t('order.to')}
-                    </span>
-                    {order.vendor.avatar ? (
-                      <img
-                        src={order.vendor.avatar}
-                        alt={order.vendor.name}
-                        className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-[10px] text-primary font-medium">
-                          {order.vendor.name?.charAt(0)?.toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-xs text-muted-foreground truncate">
-                      {order.vendor.name}
-                    </span>
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5 py-0.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-foreground truncate">
+                      {item?.title || t('order.untitledItem')}
+                    </h3>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {type === 'purchase' ? t('order.from') : t('order.to')}
+                      </span>
+                      {order.vendor.avatar ? (
+                        <img
+                          src={order.vendor.avatar}
+                          alt={order.vendor.name}
+                          className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] text-primary font-medium">
+                            {order.vendor.name?.charAt(0)?.toUpperCase() || '?'}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-xs text-muted-foreground truncate">
+                        {order.vendor.name}
+                      </span>
+                    </div>
                   </div>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                    {formatDate(order.createdAt)}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground flex-shrink-0">
-                  {formatDate(order.createdAt)}
-                </span>
-              </div>
 
-              {/* Middle: Price - 增大图标尺寸 */}
-              <div className="flex items-center gap-2">
-                {/* Currency icon - 使用真实货币图标，显示链徽章 */}
-                {(() => {
-                  const { token, chainId, isToken } = parseTokenInfo(order.currency);
-                  return (
-                    <TokenIcon token={token} size={20} showChainBadge={isToken} chainId={chainId} />
-                  );
-                })()}
-                <span className="text-sm font-semibold text-primary">
-                  {formatCurrencyPrice(order.total, order.currency || 'USD')}
-                </span>
-              </div>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const { token, chainId, isToken } = parseTokenInfo(order.currency);
+                    return (
+                      <TokenIcon
+                        token={token}
+                        size={20}
+                        showChainBadge={isToken}
+                        chainId={chainId}
+                      />
+                    );
+                  })()}
+                  <span className="text-sm font-semibold text-primary">
+                    {formatCurrencyPrice(order.total, order.currency || 'USD')}
+                  </span>
+                </div>
 
-              {/* Bottom: Status + Order ID - 增加间距 */}
-              <div className="flex items-center justify-between mt-0.5">
-                <Badge variant={status.variant} className="text-xs px-2 py-0.5 h-5">
-                  {t(status.labelKey)}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{truncateId(order.orderId)}</span>
+                <div className="flex items-center justify-between mt-0.5">
+                  <Badge variant={status.variant} className="text-xs px-2 py-0.5 h-5">
+                    {t(status.labelKey)}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">{truncateId(order.orderId)}</span>
+                </div>
               </div>
             </div>
+
+            {showActions && (onAccept || onReject) && (
+              <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                {onReject && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-3 text-xs flex-1 min-w-0"
+                    onClick={e => handleButtonClick(e, () => onReject(order.id, order.paymentCoin))}
+                  >
+                    {t('order.actions.decline')}
+                  </Button>
+                )}
+                {onAccept && (
+                  <Button
+                    size="sm"
+                    className="h-8 px-3 text-xs flex-1 min-w-0 bg-primary hover:bg-primary/90"
+                    onClick={e => handleButtonClick(e, () => onAccept(order.id, order.paymentCoin))}
+                  >
+                    {t('order.actions.accept')}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         );
       })}

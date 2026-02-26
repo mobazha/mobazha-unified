@@ -1,46 +1,75 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useUserStore } from '@mobazha/core';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { SaveBar } from '@/components/SettingsLayout/SaveBar';
 import { ReturnPolicySelector } from '@/components/Listing/ReturnPolicySelector';
 import { TermsPolicySelector } from '@/components/Listing/TermsPolicySelector';
 
-interface StorePolicies {
-  returnPolicy: string;
-  termsAndConditions: string;
-}
-
-const initialPolicies: StorePolicies = {
-  returnPolicy: '',
-  termsAndConditions: '',
-};
-
 export function StorePoliciesContent() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const { settings, fetchSettings, updateSettings } = useUserStore();
 
-  const [policies, setPolicies] = useState<StorePolicies>(initialPolicies);
-  const [savedPolicies, setSavedPolicies] = useState<StorePolicies>(initialPolicies);
+  const [returnPolicy, setReturnPolicy] = useState('');
+  const [termsAndConditions, setTermsAndConditions] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!settings) {
+      fetchSettings();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (settings) {
+      setReturnPolicy(settings.refundPolicy || '');
+      setTermsAndConditions(settings.termsAndConditions || '');
+    }
+  }, [settings]);
 
   const isDirty =
-    policies.returnPolicy !== savedPolicies.returnPolicy ||
-    policies.termsAndConditions !== savedPolicies.termsAndConditions;
+    returnPolicy !== (settings?.refundPolicy || '') ||
+    termsAndConditions !== (settings?.termsAndConditions || '');
 
-  const handleSave = useCallback(() => {
-    setSavedPolicies({ ...policies });
-    toast({
-      title: t('common.saved'),
-      description: t('settingsExtended.storePoliciesSaved'),
-    });
-  }, [policies, toast, t]);
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const success = await updateSettings({
+        refundPolicy: returnPolicy,
+        termsAndConditions,
+      });
+
+      if (success) {
+        toast({
+          title: t('common.saved'),
+          description: t('settingsExtended.storePoliciesSaved'),
+        });
+      } else {
+        toast({
+          title: t('common.error'),
+          description: t('settingsModal.saveFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('settingsModal.saveFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [returnPolicy, termsAndConditions, updateSettings, toast, t]);
 
   const handleDiscard = useCallback(() => {
-    setPolicies({ ...savedPolicies });
-  }, [savedPolicies]);
+    setReturnPolicy(settings?.refundPolicy || '');
+    setTermsAndConditions(settings?.termsAndConditions || '');
+  }, [settings]);
 
   return (
     <>
@@ -52,10 +81,7 @@ export function StorePoliciesContent() {
         >
           <Card className="p-4 md:p-6">
             <div className="space-y-4">
-              <ReturnPolicySelector
-                value={policies.returnPolicy}
-                onChange={value => setPolicies(prev => ({ ...prev, returnPolicy: value }))}
-              />
+              <ReturnPolicySelector value={returnPolicy} onChange={setReturnPolicy} />
             </div>
           </Card>
         </SettingsSection>
@@ -66,15 +92,17 @@ export function StorePoliciesContent() {
           description={t('settingsExtended.termsDesc')}
         >
           <Card className="p-4 md:p-6">
-            <TermsPolicySelector
-              value={policies.termsAndConditions}
-              onChange={value => setPolicies(prev => ({ ...prev, termsAndConditions: value }))}
-            />
+            <TermsPolicySelector value={termsAndConditions} onChange={setTermsAndConditions} />
           </Card>
         </SettingsSection>
       </div>
 
-      <SaveBar isDirty={isDirty} isLoading={false} onSave={handleSave} onDiscard={handleDiscard} />
+      <SaveBar
+        isDirty={isDirty}
+        isLoading={isSaving}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
     </>
   );
 }

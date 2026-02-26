@@ -312,6 +312,8 @@ export function AIConfigSection() {
           type="button"
           onClick={() => setShowAdvanced(prev => !prev)}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          aria-expanded={showAdvanced}
+          aria-controls="ai-config-advanced"
         >
           <ChevronDown
             className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
@@ -320,7 +322,7 @@ export function AIConfigSection() {
         </button>
 
         {showAdvanced && (
-          <div className="space-y-4 pl-1 border-l-2 border-muted ml-1.5">
+          <div id="ai-config-advanced" className="space-y-4 pl-1 border-l-2 border-muted ml-1.5">
             <div className="pl-3 space-y-4">
               {/* Model — Combobox-like: Select + free text */}
               <div className="space-y-1.5">

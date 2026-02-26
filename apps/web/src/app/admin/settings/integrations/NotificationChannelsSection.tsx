@@ -383,6 +383,7 @@ export function NotificationChannelsSection() {
                   onClick={() => handleTest(ch.id)}
                   disabled={!ch.enabled || testingId === ch.id}
                   title={t('admin.integrations.testChannel')}
+                  aria-label={t('admin.integrations.testChannel')}
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -391,6 +392,7 @@ export function NotificationChannelsSection() {
                   size="sm"
                   onClick={() => openEditDialog(ch)}
                   title={t('admin.integrations.editChannel')}
+                  aria-label={t('admin.integrations.editChannel')}
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -399,6 +401,7 @@ export function NotificationChannelsSection() {
                   size="sm"
                   onClick={() => setDeleteTarget(ch)}
                   title={t('admin.integrations.deleteChannel')}
+                  aria-label={t('admin.integrations.deleteChannel')}
                   className="text-destructive hover:text-destructive"
                 >
                   <Trash2 className="w-4 h-4" />

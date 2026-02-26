@@ -70,7 +70,7 @@ export async function uploadAvatarImage(file: File): Promise<Image | null> {
 }
 
 /**
- * 上传封面图片
+ * 上传封面图片（通用端点）
  * @param file - 文件对象
  * @returns 上传后的图片哈希
  */
@@ -80,4 +80,36 @@ export async function uploadHeaderImage(file: File): Promise<Image | null> {
     filename: 'headerImage',
     image: base64,
   });
+}
+
+/**
+ * 上传头像（专用端点）
+ *
+ * 使用 POST /v1/media/avatar，后端调用 SetAvatarImage 进行服务端裁切，
+ * 生成多尺寸（tiny/small/medium/large/original）并自动关联到当前用户 profile。
+ * 请求格式：{ avatar: base64 }（与 desktop 一致）
+ */
+export async function uploadAvatar(file: File): Promise<Image | null> {
+  try {
+    const base64 = await fileToBase64(file);
+    return await authPost<Image>(NODE_API.MEDIA_AVATAR, { avatar: base64 });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 上传店铺封面（专用端点）
+ *
+ * 使用 POST /v1/media/header，后端调用 SetHeaderImage 进行服务端裁切，
+ * 生成多尺寸并自动关联到当前用户 profile。
+ * 请求格式：{ header: base64 }
+ */
+export async function uploadHeader(file: File): Promise<Image | null> {
+  try {
+    const base64 = await fileToBase64(file);
+    return await authPost<Image>(NODE_API.MEDIA_HEADER, { header: base64 });
+  } catch {
+    return null;
+  }
 }

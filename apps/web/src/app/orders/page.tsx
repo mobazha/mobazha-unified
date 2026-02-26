@@ -12,16 +12,15 @@ import {
   useI18n,
   usePurchases,
   useSales,
-  getImageUrl,
   useChatStore,
   ordersApi,
   useOrderAction,
-  fromMinimalUnit,
   batchGetProfileDisplayInfo,
 } from '@mobazha/core';
-import type { OrderListItem, ProfileDisplayInfo } from '@mobazha/core';
+import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useToast } from '@/components/ui/use-toast';
+import { transformOrderListItem } from '@/components/admin/orders/utils';
 
 type OrderStatus =
   | 'all'
@@ -32,128 +31,6 @@ type OrderStatus =
   | 'completed'
   | 'disputed';
 type OrderType = 'purchases' | 'sales';
-
-// 将核心包的 OrderState 映射到 UI 的 OrderStatus
-function mapOrderState(state: string): Order['status'] {
-  const stateMap: Record<string, Order['status']> = {
-    PENDING: 'pending',
-    AWAITING_PAYMENT: 'pending',
-    AWAITING_PICKUP: 'processing',
-    AWAITING_FULFILLMENT: 'processing',
-    PARTIALLY_FULFILLED: 'processing',
-    FULFILLED: 'shipped',
-    COMPLETED: 'completed',
-    CANCELED: 'cancelled',
-    DECLINED: 'cancelled',
-    REFUNDED: 'cancelled',
-    DISPUTED: 'disputed',
-    DECIDED: 'disputed',
-    DISPUTE_EXPIRED: 'disputed',
-    RESOLVED: 'completed',
-    PAYMENT_FINALIZED: 'completed',
-    PROCESSING_ERROR: 'pending',
-  };
-  return stateMap[state] || 'pending';
-}
-
-// 获取价格的货币代码
-function getPriceCurrency(total: OrderListItem['total']): string {
-  if (!total) return 'USD';
-  // 优先使用 currency.code，回退到 currencyCode
-  return (
-    (total as { currency?: { code?: string } }).currency?.code ||
-    (total as { currencyCode?: string }).currencyCode ||
-    'USD'
-  );
-}
-
-// 获取图片完整 URL（将 IPFS 哈希转换为网关 URL）
-function getThumbnailUrl(thumbnail: OrderListItem['thumbnail']): string {
-  if (!thumbnail) return '';
-
-  // 如果是字符串格式（IPFS 哈希），使用 getImageUrl 转换
-  if (typeof thumbnail === 'string') {
-    return getImageUrl(thumbnail) || '';
-  }
-
-  // 如果是对象格式，按优先级获取哈希并转换为完整 URL
-  const hash =
-    thumbnail.medium ||
-    thumbnail.small ||
-    thumbnail.tiny ||
-    thumbnail.large ||
-    thumbnail.original ||
-    '';
-  return getImageUrl(hash) || '';
-}
-
-// 将 OrderListItem 转换为 OrderCard 期望的 Order 格式
-// orderType: 'purchases' 时对方是 vendor（卖家），'sales' 时对方是 buyer（买家）
-// profileMap: 通过全局 profileCache 异步获取的 profile 展示数据
-function transformOrderListItem(
-  item: OrderListItem,
-  orderType: OrderType,
-  profileMap: Map<string, ProfileDisplayInfo>,
-  labels: { seller: string; buyer: string }
-): Order {
-  const imageUrl = getThumbnailUrl(item.thumbnail);
-
-  // 防御性处理：确保字段存在（后端可能返回不同的字段名）
-  const itemAny = item as unknown as Record<string, unknown>;
-  const orderId = item.orderID || (itemAny.orderId as string) || '';
-  const vendorId = item.vendorID || (itemAny.vendorId as string) || '';
-  const buyerId = item.buyerID || (itemAny.buyerId as string) || '';
-
-  // 获取格式化后的价格和货币（使用 core 的 fromMinimalUnit 进行最小单位 → 标准单位转换）
-  const currency = getPriceCurrency(item.total) || item.paymentCoin || 'USD';
-  const formattedPrice = item.total
-    ? String(fromMinimalUnit(item.total.amount || 0, currency))
-    : '0';
-
-  // 根据订单类型确定对方（counterparty）的信息
-  // purchases（我的购买）→ 对方是卖家 vendor
-  // sales（我的销售）→ 对方是买家 buyer
-  const counterpartyId = orderType === 'purchases' ? vendorId : buyerId;
-  const counterpartyHandle = orderType === 'purchases' ? item.vendorHandle : item.buyerHandle;
-
-  // 优先使用从 profile API 异步获取的名称和头像（与订单详情页一致）
-  const profileInfo = counterpartyId ? profileMap.get(counterpartyId) : undefined;
-  const counterpartyName =
-    profileInfo?.name ||
-    counterpartyHandle ||
-    (counterpartyId
-      ? `${counterpartyId.slice(0, 6)}…${counterpartyId.slice(-4)}`
-      : orderType === 'purchases'
-        ? labels.seller
-        : labels.buyer);
-  const counterpartyAvatar = profileInfo?.avatar || undefined;
-
-  return {
-    id: orderId,
-    orderId: orderId,
-    status: mapOrderState(item.state || 'PENDING'),
-    rawState: item.state || 'PENDING', // 保留原始状态用于判断操作按钮
-    paymentCoin: item.paymentCoin, // 保留支付币种用于判断是否需要链上交易
-    items: [
-      {
-        id: orderId,
-        title: item.title || 'Unknown Item',
-        image: imageUrl,
-        quantity: item.quantity || 1,
-        price: formattedPrice,
-        currency: currency,
-      },
-    ],
-    total: formattedPrice,
-    currency: currency,
-    createdAt: item.timestamp || new Date().toISOString(),
-    vendor: {
-      id: counterpartyId,
-      name: counterpartyName,
-      avatar: counterpartyAvatar,
-    },
-  };
-}
 
 function OrdersPageContent() {
   const router = useRouter();
