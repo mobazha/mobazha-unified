@@ -88,6 +88,7 @@ export default function AdminIntegrationsPage() {
 
   const [channels, setChannels] = useState<ChannelConfig[]>([]);
   const [channelTypes, setChannelTypes] = useState<ChannelTypeInfo[]>([]);
+  const [eventCategories, setEventCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,20 +106,27 @@ export default function AdminIntegrationsPage() {
     setLoading(true);
     let loadedChannels: ChannelConfig[] = [];
     let loadedTypes: ChannelTypeInfo[] = [];
+    let loadedCategories: string[] = [];
 
     try {
-      const [ch, types] = await Promise.all([
+      const [ch, typesResp] = await Promise.all([
         notificationChannelsApi.getNotificationChannels().catch(() => []),
-        notificationChannelsApi.getNotificationChannelTypes().catch(() => []),
+        notificationChannelsApi.getNotificationChannelTypes().catch(() => ({
+          channel_types: [] as ChannelTypeInfo[],
+          event_categories: [] as string[],
+        })),
       ]);
       loadedChannels = ch ?? [];
-      loadedTypes = types && types.length > 0 ? types : FALLBACK_CHANNEL_TYPES;
+      const types = typesResp.channel_types ?? [];
+      loadedTypes = types.length > 0 ? types : FALLBACK_CHANNEL_TYPES;
+      loadedCategories = typesResp.event_categories ?? [];
     } catch {
       loadedTypes = FALLBACK_CHANNEL_TYPES;
     }
 
     setChannels(loadedChannels);
     setChannelTypes(loadedTypes);
+    setEventCategories(loadedCategories);
     setLoading(false);
   }, []);
 
@@ -467,6 +475,7 @@ export default function AdminIntegrationsPage() {
             <EventFilterSection
               filterMode={filterMode}
               selectedCategories={selectedCategories}
+              availableCategories={eventCategories}
               onFilterModeChange={setFilterMode}
               onToggleCategory={toggleCategory}
             />

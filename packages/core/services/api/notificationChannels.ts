@@ -55,8 +55,19 @@ export async function testNotificationChannel(id: string): Promise<{ status: str
   return authPost<{ status: string }>(NODE_API.NOTIFICATION_CHANNEL_TEST(id));
 }
 
-export async function getNotificationChannelTypes(): Promise<ChannelTypeInfo[]> {
-  return authGet<ChannelTypeInfo[]>(NODE_API.NOTIFICATION_CHANNEL_TYPES);
+export interface ChannelTypesResponse {
+  channel_types: ChannelTypeInfo[];
+  event_categories: string[];
+}
+
+export async function getNotificationChannelTypes(): Promise<ChannelTypesResponse> {
+  const resp = await authGet<ChannelTypesResponse | ChannelTypeInfo[]>(
+    NODE_API.NOTIFICATION_CHANNEL_TYPES
+  );
+  if (Array.isArray(resp)) {
+    return { channel_types: resp, event_categories: [] };
+  }
+  return resp;
 }
 
 export interface DetectedChat {

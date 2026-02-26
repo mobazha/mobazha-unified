@@ -5,7 +5,7 @@ import { useI18n } from '@mobazha/core';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const EVENT_CATEGORIES = [
+const FALLBACK_CATEGORIES = [
   'order',
   'dispute',
   'social',
@@ -15,20 +15,24 @@ const EVENT_CATEGORIES = [
   'publish',
   'cart',
   'chatgroup',
-] as const;
+];
 
-export type EventCategory = (typeof EVENT_CATEGORIES)[number];
+export type EventCategory = string;
 
-export function eventFilterToCategories(filter: string): Set<EventCategory> {
+export function eventFilterToCategories(
+  filter: string,
+  available: string[] = FALLBACK_CATEGORIES
+): Set<EventCategory> {
   if (!filter.trim()) return new Set();
+  const validSet = new Set(available);
   const parts = filter
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
   const cats = new Set<EventCategory>();
   for (const p of parts) {
-    const cat = p.replace(/\.\*$/, '') as EventCategory;
-    if ((EVENT_CATEGORIES as readonly string[]).includes(cat)) {
+    const cat = p.replace(/\.\*$/, '');
+    if (validSet.has(cat)) {
       cats.add(cat);
     }
   }
@@ -61,6 +65,7 @@ export function formatEventFilterDisplay(
 interface EventFilterSectionProps {
   filterMode: 'all' | 'custom';
   selectedCategories: Set<EventCategory>;
+  availableCategories: string[];
   onFilterModeChange: (mode: 'all' | 'custom') => void;
   onToggleCategory: (cat: EventCategory) => void;
 }
@@ -68,10 +73,12 @@ interface EventFilterSectionProps {
 export function EventFilterSection({
   filterMode,
   selectedCategories,
+  availableCategories,
   onFilterModeChange,
   onToggleCategory,
 }: EventFilterSectionProps) {
   const { t } = useI18n();
+  const categories = availableCategories.length > 0 ? availableCategories : FALLBACK_CATEGORIES;
 
   return (
     <div className="space-y-3">
@@ -113,7 +120,7 @@ export function EventFilterSection({
 
       {filterMode === 'custom' && (
         <div className="grid grid-cols-1 gap-1 ml-6 mt-1">
-          {EVENT_CATEGORIES.map(cat => {
+          {categories.map(cat => {
             const labelKey =
               `admin.integrations.eventCategory${cat.charAt(0).toUpperCase() + cat.slice(1)}` as Parameters<
                 typeof t
