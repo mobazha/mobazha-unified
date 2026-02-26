@@ -16,11 +16,16 @@ vi.mock('../../../services/api/client', () => ({
   },
 }));
 
+// Mock helpers used by getModerators (authGet for preferences, publicPost for fetchProfiles)
+const mockAuthGet = vi.fn();
+const mockPublicPost = vi.fn();
+vi.mock('../../../services/api/helpers', () => ({
+  authGet: (...args: unknown[]) => mockAuthGet(...args),
+  publicPost: (...args: unknown[]) => mockPublicPost(...args),
+}));
+
 import { apiClient } from '../../../services/api/client';
 import * as moderatorsApi from '../../../services/api/moderators';
-
-// Mock global fetch for getStoreModerators
-const mockFetch = vi.fn();
 
 const mockApiClient = apiClient as {
   get: ReturnType<typeof vi.fn>;
@@ -58,24 +63,16 @@ describe('Moderators API', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // 使用 stubGlobal 正确 mock fetch
-    vi.stubGlobal('fetch', mockFetch);
-    // Mock fetch 默认返回空的 storeModerators
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ storeModerators: [] }),
-    });
+    // Default: authGet returns empty storeModerators
+    mockAuthGet.mockResolvedValue({ storeModerators: [] });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.unstubAllGlobals();
   });
 
   describe('getModerators', () => {
     it('should fetch list of moderators', async () => {
-      // Mock: 先返回 preferences（含 storeModerators），再返回 fetchprofiles 结果
-      const mockStoreModerators = ['QmMod1'];
       const mockProfile = {
         peerID: 'QmMod1',
         name: 'Trusted Moderator',
@@ -95,30 +92,21 @@ describe('Moderators API', () => {
         },
       };
 
-      // 第一次调用返回 preferences
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ storeModerators: mockStoreModerators }),
-      });
-      // 第二次调用返回 fetchprofiles 结果
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]),
-      });
+      // authGet → preferences with storeModerators
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1'] });
+      // publicPost → fetchProfiles result
+      mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
 
       const result = await moderatorsApi.getModerators();
 
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockAuthGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicPost).toHaveBeenCalledTimes(1);
       expect(result.moderators).toHaveLength(1);
       expect(result.moderators[0].peerID).toBe('QmMod1');
     });
 
     it('should return empty when no store moderators configured', async () => {
-      // Mock: 返回空的 storeModerators
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ storeModerators: [] }),
-      });
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: [] });
 
       const result = await moderatorsApi.getModerators();
 
@@ -151,15 +139,10 @@ describe('Moderators API', () => {
 
   describe('searchModerators', () => {
     it('should search moderators (delegates to getModerators)', async () => {
-      // searchModerators 内部调用 getModerators，需要 mock 完整流程
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ storeModerators: [] }),
-      });
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: [] });
 
       const result = await moderatorsApi.searchModerators('trusted');
 
-      // searchModerators 返回 getModerators 的结果
       expect(result.moderators).toBeDefined();
       expect(result.total).toBe(0);
     });
