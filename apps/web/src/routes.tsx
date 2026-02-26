@@ -256,6 +256,19 @@ const routes: RouteObject[] = [
     ],
   },
 
+  // Admin — 卖家管理后台（使用独立布局 + AuthGuard）
+  {
+    path: '/admin',
+    element: lazyPage(() => import('./app/admin/AdminLayoutVite')),
+    children: [
+      { index: true, element: lazyPage(() => import('./app/admin/page')) },
+      { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
+      { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
+      { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
+      { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
+    ],
+  },
+
   // 钱包
   { path: '/wallet', element: protectedPage(() => import('./app/wallet/page')) },
   { path: '/wallet/:symbol', element: protectedPage(() => import('./app/wallet/[symbol]/page')) },

@@ -382,6 +382,91 @@ OPENAI_BASE_URL=https://...   # 可选，默认 OpenAI 官方
 - 身份展示单元测试：`packages/core/__tests__/utils/identity.test.ts`（新建）
 - 图片 fallback 组件测试：对应组件测试文件
 
+---
+
+## PG-101: Admin Layout + 路由 — ✅ 完成 | 2026-02-26
+
+### 范围（V1.1 基础）
+
+建立卖家管理后台的基础架构 — `/admin/` 路由前缀，侧边栏导航，响应式布局。
+
+### 实现内容
+
+**新建文件：**
+
+- `apps/web/src/components/admin/AdminSidebar.tsx` — 可折叠侧边栏 + 移动端抽屉
+- `apps/web/src/components/admin/AdminHeader.tsx` — Admin 顶部栏（语言/主题切换 + 用户信息）
+- `apps/web/src/components/admin/index.ts` — 组件导出
+- `apps/web/src/app/admin/layout.tsx` — Admin 布局（AuthGuard + 侧边栏 + 内容区）
+- `apps/web/src/app/admin/page.tsx` — Dashboard 占位页（统计卡片 + 快捷操作 + 空状态）
+- `apps/web/src/app/admin/products/page.tsx` — 商品管理占位页
+- `apps/web/src/app/admin/orders/page.tsx` — 订单管理占位页
+- `apps/web/src/app/admin/analytics/page.tsx` — 数据分析占位页
+- `apps/web/src/app/admin/settings/page.tsx` — 设置入口（卡片链接到现有 settings 页面）
+
+**修改文件：**
+
+- `apps/web/src/components/Header/Header.tsx` — 用户菜单顶部添加 "Store Admin" 入口
+- `packages/core/i18n/locales/en.ts` — 新增 `admin.*` 翻译键
+- `packages/core/i18n/locales/zh.ts` — 新增 `admin.*` 中文翻译
+- `packages/core/i18n/types.ts` — 新增 `admin` 类型定义
+
+### 架构设计
+
+- **侧边栏**：桌面端可折叠（240px / 64px），平板端收缩为图标，移动端隐藏+汉堡菜单抽屉
+- **认证保护**：使用现有 `AuthGuard` 组件，未登录重定向到 `/login`
+- **设置页复用**：Admin Settings 不重建设置页，而是通过卡片导航链接到现有 `/settings/*` 路由
+- **导航项**：Dashboard / Products / Orders / Analytics / Settings + 底部 View Store / Help
+
+### 验收标准
+
+- [x] `/admin` 路由可访问，需登录
+- [x] 侧边栏导航可折叠
+- [x] 移动端汉堡菜单触发抽屉
+- [x] Header 用户菜单有 "Store Admin" 入口
+- [x] i18n 支持中英文
+- [x] 5 个页面均有空状态引导
+
+## PG-102: 商品管理页 — ✅ 完成 | 2026-02-26
+
+### 范围
+
+`/admin/products` — 卖家商品列表管理，支持表格/卡片双视图、搜索、批量操作、行内操作。
+
+### 实现内容
+
+**修改文件**：
+
+- `apps/web/src/app/admin/products/page.tsx` — 从占位页重写为完整商品管理页
+- `packages/core/i18n/locales/en.ts` — 新增 22 个 admin.products 键
+- `packages/core/i18n/locales/zh.ts` — 新增 22 个 admin.products 键
+- `packages/core/i18n/types.ts` — 新增 products 子类型定义
+
+### 架构设计
+
+- **数据获取**：调用 `productDataService.getMyListings()` 获取卖家全部商品
+- **双视图切换**：表格视图（信息密集、适合管理）和卡片视图（视觉化、适合浏览）
+- **搜索过滤**：实时客户端搜索，按标题和 slug 匹配
+- **全选/批量操作**：checkbox 全选 + 批量删除（confirm 二次确认）
+- **行内操作（DropdownMenu）**：
+  - 预览（新窗口打开 `/product/{slug}`）
+  - 编辑（跳转 `/listing/edit/{slug}?from=admin`）
+  - 复制（跳转 `/listing/new?duplicate={slug}&from=admin`）
+  - 删除（confirm 确认后调 `productDataService.deleteListing()`）
+- **图片显示**：使用 `ProductImageNative` + `getImageUrl(thumbnail.small)` 处理 IPFS 缩略图
+- **空状态**：区分"无商品"和"搜索无结果"两种空状态
+
+### 验收标准
+
+- [x] 表格视图显示缩略图、标题、slug、类型、价格
+- [x] 卡片视图显示商品图片、操作悬浮、标题、价格
+- [x] 搜索框实时过滤
+- [x] 全选 checkbox + 批量删除
+- [x] 行内操作 4 种：预览/编辑/复制/删除
+- [x] 空状态引导（无商品时显示"添加第一个商品"）
+- [x] i18n 支持中英文
+- [x] 零 lint 错误
+
 ## 相关文档
 
 - [用户反馈原文](../../feedbacks/feedbacks_2026.2.26.md)

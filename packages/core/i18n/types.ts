@@ -2344,6 +2344,113 @@ export interface TranslationResource {
     noCasesDesc?: string;
     caseDetail?: string;
   };
+  admin?: {
+    title?: string;
+    nav?: {
+      dashboard?: string;
+      products?: string;
+      orders?: string;
+      analytics?: string;
+      settings?: string;
+      viewStore?: string;
+      help?: string;
+      openMenu?: string;
+      closeMenu?: string;
+      expandSidebar?: string;
+      collapseSidebar?: string;
+    };
+    dashboard?: {
+      welcome?: string;
+      subtitle?: string;
+      totalSales?: string;
+      newOrders?: string;
+      activeProducts?: string;
+      avgRating?: string;
+      allTime?: string;
+      last7Days?: string;
+      published?: string;
+      storeRating?: string;
+      emptyTitle?: string;
+      emptyDescription?: string;
+      createFirstProduct?: string;
+      setupStore?: string;
+      addProduct?: string;
+      addProductDesc?: string;
+      manageOrders?: string;
+      manageOrdersDesc?: string;
+      viewStore?: string;
+      viewStoreDesc?: string;
+      recentOrders?: string;
+      topProducts?: string;
+      viewAll?: string;
+      noOrdersYet?: string;
+      noProductsYet?: string;
+    };
+    products?: {
+      title?: string;
+      subtitle?: string;
+      count?: string;
+      addProduct?: string;
+      searchPlaceholder?: string;
+      filterAll?: string;
+      filterActive?: string;
+      filterDraft?: string;
+      emptyTitle?: string;
+      emptyDescription?: string;
+      addFirstProduct?: string;
+      noResults?: string;
+      noResultsDesc?: string;
+      colProduct?: string;
+      colType?: string;
+      colPrice?: string;
+      preview?: string;
+      edit?: string;
+      duplicate?: string;
+      delete?: string;
+      deleteConfirm?: string;
+      deleteSelected?: string;
+      bulkDeleteConfirm?: string;
+      typePhysical?: string;
+      typeDigital?: string;
+      typeService?: string;
+      typeCrypto?: string;
+      viewTable?: string;
+      viewGrid?: string;
+    };
+    orders?: {
+      title?: string;
+      subtitle?: string;
+      export?: string;
+      searchPlaceholder?: string;
+      filterAll?: string;
+      filterPending?: string;
+      filterCompleted?: string;
+      emptyTitle?: string;
+      emptyDescription?: string;
+    };
+    analytics?: {
+      title?: string;
+      subtitle?: string;
+      comingSoon?: string;
+      comingSoonDesc?: string;
+    };
+    settings?: {
+      title?: string;
+      subtitle?: string;
+      profile?: string;
+      profileDesc?: string;
+      store?: string;
+      storeDesc?: string;
+      policies?: string;
+      policiesDesc?: string;
+      shipping?: string;
+      shippingDesc?: string;
+      moderators?: string;
+      moderatorsDesc?: string;
+      general?: string;
+      generalDesc?: string;
+    };
+  };
 }
 
 // i18n 上下文类型

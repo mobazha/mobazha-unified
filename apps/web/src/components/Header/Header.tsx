@@ -42,6 +42,7 @@ import {
   MessageCircle,
   Shield,
   PieChart,
+  LayoutDashboard,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
 import { WalletConnectButton } from '../Wallet';
@@ -166,7 +167,10 @@ export const Header: React.FC = () => {
                 </span>
               </Button>
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span
+                  className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                  data-testid="header-cart-badge"
+                >
                   {cartItemCount > 99 ? '99+' : cartItemCount}
                 </span>
               )}
@@ -211,6 +215,14 @@ export const Header: React.FC = () => {
                   {/* 主要操作 — 买家跳过卖家管理项 */}
                   {!isBuyer && (
                     <>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/admin')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-admin"
+                      >
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        {t('admin.title')}
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => router.push(`/store/${profile.peerID}`)}
                         className="cursor-pointer"
