@@ -1,18 +1,34 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, memo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore, useI18n } from '@mobazha/core';
+import {
+  useUserStore,
+  useI18n,
+  getAllCountries,
+  POPULAR_COUNTRIES,
+  FIAT_CURRENCIES,
+  getPopularCurrencies,
+} from '@mobazha/core';
 import { parseJwtToken, getStoredToken } from '@mobazha/core';
+import { uploadAvatar } from '@mobazha/core/services/api/images';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Camera } from 'lucide-react';
 
-/**
- * Value proposition icon component
- */
 const ValueIcon = memo(function ValueIcon({
   icon,
   label,
@@ -30,60 +46,97 @@ const ValueIcon = memo(function ValueIcon({
   );
 });
 
-/**
- * Onboarding page for new users
- *
- * Displayed when a user has authenticated but has no profile yet.
- * Collects minimal info (name required) and creates the profile via POST /v1/profile.
- */
 export default function OnboardingPage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { toast } = useToast();
 
   const profile = useUserStore(state => state.profile);
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
   const needsOnboarding = useUserStore(state => state.needsOnboarding);
   const createProfile = useUserStore(state => state.createProfile);
+  const updateSettings = useUserStore(state => state.updateSettings);
   const isLoading = useUserStore(state => state.isLoading);
 
-  // Form state
   const [displayName, setDisplayName] = useState('');
   const [shortBio, setShortBio] = useState('');
   const [nameError, setNameError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Guard: redirect based on auth/profile state (single effect to avoid race conditions)
+  // Avatar state
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Country / Currency state
+  const [country, setCountry] = useState('');
+  const [currency, setCurrency] = useState('USD');
+
+  // Country data
+  const allCountries = useMemo(() => getAllCountries(locale), [locale]);
+  const popularCountryCodes = useMemo(() => new Set(POPULAR_COUNTRIES), []);
+  const popularCountries = useMemo(
+    () => allCountries.filter(c => popularCountryCodes.has(c.code)),
+    [allCountries, popularCountryCodes]
+  );
+  const otherCountries = useMemo(
+    () => allCountries.filter(c => !popularCountryCodes.has(c.code)),
+    [allCountries, popularCountryCodes]
+  );
+
+  // Currency data
+  const popularCurrencies = useMemo(
+    () => getPopularCurrencies().filter(c => c.type === 'fiat'),
+    []
+  );
+  const otherFiatCurrencies = useMemo(() => {
+    const popularCodes = new Set(popularCurrencies.map(c => c.code));
+    return FIAT_CURRENCIES.filter(c => !popularCodes.has(c.code));
+  }, [popularCurrencies]);
+
   useEffect(() => {
-    // 优先级 1: 未认证 → 登录页
     if (!isAuthenticated) {
       router.replace('/login');
       return;
     }
-    // 优先级 2: 已有 profile → 首页（不需要 onboarding）
     if (profile && !needsOnboarding) {
       router.replace('/');
     }
   }, [isAuthenticated, profile, needsOnboarding, router]);
 
-  // Prefill from Casdoor JWT claims
+  const avatarPreviewRef = useRef(avatarPreview);
+  avatarPreviewRef.current = avatarPreview;
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewRef.current) URL.revokeObjectURL(avatarPreviewRef.current);
+    };
+  }, []);
+
+  // Prefill from JWT claims
   useEffect(() => {
     const token = getStoredToken();
     if (token) {
       const claims = parseJwtToken(token);
       if (claims) {
-        // Use displayName or name from JWT claims
         const name = claims.name || claims.preferred_username || '';
         if (name && !displayName) {
           setDisplayName(name);
         }
       }
     }
-    // Only run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Validate name on blur
+  const handleAvatarSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(prev => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  }, []);
+
   const handleNameBlur = useCallback(() => {
     if (!displayName.trim()) {
       setNameError(t('onboarding.displayNameRequired'));
@@ -92,7 +145,6 @@ export default function OnboardingPage() {
     }
   }, [displayName, t]);
 
-  // Clear error when typing after first validation
   const handleNameChange = useCallback(
     (value: string) => {
       setDisplayName(value);
@@ -103,9 +155,7 @@ export default function OnboardingPage() {
     [nameError]
   );
 
-  // Submit profile
   const handleSubmit = useCallback(async () => {
-    // Validate
     if (!displayName.trim()) {
       setNameError(t('onboarding.displayNameRequired'));
       return;
@@ -113,19 +163,46 @@ export default function OnboardingPage() {
 
     setIsSubmitting(true);
 
-    const profileData: Record<string, string | boolean> = {
-      name: displayName.trim(),
-    };
-    if (shortBio.trim()) {
-      profileData.shortDescription = shortBio.trim();
-    }
+    try {
+      const profileData: Record<string, string | boolean> = {
+        name: displayName.trim(),
+      };
+      if (shortBio.trim()) {
+        profileData.shortDescription = shortBio.trim();
+      }
 
-    const success = await createProfile(profileData);
+      // Create profile first
+      const profileSuccess = await createProfile(profileData);
+      if (!profileSuccess) {
+        toast({
+          title: t('common.error'),
+          description: t('onboarding.createFailed'),
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-    if (success) {
-      // Brief success animation then navigate to home
+      // Parallel: upload avatar + save settings (country/currency)
+      const sideEffects: Promise<unknown>[] = [];
+
+      if (avatarFile) {
+        sideEffects.push(uploadAvatar(avatarFile).catch(() => {}));
+      }
+
+      const settingsUpdate: Record<string, string> = {};
+      if (country) settingsUpdate.country = country;
+      if (currency && currency !== 'USD') settingsUpdate.localCurrency = currency;
+      if (Object.keys(settingsUpdate).length > 0) {
+        sideEffects.push(updateSettings(settingsUpdate).catch(() => {}));
+      }
+
+      if (sideEffects.length > 0) {
+        await Promise.all(sideEffects);
+      }
+
       router.replace('/');
-    } else {
+    } catch {
       toast({
         title: t('common.error'),
         description: t('onboarding.createFailed'),
@@ -133,7 +210,18 @@ export default function OnboardingPage() {
       });
       setIsSubmitting(false);
     }
-  }, [displayName, shortBio, createProfile, router, toast, t]);
+  }, [
+    displayName,
+    shortBio,
+    avatarFile,
+    country,
+    currency,
+    createProfile,
+    updateSettings,
+    router,
+    toast,
+    t,
+  ]);
 
   const isFormDisabled = isSubmitting || isLoading;
 
@@ -147,7 +235,6 @@ export default function OnboardingPage() {
           </h1>
           <p className="text-muted-foreground text-lg">{t('onboarding.tagline')}</p>
 
-          {/* Value propositions */}
           <div className="flex justify-center gap-8 pt-4">
             <ValueIcon
               icon={
@@ -210,7 +297,46 @@ export default function OnboardingPage() {
         <div className="bg-card rounded-2xl shadow-lg border border-border p-6 space-y-5">
           <h2 className="text-lg font-semibold text-foreground">{t('onboarding.setupProfile')}</h2>
 
-          {/* Display Name (required) */}
+          {/* Avatar */}
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => avatarInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              aria-label={t('onboarding.changeAvatar') || 'Change avatar'}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') avatarInputRef.current?.click();
+              }}
+            >
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="Avatar"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-border"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
+                  <Camera className="w-6 h-6 text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Camera className="w-5 h-5 text-white" />
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarSelect}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {t('onboarding.avatarHint') || 'Click to upload'}
+            </span>
+          </div>
+
+          {/* Display Name */}
           <div className="space-y-2">
             <Label htmlFor="displayName" className="text-sm font-medium text-foreground">
               {t('onboarding.displayName')} <span className="text-destructive">*</span>
@@ -234,7 +360,7 @@ export default function OnboardingPage() {
             )}
           </div>
 
-          {/* Short Bio (optional) */}
+          {/* Short Bio */}
           <div className="space-y-2">
             <Label htmlFor="shortBio" className="text-sm font-medium text-foreground">
               {t('onboarding.shortBio')}{' '}
@@ -246,14 +372,79 @@ export default function OnboardingPage() {
               onChange={e => setShortBio(e.target.value)}
               placeholder={t('onboarding.shortBioPlaceholder')}
               disabled={isFormDisabled}
-              rows={3}
+              rows={2}
               className="resize-none"
               aria-label={t('onboarding.shortBio')}
               data-testid="onboarding-short-bio"
             />
           </div>
 
-          {/* Submit button */}
+          {/* Country + Currency row */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Country */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground">
+                {t('onboarding.country')}
+              </Label>
+              <Select value={country} onValueChange={setCountry} disabled={isFormDisabled}>
+                <SelectTrigger className="w-full" data-testid="onboarding-country">
+                  <SelectValue placeholder={t('onboarding.countryPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>{t('onboarding.popularCountries') || 'Popular'}</SelectLabel>
+                    {popularCountries.map(c => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>{t('onboarding.allCountries') || 'All Countries'}</SelectLabel>
+                    {otherCountries.map(c => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Currency */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground">
+                {t('onboarding.currency') || 'Display Currency'}
+              </Label>
+              <Select value={currency} onValueChange={setCurrency} disabled={isFormDisabled}>
+                <SelectTrigger className="w-full" data-testid="onboarding-currency">
+                  <SelectValue placeholder={t('onboarding.currencyPlaceholder') || 'Select'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>{t('onboarding.popularCountries') || 'Popular'}</SelectLabel>
+                    {popularCurrencies.map(c => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.symbol} {c.code}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>{t('onboarding.allCountries') || 'All'}</SelectLabel>
+                    {otherFiatCurrencies.map(c => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.symbol} {c.code}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Submit */}
           <Button
             onClick={handleSubmit}
             disabled={isFormDisabled || !displayName.trim()}
@@ -270,7 +461,6 @@ export default function OnboardingPage() {
             )}
           </Button>
 
-          {/* Helper text */}
           <p className="text-center text-sm text-muted-foreground">
             {t('onboarding.customizeLater')}
           </p>
