@@ -109,5 +109,6 @@ export type {
   ChannelConfig,
   ChannelFieldSchema,
   ChannelTypeInfo,
+  ChannelTypesResponse,
   DetectedChat,
 } from './notificationChannels';
