@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useI18n, useCurrency, useCartStore, getImageUrl } from '@mobazha/core';
 import type { CartItem } from '@mobazha/core';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { ProductImageNative } from '@/components/ui/product-image';
 
 interface VendorGroup {
   vendorPeerID: string;
@@ -186,18 +187,12 @@ export default function CartPage() {
                               href={`/product/${item.listing.slug}`}
                               className="flex-shrink-0 touch-feedback"
                             >
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted">
-                                {thumbUrl ? (
-                                  <img
-                                    src={thumbUrl}
-                                    alt={item.listing.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                    <ShoppingBag className="w-6 h-6" />
-                                  </div>
-                                )}
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden">
+                                <ProductImageNative
+                                  src={thumbUrl}
+                                  alt={item.listing.title}
+                                  iconSize="sm"
+                                />
                               </div>
                             </Link>
 

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { HStack, VStack } from '@/components/layouts';
 import { useCartStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { ProductImageNative } from '@/components/ui/product-image';
 
 interface CartDrawerProps {
   open: boolean;
@@ -106,18 +107,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       onClick={() => onOpenChange(false)}
                       className="flex-shrink-0"
                     >
-                      <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
-                        {thumbUrl ? (
-                          <img
-                            src={thumbUrl}
-                            alt={item.listing.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            <ShoppingBag className="w-6 h-6" />
-                          </div>
-                        )}
+                      <div className="w-16 h-16 rounded-md overflow-hidden">
+                        <ProductImageNative src={thumbUrl} alt={item.listing.title} iconSize="sm" />
                       </div>
                     </Link>
 

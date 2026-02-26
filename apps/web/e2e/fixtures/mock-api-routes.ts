@@ -13,12 +13,22 @@ const NOW = new Date().toISOString();
 const DAY_AGO = new Date(Date.now() - 86400000).toISOString();
 const WEEK_AGO = new Date(Date.now() - 7 * 86400000).toISOString();
 
+function mockThumbnail(id: number, size = 300) {
+  const url = `https://picsum.photos/id/${id}/${size}/${size}`;
+  return { tiny: url, small: url, medium: url, large: url, original: url };
+}
+
+function mockSearchThumbnail(id: number, size = 300) {
+  const url = `https://picsum.photos/id/${id}/${size}/${size}`;
+  return { tiny: url, small: url, medium: url };
+}
+
 const mockPurchases = [
   {
     orderID: 'QmOrder001',
     slug: 'wireless-headphones',
     title: 'Wireless Noise-Cancelling Headphones',
-    thumbnail: { tiny: '', small: '', medium: '', large: '', original: '' },
+    thumbnail: mockThumbnail(3),
     total: { amount: 8999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: DAY_AGO,
@@ -34,7 +44,7 @@ const mockPurchases = [
     orderID: 'QmOrder002',
     slug: 'logo-design-package',
     title: 'Professional Logo Design Package',
-    thumbnail: { tiny: '', small: '', medium: '', large: '', original: '' },
+    thumbnail: mockThumbnail(24),
     total: { amount: 14900, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: WEEK_AGO,
@@ -50,7 +60,7 @@ const mockPurchases = [
     orderID: 'QmOrder003',
     slug: 'vintage-camera',
     title: 'Vintage Film Camera - Refurbished',
-    thumbnail: { tiny: '', small: '', medium: '', large: '', original: '' },
+    thumbnail: mockThumbnail(36),
     total: { amount: 24500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: NOW,
@@ -69,7 +79,7 @@ const mockSales = [
     orderID: 'QmSale001',
     slug: 'handmade-leather-wallet',
     title: 'Handmade Leather Wallet',
-    thumbnail: { tiny: '', small: '', medium: '', large: '', original: '' },
+    thumbnail: mockThumbnail(92),
     total: { amount: 5500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 2,
     timestamp: DAY_AGO,
@@ -85,7 +95,7 @@ const mockSales = [
     orderID: 'QmSale002',
     slug: 'organic-coffee-beans',
     title: 'Organic Coffee Beans - 1kg',
-    thumbnail: { tiny: '', small: '', medium: '', large: '', original: '' },
+    thumbnail: mockThumbnail(63),
     total: { amount: 2200, currency: { code: 'USD', divisibility: 2 } },
     quantity: 3,
     timestamp: WEEK_AGO,
@@ -108,7 +118,7 @@ const mockNotifications = [
       notificationId: 'notif-001',
       orderId: 'QmSale001',
       title: 'Handmade Leather Wallet',
-      thumbnail: { tiny: '', small: '', medium: '' },
+      thumbnail: mockSearchThumbnail(92),
     },
   },
   {
@@ -192,7 +202,7 @@ const mockSearchResults = {
           categories: ['Electronics'],
           contractType: 'PHYSICAL_GOOD',
           description: 'Premium over-ear headphones with ANC and 40hr battery',
-          thumbnail: { tiny: '', small: '', medium: '' },
+          thumbnail: mockSearchThumbnail(3),
           price: { amount: 8999, currency: { code: 'USD', divisibility: 2 } },
           averageRating: 4.8,
           ratingCount: 24,
@@ -210,7 +220,7 @@ const mockSearchResults = {
           categories: ['Electronics'],
           contractType: 'PHYSICAL_GOOD',
           description: 'Classic 35mm film camera, fully refurbished and tested',
-          thumbnail: { tiny: '', small: '', medium: '' },
+          thumbnail: mockSearchThumbnail(36),
           price: { amount: 24500, currency: { code: 'USD', divisibility: 2 } },
           averageRating: 4.5,
           ratingCount: 8,
@@ -228,7 +238,7 @@ const mockSearchResults = {
           categories: ['Food'],
           contractType: 'PHYSICAL_GOOD',
           description: 'Premium single-origin coffee beans from Ethiopia',
-          thumbnail: { tiny: '', small: '', medium: '' },
+          thumbnail: mockSearchThumbnail(63),
           price: { amount: 2200, currency: { code: 'USD', divisibility: 2 } },
           averageRating: 4.9,
           ratingCount: 42,
@@ -246,7 +256,7 @@ const mockSearchResults = {
           categories: ['Services'],
           contractType: 'SERVICE',
           description: '3 unique logo concepts with unlimited revisions',
-          thumbnail: { tiny: '', small: '', medium: '' },
+          thumbnail: mockSearchThumbnail(24),
           price: { amount: 14900, currency: { code: 'USD', divisibility: 2 } },
           averageRating: 5.0,
           ratingCount: 15,
@@ -270,7 +280,7 @@ const mockOrderDetail = {
               title: 'Wireless Noise-Cancelling Headphones',
               description: 'Premium over-ear headphones with ANC',
               price: '8999',
-              images: [{ tiny: '', small: '', medium: '', large: '', original: '', filename: '' }],
+              images: [{ ...mockThumbnail(3), filename: 'headphones.png' }],
               skus: [{ productID: '1', quantity: '100' }],
             },
             shippingOptions: [
@@ -316,7 +326,7 @@ const mockOrderDetail = {
         },
         item: {
           title: 'Wireless Noise-Cancelling Headphones',
-          images: [{ tiny: '', small: '', medium: '', large: '', original: '' }],
+          images: [mockThumbnail(3)],
         },
       },
     ],
@@ -454,9 +464,7 @@ const mockProductListing = {
     categories: ['Electronics'],
     grams: 280,
     condition: 'New',
-    images: [
-      { tiny: '', small: '', medium: '', large: '', original: '', filename: 'headphones.png' },
-    ],
+    images: [{ ...mockThumbnail(3), filename: 'headphones.png' }],
     skus: [{ productID: '1', quantity: '100', price: '8999' }],
   },
   shippingOptions: [
@@ -497,10 +505,24 @@ export async function mockProductDetailAPI(page: Page): Promise<void> {
 }
 
 /**
+ * Intercept image requests from the backend (/v1/media/images/*)
+ * and redirect to picsum.photos so images always display in visual tests.
+ */
+export async function mockImageRoutes(page: Page): Promise<void> {
+  await page.route('**/v1/media/images/**', route => {
+    route.fulfill({
+      status: 302,
+      headers: { Location: 'https://picsum.photos/id/237/300/300' },
+    });
+  });
+}
+
+/**
  * Set up all mocks for a comprehensive visual test run.
  */
 export async function mockAllAPIs(page: Page): Promise<void> {
   await mockOrdersAPI(page);
   await mockNotificationsAPI(page);
   await mockSearchAPI(page);
+  await mockImageRoutes(page);
 }

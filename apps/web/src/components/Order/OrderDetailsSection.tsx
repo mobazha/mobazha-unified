@@ -3,6 +3,7 @@
 import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { ProductImageNative } from '@/components/ui/product-image';
 import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
@@ -134,14 +135,8 @@ export const OrderDetailsSection = memo(function OrderDetailsSection({
           <div key={item.id} className={cn(index > 0 && 'mt-3 pt-3 border-t border-border')}>
             <div className="flex gap-3">
               {/* 商品图片 */}
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                {item.image ? (
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                    No image
-                  </div>
-                )}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0">
+                <ProductImageNative src={item.image} alt={item.title} iconSize="sm" />
               </div>
 
               {/* 商品信息 */}

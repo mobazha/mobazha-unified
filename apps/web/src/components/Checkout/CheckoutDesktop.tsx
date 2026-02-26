@@ -9,6 +9,7 @@ import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { ProductImageNative } from '@/components/ui/product-image';
 import { useCurrency, useI18n } from '@mobazha/core';
 import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
@@ -287,30 +288,8 @@ export function CheckoutDesktop({ checkout }: Props) {
                       {checkoutItems.map(item => (
                         <div key={item.id} className="border border-border rounded-lg p-3">
                           <HStack gap="sm" align="start">
-                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              {item.image ? (
-                                <img
-                                  src={item.image}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                  <svg
-                                    className="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={1.5}
-                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    />
-                                  </svg>
-                                </div>
-                              )}
+                            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                              <ProductImageNative src={item.image} alt={item.title} iconSize="sm" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
