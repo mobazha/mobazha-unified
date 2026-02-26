@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { ProductImageNative } from '@/components/ui/product-image';
 import { useI18n, useCurrency } from '@mobazha/core';
 import { Copy } from 'lucide-react';
 import type { Order } from './OrderCard';
@@ -175,15 +176,13 @@ export const OrderTable = memo(function OrderTable({
                 {/* LISTING */}
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    {order.items[0]?.image && (
-                      <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img
-                          src={order.items[0].image}
-                          alt={order.items[0].title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
+                    <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
+                      <ProductImageNative
+                        src={order.items[0]?.image}
+                        alt={order.items[0]?.title ?? ''}
+                        iconSize="sm"
+                      />
+                    </div>
                     <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
                       {order.items[0]?.title || t('order.unknownItem')}
                     </span>

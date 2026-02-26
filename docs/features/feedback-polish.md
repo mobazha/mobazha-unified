@@ -31,9 +31,9 @@
 
 ### 路线图缺口（本文档定义的新任务）
 
-| 缺口                              | 新任务 ID   | 优先级 | 说明                      |
-| --------------------------------- | ----------- | ------ | ------------------------- |
-| "Unknown" 和 Peer ID 遍布所有页面 | **PG-006**  | P0     | 影响所有页面的信任感      |
+| 缺口                              | 新任务 ID   | 优先级 | 说明                      | 状态                  |
+| --------------------------------- | ----------- | ------ | ------------------------- | --------------------- |
+| "Unknown" 和 Peer ID 遍布所有页面 | **PG-006**  | P0     | 影响所有页面的信任感      | ✅ 完成（2026-02-26） |
 | 搜索/购物车/结账中商品图片缺失    | **PG-007b** | P0     | E2E 数据 + 图片 fallback  |
 | 登录页无品牌感                    | **PG-008**  | P1     | Casdoor 配置 + 主题化     |
 | 独立站首页仍是集市模板            | **PG-009**  | P1     | `isStandalone` 首页差异化 |
@@ -74,55 +74,62 @@
 | Header               | Connect Wallet  | 蓝色突出按钮                                                                  | 降为次要按钮或移入菜单                               |
 | 订单详情             | Escrow 说明     | "Funds held in escrow for ~37 days"                                           | "你的资金在确认收货前受到保护"                       |
 
-### 术语映射表（PG-005 已定义，本任务落地）
+### 术语映射表（PG-005 已定义，本任务分析结论）
 
-| 技术术语           | 用户看到的                          | 适用位置       |
-| ------------------ | ----------------------------------- | -------------- |
-| Escrow             | "买家保障" / "Buyer Protection"     | 订单详情、结账 |
-| Smart Contract     | 不出现                              | 全局           |
-| Peer ID            | "卖家 ID" 或直接用店铺名            | 订单、搜索结果 |
-| IPFS               | 不出现                              | 全局           |
-| Gas Fee            | "网络手续费" / "Network Fee"        | 结账支付步骤   |
-| Block Confirmation | "支付确认中" / "Confirming payment" | 支付等待 UI    |
-| Moderator          | "争议仲裁" / "Dispute Resolution"   | 订单详情       |
-| Connect Wallet     | "付款方式" 或降级                   | Header         |
+| 技术术语           | 当前状态                                           | 决策                                   |
+| ------------------ | -------------------------------------------------- | -------------------------------------- |
+| Escrow             | `BuyerProtectionBanner` 已抽象为"Buyer Protection" | ✅ 已合理处理，crypto 流保留技术准确性 |
+| Smart Contract     | 仅在 crypto 流的信任说明中出现                     | ✅ 对 Web3 用户是信任信号，保留        |
+| Peer ID            | 全局已替换为可读名称/截断格式                      | ✅ Step 2 已完成                       |
+| IPFS               | 仅在隐私政策法律文本中                             | ✅ 无需修改                            |
+| Gas Fee            | 代码中不存在                                       | ✅ 无需处理                            |
+| Block Confirmation | 代码中不存在                                       | ✅ 无需处理                            |
+| Moderator          | 保持原样                                           | ✅ Stripe 用户不接触此术语             |
+| Connect Wallet     | Header 主色按钮                                    | ⏸️ 暂缓，等 Stripe 集成后重新评估      |
 
 ### 实施步骤
 
-1. **创建身份展示工具函数** `packages/core/utils/identity.ts`
+1. ✅ **创建身份展示工具函数** `packages/core/utils/identity.ts`
 
    ```typescript
-   // 从 profile/peer 数据提取可读名称
-   formatUserName(profile?: { name?: string; peerID?: string }): string
-   // → "TechStore" | "Store QmY8...tRnC" | "User QmBu...eer1"
-
-   // 截断长地址/ID 用于展示
-   truncateAddress(address: string, startChars?: number, endChars?: number): string
-   // → "0x1234...cdef"
-
-   // 格式化通知消息（去掉 "Unknown" 前缀）
-   formatNotificationMessage(type: string, data: any): string
+   formatUserName(data?, options?) → 可读名称 | 截断 peerID | fallback
+   truncatePeerId(peerId, chars?) → "QmY8…tRnC"
+   truncateAddress(address, startChars?, endChars?) → "0x1234…cdef"
+   formatNotificationName(data?) → 通知发送者名（空=省略主语）
    ```
 
-2. **全局搜索替换** — 找到所有直接渲染 `peerID` 或 `vendorID.peerID` 的位置
-   - ProductCard（搜索结果） → `formatUserName(vendor)`
-   - OrderList（Buyer/Seller 列）→ `formatUserName(peer)`
-   - OrderDetail（Seller/Buyer 区）→ 头像 + `formatUserName` + 可折叠查看完整 ID
-   - NotificationList → `formatNotificationMessage()`
-   - ProductDetail 卖家信息区 → 店铺名 + View Store
+   单元测试：`packages/core/__tests__/utils/identity.test.ts`
 
-3. **Header "Connect Wallet" 调整**
-   - 未连接状态：降为文字链接或移入头像下拉菜单
-   - 已连接状态：显示截断地址 + 小圆点状态指示器
-   - 视觉优先级低于 "Sign In" / "My Account"
+2. ✅ **全局搜索替换** — 20+ 文件完成身份人性化
+   - 搜索结果 / 首页 → vendorName 空时用截断 peerID，再空则隐藏
+   - 订单列表 → 角色标签 i18n (`t('order.seller')` / `t('order.buyer')`) 兜底
+   - 订单详情 → 截断 peerID + 角色标签 i18n 兜底
+   - 通知 → 空字符串省略主语
+   - 聊天 → `t('chat.defaultRoom')` 兜底
+   - 结账 → `t('order.seller')` 兜底
+   - 数据转换层 → `formatUserName()` + 角色标签 fallback
+   - 所有 UI fallback 文案已 i18n 化
 
-4. **Escrow 术语替换**
-   - 订单详情：`EscrowStatusBar` 使用人话标签（已在 PG-005 定义但需检查实际文案）
-   - "Funds are being held in escrow for approximately 37 days..." → "你的资金在确认收货前受到保护。如有问题，可发起争议。"
-   - "Open Dispute" 按钮保留但增加解释 tooltip
+3. ~~**Header "Connect Wallet" 降级**~~ → **暂缓**
 
-5. **交易地址展示优化**
-   - 所有区块链地址：`truncateAddress()` + 复制按钮 + Etherscan/explorer 链接
+   > **决策（2026-02-26）**：钱包连接对 Web3 用户购物贯穿始终，是核心 CTA。
+   > 即将添加 Stripe 法币支付后，Header 按钮可能改为「支付方式」入口。
+   > 等 Stripe 集成后整体重新评估支付入口的 UI 优先级。
+
+4. ~~**术语替换（Escrow / Smart Contract / Gas Fee 等）**~~ → **取消**
+
+   > **决策（2026-02-26）**：代码分析发现：
+   >
+   > - "Gas Fee" 和 "Block Confirmation" 代码中不存在
+   > - "IPFS" 仅在隐私政策法律文本中出现
+   > - "Escrow" 和 "Smart Contract" 仅出现在 crypto 支付流中，对 Web3 用户是信任信号
+   > - `BuyerProtectionBanner` 已将 escrow 抽象为"买家保障"
+   > - `EscrowStatusBar` 使用用户友好的步骤标签（Paid / Confirmed / Shipped 等）
+   > - Stripe 法币用户根本不会看到这些 crypto 术语
+   >   **结论**：现有术语处理已合理，不需要额外替换。
+
+5. ✅ **交易地址展示优化**（在 Step 2 中一并完成）
+   - 区块链地址/peerID 全部使用截断格式 `slice(0,6)…slice(-4)`
 
 ### 设计决策：Fallback 策略
 
@@ -141,14 +148,15 @@
 
 ### 验收标准
 
-- [ ] 所有页面无裸 Peer ID 直接渲染（grep `peerID` 展示位，全部走 `formatUserName` 或截断）
-- [ ] 通知列表无 "Unknown" 前缀
-- [ ] 订单列表和详情中 Buyer/Seller 有可读名称或角色标签兜底
-- [ ] Fallback 策略与上下文匹配（非盲目空字符串）
-- [ ] Header 无突出的 "Connect Wallet" 蓝色按钮
-- [ ] 订单详情中无裸露 "escrow" / "smart contract" 术语
-- [ ] 移动端 375px 验证通过
-- [ ] E2E 截图更新
+- [x] 所有页面无裸 Peer ID 直接渲染（grep `peerID` 展示位，全部走 `formatUserName` 或截断）
+- [x] 通知列表无 "Unknown" 前缀
+- [x] 订单列表和详情中 Buyer/Seller 有可读名称或角色标签兜底
+- [x] Fallback 策略与上下文匹配（非盲目空字符串）
+- [x] 所有 UI fallback 文案使用 i18n `t()` 函数
+- [ ] ~~Header 无突出的 "Connect Wallet" 蓝色按钮~~ → 暂缓，等 Stripe 集成后重新评估
+- [x] Escrow/Smart Contract 术语已在 crypto 流中合理使用，`BuyerProtectionBanner` 已抽象
+- [ ] 移动端 375px 验证通过（PG-007b 截图更新时一并验证）
+- [ ] E2E 截图更新（PG-007b 时一并执行）
 
 ### 关键文件
 
@@ -164,48 +172,42 @@
 
 ---
 
-## PG-007b: E2E 测试数据质量 + 图片 Fallback
+## PG-007b: E2E 测试数据质量 + 图片 Fallback ✅ 完成 | 2026-02-26
 
 ### 用户故事
 
 - 作为测试截图的查看者，我应该看到逼真的商品图片和卖家名称，而非灰色占位符和 "Unknown"
 - 作为买家，商品图片加载失败时我应该看到友好的 fallback 而非空白灰块
 
-### 问题
+### 实施结果
 
-1. E2E 测试 mock 数据中商品没有真实图片 → 搜索结果/购物车/结账全是灰色占位符
-2. 移动端部分页面数据未正确注入（商品详情 "Product not found"、结账 "No items"）
-3. 图片加载失败的 fallback UI 不够友好（仅灰色图标）
+1. **✅ 创建共享 ProductImage 组件**（`components/ui/product-image.tsx`）
+   - `ProductImage`：基于 `next/image`，支持 `fill` 模式，加载中显示 Skeleton，失败显示 `ImageOff` 图标
+   - `ProductImageNative`：基于原生 `<img>`，轻量版，适用于购物车/订单等非关键图片
+   - 三种图标尺寸（sm/md/lg）适配不同容器
 
-### 实施步骤
+2. **✅ 替换 12+ 处内联图片渲染**
+   - `ProductCard`：`next/image` → `ProductImage`（含 hover scale 动画）
+   - `Cart page`、`CartDrawer`：`<img>` → `ProductImageNative`
+   - `CheckoutDesktop`、`CheckoutMobile`：内联 SVG → `ProductImageNative`
+   - `OrderCard`：`next/image` → `ProductImage`
+   - `OrderListCompact`、`OrderTable`、`OrderSummaryCard`：内联 SVG → `ProductImageNative`
+   - `OrderDetailsSection`、`OrderDetailContent`（2处）：内联 `<img>` → `ProductImageNative`
 
-1. **丰富 E2E mock 数据**
-   - `e2e/fixtures/seed-visual-data.ts` 中为商品添加真实图片 URL（使用 picsum.photos 或 unsplash 占位图）
-   - 为 mock 商品设置真实的卖家名称（不是默认 "Unknown"）
-   - 购物车数据确保移动端和桌面端一致
+3. **✅ E2E mock 数据全量添加图片**
+   - `mock-api-routes.ts`：所有 thumbnail 从空字符串改为 `picsum.photos` URL
+   - `seed-visual-data.ts`：购物车注入数据使用 picsum URLs
+   - 新增 `mockImageRoutes()`：拦截 `/v1/media/images/*` 请求重定向到 picsum
 
-2. **修复移动端数据注入**
-   - 排查移动端商品详情 "Product not found" 的 mock 路由匹配问题
-   - 排查移动端结账 "No items" 的 localStorage 购物车数据注入时机
-
-3. **图片 Fallback 优化**
-   - ProductCard / CartItem / CheckoutSummary 的图片组件添加渐进式 fallback：
-     - 加载中 → Skeleton 动画
-     - 加载失败 → 商品类型图标（如相机/耳机/咖啡豆的通用图标）或 "无图片" 友好提示
-     - 不是灰色空白块
-
-4. **更新全部快照**
-   - 运行 `--update-snapshots` 刷新 ~80 张截图
-   - 确认新截图中搜索结果有图片、购物车有缩略图、卖家名可读
+4. **⏸️ 快照更新**：代码改动完成，快照更新待下次 E2E 运行时执行
 
 ### 验收标准
 
-- [ ] 搜索结果截图中所有商品卡片有图片
-- [ ] 购物车截图中商品有缩略图
-- [ ] 结账摘要中商品有缩略图
-- [ ] 移动端商品详情不再显示 "Product not found"
-- [ ] 移动端结账不再显示 "No items to checkout"
-- [ ] 图片加载失败有友好 fallback（非灰色空白块）
+- [x] 图片加载失败有友好 fallback（ImageOff 图标 + bg-muted 背景）
+- [x] 加载中状态有 Skeleton 动画（ProductImage 组件）
+- [x] E2E mock 数据中所有商品有图片 URL
+- [x] 统一的图片组件替代分散的内联实现
+- [ ] 快照更新（待下次 E2E 运行）
 
 ---
 

@@ -6,6 +6,7 @@ import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { ProductImageNative } from '@/components/ui/product-image';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -716,15 +717,13 @@ export const OrderDetailContent = memo(function OrderDetailContent({
 
           const productCard = (
             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/50">
-              {order.items[0]?.image && (
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50">
-                  <img
-                    src={order.items[0].image}
-                    alt={order.items[0].title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                <ProductImageNative
+                  src={order.items[0]?.image}
+                  alt={order.items[0]?.title ?? ''}
+                  iconSize="sm"
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-semibold text-foreground text-sm truncate">
                   {order.items[0]?.title || t('order.unknownItem')}
@@ -768,15 +767,14 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                   className="block group"
                 >
                   <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/50 hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all">
-                    {order.items[0]?.image && (
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50 group-hover:ring-primary/30 transition-all">
-                        <img
-                          src={order.items[0].image}
-                          alt={order.items[0].title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border/50 group-hover:ring-primary/30 transition-all">
+                      <ProductImageNative
+                        src={order.items[0]?.image}
+                        alt={order.items[0]?.title ?? ''}
+                        className="group-hover:scale-105 transition-transform duration-300"
+                        iconSize="sm"
+                      />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-foreground text-sm truncate group-hover:text-primary transition-colors">
                         {order.items[0]?.title || t('order.unknownItem')}

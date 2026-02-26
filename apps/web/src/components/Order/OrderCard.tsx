@@ -2,11 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { ProductImage } from '@/components/ui/product-image';
 import { useCurrency } from '@mobazha/core';
 
 export interface OrderItem {
@@ -218,13 +218,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
         <VStack gap="sm" className="mb-3 sm:mb-4 sm:gap-4">
           {order.items.slice(0, 2).map(item => (
             <HStack key={item.id} gap="sm" align="center" className="sm:gap-4">
-              <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                <Image
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0">
+                <ProductImage
                   src={item.image}
                   alt={item.title}
                   fill
                   sizes="(max-width: 640px) 48px, 64px"
-                  className="object-cover"
+                  iconSize="sm"
                 />
               </div>
               <VStack gap="none" className="flex-1 min-w-0">

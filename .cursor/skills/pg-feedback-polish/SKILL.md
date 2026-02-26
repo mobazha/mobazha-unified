@@ -15,7 +15,7 @@
 ## 执行顺序
 
 ```
-PG-006（身份人性化 + 术语抽象）  ← 最高优先，3-4 天
+PG-006（身份人性化）  ← ✅ 完成（2026-02-26），Step 1-2 完成，Step 3-4 暂缓/取消
   ↓
 PG-007b（E2E 数据质量 + 图片 fallback）  ← 让截图好看，1-2 天
   ↓
@@ -26,7 +26,7 @@ PG-009（独立站首页差异化）  ← 品牌着陆页，2-3 天
 
 ---
 
-## PG-006: 身份人性化 + 术语抽象
+## PG-006: 身份人性化 ✅ 完成（2026-02-26）
 
 ### 核心原则
 
@@ -57,78 +57,63 @@ PG-009（独立站首页差异化）  ← 品牌着陆页，2-3 天
 
 详见 `.cursor/rules/identity-display-rules.mdc` 的 Fallback 策略表。
 
-### Step 1: 创建身份工具函数
+### Step 1: ✅ 创建身份工具函数
 
-创建 `packages/core/utils/identity.ts`：
+已创建 `packages/core/utils/identity.ts`：
 
 ```typescript
-/**
- * 从 profile 或 peer 数据提取可读名称
- * 优先用 name，无名时截断 peerID
- */
-export function formatUserName(
-  data?: { name?: string; peerID?: string; handle?: string } | null,
-  options?: { prefix?: string; fallback?: string }
-): string;
-
-/**
- * 截断长地址/ID（如 0x123456...abcdef）
- */
-export function truncateAddress(address: string, startChars?: number, endChars?: number): string;
-
-/**
- * 格式化通知消息，去掉 "Unknown" 前缀
- * 根据通知类型生成自然语言描述
- */
-export function formatNotificationTitle(type: string, data: Record<string, any>): string;
+formatUserName(data?, options?) → 可读名称 | 截断 peerID | fallback
+truncatePeerId(peerId, chars?) → "QmY8…tRnC"
+truncateAddress(address, startChars?, endChars?) → "0x1234…cdef"
+formatNotificationName(data?) → 通知发送者名（空=省略主语）
 ```
 
-添加单元测试 `packages/core/__tests__/utils/identity.test.ts`。
+单元测试：`packages/core/__tests__/utils/identity.test.ts`
 
-### Step 2: 全局搜索替换
+### Step 2: ✅ 全局搜索替换 + i18n
 
-搜索代码中所有直接渲染 peerID 的位置：
+20+ 文件完成身份人性化，所有 UI fallback 文案已 i18n 化：
 
-```bash
-rg 'peerID|peer_id|vendorID' --type tsx --type ts -l apps/web/src/
-```
+| 组件 / 文件                                       | 修改内容                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------- |
+| `app/page.tsx` / `app/search/page.tsx`            | vendorName 空时用截断 peerID，再空则隐藏                      |
+| `app/orders/page.tsx`                             | 角色标签 i18n 兜底 (`t('order.seller')` / `t('order.buyer')`) |
+| `OrderDetailModal.tsx` / `OrderDetailContent.tsx` | 截断 peerID + `t('common.user')` 兜底                         |
+| `OrderListCompact.tsx`                            | `t('order.untitledItem')` 替代 "Unknown"                      |
+| `NotificationCard.tsx` / `notificationService.ts` | 空字符串省略主语                                              |
+| `ChatDrawer.tsx`                                  | `t('chat.defaultRoom')` 兜底                                  |
+| `app/payment/page.tsx`                            | `t('order.seller')` 兜底                                      |
+| `ProductDetail.tsx`                               | 截断 peerID，无数据则隐藏                                     |
+| `ReviewList.tsx` / `ReviewCard.tsx`               | 统一截断格式 + `t('review.anonymous')` 兜底                   |
+| `UserInfoCard.tsx` / blocked-users                | 截断 peerID 展示                                              |
+| `moderator/cases/[orderId]/page.tsx`              | 截断 peerID + `t('order.fundsProtected')`                     |
+| `orderTransform.ts` (core)                        | `formatUserName()` + 'Seller'/'Buyer' 英文兜底                |
 
-逐个替换为 `formatUserName()` 调用。重点关注：
+新增 i18n keys：`common.user`、`common.event`、`chat.defaultRoom`、`order.untitledItem`、`order.fundsProtected`
 
-| 组件                                     | 搜索模式            | 替换方式                             |
-| ---------------------------------------- | ------------------- | ------------------------------------ |
-| `components/ProductCard/ProductCard.tsx` | 卖家名展示位        | `formatUserName(product.vendor)`     |
-| `components/Order/OrderListCompact.tsx`  | Buyer/Seller 列     | `formatUserName(order.buyer/seller)` |
-| `OrderDetail` 页面                       | Seller/Buyer 信息区 | 头像 + `formatUserName()`            |
-| `notifications` 页面                     | 通知标题            | `formatNotificationTitle()`          |
-| `ProductDetail.tsx`                      | 卖家信息区          | 店铺名 + View Store                  |
+### Step 3: ⏸️ Header "Connect Wallet" 降级 → 暂缓
 
-### Step 3: Header "Connect Wallet" 降级
+> **决策（2026-02-26）**：钱包连接对 Web3 用户购物贯穿始终，是核心 CTA。
+> 即将添加 Stripe 法币支付后，Header 按钮可能改为「支付方式」入口。
+> 等 Stripe 集成后整体重新评估支付入口的 UI 优先级。
 
-在 `apps/web/src/components/Header/Header.tsx` 中：
+### Step 4: ❌ 术语替换 → 取消
 
-- 将 "Connect Wallet" 从主色按钮改为 ghost/outline 样式
-- 或移入头像下拉菜单中
-- 已连接状态显示截断地址 + 状态圆点，而非完整显眼按钮
+> **决策（2026-02-26）**：代码分析发现：
+>
+> - "Gas Fee" 和 "Block Confirmation" 代码中不存在
+> - "IPFS" 仅在隐私政策法律文本中出现
+> - "Escrow" 和 "Smart Contract" 仅出现在 crypto 支付流中，对 Web3 用户是信任信号
+> - `BuyerProtectionBanner` 已将 escrow 抽象为"买家保障"
+> - `EscrowStatusBar` 使用用户友好的步骤标签
+> - Stripe 法币用户根本不会看到这些 crypto 术语
+>   **结论**：现有术语处理已合理，不需要额外替换。
 
-### Step 4: 术语替换
+### Step 5: 验收（待 PG-007b 截图更新时一并执行）
 
-检查以下文件中的技术术语：
-
-```bash
-rg -i 'escrow|smart.?contract|peer.?id|ipfs|gas.?fee|block.?confirm' apps/web/src/ --type tsx --type ts
-```
-
-仅替换**面向用户可见的 UI 文案**（不替换代码变量名、注释、API 字段名）：
-
-- 用 i18n key 封装所有替换文案
-- 新增 i18n keys 到 `packages/core/i18n/locales/en.ts`
-
-### Step 5: 验收
-
-- grep 确认无裸 Peer ID 渲染到 UI
-- 截图对比：搜索结果、订单列表、订单详情、通知、商品详情
-- 移动端 375px 验证
+- grep 确认无裸 Peer ID 渲染到 UI ← ✅ 已通过
+- 截图对比 ← 待 PG-007b 更新 E2E 数据后执行
+- 移动端 375px 验证 ← 待 PG-007b
 
 ---
 

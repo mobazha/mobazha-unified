@@ -11,6 +11,10 @@ import { getCasdoorToken, BACKEND_URL } from './auth';
 
 const PLACEHOLDER_HASH = 'QmfQkD8pBSBCBxWEwFSu4XaDVSWK6bjnNuaWZjMyQbyDub';
 
+function picsumUrl(id: number, size = 300) {
+  return `https://picsum.photos/id/${id}/${size}/${size}`;
+}
+
 interface MockImage {
   tiny: string;
   small: string;
@@ -36,6 +40,23 @@ const MOCK_IMAGES: MockImage[] = [
     large: PLACEHOLDER_HASH,
     original: PLACEHOLDER_HASH,
     filename: 'logo-design.png',
+  },
+];
+
+const CART_IMAGES = [
+  {
+    tiny: picsumUrl(3),
+    small: picsumUrl(3),
+    medium: picsumUrl(3),
+    large: picsumUrl(3),
+    original: picsumUrl(3),
+  },
+  {
+    tiny: picsumUrl(24),
+    small: picsumUrl(24),
+    medium: picsumUrl(24),
+    large: picsumUrl(24),
+    original: picsumUrl(24),
   },
 ];
 
@@ -182,17 +203,11 @@ export async function seedVisualTestData(request: APIRequestContext): Promise<Se
  * Call after navigating to any page so the origin matches.
  */
 export async function injectCartData(page: Page, data: SeededVisualData): Promise<void> {
-  const cartItems = data.listings.map(listing => ({
+  const cartItems = data.listings.map((listing, idx) => ({
     listing: {
       slug: listing.slug,
       title: listing.title,
-      thumbnail: {
-        tiny: listing.image.tiny,
-        small: listing.image.small,
-        medium: listing.image.medium,
-        large: listing.image.large,
-        original: listing.image.original,
-      },
+      thumbnail: CART_IMAGES[idx] || CART_IMAGES[0],
       price: {
         amount: parseInt(listing.price, 10),
         currency: { code: listing.priceCurrency, divisibility: 2 },
