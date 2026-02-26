@@ -131,6 +131,19 @@ const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
 5. **i18n + 主题 + 无障碍 + 类型安全** — 常规标准
 6. **骨架屏** — 数据加载有 Skeleton
 
+## 已完成的基础设施（v17 UX 审计 — 2026-02-26）
+
+本轮 UX 审计建立了视觉测试和移动端质量的基础设施：
+
+- **视觉回归测试**：`desktop-visual.spec.ts` + `mobile-visual.spec.ts`，分 Public/Authenticated 双组
+- **E2E Fixtures**：`mock-api-routes.ts`（API mock）、`seed-visual-data.ts`（测试数据）、`auth.ts`（登录）
+- **移动端 Footer**：桌面 Footer `hidden md:block`，移动端由 MobileNav 替代
+- **Settings 布局统一**：列表管理型页面全宽，表单配置型 SettingsSection 两列
+- **product-groups i18n**：全页面国际化
+- **ProductCard dropdown**：hover-only 下拉菜单（`@media(hover:hover)`），移动端不显示
+
+后续 PG 任务实现的页面应在 `desktop-visual.spec.ts` 和 `mobile-visual.spec.ts` 中补充对应截图。
+
 ## 动态调整
 
 - 路线图是指导框架，任务范围和执行顺序可根据实际情况弹性调整

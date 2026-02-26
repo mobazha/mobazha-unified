@@ -50,6 +50,24 @@ Ensure mobazha-unified mobile experience matches original mobazha-mobile.
 </Card>
 ```
 
+## Mobile Footer 规范
+
+移动端不显示桌面 Footer，底部导航由 MobileNav 提供：
+
+```tsx
+// Footer.tsx
+<footer className="hidden md:block ...">
+  {/* 仅桌面端显示 */}
+</footer>
+
+// MobileNav.tsx — 移动端底部导航栏
+<nav className="fixed bottom-0 md:hidden ...">
+  {/* Home, Search, Cart, Profile */}
+</nav>
+```
+
+主内容区需要底部留白避免被 MobileNav 遮挡：`pb-24 lg:pb-8`
+
 ## Mobile Checklist
 
 - [ ] Page title `text-lg`, not `text-xl`+
@@ -59,5 +77,18 @@ Ensure mobazha-unified mobile experience matches original mobazha-mobile.
 - [ ] All touch targets min 44px
 - [ ] Clickable elements have `active:` feedback
 - [ ] Product grid uses 2-column layout
+- [ ] No desktop Footer on mobile (`hidden md:block`)
+- [ ] Content has `pb-24 lg:pb-8` to clear MobileNav
+
+## 移动端视觉测试
+
+移动端有专门的 Playwright 视觉回归测试：
+
+| 文件                          | 设备                    |
+| ----------------------------- | ----------------------- |
+| `e2e/mobile-visual.spec.ts`   | Pixel 5 (Mobile Chrome) |
+| `e2e/mobile-ux-audit.spec.ts` | iPhone 12 (390×844)     |
+
+更新快照：`pnpm --filter @mobazha/web exec playwright test mobile-visual --update-snapshots --project="Mobile Chrome"`
 
 For detailed interaction patterns and animations, see [reference.md](reference.md).

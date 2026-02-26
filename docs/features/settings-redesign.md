@@ -862,7 +862,7 @@ export const SaveBar: React.FC<SaveBarProps> = ({ isDirty, isLoading, onSave, on
 - [ ] 键盘弹出时 Save Bar 不被遮挡（对有 Save Bar 的页面）
 - [ ] 长列表选择器（国家列表、货币列表）滚动流畅
 - [ ] Access Control 中间页显示子分类列表，点击跳转到三级页面
-- [ ] 底部 Footer（MobileNav）正常显示
+- [ ] 移动端无桌面 Footer（`hidden md:block`），底部导航由 MobileNav 提供
 
 ### 平板检查（768x1024）
 
@@ -979,21 +979,43 @@ cd ~/dev/mobazha/tests/e2e/docker && make up && make wait
 
 ## E2E 测试影响
 
-现有 E2E 测试文件 `settings.spec.ts` 和 `settings-flow.spec.ts` 很可能依赖 SettingsDrawer 的 DOM 结构（Dialog、特定的 data-testid 等）。
+### 当前视觉测试体系（2026-02-26 更新）
 
-### 迁移后需要更新的 E2E 测试
+视觉测试已重构为 Public/Authenticated 双分组模式，Settings 页面在 Authenticated 组中全覆盖：
 
-| 测试文件                     | 影响                             | 处理时机                            |
-| ---------------------------- | -------------------------------- | ----------------------------------- |
-| `e2e/settings.spec.ts`       | 选择器可能依赖 Dialog DOM        | Phase 3 删除 Drawer 后更新          |
-| `e2e/settings-flow.spec.ts`  | 设置打开/关闭/导航的交互方式变化 | Phase 3 删除 Drawer 后更新          |
-| `e2e/desktop-visual.spec.ts` | 设置页面截图基线需要重新生成     | Phase 4 打磨后 `--update-snapshots` |
+| 测试文件                      | 用途                              | Settings 覆盖        |
+| ----------------------------- | --------------------------------- | -------------------- |
+| `e2e/desktop-visual.spec.ts`  | 桌面端视觉快照（Public + Authed） | 所有 Settings 子页面 |
+| `e2e/mobile-visual.spec.ts`   | 移动端视觉快照（Public + Authed） | 所有 Settings 子页面 |
+| `e2e/ux-audit.spec.ts`        | 桌面 UX 审计                      | 深度检查             |
+| `e2e/mobile-ux-audit.spec.ts` | 移动端 UX 审计                    | 深度检查             |
 
-### 建议
+**Fixtures 依赖**：
 
-- Phase 1-2 期间**不动 E2E 测试**（Drawer 仍然存在，旧测试仍能跑）
-- Phase 3 删除 Drawer 后，**立即更新** E2E 测试
-- 更新时把选择器改为基于路由的测试（导航到 `/settings/general` 而非打开 Dialog）
+| 文件                               | 职责                                           |
+| ---------------------------------- | ---------------------------------------------- |
+| `e2e/fixtures/auth.ts`             | Casdoor 登录 + Onboarding 自动完成             |
+| `e2e/fixtures/mock-api-routes.ts`  | Mock 订单/通知/搜索/地址等 API，确保页面有数据 |
+| `e2e/fixtures/seed-visual-data.ts` | 创建测试商品 + 注入购物车                      |
+
+### 旧 E2E 测试（待 Phase 3 更新）
+
+现有 `settings.spec.ts` 和 `settings-flow.spec.ts` 仍依赖 SettingsDrawer 的 DOM 结构。
+
+| 测试文件                    | 影响                             | 处理时机                   |
+| --------------------------- | -------------------------------- | -------------------------- |
+| `e2e/settings.spec.ts`      | 选择器可能依赖 Dialog DOM        | Phase 3 删除 Drawer 后更新 |
+| `e2e/settings-flow.spec.ts` | 设置打开/关闭/导航的交互方式变化 | Phase 3 删除 Drawer 后更新 |
+
+### 快照更新
+
+```bash
+# 更新桌面端快照
+pnpm --filter @mobazha/web exec playwright test desktop-visual --update-snapshots
+
+# 更新移动端快照
+pnpm --filter @mobazha/web exec playwright test mobile-visual --update-snapshots --project="Mobile Chrome"
+```
 
 ---
 
