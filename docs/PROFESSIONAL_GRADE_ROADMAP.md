@@ -1001,4 +1001,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-26 (v26: PG-007 完成 — 后端 ChannelNotificationSink（generic EventSink + TelegramSender + 23 单元测试）+ 前端 Admin Settings/Integrations 页面（渠道 CRUD + 动态表单 + 测试发送 + i18n en/zh）+ API 服务层 + 路由注册)
+最后更新: 2026-02-26 (v27: PG-007.5 事件命名统一 — EventMeta.Legacy → Persistent bool，后端/前端全面迁移到 dot-separated 事件名，旧 camelCase 退役)
