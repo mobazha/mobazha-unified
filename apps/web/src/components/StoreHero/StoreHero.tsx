@@ -38,7 +38,10 @@ export function StoreHero() {
   const stats = profile?.stats;
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
+    <section
+      data-testid="store-hero"
+      className="relative overflow-hidden bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]"
+    >
       {headerUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"

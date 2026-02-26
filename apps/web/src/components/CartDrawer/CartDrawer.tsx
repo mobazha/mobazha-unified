@@ -127,6 +127,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         <button
                           className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
                           onClick={() => removeItem(item.listing.slug, item.listing.vendorPeerID)}
+                          data-testid="cart-item-remove"
+                          aria-label={t('cart.remove')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

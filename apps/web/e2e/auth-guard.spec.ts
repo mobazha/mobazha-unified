@@ -21,6 +21,11 @@ const protectedRoutes = [
   { path: '/notifications', name: 'Notifications' },
   { path: '/listing/new', name: 'New Listing' },
   { path: '/moderator/cases', name: 'Moderator Cases' },
+  { path: '/admin', name: 'Admin Dashboard' },
+  { path: '/admin/products', name: 'Admin Products' },
+  { path: '/admin/orders', name: 'Admin Orders' },
+  { path: '/admin/analytics', name: 'Admin Analytics' },
+  { path: '/admin/settings', name: 'Admin Settings' },
 ];
 
 // 公开路由（不需要登录）

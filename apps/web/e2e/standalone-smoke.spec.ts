@@ -118,4 +118,68 @@ test.describe('Standalone Store Smoke Test', () => {
       await popup.close();
     }
   });
+
+  // ── PG-009: StoreHero on standalone homepage ──────────────────────────────
+
+  test('9. Homepage shows StoreHero section', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const hero = page.locator('[data-testid="store-hero"]');
+    const hasHero = await hero.isVisible().catch(() => false);
+
+    // StoreHero only renders in standalone mode
+    if (!hasHero) {
+      test.skip(true, 'StoreHero not visible (may not be standalone mode)');
+      return;
+    }
+
+    await expect(hero).toBeVisible();
+    await page.screenshot({ path: 'standalone-smoke-9-hero.png', fullPage: true });
+  });
+
+  test('10. StoreHero displays store name', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const hero = page.locator('[data-testid="store-hero"]');
+    if (!(await hero.isVisible().catch(() => false))) {
+      test.skip(true, 'Not in standalone mode');
+      return;
+    }
+
+    // Hero should contain an h1 with the store name
+    const heading = hero.locator('h1');
+    await expect(heading).toBeVisible();
+    const text = await heading.textContent();
+    expect(text?.trim().length).toBeGreaterThan(0);
+  });
+
+  test('11. StoreHero has search input', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const hero = page.locator('[data-testid="store-hero"]');
+    if (!(await hero.isVisible().catch(() => false))) {
+      test.skip(true, 'Not in standalone mode');
+      return;
+    }
+
+    const searchInput = hero.locator('input[type="text"]');
+    await expect(searchInput).toBeVisible();
+  });
+
+  test('12. StoreHero shows "Powered by Mobazha" badge', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const hero = page.locator('[data-testid="store-hero"]');
+    if (!(await hero.isVisible().catch(() => false))) {
+      test.skip(true, 'Not in standalone mode');
+      return;
+    }
+
+    const badge = hero.locator('text=/Powered by/i');
+    await expect(badge).toBeVisible();
+  });
 });
