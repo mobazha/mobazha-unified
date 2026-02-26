@@ -325,7 +325,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
       {/* 标题行 */}
       <div className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold text-foreground">{title}</h4>
-        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
           {formatDateTime(timestamp)}
         </span>
       </div>

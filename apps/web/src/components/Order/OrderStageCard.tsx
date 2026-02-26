@@ -88,7 +88,7 @@ export const OrderStageCard = memo(function OrderStageCard({
           <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
         </div>
         {timestamp && (
-          <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+          <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
             {formatDateTime(timestamp, locale)}
           </span>
         )}
@@ -202,7 +202,7 @@ export const PaymentCard = memo(function PaymentCard({
             >
               {showPricingInfo ? `≈ ${amount} ${currency}` : `${amount} ${currency}`}
               {confirmations !== undefined && confirmations > 0 && (
-                <span className="text-[10px] text-muted-foreground ml-1">
+                <span className="text-xs text-muted-foreground ml-1">
                   ({confirmations} confirms)
                 </span>
               )}
@@ -294,7 +294,7 @@ export const OrderRatingCard = memo(function OrderRatingCard({
             />
           ) : (
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground">
                 {vendor?.name?.charAt(0)?.toUpperCase() || '?'}
               </span>
             </div>

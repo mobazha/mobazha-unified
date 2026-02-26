@@ -58,7 +58,7 @@ export function RwaAssetBadge({
       <span
         className={cn(
           'inline-flex items-center rounded font-mono',
-          size === 'sm' ? 'text-[10px] py-0.5 px-1.5' : 'text-xs py-0.5 px-2',
+          size === 'sm' ? 'text-xs py-0.5 px-1.5' : 'text-xs py-0.5 px-2',
           'bg-muted text-foreground/60'
         )}
       >
@@ -67,13 +67,7 @@ export function RwaAssetBadge({
 
       {/* 区块链网络 */}
       {networkName && (
-        <span
-          className={cn(
-            'inline-flex items-center',
-            size === 'sm' ? 'text-[10px]' : 'text-xs',
-            'text-foreground/60'
-          )}
-        >
+        <span className={cn('inline-flex items-center', 'text-xs', 'text-foreground/60')}>
           · {networkName}
         </span>
       )}

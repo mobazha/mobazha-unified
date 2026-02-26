@@ -2319,6 +2319,7 @@ export interface TranslationResource {
     noCasesFound?: string;
     noCasesFilterHint?: string;
     noCasesDesc?: string;
+    caseDetail?: string;
   };
 }
 

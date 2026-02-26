@@ -318,7 +318,7 @@ export function CheckoutDesktop({ checkout }: Props) {
                                   {item.title}
                                 </p>
                                 {item.contractType === 'RWA_TOKEN' && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/15 text-primary flex-shrink-0">
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-primary/15 text-primary flex-shrink-0">
                                     RWA
                                   </span>
                                 )}

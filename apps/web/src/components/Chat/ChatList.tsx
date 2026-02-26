@@ -44,7 +44,7 @@ export interface ChatListProps {
 const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type, isExternal }) => {
   if (isExternal) {
     return (
-      <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-primary/10 text-primary">
+      <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-primary/10 text-primary">
         Matrix
       </span>
     );
@@ -79,7 +79,7 @@ const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type
   if (!badge) return null;
 
   return (
-    <span className={`px-1.5 py-0.5 text-[9px] font-medium rounded ${badge.className}`}>
+    <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${badge.className}`}>
       {badge.label}
     </span>
   );
@@ -93,10 +93,10 @@ const SectionHeader: React.FC<{ title: string; count: number; icon: React.ReactN
 }) => (
   <div className="flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-muted/40 to-muted/20 border-y border-border/20 backdrop-blur-sm">
     <span className="text-muted-foreground/70">{icon}</span>
-    <span className="text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider">
+    <span className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">
       {title}
     </span>
-    <span className="text-[10px] text-muted-foreground/50 font-medium bg-muted/50 px-1.5 py-0.5 rounded-full">
+    <span className="text-xs text-muted-foreground/50 font-medium bg-muted/50 px-1.5 py-0.5 rounded-full">
       {count}
     </span>
   </div>
@@ -233,7 +233,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             <RoomTypeBadge type={room.roomType} isExternal={room.isExternal} />
           </HStack>
           {room.lastMessageTime && !isInvite && (
-            <span className="text-[10px] text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
+            <span className="text-xs text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
               {room.lastMessageTime}
             </span>
           )}
@@ -256,7 +256,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                   e.stopPropagation();
                   onAcceptInvite?.(room.id);
                 }}
-                className="px-3 py-1.5 text-[10px] font-semibold bg-success hover:bg-success/90 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
+                className="px-3 py-1.5 text-xs font-semibold bg-success hover:bg-success/90 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
               >
                 Accept
               </button>
@@ -266,13 +266,13 @@ export const ChatList: React.FC<ChatListProps> = ({
                   e.stopPropagation();
                   onRejectInvite?.(room.id);
                 }}
-                className="px-3 py-1.5 text-[10px] font-semibold bg-muted/80 hover:bg-muted text-muted-foreground rounded-lg transition-all"
+                className="px-3 py-1.5 text-xs font-semibold bg-muted/80 hover:bg-muted text-muted-foreground rounded-lg transition-all"
               >
                 Decline
               </button>
             </div>
           ) : room.unreadCount && room.unreadCount > 0 ? (
-            <span className="flex-shrink-0 min-w-[20px] h-5 px-2 bg-gradient-to-r from-primary to-primary/90 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md shadow-primary/30 animate-pulse">
+            <span className="flex-shrink-0 min-w-[20px] h-5 px-2 bg-gradient-to-r from-primary to-primary/90 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md shadow-primary/30 animate-pulse">
               {room.unreadCount > 99 ? '99+' : room.unreadCount}
             </span>
           ) : null}
@@ -291,7 +291,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             <h2 className="text-[17px] sm:text-lg font-bold text-foreground">{t('chat.title')}</h2>
             {/* Connection status indicator */}
             {!isConnected && (
-              <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-warning/15 text-warning">
+              <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-warning/15 text-warning">
                 <svg className="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"

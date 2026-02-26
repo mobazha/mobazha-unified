@@ -185,7 +185,7 @@ export function CheckoutMobile({ checkout }: Props) {
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
-                            className="w-9 h-9 flex items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-11 h-11 flex items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label={t('cart.decreaseQuantity')}
                           >
                             <svg
@@ -207,7 +207,7 @@ export function CheckoutMobile({ checkout }: Props) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-9 h-9 flex items-center justify-center rounded-md border border-border hover:bg-muted"
+                            className="w-11 h-11 flex items-center justify-center rounded-md border border-border hover:bg-muted"
                             aria-label={t('cart.increaseQuantity')}
                           >
                             <svg
@@ -380,7 +380,7 @@ export function CheckoutMobile({ checkout }: Props) {
 
       {/* Mobile Bottom Bar */}
       {checkoutItems.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-sm border-t border-border p-3 safe-area-bottom z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-sm border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-50">
           <HStack justify="between" align="center">
             <div>
               <p className="text-xs text-muted-foreground">{t('checkout.total')}</p>

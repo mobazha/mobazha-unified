@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -150,6 +151,7 @@ export default function MarketplacesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('marketplace.title')} />
 
       <main className="py-4 sm:py-8">
         <Container size="xl">
@@ -237,7 +239,7 @@ export default function MarketplacesPage() {
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary text-primary-foreground text-[10px] sm:text-xs font-medium rounded">
+                        <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary text-primary-foreground text-xs font-medium rounded">
                           {t('marketplace.featured')}
                         </span>
                       </div>
@@ -267,7 +269,7 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-sm sm:text-base text-foreground">
                                 {marketplace.memberCount.toLocaleString()}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 {t('marketplace.members')}
                               </span>
                             </VStack>
@@ -275,7 +277,7 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-sm sm:text-base text-foreground">
                                 {marketplace.sellerCount}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 {t('marketplace.sellers')}
                               </span>
                             </VStack>
@@ -283,7 +285,7 @@ export default function MarketplacesPage() {
                               <span className="font-bold text-sm sm:text-base text-foreground">
                                 {marketplace.productCount}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 {t('marketplace.products')}
                               </span>
                             </VStack>
@@ -328,7 +330,7 @@ export default function MarketplacesPage() {
                             {marketplace.name}
                           </h3>
                           {marketplace.featured && (
-                            <span className="px-1.5 sm:px-2 py-0.5 bg-primary/10 text-primary text-[10px] sm:text-xs font-medium rounded">
+                            <span className="px-1.5 sm:px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
                               {t('marketplace.featured')}
                             </span>
                           )}
@@ -352,7 +354,7 @@ export default function MarketplacesPage() {
                           {marketplace.categories.slice(0, 3).map(cat => (
                             <span
                               key={cat}
-                              className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-muted text-muted-foreground rounded"
+                              className="text-xs px-1.5 sm:px-2 py-0.5 bg-muted text-muted-foreground rounded"
                             >
                               {cat}
                             </span>

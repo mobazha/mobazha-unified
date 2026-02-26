@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Header, Footer } from '@/components';
-import { Container, VStack, HStack } from '@/components/layouts';
+import { VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -136,198 +134,163 @@ export default function BlockedUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <Container className="py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-muted rounded w-1/3" />
-            <div className="h-32 bg-muted rounded" />
-            <div className="h-32 bg-muted rounded" />
-          </div>
-        </Container>
-        <Footer />
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-muted rounded w-1/3" />
+        <div className="h-32 bg-muted rounded" />
+        <div className="h-32 bg-muted rounded" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div>
+      {/* Title */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground">Blocked Users</h1>
+        <p className="text-muted-foreground text-sm">
+          Manage users blocked from your store ({blockedUsers.length} blocked)
+        </p>
+      </div>
 
-      <main className="py-8">
-        <Container>
-          {/* Back Button & Title */}
-          <HStack justify="between" align="center" className="mb-6">
-            <HStack gap="md" align="center">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-surface-hover rounded-lg"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Blocked Users</h1>
-                <p className="text-muted-foreground text-sm">
-                  Manage users blocked from your store ({blockedUsers.length} blocked)
-                </p>
-              </div>
-            </HStack>
-            <Link href="/settings" className="text-primary hover:text-primary text-sm">
-              ← Back to Settings
-            </Link>
-          </HStack>
-
-          {/* Search & Add */}
-          <Card className="mb-6">
-            <HStack justify="between" gap="md" className="flex-wrap">
-              <Input
-                placeholder="Search by name or Peer ID..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="flex-1 min-w-[200px] max-w-md"
+      {/* Search & Add */}
+      <Card className="mb-6 p-5">
+        <HStack justify="between" gap="md" className="flex-wrap">
+          <Input
+            placeholder="Search by name or Peer ID..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="flex-1 min-w-[200px] max-w-md"
+          />
+          <Button onClick={() => setShowAddModal(true)}>
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
-              <Button onClick={() => setShowAddModal(true)}>
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                Block User
-              </Button>
-            </HStack>
-          </Card>
+            </svg>
+            Block User
+          </Button>
+        </HStack>
+      </Card>
 
-          {/* Info Banner */}
-          <Card className="mb-6 bg-warning/8 border-warning/20">
-            <HStack gap="sm" align="start">
-              <svg
-                className="w-5 h-5 text-warning flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div>
-                <p className="text-sm text-warning font-medium">
-                  What happens when you block a user?
-                </p>
-                <ul className="text-sm text-warning mt-1 list-disc list-inside">
-                  <li>They cannot view your store or products</li>
-                  <li>They cannot send you messages</li>
-                  <li>They cannot place orders with your store</li>
-                  <li>Existing orders will not be affected</li>
-                </ul>
-              </div>
-            </HStack>
-          </Card>
+      {/* Info Banner */}
+      <Card className="mb-6 p-5 bg-warning/8 border-warning/20">
+        <HStack gap="sm" align="start">
+          <svg
+            className="w-5 h-5 text-warning flex-shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <div>
+            <p className="text-sm text-warning font-medium">What happens when you block a user?</p>
+            <ul className="text-sm text-warning mt-1 list-disc list-inside">
+              <li>They cannot view your store or products</li>
+              <li>They cannot send you messages</li>
+              <li>They cannot place orders with your store</li>
+              <li>Existing orders will not be affected</li>
+            </ul>
+          </div>
+        </HStack>
+      </Card>
 
-          {/* Blocked Users List */}
-          <VStack gap="md">
-            {filteredUsers.length === 0 ? (
-              <Card className="text-center">
-                <svg
-                  className="w-12 h-12 mx-auto text-muted-foreground mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-                  />
-                </svg>
-                <p className="text-muted-foreground">
-                  {searchQuery ? 'No blocked users match your search.' : 'No blocked users.'}
-                </p>
-              </Card>
-            ) : (
-              filteredUsers.map(user => (
-                <Card key={user.id} data-testid="blocked-user-item">
-                  <HStack justify="between" align="start" className="flex-wrap gap-4">
-                    {/* User Info */}
-                    <HStack gap="md" align="start">
-                      <Avatar src={user.avatar} name={user.name} size="lg" />
-                      <VStack gap="xs">
-                        <HStack gap="sm" align="center">
-                          <h3 className="font-semibold text-foreground">{user.name}</h3>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              user.blockedBy === 'auto'
-                                ? 'bg-warning/15 text-warning'
-                                : 'bg-error/15 text-error'
-                            }`}
-                          >
-                            {user.blockedBy === 'auto' ? 'Auto-blocked' : 'Blocked'}
-                          </span>
-                        </HStack>
-                        <p className="text-sm text-muted-foreground font-mono">{user.peerID}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Blocked on {formatDate(user.blockedAt)}
-                        </p>
-                      </VStack>
+      {/* Blocked Users List */}
+      <VStack gap="md">
+        {filteredUsers.length === 0 ? (
+          <Card className="p-8 text-center">
+            <svg
+              className="w-12 h-12 mx-auto text-muted-foreground mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+              />
+            </svg>
+            <p className="text-muted-foreground">
+              {searchQuery ? 'No blocked users match your search.' : 'No blocked users.'}
+            </p>
+          </Card>
+        ) : (
+          filteredUsers.map(user => (
+            <Card key={user.id} className="p-5" data-testid="blocked-user-item">
+              <HStack justify="between" align="start" className="flex-wrap gap-4">
+                {/* User Info */}
+                <HStack gap="md" align="start">
+                  <Avatar src={user.avatar} name={user.name} size="lg" />
+                  <VStack gap="xs">
+                    <HStack gap="sm" align="center">
+                      <h3 className="font-semibold text-foreground">{user.name}</h3>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          user.blockedBy === 'auto'
+                            ? 'bg-warning/15 text-warning'
+                            : 'bg-error/15 text-error'
+                        }`}
+                      >
+                        {user.blockedBy === 'auto' ? 'Auto-blocked' : 'Blocked'}
+                      </span>
                     </HStack>
+                    <p className="text-sm text-muted-foreground font-mono">{user.peerID}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Blocked on {formatDate(user.blockedAt)}
+                    </p>
+                  </VStack>
+                </HStack>
 
-                    {/* Actions */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfirmUnblock(user)}
-                      disabled={processingId === user.id}
-                    >
-                      {processingId === user.id ? 'Processing...' : 'Unblock'}
-                    </Button>
-                  </HStack>
+                {/* Actions */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmUnblock(user)}
+                  disabled={processingId === user.id}
+                >
+                  {processingId === user.id ? 'Processing...' : 'Unblock'}
+                </Button>
+              </HStack>
 
-                  {/* Reason */}
-                  {user.reason && (
-                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Reason:</p>
-                      <p className="text-muted-foreground">{user.reason}</p>
-                    </div>
-                  )}
+              {/* Reason */}
+              {user.reason && (
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Reason:</p>
+                  <p className="text-muted-foreground">{user.reason}</p>
+                </div>
+              )}
 
-                  {/* Stats */}
-                  {user.stats && (
-                    <div className="mt-4 flex gap-6">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Disputes</p>
-                        <p className="font-medium text-error">{user.stats.disputes}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Reports</p>
-                        <p className="font-medium text-warning">{user.stats.reports}</p>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              ))
-            )}
-          </VStack>
-        </Container>
-      </main>
-
+              {/* Stats */}
+              {user.stats && (
+                <div className="mt-4 flex gap-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Disputes</p>
+                    <p className="font-medium text-error">{user.stats.disputes}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Reports</p>
+                    <p className="font-medium text-warning">{user.stats.reports}</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          ))
+        )}
+      </VStack>
       {/* Add Block Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md p-6">
             <h2 className="text-xl font-bold text-foreground mb-4">Block a User</h2>
 
             <div className="space-y-4">
@@ -375,7 +338,7 @@ export default function BlockedUsersPage() {
       {/* Confirm Unblock Modal */}
       {confirmUnblock && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-sm">
+          <Card className="w-full max-w-sm p-6">
             <h2 className="text-xl font-bold text-foreground mb-4">Unblock User?</h2>
 
             <p className="text-muted-foreground mb-4">
@@ -397,8 +360,6 @@ export default function BlockedUsersPage() {
           </Card>
         </div>
       )}
-
-      <Footer />
     </div>
   );
 }

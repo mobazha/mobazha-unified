@@ -49,7 +49,7 @@ export interface ChatMessagesProps {
 const DateSeparator: React.FC<{ date: string }> = ({ date }) => (
   <div className="flex items-center gap-4 py-5">
     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
-    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest px-3 py-1 rounded-full bg-muted/30 backdrop-blur-sm">
+    <span className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-widest px-3 py-1 rounded-full bg-muted/30 backdrop-blur-sm">
       {date}
     </span>
     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
@@ -161,7 +161,7 @@ const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
           style={{ animationDelay: '300ms', animationDuration: '600ms' }}
         />
       </div>
-      <span className="text-[11px] text-muted-foreground/70 font-medium">
+      <span className="text-xs text-muted-foreground/70 font-medium">
         {users.length === 1 ? `${users[0]} is typing...` : `${users.length} people are typing...`}
       </span>
     </div>
@@ -318,7 +318,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               </svg>
             )}
             {isEncrypted && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-primary/15 text-primary rounded-md">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-primary/15 text-primary rounded-md">
                 <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -477,9 +477,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                       End-to-End Encrypted
                     </span>
                   </div>
-                  <span className="text-[10px] text-primary/70">
-                    Messages in this chat are secured
-                  </span>
+                  <span className="text-xs text-primary/70">Messages in this chat are secured</span>
                 </div>
               </div>
             )}
@@ -498,7 +496,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                     key={message.id}
                     className="text-center py-3 animate-in fade-in duration-300"
                   >
-                    <span className="text-[11px] text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-full font-medium border border-border/20">
+                    <span className="text-xs text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-full font-medium border border-border/20">
                       {message.content}
                     </span>
                   </div>
@@ -556,7 +554,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                     </div>
                     <HStack
                       gap="xs"
-                      className={`mt-1.5 text-[10px] text-muted-foreground/50 font-medium ${isOwn ? 'justify-end pr-1' : 'pl-1'}`}
+                      className={`mt-1.5 text-xs text-muted-foreground/50 font-medium ${isOwn ? 'justify-end pr-1' : 'pl-1'}`}
                     >
                       <span>{formatTime(message.timestamp)}</span>
                       {isOwn && <MessageStatus status={message.status} />}

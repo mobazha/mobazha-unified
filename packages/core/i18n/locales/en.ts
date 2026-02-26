@@ -3426,6 +3426,7 @@ export const en: TranslationResource = {
     noCasesFound: 'No cases found',
     noCasesFilterHint: 'Try changing the filter to see more cases.',
     noCasesDesc: 'You have no moderation cases at this time.',
+    caseDetail: 'Case Detail',
   },
 };
 

@@ -56,7 +56,7 @@ export const CryptoTokenCard: React.FC<CryptoTokenCardProps> = ({
       <div className="flex flex-col items-start text-left">
         <span className="text-sm font-medium text-foreground">{token.token}</span>
         {token.type && (
-          <span className="text-[10px] text-muted-foreground">{chain?.name || token.type}</span>
+          <span className="text-xs text-muted-foreground">{chain?.name || token.type}</span>
         )}
       </div>
     </button>

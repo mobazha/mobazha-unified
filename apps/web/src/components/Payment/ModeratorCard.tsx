@@ -129,10 +129,7 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-foreground">{moderator.name}</span>
             {moderator.verifiedMod && (
-              <Badge
-                variant="secondary"
-                className="bg-primary/10 text-primary text-[10px] h-5 gap-0.5"
-              >
+              <Badge variant="secondary" className="bg-primary/10 text-primary text-xs h-5 gap-0.5">
                 <Shield className="w-3 h-3" />
                 {t('payment.verified')}
               </Badge>
@@ -167,12 +164,12 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
         {moderator.languages && moderator.languages.length > 0 && (
           <div className="flex items-center gap-1">
             {moderator.languages.slice(0, 3).map(lang => (
-              <Badge key={lang} variant="outline" className="text-[10px] h-5">
+              <Badge key={lang} variant="outline" className="text-xs h-5">
                 {lang.toUpperCase()}
               </Badge>
             ))}
             {moderator.languages.length > 3 && (
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 +{moderator.languages.length - 3}
               </span>
             )}

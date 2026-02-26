@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -287,6 +288,7 @@ export default function MarketplaceDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={marketplace.name} />
 
       <main>
         {/* Banner */}
@@ -585,7 +587,7 @@ export default function MarketplaceDetailPage() {
                         <p className="text-xs sm:text-sm text-muted-foreground">
                           {seller.productCount} products • ⭐ {seller.rating}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                        <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
                           Joined {new Date(seller.joinedAt).toLocaleDateString()}
                         </p>
                       </div>

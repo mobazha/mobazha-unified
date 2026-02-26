@@ -124,7 +124,7 @@ export const OrderDetailsSection = memo(function OrderDetailsSection({
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-foreground">Order Details</h3>
         {timestamp && (
-          <span className="text-[11px] text-muted-foreground">{formatDate(timestamp)}</span>
+          <span className="text-xs text-muted-foreground">{formatDate(timestamp)}</span>
         )}
       </div>
 
@@ -241,7 +241,7 @@ export const OrderDetailsSection = memo(function OrderDetailsSection({
                       className="w-6 h-6 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
                       {moderator.name.charAt(0).toUpperCase()}
                     </div>
                   )}

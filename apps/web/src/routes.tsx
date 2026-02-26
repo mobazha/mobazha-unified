@@ -74,6 +74,18 @@ const routes: RouteObject[] = [
   { path: '/moderators', element: lazyPage(() => import('./app/moderators/page')) },
   { path: '/moderators/:id', element: lazyPage(() => import('./app/moderators/[id]/page')) },
 
+  // 政策页面（公开浏览）
+  {
+    path: '/policies',
+    element: lazyPage(() => import('./app/policies/PoliciesLayoutVite')),
+    children: [
+      { path: 'privacy', element: lazyPage(() => import('./app/policies/privacy/page')) },
+      { path: 'terms', element: lazyPage(() => import('./app/policies/terms/page')) },
+      { path: 'shipping', element: lazyPage(() => import('./app/policies/shipping/page')) },
+      { path: 'returns', element: lazyPage(() => import('./app/policies/returns/page')) },
+    ],
+  },
+
   // ============================================
   // 私有路由（需要登录）
   // ============================================

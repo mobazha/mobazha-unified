@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { useI18n, useWallet, getExplorerResourceUrl, getCurrentChainId } from '@mobazha/core';
@@ -386,7 +387,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
       href={getExplorerUrlForValue(tx.hash, 'tx')}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+      className="flex items-center gap-3 p-3 min-h-[44px] rounded-lg hover:bg-muted/50 transition-colors"
     >
       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${typeColor}`}>
         {tx.type === 'in' ? (
@@ -798,9 +799,22 @@ export default function RwaAssetDashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader
+        title={t('rwaDashboard.title')}
+        rightAction={
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+            className="p-2 -mr-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
+            aria-label={t('common.refresh')}
+          >
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
 
-      {/* Page Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+      {/* Desktop Page Header - hidden on mobile (MobilePageHeader handles mobile) */}
+      <div className="hidden lg:block sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <Container size="xl" className="lg:max-w-6xl">
           <div className="flex items-center h-12 lg:h-14">
             <Link href="/me" className="p-1 -ml-1 mr-2 hover:bg-muted rounded-lg transition-colors">
@@ -813,6 +827,7 @@ export default function RwaAssetDashboardPage() {
               onClick={handleRefresh}
               disabled={isRefreshing || isLoading}
               className="p-2 -mr-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
+              aria-label={t('common.refresh')}
             >
               <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>

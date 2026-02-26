@@ -49,7 +49,7 @@ const TokenBadge: React.FC<{ standard: string; className?: string }> = ({
   return (
     <span
       className={cn(
-        'text-white text-[10px] px-1.5 py-0.5 rounded font-medium',
+        'text-white text-xs px-1.5 py-0.5 rounded font-medium',
         colors[standard] || 'bg-muted',
         className
       )}

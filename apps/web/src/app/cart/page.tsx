@@ -214,7 +214,7 @@ export default function CartPage() {
                                   {item.options.map((opt, i) => (
                                     <span
                                       key={i}
-                                      className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
+                                      className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
                                     >
                                       {opt.name}: {opt.value}
                                     </span>
