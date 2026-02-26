@@ -302,12 +302,12 @@ export default function ModeratorCasesPage() {
                                 {t('moderation.caseNumber', { id: caseItem.caseId })}
                               </h3>
                               <span
-                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium text-white ${stateColors[caseItem.state]}`}
+                                className={`px-1.5 py-0.5 rounded text-xs font-medium text-white ${stateColors[caseItem.state]}`}
                               >
                                 {stateLabel(caseItem.state)}
                               </span>
                               {caseItem.unreadMessages > 0 && (
-                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-error text-error-foreground">
+                                <span className="px-1.5 py-0.5 rounded-full text-xs font-medium bg-error text-error-foreground">
                                   {t('moderation.newMessages', { count: caseItem.unreadMessages })}
                                 </span>
                               )}
@@ -320,7 +320,7 @@ export default function ModeratorCasesPage() {
                             <p className="text-sm font-bold text-foreground">
                               {caseItem.total} {caseItem.coin}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               {formatDate(caseItem.timestamp)}
                             </p>
                           </div>

@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Header, Footer } from '@/components';
-import { Container, HStack, VStack } from '@/components/layouts';
+import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
@@ -113,160 +112,133 @@ export default function UserGroupsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div>
+      <HStack justify="between" align="center" className="mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('settings.sidebar.userGroups')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t('settings.accessControl.userGroupsDesc')}
+          </p>
+        </div>
+        <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+          {t('settings.accessControl.createUserGroup')}
+        </Button>
+      </HStack>
 
-      <main className="py-8">
-        <Container size="lg">
-          {/* Back Link */}
-          <Link
-            href="/settings/privacy"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            {t('settings.accessControl.privacyTitle')}
-          </Link>
+      {/* Error Message */}
+      {error && <div className="bg-error/8 text-error p-4 rounded-lg mb-6">{error}</div>}
 
-          <HStack justify="between" align="center" className="mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                {t('settings.sidebar.userGroups')}
-              </h1>
-              <p className="text-muted-foreground">{t('settings.accessControl.userGroupsDesc')}</p>
-            </div>
-            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-              {t('settings.accessControl.createUserGroup')}
-            </Button>
-          </HStack>
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
 
-          {/* Error Message */}
-          {error && <div className="bg-error/8 text-error p-4 rounded-lg mb-6">{error}</div>}
-
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          {/* Groups List */}
-          {!loading && groups.length > 0 && (
-            <VStack gap="md">
-              {groups.map(group => (
-                <Card key={group.id}>
-                  <HStack justify="between" align="start">
-                    <HStack gap="lg" align="start">
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-                        style={{ backgroundColor: getGroupColor(group.id) }}
-                      >
-                        {group.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-1">{group.name}</h3>
-                        {group.description && (
-                          <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
-                        )}
-                        <HStack gap="md" className="text-sm">
-                          <span className="text-muted-foreground">
-                            {group.memberCount || 0} {t('common.members')}
-                          </span>
-                        </HStack>
-                      </div>
-                    </HStack>
-
-                    <HStack gap="sm">
-                      <Link href={`/settings/user-groups/${group.id}/members`}>
-                        <Button size="sm" variant="ghost">
-                          {t('common.members')}
-                        </Button>
-                      </Link>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          setEditingGroup({
-                            ...group,
-                            description: group.description || '',
-                          })
-                        }
-                      >
-                        {t('common.edit')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-error hover:text-error"
-                        onClick={() => setDeleteGroupId(group.id)}
-                      >
-                        {t('common.delete')}
-                      </Button>
-                    </HStack>
-                  </HStack>
-                </Card>
-              ))}
-            </VStack>
-          )}
-
-          {/* Empty State */}
-          {!loading && groups.length === 0 && (
-            <Card className="text-center py-12">
-              <VStack gap="md" align="center">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-muted-foreground"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+      {/* Groups List */}
+      {!loading && groups.length > 0 && (
+        <VStack gap="md">
+          {groups.map(group => (
+            <Card key={group.id} className="p-5">
+              <HStack justify="between" align="start">
+                <HStack gap="lg" align="start">
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
+                    style={{ backgroundColor: getGroupColor(group.id) }}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {t('settings.accessControl.noUserGroups')}
-                </h3>
-                <p className="text-muted-foreground">
-                  {t('settings.accessControl.noUserGroupsDesc')}
-                </p>
-                <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
-                  {t('settings.accessControl.createFirstUserGroup')}
-                </Button>
-              </VStack>
+                    {group.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">{group.name}</h3>
+                    {group.description && (
+                      <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
+                    )}
+                    <HStack gap="md" className="text-sm">
+                      <span className="text-muted-foreground">
+                        {group.memberCount || 0} {t('common.members')}
+                      </span>
+                    </HStack>
+                  </div>
+                </HStack>
+
+                <HStack gap="sm">
+                  <Link href={`/settings/user-groups/${group.id}/members`}>
+                    <Button size="sm" variant="ghost">
+                      {t('common.members')}
+                    </Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      setEditingGroup({
+                        ...group,
+                        description: group.description || '',
+                      })
+                    }
+                  >
+                    {t('common.edit')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-error hover:text-error"
+                    onClick={() => setDeleteGroupId(group.id)}
+                  >
+                    {t('common.delete')}
+                  </Button>
+                </HStack>
+              </HStack>
             </Card>
-          )}
+          ))}
+        </VStack>
+      )}
 
-          {/* Not Authenticated */}
-          {!isAuthenticated && !loading && (
-            <Card className="text-center py-12">
-              <VStack gap="md" align="center">
-                <p className="text-muted-foreground">{t('common.loginRequired')}</p>
-                <Link href="/login">
-                  <Button>{t('common.login')}</Button>
-                </Link>
-              </VStack>
-            </Card>
-          )}
-        </Container>
-      </main>
+      {/* Empty State */}
+      {!loading && groups.length === 0 && (
+        <Card className="p-8 text-center">
+          <VStack gap="md" align="center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">
+              {t('settings.accessControl.noUserGroups')}
+            </h3>
+            <p className="text-muted-foreground">{t('settings.accessControl.noUserGroupsDesc')}</p>
+            <Button onClick={() => setShowCreateModal(true)} disabled={!isAuthenticated}>
+              {t('settings.accessControl.createFirstUserGroup')}
+            </Button>
+          </VStack>
+        </Card>
+      )}
 
-      <Footer />
-
+      {/* Not Authenticated */}
+      {!isAuthenticated && !loading && (
+        <Card className="p-8 text-center">
+          <VStack gap="md" align="center">
+            <p className="text-muted-foreground">{t('common.loginRequired')}</p>
+            <Link href="/login">
+              <Button>{t('common.login')}</Button>
+            </Link>
+          </VStack>
+        </Card>
+      )}
       {/* Create/Edit Modal */}
       {(showCreateModal || editingGroup) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md p-6">
             <h2 className="text-xl font-bold text-foreground mb-6">
               {editingGroup
                 ? t('settings.accessControl.editUserGroup')

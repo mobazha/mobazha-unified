@@ -226,7 +226,7 @@ export const MobileNav: React.FC = () => {
                     )}
                   </span>
                   <span
-                    className={`text-[11px] mt-1 font-medium leading-tight ${active ? 'font-semibold' : ''}`}
+                    className={`text-xs mt-1 font-medium leading-tight ${active ? 'font-semibold' : ''}`}
                   >
                     {t(item.labelKey)}
                   </span>
@@ -279,7 +279,7 @@ export const MobileNav: React.FC = () => {
 
                 {/* Label */}
                 <span
-                  className={`text-[11px] mt-1 font-medium leading-tight ${active ? 'font-semibold' : ''}`}
+                  className={`text-xs mt-1 font-medium leading-tight ${active ? 'font-semibold' : ''}`}
                 >
                   {t(item.labelKey)}
                 </span>

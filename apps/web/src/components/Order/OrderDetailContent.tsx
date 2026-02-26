@@ -221,7 +221,7 @@ function DisputeTimeoutCard({ createdAt, onOpenDispute }: DisputeTimeoutCardProp
             />
           </svg>
         </div>
-        <p className="flex-1 text-[11px] sm:text-xs text-warning leading-snug">
+        <p className="flex-1 text-xs sm:text-xs text-warning leading-snug">
           {t('order.dispute.escrowHint', { time: timeoutDetails.timeRemainingStr })}
           <span
             className="inline-flex items-center ml-1 text-warning cursor-help"
@@ -703,7 +703,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 <p className="text-sm font-semibold text-foreground truncate">
                   {order.vendor.name}
                 </p>
-                <p className="text-[11px] text-muted-foreground truncate">{order.vendor.peerID}</p>
+                <p className="text-xs text-muted-foreground truncate">{order.vendor.peerID}</p>
               </div>
             </Link>
           ) : null;
@@ -726,12 +726,12 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                 {/* 类型标签和单价分行显示 */}
                 <div className="flex flex-col gap-1 mt-1">
                   {typeLabel && (
-                    <span className="text-[10px] text-info bg-info/8 px-1.5 py-0.5 rounded w-fit">
+                    <span className="text-xs text-info bg-info/8 px-1.5 py-0.5 rounded w-fit">
                       {typeLabel}
                     </span>
                   )}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {t('order.product.unitPrice')}
                     </span>
                     <span className="text-sm text-primary font-medium">{formatPrice()}</span>
@@ -778,12 +778,12 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                       {/* 类型标签和单价分行显示 */}
                       <div className="flex flex-col gap-1 mt-1">
                         {typeLabel && (
-                          <span className="text-[10px] text-info bg-info/8 px-1.5 py-0.5 rounded w-fit">
+                          <span className="text-xs text-info bg-info/8 px-1.5 py-0.5 rounded w-fit">
                             {typeLabel}
                           </span>
                         )}
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             {t('order.product.unitPrice')}
                           </span>
                           <span className="text-sm text-primary font-medium">{formatPrice()}</span>
@@ -811,7 +811,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
         <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-foreground">{t('order.summary')}</span>
-            <span className="text-[11px] px-2 py-0.5 rounded-full border border-border/60 text-foreground bg-background/60">
+            <span className="text-xs px-2 py-0.5 rounded-full border border-border/60 text-foreground bg-background/60">
               {statusLabel || progressState.currentState}
             </span>
           </div>
@@ -885,7 +885,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
                   {t('order.disputeOpen')}
                 </h3>
                 <p className="text-xs sm:text-sm text-error">{order.dispute.claim}</p>
-                <p className="text-[10px] sm:text-xs text-error mt-0.5">
+                <p className="text-xs sm:text-xs text-error mt-0.5">
                   {t('order.initiatedBy', { party: order.dispute.initiator })} •{' '}
                   {t('order.disputeStatus', { status: order.dispute.status })}
                 </p>
@@ -1274,9 +1274,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
         {/* Moderator */}
         {order.moderator && (
           <div className="p-2.5 mb-4 bg-muted/20 rounded-lg border border-border/30">
-            <span className="text-[11px] text-muted-foreground block mb-1">
-              {t('order.moderator')}
-            </span>
+            <span className="text-xs text-muted-foreground block mb-1">{t('order.moderator')}</span>
             <Link href={`/moderators/${order.moderator.id}`} className="flex items-center gap-2">
               <Avatar
                 src={order.moderator.avatar}
@@ -1300,7 +1298,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
             <div className="space-y-2 mb-4">
               {hasMemo && (
                 <div className="p-2.5 bg-muted/20 rounded-lg">
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">
+                  <span className="text-xs text-muted-foreground block mb-0.5">
                     {t('order.memo')}
                   </span>
                   <p className="text-sm text-foreground">{order.notes}</p>
@@ -1308,7 +1306,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
               )}
               {hasContact && (
                 <div className="p-2.5 bg-muted/20 rounded-lg">
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">
+                  <span className="text-xs text-muted-foreground block mb-0.5">
                     {t('order.additionalContact')}
                   </span>
                   <p className="text-sm text-foreground">{order.alternateContactInfo}</p>

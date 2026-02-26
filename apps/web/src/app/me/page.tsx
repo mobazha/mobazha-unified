@@ -56,7 +56,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">{title}</p>
-        {description && <p className="text-[11px] text-muted-foreground truncate">{description}</p>}
+        {description && <p className="text-xs text-muted-foreground truncate">{description}</p>}
       </div>
       {rightElement || <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
     </div>

@@ -187,7 +187,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
                 <div className="flex flex-col items-start">
                   <span className="text-sm font-medium">{method.name}</span>
                   {method.comingSoon && (
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                    <Badge variant="secondary" className="text-xs h-4 px-1">
                       {t('common.comingSoon')}
                     </Badge>
                   )}

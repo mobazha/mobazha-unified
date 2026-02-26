@@ -577,12 +577,12 @@ export function ProductDetail({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 text-xs"
+                className="h-11 px-3 text-xs sm:h-9"
                 onClick={() => openChatDrawer()}
               >
                 {t('profile.message')}
               </Button>
-              <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+              <Button variant="outline" size="sm" className="h-11 px-3 text-xs sm:h-9">
                 {t('profile.follow')}
               </Button>
             </HStack>
@@ -1003,7 +1003,7 @@ export function ProductDetail({
                       aria-label="Decrease quantity"
                       data-testid="product-detail-qty-decrease"
                       className={cn(
-                        'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                        'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
                         stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
                       )}
                     >
@@ -1044,7 +1044,7 @@ export function ProductDetail({
                       aria-label="Increase quantity"
                       data-testid="product-detail-qty-increase"
                       className={cn(
-                        'w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                        'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
                         stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
                       )}
                     >
@@ -1349,7 +1349,7 @@ export function ProductDetail({
         >
           {/* 关闭按钮 */}
           <button
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
+            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
             onClick={() => setIsImagePreviewOpen(false)}
             aria-label="Close image preview"
             data-testid="product-detail-preview-close"

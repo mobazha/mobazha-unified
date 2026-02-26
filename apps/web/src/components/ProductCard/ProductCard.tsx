@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Shield, Flag, EyeOff, Pencil, Copy, Trash2 } from 'lucide-react';
+import { Shield, Flag, EyeOff, Pencil, Copy, Trash2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -135,8 +135,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // 使用货币格式化 hook
   const { formatLocalPrice } = useCurrencyFormat();
   const { t } = useI18n();
-  // hover 状态
   const [isHovered, setIsHovered] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as globalThis.Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   const hasDiscount = originalPrice && Number(originalPrice) > Number(price);
   const discountPercent = hasDiscount
@@ -288,86 +300,103 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Hover 操作按钮 - Report 和 Block */}
-        {showActionButtons && isHovered && (
-          <div className="absolute bottom-2 left-2 z-20 flex gap-1.5 animate-in fade-in duration-150">
-            {onReport && (
-              <button
-                onClick={handleReportClick}
-                className={cn(
-                  'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 hover:bg-white shadow-md',
-                  'transition-all duration-150 hover:scale-105',
-                  'text-muted-foreground hover:text-destructive'
-                )}
-                title={t('listing.report')}
-              >
-                <Flag className="w-4 h-4" />
-              </button>
+        {/* Overflow menu trigger — always visible for touch, fades in on hover for desktop */}
+        {(showActionButtons || showOwnListingButtons) && (
+          <button
+            onClick={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowMenu(v => !v);
+            }}
+            className={cn(
+              'absolute top-2 right-2 z-20 w-11 h-11 rounded-full flex items-center justify-center',
+              'bg-black/40 text-white shadow-md backdrop-blur-sm',
+              'transition-opacity duration-150',
+              isHovered || showMenu
+                ? 'opacity-100'
+                : 'opacity-60 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
             )}
-            {onBlock && vendorPeerID && (
-              <button
-                onClick={handleBlockClick}
-                className={cn(
-                  'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 hover:bg-white shadow-md',
-                  'transition-all duration-150 hover:scale-105',
-                  'text-muted-foreground hover:text-destructive'
-                )}
-                title={t('listing.blockSeller')}
-              >
-                <EyeOff className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+            aria-label={t('common.more')}
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
         )}
 
-        {/* Hover 操作按钮 - 自己商品的编辑、克隆、删除 */}
-        {showOwnListingButtons && isHovered && (
-          <div className="absolute bottom-2 left-2 z-20 flex gap-1.5 animate-in fade-in duration-150">
-            {onEdit && (
-              <button
-                data-testid="product-card-edit"
-                onClick={handleEditClick}
-                className={cn(
-                  'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 dark:bg-card/90 hover:bg-white dark:hover:bg-card shadow-md',
-                  'transition-all duration-150 hover:scale-105',
-                  'text-muted-foreground hover:text-primary'
+        {/* Dropdown menu */}
+        {showMenu && (
+          <div
+            ref={menuRef}
+            className="absolute top-11 right-2 z-30 bg-background border border-border rounded-lg shadow-xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-1 duration-150"
+          >
+            {showActionButtons && (
+              <>
+                {onReport && (
+                  <button
+                    onClick={e => {
+                      handleReportClick(e);
+                      setShowMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] text-sm text-foreground hover:bg-muted active:bg-muted/80 transition-colors"
+                  >
+                    <Flag className="w-4 h-4 text-muted-foreground" />
+                    {t('listing.report')}
+                  </button>
                 )}
-                title={t('listing.edit')}
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
+                {onBlock && vendorPeerID && (
+                  <button
+                    onClick={e => {
+                      handleBlockClick(e);
+                      setShowMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] text-sm text-destructive hover:bg-muted active:bg-muted/80 transition-colors"
+                  >
+                    <EyeOff className="w-4 h-4" />
+                    {t('listing.blockSeller')}
+                  </button>
+                )}
+              </>
             )}
-            {onClone && (
-              <button
-                onClick={handleCloneClick}
-                className={cn(
-                  'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 dark:bg-card/90 hover:bg-white dark:hover:bg-card shadow-md',
-                  'transition-all duration-150 hover:scale-105',
-                  'text-muted-foreground hover:text-primary'
+            {showOwnListingButtons && (
+              <>
+                {onEdit && (
+                  <button
+                    data-testid="product-card-edit"
+                    onClick={e => {
+                      handleEditClick(e);
+                      setShowMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] text-sm text-foreground hover:bg-muted active:bg-muted/80 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4 text-muted-foreground" />
+                    {t('listing.edit')}
+                  </button>
                 )}
-                title={t('listing.clone')}
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            )}
-            {onDelete && (
-              <button
-                data-testid="product-card-delete"
-                onClick={handleDeleteClick}
-                className={cn(
-                  'w-8 h-8 rounded-md flex items-center justify-center',
-                  'bg-white/90 dark:bg-card/90 hover:bg-white dark:hover:bg-card shadow-md',
-                  'transition-all duration-150 hover:scale-105',
-                  'text-muted-foreground hover:text-destructive'
+                {onClone && (
+                  <button
+                    onClick={e => {
+                      handleCloneClick(e);
+                      setShowMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] text-sm text-foreground hover:bg-muted active:bg-muted/80 transition-colors"
+                  >
+                    <Copy className="w-4 h-4 text-muted-foreground" />
+                    {t('listing.clone')}
+                  </button>
                 )}
-                title={t('listing.deleteListing')}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                {onDelete && (
+                  <button
+                    data-testid="product-card-delete"
+                    onClick={e => {
+                      handleDeleteClick(e);
+                      setShowMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] text-sm text-destructive hover:bg-muted active:bg-muted/80 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {t('listing.deleteListing')}
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
@@ -392,7 +421,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {formattedPrice}
             </span>
             {hasDiscount && (
-              <span className="text-[10px] text-muted-foreground line-through flex-shrink-0">
+              <span className="text-xs text-muted-foreground line-through flex-shrink-0">
                 {formattedOriginalPrice}
               </span>
             )}
@@ -436,9 +465,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             )}
             {freeShipping && (
-              <span className="text-[10px] text-primary font-medium flex-shrink-0">
-                Free Shipping
-              </span>
+              <span className="text-xs text-primary font-medium flex-shrink-0">Free Shipping</span>
             )}
           </div>
         )}

@@ -181,7 +181,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
               {formatDate(order.createdAt)}
             </span>
             <span
-              className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${status.color}`}
+              className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-medium ${status.color}`}
             >
               {status.icon}
               {status.label}
@@ -201,7 +201,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             className="w-8 h-8 sm:w-9 sm:h-9"
           />
           <VStack gap="none">
-            <span className="text-[10px] sm:text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {type === 'purchase' ? 'Seller' : 'Buyer'}
             </span>
             <Link
@@ -247,7 +247,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
         {/* Tracking */}
         {order.trackingNumber && order.status === 'shipped' && (
           <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-primary/10 rounded-lg">
-            <span className="text-[10px] sm:text-xs text-primary">Tracking Number</span>
+            <span className="text-xs text-primary">Tracking Number</span>
             <p className="font-mono font-medium text-sm sm:text-base text-foreground">
               {order.trackingNumber}
             </p>

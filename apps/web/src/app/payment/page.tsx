@@ -895,7 +895,7 @@ export default function PaymentPage() {
                       )}
 
                       {/* Security Note */}
-                      <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
+                      <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
                         <svg
                           className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                           fill="none"

@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui';
 import { toast } from '@/components/ui/use-toast';
+import { useI18n } from '@mobazha/core';
 
 interface DisputeCase {
   caseId: string;
@@ -141,6 +143,7 @@ const mockCase: DisputeCase = {
 };
 
 export default function CaseDetailPage() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const orderId = params.orderId as string;
@@ -249,25 +252,10 @@ export default function CaseDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('moderation.caseDetail')} />
 
       <main className="py-8">
         <Container size="xl">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back to Cases
-          </button>
-
           {/* Case Header */}
           <Card className="mb-6">
             <HStack justify="between" align="start" className="flex-wrap gap-4 mb-6">

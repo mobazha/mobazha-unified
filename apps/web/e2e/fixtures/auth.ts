@@ -150,4 +150,45 @@ export const authenticatedTest = base.extend<{
 });
 /* eslint-enable react-hooks/rules-of-hooks */
 
+/**
+ * Complete onboarding if the user lands on the onboarding page after login.
+ * Fills in a display name and clicks "Start Exploring", then waits for redirect.
+ */
+export async function completeOnboardingIfNeeded(page: Page): Promise<void> {
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
+
+  const url = page.url();
+  if (!url.includes('/onboarding')) {
+    return;
+  }
+
+  const nameInput = page.locator('[data-testid="onboarding-display-name"]');
+  const hasInput = await nameInput.isVisible({ timeout: 5000 }).catch(() => false);
+  if (!hasInput) return;
+
+  const currentValue = await nameInput.inputValue();
+  if (!currentValue.trim()) {
+    await nameInput.fill('Test User');
+  }
+
+  const submitBtn = page.locator('[data-testid="onboarding-submit"]');
+  await submitBtn.click();
+
+  await page.waitForURL(u => !u.toString().includes('/onboarding'), { timeout: 30000 });
+  await page.waitForLoadState('networkidle');
+}
+
+/**
+ * Full login + onboarding flow. Use this for authenticated visual tests.
+ */
+export async function loginAndSetup(
+  page: Page,
+  username?: string,
+  password?: string
+): Promise<void> {
+  await performCasdoorLogin(page, username, password);
+  await completeOnboardingIfNeeded(page);
+}
+
 export { expect };

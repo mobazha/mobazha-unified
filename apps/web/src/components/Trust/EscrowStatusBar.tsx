@@ -131,7 +131,7 @@ export function EscrowStatusBar({ status, className }: EscrowStatusBarProps) {
                 </div>
                 <span
                   className={cn(
-                    'mt-2 text-[10px] sm:text-xs text-center max-w-full truncate',
+                    'mt-2 text-xs text-center max-w-full truncate',
                     'hidden sm:block',
                     (isCompleted || isCurrent) && !showDestructive && 'text-foreground font-medium',
                     showDestructive && 'text-destructive font-medium',

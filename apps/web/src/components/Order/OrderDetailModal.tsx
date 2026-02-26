@@ -143,14 +143,14 @@ function OrderSidebar({ order, activeTab, onTabChange }: OrderSidebarProps) {
             <p className="text-xs text-muted-foreground mt-0.5">{counterparty.location}</p>
           )}
         </Link>
-        <span className="text-[10px] text-muted-foreground mt-1.5 px-2 py-0.5 bg-muted/50 rounded-full uppercase tracking-wide font-medium">
+        <span className="text-xs text-muted-foreground mt-1.5 px-2 py-0.5 bg-muted/50 rounded-full uppercase tracking-wide font-medium">
           {counterpartyLabel}
         </span>
       </div>
 
       {/* 菜单 */}
       <div className="p-3 flex-1">
-        <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-3 px-2">
+        <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider mb-3 px-2">
           {t('order.menu')}
         </p>
         <nav className="space-y-1">

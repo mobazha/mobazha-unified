@@ -101,7 +101,7 @@ export const CheckoutBottomBar: React.FC<CheckoutBottomBarProps> = ({
       className={cn(
         'fixed bottom-0 left-0 right-0 z-40',
         'bg-surface/95 backdrop-blur-sm border-t border-border',
-        'p-4 safe-area-bottom',
+        'p-4 pb-[max(1rem,env(safe-area-inset-bottom))]',
         'md:hidden', // 仅在移动端显示
         className
       )}

@@ -240,7 +240,7 @@ export const OrderChat: React.FC<OrderChatProps> = ({
                     <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   </div>
                   <p
-                    className={`text-[10px] text-muted-foreground mt-0.5 ${isOwnMessage ? 'text-right' : ''}`}
+                    className={`text-xs text-muted-foreground mt-0.5 ${isOwnMessage ? 'text-right' : ''}`}
                   >
                     {formatTime(message.timestamp)}
                     {isOwnMessage && message.status && (

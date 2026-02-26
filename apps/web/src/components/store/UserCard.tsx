@@ -255,7 +255,7 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
             {/* 隐私店铺徽标 */}
             {profile.private && (
               <span
-                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning shrink-0"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning shrink-0"
                 title={t('storeAccess.privateStore')}
               >
                 <Lock className="h-2.5 w-2.5" />

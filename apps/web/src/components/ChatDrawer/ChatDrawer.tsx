@@ -445,18 +445,18 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 {/* Status indicators */}
                 <div className="flex items-center gap-2 mt-0.5">
                   {totalUnread > 0 && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-full shadow-sm shadow-primary/30">
+                    <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-full shadow-sm shadow-primary/30">
                       {totalUnread > 99 ? '99+' : totalUnread} new
                     </span>
                   )}
                   {!isConnected && !isInitializing && (
-                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-warning/15 text-warning">
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-warning/15 text-warning">
                       <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                       {t('chat.offline')}
                     </span>
                   )}
                   {isInitializing && (
-                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-info/15 text-info">
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-info/15 text-info">
                       <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle
                           className="opacity-25"
@@ -476,7 +476,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                     </span>
                   )}
                   {isConnected && !isInitializing && totalUnread === 0 && (
-                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground/60">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       Connected
                     </span>
@@ -675,7 +675,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                           <p className="text-xs text-muted-foreground truncate">{member.userId}</p>
                         </div>
                         {member.isExternal && (
-                          <span className="px-2 py-0.5 text-[10px] font-medium bg-info/15 text-info rounded-full">
+                          <span className="px-2 py-0.5 text-xs font-medium bg-info/15 text-info rounded-full">
                             External
                           </span>
                         )}

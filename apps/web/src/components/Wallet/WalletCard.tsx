@@ -41,7 +41,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
               </span>
               {balance.change24h !== undefined && (
                 <span
-                  className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap ${
+                  className={`text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap ${
                     balance.change24h >= 0
                       ? 'bg-primary/20 text-primary'
                       : 'bg-destructive/20 text-destructive'

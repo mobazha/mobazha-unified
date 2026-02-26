@@ -159,7 +159,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                       />
                     ) : (
                       <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-[8px] text-primary font-medium">
+                        <span className="text-[10px] text-primary font-medium">
                           {order.vendor.name?.charAt(0)?.toUpperCase() || '?'}
                         </span>
                       </div>
@@ -169,7 +169,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                     </span>
                   </div>
                 </div>
-                <span className="text-[11px] text-muted-foreground flex-shrink-0">
+                <span className="text-xs text-muted-foreground flex-shrink-0">
                   {formatDate(order.createdAt)}
                 </span>
               </div>
@@ -190,12 +190,10 @@ export const OrderListCompact = memo(function OrderListCompact({
 
               {/* Bottom: Status + Order ID - 增加间距 */}
               <div className="flex items-center justify-between mt-0.5">
-                <Badge variant={status.variant} className="text-[10px] px-2 py-0.5 h-5">
+                <Badge variant={status.variant} className="text-xs px-2 py-0.5 h-5">
                   {t(status.labelKey)}
                 </Badge>
-                <span className="text-[11px] text-muted-foreground">
-                  {truncateId(order.orderId)}
-                </span>
+                <span className="text-xs text-muted-foreground">{truncateId(order.orderId)}</span>
               </div>
             </div>
           </div>

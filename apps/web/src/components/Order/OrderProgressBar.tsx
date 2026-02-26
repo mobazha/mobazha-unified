@@ -99,7 +99,7 @@ export const OrderProgressBar = memo(function OrderProgressBar({
                 {isCompleted ? (
                   <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={3} />
                 ) : (
-                  <span className="text-[10px] sm:text-[11px] font-medium">{stateNumber}</span>
+                  <span className="text-xs font-medium">{stateNumber}</span>
                 )}
               </div>
 
@@ -127,7 +127,7 @@ export const OrderProgressBar = memo(function OrderProgressBar({
               {/* 标签 - 首尾对齐边界，中间居中 */}
               <span
                 className={cn(
-                  'absolute top-full mt-2 text-[11px] sm:text-xs whitespace-nowrap',
+                  'absolute top-full mt-2 text-xs whitespace-nowrap',
                   // 对齐方式：首节点左对齐，尾节点右对齐，中间居中
                   isFirst
                     ? 'left-0 text-left'

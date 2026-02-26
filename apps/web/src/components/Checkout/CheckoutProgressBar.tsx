@@ -68,7 +68,7 @@ export function CheckoutProgressBar({ currentStep, className }: CheckoutProgress
                 </div>
                 <span
                   className={cn(
-                    'text-[10px] sm:text-xs whitespace-nowrap',
+                    'text-xs whitespace-nowrap',
                     isActive ? 'text-primary font-medium' : 'text-muted-foreground'
                   )}
                 >

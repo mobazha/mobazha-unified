@@ -464,7 +464,7 @@ const CurrencyModal: React.FC<CurrencyModalProps> = ({
                         {getFlag(c.code)}
                       </span>
                     ) : (
-                      <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0">
+                      <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
                         {c.code.slice(0, 2)}
                       </span>
                     )}

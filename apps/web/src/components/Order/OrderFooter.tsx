@@ -144,7 +144,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
           key={action}
           size="sm"
           onClick={() => onAction(action)}
-          className="whitespace-nowrap px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-full"
+          className="whitespace-nowrap px-4 sm:px-6 h-11 sm:h-10 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-full"
         >
           {getActionLabel(action)}
         </Button>
@@ -160,7 +160,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
         variant={isDanger ? 'outline' : variantMap[config.variant] || 'outline'}
         size="sm"
         onClick={() => onAction(action)}
-        className={`whitespace-nowrap px-3 sm:px-4 h-9 sm:h-10 text-xs sm:text-sm font-medium rounded-full ${
+        className={`whitespace-nowrap px-3 sm:px-4 h-11 sm:h-10 text-xs sm:text-sm font-medium rounded-full ${
           isDanger ? 'border-destructive text-destructive hover:bg-destructive/10' : ''
         }`}
       >

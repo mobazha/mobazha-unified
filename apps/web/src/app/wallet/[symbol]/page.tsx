@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -107,6 +108,7 @@ export default function AssetDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <MobilePageHeader title={t('nav.wallet')} />
         <main className="py-8">
           <Container size="sm">
             <div className="text-center py-8 sm:py-16">
@@ -146,30 +148,10 @@ export default function AssetDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={asset.currency} />
 
       <main className="py-4 sm:py-8">
         <Container size="sm">
-          {/* Back Button */}
-          <Link
-            href="/wallet"
-            className="inline-flex items-center gap-1.5 sm:gap-2 text-sm text-muted-foreground hover:text-foreground mb-3 sm:mb-6"
-          >
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            {t('wallet.back')}
-          </Link>
-
           {/* Asset Header Card */}
           <Card className="mb-4 sm:mb-6 overflow-hidden">
             <div className={`p-4 sm:p-8 ${asset.color} text-white text-center`}>
@@ -237,7 +219,7 @@ export default function AssetDetailPage() {
               <code className="flex-1 text-xs sm:text-sm text-foreground bg-muted px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg truncate">
                 {asset.address}
               </code>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+              <Button variant="outline" size="sm" className="h-11 w-11 p-0 sm:h-9 sm:w-9">
                 <svg
                   className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                   fill="none"
@@ -265,7 +247,7 @@ export default function AssetDetailPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`min-h-[44px] sm:min-h-0 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center ${
                     activeTab === tab
                       ? 'bg-primary text-white'
                       : 'bg-muted text-muted-foreground hover:text-foreground'

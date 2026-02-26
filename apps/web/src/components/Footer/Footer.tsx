@@ -84,57 +84,9 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-muted border-t border-border">
-      {/* Mobile Footer — compact */}
-      <div className="md:hidden px-4 py-6">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <MobazhaLogo size={24} className="text-primary" />
-          <span className="font-semibold text-sm text-foreground">Mobazha</span>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4">
-          {footerLinks.legal.map(link => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Link
-            href="/policies/shipping"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            {t('policies.shipping')}
-          </Link>
-          <Link
-            href="/policies/returns"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            {t('policies.returns')}
-          </Link>
-        </div>
-        <HStack gap="sm" className="justify-center mb-3">
-          {socialLinks.map(social => (
-            <a
-              key={social.label}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-background transition-colors text-muted-foreground hover:text-primary"
-              aria-label={social.label}
-            >
-              {social.icon}
-            </a>
-          ))}
-        </HStack>
-        <p className="text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} Mobazha
-        </p>
-      </div>
-
-      {/* Desktop Footer — full */}
-      <div className="hidden md:block pt-16 pb-8">
+    <footer className="hidden md:block bg-muted border-t border-border">
+      {/* Desktop Footer — MobileNav replaces footer on mobile */}
+      <div className="pt-16 pb-8">
         <Container size="xl">
           <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
             {/* Brand */}

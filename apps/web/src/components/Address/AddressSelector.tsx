@@ -91,7 +91,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
                   <HStack gap="xs" align="center" className="mb-1">
                     <span className="font-medium text-foreground text-sm">{address.name}</span>
                     {address.isDefault && (
-                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                      <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                         {t('common.default')}
                       </span>
                     )}
