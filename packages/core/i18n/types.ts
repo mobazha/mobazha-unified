@@ -2455,6 +2455,8 @@ export interface TranslationResource {
     integrations?: {
       title?: string;
       subtitle?: string;
+      tabNotifications?: string;
+      tabAI?: string;
       channels?: string;
       channelsDesc?: string;
       addChannel?: string;
@@ -2518,6 +2520,34 @@ export interface TranslationResource {
       detectNoChats?: string;
       detectFailed?: string;
       detectSelectChat?: string;
+
+      aiTitle?: string;
+      aiDesc?: string;
+      aiProvider?: string;
+      aiProviderPlaceholder?: string;
+      aiApiKey?: string;
+      aiApiKeyPlaceholder?: string;
+      aiApiKeySet?: string;
+      aiApiKeyUpdate?: string;
+      aiModel?: string;
+      aiModelPlaceholder?: string;
+      aiBaseUrl?: string;
+      aiEnabled?: string;
+      aiSaveSuccess?: string;
+      aiSaveFailed?: string;
+      aiNotConfigured?: string;
+      aiConfigured?: string;
+      aiLoadFailed?: string;
+      aiApiKeyRequired?: string;
+      aiBaseUrlPlaceholder?: string;
+      aiBaseUrlRequired?: string;
+      aiTestConnection?: string;
+      aiTestSuccess?: string;
+      aiTestFailed?: string;
+      aiAdvancedSettings?: string;
+      aiModelCustom?: string;
+      aiModelCustomPlaceholder?: string;
+      unsavedChanges?: string;
     };
   };
 }
