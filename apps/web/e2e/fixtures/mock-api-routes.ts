@@ -3,9 +3,21 @@
  *
  * Uses Playwright page.route() to intercept API calls and return mock data,
  * so pages that normally need backend data can show populated states.
+ *
+ * All JSON responses use the Phase G envelope format:
+ *   - Success (2xx): { data: T }
+ *   - Error (4xx/5xx): { error: { code: string, message: string } }
  */
 
 import type { Page } from '@playwright/test';
+
+function wrapData<T>(data: T): string {
+  return JSON.stringify({ data });
+}
+
+function wrapError(code: string, message: string): string {
+  return JSON.stringify({ error: { code, message } });
+}
 
 const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const MOCK_BUYER_PEER_ID = 'QmBuyerPeer1234567890abcdefghijk';
@@ -348,7 +360,7 @@ export async function mockOrdersAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ purchases: mockPurchases }),
+      body: wrapData({ purchases: mockPurchases }),
     });
   });
 
@@ -357,7 +369,7 @@ export async function mockOrdersAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ sales: mockSales }),
+      body: wrapData({ sales: mockSales }),
     });
   });
 
@@ -366,7 +378,7 @@ export async function mockOrdersAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({}),
+      body: wrapData({}),
     });
   });
 }
@@ -379,7 +391,7 @@ export async function mockOrderDetailAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(mockOrderDetail),
+      body: wrapData(mockOrderDetail),
     });
   });
 }
@@ -391,12 +403,12 @@ export async function mockNotificationsAPI(page: Page): Promise<void> {
   await page.route('**/v1/notifications*', route => {
     const url = route.request().url();
     if (url.includes('/read')) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: wrapData({}) });
     }
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
+      body: wrapData({
         unread: mockNotifications.filter(n => !n.read).length,
         total: mockNotifications.length,
         notifications: mockNotifications,
@@ -414,7 +426,7 @@ export async function mockPreferencesAPI(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(mockPreferencesWithAddresses),
+        body: wrapData(mockPreferencesWithAddresses),
       });
     } else {
       route.continue();
@@ -434,7 +446,7 @@ export async function mockSearchAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(mockSearchResults),
+      body: wrapData(mockSearchResults),
     });
   });
 }
@@ -496,7 +508,7 @@ export async function mockProductDetailAPI(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(mockProductListing),
+        body: wrapData(mockProductListing),
       });
     } else {
       route.continue();

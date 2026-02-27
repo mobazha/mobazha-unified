@@ -7,6 +7,35 @@ import { getHostingUrl, getAuthHeaders } from './config';
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
 import { authGet, authPost } from './helpers';
 
+// ============= 辅助函数 =============
+
+/**
+ * Unwrap {data: T} envelope from backend JSON responses.
+ */
+function unwrapData<T>(json: unknown): T {
+  if (json !== null && typeof json === 'object' && 'data' in json) {
+    return (json as Record<string, unknown>).data as T;
+  }
+  return json as T;
+}
+
+/**
+ * Extract error message from error response body.
+ * Supports both old format {error: string} and new format {error: {code, message}}.
+ */
+function extractErrorMessage(errBody: unknown): string {
+  if (errBody == null || typeof errBody !== 'object') return 'Request failed';
+  const o = errBody as Record<string, unknown>;
+  const err = o.error;
+  if (typeof err === 'string') return err;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const msg = (err as Record<string, unknown>).message;
+    return typeof msg === 'string' ? msg : 'Request failed';
+  }
+  if (typeof o.message === 'string') return o.message;
+  return 'Request failed';
+}
+
 // ============= 类型定义 =============
 
 export interface MatrixServerConfig {
@@ -34,14 +63,22 @@ export interface MatrixAutoRegisterResponse {
 // ============= API 函数 =============
 
 /**
- * 通用错误处理
+ * 通用响应处理：解析 JSON、解包 data 信封、统一错误格式
  */
 async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(error.error || error.message || error.reason || 'Request failed');
+  let raw: unknown;
+  try {
+    raw = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new Error(response.statusText || 'Request failed');
+    }
+    throw new Error('Invalid JSON response');
   }
-  return response.json();
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<T>(raw);
 }
 
 /**
@@ -149,8 +186,8 @@ export async function syncProfileToMatrix(displayName: string, avatarHash?: stri
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(error.error || 'Failed to sync profile');
+    const raw = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
