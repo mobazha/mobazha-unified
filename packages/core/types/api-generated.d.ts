@@ -153,6 +153,8 @@ export interface paths {
             'application/json': components['schemas']['SigninResponse'];
           };
         };
+        400: components['responses']['BadRequest'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -193,6 +195,8 @@ export interface paths {
             'application/json': components['schemas']['SigninResponse'];
           };
         };
+        400: components['responses']['BadRequest'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -227,6 +231,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -261,6 +266,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -295,6 +301,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -329,6 +336,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -363,6 +371,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -398,6 +407,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -432,6 +442,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -465,9 +477,12 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['ServerInfo'];
+            'application/json': {
+              data: components['schemas']['ServerInfo'];
+            };
           };
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -502,6 +517,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -538,6 +555,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -570,6 +589,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -604,6 +625,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -644,6 +667,9 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -677,7 +703,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['IpnsRecord'];
+            'application/json': {
+              data: components['schemas']['IpnsRecord'];
+            };
           };
         };
         /** @description Record not found */
@@ -687,6 +715,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -721,6 +750,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -757,6 +788,8 @@ export interface paths {
           };
           content?: never;
         };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -794,9 +827,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['GroupMarketplace'];
+            'application/json': {
+              data: components['schemas']['GroupMarketplace'];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -831,9 +868,12 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['GroupMarketplace'];
+            'application/json': {
+              data: components['schemas']['GroupMarketplace'];
+            };
           };
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -877,6 +917,9 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -911,9 +954,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['GroupMarketplaceSeller'][];
+            'application/json': {
+              data: components['schemas']['GroupMarketplaceSeller'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -957,6 +1004,10 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -993,6 +1044,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1032,6 +1085,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1068,6 +1124,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1105,6 +1162,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1144,6 +1202,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1183,6 +1243,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Remove a featured seller (admin) */
@@ -1205,6 +1268,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1241,6 +1307,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Remove a banner listing (admin) */
@@ -1263,6 +1332,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1296,6 +1368,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1335,6 +1410,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1370,6 +1448,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1402,6 +1481,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1440,6 +1521,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1476,6 +1559,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1513,6 +1598,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1544,9 +1631,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['ProductGroup'][];
+            'application/json': {
+              data: components['schemas']['ProductGroup'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1570,9 +1661,14 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['ProductGroup'];
+            'application/json': {
+              data: components['schemas']['ProductGroup'];
+            };
           };
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1608,6 +1704,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1630,6 +1729,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1662,9 +1764,14 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['ProductGroupItem'][];
+            'application/json': {
+              data: components['schemas']['ProductGroupItem'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1691,6 +1798,10 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1729,6 +1840,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1761,9 +1875,14 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['ProductGroupAuthorization'][];
+            'application/json': {
+              data: components['schemas']['ProductGroupAuthorization'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1786,6 +1905,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1824,6 +1946,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1854,9 +1979,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['UserGroup'][];
+            'application/json': {
+              data: components['schemas']['UserGroup'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1877,6 +2006,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1912,6 +2043,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1934,6 +2068,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1966,9 +2103,14 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['UserGroupMember'][];
+            'application/json': {
+              data: components['schemas']['UserGroupMember'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1991,6 +2133,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2027,6 +2172,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2065,6 +2213,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2095,9 +2246,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['StoreAccessRequest'][];
+            'application/json': {
+              data: components['schemas']['StoreAccessRequest'][];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2118,6 +2273,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2153,6 +2310,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2189,6 +2349,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2222,9 +2384,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['StoreAccessSettings'];
+            'application/json': {
+              data: components['schemas']['StoreAccessSettings'];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Update store access settings */
@@ -2244,6 +2410,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2277,6 +2445,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2297,6 +2467,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Remove peer from store access whitelist */
@@ -2316,6 +2488,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2346,9 +2520,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['StoreShortLink'];
+            'application/json': {
+              data: components['schemas']['StoreShortLink'];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2369,6 +2547,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2410,6 +2590,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2446,6 +2627,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2480,6 +2662,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2511,9 +2695,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['StoreBot'];
+            'application/json': {
+              data: components['schemas']['StoreBot'];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2537,9 +2725,14 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['StoreBot'];
+            'application/json': {
+              data: components['schemas']['StoreBot'];
+            };
           };
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Unbind store bot */
@@ -2559,6 +2752,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2596,6 +2791,9 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2634,6 +2832,9 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2669,6 +2870,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2707,6 +2911,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2740,6 +2947,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2777,6 +2986,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2826,6 +3038,8 @@ export interface paths {
             'application/json': components['schemas']['RelayExecuteResponse'];
           };
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
         /** @description Relay service unavailable */
         503: {
           headers: {
@@ -2864,9 +3078,12 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['RelayStatusResponse'];
+            'application/json': {
+              data: components['schemas']['RelayStatusResponse'];
+            };
           };
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2900,9 +3117,12 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['MatrixConfig'];
+            'application/json': {
+              data: components['schemas']['MatrixConfig'];
+            };
           };
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2939,6 +3159,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2971,6 +3193,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3007,6 +3231,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3041,6 +3267,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3075,6 +3303,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3083,7 +3313,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/orders/purchase': {
+  '/v1/orders': {
     parameters: {
       query?: never;
       header?: never;
@@ -3112,210 +3342,8 @@ export interface paths {
           };
           content?: never;
         };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/confirm': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Confirm (accept) an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order confirmed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/fulfill': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Mark order as fulfilled */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order fulfilled */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/complete': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Complete an order (release escrow) */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order completed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Cancel an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order cancelled */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/refund': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Refund an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order refunded */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/payment': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Submit payment for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Payment submitted */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3350,10 +3378,738 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm (accept/reject) an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order confirmed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/fulfill': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark order as fulfilled */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order fulfilled */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Complete an order (release escrow) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order completed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancel an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order cancelled */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Refund an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order refunded */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Submit payment for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment submitted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/spend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Spend for an order (wallet payment) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Spend successful */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get payment instructions for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get confirm/reject instructions for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Confirm instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get reject instructions for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Reject instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get refund instructions for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Refund instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get complete instructions for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Complete instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get cancel instructions for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Cancel instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{orderID}/open': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Open a dispute */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            claim?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Dispute opened */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{orderID}/close': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Close a dispute (moderator resolution) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            resolution?: string;
+            buyerPercentage?: number;
+            vendorPercentage?: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Dispute closed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{orderID}/release': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Release funds from escrow */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            txID?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Funds released */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{orderID}/release-after-timeout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Release funds after timeout */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Funds released after timeout */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{orderID}/instructions/release': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get dispute release funds instructions */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          orderID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Release instructions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -3387,6 +4143,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3424,6 +4182,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3459,6 +4219,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Create a listing */
@@ -3478,6 +4240,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3515,6 +4279,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -3549,6 +4316,8 @@ export interface paths {
           };
           content?: never;
         };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3585,6 +4354,8 @@ export interface paths {
           };
           content?: never;
         };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3619,6 +4390,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Update profile */
@@ -3638,6 +4411,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     /** Create profile */
@@ -3657,6 +4432,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3691,6 +4468,8 @@ export interface paths {
           };
           content?: never;
         };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3727,6 +4506,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3759,6 +4540,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3793,6 +4576,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3827,6 +4612,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3847,6 +4634,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3881,6 +4670,9 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3915,6 +4707,8 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3958,6 +4752,9 @@ export interface paths {
           };
           content?: never;
         };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3991,9 +4788,14 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'image/*': string;
+            'image/*': {
+              /** Format: binary */
+              data: string;
+            };
           };
         };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4031,6 +4833,8 @@ export interface paths {
           };
           content?: never;
         };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4067,8 +4871,404 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stripe/public-key': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Stripe publishable key */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Stripe public key */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                publicKey?: string;
+              };
+            };
+          };
+        };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stripe/connect-url': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Stripe OAuth connect URL */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Stripe connect URL */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                /** Format: uri */
+                url?: string;
+              };
+            };
+          };
+        };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stripe/account-status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Stripe account connection status */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Account status */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: Record<string, never>;
+            };
+          };
+        };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stripe/payment-intents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create a Stripe payment intent */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: int64 */
+            amount: number;
+            currency: string;
+            orderID: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Payment intent created */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                clientSecret?: string;
+              };
+            };
+          };
+        };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stripe/webhooks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle Stripe webhook events
+     * @description Receives webhook events from Stripe (payment confirmations, etc.)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Webhook processed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/moderators': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get list of known moderators */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Moderator list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: Record<string, never>[];
+            };
+          };
+        };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    put?: never;
+    /** Set self as moderator */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Moderator set */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        400: components['responses']['BadRequest'];
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    /** Remove self as moderator */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Moderator removed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        401: components['responses']['Unauthorized'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/exchange-rates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get all exchange rates */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Exchange rates for all currencies */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                [key: string]: {
+                  [key: string]: number;
+                };
+              };
+            };
+          };
+        };
+        500: components['responses']['InternalError'];
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/exchange-rates/{currencyCode}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get exchange rates for a specific currency */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Currency code (e.g., BTC, ETH) */
+          currencyCode: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Exchange rates for the specified currency */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                [key: string]: number;
+              };
+            };
+          };
+        };
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -4104,10 +5304,12 @@ export interface paths {
           };
           content: {
             'application/json': {
-              tenants?: components['schemas']['Tenant'][];
-              total?: number;
-              limit?: number;
-              offset?: number;
+              data: {
+                tenants?: components['schemas']['Tenant'][];
+                total?: number;
+                limit?: number;
+                offset?: number;
+              };
             };
           };
         };
@@ -4125,6 +5327,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4160,9 +5363,13 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['Tenant'];
+            'application/json': {
+              data: components['schemas']['Tenant'];
+            };
           };
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
         /** @description Tenant not found */
         404: {
           headers: {
@@ -4170,11 +5377,12 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
     post?: never;
-    /** Permanently delete a tenant */
+    /** Soft-delete a tenant (sets status to deleted) */
     delete: {
       parameters: {
         query?: never;
@@ -4193,8 +5401,10 @@ export interface paths {
           };
           content: {
             'application/json': {
-              /** @enum {string} */
-              status?: 'deleted';
+              data: {
+                /** @enum {string} */
+                status?: 'deleted';
+              };
             };
           };
         };
@@ -4205,6 +5415,10 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -4246,8 +5460,10 @@ export interface paths {
           };
           content: {
             'application/json': {
-              /** @enum {string} */
-              status?: 'suspended';
+              data: {
+                /** @enum {string} */
+                status?: 'suspended';
+              };
             };
           };
         };
@@ -4258,6 +5474,10 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4294,8 +5514,10 @@ export interface paths {
           };
           content: {
             'application/json': {
-              /** @enum {string} */
-              status?: 'active';
+              data: {
+                /** @enum {string} */
+                status?: 'active';
+              };
             };
           };
         };
@@ -4306,6 +5528,10 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4342,8 +5568,10 @@ export interface paths {
           };
           content: {
             'application/json': {
-              /** @enum {string} */
-              status?: 'archived';
+              data: {
+                /** @enum {string} */
+                status?: 'archived';
+              };
             };
           };
         };
@@ -4354,6 +5582,10 @@ export interface paths {
           };
           content?: never;
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
+        404: components['responses']['NotFound'];
+        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4388,15 +5620,19 @@ export interface paths {
           };
           content: {
             'application/json': {
-              tenant?: components['schemas']['Tenant'];
-              node_running?: boolean;
-              data_summary?: {
-                product_groups?: number;
-                product_group_items?: number;
+              data: {
+                tenant?: components['schemas']['Tenant'];
+                node_running?: boolean;
+                data_summary?: {
+                  product_groups?: number;
+                  product_group_items?: number;
+                };
               };
             };
           };
         };
+        401: components['responses']['Unauthorized'];
+        403: components['responses']['Forbidden'];
         /** @description Tenant not found */
         404: {
           headers: {
@@ -4404,6 +5640,7 @@ export interface paths {
           };
           content?: never;
         };
+        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4418,6 +5655,37 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** @description Standard error envelope */
+    ApiError: {
+      error: {
+        /** @enum {string} */
+        code:
+          | 'VALIDATION_ERROR'
+          | 'BAD_REQUEST'
+          | 'UNAUTHORIZED'
+          | 'FORBIDDEN'
+          | 'NOT_FOUND'
+          | 'CONFLICT'
+          | 'INTERNAL_ERROR'
+          | 'SERVICE_UNAVAILABLE'
+          | 'RATE_LIMITED';
+        message: string;
+        details?: {
+          field?: string;
+          message?: string;
+        }[];
+      };
+    };
+    PaginationMeta: {
+      total?: number;
+      limit?: number;
+      offset?: number;
+      nextCursor?: string;
+    };
+    /**
+     * @deprecated
+     * @description Legacy error format — use ApiError instead
+     */
     Error: {
       error: string;
     };
@@ -4434,9 +5702,8 @@ export interface components {
       state: string;
     };
     SigninResponse: {
-      status?: string;
       /** @description JWT access token */
-      token?: string;
+      data?: string;
     };
     TelegramSigninRequest: {
       /** Format: int64 */
@@ -4570,9 +5837,10 @@ export interface components {
       orderId?: string;
     };
     RelayExecuteResponse: {
-      success?: boolean;
-      txHash?: string;
-      error?: string;
+      data?: {
+        success?: boolean;
+        txHash?: string;
+      };
     };
     RelayStatusResponse: {
       enabled?: boolean;
@@ -4629,7 +5897,62 @@ export interface components {
       updatedAt?: string;
     };
   };
-  responses: never;
+  responses: {
+    /** @description Invalid request parameters */
+    BadRequest: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ApiError'];
+      };
+    };
+    /** @description Authentication required or token invalid */
+    Unauthorized: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ApiError'];
+      };
+    };
+    /** @description Insufficient permissions */
+    Forbidden: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ApiError'];
+      };
+    };
+    /** @description Resource not found */
+    NotFound: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ApiError'];
+      };
+    };
+    /** @description Resource conflict */
+    Conflict: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ApiError'];
+      };
+    };
+    /** @description Internal server error */
+    InternalError: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ApiError'];
+      };
+    };
+  };
   parameters: never;
   requestBodies: never;
   headers: never;
