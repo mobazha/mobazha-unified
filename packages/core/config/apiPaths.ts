@@ -4,13 +4,13 @@
  * 三个后端服务，三组常量，一一对应：
  *
  *   NODE_API    → mobazha3.0 节点 API（经 hosting 反向代理，/v1/* 前缀）
- *   HOSTING_API → mobazha_hosting 自有 API（/api/* 和 /api/v1/* 前缀）
+ *   HOSTING_API → mobazha_hosting 平台 API（/platform/v1/* 前缀）
  *   SEARCH_API  → mobazha.info 搜索服务（/api/* 前缀）
  *
  * 使用方式：
  *   import { NODE_API, HOSTING_API, SEARCH_API } from '../../config/apiPaths';
  *   const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
- *   const url = `${getHostingUrl()}${HOSTING_API.MATRIX_CONFIG}`;
+ *   const url = `${getPlatformUrl()}${HOSTING_API.MATRIX_CONFIG}`;
  *   const url = `${getSearchUrl()}${SEARCH_API.SEARCH}`;
  */
 
@@ -146,103 +146,140 @@ export const NODE_API = {
 } as const;
 
 // ============================================================
-// Hosting API（mobazha_hosting 自有路由）
-// 与 getHostingUrl() 或 getBaseUrl() 拼接
+// Hosting API（mobazha_hosting 平台路由）
+// 与 getPlatformUrl() 或 getBaseUrl() 拼接
 // 后端注册：mobazha_hosting/api/gateway.go → newHostingRouter()
 // ============================================================
 export const HOSTING_API = {
+  // --- Auth ---
+  AUTH_SIGNIN: '/platform/v1/auth/signin',
+  AUTH_TELEGRAM_SIGNIN: '/platform/v1/auth/telegram/signin',
+  AUTH_TELEGRAM_MINI_APP_SIGNIN: '/platform/v1/auth/telegram/mini-app-signin',
+  AUTH_TELEGRAM_CHECK_MINI_APP_USER: '/platform/v1/auth/telegram/check-mini-app-user',
+  AUTH_DISCORD_MINI_APP_SIGNIN: '/platform/v1/auth/discord/mini-app-signin',
+  AUTH_DISCORD_OAUTH2_TOKEN: '/platform/v1/auth/discord/oauth2-token',
+  AUTH_DISCORD_CHECK_USER: '/platform/v1/auth/discord/check-user',
+  AUTH_DISCORD_OAUTH_CALLBACK: '/platform/v1/auth/discord/oauth-callback',
+
+  // --- Accounts ---
+  ACCOUNTS_ME: '/platform/v1/accounts/me',
+  ACCOUNTS_LINKED: '/platform/v1/accounts/linked',
+  ACCOUNTS_UNLINK: '/platform/v1/accounts/unlink',
+  ACCOUNTS_LINK_URL: '/platform/v1/accounts/link-url',
+  ACCOUNTS_LINK_CALLBACK: '/platform/v1/accounts/link-callback',
+
+  // --- Server ---
+  SERVER_INFO: '/platform/v1/server/info',
+
+  // --- IPNS ---
+  IPNS: '/platform/v1/ipns',
+  IPNS_PEER: (peerID: string) => `/platform/v1/ipns/${peerID}`,
+
+  // --- Stream ---
+  STREAM_AUTH: '/platform/v1/stream/auth',
+
+  // --- Integrations ---
+  INTEGRATIONS_STRIPE_ACCOUNT: (peerID: string) =>
+    `/platform/v1/integrations/stripe/accounts/${peerID}`,
+  INTEGRATIONS_TELEGRAM_WEBHOOK: '/platform/v1/integrations/telegram/webhook',
+
+  // --- Relay ---
+  RELAY_EXECUTE: '/platform/v1/relay/execute',
+  RELAY_STATUS: '/platform/v1/relay/status',
+
   // --- Matrix (hosting-level, 集中式注册/管理) ---
-  MATRIX_CONFIG: '/api/matrix/config',
-  MATRIX_AUTO_REGISTER: '/api/matrix/auto-register',
-  MATRIX_SYNC_PROFILE: '/api/matrix/sync-profile',
-  MATRIX_PEER_ID: '/api/matrix/peer-id',
-  MATRIX_STORE_CREATE_SPACE: '/api/matrix/store/create-space',
-  MATRIX_STORE_INVITE: '/api/matrix/store/invite',
-  MATRIX_STORE_KICK: '/api/matrix/store/kick',
+  MATRIX_CONFIG: '/platform/v1/matrix/config',
+  MATRIX_AUTO_REGISTER: '/platform/v1/matrix/auto-register',
+  MATRIX_SYNC_PROFILE: '/platform/v1/matrix/sync-profile',
+  MATRIX_PEER_ID: '/platform/v1/matrix/peer-id',
+  MATRIX_STORE_CREATE_SPACE: '/platform/v1/matrix/store/spaces',
+  MATRIX_STORE_INVITE: '/platform/v1/matrix/store/invite',
+  MATRIX_STORE_KICK: '/platform/v1/matrix/store/kick',
 
   // --- Moderators ---
-  MODERATOR: (id: string) => `/api/v1/moderators/${id}`,
-  MODERATOR_BY_PEER: (peerID: string) => `/api/v1/moderators/peer/${peerID}`,
-  MODERATORS_RECOMMENDED: '/api/v1/moderators/recommended',
-  MODERATOR_REVIEWS: (id: string) => `/api/v1/moderators/${id}/reviews`,
-  MODERATORS_REGISTER: '/api/v1/moderators/register',
-  MODERATORS_ME: '/api/v1/moderators/me',
+  MODERATOR: (id: string) => `/platform/v1/moderators/${id}`,
+  MODERATOR_BY_PEER: (peerID: string) => `/platform/v1/moderators/peer/${peerID}`,
+  MODERATORS_RECOMMENDED: '/platform/v1/moderators/recommended',
+  MODERATOR_REVIEWS: (id: string) => `/platform/v1/moderators/${id}/reviews`,
+  MODERATORS_REGISTER: '/platform/v1/moderators/register',
+  MODERATORS_ME: '/platform/v1/moderators/me',
 
   // --- Disputes (hosting-level) ---
-  DISPUTES: '/api/v1/disputes',
-  DISPUTE: (id: string) => `/api/v1/disputes/${id}`,
-  DISPUTES_ME: '/api/v1/disputes/me',
-  DISPUTE_RESPOND: (id: string) => `/api/v1/disputes/${id}/respond`,
-  DISPUTE_EVIDENCE: (id: string) => `/api/v1/disputes/${id}/evidence`,
-  DISPUTE_RESOLVE: (id: string) => `/api/v1/disputes/${id}/resolve`,
+  DISPUTES: '/platform/v1/disputes',
+  DISPUTE: (id: string) => `/platform/v1/disputes/${id}`,
+  DISPUTES_ME: '/platform/v1/disputes/me',
+  DISPUTE_RESPOND: (id: string) => `/platform/v1/disputes/${id}/respond`,
+  DISPUTE_EVIDENCE: (id: string) => `/platform/v1/disputes/${id}/evidence`,
+  DISPUTE_RESOLVE: (id: string) => `/platform/v1/disputes/${id}/resolve`,
 
   // --- User Groups ---
-  USER_GROUPS: '/api/v1/user-groups',
-  USER_GROUP: (id: string) => `/api/v1/user-groups/${id}`,
-  USER_GROUP_MEMBERS: (id: string) => `/api/v1/user-groups/${id}/members`,
-  USER_GROUP_MEMBERS_BATCH: (id: string) => `/api/v1/user-groups/${id}/members/batch`,
+  USER_GROUPS: '/platform/v1/user-groups',
+  USER_GROUP: (id: string) => `/platform/v1/user-groups/${id}`,
+  USER_GROUP_MEMBERS: (id: string) => `/platform/v1/user-groups/${id}/members`,
+  USER_GROUP_MEMBERS_BATCH: (id: string) => `/platform/v1/user-groups/${id}/members/batch`,
   USER_GROUP_MEMBER: (groupId: string, memberId: string) =>
-    `/api/v1/user-groups/${groupId}/members/${memberId}`,
+    `/platform/v1/user-groups/${groupId}/members/${memberId}`,
 
   // --- Product Groups ---
-  PRODUCT_GROUPS: '/api/v1/product-groups',
-  PRODUCT_GROUP: (id: string) => `/api/v1/product-groups/${id}`,
-  PRODUCT_GROUP_ITEMS: (id: string) => `/api/v1/product-groups/${id}/items`,
+  PRODUCT_GROUPS: '/platform/v1/product-groups',
+  PRODUCT_GROUP: (id: string) => `/platform/v1/product-groups/${id}`,
+  PRODUCT_GROUP_ITEMS: (id: string) => `/platform/v1/product-groups/${id}/items`,
   PRODUCT_GROUP_ITEM: (groupId: string, slug: string) =>
-    `/api/v1/product-groups/${groupId}/items/${slug}`,
-  PRODUCT_GROUP_AUTHORIZATIONS: (id: string) => `/api/v1/product-groups/${id}/authorizations`,
+    `/platform/v1/product-groups/${groupId}/items/${slug}`,
+  PRODUCT_GROUP_AUTHORIZATIONS: (id: string) => `/platform/v1/product-groups/${id}/authorizations`,
   PRODUCT_GROUP_AUTHORIZATION: (groupId: string, authId: string) =>
-    `/api/v1/product-groups/${groupId}/authorizations/${authId}`,
+    `/platform/v1/product-groups/${groupId}/authorizations/${authId}`,
 
   // --- Store Access ---
-  STORE_ACCESS_REQUESTS: '/api/v1/store-access-requests',
-  STORE_ACCESS_REQUEST: (id: string) => `/api/v1/store-access-requests/${id}`,
-  STORE_ACCESS_CHECK: '/api/v1/store-access/check',
-  STORE_ACCESS_SETTINGS: '/api/v1/store-access-settings',
-  STORE_ACCESS_LIST: '/api/v1/store-access-list',
+  STORE_ACCESS_REQUESTS: '/platform/v1/store-access-requests',
+  STORE_ACCESS_REQUEST: (id: string) => `/platform/v1/store-access-requests/${id}`,
+  STORE_ACCESS_CHECK: '/platform/v1/store-access/check',
+  STORE_ACCESS_SETTINGS: '/platform/v1/store-access-settings',
+  STORE_ACCESS_LIST: '/platform/v1/store-access-list',
 
   // --- Group Marketplace ---
   GROUP_MARKETPLACE_LISTINGS: (platform: string, chatId: string) =>
-    `/api/v1/group-marketplace/${platform}/${chatId}/listings`,
+    `/platform/v1/group-marketplace/${platform}/${chatId}/listings`,
   GROUP_MARKETPLACE_SELLERS: (platform: string, chatId: string) =>
-    `/api/v1/group-marketplace/${platform}/${chatId}/sellers`,
+    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers`,
   GROUP_MARKETPLACE_SELLERS_APPLY: (platform: string, chatId: string) =>
-    `/api/v1/group-marketplace/${platform}/${chatId}/sellers/apply`,
+    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/apply`,
   GROUP_MARKETPLACE_SELLER_REVIEW: (platform: string, chatId: string, sellerId: string) =>
-    `/api/v1/group-marketplace/${platform}/${chatId}/sellers/${sellerId}/review`,
+    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/${sellerId}/review`,
   GROUP_MARKETPLACE_CHECK_ADMIN: (platform: string, chatId: string) =>
-    `/api/v1/group-marketplace/${platform}/${chatId}/check-admin`,
+    `/platform/v1/group-marketplace/${platform}/${chatId}/check-admin`,
 
   // --- Marketplaces ---
-  MARKETPLACES: '/api/v1/marketplaces',
-  MARKETPLACE: (id: string) => `/api/v1/marketplaces/${id}`,
-  MARKETPLACE_BY_SLUG: (slug: string) => `/api/v1/marketplaces/slug/${slug}`,
-  MARKETPLACES_ME_OWNED: '/api/v1/marketplaces/me/owned',
-  MARKETPLACES_ME_JOINED: '/api/v1/marketplaces/me/joined',
-  MARKETPLACES_FEATURED: '/api/v1/marketplaces/featured',
-  MARKETPLACE_MEMBERS: (id: string) => `/api/v1/marketplaces/${id}/members`,
-  MARKETPLACE_JOIN: (id: string) => `/api/v1/marketplaces/${id}/join`,
-  MARKETPLACE_LEAVE: (id: string) => `/api/v1/marketplaces/${id}/leave`,
+  MARKETPLACES: '/platform/v1/marketplaces',
+  MARKETPLACE: (id: string) => `/platform/v1/marketplaces/${id}`,
+  MARKETPLACE_BY_SLUG: (slug: string) => `/platform/v1/marketplaces/slug/${slug}`,
+  MARKETPLACES_ME_OWNED: '/platform/v1/marketplaces/me/owned',
+  MARKETPLACES_ME_JOINED: '/platform/v1/marketplaces/me/joined',
+  MARKETPLACES_FEATURED: '/platform/v1/marketplaces/featured',
+  MARKETPLACE_MEMBERS: (id: string) => `/platform/v1/marketplaces/${id}/members`,
+  MARKETPLACE_JOIN: (id: string) => `/platform/v1/marketplaces/${id}/join`,
+  MARKETPLACE_LEAVE: (id: string) => `/platform/v1/marketplaces/${id}/leave`,
   MARKETPLACE_MEMBER_ROLE: (marketplaceId: string, memberId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/members/${memberId}/role`,
+    `/platform/v1/marketplaces/${marketplaceId}/members/${memberId}/role`,
   MARKETPLACE_MEMBER: (marketplaceId: string, memberId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/members/${memberId}`,
-  MARKETPLACE_SELLER_APPLICATIONS: (id: string) => `/api/v1/marketplaces/${id}/seller-applications`,
+    `/platform/v1/marketplaces/${marketplaceId}/members/${memberId}`,
+  MARKETPLACE_SELLER_APPLICATIONS: (id: string) =>
+    `/platform/v1/marketplaces/${id}/seller-applications`,
   MARKETPLACE_SELLER_APPLICATION_REVIEW: (marketplaceId: string, applicationId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/seller-applications/${applicationId}/review`,
+    `/platform/v1/marketplaces/${marketplaceId}/seller-applications/${applicationId}/review`,
   MARKETPLACE_SELLER_STATUS: (marketplaceId: string, sellerId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/sellers/${sellerId}/status`,
-  MARKETPLACE_PRODUCTS: (id: string) => `/api/v1/marketplaces/${id}/products`,
+    `/platform/v1/marketplaces/${marketplaceId}/sellers/${sellerId}/status`,
+  MARKETPLACE_PRODUCTS: (id: string) => `/platform/v1/marketplaces/${id}/products`,
   MARKETPLACE_PRODUCT: (marketplaceId: string, productId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/products/${productId}`,
+    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}`,
   MARKETPLACE_PRODUCT_REVIEW: (marketplaceId: string, productId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/products/${productId}/review`,
+    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}/review`,
   MARKETPLACE_PRODUCT_FEATURED: (marketplaceId: string, productId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/products/${productId}/featured`,
-  MARKETPLACE_ANNOUNCEMENTS: (id: string) => `/api/v1/marketplaces/${id}/announcements`,
+    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}/featured`,
+  MARKETPLACE_ANNOUNCEMENTS: (id: string) => `/platform/v1/marketplaces/${id}/announcements`,
   MARKETPLACE_ANNOUNCEMENT: (marketplaceId: string, announcementId: string) =>
-    `/api/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
-  MARKETPLACE_ACTIVITY: (id: string) => `/api/v1/marketplaces/${id}/activity`,
+    `/platform/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
+  MARKETPLACE_ACTIVITY: (id: string) => `/platform/v1/marketplaces/${id}/activity`,
 } as const;
 
 // ============================================================

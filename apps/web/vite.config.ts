@@ -174,7 +174,7 @@ export default defineConfig(({ mode }) => {
           target: apiBase,
           changeOrigin: true,
         }),
-        '/api': withStripWwwAuth({
+        '/platform': withStripWwwAuth({
           target: apiBase,
           changeOrigin: true,
         }),

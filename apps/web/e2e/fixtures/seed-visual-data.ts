@@ -75,7 +75,7 @@ export interface SeededVisualData {
 async function tryGetPeerID(request: APIRequestContext): Promise<string> {
   try {
     const token = await getCasdoorToken(request);
-    const resp = await request.get(`${BACKEND_URL}/api/userinfo`, {
+    const resp = await request.get(`${BACKEND_URL}/platform/v1/accounts/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await resp.json();
@@ -152,7 +152,7 @@ async function tryCreateListings(request: APIRequestContext): Promise<string[]> 
     const slugs: string[] = [];
     for (const payload of listingPayloads) {
       try {
-        const resp = await request.post(`${BACKEND_URL}/api/v1/listings`, {
+        const resp = await request.post(`${BACKEND_URL}/v1/listings`, {
           headers,
           data: payload,
         });
@@ -240,7 +240,7 @@ export async function cleanupVisualTestData(
     const headers = { Authorization: `Bearer ${token}` };
     for (const listing of data.listings) {
       try {
-        await request.delete(`${BACKEND_URL}/api/v1/listings/${listing.slug}`, { headers });
+        await request.delete(`${BACKEND_URL}/v1/listings/${listing.slug}`, { headers });
       } catch {
         /* ignore */
       }

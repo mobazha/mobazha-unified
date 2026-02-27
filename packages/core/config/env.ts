@@ -39,7 +39,7 @@ export interface CasdoorConfig {
 }
 
 export interface ApiEndpoints {
-  /** 基础 URL，用于 /api/* 接口 (如 /api/signin) */
+  /** 基础 URL，用于 /platform/v1/* 接口 (如 /platform/v1/auth/signin) */
   baseUrl: string;
   /** 节点 API URL，用于 /v1/* 接口 (如 /v1/profile) */
   gateway: string;
@@ -65,7 +65,7 @@ export interface EnvConfig {
  * 测试环境配置
  *
  * API 路径说明（参考后端 gateway.go 和移动端 api/const.js）：
- * - baseUrl: 基础 URL，用于 /api/* 接口 (如 /api/signin, /api/userinfo)
+ * - baseUrl: 基础 URL，用于 /platform/v1/* 接口 (如 /platform/v1/auth/signin, /platform/v1/accounts/me)
  * - gateway: 节点 API URL，用于 /v1/* 接口 (如 /v1/profile, /v1/listing)
  * - search: 搜索 API URL，用于 /info/* 接口
  */
@@ -83,7 +83,7 @@ export const TEST_ENV: EnvConfig = {
     redirectPath: '/',
   },
   api: {
-    baseUrl: 'https://miniapptest.mobazha.org', // 基础 URL，用于 /api/*
+    baseUrl: 'https://miniapptest.mobazha.org', // 基础 URL，用于 /platform/*
     gateway: 'https://miniapptest.mobazha.org/v1', // 节点 API，用于 /v1/*
     search: 'https://miniapptest.mobazha.org/info',
     mbzGateway: 'https://miniapptest.mobazha.org/info/v1',
@@ -108,7 +108,7 @@ export const PROD_ENV: EnvConfig = {
     redirectPath: '/',
   },
   api: {
-    baseUrl: 'https://miniapp.mobazha.org', // 基础 URL，用于 /api/*
+    baseUrl: 'https://miniapp.mobazha.org', // 基础 URL，用于 /platform/*
     gateway: 'https://miniapp.mobazha.org/v1', // 节点 API，用于 /v1/*
     search: 'https://miniapp.mobazha.org/info',
     mbzGateway: 'https://miniapp.mobazha.org/info/v1',
@@ -132,7 +132,7 @@ export const LOCAL_ENV: EnvConfig = {
     ...TEST_ENV.casdoor,
   },
   api: {
-    baseUrl: 'http://localhost:4002', // 基础 URL，用于 /api/*
+    baseUrl: 'http://localhost:4002', // 基础 URL，用于 /platform/*
     gateway: 'http://localhost:4002/v1', // 节点 API，用于 /v1/*
     search: 'https://info.mobazha.org', // 本地开发时使用公共 info 服务
     mbzGateway: 'https://info.mobazha.org/v1',

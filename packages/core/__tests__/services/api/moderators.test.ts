@@ -121,7 +121,7 @@ describe('Moderators API', () => {
 
       const result = await moderatorsApi.getModerator('mod1');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/moderators/mod1');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/moderators/mod1');
       expect(result.id).toBe('mod1');
     });
   });
@@ -132,7 +132,7 @@ describe('Moderators API', () => {
 
       const result = await moderatorsApi.getModeratorByPeerId('QmMod1');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/moderators/peer/QmMod1');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/moderators/peer/QmMod1');
       expect(result.peerID).toBe('QmMod1');
     });
   });
@@ -154,7 +154,7 @@ describe('Moderators API', () => {
 
       const result = await moderatorsApi.getRecommendedModerators(3);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/moderators/recommended?limit=3');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/moderators/recommended?limit=3');
       expect(Array.isArray(result)).toBe(true);
     });
   });
@@ -182,7 +182,7 @@ describe('Moderators API', () => {
         claim: 'Item not as described',
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/disputes', {
+      expect(mockApiClient.post).toHaveBeenCalledWith('/platform/v1/disputes', {
         orderId: 'ord1',
         claim: 'Item not as described',
       });
@@ -223,7 +223,7 @@ describe('Moderators API', () => {
         reason: 'Seller did not respond',
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/disputes/disp1/resolve', {
+      expect(mockApiClient.post).toHaveBeenCalledWith('/platform/v1/disputes/disp1/resolve', {
         decision: 'buyer',
         buyerPercentage: 100,
         sellerPercentage: 0,
@@ -247,7 +247,7 @@ describe('Moderators API', () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/api/v1/moderators/register',
+        '/platform/v1/moderators/register',
         expect.any(Object)
       );
     });

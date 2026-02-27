@@ -233,7 +233,7 @@ test.describe('AI Config API', () => {
       return;
     }
 
-    const resp = await request.get(`${BACKEND_URL}/api/v1/settings/ai/providers`, {
+    const resp = await request.get(`${BACKEND_URL}/v1/settings/ai/providers`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -261,7 +261,7 @@ test.describe('AI Config API', () => {
       return;
     }
 
-    const resp = await request.get(`${BACKEND_URL}/api/v1/settings/ai`, {
+    const resp = await request.get(`${BACKEND_URL}/v1/settings/ai`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -281,7 +281,7 @@ test.describe('AI Config API', () => {
       return;
     }
 
-    const putResp = await request.put(`${BACKEND_URL}/api/v1/settings/ai`, {
+    const putResp = await request.put(`${BACKEND_URL}/v1/settings/ai`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -303,7 +303,7 @@ test.describe('AI Config API', () => {
     expect(saved.model).toBe('');
     expect(saved.base_url).toBe('');
 
-    const getResp = await request.get(`${BACKEND_URL}/api/v1/settings/ai`, {
+    const getResp = await request.get(`${BACKEND_URL}/v1/settings/ai`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const fetched = await getResp.json();
@@ -320,7 +320,7 @@ test.describe('AI Config API', () => {
       return;
     }
 
-    const resp = await request.post(`${BACKEND_URL}/api/v1/settings/ai/test`, {
+    const resp = await request.post(`${BACKEND_URL}/v1/settings/ai/test`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',

@@ -50,8 +50,10 @@ test.describe('Smoke Test', () => {
     }
   });
 
-  test('3. API Health - /api/serverInfo returns 401 when unauthenticated', async ({ request }) => {
-    const response = await request.get(`${BASE_URL}/api/serverInfo`);
+  test('3. API Health - /platform/v1/server/info returns 401 when unauthenticated', async ({
+    request,
+  }) => {
+    const response = await request.get(`${BASE_URL}/platform/v1/server/info`);
     expect(response.status()).toBe(401);
     const body = await response.text();
     expect(body).toMatch(/auth|401|unauthorized/i);

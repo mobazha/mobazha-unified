@@ -61,7 +61,7 @@ export function createApiHelper(request: APIRequestContext, token: string) {
      * Create a group marketplace.
      */
     async createMarketplace(platform: string, chatID: string, title?: string) {
-      return this.post(`/api/v1/group-marketplace/${platform}`, {
+      return this.post(`/platform/v1/group-marketplace/${platform}`, {
         chatID,
         chatType: 'group',
         chatTitle: title || `E2E Test Marketplace ${chatID}`,
@@ -73,7 +73,7 @@ export function createApiHelper(request: APIRequestContext, token: string) {
      * Apply as seller in a marketplace.
      */
     async applySeller(platform: string, chatID: string, productGroupIDs?: number[]) {
-      return this.post(`/api/v1/group-marketplace/${platform}/${chatID}/sellers/apply`, {
+      return this.post(`/platform/v1/group-marketplace/${platform}/${chatID}/sellers/apply`, {
         productGroupIDs: productGroupIDs || [],
       });
     },
@@ -86,11 +86,11 @@ export function createApiHelper(request: APIRequestContext, token: string) {
       chatID: string,
       sellerID: string,
       status: 'approved' | 'rejected',
-      platformUserID: string,
+      platformUserID: string
     ) {
       return this.put(
-        `/api/v1/group-marketplace/${platform}/${chatID}/sellers/${sellerID}/review`,
-        { status, platformUserID },
+        `/platform/v1/group-marketplace/${platform}/${chatID}/sellers/${sellerID}/review`,
+        { status, platformUserID }
       );
     },
 
@@ -98,7 +98,7 @@ export function createApiHelper(request: APIRequestContext, token: string) {
      * Create a product group.
      */
     async createProductGroup(userID: string, name: string, description?: string) {
-      return this.post('/api/v1/product-groups', {
+      return this.post('/platform/v1/product-groups', {
         userID,
         name,
         description: description || `E2E test product group: ${name}`,
@@ -110,14 +110,14 @@ export function createApiHelper(request: APIRequestContext, token: string) {
      * Delete a product group.
      */
     async deleteProductGroup(groupID: string) {
-      return this.delete(`/api/v1/product-groups/${groupID}`);
+      return this.delete(`/platform/v1/product-groups/${groupID}`);
     },
 
     /**
      * Get user info for the authenticated user.
      */
     async getUserInfo() {
-      const resp = await this.get('/api/userinfo');
+      const resp = await this.get('/platform/v1/accounts/me');
       const data = await resp.json();
       return data?.data || data;
     },

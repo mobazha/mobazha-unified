@@ -281,7 +281,7 @@ test.describe('Standalone Store — Casdoor Token API', () => {
     const loginData = await loginResp.json();
     const token = loginData.data;
 
-    const userinfoResp = await request.get(`${CADDY_BASE}/buyer-api/api/userinfo`, {
+    const userinfoResp = await request.get(`${CADDY_BASE}/buyer-api/platform/v1/accounts/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

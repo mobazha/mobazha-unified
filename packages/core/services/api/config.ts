@@ -60,12 +60,10 @@ export function getApiConfig(): ApiConfig {
 }
 
 /**
- * 获取 Hosting 服务基础 URL
- * 用于 /api/* 接口（如 /api/signin, /api/userinfo）
- * 这些接口不需要 /v1 前缀
+ * 获取 Hosting 平台服务基础 URL
+ * 用于 /platform/v1/* 接口（如 /platform/v1/auth/signin, /platform/v1/accounts/me）
  */
 export function getHostingUrl(): string {
-  // 浏览器环境：服务器 nginx 直接代理 /api 路径
   if (shouldUseProxy()) {
     return '';
   }

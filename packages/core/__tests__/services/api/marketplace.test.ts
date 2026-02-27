@@ -89,7 +89,7 @@ describe('Marketplace API', () => {
       const result = await marketplaceApi.getMarketplaces();
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/marketplaces');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/marketplaces');
       expect(result.marketplaces).toHaveLength(1);
     });
 
@@ -110,7 +110,7 @@ describe('Marketplace API', () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/marketplaces?')
+        expect.stringContaining('/platform/v1/marketplaces?')
       );
     });
   });
@@ -121,7 +121,7 @@ describe('Marketplace API', () => {
 
       const result = await marketplaceApi.getMarketplace('mp1');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/marketplaces/mp1');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1');
       expect(result.id).toBe('mp1');
       expect(result.name).toBe('Crypto Collectibles');
     });
@@ -134,7 +134,7 @@ describe('Marketplace API', () => {
       const result = await marketplaceApi.getMarketplaceBySlug('crypto-collectibles');
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/api/v1/marketplaces/slug/crypto-collectibles'
+        '/platform/v1/marketplaces/slug/crypto-collectibles'
       );
       expect(result.slug).toBe('crypto-collectibles');
     });
@@ -154,7 +154,10 @@ describe('Marketplace API', () => {
         },
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/marketplaces', expect.any(Object));
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces',
+        expect.any(Object)
+      );
       expect(result.name).toBe('Crypto Collectibles');
     });
   });
@@ -175,7 +178,7 @@ describe('Marketplace API', () => {
 
       const result = await marketplaceApi.joinMarketplace('mp1');
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/marketplaces/mp1/join', {});
+      expect(mockApiClient.post).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/join', {});
       expect(result.marketplaceId).toBe('mp1');
     });
   });
@@ -186,7 +189,7 @@ describe('Marketplace API', () => {
 
       await marketplaceApi.leaveMarketplace('mp1');
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/marketplaces/mp1/leave', {});
+      expect(mockApiClient.post).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/leave', {});
     });
   });
 
@@ -209,7 +212,7 @@ describe('Marketplace API', () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplaces/mp1/seller-applications',
+        '/platform/v1/marketplaces/mp1/seller-applications',
         expect.any(Object)
       );
       expect(result.status).toBe('pending');
@@ -243,7 +246,7 @@ describe('Marketplace API', () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/marketplaces/mp1/products')
+        expect.stringContaining('/platform/v1/marketplaces/mp1/products')
       );
       expect(result.products).toHaveLength(1);
     });
@@ -270,7 +273,7 @@ describe('Marketplace API', () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplaces/mp1/products',
+        '/platform/v1/marketplaces/mp1/products',
         expect.any(Object)
       );
       expect(result.approvalStatus).toBe('pending');
@@ -297,7 +300,7 @@ describe('Marketplace API', () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplaces/mp1/products/prod1/review',
+        '/platform/v1/marketplaces/mp1/products/prod1/review',
         { status: 'approved' }
       );
       expect(result.approvalStatus).toBe('approved');
