@@ -94,5 +94,5 @@ const response = await searchFetch(SEARCH_API.SEARCH_LISTINGS);
 
 ## 迁移状态
 
-`apiPaths.ts` 中存在若干不规范的路径常量，将在 Phase R1-R3 逐步修正。
-新增路径常量**必须**遵循本规范。
+**Phase R1-R3 已全部完成（2026-02-27）**：`apiPaths.ts` 中所有路径常量已迁移为规范格式。
+所有路径常量**必须**遵循本规范。
