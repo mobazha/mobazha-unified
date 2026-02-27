@@ -23,7 +23,7 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
       return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
     }
     const timestamp = Date.now();
-    const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW}?peerId=${peerID}&${timestamp}`;
+    const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}?${timestamp}`;
     return await get<UserProfile>(url, getAuthHeaders());
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {

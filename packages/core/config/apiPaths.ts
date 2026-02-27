@@ -5,13 +5,13 @@
  *
  *   NODE_API    → mobazha3.0 节点 API（经 hosting 反向代理，/v1/* 前缀）
  *   HOSTING_API → mobazha_hosting 平台 API（/platform/v1/* 前缀）
- *   SEARCH_API  → mobazha.info 搜索服务（/api/* 前缀）
+ *   SEARCH_API  → mobazha.info 搜索服务（/search/v1/* 前缀）
  *
  * 使用方式：
  *   import { NODE_API, HOSTING_API, SEARCH_API } from '../../config/apiPaths';
  *   const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
  *   const url = `${getPlatformUrl()}${HOSTING_API.MATRIX_CONFIG}`;
- *   const url = `${getSearchUrl()}${SEARCH_API.SEARCH}`;
+ *   const url = `${getSearchUrl()}${SEARCH_API.SEARCH_LISTINGS}`;
  */
 
 // ============================================================
@@ -287,11 +287,12 @@ export const HOSTING_API = {
 // 后端注册：mobazha.info/backend/internal/api/server.go → setupRoutes()
 // ============================================================
 export const SEARCH_API = {
-  LISTINGS_FRESH: (limit: number) => `/api/listings/fresh/${limit}`,
-  LISTINGS_HOT: (hours: number, limit: number) => `/api/listings/hot/${hours}/${limit}`,
-  PROFILE_LISTINGS: '/profile/listings',
-  PROFILE_RAW: '/api/profile/raw',
-  SEARCH: '/api/search',
-  SEARCH_PROFILES: '/api/search/profile_m',
-  REPORTS: '/api/reports',
+  SEARCH_LISTINGS: '/search/v1/listings',
+  SEARCH_PROFILES: '/search/v1/profiles?format=mobile',
+  LISTINGS_FRESH: (limit: number) => `/search/v1/listings/fresh?limit=${limit}`,
+  LISTINGS_HOT: (hours: number, limit: number) =>
+    `/search/v1/listings/hot?hours=${hours}&limit=${limit}`,
+  PROFILE_LISTINGS: (peerID: string) => `/search/v1/profiles/${peerID}/listings`,
+  PROFILE_RAW: (peerID: string) => `/search/v1/profiles/${peerID}/raw`,
+  REPORTS: '/search/v1/reports',
 } as const;

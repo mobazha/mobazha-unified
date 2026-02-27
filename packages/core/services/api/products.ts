@@ -207,7 +207,7 @@ export async function fetchStoreListings(
   pageSize = 9
 ): Promise<ProductListItem[]> {
   return searchSafeGet<ProductListItem[]>(
-    `${SEARCH_API.PROFILE_LISTINGS}?peerId=${storePeerID}&pageSize=${pageSize}`,
+    `${SEARCH_API.PROFILE_LISTINGS(storePeerID)}?pageSize=${pageSize}`,
     []
   );
 }
@@ -425,7 +425,7 @@ export async function searchListings(
 
   try {
     const response = await searchSafeGet<SearchApiResponse>(
-      `${SEARCH_API.SEARCH}?${queryParams.toString()}`,
+      `${SEARCH_API.SEARCH_LISTINGS}?${queryParams.toString()}`,
       {}
     );
 
@@ -473,7 +473,7 @@ export async function searchProfiles(params: {
 
   try {
     const response = await searchSafeGet<ProfileSearchApiResponse>(
-      `${SEARCH_API.SEARCH_PROFILES}?${queryParams.toString()}`,
+      `${SEARCH_API.SEARCH_PROFILES}&${queryParams.toString()}`,
       {}
     );
 
