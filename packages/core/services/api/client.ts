@@ -1,45 +1,35 @@
 /**
- * API 客户端基础
+ * API client with standard envelope unwrapping.
+ *
+ * Success responses are wrapped in {"data": T} or {"data": T[], "meta": {...}}.
+ * Error responses are wrapped in {"error": {"code": "...", "message": "...", "details": [...]}}.
  */
 
-// ApiResponse type imported but used only for documentation
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { ApiResponse as _ApiResponse } from '../../types';
+import type { ErrorEnvelope, ApiErrorCode } from '../../types';
 import { isStandaloneBuyerAuth, getBuyerGatewayUrl } from './config';
 
-/**
- * 401 回调注册（用于通知 userStore 触发会话过期流程）
- * 避免 API client 直接依赖 store（防止循环依赖）
- */
 type UnauthorizedCallback = () => void;
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
 
-/**
- * 注册 401 未授权回调
- * 由 userStore 初始化时调用
- */
 export function onUnauthorized(callback: UnauthorizedCallback): void {
   onUnauthorizedCallback = callback;
 }
 
-/**
- * 请求选项
- */
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   headers?: Record<string, string>;
   body?: unknown;
   timeout?: number;
+  /** If true, return the raw JSON without unwrapping the data envelope. */
+  raw?: boolean;
 }
 
-/**
- * API 错误
- */
 export class ApiError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public code?: string
+    public code?: ApiErrorCode | string,
+    public details?: Array<{ field: string; message: string }>
   ) {
     super(message);
     this.name = 'ApiError';
@@ -47,10 +37,32 @@ export class ApiError extends Error {
 }
 
 /**
- * 发起 API 请求
+ * Parse a structured error envelope from the response body.
+ * Falls back to status text if the body is not in envelope format.
+ */
+async function parseErrorResponse(response: Response): Promise<ApiError> {
+  try {
+    const body = await response.json();
+    if (body?.error?.code && body?.error?.message) {
+      const { code, message, details } = body.error as ErrorEnvelope['error'];
+      return new ApiError(message, response.status, code, details);
+    }
+    const fallbackMsg = body?.error || body?.message || response.statusText;
+    return new ApiError(String(fallbackMsg), response.status);
+  } catch {
+    return new ApiError(response.statusText, response.status);
+  }
+}
+
+/**
+ * Core request function with envelope unwrapping.
+ *
+ * For 204 No Content, returns `undefined` (callers should type as `T | void`).
+ * For success responses, unwraps `{data: T}` and returns `T`.
+ * For error responses, throws `ApiError` with structured code/details.
  */
 export async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', headers = {}, body, timeout = 30000 } = options;
+  const { method = 'GET', headers = {}, body, timeout = 30000, raw = false } = options;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -73,19 +85,29 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
 
     if (!response.ok) {
       if (response.status === 401 && onUnauthorizedCallback) {
-        // In standalone buyer mode, a 401 from the local node means the
-        // request hit a private seller route — not a buyer token issue.
-        // Only trigger forceLogout when the buyer's own SaaS token is rejected.
         const isLocalNodeReject = isStandaloneBuyerAuth() && !url.startsWith(getBuyerGatewayUrl());
         if (!isLocalNodeReject) {
           onUnauthorizedCallback();
         }
       }
-      throw new ApiError(`HTTP ${response.status}: ${response.statusText}`, response.status);
+      throw await parseErrorResponse(response);
     }
 
-    const data = await response.json();
-    return data as T;
+    if (response.status === 204) {
+      return undefined as unknown as T;
+    }
+
+    const json = await response.json();
+
+    if (raw) {
+      return json as T;
+    }
+
+    if (json !== null && typeof json === 'object' && 'data' in json) {
+      return json.data as T;
+    }
+
+    return json as T;
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -104,16 +126,10 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
   }
 }
 
-/**
- * GET 请求
- */
 export async function get<T>(url: string, headers?: Record<string, string>): Promise<T> {
   return request<T>(url, { method: 'GET', headers });
 }
 
-/**
- * POST 请求
- */
 export async function post<T>(
   url: string,
   body?: unknown,
@@ -122,9 +138,6 @@ export async function post<T>(
   return request<T>(url, { method: 'POST', body, headers });
 }
 
-/**
- * PUT 请求
- */
 export async function put<T>(
   url: string,
   body?: unknown,
@@ -133,16 +146,10 @@ export async function put<T>(
   return request<T>(url, { method: 'PUT', body, headers });
 }
 
-/**
- * DELETE 请求
- */
 export async function del<T>(url: string, headers?: Record<string, string>): Promise<T> {
   return request<T>(url, { method: 'DELETE', headers });
 }
 
-/**
- * 安全请求（捕获错误返回空数组）
- */
 export async function safeRequest<T>(
   url: string,
   options: RequestOptions = {},
@@ -156,9 +163,6 @@ export async function safeRequest<T>(
   }
 }
 
-/**
- * API 客户端对象 (用于对象风格调用)
- */
 export const apiClient = {
   request,
   get,
