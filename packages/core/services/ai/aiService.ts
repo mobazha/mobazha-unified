@@ -6,6 +6,7 @@
  */
 
 import { authPost } from '../api/helpers';
+import { NODE_API } from '../../config/apiPaths';
 
 export type AiAction =
   | 'generate_from_images'
@@ -33,7 +34,7 @@ export interface AiGenerateResponse {
 class AiService {
   private async request(body: AiGenerateRequest): Promise<AiGenerateResponse> {
     try {
-      return await authPost<AiGenerateResponse>('/v1/ai/generate', body);
+      return await authPost<AiGenerateResponse>(NODE_API.AI_GENERATE, body);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'status' in error) {
         const status = (error as { status: number }).status;

@@ -311,6 +311,11 @@ export function initEnvFromProcess(): void {
 }
 
 // 自动初始化
-if (typeof process !== 'undefined' && process.env) {
+// Vite 的 define 在编译时替换 process.env.NEXT_PUBLIC_* 为字面量，
+// 但 process 对象本身在浏览器中不存在，所以不能用 typeof process 做守卫。
+// 直接调用即可 — 函数内部所有 process.env.NEXT_PUBLIC_* 引用都会被 Vite 替换。
+try {
   initEnvFromProcess();
+} catch {
+  // Node.js 环境中如果缺少 env var 也能安全降级
 }

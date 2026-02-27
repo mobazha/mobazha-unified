@@ -12,6 +12,7 @@ import {
 import type { ProductListItem } from '@mobazha/core';
 import { Package, ShoppingCart, TrendingUp, Star, Plus, Eye, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   StatCard,
   RecentOrderRow,
@@ -161,6 +162,7 @@ export default function AdminDashboardPage() {
     totalSalesDisplay,
   } = useDashboardData();
 
+  const searchParams = useSearchParams();
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
   const isDataLoading = productsLoading || salesLoading;
@@ -169,9 +171,11 @@ export default function AdminDashboardPage() {
   const isEmpty = !isDataLoading && !hasProducts && !hasOrders;
   const displayName = profile?.name || 'Seller';
 
+  const cameFromOnboarding = searchParams.get('onboarding') === 'complete';
+
   const showOnboarding = useMemo(
-    () => !sessionDismissed && isEmpty && !isOnboardingDismissed(),
-    [sessionDismissed, isEmpty]
+    () => (!sessionDismissed && isEmpty && !isOnboardingDismissed()) || cameFromOnboarding,
+    [sessionDismissed, isEmpty, cameFromOnboarding]
   );
 
   const handleOnboardingComplete = useCallback(() => {

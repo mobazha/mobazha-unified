@@ -1,18 +1,18 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { Menu } from 'lucide-react';
+import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
 interface AdminHeaderProps {
-  onMenuClick?: () => void;
   title?: string;
 }
 
-export function AdminHeader({ onMenuClick, title }: AdminHeaderProps) {
+export function AdminHeader({ title }: AdminHeaderProps) {
   const { t } = useI18n();
   const { profile } = useUserStore();
 
@@ -22,14 +22,11 @@ export function AdminHeader({ onMenuClick, title }: AdminHeaderProps) {
       data-testid="admin-header"
     >
       <div className="flex items-center gap-3">
-        {/* Mobile menu trigger */}
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md hover:bg-muted text-muted-foreground"
-          aria-label={t('admin.nav.openMenu')}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        {/* Mobile: show logo (bottom tabs replace hamburger) */}
+        <Link href="/admin" className="lg:hidden flex items-center gap-2">
+          <MobazhaLogo size={24} className="text-primary" />
+          <span className="font-semibold text-sm text-foreground">{t('admin.title')}</span>
+        </Link>
 
         {title && <h1 className="text-lg font-semibold text-foreground">{title}</h1>}
       </div>

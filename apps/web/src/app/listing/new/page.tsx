@@ -50,9 +50,12 @@ import {
   ReturnPolicySelector,
   AiImageGeneratePanel,
   AiAssistButton,
+  AiSetupPrompt,
   useListingAiIntegration,
+  MobileListingWizard,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // ─── 左侧导航标签定义 ───────────────────────────
 
@@ -127,8 +130,9 @@ function CreateListingContent() {
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { toast } = useToast();
 
-  // 克隆参数
+  // URL 参数
   const cloneSlug = searchParams.get('clone');
+  const fromOnboarding = searchParams.get('from') === 'onboarding';
 
   // 克隆数据加载状态
   const [cloneData, setCloneData] = useState<Partial<ListingFormData> | null>(null);
@@ -197,12 +201,16 @@ function CreateListingContent() {
   // 当前激活的标签
   const [activeTab, setActiveTab] = useState<TabKey>('general');
 
+  // 移动端检测
+  const isMobile = useIsMobile();
+
   // 店铺已有分类（用于自动补全建议）
   const { categories: storeCategories } = useStoreCategories();
 
   // AI 助手
   const {
     aiLoadingAction,
+    aiNotConfigured,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
@@ -333,10 +341,10 @@ function CreateListingContent() {
           title: t('common.success'),
           description: t('listing.createSuccess'),
         });
-        router.push(`/listing/edit/${result.slug}`);
+        router.push(fromOnboarding ? '/admin?onboarding=complete' : `/listing/edit/${result.slug}`);
       }
     },
-    [validate, submit, toast, t, router]
+    [validate, submit, toast, t, router, fromOnboarding]
   );
 
   // 保存草稿
@@ -403,7 +411,37 @@ function CreateListingContent() {
     );
   }
 
-  // ─── 主要渲染 ─────────────────────────────────
+  // ─── 移动端分步向导 ─────────────────────────────
+
+  if (isMobile) {
+    return (
+      <MobileListingWizard
+        formData={formData}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        updateField={updateField}
+        changeContractType={changeContractType}
+        addTag={addTag}
+        removeTag={removeTag}
+        updateVariantOptions={updateVariantOptions}
+        updateSkus={updateSkus}
+        addCoupon={addCoupon}
+        updateCoupon={updateCoupon}
+        removeCoupon={removeCoupon}
+        validate={validate}
+        onSubmit={handleSubmit}
+        onSaveDraft={handleSaveDraft}
+        onCancel={() => (fromOnboarding ? router.push('/admin') : router.back())}
+        storeCategories={storeCategories}
+        aiLoadingAction={aiLoadingAction}
+        onAiImproveTitle={handleAiImproveTitle}
+        onAiPolishDescription={handleAiPolishDescription}
+        onAiSuggestTags={handleAiSuggestTags}
+      />
+    );
+  }
+
+  // ─── 桌面端主要渲染 ─────────────────────────────
 
   return (
     <>
@@ -414,7 +452,7 @@ function CreateListingContent() {
           <div className="flex items-center justify-between mb-4 lg:mb-6">
             <div className="flex items-center gap-2 lg:gap-3">
               <Link
-                href="/settings/store"
+                href={fromOnboarding ? '/admin' : '/settings/store'}
                 className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -678,8 +716,11 @@ function CreateListingContent() {
                 />
               </div>
 
+              {/* AI 未配置引导 */}
+              {aiNotConfigured && <AiSetupPrompt />}
+
               {/* AI 从图片生成 */}
-              {aiImageUrls.length > 0 && (
+              {aiImageUrls.length > 0 && !aiNotConfigured && (
                 <AiImageGeneratePanel
                   imageUrls={aiImageUrls}
                   contractType={formData.contractType}
@@ -927,36 +968,8 @@ function CreateListingContent() {
                   </Card>
                 )}
 
-              {/* 移动端底部固定操作栏 */}
-              <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] z-50">
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={handleSaveDraft}
-                    disabled={isSubmitting}
-                    data-testid="listing-form-save-draft"
-                  >
-                    {t('listing.saveDraft')}
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    data-testid="listing-form-publish"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-1" />
-                    )}
-                    {t('listing.publish')}
-                  </Button>
-                </div>
-              </div>
-
-              {/* 底部间距（为移动端固定栏留空） */}
-              <div className="h-20 lg:hidden" />
+              {/* 底部间距 */}
+              <div className="h-6" />
             </div>
           </div>
         </Container>

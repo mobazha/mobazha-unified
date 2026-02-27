@@ -2524,6 +2524,18 @@ export const en: TranslationResource = {
       rwaTokenDesc: 'Real World Asset tokenized on blockchain',
     },
 
+    // Mobile wizard
+    mobile: {
+      stepEssentials: 'Essentials',
+      stepMedia: 'Photos & Video',
+      stepDetails: 'Details',
+      stepReview: 'Review',
+      stepOf: 'Step {{current}} of {{total}}',
+      readinessCheck: 'Readiness Check',
+      takePhoto: 'Take Photo',
+      chooseFromLibrary: 'From Library',
+    },
+
     // Wizard
     wizard: {
       steps: {
@@ -2607,6 +2619,7 @@ export const en: TranslationResource = {
     // Media
     photos: 'Photos',
     photosHelper: 'Include up to 30 photos. Drag files to upload, drag to reorder.',
+    photosHelperMobile: 'Include up to 30 photos. Long press to reorder.',
     primaryPhoto: 'PRIMARY PHOTO',
     imageAlt: {
       edit: 'Edit alt text',
@@ -3440,7 +3453,9 @@ export const en: TranslationResource = {
     generateAll: 'Generate All Fields',
     applyAll: 'Apply All',
     regenerate: 'Regenerate',
-    notConfigured: 'AI service not configured. Ask admin to set OPENAI_API_KEY.',
+    notConfigured: 'AI assistant is not configured.',
+    setupPrompt: 'Set up AI to auto-optimize product titles and descriptions.',
+    goToSettings: 'Go to Settings',
     error: 'Failed to generate. Please try again.',
   },
 
@@ -3602,20 +3617,12 @@ export const en: TranslationResource = {
       clickToUpload: 'Click to upload avatar',
       nameRequired: 'Store name is required',
       saveFailed: 'Failed to save store profile',
-      productTitle: 'Product Title',
-      productTitlePlaceholder: 'e.g. Handmade Leather Wallet',
-      productImages: 'Product Images',
-      addImage: 'Add',
-      productPrice: 'Price (USD)',
-      productDescription: 'Description',
-      productDescPlaceholder: 'Describe your product...',
-      productTitleRequired: 'Product title is required',
-      priceRequired: 'Please enter a valid price',
-      productCreateFailed: 'Failed to create product',
       createProduct: 'Create Product',
+      featureAi: 'AI-powered title & description',
+      featureVariants: 'Variants, pricing & inventory',
+      featureShipping: 'Shipping profiles & policies',
+      featureCoupons: 'Coupons & promotions',
       completeTitle: 'Your Store is Ready!',
-      completeDescWithProduct:
-        'Your store profile is set and your first product is live. Share your store link to start selling!',
       completeDesc: 'Your store profile is set up. Add products anytime from the admin panel.',
       viewStore: 'View Your Store',
       goToDashboard: 'Go to Dashboard',

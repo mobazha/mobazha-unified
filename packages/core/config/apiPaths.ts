@@ -93,7 +93,8 @@ export const NODE_API = {
   NOTIFICATION_CHANNEL_TYPES: '/notifications/channel-types',
   NOTIFICATION_CHANNELS_DETECT_CHAT: '/notifications/channels/detect-chat',
 
-  // --- AI Settings ---
+  // --- AI ---
+  AI_GENERATE: '/ai/generate',
   AI_CONFIG: '/settings/ai',
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',

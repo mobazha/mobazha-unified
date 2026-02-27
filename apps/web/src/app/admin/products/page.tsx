@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 type ViewMode = 'table' | 'grid';
 
@@ -89,6 +90,7 @@ export default function AdminProductsPage() {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -279,7 +281,7 @@ export default function AdminProductsPage() {
             {t('admin.products.count', { count: products.length })}
           </p>
         </div>
-        <Link href="/listing/new?from=admin">
+        <Link href="/listing/new?from=admin" className="hidden md:block">
           <Button className="gap-2">
             <Plus className="w-4 h-4" />
             {t('admin.products.addProduct')}
@@ -309,7 +311,7 @@ export default function AdminProductsPage() {
               {t('admin.products.deleteSelected', { count: selectedSlugs.size })}
             </Button>
           )}
-          <div className="flex border border-border rounded-lg overflow-hidden">
+          <div className="hidden md:flex border border-border rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={cn(
@@ -338,7 +340,54 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Mobile compact card list */}
+      {isMobile && filtered.length > 0 && (
+        <div className="space-y-2 md:hidden">
+          {filtered.map(product => (
+            <div
+              key={product.slug}
+              className="flex items-center gap-3 bg-card border border-border rounded-lg p-3"
+            >
+              <Checkbox
+                checked={selectedSlugs.has(product.slug)}
+                onCheckedChange={() => toggleSelect(product.slug)}
+                aria-label={t('admin.products.selectProduct', { title: product.title })}
+                className="shrink-0"
+              />
+              <Link
+                href={`/listing/edit/${product.slug}?from=admin`}
+                className="flex items-center gap-3 flex-1 min-w-0"
+              >
+                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-muted">
+                  <ProductImageNative
+                    src={getImageUrl(product.thumbnail?.small)}
+                    alt={product.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm font-semibold text-primary">
+                      {renderPrice(product.price)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {contractTypeLabel(product.contractType)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+              <ProductActions
+                slug={product.slug}
+                onRequestDelete={slug => setDeleteTarget({ type: 'single', slug })}
+                deleting={deletingSlug === product.slug}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop content */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-border rounded-xl">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted mb-4">
@@ -360,7 +409,7 @@ export default function AdminProductsPage() {
           )}
         </div>
       ) : viewMode === 'table' ? (
-        <div className="border border-border rounded-xl overflow-hidden">
+        <div className="border border-border rounded-xl overflow-hidden hidden md:block">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
@@ -433,7 +482,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map(product => (
             <div
               key={product.slug}
@@ -445,7 +494,7 @@ export default function AdminProductsPage() {
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 transition-opacity opacity-0 group-hover:opacity-100">
                   <ProductActions
                     slug={product.slug}
                     onRequestDelete={slug => setDeleteTarget({ type: 'single', slug })}
@@ -475,6 +524,15 @@ export default function AdminProductsPage() {
           ))}
         </div>
       )}
+
+      {/* Mobile FAB */}
+      <Link
+        href="/listing/new?from=admin"
+        className="md:hidden fixed right-4 bottom-20 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        aria-label={t('admin.products.addProduct')}
+      >
+        <Plus className="w-6 h-6" />
+      </Link>
     </div>
   );
 }
