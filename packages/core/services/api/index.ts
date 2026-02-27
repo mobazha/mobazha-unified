@@ -84,6 +84,16 @@ export * as socialApi from './social';
 // 购物车 API
 export * as cartApi from './cart';
 
+// 折扣 API
+export * as discountsApi from './discounts';
+export type {
+  Discount,
+  DiscountCode,
+  DiscountRedemption,
+  ValidateDiscountResponse,
+  ApplicableDiscount,
+} from './discounts';
+
 // 通知 API
 export * as notificationsApi from './notifications';
 export type { Notification, NotificationFilter, NotificationsResult } from './notifications';

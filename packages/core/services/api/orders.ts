@@ -301,7 +301,8 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
  * 注意：后端 API 不需要 vendorId，它从 listingHash 中解析卖家信息
  */
 export interface CreateOrderData {
-  vendorId?: string; // 可选，仅用于前端内部逻辑，不会发送到后端
+  vendorId?: string;
+  discountCodes?: string[];
   items: Array<{
     listingHash: string;
     quantity: number;
@@ -314,7 +315,6 @@ export interface CreateOrderData {
       service: string;
     };
     memo?: string;
-    coupons?: string[];
   }>;
   // 地址信息（仅物理商品需要）
   address?: {

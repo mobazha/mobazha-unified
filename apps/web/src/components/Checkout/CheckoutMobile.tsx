@@ -13,6 +13,7 @@ import { useCurrency, useI18n } from '@mobazha/core';
 import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
+import { DiscountInput } from './DiscountInput';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -47,6 +48,12 @@ export function CheckoutMobile({ checkout }: Props) {
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,
+    appliedDiscounts,
+    applicableDiscounts,
+    discountTotal,
+    isValidatingDiscount,
+    handleApplyDiscountCode,
+    handleRemoveDiscount,
   } = checkout;
 
   return (
@@ -309,6 +316,21 @@ export function CheckoutMobile({ checkout }: Props) {
               </Card>
             )}
 
+            {/* Discount Code */}
+            <Card>
+              <CardContent className="p-4">
+                <DiscountInput
+                  appliedDiscounts={appliedDiscounts}
+                  applicableDiscounts={applicableDiscounts}
+                  subtotal={subtotal}
+                  currency={currency}
+                  isValidating={isValidatingDiscount}
+                  onApplyCode={handleApplyDiscountCode}
+                  onRemoveDiscount={handleRemoveDiscount}
+                />
+              </CardContent>
+            </Card>
+
             {/* Order Note */}
             <Card>
               <CardContent className="p-4">
@@ -347,6 +369,16 @@ export function CheckoutMobile({ checkout }: Props) {
                           : shippingTotal === 0
                             ? t('checkout.free')
                             : renderPairedPrice(shippingTotal, currency)}
+                      </span>
+                    </HStack>
+                  )}
+                  {discountTotal > 0 && (
+                    <HStack justify="between">
+                      <span className="text-sm text-muted-foreground">
+                        {t('checkout.discount.label')}
+                      </span>
+                      <span className="font-medium text-success text-sm">
+                        -{renderPairedPrice(discountTotal, currency)}
                       </span>
                     </HStack>
                   )}

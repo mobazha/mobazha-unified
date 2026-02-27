@@ -12,6 +12,10 @@ import {
   useCartStore,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
+import { discountsApi } from '@mobazha/core/services/api/discounts';
+import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
+import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
+import { calculateDiscountAmount } from '@mobazha/core/utils/discountUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { useI18n } from '@mobazha/core';
 import {
@@ -99,6 +103,11 @@ export function useCheckout(): UseCheckoutReturn {
   // ---- Order note ----
   const [orderNote, setOrderNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ---- Discounts ----
+  const [appliedDiscounts, setAppliedDiscounts] = useState<AppliedDiscount[]>([]);
+  const [applicableDiscounts, setApplicableDiscounts] = useState<ApplicableDiscount[]>([]);
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
 
   // ---- Quantity ----
   const handleUpdateQuantity = useCallback((itemId: string, newQuantity: number) => {
@@ -266,7 +275,24 @@ export function useCheckout(): UseCheckoutReturn {
     }, 0);
   }, [checkoutItems, selectedShipping]);
 
-  const total = subtotal + shippingTotal;
+  // Recalculate savedAmount for percentage-based discounts when subtotal changes
+  useEffect(() => {
+    if (!appliedDiscounts.length || subtotal <= 0) return;
+    setAppliedDiscounts(prev =>
+      prev.map(d => ({
+        ...d,
+        savedAmount: calculateDiscountAmount(d.valueType, d.value, subtotal),
+      }))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
+
+  const discountTotal = useMemo(
+    () => appliedDiscounts.reduce((sum, d) => sum + d.savedAmount, 0),
+    [appliedDiscounts]
+  );
+
+  const total = Math.max(0, subtotal + shippingTotal - discountTotal);
   const currency = checkoutItems[0]?.currency || 'USD';
 
   const isRwaToken = useMemo(
@@ -345,6 +371,99 @@ export function useCheckout(): UseCheckoutReturn {
     }
   }, [selectedCountryCode, checkoutItems]);
 
+  // ---- Fetch applicable automatic discounts and auto-apply qualifying ones ----
+  useEffect(() => {
+    if (!checkoutItems.length) return;
+    let cancelled = false;
+    discountsApi
+      .getApplicableDiscounts()
+      .then(result => {
+        if (cancelled) return;
+        setApplicableDiscounts(result);
+        const currentSubtotal = checkoutItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        const autoApplied: AppliedDiscount[] = result
+          .filter(d => {
+            if (d.minPurchaseType === 'min_amount' && d.minAmount) {
+              return currentSubtotal >= Number(d.minAmount);
+            }
+            return true;
+          })
+          .map(d => {
+            const numValue = Number(d.value) || 0;
+            return {
+              id: d.title,
+              title: d.title,
+              valueType: d.valueType as AppliedDiscount['valueType'],
+              value: numValue,
+              savedAmount: calculateDiscountAmount(d.valueType, numValue, currentSubtotal),
+              currency: d.currency || checkoutItems[0]?.currency || 'USD',
+              auto: true,
+            };
+          });
+        if (autoApplied.length > 0) {
+          setAppliedDiscounts(prev => {
+            const manual = prev.filter(d => !d.auto);
+            return [...manual, ...autoApplied];
+          });
+        }
+      })
+      .catch(() => {
+        // Applicable discounts are optional
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [checkoutItems]);
+
+  const handleApplyDiscountCode = useCallback(
+    async (code: string) => {
+      setIsValidatingDiscount(true);
+      try {
+        const result = await discountsApi.validateDiscountCode({ code });
+
+        if (result.valid) {
+          const alreadyApplied = appliedDiscounts.some(ad => ad.code === code);
+          if (alreadyApplied) {
+            toast({ title: t('checkout.discount.alreadyApplied'), variant: 'destructive' });
+            return;
+          }
+          const numValue = Number(result.value) || 0;
+          const savedAmount = calculateDiscountAmount(result.valueType, numValue, subtotal);
+          setAppliedDiscounts(prev => [
+            ...prev,
+            {
+              id: code,
+              title: result.title,
+              code,
+              valueType: result.valueType as AppliedDiscount['valueType'],
+              value: numValue,
+              savedAmount,
+              currency,
+            },
+          ]);
+          toast({ title: t('checkout.discount.applied') });
+        }
+      } catch (err) {
+        const msg = (err as Error).message;
+        toast({
+          title: t('checkout.discount.invalid'),
+          description: msg || undefined,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsValidatingDiscount(false);
+      }
+    },
+    [subtotal, currency, appliedDiscounts, toast, t]
+  );
+
+  const handleRemoveDiscount = useCallback((id: string) => {
+    setAppliedDiscounts(prev => prev.filter(d => d.id !== id));
+  }, []);
+
   // ---- Create order ----
   const handleCreateOrder = useCallback(async () => {
     if (needsShippingAddress && !selectedAddress) {
@@ -366,7 +485,10 @@ export function useCheckout(): UseCheckoutReturn {
       const addressData =
         needsShippingAddress && selectedApiAddress ? toOrderAddress(selectedApiAddress) : undefined;
 
+      const discountCodes = appliedDiscounts.filter(d => d.code).map(d => d.code!);
+
       const result = await ordersApi.createOrder({
+        discountCodes: discountCodes.length > 0 ? discountCodes : undefined,
         items: checkoutItems.map(item => {
           const payload: {
             listingHash: string;
@@ -465,6 +587,7 @@ export function useCheckout(): UseCheckoutReturn {
     hasAllShippingSelected,
     apiAddresses,
     currency,
+    appliedDiscounts,
   ]);
 
   return {
@@ -508,6 +631,13 @@ export function useCheckout(): UseCheckoutReturn {
     handleCreateOrder,
     isSubmitting,
     canSubmit,
+
+    appliedDiscounts,
+    applicableDiscounts,
+    discountTotal,
+    isValidatingDiscount,
+    handleApplyDiscountCode,
+    handleRemoveDiscount,
 
     isRwaToken,
     rwaTradeMode,

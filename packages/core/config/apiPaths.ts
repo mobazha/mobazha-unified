@@ -139,6 +139,16 @@ export const NODE_API = {
   MATRIX_CREDENTIALS: '/matrix/credentials',
   MATRIX_PASSWORD: '/matrix/password',
 
+  // --- Discounts ---
+  DISCOUNTS: '/discounts',
+  DISCOUNT: (discountID: string) => `/discounts/${discountID}`,
+  DISCOUNT_CODES: (discountID: string) => `/discounts/${discountID}/codes`,
+  DISCOUNT_CODE: (discountID: string, codeID: string) => `/discounts/${discountID}/codes/${codeID}`,
+  DISCOUNT_REDEMPTIONS: (discountID: string) => `/discounts/${discountID}/redemptions`,
+  DISCOUNTS_VALIDATE: '/discounts/validate',
+  DISCOUNTS_APPLICABLE: '/discounts/applicable',
+  DISCOUNTS_CALCULATE: '/discounts/calculate',
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',

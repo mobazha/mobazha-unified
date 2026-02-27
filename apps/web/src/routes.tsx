@@ -264,6 +264,9 @@ const routes: RouteObject[] = [
       { index: true, element: lazyPage(() => import('./app/admin/page')) },
       { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
       { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
+      { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
+      { path: 'discounts/new', element: lazyPage(() => import('./app/admin/discounts/new/page')) },
+      { path: 'discounts/:id', element: lazyPage(() => import('./app/admin/discounts/[id]/page')) },
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
       {
