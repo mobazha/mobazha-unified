@@ -117,6 +117,33 @@ function getAuthHeaders(): Record<string, string> {
   return headers;
 }
 
+/**
+ * Unwrap {data: T} envelope from backend JSON responses.
+ */
+function unwrapData<T>(json: unknown): T {
+  if (json !== null && typeof json === 'object' && 'data' in json) {
+    return (json as Record<string, unknown>).data as T;
+  }
+  return json as T;
+}
+
+/**
+ * Extract error message from error response body.
+ * Supports both old format {error: string} and new format {error: {code, message}}.
+ */
+function extractErrorMessage(errBody: unknown): string {
+  if (errBody == null || typeof errBody !== 'object') return 'Request failed';
+  const o = errBody as Record<string, unknown>;
+  const err = o.error;
+  if (typeof err === 'string') return err;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const msg = (err as Record<string, unknown>).message;
+    return typeof msg === 'string' ? msg : 'Request failed';
+  }
+  if (typeof o.message === 'string') return o.message;
+  return 'Request failed';
+}
+
 // ============ 用户组管理 API ============
 
 /**
@@ -128,13 +155,14 @@ export async function getUserGroups(peerID: string): Promise<UserGroup[]> {
     method: 'GET',
     headers: getAuthHeaders(),
   });
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get user groups');
+    throw new Error(extractErrorMessage(raw));
   }
-  // 处理 API 返回 {"groups": null} 的情况
-  if (Array.isArray(data.groups)) {
-    return data.groups;
+  const data = unwrapData<{ groups?: UserGroup[] } | UserGroup[] | null>(raw);
+  if (data == null) return [];
+  if (Array.isArray((data as { groups?: UserGroup[] }).groups)) {
+    return (data as { groups: UserGroup[] }).groups;
   }
   if (Array.isArray(data)) {
     return data;
@@ -151,11 +179,11 @@ export async function createUserGroup(data: CreateUserGroupRequest): Promise<Use
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to create user group');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<UserGroup>(raw);
 }
 
 /**
@@ -170,11 +198,11 @@ export async function updateUserGroup(
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to update user group');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<UserGroup>(raw);
 }
 
 /**
@@ -186,8 +214,8 @@ export async function deleteUserGroup(groupId: number): Promise<void> {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    throw new Error(result.error || result.message || 'Failed to delete user group');
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
@@ -204,11 +232,17 @@ export async function getUserGroupMembers(groupId: number): Promise<UserGroupMem
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get members');
+    throw new Error(extractErrorMessage(raw));
   }
-  return Array.isArray(data.members) ? data.members : Array.isArray(data) ? data : [];
+  const data = unwrapData<{ members?: UserGroupMember[] } | UserGroupMember[] | null>(raw);
+  if (data == null) return [];
+  return Array.isArray((data as { members?: UserGroupMember[] }).members)
+    ? (data as { members: UserGroupMember[] }).members
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -226,11 +260,11 @@ export async function addUserGroupMember(
       body: JSON.stringify({ peerID }),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to add member');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<UserGroupMember>(raw);
 }
 
 /**
@@ -248,11 +282,11 @@ export async function addUserGroupMembersBatch(
       body: JSON.stringify({ peerIDs }),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to add members');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<{ added: number; failed: number }>(raw);
 }
 
 /**
@@ -267,8 +301,8 @@ export async function removeUserGroupMember(groupId: number, memberId: number): 
     }
   );
   if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    throw new Error(result.error || result.message || 'Failed to remove member');
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
@@ -283,11 +317,17 @@ export async function getProductGroups(userID: string): Promise<ProductGroup[]> 
     method: 'GET',
     headers: getAuthHeaders(),
   });
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get product groups');
+    throw new Error(extractErrorMessage(raw));
   }
-  return Array.isArray(data.productGroups) ? data.productGroups : Array.isArray(data) ? data : [];
+  const data = unwrapData<{ productGroups?: ProductGroup[] } | ProductGroup[] | null>(raw);
+  if (data == null) return [];
+  return Array.isArray((data as { productGroups?: ProductGroup[] }).productGroups)
+    ? (data as { productGroups: ProductGroup[] }).productGroups
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -299,11 +339,11 @@ export async function createProductGroup(data: CreateProductGroupRequest): Promi
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to create product group');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<ProductGroup>(raw);
 }
 
 /**
@@ -318,11 +358,11 @@ export async function updateProductGroup(
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to update product group');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<ProductGroup>(raw);
 }
 
 /**
@@ -334,8 +374,8 @@ export async function deleteProductGroup(groupId: number): Promise<void> {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    throw new Error(result.error || result.message || 'Failed to delete product group');
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
@@ -350,11 +390,17 @@ export async function getProductGroupItems(groupId: number): Promise<ProductGrou
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get items');
+    throw new Error(extractErrorMessage(raw));
   }
-  return Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
+  const data = unwrapData<{ data?: ProductGroupItem[] } | ProductGroupItem[] | null>(raw);
+  if (data == null) return [];
+  return Array.isArray((data as { data?: ProductGroupItem[] }).data)
+    ? (data as { data: ProductGroupItem[] }).data
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -373,11 +419,11 @@ export async function addProductToGroup(
       body: JSON.stringify({ listingSlug, peerID }),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to add product');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<ProductGroupItem>(raw);
 }
 
 /**
@@ -392,8 +438,8 @@ export async function removeProductFromGroup(groupId: number, slug: string): Pro
     }
   );
   if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    throw new Error(result.error || result.message || 'Failed to remove product');
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
@@ -412,11 +458,18 @@ export async function getProductGroupAuthorizations(
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get authorizations');
+    throw new Error(extractErrorMessage(raw));
   }
-  return Array.isArray(data.authorizations) ? data.authorizations : Array.isArray(data) ? data : [];
+  const data = unwrapData<
+    { authorizations?: ProductGroupAuthorization[] } | ProductGroupAuthorization[]
+  >(raw);
+  return Array.isArray((data as { authorizations?: ProductGroupAuthorization[] }).authorizations)
+    ? (data as { authorizations: ProductGroupAuthorization[] }).authorizations
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -434,11 +487,11 @@ export async function addProductGroupAuthorization(
       body: JSON.stringify(data),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to add authorization');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<ProductGroupAuthorization>(raw);
 }
 
 /**
@@ -456,8 +509,8 @@ export async function deleteProductGroupAuthorization(
     }
   );
   if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    throw new Error(result.error || result.message || 'Failed to delete authorization');
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
@@ -478,11 +531,16 @@ export async function getStoreAccessRequests(
     method: 'GET',
     headers: getAuthHeaders(),
   });
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get access requests');
+    throw new Error(extractErrorMessage(raw));
   }
-  return Array.isArray(data.requests) ? data.requests : Array.isArray(data) ? data : [];
+  const data = unwrapData<{ requests?: StoreAccessRequest[] } | StoreAccessRequest[]>(raw);
+  return Array.isArray((data as { requests?: StoreAccessRequest[] }).requests)
+    ? (data as { requests: StoreAccessRequest[] }).requests
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -496,11 +554,11 @@ export async function submitStoreAccessRequest(
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to submit request');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<StoreAccessRequest>(raw);
 }
 
 /**
@@ -518,11 +576,11 @@ export async function reviewAccessRequest(
       body: JSON.stringify(data),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to review request');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<StoreAccessRequest>(raw);
 }
 
 // ============ 店铺访问检查 API ============
@@ -547,11 +605,11 @@ export async function checkStoreAccess(
     method: 'GET',
     headers: getAuthHeaders(),
   });
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to check access');
+    throw new Error(extractErrorMessage(raw));
   }
-  return data;
+  return unwrapData<StoreAccessCheckResult>(raw);
 }
 
 // ============ 店铺访问设置 API ============
@@ -567,11 +625,11 @@ export async function getStoreAccessSettings(peerID: string): Promise<StoreAcces
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get settings');
+    throw new Error(extractErrorMessage(raw));
   }
-  return data;
+  return unwrapData<StoreAccessSettings>(raw);
 }
 
 /**
@@ -586,11 +644,11 @@ export async function updateStoreAccessSettings(
     headers: getAuthHeaders(),
     body: JSON.stringify({ peerID, ...data }),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to update settings');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<StoreAccessSettings>(raw);
 }
 
 // ============ 店铺访问白名单 API ============
@@ -606,12 +664,17 @@ export async function getStoreAccessList(storePeerID: string): Promise<StoreAcce
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get access list');
+    throw new Error(extractErrorMessage(raw));
   }
+  const data = unwrapData<{ accessList?: StoreAccessListItem[] } | StoreAccessListItem[]>(raw);
   // 后端返回格式: { accessList: [...], total: n }
-  return Array.isArray(data.accessList) ? data.accessList : Array.isArray(data) ? data : [];
+  return Array.isArray((data as { accessList?: StoreAccessListItem[] }).accessList)
+    ? (data as { accessList: StoreAccessListItem[] }).accessList
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -626,11 +689,11 @@ export async function addToStoreAccessList(
     headers: getAuthHeaders(),
     body: JSON.stringify({ storePeerID, requestorPeerID }),
   });
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to add to list');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<StoreAccessListItem>(raw);
 }
 
 /**
@@ -648,8 +711,8 @@ export async function removeFromStoreAccessList(
     }
   );
   if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    throw new Error(result.error || result.message || 'Failed to remove from list');
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
   }
 }
 
@@ -675,11 +738,11 @@ export async function getGroupListings(
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get listings');
+    throw new Error(extractErrorMessage(raw));
   }
-  return data;
+  return unwrapData<{ listings: unknown[]; total: number }>(raw);
 }
 
 /**
@@ -701,11 +764,16 @@ export async function getGroupSellers(
       headers: getAuthHeaders(),
     }
   );
-  const data = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to get sellers');
+    throw new Error(extractErrorMessage(raw));
   }
-  return Array.isArray(data.sellers) ? data.sellers : Array.isArray(data) ? data : [];
+  const data = unwrapData<{ sellers?: GroupSeller[] } | GroupSeller[]>(raw);
+  return Array.isArray((data as { sellers?: GroupSeller[] }).sellers)
+    ? (data as { sellers: GroupSeller[] }).sellers
+    : Array.isArray(data)
+      ? data
+      : [];
 }
 
 /**
@@ -724,11 +792,11 @@ export async function applyAsSeller(
       body: JSON.stringify(data),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to apply');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<GroupSeller>(raw);
 }
 
 /**
@@ -748,11 +816,11 @@ export async function reviewSeller(
       body: JSON.stringify(data),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to review');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<GroupSeller>(raw);
 }
 
 /**
@@ -771,11 +839,11 @@ export async function checkGroupAdmin(
       body: JSON.stringify({ platformUserID }),
     }
   );
-  const result = await response.json();
+  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || result.message || 'Failed to check admin');
+    throw new Error(extractErrorMessage(raw));
   }
-  return result;
+  return unwrapData<{ isAdmin: boolean }>(raw);
 }
 
 // ============ 导出 apiClient 兼容调用 ============
