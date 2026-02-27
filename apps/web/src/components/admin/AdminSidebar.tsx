@@ -14,7 +14,6 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -146,41 +145,6 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
         </a>
       </div>
     </div>
-  );
-}
-
-/** Mobile sidebar overlay */
-interface AdminMobileSidebarProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-export function AdminMobileSidebar({ open, onClose }: AdminMobileSidebarProps) {
-  const { t } = useI18n();
-  if (!open) return null;
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 z-50 lg:hidden animate-in slide-in-from-left duration-200">
-        <div className="relative h-full">
-          <AdminSidebar />
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-[-48px] min-w-[44px] min-h-[44px] rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground"
-            aria-label={t('admin.nav.closeMenu')}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </>
   );
 }
 

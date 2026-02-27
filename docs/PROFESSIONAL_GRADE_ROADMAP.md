@@ -974,7 +974,7 @@ Store Config JSON Schema:
 | PG-108 | 卖家 Onboarding 引导      | V1.3  | ✅ 完成   | 2026-02-26 (3 步向导：店铺资料+头像 → 创建首个商品 → 完成预览/跳转，localStorage 跟踪) |
 | PG-109 | 结账优惠券                | V1.3  | ⏳ 未开始 |                                                                                        |
 | PG-110 | AI 商品创建助手           | ✅ V1 | ✅ 完成   | 2026-02-26 (API Route + AI Service + UI 集成)                                          |
-| PG-111 | 移动端卖家体验            | V1.3  | ⏳ 未开始 |                                                                                        |
+| PG-111 | 移动端卖家体验            | V1.3  | ✅ 完成   | Shopify 风格：底部 Tab Bar、4 步商品创建向导、Camera-First 拍照、紧凑卡片列表 + FAB    |
 
 ### Tier 2 — 差异化竞争力
 
@@ -1001,4 +1001,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-26 (v32: PG-108 卖家 Onboarding 引导 — 3 步向导(店铺资料+头像/创建商品/完成预览) + localStorage dismiss + i18n 中英双语 + Dashboard 集成)
+最后更新: 2026-02-26 (v33: PG-111 移动端卖家体验 — Shopify 风格底部 Tab Bar + 4 步商品创建向导 + Camera-First 媒体上传 + 紧凑卡片列表 + FAB)

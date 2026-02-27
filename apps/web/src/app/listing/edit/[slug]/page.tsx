@@ -60,9 +60,12 @@ import {
   ReturnPolicySelector,
   AiImageGeneratePanel,
   AiAssistButton,
+  AiSetupPrompt,
   useListingAiIntegration,
+  MobileListingWizard,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // 左侧导航标签
 type TabKey =
@@ -176,12 +179,16 @@ export default function EditListingPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // 移动端检测
+  const isMobile = useIsMobile();
+
   // 店铺已有分类（用于自动补全建议）
   const { categories: storeCategories } = useStoreCategories();
 
   // AI 助手
   const {
     aiLoadingAction,
+    aiNotConfigured,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
@@ -400,6 +407,69 @@ export default function EditListingPage() {
       </div>
     );
   }
+
+  // ─── 移动端分步向导 ─────────────────────────────
+
+  if (isMobile) {
+    return (
+      <>
+        <MobileListingWizard
+          formData={formData}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          isEditMode
+          updateField={updateField}
+          changeContractType={changeContractType}
+          addTag={addTag}
+          removeTag={removeTag}
+          updateVariantOptions={updateVariantOptions}
+          updateSkus={updateSkus}
+          addCoupon={addCoupon}
+          updateCoupon={updateCoupon}
+          removeCoupon={removeCoupon}
+          validate={validate}
+          onSubmit={handleSubmit}
+          onSaveDraft={handleSaveDraft}
+          onCancel={() => router.back()}
+          onDelete={() => setShowDeleteDialog(true)}
+          onPreview={() => window.open(`/product/${slug}`, '_blank')}
+          storeCategories={storeCategories}
+          aiLoadingAction={aiLoadingAction}
+          onAiImproveTitle={handleAiImproveTitle}
+          onAiPolishDescription={handleAiPolishDescription}
+          onAiSuggestTags={handleAiSuggestTags}
+        />
+        {/* Delete dialog (shared with desktop) */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('listing.deleteConfirmTitle')}</DialogTitle>
+              <DialogDescription>{t('listing.deleteConfirmDesc')}</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={isDeleting}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-1" />
+                )}
+                {t('common.delete')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  // ─── 桌面端渲染 ─────────────────────────────
 
   return (
     <div className="min-h-screen bg-background" data-testid="listing-form-edit">
@@ -675,8 +745,11 @@ export default function EditListingPage() {
                 />
               </div>
 
+              {/* AI 未配置引导 */}
+              {aiNotConfigured && <AiSetupPrompt />}
+
               {/* AI 从图片生成 */}
-              {aiImageUrls.length > 0 && (
+              {aiImageUrls.length > 0 && !aiNotConfigured && (
                 <AiImageGeneratePanel
                   imageUrls={aiImageUrls}
                   contractType={formData.contractType}

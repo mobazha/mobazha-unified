@@ -11,6 +11,7 @@ import {
   Link as LinkIcon,
   Loader2,
   Pencil,
+  Camera,
 } from 'lucide-react';
 import type { Image } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
@@ -18,6 +19,7 @@ import { useI18n, getGatewayUrl, imagesApi, NODE_API } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface MediaSectionProps {
   images: Image[];
@@ -52,7 +54,9 @@ export function MediaSection({
 }: MediaSectionProps) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -307,20 +311,22 @@ export function MediaSection({
               />
 
               {/* 拖拽手柄 */}
-              <div className="absolute top-1 left-1 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              <div
+                className={`absolute top-1 left-1 p-1 bg-black/50 rounded transition-opacity ${isMobile ? 'opacity-80' : 'opacity-0 group-hover:opacity-100'}`}
+              >
                 <GripVertical className="w-3 h-3 text-white" />
               </div>
 
-              {/* 删除按钮 */}
+              {/* 删除按钮 — 移动端始终可见 */}
               <button
                 type="button"
                 onClick={() => handleRemoveImage(index)}
-                className="absolute top-1 right-1 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/90"
+                className={`absolute top-1 right-1 p-1.5 bg-destructive text-white rounded-full transition-opacity hover:bg-destructive/90 ${isMobile ? 'opacity-90' : 'opacity-0 group-hover:opacity-100'}`}
               >
                 <X className="w-3 h-3" />
               </button>
 
-              {/* Alt text 编辑按钮 */}
+              {/* Alt text 编辑按钮 — 移动端始终可见 */}
               <button
                 type="button"
                 onClick={e => {
@@ -330,7 +336,9 @@ export function MediaSection({
                 className={`absolute bottom-1 right-1 p-1 rounded transition-opacity text-xs ${
                   image.alt
                     ? 'bg-primary/80 text-white opacity-80 hover:opacity-100'
-                    : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                    : isMobile
+                      ? 'bg-black/50 text-white opacity-70'
+                      : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
                 }`}
                 title={t('listing.imageAlt.edit')}
               >
@@ -388,13 +396,50 @@ export function MediaSection({
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground mt-3">{t('listing.photosHelper')}</p>
+        {/* Mobile: camera-first upload bar */}
+        {isMobile && images.length < maxImages && (
+          <div className="flex gap-2 mt-3">
+            <Button
+              type="button"
+              variant="default"
+              className="flex-1 h-12"
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              <Camera className="w-5 h-5 mr-2" />
+              {t('listing.mobile.takePhoto')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 h-12"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              <ImageIcon className="w-5 h-5 mr-2" />
+              {t('listing.mobile.chooseFromLibrary')}
+            </Button>
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground mt-3">
+          {isMobile ? t('listing.photosHelperMobile') : t('listing.photosHelper')}
+        </p>
 
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           multiple
+          onChange={e => handleImageUpload(e.target.files)}
+          className="hidden"
+        />
+        {/* Camera capture input (mobile) */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           onChange={e => handleImageUpload(e.target.files)}
           className="hidden"
         />

@@ -2317,6 +2317,8 @@ export interface TranslationResource {
     applyAll?: string;
     regenerate?: string;
     notConfigured?: string;
+    setupPrompt?: string;
+    goToSettings?: string;
     error?: string;
   };
 
@@ -2483,19 +2485,12 @@ export interface TranslationResource {
       clickToUpload?: string;
       nameRequired?: string;
       saveFailed?: string;
-      productTitle?: string;
-      productTitlePlaceholder?: string;
-      productImages?: string;
-      addImage?: string;
-      productPrice?: string;
-      productDescription?: string;
-      productDescPlaceholder?: string;
-      productTitleRequired?: string;
-      priceRequired?: string;
-      productCreateFailed?: string;
       createProduct?: string;
+      featureAi?: string;
+      featureVariants?: string;
+      featureShipping?: string;
+      featureCoupons?: string;
       completeTitle?: string;
-      completeDescWithProduct?: string;
       completeDesc?: string;
       viewStore?: string;
       goToDashboard?: string;

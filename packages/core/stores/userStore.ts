@@ -607,8 +607,9 @@ export const useUserStore = create<UserState>()(
         },
 
         // 更新用户资料
+        // 注意：不设置 isLoading，因为 AuthGuard 监听 isLoading 会导致子组件卸载重挂载
         updateProfile: async (updates: Partial<UserProfile>) => {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
           try {
             const result = await profileApi.setProfile(updates);
@@ -617,28 +618,21 @@ export const useUserStore = create<UserState>()(
               const { profile } = get();
               set({
                 profile: profile ? { ...profile, ...updates } : null,
-                isLoading: false,
               });
               return true;
             }
 
-            set({
-              error: result.error || '更新资料失败',
-              isLoading: false,
-            });
+            set({ error: result.error || '更新资料失败' });
             return false;
           } catch (err) {
-            set({
-              error: err instanceof Error ? err.message : '更新资料失败',
-              isLoading: false,
-            });
+            set({ error: err instanceof Error ? err.message : '更新资料失败' });
             return false;
           }
         },
 
         // 创建用户资料（onboarding 时使用 POST）
         createProfile: async (profileData: Partial<UserProfile>) => {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
           const { authMode } = get();
           const isStandaloneBuyer = authMode === 'standalone';
@@ -656,32 +650,25 @@ export const useUserStore = create<UserState>()(
                 saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
                 set({
                   profile,
-                  isLoading: false,
                   needsOnboarding: false,
                 });
               } else {
-                set({ isLoading: false, needsOnboarding: false });
+                set({ needsOnboarding: false });
               }
               return true;
             }
 
-            set({
-              error: result.error || 'Failed to create profile',
-              isLoading: false,
-            });
+            set({ error: result.error || 'Failed to create profile' });
             return false;
           } catch (err) {
-            set({
-              error: err instanceof Error ? err.message : 'Failed to create profile',
-              isLoading: false,
-            });
+            set({ error: err instanceof Error ? err.message : 'Failed to create profile' });
             return false;
           }
         },
 
         // 更新用户设置
         updateSettings: async (updates: Partial<UserSettings>) => {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
           try {
             const result = await profileApi.setSettings(updates);
@@ -690,28 +677,21 @@ export const useUserStore = create<UserState>()(
               const { settings } = get();
               set({
                 settings: settings ? { ...settings, ...updates } : null,
-                isLoading: false,
               });
               return true;
             }
 
-            set({
-              error: result.error || '更新设置失败',
-              isLoading: false,
-            });
+            set({ error: result.error || '更新设置失败' });
             return false;
           } catch (err) {
-            set({
-              error: err instanceof Error ? err.message : '更新设置失败',
-              isLoading: false,
-            });
+            set({ error: err instanceof Error ? err.message : '更新设置失败' });
             return false;
           }
         },
 
         // 设置接受的币种
         setAcceptedCoins: async (coins: string[]) => {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
           try {
             const result = await profileApi.setAcceptedCoins(coins);
@@ -721,22 +701,15 @@ export const useUserStore = create<UserState>()(
               if (profile) {
                 set({
                   profile: { ...profile, currencies: coins as UserProfile['currencies'] },
-                  isLoading: false,
                 });
               }
               return true;
             }
 
-            set({
-              error: result.error || '设置失败',
-              isLoading: false,
-            });
+            set({ error: result.error || '设置失败' });
             return false;
           } catch (err) {
-            set({
-              error: err instanceof Error ? err.message : '设置失败',
-              isLoading: false,
-            });
+            set({ error: err instanceof Error ? err.message : '设置失败' });
             return false;
           }
         },

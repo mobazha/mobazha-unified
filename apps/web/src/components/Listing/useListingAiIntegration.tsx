@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { getGatewayUrl, useI18n } from '@mobazha/core';
 import type { AiGenerateResponse, Image, ListingFormData } from '@mobazha/core';
-import { useToast } from '@/components/ui';
+import { useToast, ToastAction } from '@/components/ui';
 import { useAiAssist } from './AiAssistant';
 
 interface UseListingAiIntegrationParams {
@@ -22,6 +22,7 @@ export function useListingAiIntegration({
   const {
     loadingAction: aiLoadingAction,
     lastError: aiError,
+    notConfigured: aiNotConfigured,
     improveTitle,
     polishDescription,
     suggestTags,
@@ -32,6 +33,25 @@ export function useListingAiIntegration({
       toast({ title: t('ai.assist'), description: aiError, variant: 'destructive' });
     }
   }, [aiError, toast, t]);
+
+  useEffect(() => {
+    if (aiNotConfigured) {
+      toast({
+        title: t('ai.notConfigured', { defaultValue: 'AI assistant is not configured.' }),
+        description: t('ai.setupPrompt', {
+          defaultValue: 'Set up AI to auto-optimize product titles and descriptions.',
+        }),
+        action: (
+          <ToastAction
+            altText={t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
+            onClick={() => window.open('/admin/settings/integrations', '_blank')}
+          >
+            {t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
+          </ToastAction>
+        ),
+      });
+    }
+  }, [aiNotConfigured, toast, t]);
 
   const handleAiImproveTitle = useCallback(async () => {
     const improved = await improveTitle(formData.title, formData.description);
@@ -84,6 +104,7 @@ export function useListingAiIntegration({
 
   return {
     aiLoadingAction,
+    aiNotConfigured,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,

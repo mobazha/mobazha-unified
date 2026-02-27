@@ -2398,6 +2398,18 @@ export const zh: TranslationResource = {
       rwaTokenDesc: '在区块链上代币化的真实世界资产',
     },
 
+    // 移动端向导
+    mobile: {
+      stepEssentials: '基本信息',
+      stepMedia: '图片视频',
+      stepDetails: '详细设置',
+      stepReview: '确认发布',
+      stepOf: '第 {{current}} 步，共 {{total}} 步',
+      readinessCheck: '发布前检查',
+      takePhoto: '拍照',
+      chooseFromLibrary: '从相册选择',
+    },
+
     // 向导式创建
     wizard: {
       steps: {
@@ -2480,6 +2492,7 @@ export const zh: TranslationResource = {
     // 媒体
     photos: '图片',
     photosHelper: '最多可上传 30 张图片，可拖拽添加或排序',
+    photosHelperMobile: '最多可上传 30 张图片，长按可排序',
     primaryPhoto: '主图',
     imageAlt: {
       edit: '编辑替代文本',
@@ -3291,7 +3304,9 @@ export const zh: TranslationResource = {
     generateAll: '生成所有字段',
     applyAll: '全部应用',
     regenerate: '重新生成',
-    notConfigured: 'AI 服务未配置，请联系管理员设置 OPENAI_API_KEY。',
+    notConfigured: 'AI 助手尚未配置。',
+    setupPrompt: '配置 AI 助手，自动优化商品标题和描述。',
+    goToSettings: '前往设置',
     error: '生成失败，请重试。',
   },
 
@@ -3432,19 +3447,12 @@ export const zh: TranslationResource = {
       clickToUpload: '点击上传头像',
       nameRequired: '请输入店铺名称',
       saveFailed: '保存店铺资料失败',
-      productTitle: '商品标题',
-      productTitlePlaceholder: '例如：手工皮革钱包',
-      productImages: '商品图片',
-      addImage: '添加',
-      productPrice: '价格（美元）',
-      productDescription: '商品描述',
-      productDescPlaceholder: '描述你的商品...',
-      productTitleRequired: '请输入商品标题',
-      priceRequired: '请输入有效的价格',
-      productCreateFailed: '创建商品失败',
       createProduct: '创建商品',
+      featureAi: 'AI 智能生成标题和描述',
+      featureVariants: '变体、定价和库存管理',
+      featureShipping: '配送方案和退换政策',
+      featureCoupons: '优惠券和促销活动',
       completeTitle: '你的店铺已就绪！',
-      completeDescWithProduct: '店铺资料已设置，第一个商品已上架。分享你的店铺链接开始销售吧！',
       completeDesc: '店铺资料已设置完成。你可以随时在管理面板中添加商品。',
       viewStore: '查看你的店铺',
       goToDashboard: '前往仪表盘',

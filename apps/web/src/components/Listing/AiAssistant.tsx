@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Sparkles, Loader2, Wand2, ImageIcon, Check, AlertCircle } from 'lucide-react';
+import {
+  Sparkles,
+  Loader2,
+  Wand2,
+  ImageIcon,
+  Check,
+  AlertCircle,
+  Settings,
+  ExternalLink,
+} from 'lucide-react';
 import { aiService, AiServiceError, useI18n } from '@mobazha/core';
 import type { AiGenerateResponse } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
@@ -43,6 +52,47 @@ export function AiAssistButton({
   );
 }
 
+// ─── AI Setup Prompt (shown when AI is not configured) ──
+
+interface AiSetupPromptProps {
+  onDismiss?: () => void;
+}
+
+export function AiSetupPrompt({ onDismiss }: AiSetupPromptProps) {
+  const { t } = useI18n();
+  return (
+    <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-lg">
+      <Settings className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-amber-800 dark:text-amber-200">
+          {t('ai.setupPrompt', {
+            defaultValue: 'Set up AI to auto-optimize product titles and descriptions.',
+          })}
+        </p>
+        <a
+          href="/admin/settings/integrations"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline mt-1"
+        >
+          {t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="text-amber-400 hover:text-amber-600 dark:text-amber-600 dark:hover:text-amber-400 transition-colors"
+          aria-label="Dismiss"
+        >
+          <span className="text-lg leading-none">&times;</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── AI Generate From Images Panel ──────────────────────
 
 interface AiImageGeneratePanelProps {
@@ -62,6 +112,7 @@ export function AiImageGeneratePanel({
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<AiGenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSetup, setShowSetup] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     if (!imageUrls.length) return;
@@ -76,14 +127,10 @@ export function AiImageGeneratePanel({
       });
       setResult(res);
     } catch (err) {
-      if (err instanceof AiServiceError) {
-        setError(
-          err.isNotConfigured
-            ? t('ai.notConfigured', {
-                defaultValue: 'AI service not configured. Ask admin to set OPENAI_API_KEY.',
-              })
-            : err.message
-        );
+      if (err instanceof AiServiceError && err.isNotConfigured) {
+        setShowSetup(true);
+      } else if (err instanceof AiServiceError) {
+        setError(err.message);
       } else {
         setError(t('ai.error', { defaultValue: 'Failed to generate. Please try again.' }));
       }
@@ -112,7 +159,9 @@ export function AiImageGeneratePanel({
         </div>
       </div>
 
-      {!result && !error && (
+      {showSetup && <AiSetupPrompt onDismiss={() => setShowSetup(false)} />}
+
+      {!result && !error && !showSetup && (
         <Button
           type="button"
           onClick={handleGenerate}
@@ -214,22 +263,33 @@ export interface UseAiAssistOptions {
 export function useAiAssist(opts?: UseAiAssistOptions) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [notConfigured, setNotConfigured] = useState(false);
+
+  const handleError = useCallback((err: unknown) => {
+    if (err instanceof AiServiceError && err.isNotConfigured) {
+      setNotConfigured(true);
+      setLastError(null);
+    } else {
+      setLastError(err instanceof Error ? err.message : 'Failed');
+    }
+  }, []);
 
   const improveTitle = useCallback(
     async (title: string, description?: string): Promise<string | null> => {
       setLoadingAction('improve_title');
       setLastError(null);
+      setNotConfigured(false);
       try {
         const res = await aiService.improveTitle(title, { description, language: opts?.language });
         return res.title;
       } catch (err) {
-        setLastError(err instanceof Error ? err.message : 'Failed');
+        handleError(err);
         return null;
       } finally {
         setLoadingAction(null);
       }
     },
-    [opts?.language]
+    [opts?.language, handleError]
   );
 
   const polishDescription = useCallback(
@@ -239,16 +299,17 @@ export function useAiAssist(opts?: UseAiAssistOptions) {
     ): Promise<{ description: string; shortDescription?: string } | null> => {
       setLoadingAction('polish_description');
       setLastError(null);
+      setNotConfigured(false);
       try {
         return await aiService.polishDescription(title, description, { language: opts?.language });
       } catch (err) {
-        setLastError(err instanceof Error ? err.message : 'Failed');
+        handleError(err);
         return null;
       } finally {
         setLoadingAction(null);
       }
     },
-    [opts?.language]
+    [opts?.language, handleError]
   );
 
   const suggestTags = useCallback(
@@ -258,21 +319,23 @@ export function useAiAssist(opts?: UseAiAssistOptions) {
     ): Promise<{ tags: string[]; categories: string[] } | null> => {
       setLoadingAction('suggest_tags');
       setLastError(null);
+      setNotConfigured(false);
       try {
         return await aiService.suggestTags(title, { description, language: opts?.language });
       } catch (err) {
-        setLastError(err instanceof Error ? err.message : 'Failed');
+        handleError(err);
         return null;
       } finally {
         setLoadingAction(null);
       }
     },
-    [opts?.language]
+    [opts?.language, handleError]
   );
 
   return {
     loadingAction,
     lastError,
+    notConfigured,
     isLoading: loadingAction !== null,
     improveTitle,
     polishDescription,
