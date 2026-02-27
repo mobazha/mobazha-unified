@@ -943,7 +943,7 @@ export const SaveBar: React.FC<SaveBarProps> = ({ isDirty, isLoading, onSave, on
 
 ```bash
 # 检查后端是否运行
-curl -sf http://localhost:18080/api/serverInfo && echo "OK"
+curl -sf http://localhost:18080/platform/serverInfo && echo "OK"
 # 如果没运行，启动 Docker E2E 环境
 cd ~/dev/mobazha/tests/e2e/docker && make up && make wait
 # 测试账号：testuser1/123

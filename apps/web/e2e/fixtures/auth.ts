@@ -74,7 +74,7 @@ export async function performCasdoorLogin(
 
 /**
  * Get a Casdoor JWT token via direct API call (type: "token").
- * This token can be used with /api/userinfo on the hosting backend.
+ * This token can be used with /platform/v1/accounts/me on the hosting backend.
  */
 export async function getCasdoorToken(
   request: APIRequestContext,
@@ -107,7 +107,7 @@ export async function getCasdoorToken(
 }
 
 /**
- * Get the peerID for a user by calling /api/userinfo with a Casdoor token.
+ * Get the peerID for a user by calling /platform/v1/accounts/me with a Casdoor token.
  */
 export async function getPeerID(
   request: APIRequestContext,
@@ -116,7 +116,7 @@ export async function getPeerID(
 ): Promise<string> {
   const token = await getCasdoorToken(request, username, password);
 
-  const resp = await request.get(`${BACKEND_URL}/api/userinfo`, {
+  const resp = await request.get(`${BACKEND_URL}/platform/v1/accounts/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

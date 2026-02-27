@@ -141,7 +141,7 @@ test.describe('Auth Guard Visual', () => {
       resolveDelay = resolve;
     });
 
-    await page.route('**/api/**', async route => {
+    await page.route('**/platform/**', async route => {
       await delayPromise;
       route.continue();
     });

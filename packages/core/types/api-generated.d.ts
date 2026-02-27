@@ -121,7 +121,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/signin': {
+  '/platform/v1/auth/signin': {
     parameters: {
       query?: never;
       header?: never;
@@ -161,7 +161,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/telegramSignin': {
+  '/platform/v1/auth/telegram/signin': {
     parameters: {
       query?: never;
       header?: never;
@@ -201,7 +201,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/telegramMiniAppSignin': {
+  '/platform/v1/auth/telegram/mini-app-signin': {
     parameters: {
       query?: never;
       header?: never;
@@ -235,7 +235,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/checkTelegramMiniAppUser': {
+  '/platform/v1/auth/telegram/check-mini-app-user': {
     parameters: {
       query?: never;
       header?: never;
@@ -269,7 +269,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/discordMiniAppSignin': {
+  '/platform/v1/auth/discord/mini-app-signin': {
     parameters: {
       query?: never;
       header?: never;
@@ -303,7 +303,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/discordOAuth2Token': {
+  '/platform/v1/auth/discord/oauth2-token': {
     parameters: {
       query?: never;
       header?: never;
@@ -337,7 +337,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/checkDiscordUser': {
+  '/platform/v1/auth/discord/check-user': {
     parameters: {
       query?: never;
       header?: never;
@@ -371,7 +371,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/discord/oauth/callback': {
+  '/platform/v1/auth/discord/oauth-callback': {
     parameters: {
       query?: never;
       header?: never;
@@ -408,7 +408,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/userinfo': {
+  '/platform/v1/accounts/me': {
     parameters: {
       query?: never;
       header?: never;
@@ -442,7 +442,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/serverInfo': {
+  '/platform/v1/server/info': {
     parameters: {
       query?: never;
       header?: never;
@@ -478,7 +478,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/account/linked': {
+  '/platform/v1/accounts/linked': {
     parameters: {
       query?: never;
       header?: never;
@@ -512,7 +512,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/account/unlink': {
+  '/platform/v1/accounts/unlink': {
     parameters: {
       query?: never;
       header?: never;
@@ -546,7 +546,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/account/link-url': {
+  '/platform/v1/accounts/link-url': {
     parameters: {
       query?: never;
       header?: never;
@@ -580,7 +580,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/account/link-callback': {
+  '/platform/v1/accounts/link-callback': {
     parameters: {
       query?: never;
       header?: never;
@@ -614,7 +614,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/ipns': {
+  '/platform/v1/ipns': {
     parameters: {
       query?: never;
       header?: never;
@@ -652,7 +652,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/ipns/{peerID}': {
+  '/platform/v1/ipns/{peerID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -697,7 +697,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/stream/auth': {
+  '/platform/v1/stream/auth': {
     parameters: {
       query?: never;
       header?: never;
@@ -731,7 +731,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/stripe/account/{peerID}': {
+  '/platform/v1/integrations/stripe/accounts/{peerID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -767,7 +767,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}': {
+  '/platform/v1/group-marketplace/{platform}': {
     parameters: {
       query?: never;
       header?: never;
@@ -805,7 +805,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -844,7 +844,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/sellers/apply': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/apply': {
     parameters: {
       query?: never;
       header?: never;
@@ -885,7 +885,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/sellers': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers': {
     parameters: {
       query?: never;
       header?: never;
@@ -924,7 +924,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review': {
     parameters: {
       query?: never;
       header?: never;
@@ -966,7 +966,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/listings': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/listings': {
     parameters: {
       query?: never;
       header?: never;
@@ -1003,7 +1003,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1041,7 +1041,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/featured': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/featured': {
     parameters: {
       query?: never;
       header?: never;
@@ -1078,7 +1078,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/banners': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/banners': {
     parameters: {
       query?: never;
       header?: never;
@@ -1115,7 +1115,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/search': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -1154,7 +1154,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/admin/featured': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/admin/featured': {
     parameters: {
       query?: never;
       header?: never;
@@ -1212,7 +1212,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/admin/banners': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/admin/banners': {
     parameters: {
       query?: never;
       header?: never;
@@ -1270,7 +1270,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/sellers/{userID}/group-marketplaces': {
+  '/platform/v1/sellers/{userID}/group-marketplaces': {
     parameters: {
       query?: never;
       header?: never;
@@ -1306,7 +1306,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/sellers/{userID}/visibility/{platform}/{chatID}': {
+  '/platform/v1/sellers/{userID}/visibility/{platform}/{chatID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1344,7 +1344,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/telegram/webhook': {
+  '/platform/v1/integrations/telegram/webhook': {
     parameters: {
       query?: never;
       header?: never;
@@ -1378,7 +1378,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/groups': {
+  '/platform/v1/group-marketplace/groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1412,7 +1412,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/telegram/{chatID}/verify-member': {
+  '/platform/v1/group-marketplace/telegram/{chatID}/verify-member': {
     parameters: {
       query?: never;
       header?: never;
@@ -1448,7 +1448,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/discord/{chatID}/verify-member': {
+  '/platform/v1/group-marketplace/discord/{chatID}/verify-member': {
     parameters: {
       query?: never;
       header?: never;
@@ -1484,7 +1484,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/group-marketplace/{platform}/{chatID}/check-admin': {
+  '/platform/v1/group-marketplace/{platform}/{chatID}/check-admin': {
     parameters: {
       query?: never;
       header?: never;
@@ -1521,7 +1521,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/product-groups': {
+  '/platform/v1/product-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1581,7 +1581,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/product-groups/{groupID}': {
+  '/platform/v1/product-groups/{groupID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1637,7 +1637,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/product-groups/{groupID}/items': {
+  '/platform/v1/product-groups/{groupID}/items': {
     parameters: {
       query?: never;
       header?: never;
@@ -1699,7 +1699,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/product-groups/{groupID}/items/{slug}': {
+  '/platform/v1/product-groups/{groupID}/items/{slug}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1736,7 +1736,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/product-groups/{productGroupID}/authorizations': {
+  '/platform/v1/product-groups/{productGroupID}/authorizations': {
     parameters: {
       query?: never;
       header?: never;
@@ -1794,7 +1794,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/product-groups/{productGroupID}/authorizations/{authID}': {
+  '/platform/v1/product-groups/{productGroupID}/authorizations/{authID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1831,7 +1831,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/user-groups': {
+  '/platform/v1/user-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1885,7 +1885,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/user-groups/{groupID}': {
+  '/platform/v1/user-groups/{groupID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1941,7 +1941,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/user-groups/{groupID}/members': {
+  '/platform/v1/user-groups/{groupID}/members': {
     parameters: {
       query?: never;
       header?: never;
@@ -1999,7 +1999,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/user-groups/{groupID}/members/batch': {
+  '/platform/v1/user-groups/{groupID}/members/batch': {
     parameters: {
       query?: never;
       header?: never;
@@ -2035,7 +2035,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/user-groups/{groupID}/members/{memberID}': {
+  '/platform/v1/user-groups/{groupID}/members/{memberID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2072,7 +2072,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-access-requests': {
+  '/platform/v1/store-access-requests': {
     parameters: {
       query?: never;
       header?: never;
@@ -2126,7 +2126,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-access-requests/{requestID}': {
+  '/platform/v1/store-access-requests/{requestID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2162,7 +2162,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-access/check': {
+  '/platform/v1/store-access/check': {
     parameters: {
       query?: never;
       header?: never;
@@ -2199,7 +2199,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-access-settings': {
+  '/platform/v1/store-access-settings': {
     parameters: {
       query?: never;
       header?: never;
@@ -2253,7 +2253,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-access-list': {
+  '/platform/v1/store-access-list': {
     parameters: {
       query?: never;
       header?: never;
@@ -2323,7 +2323,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-link': {
+  '/platform/v1/store-links': {
     parameters: {
       query?: never;
       header?: never;
@@ -2377,7 +2377,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-link/resolve/{shortCode}': {
+  '/platform/v1/store-links/resolve/{shortCode}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2420,7 +2420,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-link/resolve': {
+  '/platform/v1/store-links/resolve': {
     parameters: {
       query?: never;
       header?: never;
@@ -2454,7 +2454,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-link/regenerate': {
+  '/platform/v1/store-links/regenerate': {
     parameters: {
       query?: never;
       header?: never;
@@ -2488,7 +2488,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/store-bot': {
+  '/platform/v1/store-bots': {
     parameters: {
       query?: never;
       header?: never;
@@ -2566,7 +2566,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/encryption/sync-listing-key': {
+  '/platform/v1/encryption/sync-listing-key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2604,7 +2604,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/encryption/sync-product-group-key': {
+  '/platform/v1/encryption/sync-product-group-key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2642,7 +2642,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/encryption/listings/{peerID}/{slug}/key': {
+  '/platform/v1/encryption/listings/{peerID}/{slug}/key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2679,7 +2679,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/encryption/stores/{peerID}/keys': {
+  '/platform/v1/encryption/stores/{peerID}/keys': {
     parameters: {
       query?: never;
       header?: never;
@@ -2715,7 +2715,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/encryption/profile/privacy': {
+  '/platform/v1/encryption/profile/privacy': {
     parameters: {
       query?: never;
       header?: never;
@@ -2749,7 +2749,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/encryption/product-groups/{id}/rotate-key': {
+  '/platform/v1/encryption/product-groups/{id}/rotate-key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2785,7 +2785,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/relay/execute': {
+  '/platform/v1/relay/execute': {
     parameters: {
       query?: never;
       header?: never;
@@ -2841,7 +2841,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/relay/status': {
+  '/platform/v1/relay/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -2877,7 +2877,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/matrix/config': {
+  '/platform/v1/matrix/config': {
     parameters: {
       query?: never;
       header?: never;
@@ -2913,7 +2913,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/matrix/auto-register': {
+  '/platform/v1/matrix/auto-register': {
     parameters: {
       query?: never;
       header?: never;
@@ -2947,7 +2947,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/matrix/peer-id': {
+  '/platform/v1/matrix/peer-id': {
     parameters: {
       query?: never;
       header?: never;
@@ -2981,7 +2981,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/matrix/store/create-space': {
+  '/platform/v1/matrix/store/spaces': {
     parameters: {
       query?: never;
       header?: never;
@@ -3015,7 +3015,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/matrix/store/invite': {
+  '/platform/v1/matrix/store/invite': {
     parameters: {
       query?: never;
       header?: never;
@@ -3049,7 +3049,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/matrix/store/kick': {
+  '/platform/v1/matrix/store/kick': {
     parameters: {
       query?: never;
       header?: never;
@@ -4075,7 +4075,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/tenants': {
+  '/platform/v1/admin/tenants': {
     parameters: {
       query?: never;
       header?: never;
@@ -4135,7 +4135,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/tenants/{id}': {
+  '/platform/v1/admin/tenants/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -4212,7 +4212,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/tenants/{id}/suspend': {
+  '/platform/v1/admin/tenants/{id}/suspend': {
     parameters: {
       query?: never;
       header?: never;
@@ -4266,7 +4266,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/tenants/{id}/activate': {
+  '/platform/v1/admin/tenants/{id}/activate': {
     parameters: {
       query?: never;
       header?: never;
@@ -4314,7 +4314,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/tenants/{id}/archive': {
+  '/platform/v1/admin/tenants/{id}/archive': {
     parameters: {
       query?: never;
       header?: never;
@@ -4362,7 +4362,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/tenants/{id}/export': {
+  '/platform/v1/admin/tenants/{id}/export': {
     parameters: {
       query?: never;
       header?: never;
