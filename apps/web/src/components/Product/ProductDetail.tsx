@@ -22,7 +22,9 @@ import {
   sanitizeHtml,
   useChatStore,
   productsApi,
+  discountsApi,
 } from '@mobazha/core';
+import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
 import {
@@ -357,6 +359,16 @@ export function ProductDetail({
       isCancelled = true;
     };
   }, [product, slug]);
+
+  // 自动折扣标签
+  const [applicableDiscounts, setApplicableDiscounts] = useState<ApplicableDiscount[]>([]);
+  useEffect(() => {
+    if (!product) return;
+    discountsApi
+      .getApplicableDiscounts()
+      .then(setApplicableDiscounts)
+      .catch(() => {});
+  }, [product]);
 
   // 计算图片 URL 数组
   const imageUrls = useMemo(() => {
@@ -747,6 +759,51 @@ export function ProductDetail({
                 {priceInfo.pairedPrice}
               </span>
             </div>
+
+            {/* Applicable discounts */}
+            {applicableDiscounts.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {applicableDiscounts.map((d, idx) => (
+                  <div
+                    key={`${d.title}-${idx}`}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/5 text-primary',
+                      isModal ? 'px-2 py-1 text-xs' : 'px-2.5 py-1 text-xs sm:text-sm'
+                    )}
+                  >
+                    <svg
+                      className="w-3 h-3 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                    <span>
+                      {d.valueType === 'percentage' &&
+                        t('product.discount.off', { value: `${d.value}%` })}
+                      {d.valueType === 'fixed_amount' &&
+                        t('product.discount.off', { value: `${d.currency} ${d.value}` })}
+                      {d.valueType === 'free_shipping' && t('product.discount.freeShipping')}
+                      {d.minPurchaseType === 'min_amount' && Number(d.minAmount) > 0 && (
+                        <>
+                          {' '}
+                          ·{' '}
+                          {t('product.discount.minPurchase', {
+                            amount: `${d.currency} ${d.minAmount}`,
+                          })}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Shipping - 仅对实物商品显示 */}
             {product.metadata?.contractType === 'PHYSICAL_GOOD' && (

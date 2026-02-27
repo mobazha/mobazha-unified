@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   BarChart3,
   Settings,
+  Tag,
   ExternalLink,
   HelpCircle,
   ChevronLeft,
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
+  { id: 'discounts', labelKey: 'admin.nav.discounts', href: '/admin/discounts', icon: Tag },
   { id: 'analytics', labelKey: 'admin.nav.analytics', href: '/admin/analytics', icon: BarChart3 },
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
 ];

@@ -1,5 +1,7 @@
 import type { Address as FrontendAddress } from '@/components/Address';
 import type { UserProfile, DisplayAddress, Address as CoreAddress } from '@mobazha/core';
+import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
+import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 
 /** Checkout shipping zone (unified from ShippingProfile zones and legacy ShippingOptions) */
 export interface CheckoutShippingZone {
@@ -93,6 +95,13 @@ export interface UseCheckoutReturn {
   handleCreateOrder: () => Promise<void>;
   isSubmitting: boolean;
   canSubmit: boolean;
+
+  appliedDiscounts: AppliedDiscount[];
+  applicableDiscounts: ApplicableDiscount[];
+  discountTotal: number;
+  isValidatingDiscount: boolean;
+  handleApplyDiscountCode: (code: string) => Promise<void>;
+  handleRemoveDiscount: (id: string) => void;
 
   isRwaToken: boolean;
   rwaTradeMode: number | undefined;

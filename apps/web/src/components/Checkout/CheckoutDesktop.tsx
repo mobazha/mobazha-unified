@@ -14,6 +14,7 @@ import { useCurrency, useI18n } from '@mobazha/core';
 import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
+import { DiscountInput } from './DiscountInput';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -49,6 +50,12 @@ export function CheckoutDesktop({ checkout }: Props) {
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,
+    appliedDiscounts,
+    applicableDiscounts,
+    discountTotal,
+    isValidatingDiscount,
+    handleApplyDiscountCode,
+    handleRemoveDiscount,
   } = checkout;
 
   const formatItemPrice = (item: (typeof checkoutItems)[0]) =>
@@ -261,6 +268,20 @@ export function CheckoutDesktop({ checkout }: Props) {
 
                 <Card>
                   <CardContent className="p-6">
+                    <DiscountInput
+                      appliedDiscounts={appliedDiscounts}
+                      applicableDiscounts={applicableDiscounts}
+                      subtotal={subtotal}
+                      currency={currency}
+                      isValidating={isValidatingDiscount}
+                      onApplyCode={handleApplyDiscountCode}
+                      onRemoveDiscount={handleRemoveDiscount}
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
                     <h2 className="text-lg font-semibold text-foreground mb-3">
                       {t('checkout.orderNote')}
                     </h2>
@@ -399,6 +420,17 @@ export function CheckoutDesktop({ checkout }: Props) {
                               : shippingTotal === 0
                                 ? t('checkout.free')
                                 : renderPairedPrice(shippingTotal, currency)}
+                          </span>
+                        </HStack>
+                      )}
+
+                      {discountTotal > 0 && (
+                        <HStack justify="between">
+                          <span className="text-sm text-muted-foreground">
+                            {t('checkout.discount.label')}
+                          </span>
+                          <span className="font-medium text-success text-sm">
+                            -{renderPairedPrice(discountTotal, currency)}
                           </span>
                         </HStack>
                       )}
