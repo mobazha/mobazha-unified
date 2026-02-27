@@ -3769,7 +3769,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/wallet/receivingaccountlist': {
+  '/v1/wallet/receiving-accounts': {
     parameters: {
       query?: never;
       header?: never;

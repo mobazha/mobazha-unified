@@ -171,14 +171,14 @@ export async function openDispute(
   orderId: string,
   claim: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_OPEN, { orderID: orderId, claim });
+  return authPost(NODE_API.DISPUTE_OPEN(orderId), { claim });
 }
 
 /**
  * 关闭争议（撤回）
  */
 export async function closeDispute(orderId: string): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_CLOSE, { orderID: orderId });
+  return authPost(NODE_API.DISPUTE_CLOSE(orderId), {});
 }
 
 /**
@@ -190,8 +190,7 @@ export async function resolveDispute(
   vendorPercentage: number,
   resolution: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_RELEASE, {
-    orderID: orderId,
+  return authPost(NODE_API.DISPUTE_RELEASE(orderId), {
     buyerPercentage,
     vendorPercentage,
     resolution,
@@ -204,7 +203,7 @@ export async function resolveDispute(
 export async function acceptDisputeResolution(
   orderId: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_RELEASE, { orderID: orderId });
+  return authPost(NODE_API.DISPUTE_RELEASE(orderId), {});
 }
 
 /**
@@ -213,7 +212,7 @@ export async function acceptDisputeResolution(
 export async function releaseEscrowAfterTimeout(
   orderId: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT, { orderID: orderId });
+  return authPost(NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT(orderId), {});
 }
 
 /**
@@ -229,8 +228,7 @@ export async function getReleaseFundsInstructions(
   signature?: string;
   error?: string;
 }> {
-  return authPost(NODE_API.INSTRUCTIONS_DISPUTE_RELEASE, {
-    orderID: orderId,
+  return authPost(NODE_API.DISPUTE_INSTRUCTIONS_RELEASE(orderId), {
     buyerPercentage,
     vendorPercentage,
     resolution,

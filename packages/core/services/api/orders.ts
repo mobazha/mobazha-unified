@@ -428,7 +428,7 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
     }
   }
 
-  return authPost<CreateOrderResult>(NODE_API.ORDERS_PURCHASE, apiData);
+  return authPost<CreateOrderResult>(NODE_API.ORDERS, apiData);
 }
 
 /**
@@ -519,13 +519,12 @@ export async function confirmOrder(payload: {
   payoutAddress?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDERS_CONFIRM, payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_CONFIRM(payload.orderID), payload);
     return { success: true };
   };
 
   const mockFn = async () => {
     await mockDelay();
-    // Mock: 更新订单状态
     const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
       order.state = payload.reject ? 'DECLINED' : 'AWAITING_FULFILLMENT';
@@ -533,7 +532,7 @@ export async function confirmOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/confirm');
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/confirm`);
 }
 
 /**
@@ -549,7 +548,7 @@ export async function fulfillOrder(payload: {
   receivingAccountID?: number;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDERS_FULFILL, payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_FULFILL(payload.orderID), payload);
     return { success: true };
   };
 
@@ -562,7 +561,7 @@ export async function fulfillOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/fulfill');
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/fulfill`);
 }
 
 /**
@@ -584,7 +583,7 @@ export async function completeOrder(payload: {
   anonymous?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDERS_COMPLETE, payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_COMPLETE(payload.orderID), payload);
     return { success: true };
   };
 
@@ -597,7 +596,7 @@ export async function completeOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/complete');
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/complete`);
 }
 
 /**
@@ -643,18 +642,20 @@ export async function getCompleteInstructions(params: {
   initiatorAddress: string;
 }): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_COMPLETE, params);
+    return authPost<OrderInstructionsResponse>(
+      NODE_API.ORDER_INSTRUCTIONS_COMPLETE(params.orderID),
+      params
+    );
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
     await mockDelay();
-    // Mock: 默认不需要链上交易
     return {
       hasInstructions: false,
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/instructions/order/complete');
+  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/complete`);
 }
 
 /**
@@ -674,18 +675,20 @@ export async function getConfirmInstructions(params: {
   payoutAddress?: string;
 }): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_CONFIRM, params);
+    return authPost<OrderInstructionsResponse>(
+      NODE_API.ORDER_INSTRUCTIONS_CONFIRM(params.orderID),
+      params
+    );
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
     await mockDelay();
-    // Mock: 默认不需要链上交易（UTXO 链或其他不需要 instructions 的情况）
     return {
       hasInstructions: false,
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/instructions/order/confirm');
+  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/confirm`);
 }
 
 /**
@@ -701,18 +704,20 @@ export async function getCancelInstructions(params: {
   initiatorAddress: string;
 }): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_CANCEL, params);
+    return authPost<OrderInstructionsResponse>(
+      NODE_API.ORDER_INSTRUCTIONS_CANCEL(params.orderID),
+      params
+    );
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
     await mockDelay();
-    // Mock: 默认不需要链上交易
     return {
       hasInstructions: false,
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/instructions/order/cancel');
+  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/cancel`);
 }
 
 /**
@@ -728,18 +733,20 @@ export async function getRefundInstructions(params: {
   initiatorAddress: string;
 }): Promise<OrderInstructionsResponse> {
   const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(NODE_API.INSTRUCTIONS_ORDER_REFUND, params);
+    return authPost<OrderInstructionsResponse>(
+      NODE_API.ORDER_INSTRUCTIONS_REFUND(params.orderID),
+      params
+    );
   };
 
   const mockFn = async (): Promise<OrderInstructionsResponse> => {
     await mockDelay();
-    // Mock: 默认不需要链上交易
     return {
       hasInstructions: false,
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/instructions/order/refund');
+  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/refund`);
 }
 
 /**
@@ -751,7 +758,7 @@ export async function cancelOrder(payload: {
   transactionID?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDERS_CANCEL, payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_CANCEL(payload.orderID), payload);
     return { success: true };
   };
 
@@ -764,7 +771,7 @@ export async function cancelOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/cancel');
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/cancel`);
 }
 
 /**
@@ -776,7 +783,7 @@ export async function refundOrder(payload: {
   transactionID?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDERS_REFUND, payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_REFUND(payload.orderID), payload);
     return { success: true };
   };
 
@@ -789,7 +796,7 @@ export async function refundOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/refund');
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/refund`);
 }
 
 // ========== 支付相关 API ==========
@@ -835,7 +842,10 @@ export async function submitPayment(
   paymentData: SubmitPaymentData
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; error?: string }>(NODE_API.ORDERS_PAYMENT, { paymentData });
+    return authPost<{ success: boolean; error?: string }>(
+      NODE_API.ORDER_PAYMENT(paymentData.orderID),
+      { paymentData }
+    );
   };
 
   const mockFn = async () => {
@@ -843,7 +853,7 @@ export async function submitPayment(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/payment');
+  return withMockFallback(realFn, mockFn, `/orders/${paymentData.orderID}/payment`);
 }
 
 /**
@@ -857,15 +867,18 @@ export async function fundOrder(payload: {
   memo?: string;
 }): Promise<{ success: boolean; txid?: string; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; txid?: string; error?: string }>(NODE_API.ORDERS_SPEND, {
-      coinType: payload.coin,
-      orderID: payload.orderId,
-      address: payload.address,
-      amount: payload.amount,
-      feeLevel: 'ECONOMIC',
-      memo: payload.memo,
-      requireAssociateOrder: true,
-    });
+    return authPost<{ success: boolean; txid?: string; error?: string }>(
+      NODE_API.ORDER_SPEND(payload.orderId),
+      {
+        coinType: payload.coin,
+        orderID: payload.orderId,
+        address: payload.address,
+        amount: payload.amount,
+        feeLevel: 'ECONOMIC',
+        memo: payload.memo,
+        requireAssociateOrder: true,
+      }
+    );
   };
 
   const mockFn = async () => {
@@ -880,7 +893,7 @@ export async function fundOrder(payload: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/orders/spend');
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderId}/spend`);
 }
 
 /**
@@ -957,7 +970,7 @@ export async function getPaymentInstructions(requestData: {
       backendRequestData.moderator = requestData.moderator;
     }
     return authPost<PaymentInstructionsResponse>(
-      NODE_API.INSTRUCTIONS_ORDER_PAYMENT,
+      NODE_API.ORDER_INSTRUCTIONS_PAYMENT(requestData.orderId),
       backendRequestData
     );
   };
@@ -969,7 +982,7 @@ export async function getPaymentInstructions(requestData: {
     return {
       instructions: {
         to: mockContractAddress,
-        data: '0x57bced76' + '0'.repeat(256), // Mock contract call data
+        data: '0x57bced76' + '0'.repeat(256),
         value: '0',
       },
       paymentData: {
@@ -977,7 +990,7 @@ export async function getPaymentInstructions(requestData: {
         coin: requestData.coin,
         method: 1,
         contractAddress: mockContractAddress,
-        amount: 1500, // Mock amount in minimal units
+        amount: 1500,
         unlockHours: 720,
         paymentTokenAddress: '0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
       },
@@ -985,7 +998,7 @@ export async function getPaymentInstructions(requestData: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, '/instructions/order/payment');
+  return withMockFallback(realFn, mockFn, `/orders/${requestData.orderId}/instructions/payment`);
 }
 
 /**
@@ -1021,8 +1034,7 @@ export async function openDispute(
   claim: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_OPEN, {
-      orderID: orderId,
+    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_OPEN(orderId), {
       claim,
     });
   };
@@ -1046,9 +1058,7 @@ export async function acceptDispute(
   orderId: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_RELEASE, {
-      orderID: orderId,
-    });
+    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_RELEASE(orderId), {});
   };
 
   const mockFn = async () => {
@@ -1069,9 +1079,10 @@ export async function acceptDispute(
  */
 export async function claimPayment(orderId: string): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; error?: string }>(NODE_API.RELEASE_AFTER_TIMEOUT, {
-      orderID: orderId,
-    });
+    return authPost<{ success: boolean; error?: string }>(
+      NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT(orderId),
+      {}
+    );
   };
 
   const mockFn = async () => {
