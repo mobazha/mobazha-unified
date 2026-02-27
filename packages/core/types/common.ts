@@ -1,5 +1,56 @@
 /**
- * 通用 API 响应类型
+ * Standard API success envelope: {"data": T}
+ */
+export interface DataEnvelope<T = unknown> {
+  data: T;
+}
+
+/**
+ * Standard API list envelope: {"data": T[], "meta": {...}}
+ */
+export interface ListEnvelope<T = unknown> {
+  data: T[];
+  meta: ListMeta;
+}
+
+export interface ListMeta {
+  total: number;
+  limit?: number;
+  offset?: number;
+  nextCursor?: string;
+}
+
+/**
+ * Standard API error envelope: {"error": {...}}
+ */
+export interface ErrorEnvelope {
+  error: ApiErrorDetail;
+}
+
+export interface ApiErrorDetail {
+  code: ApiErrorCode;
+  message: string;
+  details?: FieldError[];
+}
+
+export interface FieldError {
+  field: string;
+  message: string;
+}
+
+export type ApiErrorCode =
+  | 'VALIDATION_ERROR'
+  | 'BAD_REQUEST'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'CONFLICT'
+  | 'INTERNAL_ERROR'
+  | 'SERVICE_UNAVAILABLE'
+  | 'RATE_LIMITED';
+
+/**
+ * @deprecated Use DataEnvelope<T> instead. Kept for backward compatibility during migration.
  */
 export interface ApiResponse<T = unknown> {
   success?: boolean;
@@ -9,7 +60,7 @@ export interface ApiResponse<T = unknown> {
 }
 
 /**
- * 分页响应
+ * @deprecated Use ListEnvelope<T> instead.
  */
 export interface PaginatedResponse<T> {
   results: T[];
