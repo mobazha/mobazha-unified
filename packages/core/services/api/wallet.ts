@@ -215,7 +215,7 @@ export interface ReceivingAccount {
  * 获取所有收款账户列表
  */
 export async function getReceivingAccounts(): Promise<ReceivingAccount[]> {
-  return authSafeGet<ReceivingAccount[]>(NODE_API.WALLET_RECEIVING_ACCOUNT_LIST, []);
+  return authSafeGet<ReceivingAccount[]>(NODE_API.WALLET_RECEIVING_ACCOUNTS, []);
 }
 
 // ========== 导出 API 对象 ==========
