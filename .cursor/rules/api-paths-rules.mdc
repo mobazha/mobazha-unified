@@ -1,0 +1,98 @@
+---
+description: 前端 API 路径规范，确保与后端路由一致
+alwaysApply: true
+globs:
+  - "packages/core/config/apiPaths.ts"
+  - "packages/core/config/env.ts"
+  - "packages/core/services/**/*.ts"
+---
+
+# 前端 API 路径规范
+
+## 后端 API 设计标准
+
+完整规范：`mobazha_hosting/docs/API_DESIGN_STANDARD.md`
+标准化执行清单：`mobazha_hosting/docs/API_STANDARDIZATION_CHECKLIST.md`
+
+## 三层 API 路径常量
+
+所有后端 API 路径定义在 `packages/core/config/apiPaths.ts`：
+
+| 常量组 | 后端服务 | URL 拼接 | 前缀 |
+|---|---|---|---|
+| `NODE_API` | mobazha3.0 | `getGatewayUrl()` + path | `/v1/` 前缀由 URL 提供 |
+| `HOSTING_API` | mobazha_hosting | 绝对路径，含 `/platform/` | `/platform/v1/` |
+| `SEARCH_API` | mobazha.info | `getSearchUrl()` + path | 目标 `/search/v1/` |
+
+## 命名规范
+
+### 路径常量命名
+
+```typescript
+// ✅ 静态路径：大写 + 下划线
+WALLET_RECEIVING_ACCOUNTS: '/wallet/receiving-accounts',
+
+// ✅ 动态路径：函数，参数描述清晰
+ORDER_CONFIRM: (orderId: string) => `/orders/${orderId}/confirm`,
+```
+
+### 路径值规范
+
+| 维度 | 规范 | 正确 | 错误 |
+|---|---|---|---|
+| 大小写 | **kebab-case** | `/receiving-accounts` | ~~`/receivingaccountlist`~~ |
+| 资源名 | **复数** | `/listings`, `/accounts` | ~~`/listing`~~, ~~`/account`~~ |
+| Action | ID 在 URL 中 | `(id) => /orders/${id}/confirm` | ~~`'/orders/confirm'`~~ |
+
+## 禁止规则
+
+### 1. 禁止硬编码 API 路径
+
+```typescript
+// ❌ 直接拼路径
+fetch(`${getGatewayUrl()}/wallet/spend`)
+
+// ✅ 使用 apiPaths 常量
+fetch(`${getGatewayUrl()}${NODE_API.WALLET_SPEND}`)
+```
+
+### 2. 禁止 HOSTING_API 使用无版本路径（新增时）
+
+```typescript
+// ❌ 新增路径没有 /v1/
+MATRIX_CONFIG: '/platform/matrix/config',
+
+// ✅ 新增路径带 /v1/ 和域分组
+MATRIX_CONFIG: '/platform/v1/matrix/config',
+```
+
+### 3. 禁止 camelCase 路径段
+
+```typescript
+// ❌
+WALLET_RECEIVING_ACCOUNT_LIST: '/wallet/receivingaccountlist',
+
+// ✅
+WALLET_RECEIVING_ACCOUNTS: '/wallet/receiving-accounts',
+```
+
+## Service 文件使用三层 helpers
+
+```typescript
+import { authFetch, publicFetch, searchFetch } from '../helpers';
+import { NODE_API, HOSTING_API, SEARCH_API } from '../../config/apiPaths';
+
+// Node API（需认证）
+const response = await authFetch(NODE_API.LISTINGS);
+
+// Hosting API（平台操作）
+const response = await authFetch(HOSTING_API.MATRIX_CONFIG);
+
+// Search API（公开搜索）
+const response = await searchFetch(SEARCH_API.SEARCH_LISTINGS);
+```
+
+## 迁移状态
+
+`apiPaths.ts` 中存在若干不规范的路径常量，将在 Phase R1-R3 逐步修正。
+新增路径常量**必须**遵循本规范。
