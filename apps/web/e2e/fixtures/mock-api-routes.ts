@@ -438,11 +438,7 @@ export async function mockPreferencesAPI(page: Page): Promise<void> {
  * Set up route mocking for search results page.
  */
 export async function mockSearchAPI(page: Page): Promise<void> {
-  await page.route('**/api/search?**', route => {
-    const url = route.request().url();
-    if (url.includes('profile_m') || url.includes('search/profile')) {
-      return route.continue();
-    }
+  await page.route('**/search/v1/listings**', route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
