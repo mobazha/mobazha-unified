@@ -535,7 +535,8 @@ export async function getStoreAccessRequests(
   if (!response.ok) {
     throw new Error(extractErrorMessage(raw));
   }
-  const data = unwrapData<{ requests?: StoreAccessRequest[] } | StoreAccessRequest[]>(raw);
+  const data = unwrapData<{ requests?: StoreAccessRequest[] } | StoreAccessRequest[] | null>(raw);
+  if (data == null) return [];
   return Array.isArray((data as { requests?: StoreAccessRequest[] }).requests)
     ? (data as { requests: StoreAccessRequest[] }).requests
     : Array.isArray(data)
@@ -668,8 +669,10 @@ export async function getStoreAccessList(storePeerID: string): Promise<StoreAcce
   if (!response.ok) {
     throw new Error(extractErrorMessage(raw));
   }
-  const data = unwrapData<{ accessList?: StoreAccessListItem[] } | StoreAccessListItem[]>(raw);
-  // 后端返回格式: { accessList: [...], total: n }
+  const data = unwrapData<{ accessList?: StoreAccessListItem[] } | StoreAccessListItem[] | null>(
+    raw
+  );
+  if (data == null) return [];
   return Array.isArray((data as { accessList?: StoreAccessListItem[] }).accessList)
     ? (data as { accessList: StoreAccessListItem[] }).accessList
     : Array.isArray(data)
@@ -768,7 +771,8 @@ export async function getGroupSellers(
   if (!response.ok) {
     throw new Error(extractErrorMessage(raw));
   }
-  const data = unwrapData<{ sellers?: GroupSeller[] } | GroupSeller[]>(raw);
+  const data = unwrapData<{ sellers?: GroupSeller[] } | GroupSeller[] | null>(raw);
+  if (data == null) return [];
   return Array.isArray((data as { sellers?: GroupSeller[] }).sellers)
     ? (data as { sellers: GroupSeller[] }).sellers
     : Array.isArray(data)
