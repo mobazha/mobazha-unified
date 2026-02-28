@@ -27,7 +27,7 @@ export interface AiGenerateResponse {
   title?: string;
   description?: string;
   tags?: string[];
-  categories?: string[];
+  productType?: string;
   shortDescription?: string;
 }
 
@@ -50,7 +50,7 @@ class AiService {
 
   /**
    * Generate a complete listing from product images.
-   * Returns title, description, tags, categories.
+   * Returns title, description, tags, productType.
    */
   async generateFromImages(
     imageUrls: string[],
@@ -101,12 +101,12 @@ class AiService {
   }
 
   /**
-   * Suggest tags and categories for a product.
+   * Suggest tags and product type for a product.
    */
   async suggestTags(
     title: string,
     opts?: { description?: string; language?: string }
-  ): Promise<{ tags: string[]; categories: string[] }> {
+  ): Promise<{ tags: string[]; productType?: string }> {
     const result = await this.request({
       action: 'suggest_tags',
       title,
@@ -115,7 +115,7 @@ class AiService {
     });
     return {
       tags: result.tags || [],
-      categories: result.categories || [],
+      productType: result.productType,
     };
   }
 }

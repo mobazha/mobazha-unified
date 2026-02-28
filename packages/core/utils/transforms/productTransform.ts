@@ -66,7 +66,7 @@ export function convertProductToFormData(
     introVideo: item.introVideo || '',
     altIntroVideoLinks: item.altIntroVideoLinks || [],
     tags: item.tags || [],
-    categories: item.categories || [],
+    productType: item.productType || '',
     shippingProfile: product.shippingProfile,
     // 变体选项
     options: (item.options || []).map(opt => ({

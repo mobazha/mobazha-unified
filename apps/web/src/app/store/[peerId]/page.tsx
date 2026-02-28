@@ -41,11 +41,13 @@ import {
   useAccessControl,
   stripHtmlTags,
   sanitizeHtml,
+  collectionsApi,
 } from '@mobazha/core';
-import type { UserProfile, ProductListItem, Image } from '@mobazha/core';
+import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
 import {
   Settings,
   Camera,
+  Layers,
   Package,
   Lock,
   ShieldCheck,
@@ -124,7 +126,8 @@ export default function StorePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<UserProfile | null>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true); // 初始为 true，显示加载骨架
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [storeCollections, setStoreCollections] = useState<Collection[]>([]);
 
   // 筛选相关状态
   const [filter, setFilter] = useState<FilterState>(defaultFilterState);
@@ -269,6 +272,12 @@ export default function StorePage() {
         if (!isCancelled) {
           setProducts(productsData as ProductListItem[]);
           productsLoadedRef.current = loadKey;
+          collectionsApi
+            .listPublishedCollections(1, 20)
+            .then(res => {
+              if (!isCancelled) setStoreCollections(res.data || []);
+            })
+            .catch(() => {});
         }
       } catch (err) {
         console.error('Failed to fetch store products:', err);
@@ -380,18 +389,15 @@ export default function StorePage() {
     return product.contractType?.toUpperCase() === 'RWA_TOKEN';
   }, []);
 
-  // 从非 RWA 商品数据中提取分类列表
+  // 从非 RWA 商品数据中提取 productType 列表
   const categories = useMemo((): CategoryItem[] => {
     const categoryMap = new Map<string, number>();
 
-    // 只统计非 RWA 商品的分类
     products
       .filter(product => !isRwaProduct(product))
       .forEach(product => {
-        if (product.categories && product.categories.length > 0) {
-          product.categories.forEach(cat => {
-            categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
-          });
+        if (product.productType) {
+          categoryMap.set(product.productType, (categoryMap.get(product.productType) || 0) + 1);
         }
       });
 
@@ -415,11 +421,9 @@ export default function StorePage() {
       result = result.filter(product => product.title?.toLowerCase().includes(searchLower));
     }
 
-    // 分类过滤
+    // 分类过滤（基于 productType）
     if (filter.category !== 'all') {
-      result = result.filter(
-        product => product.categories && product.categories.includes(filter.category)
-      );
+      result = result.filter(product => product.productType === filter.category);
     }
 
     // 类型过滤（RWA_TOKEN 已被排除，所以这里的 rwa_token 选项实际上不会匹配任何商品）
@@ -1126,6 +1130,44 @@ export default function StorePage() {
                       onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
                       compact
                     />
+                  )}
+
+                  {/* Collections Section */}
+                  {storeCollections.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                        <Layers className="w-4 h-4" />
+                        {t('admin.nav.collections')}
+                      </h3>
+                      <div className="flex gap-3 overflow-x-auto pb-2">
+                        {storeCollections.map(col => (
+                          <Link
+                            key={col.id}
+                            href={`/store/${peerId}/collection/${col.id}`}
+                            className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
+                          >
+                            {col.image ? (
+                              <img
+                                src={getImageUrl(col.image)}
+                                alt={col.title}
+                                className="w-full h-20 object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-20 bg-muted flex items-center justify-center">
+                                <Layers className="w-6 h-6 text-muted-foreground/30" />
+                              </div>
+                            )}
+                            <div className="p-2">
+                              <p className="text-xs font-medium truncate">{col.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {col.products?.length || 0}{' '}
+                                {t('listing.tabs.productType').toLowerCase()}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
                   )}
 
                   {/* Products Grid */}

@@ -282,6 +282,17 @@ export {
   getChainConfig,
 } from './rwa';
 
+// Collection types
+export type {
+  CollectionType,
+  CollectionSortOrder,
+  CollectionProduct,
+  Collection,
+  CollectionListResponse,
+  CreateCollectionRequest,
+  UpdateCollectionRequest,
+} from './collection';
+
 // Shipping Config types (店铺配送选项设置)
 export type {
   // 新版 Shopify 风格类型

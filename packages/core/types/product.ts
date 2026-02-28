@@ -37,8 +37,8 @@ export interface ProductListItem {
   rwaTradeMode?: number;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
-  /** 商品分类 */
-  categories?: string[];
+  /** 商品类型（单值分类） */
+  productType?: string;
   /** 商品发布状态 */
   status?: ListingStatus;
 }
@@ -152,7 +152,7 @@ export interface ProductItem {
   nsfw: boolean;
   tags?: string[];
   images: Image[];
-  categories?: string[];
+  productType?: string;
   grams?: number;
   /** 重量单位: g/kg/lb/oz */
   weightUnit?: WeightUnit;

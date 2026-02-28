@@ -558,7 +558,7 @@ export function ProductDetail({
   const rwaEscrowTimeoutSeconds =
     product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
   const tags = product.item.tags || [];
-  const category = product.item.categories?.[0] || '';
+  const category = product.item.productType || '';
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
