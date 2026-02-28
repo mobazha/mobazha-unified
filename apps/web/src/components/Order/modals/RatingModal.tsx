@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { VStack, HStack } from '@/components/layouts';
 import { useI18n } from '@mobazha/core';
+import { useToast } from '@/components/ui/use-toast';
 
 export interface OrderRatingData {
   slug: string;
@@ -89,6 +90,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
   orderInfo,
 }) => {
   const { t } = useI18n();
+  const { toast } = useToast();
 
   const [overall, setOverall] = useState(5);
   const [quality, setQuality] = useState(5);
@@ -100,7 +102,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
 
   const handleSubmit = useCallback(async () => {
     if (overall === 0) {
-      window.alert(t('order.rating.overallRequired'));
+      toast({ title: t('order.rating.overallRequired'), variant: 'destructive' });
       return;
     }
 
@@ -127,6 +129,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
     orderInfo,
     onSubmit,
     t,
+    toast,
   ]);
 
   const handleClose = useCallback(() => {

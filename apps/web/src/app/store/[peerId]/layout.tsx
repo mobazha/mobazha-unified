@@ -97,13 +97,9 @@ export async function generateMetadata({
     heroMeta.description ||
     (profile.about ? profile.about.slice(0, 160) : `Browse products from ${name} on Mobazha`);
 
-  const avatarUrl = getImageUrl(profile.avatarHashes?.medium || profile.avatarHashes?.small);
-  const headerUrl = getImageUrl(profile.headerHashes?.medium || profile.headerHashes?.original);
-  const heroImageUrl = getImageUrl(heroMeta.imageHash);
-  const ogImage = heroImageUrl || headerUrl || avatarUrl;
-
   const canonicalUrl = `${SITE_URL}/store/${peerId}`;
   const themeColor = storefront?.theme?.primaryColor;
+  const ogImageUrl = `${SITE_URL}/store/${peerId}/opengraph-image`;
 
   return {
     title,
@@ -115,19 +111,54 @@ export async function generateMetadata({
       title,
       description,
       url: canonicalUrl,
-      ...(ogImage && {
-        images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
-      }),
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
     },
     twitter: {
-      card: ogImage ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      ...(ogImage && { images: [ogImage] }),
+      images: [ogImageUrl],
     },
   };
 }
 
-export default function StoreLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+function buildOrganizationLd(profile: ProfileData | null, peerId: string) {
+  if (!profile) return null;
+  const name = profile.name || profile.handle || peerId.slice(0, 12);
+  const avatarUrl = getImageUrl(profile.avatarHashes?.medium || profile.avatarHashes?.small);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name,
+    url: `${SITE_URL}/store/${peerId}`,
+    ...(avatarUrl && { logo: avatarUrl }),
+    ...(profile.about && { description: profile.about.slice(0, 200) }),
+  };
+}
+
+export default async function StoreLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ peerId: string }>;
+}) {
+  const { peerId } = await params;
+  const profile = await fetchProfile(peerId);
+  const orgLd = buildOrganizationLd(profile, peerId);
+
+  return (
+    <>
+      {orgLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(orgLd).replace(/<\/script/gi, '<\\/script'),
+          }}
+        />
+      )}
+      {children}
+    </>
+  );
 }

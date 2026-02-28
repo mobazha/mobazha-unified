@@ -14,6 +14,7 @@ import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
+import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -383,6 +384,11 @@ export function CheckoutMobile({ checkout }: Props) {
                     </HStack>
                   )}
                 </div>
+
+                <BuyerProtectionBadge
+                  variant="inline"
+                  className="mt-3 pt-3 border-t border-border"
+                />
               </CardContent>
             </Card>
           </div>

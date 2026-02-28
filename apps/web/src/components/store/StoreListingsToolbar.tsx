@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,12 +54,17 @@ interface StoreListingsToolbarProps {
   onFilterChange: (filter: FilterState) => void;
   totalCount: number;
   filteredCount?: number;
-  categories?: CategoryItem[]; // 可用的分类列表
+  categories?: CategoryItem[];
   onOpenMobileFilter?: () => void;
   /** 紧凑模式：桌面端有侧边栏时使用，只显示搜索+排序+数量 */
   compact?: boolean;
+  /** Product titles for search suggestions */
+  productTitles?: string[];
   className?: string;
 }
+
+const DEBOUNCE_MS = 300;
+const MAX_SUGGESTIONS = 6;
 
 // 商品类型配置（RWA 代币不单独筛选，在"全部"中显示）
 const productTypes: { value: ProductType; labelKey: string }[] = [
@@ -86,9 +91,83 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
   categories = [],
   onOpenMobileFilter,
   compact = false,
+  productTitles = [],
   className,
 }) => {
   const { t } = useI18n();
+  const [localSearch, setLocalSearch] = useState(filter.search);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Sync external filter.search → localSearch (e.g. when "Clear Filters" is clicked)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    setLocalSearch(filter.search);
+  }, [filter.search]);
+
+  const debouncedSearchUpdate = useCallback(
+    (value: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        onFilterChange({ ...filter, search: value });
+      }, DEBOUNCE_MS);
+    },
+    [filter, onFilterChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setLocalSearch(value);
+      setShowSuggestions(value.trim().length > 0);
+      debouncedSearchUpdate(value);
+    },
+    [debouncedSearchUpdate]
+  );
+
+  const handleSuggestionClick = useCallback(
+    (title: string) => {
+      setLocalSearch(title);
+      setShowSuggestions(false);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      onFilterChange({ ...filter, search: title });
+    },
+    [filter, onFilterChange]
+  );
+
+  const handleClearSearch = useCallback(() => {
+    setLocalSearch('');
+    setShowSuggestions(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    onFilterChange({ ...filter, search: '' });
+  }, [filter, onFilterChange]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as HTMLElement)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const suggestions = useMemo(() => {
+    if (!localSearch.trim() || productTitles.length === 0) return [];
+    const lower = localSearch.toLowerCase();
+    return productTitles
+      .filter(title => title.toLowerCase().includes(lower))
+      .slice(0, MAX_SUGGESTIONS);
+  }, [localSearch, productTitles]);
 
   const updateFilter = (updates: Partial<FilterState>) => {
     onFilterChange({ ...filter, ...updates });
@@ -101,10 +180,48 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
     filter.search.trim() !== '';
 
   const clearFilters = () => {
+    setLocalSearch('');
     onFilterChange(defaultFilterState);
   };
 
   const displayCount = filteredCount !== undefined ? filteredCount : totalCount;
+
+  const renderSearchInput = (inputClassName?: string) => (
+    <div className="relative" ref={searchContainerRef}>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        placeholder={t('filter.searchInStore')}
+        value={localSearch}
+        onChange={e => handleSearchChange(e.target.value)}
+        onFocus={() => localSearch.trim() && setShowSuggestions(true)}
+        className={cn('pl-9', inputClassName)}
+      />
+      {localSearch && (
+        <button
+          onClick={handleClearSearch}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-md border border-border bg-popover shadow-md overflow-hidden">
+          {suggestions.map((title, i) => (
+            <button
+              key={i}
+              className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent truncate"
+              onMouseDown={e => {
+                e.preventDefault();
+                handleSuggestionClick(title);
+              }}
+            >
+              {title}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -112,23 +229,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
       {compact ? (
         <div className="hidden md:flex items-center gap-4">
           {/* 搜索框 */}
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('filter.searchInStore')}
-              value={filter.search}
-              onChange={e => updateFilter({ search: e.target.value })}
-              className="pl-9 h-9"
-            />
-            {filter.search && (
-              <button
-                onClick={() => updateFilter({ search: '' })}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <div className="flex-1 max-w-sm">{renderSearchInput('h-9')}</div>
 
           {/* 商品数量 */}
           <span className="text-sm text-muted-foreground whitespace-nowrap">
@@ -160,23 +261,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
           {/* 桌面端完整布局（无侧边栏时） */}
           <div className="hidden md:flex items-center gap-4">
             {/* 搜索框 */}
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('filter.searchInStore')}
-                value={filter.search}
-                onChange={e => updateFilter({ search: e.target.value })}
-                className="pl-9 h-9"
-              />
-              {filter.search && (
-                <button
-                  onClick={() => updateFilter({ search: '' })}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+            <div className="flex-1 max-w-xs">{renderSearchInput('h-9')}</div>
 
             {/* 类型筛选标签 */}
             <HStack gap="xs" className="flex-1">
@@ -273,23 +358,7 @@ export const StoreListingsToolbar: React.FC<StoreListingsToolbarProps> = ({
       {/* 移动端布局 */}
       <div className="md:hidden space-y-3">
         {/* 搜索框 */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('filter.searchInStore')}
-            value={filter.search}
-            onChange={e => updateFilter({ search: e.target.value })}
-            className="pl-9"
-          />
-          {filter.search && (
-            <button
-              onClick={() => updateFilter({ search: '' })}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        {renderSearchInput()}
 
         {/* 筛选和排序按钮 */}
         <div className="flex items-center justify-between gap-2">

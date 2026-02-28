@@ -59,10 +59,8 @@ export async function generateMetadata({
   const title = product.item.title || slug;
   const rawDescription = product.item.description || '';
   const description = stripHtml(rawDescription).slice(0, 160) || `Buy ${title} on Mobazha`;
-  const firstImage = product.item.images?.[0];
-  const imageUrl = getImageUrl(firstImage?.medium || firstImage?.small || firstImage?.original);
-
   const canonicalUrl = `${SITE_URL}/product/${slug}`;
+  const ogImageUrl = `${SITE_URL}/product/${slug}/opengraph-image`;
 
   return {
     title,
@@ -73,15 +71,13 @@ export async function generateMetadata({
       title,
       description,
       url: canonicalUrl,
-      ...(imageUrl && {
-        images: [{ url: imageUrl, width: 600, height: 600, alt: title }],
-      }),
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      ...(imageUrl && { images: [imageUrl] }),
+      images: [ogImageUrl],
     },
   };
 }
@@ -122,6 +118,33 @@ function buildJsonLd(product: ProductData | null) {
   };
 }
 
+function buildBreadcrumbLd(product: ProductData | null) {
+  if (!product?.item) return null;
+  const title = product.item.title || product.slug;
+  const items: Array<{ '@type': string; position: number; name: string; item?: string }> = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${SITE_URL}/marketplace` },
+  ];
+
+  if (product.vendorID?.peerID) {
+    items.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: product.vendorID.handle || 'Store',
+      item: `${SITE_URL}/store/${product.vendorID.peerID}`,
+    });
+    items.push({ '@type': 'ListItem', position: 4, name: title });
+  } else {
+    items.push({ '@type': 'ListItem', position: 3, name: title });
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
+  };
+}
+
 export default async function ProductLayout({
   children,
   params,
@@ -132,6 +155,7 @@ export default async function ProductLayout({
   const { slug } = await params;
   const product = await fetchProduct(slug);
   const jsonLd = buildJsonLd(product);
+  const breadcrumbLd = buildBreadcrumbLd(product);
 
   return (
     <>
@@ -140,6 +164,14 @@ export default async function ProductLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd).replace(/<\/script/gi, '<\\/script'),
+          }}
+        />
+      )}
+      {breadcrumbLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbLd).replace(/<\/script/gi, '<\\/script'),
           }}
         />
       )}

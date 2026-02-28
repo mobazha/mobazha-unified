@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { ProductRating, RatingIndex } from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HStack, VStack } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
 
 export interface ReviewListProps {
   ratings: ProductRating[];
   ratingIndex?: RatingIndex;
   className?: string;
+  /** Number of reviews to show initially before "Show More" */
+  pageSize?: number;
 }
 
 function StarDisplay({ value }: { value: number }) {
@@ -33,8 +36,16 @@ function StarDisplay({ value }: { value: number }) {
   );
 }
 
-export function ReviewList({ ratings, ratingIndex, className }: ReviewListProps) {
+const DEFAULT_PAGE_SIZE = 5;
+
+export function ReviewList({
+  ratings,
+  ratingIndex,
+  className,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: ReviewListProps) {
   const { t, formatDate } = useI18n();
+  const [visibleCount, setVisibleCount] = useState(pageSize);
 
   const safeRatings = useMemo(() => (Array.isArray(ratings) ? ratings : []), [ratings]);
   const count = ratingIndex?.count ?? safeRatings.length;
@@ -140,7 +151,7 @@ export function ReviewList({ ratings, ratingIndex, className }: ReviewListProps)
       {/* Review list */}
       {hasIndividualRatings && (
         <VStack gap="md">
-          {sortedRatings.map(r => (
+          {sortedRatings.slice(0, visibleCount).map(r => (
             <article
               key={r.ratingID}
               className="rounded-lg border border-border bg-card p-4"
@@ -166,6 +177,26 @@ export function ReviewList({ ratings, ratingIndex, className }: ReviewListProps)
               </HStack>
             </article>
           ))}
+
+          {sortedRatings.length > visibleCount && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setVisibleCount(prev => prev + pageSize)}
+            >
+              {t('review.showMore')}
+            </Button>
+          )}
+          {visibleCount > pageSize && sortedRatings.length <= visibleCount && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mx-auto"
+              onClick={() => setVisibleCount(pageSize)}
+            >
+              {t('review.showLess')}
+            </Button>
+          )}
         </VStack>
       )}
     </VStack>

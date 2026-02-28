@@ -56,7 +56,9 @@ import {
   Upload,
   Ban,
   ImageIcon,
+  FileText,
 } from 'lucide-react';
+import { ShareButton } from '@/components/Share';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
@@ -414,6 +416,11 @@ export default function StorePage() {
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [products, isRwaProduct]);
+
+  const productTitles = useMemo(
+    () => products.filter(p => !isRwaProduct(p) && p.title).map(p => p.title as string),
+    [products, isRwaProduct]
+  );
 
   // 筛选后的商品列表（排除 RWA 商品，RWA 商品显示在数字资产 Tab）
   const filteredProducts = useMemo(() => {
@@ -1006,6 +1013,19 @@ export default function StorePage() {
                               <Ban className="h-4 w-4" />
                             )}
                           </Button>
+                          <ShareButton
+                            url={
+                              typeof window !== 'undefined'
+                                ? window.location.href
+                                : `/store/${peerId}`
+                            }
+                            title={store.name || peerId.slice(0, 8)}
+                            description={
+                              store.shortDescription
+                                ? stripHtmlTags(store.shortDescription)
+                                : undefined
+                            }
+                          />
                         </>
                       )}
                     </div>
@@ -1145,6 +1165,7 @@ export default function StorePage() {
                           filteredCount={filteredProducts.length}
                           categories={categories}
                           onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
+                          productTitles={productTitles}
                           compact
                         />
                       )}
@@ -1354,6 +1375,16 @@ export default function StorePage() {
                               <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
                             )}
                         </VStack>
+                      </Card>
+
+                      <Card className="p-4 sm:p-6 mt-4">
+                        <Link
+                          href={`/store/${peerId}/policies`}
+                          className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {t('settings.storePolicies')}
+                        </Link>
                       </Card>
                     </div>
                   </Grid>

@@ -1,17 +1,26 @@
 /**
  * 购物车状态管理
+ *
+ * Optimistic local updates with fire-and-forget API write-back.
+ * LocalStorage persistence (Zustand persist) is the primary store;
+ * API sync keeps the server in sync for cross-device continuity.
  */
 
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
 import type { CartItem, OrderItemOption, OrderShippingOption } from '../types';
+import { cartApi } from '../services/api/cart';
+
+function syncToApi(fn: () => Promise<unknown>) {
+  fn().catch(() => {
+    /* best-effort background sync */
+  });
+}
 
 interface CartState {
-  // 状态
   items: CartItem[];
   isLoading: boolean;
 
-  // 动作
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
   removeItem: (slug: string, vendorPeerID: string) => void;
   updateQuantity: (slug: string, vendorPeerID: string, quantity: number) => void;
@@ -20,7 +29,6 @@ interface CartState {
   clearCart: () => void;
   clearVendorItems: (vendorPeerID: string) => void;
 
-  // 计算属性
   getItemCount: () => number;
   getVendorItems: (vendorPeerID: string) => CartItem[];
   getItemBySlug: (slug: string, vendorPeerID: string) => CartItem | undefined;
@@ -30,11 +38,9 @@ export const useCartStore = create<CartState>()(
   devtools(
     persist(
       (set, get) => ({
-        // 初始状态
         items: [],
         isLoading: false,
 
-        // 添加商品
         addItem: newItem => {
           const { items } = get();
           const existingIndex = items.findIndex(
@@ -43,65 +49,94 @@ export const useCartStore = create<CartState>()(
               item.listing.vendorPeerID === newItem.listing.vendorPeerID
           );
 
+          const qty = newItem.quantity ?? 1;
+
           if (existingIndex >= 0) {
-            // 更新数量
             const updatedItems = [...items];
+            const newQty = updatedItems[existingIndex].quantity + qty;
             updatedItems[existingIndex] = {
               ...updatedItems[existingIndex],
-              quantity: updatedItems[existingIndex].quantity + (newItem.quantity ?? 1),
+              quantity: newQty,
             };
             set({ items: updatedItems });
+            syncToApi(() =>
+              cartApi.updateCartItem(newItem.listing.vendorPeerID, {
+                slug: newItem.listing.slug,
+                quantity: newQty,
+                options: newItem.options?.map(o => ({ name: o.name, value: o.value })),
+              })
+            );
           } else {
-            // 添加新商品
             set({
-              items: [
-                ...items,
-                {
-                  ...newItem,
-                  quantity: newItem.quantity ?? 1,
-                },
-              ],
+              items: [...items, { ...newItem, quantity: qty }],
             });
+            syncToApi(() =>
+              cartApi.addToCart(newItem.listing.vendorPeerID, {
+                slug: newItem.listing.slug,
+                quantity: qty,
+                options: newItem.options?.map(o => ({ name: o.name, value: o.value })),
+                memo: newItem.memo,
+              })
+            );
           }
         },
 
-        // 移除商品
         removeItem: (slug, vendorPeerID) => {
           set({
             items: get().items.filter(
               item => !(item.listing.slug === slug && item.listing.vendorPeerID === vendorPeerID)
             ),
           });
+          syncToApi(() => cartApi.removeFromCart(vendorPeerID, slug));
         },
 
-        // 更新数量
         updateQuantity: (slug, vendorPeerID, quantity) => {
           if (quantity <= 0) {
             get().removeItem(slug, vendorPeerID);
             return;
           }
 
+          const item = get().items.find(
+            i => i.listing.slug === slug && i.listing.vendorPeerID === vendorPeerID
+          );
           set({
-            items: get().items.map(item =>
-              item.listing.slug === slug && item.listing.vendorPeerID === vendorPeerID
-                ? { ...item, quantity }
-                : item
+            items: get().items.map(i =>
+              i.listing.slug === slug && i.listing.vendorPeerID === vendorPeerID
+                ? { ...i, quantity }
+                : i
             ),
           });
+          syncToApi(() =>
+            cartApi.updateCartItem(vendorPeerID, {
+              slug,
+              quantity,
+              options: item?.options?.map(o => ({ name: o.name, value: o.value })),
+            })
+          );
         },
 
-        // 更新选项
         updateOptions: (slug, vendorPeerID, options) => {
+          const item = get().items.find(
+            i => i.listing.slug === slug && i.listing.vendorPeerID === vendorPeerID
+          );
           set({
-            items: get().items.map(item =>
-              item.listing.slug === slug && item.listing.vendorPeerID === vendorPeerID
-                ? { ...item, options }
-                : item
+            items: get().items.map(i =>
+              i.listing.slug === slug && i.listing.vendorPeerID === vendorPeerID
+                ? { ...i, options }
+                : i
             ),
           });
+          if (item) {
+            syncToApi(() =>
+              cartApi.updateCartItem(vendorPeerID, {
+                slug,
+                quantity: item.quantity,
+                options: options.map(o => ({ name: o.name, value: o.value })),
+              })
+            );
+          }
         },
 
-        // 更新运输选项
         updateShipping: (slug, vendorPeerID, shippingOption) => {
           set({
             items: get().items.map(item =>
@@ -112,27 +147,31 @@ export const useCartStore = create<CartState>()(
           });
         },
 
-        // 清空购物车
-        clearCart: () => set({ items: [] }),
+        clearCart: () => {
+          set({ items: [] });
+          syncToApi(() => cartApi.clearCarts());
+        },
 
-        // 清空指定卖家的商品
         clearVendorItems: vendorPeerID => {
+          const vendorItems = get().items.filter(
+            item => item.listing.vendorPeerID === vendorPeerID
+          );
           set({
             items: get().items.filter(item => item.listing.vendorPeerID !== vendorPeerID),
           });
+          for (const item of vendorItems) {
+            syncToApi(() => cartApi.removeFromCart(vendorPeerID, item.listing.slug));
+          }
         },
 
-        // 获取商品数量
         getItemCount: () => {
           return get().items.reduce((sum, item) => sum + item.quantity, 0);
         },
 
-        // 获取指定卖家的商品
         getVendorItems: vendorPeerID => {
           return get().items.filter(item => item.listing.vendorPeerID === vendorPeerID);
         },
 
-        // 按 slug 获取商品
         getItemBySlug: (slug, vendorPeerID) => {
           return get().items.find(
             item => item.listing.slug === slug && item.listing.vendorPeerID === vendorPeerID
