@@ -1,7 +1,5 @@
-'use client';
-
 /**
- * TestimonialsSection — PG-201
+ * TestimonialsSection — PG-201 (Server Component)
  *
  * Customer testimonials in a card grid.
  * mode=manual renders provided items; mode=latest is a placeholder
@@ -70,12 +68,16 @@ export function TestimonialsSection({ title, mode, items, count }: TestimonialsP
                 >
                   {item.name}
                 </div>
-                {item.rating != null && (
-                  <div className="text-xs text-amber-500">
-                    {'★'.repeat(Math.round(item.rating))}
-                    {'☆'.repeat(5 - Math.round(item.rating))}
-                  </div>
-                )}
+                {item.rating != null &&
+                  (() => {
+                    const stars = Math.min(5, Math.max(0, Math.round(item.rating)));
+                    return (
+                      <div className="text-xs text-amber-500">
+                        {'★'.repeat(stars)}
+                        {'☆'.repeat(5 - stars)}
+                      </div>
+                    );
+                  })()}
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">

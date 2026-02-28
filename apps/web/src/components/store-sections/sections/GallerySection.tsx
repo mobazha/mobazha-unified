@@ -6,7 +6,7 @@
  * Image grid with configurable columns, aspect ratio, and optional lightbox.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { GallerySectionProps } from '@mobazha/core';
 import { getImageUrl } from '@mobazha/core';
 import { X } from 'lucide-react';
@@ -31,6 +31,21 @@ export function GallerySection({
   enableLightbox,
 }: GallerySectionProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  useEffect(() => {
+    if (lightboxIndex == null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft')
+        setLightboxIndex(prev => (prev != null && prev > 0 ? prev - 1 : prev));
+      if (e.key === 'ArrowRight')
+        setLightboxIndex(prev => (prev != null && prev < images.length - 1 ? prev + 1 : prev));
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightboxIndex, images.length, closeLightbox]);
 
   if (!images.length) return null;
 
