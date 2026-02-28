@@ -161,6 +161,26 @@ export interface StoreTabsProps {
   tabs: Array<'reviews' | 'following' | 'followers'>;
 }
 
+export interface VideoSectionProps {
+  title?: string;
+  videoUrl: string;
+  posterImage?: string;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  aspectRatio?: '16:9' | '4:3' | '1:1';
+}
+
+export interface CountdownSectionProps {
+  title?: string;
+  targetDate: string;
+  endMessage?: string;
+  showDays?: boolean;
+  showHours?: boolean;
+  showMinutes?: boolean;
+  showSeconds?: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Discriminated Union — type field determines props type
 // ---------------------------------------------------------------------------
@@ -244,6 +264,20 @@ export type StoreSection =
       props: StoreTabsProps;
       visible: boolean;
       layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'video';
+      props: VideoSectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'countdown';
+      props: CountdownSectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
     };
 
 export type SectionType = StoreSection['type'];
@@ -306,6 +340,8 @@ export const SECTION_TYPE_LIST: SectionType[] = [
   'gallery',
   'rich-text',
   'contact',
+  'video',
+  'countdown',
   'store-tabs',
 ];
 

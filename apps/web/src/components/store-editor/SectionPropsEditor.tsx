@@ -17,6 +17,8 @@ import type {
   RichTextSectionProps,
   CollectionsSectionProps,
   StoreTabsProps,
+  VideoSectionProps,
+  CountdownSectionProps,
 } from '@mobazha/core';
 import { TextInput, TextArea, SelectInput, ToggleInput, NumberInput } from './form-helpers';
 
@@ -51,6 +53,10 @@ export function SectionPropsEditor({ section, onUpdate }: SectionPropsEditorProp
       return <RichTextEditor props={section.props} onUpdate={onUpdate} />;
     case 'collections':
       return <CollectionsEditor props={section.props} onUpdate={onUpdate} />;
+    case 'video':
+      return <VideoEditor props={section.props} onUpdate={onUpdate} />;
+    case 'countdown':
+      return <CountdownEditor props={section.props} onUpdate={onUpdate} />;
     case 'store-tabs':
       return <StoreTabsEditor props={section.props} onUpdate={onUpdate} />;
     default:
@@ -535,6 +541,101 @@ function StoreTabsEditor({ props, onUpdate }: EditorProps<StoreTabsProps>) {
           onChange={() => toggleTab(tab)}
         />
       ))}
+    </div>
+  );
+}
+
+function VideoEditor({ props, onUpdate }: EditorProps<VideoSectionProps>) {
+  const { t } = useI18n();
+  return (
+    <div className="space-y-3">
+      <TextInput
+        label={t('admin.storeBranding.fieldTitle')}
+        value={props.title || ''}
+        onChange={v => onUpdate({ title: v })}
+      />
+      <TextInput
+        label={t('admin.storeBranding.fieldVideoUrl')}
+        value={props.videoUrl}
+        onChange={v => onUpdate({ videoUrl: v })}
+        placeholder={t('admin.storeBranding.placeholderVideoUrl')}
+      />
+      <TextInput
+        label={t('admin.storeBranding.fieldPosterImage')}
+        value={props.posterImage || ''}
+        onChange={v => onUpdate({ posterImage: v })}
+        placeholder={t('admin.storeBranding.placeholderPosterImage')}
+      />
+      <SelectInput
+        label={t('admin.storeBranding.fieldAspectRatio')}
+        value={props.aspectRatio || '16:9'}
+        options={[
+          { value: '16:9', label: '16:9' },
+          { value: '4:3', label: '4:3' },
+          { value: '1:1', label: '1:1' },
+        ]}
+        onChange={v => onUpdate({ aspectRatio: v })}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldAutoplay')}
+        checked={props.autoplay || false}
+        onChange={v => onUpdate({ autoplay: v })}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldLoop')}
+        checked={props.loop || false}
+        onChange={v => onUpdate({ loop: v })}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldMuted')}
+        checked={props.muted || false}
+        onChange={v => onUpdate({ muted: v })}
+      />
+    </div>
+  );
+}
+
+function CountdownEditor({ props, onUpdate }: EditorProps<CountdownSectionProps>) {
+  const { t } = useI18n();
+  return (
+    <div className="space-y-3">
+      <TextInput
+        label={t('admin.storeBranding.fieldTitle')}
+        value={props.title || ''}
+        onChange={v => onUpdate({ title: v })}
+      />
+      <TextInput
+        label={t('admin.storeBranding.fieldTargetDate')}
+        value={props.targetDate}
+        onChange={v => onUpdate({ targetDate: v })}
+        placeholder="2026-03-15T00:00:00Z"
+      />
+      <TextInput
+        label={t('admin.storeBranding.fieldEndMessage')}
+        value={props.endMessage || ''}
+        onChange={v => onUpdate({ endMessage: v })}
+        placeholder={t('admin.storeBranding.placeholderEndMessage')}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldShowDays')}
+        checked={props.showDays ?? true}
+        onChange={v => onUpdate({ showDays: v })}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldShowHours')}
+        checked={props.showHours ?? true}
+        onChange={v => onUpdate({ showHours: v })}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldShowMinutes')}
+        checked={props.showMinutes ?? true}
+        onChange={v => onUpdate({ showMinutes: v })}
+      />
+      <ToggleInput
+        label={t('admin.storeBranding.fieldShowSeconds')}
+        checked={props.showSeconds ?? true}
+        onChange={v => onUpdate({ showSeconds: v })}
+      />
     </div>
   );
 }

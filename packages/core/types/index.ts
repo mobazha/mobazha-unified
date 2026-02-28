@@ -373,6 +373,8 @@ export type {
   RichTextSectionProps,
   ContactSectionProps,
   StoreTabsProps,
+  VideoSectionProps,
+  CountdownSectionProps,
 } from './storeConfig';
 
 export {
