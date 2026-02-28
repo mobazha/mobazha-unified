@@ -6,15 +6,27 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container } from '@/components/layouts';
 import { ProductDetail, ProductBottomBar } from '@/components/Product';
-import { useI18n, useUserStore, useChatStore } from '@mobazha/core';
-import type { Product } from '@mobazha/core';
+import { useI18n, useUserStore, useChatStore, useWishlist } from '@mobazha/core';
+import type { Product, AddWishlistParams } from '@mobazha/core';
+import { toast } from '@/components/ui/use-toast';
 
-// 获取库存数量（从 SKU 计算）
 function getStockQuantity(product: Product): number {
   if (!product.item.skus || product.item.skus.length === 0) {
-    return 999; // 默认无限库存
+    return 999;
   }
   return product.item.skus.reduce((sum, sku) => sum + (Number(sku.quantity) || 0), 0);
+}
+
+function buildWishlistParams(product: Product): AddWishlistParams | null {
+  if (!product.vendorID?.peerID || !product.slug) return null;
+  return {
+    peerID: product.vendorID.peerID,
+    slug: product.slug,
+    title: product.item?.title || product.slug,
+    thumbnail: product.item?.images?.[0]?.small || '',
+    price: String(product.item?.price ?? ''),
+    currency: product.metadata?.pricingCurrency?.code || '',
+  };
 }
 
 export default function ProductPage() {
@@ -31,36 +43,44 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, _setQuantity] = useState(1);
-  const [isWishlist, setIsWishlist] = useState(false);
-  void _setQuantity; // Reserved for future use - quantity control in bottom bar
+  void _setQuantity;
+
+  const { isInWishlist, toggleItem } = useWishlist();
 
   const isOwnProduct =
     isAuthenticated &&
     !!product?.vendorID?.peerID &&
     currentUserProfile?.peerID === product.vendorID.peerID;
 
-  // 计算库存
+  const wishlisted =
+    product?.vendorID?.peerID && product?.slug
+      ? isInWishlist(product.vendorID.peerID, product.slug)
+      : false;
+
   const stock = useMemo(() => {
     if (!product) return 0;
     return getStockQuantity(product);
   }, [product]);
 
-  // 切换收藏
-  const handleToggleWishlist = useCallback(() => {
-    setIsWishlist(prev => !prev);
-    // TODO: 实际的收藏 API 调用
-  }, []);
+  const handleToggleWishlist = useCallback(async () => {
+    if (!product) return;
+    const params = buildWishlistParams(product);
+    if (!params) return;
+    const added = await toggleItem(params);
+    toast({
+      description: added ? t('product.wishlisted') : t('me.wishlistRemove'),
+      duration: 1500,
+    });
+  }, [product, toggleItem, t]);
 
   const handleMessage = useCallback(() => {
     openChatDrawer();
   }, [openChatDrawer]);
 
-  // 跳转到购物车
   const handleCart = useCallback(() => {
     router.push('/cart');
   }, [router]);
 
-  // 接收 ProductDetail 加载的商品数据
   const handleProductLoaded = useCallback((loadedProduct: Product | null) => {
     setProduct(loadedProduct);
   }, []);
@@ -69,7 +89,6 @@ export default function ProductPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* 移动端顶部返回导航栏 */}
       <MobilePageHeader title={t('product.details')} />
 
       <main className="py-4 sm:py-8 pb-24 lg:pb-8">
@@ -81,17 +100,18 @@ export default function ProductPage() {
             onMessage={handleMessage}
             onCart={handleCart}
             onProductLoaded={handleProductLoaded}
+            isWishlist={wishlisted}
+            onToggleWishlist={handleToggleWishlist}
           />
         </Container>
       </main>
 
-      {/* 移动端底部操作栏 */}
       <ProductBottomBar
         product={product}
         quantity={quantity}
         stock={stock}
         isOwnProduct={isOwnProduct}
-        isWishlist={isWishlist}
+        isWishlist={wishlisted}
         onToggleWishlist={handleToggleWishlist}
       />
 

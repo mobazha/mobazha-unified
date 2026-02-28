@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Shield, Flag, EyeOff, Pencil, Copy, Trash2 } from 'lucide-react';
+import { Shield, Flag, EyeOff, Pencil, Copy, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -87,6 +87,10 @@ export interface ProductCardProps {
   onClone?: () => void;
   /** 删除回调 (自己的商品) */
   onDelete?: () => void;
+  /** 是否已收藏 */
+  isWishlist?: boolean;
+  /** 收藏/取消收藏回调 */
+  onToggleWishlist?: (e: React.MouseEvent) => void;
   /** 自定义类名 */
   className?: string;
 }
@@ -130,6 +134,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onClone,
   onDelete,
+  isWishlist = false,
+  onToggleWishlist,
   className,
 }) => {
   // 使用货币格式化 hook
@@ -307,6 +313,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </button>
             )}
           </div>
+        )}
+
+        {/* Wishlist heart — 右下角，移动端始终可见，桌面端 hover 时显示 */}
+        {onToggleWishlist && !isOwnListing && (
+          <button
+            onClick={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleWishlist(e);
+            }}
+            className={cn(
+              'absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full flex items-center justify-center shadow-md',
+              'transition-all duration-200 hover:scale-110 active:scale-95',
+              isWishlist
+                ? 'bg-white/95 dark:bg-card/95'
+                : cn(
+                    'bg-white/70 dark:bg-card/70',
+                    'md:opacity-0 md:group-hover:opacity-100',
+                    'md:bg-white/90 md:dark:bg-card/90 md:hover:bg-white md:dark:hover:bg-card'
+                  )
+            )}
+            title={isWishlist ? t('product.wishlisted') : t('product.addToWishlist')}
+          >
+            <Heart
+              className={cn(
+                'w-4 h-4 transition-colors',
+                isWishlist
+                  ? 'fill-destructive text-destructive'
+                  : 'text-muted-foreground/70 md:text-muted-foreground'
+              )}
+            />
+          </button>
         )}
 
         {showOwnListingButtons && isHovered && (

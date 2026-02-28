@@ -32,6 +32,7 @@ import {
   getProfileWithDedup,
   getRatingsWithDedup,
 } from '@/utils/requestDedup';
+import { Heart } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
@@ -105,20 +106,15 @@ function getEstimatedDelivery(product: Product): string | null {
 }
 
 export interface ProductDetailProps {
-  /** 商品 slug */
   slug: string;
-  /** 卖家 peerID */
   peerID?: string;
-  /** 是否为弹框模式 */
   isModal?: boolean;
-  /** 关闭弹框回调 */
   onClose?: () => void;
-  /** 跳转到消息回调 */
   onMessage?: () => void;
-  /** 跳转到购物车回调 */
   onCart?: () => void;
-  /** 商品数据加载完成回调 */
   onProductLoaded?: (product: Product | null) => void;
+  isWishlist?: boolean;
+  onToggleWishlist?: () => void;
 }
 
 export function ProductDetail({
@@ -129,6 +125,8 @@ export function ProductDetail({
   onMessage,
   onCart,
   onProductLoaded,
+  isWishlist = false,
+  onToggleWishlist,
 }: ProductDetailProps) {
   const { t } = useI18n();
   const router = useRouter();
@@ -146,14 +144,12 @@ export function ProductDetail({
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [cartSuccess, setCartSuccess] = useState(false);
-  const [_isWishlist, _setIsWishlist] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   const [rwaChainData, setRwaChainData] = useState<{
     totalAmount?: string;
     availableAmount?: string;
     status?: string;
   } | null>(null);
-  void _isWishlist; // Reserved for future wishlist feature
   const [linkCopied, setLinkCopied] = useState(false);
 
   const { isAuthenticated, profile: currentUserProfile } = useUserStore();
@@ -471,12 +467,6 @@ export function ProductDetail({
     setTimeout(() => setLinkCopied(false), 2000);
   }, [product]);
 
-  // 切换收藏 (reserved for future use)
-  const _handleToggleWishlist = useCallback(() => {
-    _setIsWishlist(prev => !prev);
-    // TODO: 实际的收藏 API 调用
-  }, []);
-
   const _handleMessage = useCallback(() => {
     if (onMessage) {
       onMessage();
@@ -494,8 +484,6 @@ export function ProductDetail({
     }
   }, [onCart, router]);
 
-  // 暂时标记为使用
-  void _handleToggleWishlist;
   void _handleMessage;
   void _handleGoToCart;
 
@@ -1164,6 +1152,23 @@ export function ProductDetail({
                   >
                     {t('product.buyNow')}
                   </Button>
+                  {onToggleWishlist && (
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="w-full"
+                      onClick={onToggleWishlist}
+                      data-testid="product-detail-wishlist"
+                    >
+                      <Heart
+                        className={cn(
+                          'w-4 h-4 mr-2',
+                          isWishlist ? 'fill-destructive text-destructive' : 'text-muted-foreground'
+                        )}
+                      />
+                      {isWishlist ? t('product.wishlisted') : t('product.addToWishlist')}
+                    </Button>
+                  )}
                 </VStack>
 
                 {acceptedCurrencies.length > 0 && (

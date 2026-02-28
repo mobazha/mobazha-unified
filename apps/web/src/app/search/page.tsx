@@ -12,8 +12,15 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import type { ProductContractType } from '@/components/ProductCard';
-import { useI18n, searchDataService, getImageUrl, useVerifiedModerators } from '@mobazha/core';
-import type { ProductListItem } from '@mobazha/core';
+import {
+  useI18n,
+  searchDataService,
+  getImageUrl,
+  useVerifiedModerators,
+  useWishlist,
+} from '@mobazha/core';
+import { toast } from '@/components/ui/use-toast';
+import type { ProductListItem, AddWishlistParams } from '@mobazha/core';
 import { useProductModal } from '@/hooks';
 
 // 显示用的商品类型
@@ -129,6 +136,7 @@ function SearchPageContent() {
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const { hasVerifiedMod } = useVerifiedModerators();
+  const { isInWishlist, toggleItem } = useWishlist();
 
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState(queryParam);
@@ -336,6 +344,28 @@ function SearchPageContent() {
     // TODO: 实现屏蔽卖家功能
   }, []);
 
+  const handleToggleWishlist = useCallback(
+    async (product: DisplayProduct, e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!product.vendor.peerID || !product.slug) return;
+      const params: AddWishlistParams = {
+        peerID: product.vendor.peerID,
+        slug: product.slug,
+        title: product.title,
+        thumbnail: product.image,
+        price: String(product.price),
+        currency: product.currency,
+      };
+      const added = await toggleItem(params);
+      toast({
+        description: added ? t('product.wishlisted') : t('me.wishlistRemove'),
+        duration: 1500,
+      });
+    },
+    [toggleItem, t]
+  );
+
   // Render product item using imported ProductCard
   const renderProductCard = (product: DisplayProduct) => (
     <Link
@@ -364,6 +394,8 @@ function SearchPageContent() {
         tokenStandard={product.tokenStandard}
         rwaTradeMode={product.rwaTradeMode}
         hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+        isWishlist={isInWishlist(product.vendor.peerID, product.slug)}
+        onToggleWishlist={e => handleToggleWishlist(product, e)}
         onReport={() => handleReport(product)}
         onBlock={() => handleBlock(product)}
       />
