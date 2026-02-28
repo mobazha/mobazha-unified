@@ -85,6 +85,24 @@ For complete API endpoint tables and data structures, see [reference.md](referen
 - No `vendorId` field — backend resolves from `listingHash`
 - Product detail API doesn't return CID — get it from `listingindex`
 
+## Storefront Config API (PG-201)
+
+Store 品牌化配置端点，后端存储在 NodeSettings（key=`store_config`）。
+
+| Method | Route                              | Auth        | Description                                              |
+| ------ | ---------------------------------- | ----------- | -------------------------------------------------------- |
+| GET    | `/v1/settings/storefront`          | Yes (owner) | 获取当前用户的 StoreConfig（含 draft）                   |
+| PUT    | `/v1/settings/storefront`          | Yes (owner) | 全量替换 StoreConfig（后端做 JSON 结构校验，100KB 限制） |
+| GET    | `/v1/settings/storefront/{peerID}` | No (public) | 获取指定店铺的 StoreConfig（仅 `status=published`）      |
+
+**前端 API 路径常量**：`packages/core/config/apiPaths.ts` → `NODE_API.SETTINGS_STOREFRONT` / `NODE_API.SETTINGS_STOREFRONT_PUBLIC(peerID)`
+
+**响应格式**：标准 `{ data: StoreConfig }` 信封。公开端点返回 `null`（无配置时 404）。
+
+**类型定义**：`packages/core/types/storeConfig.ts`（Discriminated Union）。
+
+详细 Schema 见 `docs/features/PG-201_STORE_BRANDING_DESIGN.md`。
+
 ## Common Field Mapping
 
 | Frontend            | Backend             | Notes                  |

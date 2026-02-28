@@ -113,9 +113,10 @@ globs:
 
 ### 允许保留的设计性颜色
 1. **Hero 区块**的装饰性/氛围性色彩（渐变、光晕、强调色）必须使用 `--hero-*` CSS 变量（参见 `brand-theme-rules.mdc`），不允许硬编码颜色；深色背景上的 `text-white`/`bg-white/*`/`border-white/*` 属于可见性例外，允许使用
-2. **登录页面**等专门的深色主题页面
-3. **星级评分**的金色 `text-amber-500`（语义明确）
-4. **深色背景区域**的 `text-white` / `text-white/*`（文字可见性需求）
+2. **Store Section 组件**（`store-sections/` 目录）使用 `--store-*` CSS 变量（由 `StoreThemeProvider` 注入），包括 `var(--store-primary/secondary/accent/on-*/font/radius)`。这些变量来自卖家的 `StoreConfig.theme`，是运行时动态值，不是全局主题变量。详见 `brand-theme-rules.mdc`
+3. **登录页面**等专门的深色主题页面
+4. **星级评分**的金色 `text-amber-500`（语义明确）
+5. **深色背景区域**的 `text-white` / `text-white/*`（文字可见性需求）
 
 ### 深色背景区域的文字颜色
 在 Hero、登录页等深色背景区域，文字颜色应使用 `text-white` 及其透明度变体，而不是 `text-slate-*`：

@@ -982,14 +982,14 @@ Store Config JSON Schema:
 
 ### Tier 2 — 差异化竞争力
 
-| ID     | 任务                          | 状态      | 完成日期 |
-| ------ | ----------------------------- | --------- | -------- |
-| PG-201 | 店铺品牌化（Section-based）   | ⏳ 未开始 |          |
-| PG-202 | AI Store Builder（MVP）       | ⏳ 未开始 |          |
-| PG-203 | 收藏/愿望单 + 降价提醒        | ⏳ 未开始 |          |
-| PG-204 | 买家发现体验（推荐/浏览历史） | ⏳ 未开始 |          |
-| PG-205 | 智能通知中心                  | ⏳ 未开始 |          |
-| PG-206 | AI 客服助手                   | ⏳ 未开始 |          |
+| ID     | 任务                          | 状态                | 完成日期                                                                                                                     |
+| ------ | ----------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| PG-201 | 店铺品牌化（Section-based）   | 🔄 设计完成，待实施 | 设计文档 `docs/features/PG-201_STORE_BRANDING_DESIGN.md`; 分支 `feature/pg-tier2-branding`; worktree `mobazha-unified-tier2` |
+| PG-202 | AI Store Builder（MVP）       | ⏳ 未开始           |                                                                                                                              |
+| PG-203 | 收藏/愿望单 + 降价提醒        | ⏳ 未开始           |                                                                                                                              |
+| PG-204 | 买家发现体验（推荐/浏览历史） | ⏳ 未开始           |                                                                                                                              |
+| PG-205 | 智能通知中心                  | ⏳ 未开始           |                                                                                                                              |
+| PG-206 | AI 客服助手                   | ⏳ 未开始           |                                                                                                                              |
 
 ### Tier 3 — 规模化运营
 
@@ -1005,4 +1005,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-28 (v34: Collection + productType 功能完成 — 后端 CRUD + 前端管理页/店面展示 + Discount x Collection 集成 + categories 清理; PG-109 状态更新; Section 7.3 Categories→Collections)
+最后更新: 2026-02-28 (v35: PG-201 设计文档完成; Tier 2 worktree `feature/pg-tier2-branding` 创建; 6 Phase 实施路线图: Foundation→Section 渲染→Store 集成→Admin 编辑器→扩展 Sections→打磨, 预估 11-14 天)

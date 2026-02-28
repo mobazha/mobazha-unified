@@ -6,6 +6,9 @@ globs:
   - "apps/web/src/components/Product/**"
   - "apps/web/src/app/checkout/**"
   - "apps/web/src/app/orders/**"
+  - "apps/web/src/components/store-sections/**"
+  - "apps/web/src/components/store-editor/**"
+  - "packages/core/types/storeConfig.ts"
 alwaysApply: false
 ---
 
@@ -19,9 +22,9 @@ Mobazha 正从 P2P 交易工具进化为 Web3 Shopify 专业电商平台。
 ## 当前阶段
 
 - **Tier 0**：交易闭环修复（PG-001 ~ PG-005）✅ 已完成
-- **Tier 0.5**：反馈驱动体验打磨（PG-006 ~ PG-009）← **当前**
+- **Tier 0.5**：反馈驱动体验打磨（PG-006 ~ PG-009）✅ 已完成
 - **Tier 1**：Admin 分离 + AI 商品助手 + 移动端卖家（PG-101 ~ PG-111）
-- **Tier 2**：差异化 + AI Store Builder + AI 客服（PG-201 ~ PG-206）
+- **Tier 2**：差异化 + AI Store Builder + AI 客服（PG-201 ~ PG-206）← **当前（PG-201 设计完成，待实施）**
 - **Tier 3**：规模化 + AI 分析/营销（PG-301 ~ PG-305）
 
 ## 核心设计原则
@@ -108,6 +111,18 @@ Mobazha 正从 P2P 交易工具进化为 Web3 Shopify 专业电商平台。
 5. **不在 Admin 中显示买家操作**：Admin 视图不显示 Add to Cart / Buy Now
 6. **不在 Storefront 中暴露管理功能**：非卖家不可见编辑/删除操作
 7. **UX 驱动 API**：产品未上线，如果理想 UX 需要新 API 或修改现有 API，直接设计并记录到对应 PG 任务中
+
+## Store Section 组件规范（PG-201）
+
+修改 `store-sections/` 和 `store-editor/` 目录时必须遵守：
+
+1. **类型安全**：`StoreSection` 使用 Discriminated Union，每种 type 严格绑定 Props，禁止 `Record<string, unknown>`
+2. **SSR 兼容**：`SectionRenderer` 是 Server Component。需要 DOM API 的 Section（如 `RichTextSection`）必须标记 `'use client'`
+3. **主题变量**：Section 组件使用 `var(--store-primary/secondary/accent/on-*/font/radius)` CSS 变量，不使用 Tailwind 主题色或硬编码颜色
+4. **store-tabs 不可删除**：系统级 Section，可排序可隐藏但编辑器不允许删除，不出现在"添加 Section"列表中
+5. **Section 数量**：编辑器限制最多 20 个 sections
+6. **图片来源**：仅接受 IPFS hash（`Qm.../bafy...`）或本站 `/v1/media/` 路径
+7. **设计文档**：`docs/features/PG-201_STORE_BRANDING_DESIGN.md`（v2.1，权威 Schema 来源）
 
 ## Admin Layout 规范
 

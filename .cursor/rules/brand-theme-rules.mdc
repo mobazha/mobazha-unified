@@ -1,9 +1,11 @@
 ---
-description: 品牌区域主题化规则 — Hero、Landing Page 等品牌展示区域必须使用主题变量
+description: 品牌区域主题化规则 — Hero、Landing Page、Store Section 等品牌展示区域必须使用主题变量
 globs:
   - "apps/web/src/components/Hero/**"
   - "apps/web/src/app/page.tsx"
   - "apps/web/src/components/Landing/**"
+  - "apps/web/src/components/store-sections/**"
+  - "apps/web/src/components/store-editor/**"
 ---
 
 # 品牌区域主题化规则
@@ -55,6 +57,47 @@ globs:
 | `--hero-glow` | 光晕/阴影色 |
 
 每套主题在 `globals.css` 中定义了不同的值，无需手动处理主题切换。
+
+## Store Section 变量（PG-201 — StoreThemeProvider 注入）
+
+Store Section 组件使用 `--store-*` 变量系列，由 `StoreThemeProvider` 从卖家的 StoreConfig.theme 生成。
+这些变量与全局 `--hero-*` 变量是**独立的两套体系**，分别用于不同场景。
+
+| 变量 | 用途 | 来源 |
+|------|------|------|
+| `--store-primary` | 卖家品牌主色 | `StoreConfig.theme.primaryColor` |
+| `--store-secondary` | 辅助色 | `StoreConfig.theme.secondaryColor` |
+| `--store-accent` | 强调色 | `StoreConfig.theme.accentColor` |
+| `--store-on-primary` | primary 上的可读文字色（自动计算，WCAG AA） | sRGB 亮度计算 |
+| `--store-on-secondary` | secondary 上的可读文字色 | 同上 |
+| `--store-on-accent` | accent 上的可读文字色 | 同上 |
+| `--store-font` | 卖家选择的字体 | `StoreConfig.theme.fontFamily` → font-family 映射 |
+| `--store-radius` | 圆角档位 | `StoreConfig.theme.borderRadius` → px 映射 |
+
+### 使用方式
+
+```tsx
+// ✅ Section 组件中使用 store 变量
+<h2 className="text-[var(--store-on-primary)]" style={{ fontFamily: 'var(--store-font)' }}>
+  Section Title
+</h2>
+<div className="bg-[var(--store-primary)] rounded-[var(--store-radius)]">
+  品牌色背景
+</div>
+
+// ❌ 禁止在 Section 中使用全局主题色或硬编码
+<h2 className="text-primary">Not this</h2>
+<div className="bg-emerald-500">Not this</div>
+```
+
+### `--hero-*` vs `--store-*` 适用范围
+
+| 变量体系 | 适用组件 | 数据来源 |
+|---|---|---|
+| `--hero-*` | SaaS 首页 Hero、Landing Page | 全局 theme 定义（`globals.css`） |
+| `--store-*` | Store Section 组件（品牌化区域） | 卖家 StoreConfig.theme（运行时注入） |
+
+两套变量不冲突。Store Section 渲染在 `StoreThemeProvider` 子树中，不影响全局主题。
 
 ## 允许的例外
 

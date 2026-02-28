@@ -11,80 +11,149 @@ description: 'Tier 2 差异化竞争力执行指南（PG-201~PG-206）。AI Stor
 
 ## PG-201: 店铺品牌化（Section-based）
 
+> **详细设计文档**：`docs/features/PG-201_STORE_BRANDING_DESIGN.md`（v2.1，权威来源）
+> **工作分支**：`feature/pg-tier2-branding` | **Worktree**：`mobazha-unified-tier2`
+
 ### 目标
 
-让每个卖家的店铺有独特的品牌形象，而不是千篇一律的模板。
+让每个卖家的店铺有独特的品牌形象。通过 JSON 配置驱动 Section 组件渲染，对标 Shopify 店铺定制。
 
-### 技术方案
+### 架构要点
 
-1. **Store Config Schema**
+1. **StoreConfig Schema** — Discriminated Union 类型安全
 
 ```typescript
 // packages/core/types/storeConfig.ts
-interface StoreConfig {
-  theme: {
-    primaryColor: string; // 品牌主色
-    secondaryColor?: string; // 辅助色
-    fontFamily: 'sans' | 'serif' | 'mono';
-    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full';
-  };
-  sections: StoreSection[];
+export interface StoreConfig {
+  version: 1;
+  status: 'draft' | 'published';
+  theme: StoreTheme;
+  sections: StoreSection[]; // 最多 20 个
 }
 
-interface StoreSection {
-  id: string;
-  type: SectionType;
-  props: Record<string, unknown>;
-  visible: boolean;
-}
-
-type SectionType =
-  | 'hero'
-  | 'announcement-bar'
-  | 'featured-products'
-  | 'product-grid'
-  | 'about'
-  | 'trust-badges'
-  | 'testimonials'
-  | 'faq'
-  | 'collections'
-  | 'gallery'
-  | 'rich-text'
-  | 'contact';
+// Discriminated Union — type 字段决定 props 类型
+export type StoreSection =
+  | { id: string; type: 'hero'; props: HeroSectionProps; visible: boolean; layout?: SectionLayout }
+  | {
+      id: string;
+      type: 'announcement-bar';
+      props: AnnouncementBarProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'featured-products';
+      props: FeaturedProductsProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'product-grid';
+      props: ProductGridProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'about';
+      props: AboutSectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'trust-badges';
+      props: TrustBadgesProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'testimonials';
+      props: TestimonialsProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | { id: string; type: 'faq'; props: FaqSectionProps; visible: boolean; layout?: SectionLayout }
+  | {
+      id: string;
+      type: 'collections';
+      props: CollectionsSectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'gallery';
+      props: GallerySectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'rich-text';
+      props: RichTextSectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'contact';
+      props: ContactSectionProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    }
+  | {
+      id: string;
+      type: 'store-tabs';
+      props: StoreTabsProps;
+      visible: boolean;
+      layout?: SectionLayout;
+    };
 ```
 
-2. **Section 组件库**
+2. **后端存储**：`NodeSettings` key-value（key=`store_config`）
+
+3. **API 端点**（mobazha3.0，3 个新 handler）：
+
+| Method | Route                              | Auth        | 说明                                         |
+| ------ | ---------------------------------- | ----------- | -------------------------------------------- |
+| GET    | `/v1/settings/storefront`          | Yes (owner) | 获取 StoreConfig                             |
+| PUT    | `/v1/settings/storefront`          | Yes (owner) | 更新 StoreConfig (全量替换，后端 JSON 校验)  |
+| GET    | `/v1/settings/storefront/{peerID}` | No (public) | 获取指定店铺 StoreConfig（只返回 published） |
+
+4. **前端架构**：
 
 ```
-apps/web/src/components/store-sections/
-├── HeroSection.tsx
-├── FeaturedProductsSection.tsx
-├── ProductGridSection.tsx
-├── AboutSection.tsx
-├── TestimonialsSection.tsx
-├── CategoriesSection.tsx
-├── GallerySection.tsx
-├── RichTextSection.tsx
-├── ContactSection.tsx
-├── NewsletterSection.tsx
-└── SectionRenderer.tsx         ← 根据 config 动态渲染
+packages/core/types/storeConfig.ts        # Discriminated Union 类型
+packages/core/utils/theme.ts              # 对比度计算 + 调色板映射
+apps/web/src/components/store-sections/   # 13 个 Section 组件 + SectionRenderer(Server Component)
+apps/web/src/components/store-editor/     # Admin 编辑器（拖拽、调色板、预览）
+apps/web/src/app/admin/settings/storefront/  # Admin 编辑页
 ```
 
-3. **配置存储**
+5. **关键设计决策**：
+   - **SectionRenderer 是 Server Component**（SSR，SEO 数据在 HTML 中）
+   - **StoreThemeProvider** 自动计算 WCAG AA 对比色（sRGB 线性化）
+   - **store-tabs** 是系统级 Section（承载 Reviews/Following/Followers），可排序/隐藏但不可删除
+   - **RichTextSection** 必须是 `'use client'`（DOMPurify 需要 DOM）
+   - **颜色选择分层**：预设调色板 → react-colorful → PG-202 AI 提取
+   - **字体选择带实时预览**，`next/font/google` 按需加载
 
-Store config 存储在卖家的 Profile 扩展字段中（或独立 API 端点）。
+### 实施顺序（6 Phase，11-15 天）
 
-4. **编辑器**
+| Phase | 内容                                                                                    | 天数 |
+| ----- | --------------------------------------------------------------------------------------- | ---- |
+| 1     | Foundation — 类型定义 + API paths + 后端 handlers + Section 注册表                      | 2    |
+| 2     | Section 渲染引擎 — ThemeProvider + SectionBlock + SectionRenderer + 5 个 P0 Section     | 2    |
+| 3     | Store 页面 SSR 集成 — 并行 fetch + generateMetadata + 向后兼容                          | 1-2  |
+| 4     | Admin 编辑器 MVP — 调色板 + 拖拽排序 + Section 属性编辑 + 实时预览                      | 3-4  |
+| 5     | 扩展 Sections — About/TrustBadges/Testimonials/FAQ/Collections/Gallery/RichText/Contact | 2-3  |
+| 6     | 打磨 — i18n + 暗色模式 + Google Fonts 优化 + E2E 测试                                   | 1-2  |
 
-`/admin/settings/storefront` — 拖拽排序 Sections + 编辑 props + 主题色板选择。
-
-### 实施顺序
-
-1. 定义 Schema + 3 个核心 Section（Hero、ProductGrid、About）
-2. SectionRenderer 组件
-3. Store 页面根据 config 渲染（无 config 时使用默认）
-4. Admin 编辑器（简单版：表单编辑，无拖拽）
-5. 扩展到 10 个 Section + 拖拽排序
+> 完整 Props 定义、wireframe、预设模板、安全约束等详见设计文档。
 
 ---
 
