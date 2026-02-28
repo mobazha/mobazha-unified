@@ -10,7 +10,6 @@ export * from './useConfig';
 // 商品相关
 export * from './useProducts';
 export * from './useListingForm';
-export * from './useStoreCategories';
 
 // 订单相关
 export * from './useOrders';
@@ -92,6 +91,9 @@ export { createEmptyOption, createEmptyService } from './useShippingOptions';
 // 配送档案管理相关（Shopify 模式）
 export * from './useShippingProfiles';
 export { createEmptyProfile } from './useShippingProfiles';
+
+// Collection 相关
+export * from './useCollections';
 
 // 认证守卫相关
 export * from './useAuthGuard';

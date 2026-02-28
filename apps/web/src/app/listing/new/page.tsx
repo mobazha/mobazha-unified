@@ -28,7 +28,6 @@ import {
   useListingForm,
   useI18n,
   useCurrency,
-  useStoreCategories,
   getGatewayUrl,
   productDataService,
   convertProductToFormData,
@@ -63,7 +62,7 @@ type TabKey =
   | 'general'
   | 'photos'
   | 'tags'
-  | 'category'
+  | 'productType'
   | 'shipping'
   | 'variants'
   | 'files'
@@ -82,7 +81,11 @@ const tabs: TabItem[] = [
   { key: 'general', labelKey: 'listing.tabs.general', icon: <FileText className="w-4 h-4" /> },
   { key: 'photos', labelKey: 'listing.tabs.photos', icon: <ImageIcon className="w-4 h-4" /> },
   { key: 'tags', labelKey: 'listing.tabs.tags', icon: <Tag className="w-4 h-4" /> },
-  { key: 'category', labelKey: 'listing.tabs.category', icon: <FolderTree className="w-4 h-4" /> },
+  {
+    key: 'productType',
+    labelKey: 'listing.tabs.productType',
+    icon: <FolderTree className="w-4 h-4" />,
+  },
   {
     key: 'shipping',
     labelKey: 'listing.tabs.shipping',
@@ -204,9 +207,6 @@ function CreateListingContent() {
   // 移动端检测
   const isMobile = useIsMobile();
 
-  // 店铺已有分类（用于自动补全建议）
-  const { categories: storeCategories } = useStoreCategories();
-
   // AI 助手
   const {
     aiLoadingAction,
@@ -223,7 +223,7 @@ function CreateListingContent() {
     general: null,
     photos: null,
     tags: null,
-    category: null,
+    productType: null,
     shipping: null,
     variants: null,
     files: null,
@@ -271,14 +271,6 @@ function CreateListingContent() {
       removed.forEach(t => removeTag(t));
     },
     [formData.tags, addTag, removeTag]
-  );
-
-  // 分类变化处理
-  const handleCategoriesChange = useCallback(
-    (newCategories: string[]) => {
-      updateField('categories', newCategories);
-    },
-    [updateField]
   );
 
   // 处理图片变化
@@ -432,7 +424,6 @@ function CreateListingContent() {
         onSubmit={handleSubmit}
         onSaveDraft={handleSaveDraft}
         onCancel={() => (fromOnboarding ? router.push('/admin') : router.back())}
-        storeCategories={storeCategories}
         aiLoadingAction={aiLoadingAction}
         onAiImproveTitle={handleAiImproveTitle}
         onAiPolishDescription={handleAiPolishDescription}
@@ -757,23 +748,23 @@ function CreateListingContent() {
                 <p className="text-xs text-muted-foreground mt-2">{t('listing.tagsHelper')}</p>
               </Card>
 
-              {/* 分类 */}
+              {/* Product Type */}
               <Card
                 className="p-6"
                 ref={el => {
-                  sectionRefs.current.category = el;
+                  sectionRefs.current.productType = el;
                 }}
               >
                 <h2 className="text-lg font-semibold text-foreground mb-2">
-                  {t('listing.category')}
+                  {t('listing.productType')}
                 </h2>
-                <p className="text-sm text-muted-foreground mb-3">{t('listing.categoryDesc')}</p>
-                <TokenInput
-                  tokens={formData.categories}
-                  onTokensChange={handleCategoriesChange}
-                  suggestions={storeCategories}
-                  placeholder={t('listing.enterCategory')}
-                  createLabel={t('listing.createCategory')}
+                <p className="text-sm text-muted-foreground mb-3">
+                  {t('listing.productTypeHelper')}
+                </p>
+                <Input
+                  value={formData.productType}
+                  onChange={e => updateField('productType', e.target.value)}
+                  placeholder={t('listing.productTypePlaceholder')}
                 />
               </Card>
 

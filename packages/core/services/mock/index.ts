@@ -151,7 +151,7 @@ export const mockProductService = {
           large: img,
           original: img,
         })),
-        categories: [found.category],
+        productType: found.category,
       },
     };
   },

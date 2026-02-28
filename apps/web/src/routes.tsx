@@ -62,6 +62,10 @@ const routes: RouteObject[] = [
 
   // 店铺（公开浏览）
   { path: '/store/:peerId', element: lazyPage(() => import('./app/store/[peerId]/page')) },
+  {
+    path: '/store/:peerId/collection/:collectionId',
+    element: lazyPage(() => import('./app/store/[peerId]/collection/[collectionId]/page')),
+  },
 
   // 产品详情（公开浏览）
   { path: '/product/:slug', element: lazyPage(() => import('./app/product/[slug]/page')) },
@@ -267,6 +271,18 @@ const routes: RouteObject[] = [
       { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
       { path: 'discounts/new', element: lazyPage(() => import('./app/admin/discounts/new/page')) },
       { path: 'discounts/:id', element: lazyPage(() => import('./app/admin/discounts/[id]/page')) },
+      {
+        path: 'collections',
+        element: lazyPage(() => import('./app/admin/collections/page')),
+      },
+      {
+        path: 'collections/new',
+        element: lazyPage(() => import('./app/admin/collections/new/page')),
+      },
+      {
+        path: 'collections/:id',
+        element: lazyPage(() => import('./app/admin/collections/[id]/page')),
+      },
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
       {

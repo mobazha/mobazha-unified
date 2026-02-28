@@ -94,6 +94,18 @@ export type {
   ApplicableDiscount,
 } from './discounts';
 
+// Collection API
+export * as collectionsApi from './collections';
+export type {
+  Collection,
+  CollectionProduct,
+  CollectionListResponse,
+  CollectionType,
+  CollectionSortOrder,
+  CreateCollectionRequest,
+  UpdateCollectionRequest,
+} from './collections';
+
 // 通知 API
 export * as notificationsApi from './notifications';
 export type { Notification, NotificationFilter, NotificationsResult } from './notifications';

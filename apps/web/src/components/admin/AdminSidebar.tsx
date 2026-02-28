@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Tag,
+  Layers,
   ExternalLink,
   HelpCircle,
   ChevronLeft,
@@ -32,6 +33,12 @@ const navItems: NavItem[] = [
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
   { id: 'discounts', labelKey: 'admin.nav.discounts', href: '/admin/discounts', icon: Tag },
+  {
+    id: 'collections',
+    labelKey: 'admin.nav.collections',
+    href: '/admin/collections',
+    icon: Layers,
+  },
   { id: 'analytics', labelKey: 'admin.nav.analytics', href: '/admin/analytics', icon: BarChart3 },
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
 ];

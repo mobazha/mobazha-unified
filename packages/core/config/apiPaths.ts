@@ -149,6 +149,17 @@ export const NODE_API = {
   DISCOUNTS_APPLICABLE: '/discounts/applicable',
   DISCOUNTS_CALCULATE: '/discounts/calculate',
 
+  // --- Collections ---
+  COLLECTIONS: '/collections',
+  COLLECTION: (collectionID: string) => `/collections/${collectionID}`,
+  COLLECTION_PRODUCTS: (collectionID: string) => `/collections/${collectionID}/products`,
+  COLLECTION_PRODUCT: (collectionID: string, slug: string) =>
+    `/collections/${collectionID}/products/${slug}`,
+  COLLECTION_PRODUCTS_REORDER: (collectionID: string) =>
+    `/collections/${collectionID}/products/reorder`,
+  COLLECTIONS_PUBLISHED: '/collections/published',
+  COLLECTION_PUBLISHED: (collectionID: string) => `/collections/published/${collectionID}`,
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',

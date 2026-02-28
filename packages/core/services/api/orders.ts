@@ -262,7 +262,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
                   description: 'Mock product description',
                   price: orderItem.total.amount,
                   images: [orderItem.thumbnail],
-                  categories: [],
+                  productType: '',
                   tags: [],
                   grams: 0,
                   condition: 'NEW',

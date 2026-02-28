@@ -316,7 +316,7 @@ export function useAiAssist(opts?: UseAiAssistOptions) {
     async (
       title: string,
       description?: string
-    ): Promise<{ tags: string[]; categories: string[] } | null> => {
+    ): Promise<{ tags: string[]; productType?: string } | null> => {
       setLoadingAction('suggest_tags');
       setLastError(null);
       setNotConfigured(false);

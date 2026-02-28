@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { useI18n, discountsApi } from '@mobazha/core';
-import type { Discount, DiscountCode } from '@mobazha/core';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useI18n, discountsApi, collectionsApi } from '@mobazha/core';
+import type { Discount, DiscountCode, Collection } from '@mobazha/core';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 type DiscountMethod = 'code' | 'automatic';
 type ValueType = 'percentage' | 'fixed_amount' | 'free_shipping';
-type AppliesTo = 'all' | 'specific_products';
+type AppliesTo = 'all' | 'specific_products' | 'specific_collections';
 
 interface DiscountFormProps {
   initial?: Discount;
@@ -36,6 +36,15 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
   const [minAmount, setMinAmount] = useState(initial?.minAmount ?? '');
   const [appliesTo, setAppliesTo] = useState<AppliesTo>((initial?.appliesTo as AppliesTo) || 'all');
   const [productIDs, setProductIDs] = useState(initial?.productIDs?.join(', ') || '');
+  const [collectionIDs, setCollectionIDs] = useState<string[]>(initial?.collectionIDs || []);
+  const [allCollections, setAllCollections] = useState<Collection[]>([]);
+
+  useEffect(() => {
+    collectionsApi
+      .listPublishedCollections(1, 100)
+      .then(res => setAllCollections(res.data || []))
+      .catch(() => {});
+  }, []);
   const [usageLimit, setUsageLimit] = useState(initial?.usageLimit ?? 0);
   const [perCustomerLimit, setPerCustomerLimit] = useState(initial?.perCustomerLimit ?? 0);
   const [combinesWithProduct, setCombinesWithProduct] = useState(
@@ -113,6 +122,7 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
                 .map(s => s.trim())
                 .filter(Boolean)
             : [],
+        collectionIDs: appliesTo === 'specific_collections' ? collectionIDs : [],
         usageLimit: Number(usageLimit),
         perCustomerLimit: Number(perCustomerLimit),
         combinesWithProduct,
@@ -137,6 +147,7 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
       minAmount,
       appliesTo,
       productIDs,
+      collectionIDs,
       usageLimit,
       perCustomerLimit,
       combinesWithProduct,
@@ -298,6 +309,16 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
             />
             <span className="text-sm">{t('admin.discounts.scopeSpecific')}</span>
           </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="scope"
+              checked={appliesTo === 'specific_collections'}
+              onChange={() => setAppliesTo('specific_collections')}
+              className="accent-primary"
+            />
+            <span className="text-sm">{t('admin.discounts.scopeCollections')}</span>
+          </label>
         </div>
         {appliesTo === 'specific_products' && (
           <div>
@@ -307,6 +328,33 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
               onChange={e => setProductIDs(e.target.value)}
               placeholder={t('admin.discounts.productSlugsPlaceholder')}
             />
+          </div>
+        )}
+        {appliesTo === 'specific_collections' && (
+          <div className="space-y-2">
+            <Label>{t('admin.discounts.collectionIDsLabel')}</Label>
+            {allCollections.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('admin.collections.emptyTitle')}</p>
+            ) : (
+              <div className="space-y-1 max-h-48 overflow-y-auto border border-border rounded-lg p-2">
+                {allCollections.map(c => (
+                  <label
+                    key={c.id}
+                    className="flex items-center gap-2 p-1 rounded hover:bg-muted/50 cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={collectionIDs.includes(c.id)}
+                      onCheckedChange={checked => {
+                        setCollectionIDs(prev =>
+                          checked ? [...prev, c.id] : prev.filter(id => id !== c.id)
+                        );
+                      }}
+                    />
+                    <span className="text-sm truncate">{c.title}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </Card>

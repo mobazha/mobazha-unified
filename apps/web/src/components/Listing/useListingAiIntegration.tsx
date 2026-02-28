@@ -70,11 +70,18 @@ export function useListingAiIntegration({
     const result = await suggestTags(formData.title, formData.description);
     if (result) {
       result.tags.forEach(tag => addTag(tag));
-      if (result.categories.length > 0) {
-        updateField('categories', [...new Set([...formData.categories, ...result.categories])]);
+      if (result.productType && !formData.productType) {
+        updateField('productType', result.productType);
       }
     }
-  }, [suggestTags, formData.title, formData.description, formData.categories, addTag, updateField]);
+  }, [
+    suggestTags,
+    formData.title,
+    formData.description,
+    formData.productType,
+    addTag,
+    updateField,
+  ]);
 
   const handleAiApplyAll = useCallback(
     (result: AiGenerateResponse) => {
@@ -82,13 +89,11 @@ export function useListingAiIntegration({
       if (result.shortDescription) updateField('shortDescription', result.shortDescription);
       if (result.description) updateField('description', result.description);
       if (result.tags) result.tags.forEach(tag => addTag(tag));
-      if (result.categories) {
-        updateField('categories', [
-          ...new Set([...formData.categories, ...(result.categories || [])]),
-        ]);
+      if (result.productType && !formData.productType) {
+        updateField('productType', result.productType);
       }
     },
-    [updateField, addTag, formData.categories]
+    [updateField, addTag, formData.productType]
   );
 
   const aiImageUrls = useMemo(() => {

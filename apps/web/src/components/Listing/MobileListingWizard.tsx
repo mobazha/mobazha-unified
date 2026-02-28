@@ -19,6 +19,7 @@ import type { ContractType, Image, ShippingProfile, Coupon } from '@mobazha/core
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   ProductTypeSelector,
   BasicInfoSection,
@@ -61,8 +62,6 @@ interface MobileListingWizardProps {
   onCancel: () => void;
   onDelete?: () => void;
   onPreview?: () => void;
-
-  storeCategories?: string[];
 
   aiLoadingAction?: string | null;
   onAiImproveTitle?: () => void;
@@ -125,7 +124,6 @@ export function MobileListingWizard({
   onCancel,
   onDelete,
   onPreview,
-  storeCategories = [],
   aiLoadingAction,
   onAiImproveTitle,
   onAiPolishDescription,
@@ -237,7 +235,7 @@ export function MobileListingWizard({
       { label: t('listing.price'), done: formData.price !== '' && formData.price !== '0' },
       { label: t('listing.photos'), done: formData.images.length > 0 },
       { label: t('listing.tags'), done: formData.tags.length > 0 },
-      { label: t('listing.category'), done: formData.categories.length > 0 },
+      { label: t('listing.productType'), done: !!formData.productType },
     ];
     if (formData.contractType === 'PHYSICAL_GOOD') {
       items.push({
@@ -501,13 +499,11 @@ export function MobileListingWizard({
               </div>
             </AccordionItem>
 
-            <AccordionItem title={t('listing.category')}>
-              <TokenInput
-                tokens={formData.categories}
-                onTokensChange={cats => updateField('categories', cats)}
-                suggestions={storeCategories}
-                placeholder={t('listing.enterCategory')}
-                tokenClassName="bg-muted text-foreground"
+            <AccordionItem title={t('listing.productType')}>
+              <Input
+                value={formData.productType}
+                onChange={e => updateField('productType', e.target.value)}
+                placeholder={t('listing.productTypePlaceholder')}
               />
             </AccordionItem>
 

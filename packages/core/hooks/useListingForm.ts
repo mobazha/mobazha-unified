@@ -59,9 +59,9 @@ export interface ListingFormData {
   introVideo?: string;
   altIntroVideoLinks?: string[];
 
-  // 分类和标签
+  // 标签和商品类型
   tags: string[];
-  categories: string[];
+  productType: string;
 
   // 配送档案
   shippingProfile?: ShippingProfile;
@@ -172,7 +172,7 @@ export const initialFormData: ListingFormData = {
   introVideo: '',
   altIntroVideoLinks: [],
   tags: [],
-  categories: [],
+  productType: '',
   shippingProfile: undefined,
   options: [],
   skus: [
@@ -208,7 +208,7 @@ export function getFieldsForType(contractType: ContractType): string[] {
     'pricingCurrency',
     'images',
     'tags',
-    'categories',
+    'productType',
     'nsfw',
   ];
 
@@ -417,7 +417,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       nsfw: formData.nsfw,
       tags: formData.tags,
       images: formData.images,
-      categories: formData.categories,
+      productType: formData.productType,
       processingTime: formData.processingTime,
     };
 
