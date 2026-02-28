@@ -84,10 +84,6 @@ export * from './useShippingAddresses';
 export type { DisplayAddress, DisplayAddressUI } from './useShippingAddresses';
 export { toDisplayAddressUI } from './useShippingAddresses';
 
-// 配送选项管理相关
-export * from './useShippingOptions';
-export { createEmptyOption, createEmptyService } from './useShippingOptions';
-
 // 配送档案管理相关（Shopify 模式）
 export * from './useShippingProfiles';
 export { createEmptyProfile } from './useShippingProfiles';

@@ -88,6 +88,7 @@ export const en: TranslationResource = {
     collapse: 'Collapse',
     expand: 'Expand',
     clickToEdit: 'Click to edit',
+    createFailed: 'Failed to create',
     deleteFailed: 'Failed to delete',
     loadFailed: 'Failed to load',
     loadFailedDesc: 'Unable to load data, please try again later.',
@@ -3001,6 +3002,10 @@ export const en: TranslationResource = {
     shippingProfile: 'Shipping Profile',
     selectShippingProfile: 'Select a shipping profile for this listing',
     manageProfiles: 'Manage Profiles',
+    noShippingConfigured: 'No Shipping Profiles',
+    noShippingConfiguredDesc:
+      'Create a shipping profile in settings before listing physical goods.',
+    goToShippingSettings: 'Go to Shipping Settings',
 
     // Rich Editor
     richEditor: {
@@ -3205,6 +3210,22 @@ export const en: TranslationResource = {
     setAsDefault: 'Set as default',
     orUseTemplate: 'Or start with a template:',
     cannotDeleteDefault: 'Default profile cannot be deleted',
+    deleteProfileDesc: 'Are you sure you want to delete this profile?',
+    deleteProfileHasListings:
+      'This profile has associated listings. Choose another profile to migrate them to, or the listings will lose their shipping configuration.',
+    migrateListingsTo: 'Migrate listings to',
+    selectTargetProfile: 'Select a profile...',
+    deleteWithoutMigration: 'Delete without migration',
+    profileDeletedWithMigration: 'Profile deleted, {{count}} listing(s) migrated',
+    listingsCount: '{{count}} listing(s)',
+    staleListingsTitle: '{{count}} listing(s) need updating',
+    staleListingsDesc:
+      'Some listings reference outdated shipping profiles. Refresh to update their shipping snapshots.',
+    refreshSnapshots: 'Refresh Snapshots',
+    refreshing: 'Refreshing...',
+    refreshComplete: 'Refreshed {{refreshed}} listing(s)',
+    refreshFailed: 'Failed to refresh snapshots',
+    profileSavedStaleNotice: 'Profile saved. {{count}} listing(s) will need snapshot refresh.',
     addOptionToProfile: 'Add Shipping Option',
     viewOptions: 'View shipping options',
     option: 'option',

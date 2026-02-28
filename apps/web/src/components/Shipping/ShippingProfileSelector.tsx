@@ -11,21 +11,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 export interface ShippingProfileSelectorProps {
-  /** 当前选中的档案 ID */
   selectedProfileId?: string;
-  /** 选中档案变化时的回调 */
   onProfileChange: (profile: ShippingProfile | null) => void;
-  /** 错误信息 */
   error?: string;
-  /** 自定义样式 */
   className?: string;
 }
 
-/**
- * 配送档案选择器组件
- *
- * 用于在商品创建/编辑时选择配送档案
- */
 export function ShippingProfileSelector({
   selectedProfileId,
   onProfileChange,
@@ -33,16 +24,13 @@ export function ShippingProfileSelector({
   className = '',
 }: ShippingProfileSelectorProps) {
   const { t } = useI18n();
-  const { profiles, isLoading, isUsingProfiles, legacyOptions, defaultProfile } =
-    useShippingProfiles();
+  const { profiles, isLoading, defaultProfile } = useShippingProfiles();
 
-  // 当前选中的档案
   const selectedProfile = useMemo(() => {
     if (!selectedProfileId) return defaultProfile;
     return profiles.find(p => p.profileId === selectedProfileId) || defaultProfile;
   }, [selectedProfileId, profiles, defaultProfile]);
 
-  // 加载状态
   if (isLoading) {
     return (
       <Card className={`p-6 ${className}`}>
@@ -67,13 +55,12 @@ export function ShippingProfileSelector({
     );
   }
 
-  // 没有配送档案也没有传统运费选项 - 引导用户设置
-  if (!isUsingProfiles && legacyOptions.length === 0) {
+  if (profiles.length === 0) {
     return (
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
-            {t('listing.shippingOptions')}
+            {t('listing.shippingProfile')}
             <span className="text-destructive ml-1">*</span>
           </h2>
         </div>
@@ -84,12 +71,12 @@ export function ShippingProfileSelector({
           <p className="text-sm text-muted-foreground mb-4">
             {t('listing.noShippingConfiguredDesc')}
           </p>
-          <Link href="/settings/store/shipping">
-            <Button>
+          <Button asChild>
+            <Link href="/settings/store/shipping">
               <Settings className="w-4 h-4 mr-2" />
               {t('listing.goToShippingSettings')}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         {error && <p className="text-destructive text-sm mt-3">{error}</p>}
@@ -97,37 +84,6 @@ export function ShippingProfileSelector({
     );
   }
 
-  // 使用传统运费选项模式（向后兼容）
-  if (!isUsingProfiles && legacyOptions.length > 0) {
-    return (
-      <Card className={`p-6 ${className}`}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            {t('listing.shippingOptions')}
-            <span className="text-destructive ml-1">*</span>
-          </h2>
-          <Link href="/settings/store/shipping">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-1" />
-              {t('listing.manageShipping')}
-            </Button>
-          </Link>
-        </div>
-
-        <div className="p-4 border border-border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-3 mb-3">
-            <Package className="w-5 h-5 text-primary" />
-            <span className="font-medium">{t('listing.storeShippingOptions')}</span>
-          </div>
-          <p className="text-sm text-muted-foreground">{t('listing.usingStoreShippingOptions')}</p>
-        </div>
-
-        {error && <p className="text-destructive text-sm mt-3">{error}</p>}
-      </Card>
-    );
-  }
-
-  // 配送档案模式
   return (
     <Card className={`p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
@@ -135,30 +91,43 @@ export function ShippingProfileSelector({
           {t('listing.shippingProfile')}
           <span className="text-destructive ml-1">*</span>
         </h2>
-        <Link href="/settings/store/shipping">
-          <Button variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/settings/store/shipping">
             <Settings className="w-4 h-4 mr-1" />
             {t('listing.manageProfiles')}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">{t('listing.selectShippingProfile')}</p>
 
       {error && <p className="text-destructive text-sm mb-3">{error}</p>}
 
-      <div className="space-y-3">
+      <div className="space-y-3" role="radiogroup" aria-label={t('listing.shippingProfile')}>
         {profiles.map(profile => {
           const isSelected = selectedProfile?.profileId === profile.profileId;
           const zones = getAllZones(profile);
           return (
             <div
               key={profile.profileId}
+              role="radio"
+              tabIndex={0}
+              aria-checked={isSelected}
+              aria-label={`${profile.name}${profile.isDefault ? `, ${t('common.default')}` : ''}`}
               className={cn(
                 'p-4 border rounded-lg cursor-pointer transition-colors',
-                isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                isSelected
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
               )}
               onClick={() => onProfileChange(profile)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onProfileChange(profile);
+                }
+              }}
             >
               <div className="flex items-start gap-3">
                 <span
@@ -176,6 +145,12 @@ export function ShippingProfileSelector({
                       {profile.isDefault && (
                         <span className="ml-2 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
                           {t('common.default')}
+                        </span>
+                      )}
+                      {profile.listingCount != null && profile.listingCount > 0 && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          <Package className="w-3 h-3 inline mr-0.5" />
+                          {t('shipping.listingsCount', { count: profile.listingCount })}
                         </span>
                       )}
                     </div>
