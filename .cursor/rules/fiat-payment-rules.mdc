@@ -4,8 +4,8 @@
 
 完整设计位于 hosting 仓库：`docs/FIAT_PAYMENT_DESIGN.md`（v1.1）
 
-> 多仓库开发时，设计文档在 hosting worktree 中。
-> 路径：`~/go/src/github.com/mobazha/mobazha_hosting-fiat-payment/docs/FIAT_PAYMENT_DESIGN.md`
+> 多仓库开发时，设计文档在 hosting 仓库中。
+> 路径：`~/go/src/github.com/mobazha/mobazha_hosting/docs/FIAT_PAYMENT_DESIGN.md`
 
 ## 核心原则
 
@@ -29,38 +29,42 @@ npm install @paypal/react-paypal-js
 
 ```
 apps/web/src/components/Payment/
-  PaymentMethodSelector.tsx   — 支付方式选择器（法币 + 加密）
-  FiatPaymentForm.tsx         — 统一法币支付入口
-  StripePaymentForm.tsx       — Stripe Elements 表单
-  PayPalPaymentForm.tsx       — PayPal 按钮
-  RateLockBanner.tsx          — 汇率锁定倒计时
+  FiatPaymentSection.tsx      — 法币支付编排（创建会话 → Stripe/PayPal 分发 → 成功/重试）
+  StripePaymentForm.tsx       — Stripe PaymentElement + 3DS/SCA + dark mode
+  PayPalPaymentForm.tsx       — PayPal Buttons + 显式 capture
+  PaymentCryptoSelector.tsx   — 支付方式选择器（法币 + 加密共存）
+  PaymentMethodBadges.tsx     — 商品详情页支付方式徽章（i18n）
+  PaymentDrawer.tsx           — 桌面端支付抽屉（含 availableFiatProviders）
 
-apps/web/src/app/admin/settings/payment/
-  page.tsx                    — 卖家支付设置页
-  OAuthConnectButton.tsx      — SaaS OAuth 连接按钮
-  ApiKeyConfigForm.tsx        — 独立站 API 密钥配置表单
+apps/web/src/app/checkout/payment-method/
+  page.tsx                    — 移动端支付方式选择页（含法币选项 + URL 参数传递）
+
+apps/web/src/app/admin/settings/integrations/
+  PaymentProvidersSection.tsx — 卖家支付配置（SaaS OAuth + 独立站 API Key + 错误反馈）
+
+apps/web/src/hooks/
+  usePaymentSelector.tsx      — 支付方式状态管理（paymentCategory + fiatProvider）
 
 packages/core/
-  config/paymentProviders.ts  — 法币 Provider 配置
+  types/fiat.ts               — 法币支付 TS 类型
   services/api/fiat.ts        — 法币 API 服务
-  utils/deploymentMode.ts     — 部署模式检测
+  hooks/useFiatProviders.ts   — 获取卖家启用的法币 Provider
+  hooks/useFiatPayment.ts     — 法币支付会话生命周期管理
+  config/apiPaths.ts          — NODE_API.FIAT_* + HOSTING_API.FIAT_* 常量
 ```
 
 ## 部署模式检测
 
 ```typescript
-// packages/core/utils/deploymentMode.ts
+// 使用 isStandaloneMode() 判断（基于 NEXT_PUBLIC_AUTH_MODE 环境变量）
+import { isStandaloneMode } from '../utils/env';
 
-export function isStandaloneMode(): boolean {
-  return import.meta.env.VITE_DEPLOYMENT_MODE === 'standalone';
-}
-
-// ✅ 卖家设置页根据模式显示不同 UI
-function PaymentProviderCard({ providerID }: Props) {
-  if (isStandaloneMode()) {
-    return <ApiKeyConfigForm providerID={providerID} />;
-  }
-  return <OAuthConnectButton providerID={providerID} />;
+// ✅ PaymentProvidersSection 根据模式显示不同 UI
+// SaaS 模式：OAuth "Connect" 按钮
+// 独立站模式：API Key 输入表单（Secret Key / Publishable Key / Webhook Secret）
+{isStandaloneMode()
+  ? <ApiKeyForm provider={provider} onSave={handleSave} />
+  : <OAuthConnectButton provider={provider} />
 }
 
 // ❌ 禁止硬编码模式
@@ -70,25 +74,54 @@ const isSaaS = true;
 ## API 调用规范
 
 ```typescript
-// ✅ 使用 apiPaths 常量
+// ✅ 使用 apiPaths 常量 + fiatApi 服务
 import { NODE_API } from '../../config/apiPaths';
-const session = await authFetch(NODE_API.FIAT_PAYMENTS, { method: 'POST', body });
+import { fiatApi } from '../services/api/fiat';
+
+// 获取卖家启用的 Provider
+const providers = await fiatApi.getProviders(vendorPeerID);
+
+// 创建支付会话
+const session = await fiatApi.createPayment('stripe', {
+  providerID: 'stripe', orderID, amount, currency, returnURL, cancelURL
+});
+
+// 捕获支付（PayPal 需要显式调用）
+await fiatApi.capturePayment('paypal', sessionID);
 
 // ❌ 禁止硬编码路径
-const session = await fetch(`${getGatewayUrl()}/fiat/payments`);
+const session = await fetch(`${getGatewayUrl()}/fiat/stripe/payments`);
+```
+
+### apiPaths 常量速查
+
+```typescript
+// Node API
+NODE_API.FIAT_PROVIDERS             // '/fiat/providers'
+NODE_API.FIAT_PROVIDER_STATUS(p)    // `/fiat/${p}/status`
+NODE_API.FIAT_CREATE_PAYMENT(p)     // `/fiat/${p}/payments`
+NODE_API.FIAT_CAPTURE_PAYMENT(p,s)  // `/fiat/${p}/payments/${s}/capture`
+NODE_API.FIAT_PROVIDER_CONFIG       // '/fiat/config'
+NODE_API.FIAT_PROVIDER_CONFIG_BY_ID(p) // `/fiat/config/${p}`
+
+// Hosting API (SaaS 入驻)
+HOSTING_API.FIAT_ONBOARDING_START(p)  // `/platform/v1/integrations/fiat/${p}/onboarding`
+HOSTING_API.FIAT_ONBOARDING_STATUS(p) // `/platform/v1/integrations/fiat/${p}/status`
 ```
 
 ## 支付方式选择
 
 ```typescript
-// ✅ 从后端动态获取卖家支持的支付方式
-const methods = await publicFetch(
-  NODE_API.LISTING_PAYMENT_METHODS(peerID, slug)
-);
+// ✅ 使用 useFiatProviders hook 动态获取
+const { providers, isLoading } = useFiatProviders(vendorPeerID);
 
-// ✅ 根据返回数据动态渲染
-{methods.fiat.map(p => <FiatOption key={p.provider} {...p} />)}
-{methods.crypto.map(c => <CryptoOption key={c.chain} {...c} />)}
+// ✅ PaymentCryptoSelector 同时展示法币和加密选项
+<PaymentCryptoSelector
+  availableFiatProviders={providers}
+  paymentCategory={paymentCategory}
+  selectedFiatProvider={selectedFiatProvider}
+  onSelectFiat={(provider) => setSelectedFiatProvider(provider)}
+/>
 
 // ❌ 禁止在前端硬编码可用支付方式
 ```
@@ -104,17 +137,22 @@ const order = await authFetch(NODE_API.ORDERS, {
   body: { pricingCoin: 'USD', fiatProvider: 'stripe', method: 'FIAT', ... }
 });
 
-// Step 2: 创建支付会话
-const session = await authFetch(NODE_API.FIAT_PAYMENTS, {
-  method: 'POST',
-  body: { providerID: 'stripe', orderID: order.id, currency: 'USD' }
+// Step 2: useFiatPayment hook 管理支付会话生命周期
+const { createSession, status, session } = useFiatPayment({
+  provider: 'stripe',
+  orderID: order.id,
+  amount, currency, returnURL,
+  onSuccess: () => { /* 导航到成功页 */ },
+  onError: (err) => { /* 显示错误 */ },
 });
+await createSession();
 
-// Step 3: 前端 SDK 完成支付
-await stripe.confirmPayment({ clientSecret: session.stripe.clientSecret });
+// Step 3: FiatPaymentSection 根据 provider 渲染 Stripe/PayPal 组件
+// Stripe: PaymentElement + confirmPayment
+// PayPal: PayPalButtons + capturePayment
 
-// Step 4: Webhook 自动完成 → WebSocket 推送状态更新
-// 前端监听 WebSocket 事件，显示成功页面
+// Step 4: Webhook 自动完成 → WebSocket 推送 orderFunded 事件
+// 前端通过 usePaymentSelector 状态更新显示成功
 ```
 
 ## Stripe 集成
