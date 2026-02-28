@@ -21,6 +21,8 @@ import { CollectionsSection } from './sections/CollectionsSection';
 import { GallerySection } from './sections/GallerySection';
 import { RichTextSection } from './sections/RichTextSection';
 import { ContactSection } from './sections/ContactSection';
+import { VideoSection } from './sections/VideoSection';
+import { CountdownSection } from './sections/CountdownSection';
 
 interface SectionRendererProps {
   sections: StoreSection[];
@@ -79,6 +81,10 @@ function SectionSwitch({
       return <RichTextSection {...section.props} />;
     case 'contact':
       return <ContactSection {...section.props} />;
+    case 'video':
+      return <VideoSection {...section.props} />;
+    case 'countdown':
+      return <CountdownSection {...section.props} />;
     default:
       return null;
   }

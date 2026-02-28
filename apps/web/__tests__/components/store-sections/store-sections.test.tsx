@@ -14,15 +14,66 @@ import { render, screen, fireEvent } from '@testing-library/react';
 // ---------------------------------------------------------------------------
 
 const mockT = (key: string) => key;
-vi.mock('@mobazha/core', async () => {
-  const actual = await vi.importActual('@mobazha/core');
-  return {
-    ...(actual as Record<string, unknown>),
-    useI18n: () => ({ t: mockT, locale: 'en', setLocale: vi.fn() }),
-    useGatewayUrl: () => 'http://localhost:4002',
-    usePeerID: () => 'QmTest123',
-  };
-});
+
+vi.mock('@mobazha/core', () => ({
+  useI18n: () => ({ t: mockT, locale: 'en', setLocale: vi.fn() }),
+  useGatewayUrl: () => 'http://localhost:4002',
+  usePeerID: () => 'QmTest123',
+  getImageUrl: (hash: string | undefined | null) =>
+    hash ? `http://localhost:4002/v1/media/images/${hash}` : undefined,
+  getContrastText: (hex: string) => {
+    const c = hex.replace('#', '');
+    const r = parseInt(c.slice(0, 2), 16) / 255;
+    const g = parseInt(c.slice(2, 4), 16) / 255;
+    const b = parseInt(c.slice(4, 6), 16) / 255;
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return lum > 0.179 ? '#000000' : '#ffffff';
+  },
+  RADIUS_MAP: { none: '0px', sm: '4px', md: '8px', lg: '16px', full: '9999px' },
+  SPACING_MAP: { none: '0', sm: '1rem', md: '2rem', lg: '3rem', xl: '4rem' },
+  WEB3_TRUST_KIT: [
+    { icon: 'escrow', title: 'Buyer Protection', description: 'Funds held securely' },
+    { icon: 'crypto', title: 'Crypto Native', description: 'Pay with ETH, BNB, SOL' },
+    { icon: 'selfHosted', title: 'Self-Hosted', description: "Seller's own server" },
+    { icon: 'p2p', title: 'Direct Trade', description: 'No middleman' },
+    { icon: 'privacy', title: 'Privacy First', description: 'No tracking' },
+  ],
+  MAX_SECTIONS: 20,
+  SECTION_TYPE_LIST: [
+    'hero',
+    'announcement-bar',
+    'featured-products',
+    'product-grid',
+    'about',
+    'trust-badges',
+    'testimonials',
+    'faq',
+    'collections',
+    'gallery',
+    'rich-text',
+    'contact',
+    'video',
+    'countdown',
+    'store-tabs',
+  ],
+  SYSTEM_SECTION_TYPES: ['store-tabs'],
+  ADDABLE_SECTION_TYPES: [
+    'hero',
+    'announcement-bar',
+    'featured-products',
+    'product-grid',
+    'about',
+    'trust-badges',
+    'testimonials',
+    'faq',
+    'collections',
+    'gallery',
+    'rich-text',
+    'contact',
+    'video',
+    'countdown',
+  ],
+}));
 
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -66,6 +117,18 @@ import {
 } from '@/components/store-sections/registry';
 import { DEFAULT_STORE_CONFIG, STORE_PRESETS } from '@/components/store-sections/defaults';
 
+import type { StoreTheme } from '@mobazha/core';
+
+const BASE_THEME: StoreTheme = {
+  palette: 'custom',
+  primaryColor: '#000',
+  secondaryColor: '#666',
+  accentColor: '#999',
+  fontFamily: 'inter',
+  borderRadius: 'md',
+  headerStyle: 'minimal',
+};
+
 // ---------------------------------------------------------------------------
 // StoreThemeProvider
 // ---------------------------------------------------------------------------
@@ -75,11 +138,10 @@ describe('StoreThemeProvider', () => {
     const { container } = render(
       <StoreThemeProvider
         theme={{
+          ...BASE_THEME,
           primaryColor: '#ff0000',
           secondaryColor: '#00ff00',
           accentColor: '#0000ff',
-          fontFamily: 'inter',
-          borderRadius: 'md',
         }}
       >
         <span>child</span>
@@ -95,15 +157,7 @@ describe('StoreThemeProvider', () => {
 
   it('renders children', () => {
     render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'inter',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={BASE_THEME}>
         <span>Hello Store</span>
       </StoreThemeProvider>
     );
@@ -112,15 +166,7 @@ describe('StoreThemeProvider', () => {
 
   it('uses CSS variable reference for --store-font', () => {
     const { container } = render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'poppins',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={{ ...BASE_THEME, fontFamily: 'poppins' }}>
         <span>font test</span>
       </StoreThemeProvider>
     );
@@ -131,15 +177,7 @@ describe('StoreThemeProvider', () => {
 
   it('falls back to inter font when fontFamily is unknown', () => {
     const { container } = render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'unknown-font' as 'inter',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={{ ...BASE_THEME, fontFamily: 'unknown-font' as 'inter' }}>
         <span>fallback font</span>
       </StoreThemeProvider>
     );
@@ -152,6 +190,7 @@ describe('StoreThemeProvider', () => {
     const { container } = render(
       <StoreThemeProvider
         theme={{
+          ...BASE_THEME,
           primaryColor: '',
           secondaryColor: '',
           accentColor: '',
@@ -173,27 +212,27 @@ describe('StoreThemeProvider', () => {
 // ---------------------------------------------------------------------------
 
 describe('SectionBlock', () => {
-  it('renders with data-section-id attribute', () => {
-    const { container } = render(
-      <SectionBlock id="test-section" type="hero">
+  it('renders children with default padding', () => {
+    render(
+      <SectionBlock>
         <span>Hero Content</span>
       </SectionBlock>
     );
 
-    const block = container.querySelector('[data-section-id="test-section"]');
-    expect(block).toBeTruthy();
     expect(screen.getByText('Hero Content')).toBeTruthy();
   });
 
-  it('renders with data-section-type attribute', () => {
+  it('applies layout spacing', () => {
     const { container } = render(
-      <SectionBlock id="faq-1" type="faq">
+      <SectionBlock layout={{ paddingTop: 'lg', paddingBottom: 'sm' }}>
         <span>FAQ</span>
       </SectionBlock>
     );
 
-    const block = container.querySelector('[data-section-type="faq"]');
-    expect(block).toBeTruthy();
+    const section = container.querySelector('section') as HTMLElement;
+    expect(section).toBeTruthy();
+    expect(section.style.paddingTop).toBe('3rem');
+    expect(section.style.paddingBottom).toBe('1rem');
   });
 });
 
@@ -206,26 +245,28 @@ describe('SectionRenderer', () => {
     render(
       <StoreThemeProvider
         theme={{
+          ...BASE_THEME,
           primaryColor: '#123456',
           secondaryColor: '#654321',
           accentColor: '#abcdef',
-          fontFamily: 'inter',
-          borderRadius: 'md',
         }}
       >
         <SectionRenderer
-          section={{
-            id: 'hero-1',
-            type: 'hero',
-            visible: true,
-            props: {
-              title: 'Test Store',
-              subtitle: 'Welcome',
-              height: 'md',
-              textAlign: 'center',
-              overlayOpacity: 0.4,
+          sections={[
+            {
+              id: 'hero-1',
+              type: 'hero',
+              visible: true,
+              props: {
+                title: 'Test Store',
+                subtitle: 'Welcome',
+                height: 'md',
+                textAlign: 'center',
+                overlayOpacity: 0.4,
+              },
             },
-          }}
+          ]}
+          peerId="QmTest123"
         />
       </StoreThemeProvider>
     );
@@ -236,25 +277,20 @@ describe('SectionRenderer', () => {
 
   it('renders announcement bar section', () => {
     render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'inter',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={BASE_THEME}>
         <SectionRenderer
-          section={{
-            id: 'ann-1',
-            type: 'announcement-bar',
-            visible: true,
-            props: {
-              text: 'Sale today!',
-              dismissible: true,
+          sections={[
+            {
+              id: 'ann-1',
+              type: 'announcement-bar',
+              visible: true,
+              props: {
+                text: 'Sale today!',
+                dismissible: true,
+              },
             },
-          }}
+          ]}
+          peerId="QmTest123"
         />
       </StoreThemeProvider>
     );
@@ -264,27 +300,22 @@ describe('SectionRenderer', () => {
 
   it('does not render hidden sections', () => {
     render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'inter',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={BASE_THEME}>
         <SectionRenderer
-          section={{
-            id: 'hero-hidden',
-            type: 'hero',
-            visible: false,
-            props: {
-              title: 'Hidden Hero',
-              height: 'md',
-              textAlign: 'center',
-              overlayOpacity: 0.4,
+          sections={[
+            {
+              id: 'hero-hidden',
+              type: 'hero',
+              visible: false,
+              props: {
+                title: 'Hidden Hero',
+                height: 'md',
+                textAlign: 'center',
+                overlayOpacity: 0.4,
+              },
             },
-          }}
+          ]}
+          peerId="QmTest123"
         />
       </StoreThemeProvider>
     );
@@ -294,28 +325,23 @@ describe('SectionRenderer', () => {
 
   it('renders FAQ section with items', () => {
     render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'inter',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={BASE_THEME}>
         <SectionRenderer
-          section={{
-            id: 'faq-1',
-            type: 'faq',
-            visible: true,
-            props: {
-              title: 'FAQ',
-              items: [
-                { question: 'Q1?', answer: 'A1.' },
-                { question: 'Q2?', answer: 'A2.' },
-              ],
+          sections={[
+            {
+              id: 'faq-1',
+              type: 'faq',
+              visible: true,
+              props: {
+                title: 'FAQ',
+                items: [
+                  { question: 'Q1?', answer: 'A1.' },
+                  { question: 'Q2?', answer: 'A2.' },
+                ],
+              },
             },
-          }}
+          ]}
+          peerId="QmTest123"
         />
       </StoreThemeProvider>
     );
@@ -326,25 +352,20 @@ describe('SectionRenderer', () => {
 
   it('can toggle FAQ items', () => {
     render(
-      <StoreThemeProvider
-        theme={{
-          primaryColor: '#000',
-          secondaryColor: '#666',
-          accentColor: '#999',
-          fontFamily: 'inter',
-          borderRadius: 'md',
-        }}
-      >
+      <StoreThemeProvider theme={BASE_THEME}>
         <SectionRenderer
-          section={{
-            id: 'faq-toggle',
-            type: 'faq',
-            visible: true,
-            props: {
-              title: 'FAQ',
-              items: [{ question: 'Q?', answer: 'Answer text here.' }],
+          sections={[
+            {
+              id: 'faq-toggle',
+              type: 'faq',
+              visible: true,
+              props: {
+                title: 'FAQ',
+                items: [{ question: 'Q?', answer: 'Answer text here.' }],
+              },
             },
-          }}
+          ]}
+          peerId="QmTest123"
         />
       </StoreThemeProvider>
     );
@@ -360,8 +381,8 @@ describe('SectionRenderer', () => {
 // ---------------------------------------------------------------------------
 
 describe('SECTION_REGISTRY', () => {
-  it('has 13 section types registered', () => {
-    expect(SECTION_REGISTRY).toHaveLength(13);
+  it('has 15 section types registered', () => {
+    expect(SECTION_REGISTRY).toHaveLength(15);
   });
 
   it('each entry has required fields', () => {
