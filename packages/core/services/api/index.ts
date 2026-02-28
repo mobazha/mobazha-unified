@@ -84,6 +84,10 @@ export * as socialApi from './social';
 // 购物车 API
 export * as cartApi from './cart';
 
+// 收藏/愿望单 API
+export * as wishlistApi from './wishlist';
+export type { WishlistItem, AddWishlistParams } from './wishlist';
+
 // 折扣 API
 export * as discountsApi from './discounts';
 export type {

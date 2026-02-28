@@ -23,6 +23,9 @@ export * from './chatStore';
 // 通知状态
 export * from './notificationStore';
 
+// 收藏/愿望单状态
+export * from './wishlistStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';

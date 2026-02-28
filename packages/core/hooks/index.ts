@@ -50,6 +50,8 @@ export * from './useSocial';
 
 // 购物车相关
 export * from './useCart';
+export * from './useWishlist';
+export * from './usePriceUpdates';
 
 // 通知相关
 export * from './useNotifications';

@@ -171,6 +171,10 @@ export const NODE_API = {
   COLLECTIONS_PUBLISHED: '/collections/published',
   COLLECTION_PUBLISHED: (collectionID: string) => `/collections/published/${collectionID}`,
 
+  // --- Wishlists ---
+  WISHLISTS: '/wishlists',
+  WISHLIST_ITEM: (peerID: string, slug: string) => `/wishlists/${peerID}/${slug}`,
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',

@@ -187,6 +187,10 @@ export interface TranslationResource {
     receivingAccountsDesc?: string;
     wishlist?: string;
     wishlistDesc?: string;
+    wishlistEmpty?: string;
+    wishlistEmptyDesc?: string;
+    wishlistRemove?: string;
+    wishlistItemCount?: string;
     notifications?: string;
     notificationsDesc?: string;
     settings?: string;
@@ -208,6 +212,15 @@ export interface TranslationResource {
     inStock: string;
     outOfStock: string;
     wishlist: string;
+    addToWishlist?: string;
+    wishlisted?: string;
+    priceDropped?: string;
+    priceRose?: string;
+    priceCheckingPrices?: string;
+    timeJustNow?: string;
+    timeMinutesAgo?: string;
+    timeHoursAgo?: string;
+    timeDaysAgo?: string;
     category: string;
     condition: string;
     shipping: string;

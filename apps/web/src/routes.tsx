@@ -138,6 +138,9 @@ const routes: RouteObject[] = [
     element: protectedPage(() => import('./app/marketplace/[slug]/sell/page')),
   },
 
+  // 收藏/愿望单
+  { path: '/wishlist', element: protectedPage(() => import('./app/wishlist/page')) },
+
   // 用户中心
   { path: '/me', element: protectedPage(() => import('./app/me/page')) },
   { path: '/profile', element: protectedPage(() => import('./app/profile/page')) },
