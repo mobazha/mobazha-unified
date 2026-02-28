@@ -2949,6 +2949,22 @@ export interface TranslationResource {
       optPill?: string;
       optSharp?: string;
       optFull?: string;
+      aiGenerate?: string;
+      aiBuilderTitle?: string;
+      aiBuilderDesc?: string;
+      brandNameLabel?: string;
+      brandNamePlaceholder?: string;
+      brandDescLabel?: string;
+      brandDescPlaceholder?: string;
+      generateWithAI?: string;
+      generating?: string;
+      regenerate?: string;
+      applyDesign?: string;
+      aiNotConfigured?: string;
+      aiNotConfiguredDesc?: string;
+      aiGenerateSuccess?: string;
+      aiGenerateFailed?: string;
+      aiRetry?: string;
     };
   };
 

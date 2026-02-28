@@ -8,10 +8,10 @@
  * Responsive: stacked on mobile, side-by-side on md+.
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useI18n, useStorefrontConfig } from '@mobazha/core';
 import type { StoreConfig, StoreTheme, StoreSection, SectionType } from '@mobazha/core';
-import { ChevronLeft, Loader2, Undo2, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { ChevronLeft, Loader2, Undo2, Monitor, Tablet, Smartphone, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -26,6 +26,7 @@ import { ThemeEditor } from './ThemeEditor';
 import { SectionListEditor } from './SectionListEditor';
 import { PresetPicker } from './PresetPicker';
 import { AddSectionPicker } from './AddSectionPicker';
+import { AIStoreBuilderDialog } from './AIStoreBuilderDialog';
 import { createSection } from '@/components/store-sections';
 
 type EditorTab = 'theme' | 'sections';
@@ -50,6 +51,9 @@ export function StoreBrandingEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('theme');
   const [showAddSection, setShowAddSection] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [showAIBuilder, setShowAIBuilder] = useState(false);
+  const [aiCooldown, setAiCooldown] = useState(false);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [viewport, setViewport] = useState<PreviewViewport>('desktop');
 
   const config = useMemo(() => {
@@ -144,6 +148,18 @@ export function StoreBrandingEditor() {
     }
   }, []);
 
+  const handleAIApply = useCallback(
+    (config: StoreConfig) => {
+      setDraft(config);
+      setShowAIBuilder(false);
+      toast({ title: t('admin.storeBranding.aiGenerateSuccess') });
+      setAiCooldown(true);
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = setTimeout(() => setAiCooldown(false), 10_000);
+    },
+    [toast, t]
+  );
+
   const handleSave = useCallback(async () => {
     if (!draft) return;
     try {
@@ -185,6 +201,16 @@ export function StoreBrandingEditor() {
           <span className="text-sm font-medium">{t('admin.storeBranding.pageTitle')}</span>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAIBuilder(true)}
+            disabled={aiCooldown}
+            className="hidden sm:inline-flex gap-1"
+          >
+            <Sparkles className="w-4 h-4" />
+            {t('admin.storeBranding.aiGenerate')}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -244,12 +270,22 @@ export function StoreBrandingEditor() {
             </button>
           </div>
 
-          {/* Mobile-only: template button */}
-          <div className="sm:hidden px-4 pt-3">
+          {/* Mobile-only: AI + template buttons */}
+          <div className="sm:hidden px-4 pt-3 flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="w-full"
+              className="flex-1 gap-1"
+              onClick={() => setShowAIBuilder(true)}
+              disabled={aiCooldown}
+            >
+              <Sparkles className="w-4 h-4" />
+              {t('admin.storeBranding.aiGenerate')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
               onClick={() => setShowPresets(true)}
             >
               {t('admin.storeBranding.useTemplate')}
@@ -326,6 +362,12 @@ export function StoreBrandingEditor() {
         open={showPresets}
         onSelect={applyPreset}
         onClose={() => setShowPresets(false)}
+      />
+
+      <AIStoreBuilderDialog
+        open={showAIBuilder}
+        onApply={handleAIApply}
+        onClose={() => setShowAIBuilder(false)}
       />
     </div>
   );

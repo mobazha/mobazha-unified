@@ -41,6 +41,9 @@ export * from './identity';
 // 店铺品牌化主题工具 (PG-201)
 export * from './theme';
 
+// AI StoreConfig 验证 (PG-202)
+export * from './storeConfigValidator';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

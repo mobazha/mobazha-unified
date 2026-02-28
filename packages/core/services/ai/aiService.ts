@@ -7,12 +7,15 @@
 
 import { authPost } from '../api/helpers';
 import { NODE_API } from '../../config/apiPaths';
+import type { StoreConfig } from '../../types/storeConfig';
+import { validateAndFixStoreConfig } from '../../utils';
 
 export type AiAction =
   | 'generate_from_images'
   | 'improve_title'
   | 'polish_description'
-  | 'suggest_tags';
+  | 'suggest_tags'
+  | 'generate_store';
 
 export interface AiGenerateRequest {
   action: AiAction;
@@ -21,6 +24,8 @@ export interface AiGenerateRequest {
   description?: string;
   contractType?: string;
   language?: string;
+  brandName?: string;
+  brandDescription?: string;
 }
 
 export interface AiGenerateResponse {
@@ -29,6 +34,13 @@ export interface AiGenerateResponse {
   tags?: string[];
   productType?: string;
   shortDescription?: string;
+  storeConfig?: unknown;
+}
+
+export interface StoreBuilderInput {
+  brandName: string;
+  brandDescription: string;
+  language?: string;
 }
 
 class AiService {
@@ -117,6 +129,20 @@ class AiService {
       tags: result.tags || [],
       productType: result.productType,
     };
+  }
+
+  /**
+   * Generate a complete store config from brand info.
+   * The raw AI output is validated and fixed client-side.
+   */
+  async generateStoreConfig(input: StoreBuilderInput): Promise<StoreConfig> {
+    const result = await this.request({
+      action: 'generate_store',
+      brandName: input.brandName,
+      brandDescription: input.brandDescription,
+      language: input.language,
+    });
+    return validateAndFixStoreConfig(result.storeConfig);
   }
 }
 
