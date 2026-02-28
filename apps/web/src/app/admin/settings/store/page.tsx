@@ -15,6 +15,7 @@ export default function AdminStoreSettingsPage() {
         policiesHref="/admin/settings/policies"
         moderatorsHref="/admin/settings/moderators"
         shippingHref="/admin/settings/shipping"
+        brandingHref="/admin/settings/store/branding"
       />
     </div>
   );

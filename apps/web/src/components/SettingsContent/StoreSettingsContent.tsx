@@ -49,12 +49,14 @@ export interface StoreSettingsContentProps {
   policiesHref?: string;
   moderatorsHref?: string;
   shippingHref?: string;
+  brandingHref?: string;
 }
 
 export function StoreSettingsContent({
   policiesHref = '/settings/store/policies',
   moderatorsHref = '/settings/store/moderators',
   shippingHref = '/settings/store/shipping',
+  brandingHref = '/settings/store/branding',
 }: StoreSettingsContentProps) {
   const { t } = useI18n();
   const router = useRouter();
@@ -75,6 +77,20 @@ export function StoreSettingsContent({
       <div className="divide-y divide-border">
         <SettingsSection
           className="pb-5 md:pb-8"
+          title="Store Appearance"
+          description="Customize your store branding and layout"
+        >
+          <Card className="overflow-hidden">
+            <SettingRow
+              title="Store Branding"
+              description="Theme, colors, fonts, and section layout"
+              onClick={() => router.push(brandingHref)}
+            />
+          </Card>
+        </SettingsSection>
+
+        <SettingsSection
+          className="py-5 md:py-8"
           title={t('settingsExtended.storePolicies')}
           description={t('settingsExtended.storePoliciesDesc')}
         >

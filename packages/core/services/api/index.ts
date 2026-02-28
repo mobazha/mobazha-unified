@@ -123,6 +123,9 @@ export * as matrixApi from './matrix';
 // 通知渠道 API (Telegram, Discord, etc.)
 export * as notificationChannelsApi from './notificationChannels';
 
+// Storefront Config API (PG-201)
+export * as storefrontApi from './storefront';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type { AIConfig, AIConfigInput, AIProviderInfo, AITestConnectionResult } from './aiSettings';
