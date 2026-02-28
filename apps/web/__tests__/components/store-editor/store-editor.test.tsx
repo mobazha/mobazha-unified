@@ -94,8 +94,6 @@ vi.mock('next/link', () => ({
 
 vi.mock('lucide-react', () => ({
   ChevronLeft: () => <span data-testid="icon-chevron-left" />,
-  ChevronUp: () => <span data-testid="icon-chevron-up" />,
-  ChevronDown: () => <span data-testid="icon-chevron-down" />,
   ChevronRight: () => <span data-testid="icon-chevron-right" />,
   Loader2: () => <span data-testid="icon-loader" />,
   Undo2: () => <span data-testid="icon-undo" />,
@@ -104,6 +102,52 @@ vi.mock('lucide-react', () => ({
   Trash2: () => <span data-testid="icon-trash" />,
   Plus: () => <span data-testid="icon-plus" />,
   Check: () => <span data-testid="icon-check" />,
+  GripVertical: () => <span data-testid="icon-grip-vertical" />,
+  Monitor: () => <span data-testid="icon-monitor" />,
+  Tablet: () => <span data-testid="icon-tablet" />,
+  Smartphone: () => <span data-testid="icon-smartphone" />,
+}));
+
+vi.mock('@dnd-kit/core', () => ({
+  DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  closestCenter: vi.fn(),
+  KeyboardSensor: vi.fn(),
+  PointerSensor: vi.fn(),
+  useSensor: vi.fn(() => ({})),
+  useSensors: vi.fn(() => []),
+}));
+
+vi.mock('@dnd-kit/sortable', () => ({
+  SortableContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  sortableKeyboardCoordinates: vi.fn(),
+  useSortable: () => ({
+    attributes: {},
+    listeners: {},
+    setNodeRef: vi.fn(),
+    transform: null,
+    transition: null,
+    isDragging: false,
+  }),
+  verticalListSortingStrategy: 'vertical',
+}));
+
+vi.mock('@dnd-kit/utilities', () => ({
+  CSS: { Transform: { toString: () => undefined } },
+}));
+
+vi.mock('@/lib/fonts', () => ({
+  FONT_CSS_VAR_MAP: {
+    inter: 'var(--font-inter)',
+    'dm-sans': 'var(--font-dm-sans)',
+    'space-grotesk': 'var(--font-space-grotesk)',
+    playfair: 'var(--font-playfair)',
+    lora: 'var(--font-lora)',
+    merriweather: 'var(--font-merriweather)',
+    'josefin-sans': 'var(--font-josefin-sans)',
+    poppins: 'var(--font-poppins)',
+  },
+  storeFonts: [{ className: 'font-inter', variable: '--font-inter' }],
+  storeFontVariableClasses: '--font-inter',
 }));
 
 // ---------------------------------------------------------------------------
@@ -527,5 +571,38 @@ describe('StoreBrandingEditor', () => {
     render(<StoreBrandingEditor />);
     const backLink = screen.getByRole('link');
     expect(backLink.getAttribute('href')).toBe('/admin/settings/store');
+  });
+
+  it('renders viewport toggle buttons (desktop, tablet, mobile)', () => {
+    render(<StoreBrandingEditor />);
+
+    const desktopBtn = screen.getByLabelText('Desktop');
+    const tabletBtn = screen.getByLabelText('Tablet');
+    const mobileBtn = screen.getByLabelText('Mobile');
+
+    expect(desktopBtn).toBeTruthy();
+    expect(tabletBtn).toBeTruthy();
+    expect(mobileBtn).toBeTruthy();
+  });
+
+  it('desktop viewport is active by default', () => {
+    render(<StoreBrandingEditor />);
+
+    const desktopBtn = screen.getByLabelText('Desktop');
+    expect(desktopBtn.getAttribute('aria-pressed')).toBe('true');
+
+    const tabletBtn = screen.getByLabelText('Tablet');
+    expect(tabletBtn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('clicking viewport button updates active state', () => {
+    render(<StoreBrandingEditor />);
+
+    const tabletBtn = screen.getByLabelText('Tablet');
+    fireEvent.click(tabletBtn);
+    expect(tabletBtn.getAttribute('aria-pressed')).toBe('true');
+
+    const desktopBtn = screen.getByLabelText('Desktop');
+    expect(desktopBtn.getAttribute('aria-pressed')).toBe('false');
   });
 });

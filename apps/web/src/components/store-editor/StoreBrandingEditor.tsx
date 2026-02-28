@@ -11,7 +11,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useI18n, useStorefrontConfig } from '@mobazha/core';
 import type { StoreConfig, StoreTheme, StoreSection, SectionType } from '@mobazha/core';
-import { ChevronLeft, Loader2, Undo2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Undo2, Monitor, Tablet, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -29,6 +29,13 @@ import { AddSectionPicker } from './AddSectionPicker';
 import { createSection } from '@/components/store-sections';
 
 type EditorTab = 'theme' | 'sections';
+type PreviewViewport = 'desktop' | 'tablet' | 'mobile';
+
+const VIEWPORT_WIDTHS: Record<PreviewViewport, string> = {
+  desktop: '100%',
+  tablet: '768px',
+  mobile: '375px',
+};
 
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -43,6 +50,7 @@ export function StoreBrandingEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('theme');
   const [showAddSection, setShowAddSection] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [viewport, setViewport] = useState<PreviewViewport>('desktop');
 
   const config = useMemo(() => {
     if (draft) return draft;
@@ -198,7 +206,11 @@ export function StoreBrandingEditor() {
         </div>
       </div>
 
-      {error && <div className="px-4 py-2 bg-destructive/10 text-destructive text-sm">{error}</div>}
+      {error && (
+        <div role="alert" className="px-4 py-2 bg-destructive/10 text-destructive text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Main content: split panel (stacked on mobile, side-by-side on md+) */}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
@@ -261,11 +273,43 @@ export function StoreBrandingEditor() {
         </div>
 
         {/* Right: Live Preview */}
-        <div className="flex-1 overflow-y-auto bg-muted/30 p-4 lg:p-8">
-          <div className="max-w-4xl mx-auto bg-background rounded-lg shadow-sm border border-border overflow-hidden">
-            <StoreThemeProvider theme={config.theme}>
-              <SectionRenderer sections={config.sections} peerId="preview" />
-            </StoreThemeProvider>
+        <div className="flex-1 overflow-y-auto bg-muted/30 flex flex-col">
+          {/* Viewport toolbar */}
+          <div className="flex items-center justify-center gap-1 py-2 px-4 border-b border-border bg-card/50 shrink-0">
+            {[
+              { key: 'desktop' as const, icon: Monitor, label: 'Desktop' },
+              { key: 'tablet' as const, icon: Tablet, label: 'Tablet' },
+              { key: 'mobile' as const, icon: Smartphone, label: 'Mobile' },
+            ].map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setViewport(key)}
+                className={cn(
+                  'p-2 rounded-md transition-colors',
+                  viewport === key
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+                aria-label={label}
+                aria-pressed={viewport === key}
+                title={label}
+              >
+                <Icon className="w-4 h-4" />
+              </button>
+            ))}
+          </div>
+
+          {/* Preview container */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+            <div
+              className="mx-auto bg-background rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300"
+              style={{ maxWidth: VIEWPORT_WIDTHS[viewport] }}
+            >
+              <StoreThemeProvider theme={config.theme}>
+                <SectionRenderer sections={config.sections} peerId="preview" />
+              </StoreThemeProvider>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import {
   AppKitProvider,
@@ -16,6 +15,7 @@ import {
 } from '@/components';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
+import { storeFonts, storeFontVariableClasses } from '@/lib/fonts';
 
 /**
  * AuthProvider 加载状态
@@ -32,8 +32,6 @@ function AuthProviderLoading() {
     </div>
   );
 }
-
-const inter = Inter({ subsets: ['latin'] });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
 
@@ -113,7 +111,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${storeFonts[0].className} ${storeFontVariableClasses}`}>
         <ThemeProvider>
           <TGMiniAppProvider>
             <ServiceWorkerProvider>

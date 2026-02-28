@@ -39,6 +39,19 @@ vi.mock('lucide-react', () => ({
   X: () => <span data-testid="x-icon" />,
 }));
 
+vi.mock('@/lib/fonts', () => ({
+  FONT_CSS_VAR_MAP: {
+    inter: 'var(--font-inter)',
+    'dm-sans': 'var(--font-dm-sans)',
+    'space-grotesk': 'var(--font-space-grotesk)',
+    playfair: 'var(--font-playfair)',
+    lora: 'var(--font-lora)',
+    merriweather: 'var(--font-merriweather)',
+    'josefin-sans': 'var(--font-josefin-sans)',
+    poppins: 'var(--font-poppins)',
+  },
+}));
+
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
@@ -95,6 +108,44 @@ describe('StoreThemeProvider', () => {
       </StoreThemeProvider>
     );
     expect(screen.getByText('Hello Store')).toBeTruthy();
+  });
+
+  it('uses CSS variable reference for --store-font', () => {
+    const { container } = render(
+      <StoreThemeProvider
+        theme={{
+          primaryColor: '#000',
+          secondaryColor: '#666',
+          accentColor: '#999',
+          fontFamily: 'poppins',
+          borderRadius: 'md',
+        }}
+      >
+        <span>font test</span>
+      </StoreThemeProvider>
+    );
+
+    const root = container.querySelector('.store-theme-root') as HTMLElement;
+    expect(root.style.getPropertyValue('--store-font')).toBe('var(--font-poppins)');
+  });
+
+  it('falls back to inter font when fontFamily is unknown', () => {
+    const { container } = render(
+      <StoreThemeProvider
+        theme={{
+          primaryColor: '#000',
+          secondaryColor: '#666',
+          accentColor: '#999',
+          fontFamily: 'unknown-font' as 'inter',
+          borderRadius: 'md',
+        }}
+      >
+        <span>fallback font</span>
+      </StoreThemeProvider>
+    );
+
+    const root = container.querySelector('.store-theme-root') as HTMLElement;
+    expect(root.style.getPropertyValue('--store-font')).toBe('var(--font-inter)');
   });
 
   it('applies default values for missing theme props', () => {

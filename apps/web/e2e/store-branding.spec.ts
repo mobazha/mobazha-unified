@@ -233,6 +233,56 @@ test.describe('Store Branding — Admin Editor', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Viewport Preview Controls
+  // -------------------------------------------------------------------------
+
+  test('viewport toggle buttons are rendered', async ({ page }) => {
+    await page.goto(EDITOR_URL);
+    await page.waitForLoadState('networkidle');
+
+    const desktopBtn = page.getByLabel('Desktop');
+    const tabletBtn = page.getByLabel('Tablet');
+    const mobileBtn = page.getByLabel('Mobile');
+
+    await expect(desktopBtn).toBeVisible();
+    await expect(tabletBtn).toBeVisible();
+    await expect(mobileBtn).toBeVisible();
+  });
+
+  test('viewport toggle changes preview container width', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(EDITOR_URL);
+    await page.waitForLoadState('networkidle');
+
+    const tabletBtn = page.getByLabel('Tablet');
+    await tabletBtn.click();
+
+    await expect(tabletBtn).toHaveAttribute('aria-pressed', 'true');
+
+    const mobileBtn = page.getByLabel('Mobile');
+    await mobileBtn.click();
+
+    await expect(mobileBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(tabletBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  // -------------------------------------------------------------------------
+  // Drag-and-Drop Reordering
+  // -------------------------------------------------------------------------
+
+  test('sections tab shows drag handles', async ({ page }) => {
+    await page.goto(EDITOR_URL);
+    await page.waitForLoadState('networkidle');
+
+    const sectionsTab = page.getByRole('button', { name: /sections/i });
+    await sectionsTab.click();
+
+    const dragHandles = page.getByLabel('Drag to reorder');
+    const count = await dragHandles.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  // -------------------------------------------------------------------------
   // Visual Regression — Admin Editor
   // -------------------------------------------------------------------------
 
@@ -270,6 +320,36 @@ test.describe('Store Branding — Admin Editor', () => {
     await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('store-editor-sections-tab.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test('visual regression — editor tablet preview', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(EDITOR_URL);
+    await page.waitForLoadState('networkidle');
+
+    const tabletBtn = page.getByLabel('Tablet');
+    await tabletBtn.click();
+    await page.waitForTimeout(500);
+
+    await expect(page).toHaveScreenshot('store-editor-tablet-preview.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test('visual regression — editor mobile preview', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(EDITOR_URL);
+    await page.waitForLoadState('networkidle');
+
+    const mobileBtn = page.getByLabel('Mobile');
+    await mobileBtn.click();
+    await page.waitForTimeout(500);
+
+    await expect(page).toHaveScreenshot('store-editor-mobile-preview.png', {
       fullPage: true,
       maxDiffPixelRatio: 0.05,
     });

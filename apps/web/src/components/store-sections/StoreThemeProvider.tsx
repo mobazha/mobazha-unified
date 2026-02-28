@@ -7,12 +7,14 @@
  * StoreConfig.theme. Children (Section components) read these vars
  * instead of using Tailwind theme colors or hardcoded values.
  *
- * Google Fonts are loaded via dynamic <link> injection to prevent FOUC.
+ * Fonts are pre-loaded via next/font/google in lib/fonts.ts; this
+ * component simply selects the right CSS variable at runtime.
  */
 
-import { useMemo, useEffect, useRef, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { StoreTheme } from '@mobazha/core';
-import { getContrastText, FONT_FAMILY_MAP, RADIUS_MAP } from '@mobazha/core';
+import { getContrastText, RADIUS_MAP } from '@mobazha/core';
+import { FONT_CSS_VAR_MAP } from '@/lib/fonts';
 
 interface StoreThemeProviderProps {
   theme: StoreTheme;
@@ -24,6 +26,7 @@ export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps)
     const primary = theme.primaryColor || '#000000';
     const secondary = theme.secondaryColor || '#6b7280';
     const accent = theme.accentColor || '#9ca3af';
+    const fontVar = FONT_CSS_VAR_MAP[theme.fontFamily] || FONT_CSS_VAR_MAP['inter'];
 
     return {
       '--store-primary': primary,
@@ -32,41 +35,10 @@ export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps)
       '--store-on-primary': getContrastText(primary),
       '--store-on-secondary': getContrastText(secondary),
       '--store-on-accent': getContrastText(accent),
-      '--store-font': FONT_FAMILY_MAP[theme.fontFamily] || FONT_FAMILY_MAP['inter'],
+      '--store-font': fontVar,
       '--store-radius': RADIUS_MAP[theme.borderRadius] || RADIUS_MAP['md'],
     } as Record<string, string>;
   }, [theme]);
-
-  const fontFamily = theme.fontFamily || 'inter';
-  const googleFont = FONT_FAMILY_MAP[fontFamily]?.match(/'([^']+)'/)?.[1];
-  const linkRef = useRef<Element | null>(null);
-
-  useEffect(() => {
-    if (!googleFont || googleFont === 'Inter') {
-      if (linkRef.current) {
-        linkRef.current.remove();
-        linkRef.current = null;
-      }
-      return;
-    }
-
-    const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googleFont)}:wght@300;400;500;600;700&display=swap`;
-
-    if (linkRef.current?.getAttribute('href') === href) return;
-
-    if (linkRef.current) linkRef.current.remove();
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
-    linkRef.current = link;
-
-    return () => {
-      link.remove();
-      linkRef.current = null;
-    };
-  }, [googleFont]);
 
   return (
     <div style={cssVars} className="store-theme-root">
