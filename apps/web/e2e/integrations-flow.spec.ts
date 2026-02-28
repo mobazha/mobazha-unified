@@ -45,9 +45,11 @@ authenticatedTest.describe('Integrations Page', () => {
     const page = authedPage.locator('[data-testid="admin-integrations"]');
     await expect(page).toBeVisible();
 
+    const paymentsTab = authedPage.getByRole('tab', { name: /payment|支付/i });
     const notificationsTab = authedPage.getByRole('tab', { name: /notification|通知/i });
     const aiTab = authedPage.getByRole('tab', { name: /ai|助手/i });
 
+    await expect(paymentsTab).toBeVisible();
     await expect(notificationsTab).toBeVisible();
     await expect(aiTab).toBeVisible();
 
@@ -57,12 +59,12 @@ authenticatedTest.describe('Integrations Page', () => {
     });
   });
 
-  authenticatedTest('notifications tab should be active by default', async ({ authedPage }) => {
+  authenticatedTest('payments tab should be active by default', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
     await authedPage.waitForLoadState('networkidle');
 
-    const notificationsTab = authedPage.getByRole('tab', { name: /notification|通知/i });
-    await expect(notificationsTab).toHaveAttribute('data-state', 'active');
+    const paymentsTab = authedPage.getByRole('tab', { name: /payment|支付/i });
+    await expect(paymentsTab).toHaveAttribute('data-state', 'active');
   });
 });
 
