@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useFiatProviders } from '@mobazha/core';
 import { PaymentCryptoSelector } from '@/components/Payment';
 
 /**
@@ -15,29 +15,41 @@ export default function PaymentMethodPage() {
   const searchParams = useSearchParams();
   const { t } = useI18n();
 
-  // 从 URL 获取当前选中的支付方式
   const initialTokenId = searchParams.get('selected') || undefined;
+  const initialFiatProvider = searchParams.get('fiatProvider') || undefined;
+  const vendorPeerID = searchParams.get('vendor') || undefined;
   const returnUrl = searchParams.get('returnUrl') || '/checkout';
 
-  // 处理选择 - 点击即选择并自动返回
+  const { providers } = useFiatProviders(vendorPeerID);
+  const availableFiatProviders = useMemo(
+    () => providers.filter(p => p.status === 'active').map(p => p.providerID),
+    [providers]
+  );
+
   const handleSelect = useCallback(
     (tokenId: string) => {
-      // 使用 sessionStorage 存储选择的支付方式
       sessionStorage.setItem('checkout_selected_token', tokenId);
-      // 自动返回上一页
+      sessionStorage.removeItem('checkout_selected_fiat_provider');
       router.push(returnUrl);
     },
     [returnUrl, router]
   );
 
-  // 处理返回
+  const handleFiatSelect = useCallback(
+    (providerID: string) => {
+      sessionStorage.setItem('checkout_selected_fiat_provider', providerID);
+      sessionStorage.removeItem('checkout_selected_token');
+      router.push(returnUrl);
+    },
+    [returnUrl, router]
+  );
+
   const handleBack = useCallback(() => {
     router.back();
   }, [router]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* 头部 */}
       <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center h-14 px-4 gap-2">
           <button
@@ -52,11 +64,13 @@ export default function PaymentMethodPage() {
         </div>
       </header>
 
-      {/* 内容区域 - 使用紧凑间距 */}
       <main className="flex-1 p-3">
         <PaymentCryptoSelector
           selectedTokenId={initialTokenId}
+          selectedFiatProvider={initialFiatProvider}
+          availableFiatProviders={availableFiatProviders}
           onSelect={handleSelect}
+          onSelectFiat={handleFiatSelect}
           showFiatMethods={true}
         />
       </main>

@@ -2766,7 +2766,53 @@ export interface TranslationResource {
       aiModelCustom?: string;
       aiModelCustomPlaceholder?: string;
       unsavedChanges?: string;
+
+      paymentProviders?: string;
+      paymentProvidersDesc?: string;
+      stripeTitle?: string;
+      stripeDesc?: string;
+      paypalTitle?: string;
+      paypalDesc?: string;
+      providerConnected?: string;
+      providerNotConnected?: string;
+      providerPending?: string;
+      providerRestricted?: string;
+      connectProvider?: string;
+      disconnectProvider?: string;
+      disconnectConfirm?: string;
+      secretKey?: string;
+      publishableKey?: string;
+      webhookSecret?: string;
+      clientId?: string;
+      clientSecret?: string;
+      webhookId?: string;
+      saveConfig?: string;
+      configSaved?: string;
+      configSaveFailed?: string;
+      configDeleted?: string;
+      configDeleteFailed?: string;
     };
+  };
+
+  fiat?: {
+    creditDebitCard?: string;
+    paypal?: string;
+    orPayWithCrypto?: string;
+    protectedBy?: string;
+    payAmount?: string;
+    processing?: string;
+    confirming?: string;
+    success?: string;
+    failed?: string;
+    cancelled?: string;
+    retry?: string;
+    switchToCrypto?: string;
+    sdkLoadFailed?: string;
+    sdkLoadFailedHint?: string;
+    confirmingWithPaypal?: string;
+    paymentBeingConfirmed?: string;
+    providerNotAvailable?: string;
+    acceptedPayments?: string;
   };
 }
 

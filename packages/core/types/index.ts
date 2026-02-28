@@ -329,5 +329,23 @@ export {
   createEmptyShippingOption,
 } from './shippingConfig';
 
+// Fiat payment types
+export type {
+  CaptureMode,
+  StripeSessionData,
+  PayPalSessionData,
+  FiatPaymentSession,
+  PaymentMethodInfo,
+  FiatPaymentResult,
+  FiatPaymentDetail,
+  FiatProviderInfo,
+  FiatAccountStatus,
+  FiatProviderConfigView,
+  FiatProviderConfigInput,
+  CreateFiatPaymentParams,
+  FiatProviderID,
+  FiatPaymentStatus,
+} from './fiat';
+
 // OpenAPI auto-generated types (from hosting openapi.yaml)
 export type { paths as ApiPaths, components as ApiComponents } from './api-generated';

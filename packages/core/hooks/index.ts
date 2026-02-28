@@ -93,5 +93,9 @@ export { createEmptyProfile } from './useShippingProfiles';
 // Collection 相关
 export * from './useCollections';
 
+// 法币支付相关
+export * from './useFiatProviders';
+export * from './useFiatPayment';
+
 // 认证守卫相关
 export * from './useAuthGuard';

@@ -1,20 +1,23 @@
 'use client';
 
-import React, { useState, useCallback, createContext, useContext } from 'react';
+import React, { useState, useCallback, useMemo, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from './useMediaQuery';
 import { useModerators } from './useModerators';
+import { useFiatProviders } from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
+
+type PaymentCategory = 'crypto' | 'fiat';
 
 /**
  * 支付选择器上下文状态
  */
 interface PaymentSelectorState {
-  // 抽屉状态
   isPaymentDrawerOpen: boolean;
   isModeratorDrawerOpen: boolean;
-  // 选中的值
+  paymentCategory: PaymentCategory;
   selectedTokenId?: string;
+  selectedFiatProvider?: string;
   selectedModerator?: Moderator;
 }
 
@@ -22,16 +25,15 @@ interface PaymentSelectorState {
  * 支付选择器上下文操作
  */
 interface PaymentSelectorContextValue extends PaymentSelectorState {
-  // 打开选择器（响应式：移动端跳转页面，桌面端打开抽屉）
+  availableFiatProviders: string[];
   openPaymentSelector: (returnUrl?: string) => void;
   openModeratorSelector: (returnUrl?: string) => void;
-  // 关闭抽屉
   closePaymentDrawer: () => void;
   closeModeratorDrawer: () => void;
-  // 设置选中值
   setSelectedTokenId: (tokenId: string) => void;
+  setSelectedFiatProvider: (providerID: string) => void;
   setSelectedModerator: (moderator: Moderator) => void;
-  // 从 sessionStorage 恢复状态
+  setVendorPeerID: (peerID: string | undefined) => void;
   restoreFromSession: () => void;
 }
 
@@ -47,39 +49,53 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   // 获取调解员列表
   const { moderators, isLoading: isLoadingModerators } = useModerators({ autoFetch: true });
 
-  // 使用初始状态函数从 sessionStorage 恢复状态
+  // 卖家 PeerID — 用于获取该卖家支持的法币支付方式
+  const [vendorPeerID, setVendorPeerID] = useState<string | undefined>();
+  const { activeProviders } = useFiatProviders(vendorPeerID);
+  const availableFiatProviders = useMemo(
+    () => activeProviders.map(p => p.providerID),
+    [activeProviders]
+  );
+
   const [state, setState] = useState<PaymentSelectorState>(() => {
-    // 仅在客户端执行
     if (typeof window === 'undefined') {
       return {
         isPaymentDrawerOpen: false,
         isModeratorDrawerOpen: false,
+        paymentCategory: 'crypto' as PaymentCategory,
         selectedTokenId: undefined,
+        selectedFiatProvider: undefined,
         selectedModerator: undefined,
       };
     }
 
     const savedTokenId = sessionStorage.getItem('checkout_selected_token');
+    const savedFiatProvider = sessionStorage.getItem('checkout_selected_fiat_provider');
     const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
+    const category: PaymentCategory = savedFiatProvider ? 'fiat' : 'crypto';
 
     return {
       isPaymentDrawerOpen: false,
       isModeratorDrawerOpen: false,
+      paymentCategory: category,
       selectedTokenId: savedTokenId || undefined,
+      selectedFiatProvider: savedFiatProvider || undefined,
       selectedModerator: savedModeratorJson ? JSON.parse(savedModeratorJson) : undefined,
     };
   });
 
-  // 从 sessionStorage 恢复状态（供外部调用）
   const restoreFromSession = useCallback(() => {
     if (typeof window === 'undefined') return;
 
     const savedTokenId = sessionStorage.getItem('checkout_selected_token');
+    const savedFiatProvider = sessionStorage.getItem('checkout_selected_fiat_provider');
     const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
 
     setState(prev => ({
       ...prev,
+      paymentCategory: savedFiatProvider ? 'fiat' : 'crypto',
       selectedTokenId: savedTokenId || prev.selectedTokenId,
+      selectedFiatProvider: savedFiatProvider || prev.selectedFiatProvider,
       selectedModerator: savedModeratorJson
         ? JSON.parse(savedModeratorJson)
         : prev.selectedModerator,
@@ -90,21 +106,25 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const openPaymentSelector = useCallback(
     (returnUrl?: string) => {
       if (isMobile) {
-        // 移动端：跳转到选择页面
         const url = new URL('/checkout/payment-method', window.location.origin);
         if (state.selectedTokenId) {
           url.searchParams.set('selected', state.selectedTokenId);
+        }
+        if (state.selectedFiatProvider) {
+          url.searchParams.set('fiatProvider', state.selectedFiatProvider);
+        }
+        if (vendorPeerID) {
+          url.searchParams.set('vendor', vendorPeerID);
         }
         if (returnUrl) {
           url.searchParams.set('returnUrl', returnUrl);
         }
         router.push(url.pathname + url.search);
       } else {
-        // 桌面端：打开抽屉
         setState(prev => ({ ...prev, isPaymentDrawerOpen: true }));
       }
     },
-    [isMobile, router, state.selectedTokenId]
+    [isMobile, router, state.selectedTokenId, state.selectedFiatProvider, vendorPeerID]
   );
 
   // 打开仲裁员选择器
@@ -138,12 +158,29 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     setState(prev => ({ ...prev, isModeratorDrawerOpen: false }));
   }, []);
 
-  // 设置选中的代币
   const setSelectedTokenId = useCallback((tokenId: string) => {
-    setState(prev => ({ ...prev, selectedTokenId: tokenId }));
-    // 同步到 sessionStorage
+    setState(prev => ({
+      ...prev,
+      paymentCategory: 'crypto',
+      selectedTokenId: tokenId,
+      selectedFiatProvider: undefined,
+    }));
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('checkout_selected_token', tokenId);
+      sessionStorage.removeItem('checkout_selected_fiat_provider');
+    }
+  }, []);
+
+  const setSelectedFiatProvider = useCallback((providerID: string) => {
+    setState(prev => ({
+      ...prev,
+      paymentCategory: 'fiat',
+      selectedFiatProvider: providerID,
+      selectedTokenId: undefined,
+    }));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('checkout_selected_fiat_provider', providerID);
+      sessionStorage.removeItem('checkout_selected_token');
     }
   }, []);
 
@@ -156,13 +193,20 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     }
   }, []);
 
-  // 处理抽屉中的选择
   const handleTokenSelect = useCallback(
     (tokenId: string) => {
       setSelectedTokenId(tokenId);
       closePaymentDrawer();
     },
     [setSelectedTokenId, closePaymentDrawer]
+  );
+
+  const handleFiatSelect = useCallback(
+    (providerID: string) => {
+      setSelectedFiatProvider(providerID);
+      closePaymentDrawer();
+    },
+    [setSelectedFiatProvider, closePaymentDrawer]
   );
 
   const handleModeratorSelect = useCallback(
@@ -175,12 +219,15 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
 
   const contextValue: PaymentSelectorContextValue = {
     ...state,
+    availableFiatProviders,
     openPaymentSelector,
     openModeratorSelector,
     closePaymentDrawer,
     closeModeratorDrawer,
     setSelectedTokenId,
+    setSelectedFiatProvider,
     setSelectedModerator,
+    setVendorPeerID,
     restoreFromSession,
   };
 
@@ -197,6 +244,9 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
             onClose={closePaymentDrawer}
             selectedTokenId={state.selectedTokenId}
             onSelectToken={handleTokenSelect}
+            selectedFiatProvider={state.selectedFiatProvider}
+            onSelectFiat={handleFiatSelect}
+            availableFiatProviders={availableFiatProviders}
           />
           <PaymentDrawer
             type="moderator"

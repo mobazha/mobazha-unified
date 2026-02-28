@@ -211,25 +211,25 @@ export const CHAINS: ChainConfig[] = [
   // },
 ];
 
-// 法币支付方式
+// 法币支付方式 — UI metadata only; availability determined by backend
 export const FIAT_METHODS: FiatMethodConfig[] = [
   {
-    id: 'PayPal',
+    id: 'stripe',
+    providerID: 'stripe',
+    name: 'Credit / Debit Card',
+    icon: 'credit-card',
+    color: '#6772e5',
+    type: 'payment',
+    brandLabels: ['Visa', 'Mastercard', 'Apple Pay', 'Google Pay'],
+  },
+  {
+    id: 'paypal',
+    providerID: 'paypal',
     name: 'PayPal',
     icon: 'paypal',
     color: '#0070ba',
     type: 'payment',
-    comingSoon: true,
-    disabled: true,
-  },
-  {
-    id: 'Stripe',
-    name: 'Stripe',
-    icon: 'credit-card',
-    color: '#6772e5',
-    type: 'payment',
-    comingSoon: true,
-    disabled: true,
+    brandLabels: ['PayPal'],
   },
 ];
 

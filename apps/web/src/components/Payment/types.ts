@@ -30,10 +30,12 @@ export interface ChainConfig {
 // 法币支付方式
 export interface FiatMethodConfig {
   id: string;
+  providerID: string;
   name: string;
   icon: string;
   color: string;
   type: 'payment';
+  brandLabels?: string[];
   comingSoon?: boolean;
   disabled?: boolean;
 }
@@ -105,6 +107,9 @@ export interface SelectedModerator {
 export interface PaymentCryptoSelectorProps {
   selectedTokenId?: string;
   onSelect: (tokenId: string) => void;
+  onSelectFiat?: (providerID: string) => void;
+  selectedFiatProvider?: string;
+  availableFiatProviders?: string[];
   disabled?: boolean;
   className?: string;
   isRwaTokenPurchase?: boolean;

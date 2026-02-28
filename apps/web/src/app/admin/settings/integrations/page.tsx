@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { useI18n } from '@mobazha/core';
-import { ArrowLeft, Bell, Sparkles } from 'lucide-react';
+import { ArrowLeft, Bell, CreditCard, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NotificationChannelsSection } from './NotificationChannelsSection';
 import { AIConfigSection } from './AIConfigSection';
+import { PaymentProvidersSection } from './PaymentProvidersSection';
 
 export default function AdminIntegrationsPage() {
   const { t } = useI18n();
@@ -27,8 +28,12 @@ export default function AdminIntegrationsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="notifications">
+      <Tabs defaultValue="payments">
         <TabsList>
+          <TabsTrigger value="payments" className="gap-1.5">
+            <CreditCard className="w-4 h-4" />
+            {t('admin.integrations.tabPayments', { defaultValue: 'Payments' })}
+          </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-1.5">
             <Bell className="w-4 h-4" />
             {t('admin.integrations.tabNotifications')}
@@ -38,6 +43,10 @@ export default function AdminIntegrationsPage() {
             {t('admin.integrations.tabAI')}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="payments" className="mt-6">
+          <PaymentProvidersSection />
+        </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">
           <NotificationChannelsSection />
