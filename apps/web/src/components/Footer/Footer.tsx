@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Container, Grid, HStack, VStack } from '@/components/layouts';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { useI18n } from '@mobazha/core';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 const socialLinks = [
   {
@@ -157,6 +158,18 @@ export const Footer: React.FC = () => {
               ))}
             </VStack>
           </Grid>
+
+          {/* Payment Methods */}
+          <div className="flex items-center gap-3 mb-8">
+            <span className="text-xs text-muted-foreground/60 uppercase tracking-wide">
+              {t('footer.paymentMethods')}
+            </span>
+            <div className="flex items-center gap-2 opacity-60">
+              {['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'LTC', 'USDT', 'USDC'].map(token => (
+                <TokenIcon key={token} token={token} size={20} />
+              ))}
+            </div>
+          </div>
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">

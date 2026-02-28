@@ -84,6 +84,7 @@ function buildConfirmationUrl(details: OrderDetails): string {
   url.searchParams.set('total', String(details.total));
   url.searchParams.set('currency', details.currency);
   if (details.items[0]?.title) url.searchParams.set('title', details.items[0].title);
+  if (details.items[0]?.id) url.searchParams.set('slug', details.items[0].id);
   if (details.vendor?.name) url.searchParams.set('vendorName', details.vendor.name);
   return url.toString();
 }

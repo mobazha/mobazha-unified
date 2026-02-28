@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useI18n, useCurrency } from '@mobazha/core';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
+import { ShareButton } from '@/components/Share';
+import { ShieldCheck, Bell, FileSearch } from 'lucide-react';
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
@@ -20,7 +22,10 @@ function ConfirmationContent() {
   const totalRaw = searchParams.get('total') || '';
   const currency = searchParams.get('currency') || 'USD';
   const vendorName = searchParams.get('vendorName') || '';
+  const slug = searchParams.get('slug') || '';
   const totalAmount = totalRaw ? parseFloat(totalRaw) : 0;
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const productShareUrl = slug ? `${siteUrl}/product/${slug}` : '';
 
   return (
     <div className="min-h-screen bg-background" data-testid="order-confirmation-page">
@@ -96,6 +101,25 @@ function ConfirmationContent() {
                   )}
                 </div>
 
+                {/* Next steps */}
+                <div className="w-full space-y-3 text-left">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {t('checkout.nextStepsTitle')}
+                  </h3>
+                  <div className="flex items-start gap-3">
+                    <Bell className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">{t('checkout.nextStepsSeller')}</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="w-4 h-4 mt-0.5 text-success flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">{t('checkout.nextStepsEscrow')}</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FileSearch className="w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">{t('checkout.nextStepsTrack')}</p>
+                  </div>
+                </div>
+
                 {/* Actions */}
                 <VStack gap="sm" className="w-full">
                   {orderID && (
@@ -110,6 +134,15 @@ function ConfirmationContent() {
                       {t('checkout.continueShopping')}
                     </Button>
                   </Link>
+                  {productShareUrl && title && (
+                    <div className="flex justify-center pt-2">
+                      <ShareButton
+                        url={productShareUrl}
+                        title={title}
+                        description={vendorName ? `${title} by ${vendorName}` : title}
+                      />
+                    </div>
+                  )}
                 </VStack>
               </VStack>
             </CardContent>

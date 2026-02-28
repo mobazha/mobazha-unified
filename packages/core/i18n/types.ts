@@ -1923,6 +1923,8 @@ export interface TranslationResource {
     averageRating: string;
     outOf5: string;
     basedOn: string;
+    showMore: string;
+    showLess: string;
   };
 
   // Validation messages

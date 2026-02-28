@@ -35,6 +35,7 @@ import {
 import { Heart } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
+import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
@@ -747,6 +748,8 @@ export function ProductDetail({
                 {priceInfo.pairedPrice}
               </span>
             </div>
+
+            <BuyerProtectionBadge variant="inline" className="mt-1" />
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (

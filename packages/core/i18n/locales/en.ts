@@ -124,6 +124,8 @@ export const en: TranslationResource = {
     averageRating: 'Average rating',
     outOf5: 'out of 5',
     basedOn: 'Based on {{count}} reviews',
+    showMore: 'Show More Reviews',
+    showLess: 'Show Less',
   },
 
   validation: {
@@ -443,6 +445,11 @@ export const en: TranslationResource = {
       'This transaction requires seller confirmation. Your payment will be locked until the seller confirms.',
     loadFailed: 'Unable to load checkout',
     loadFailedDesc: 'Something went wrong while preparing your order. Please try again later.',
+    nextStepsTitle: 'What happens next',
+    nextStepsSeller:
+      "The seller will review and confirm your order. You'll receive a notification once it's processed.",
+    nextStepsEscrow: 'Your payment is protected by buyer protection until you confirm delivery.',
+    nextStepsTrack: 'Track your order status anytime from your order details page.',
     // Discount
     discount: {
       title: 'Discount Code',
@@ -1479,6 +1486,7 @@ export const en: TranslationResource = {
     careers: 'Careers',
     contact: 'Contact',
     allRightsReserved: 'All rights reserved.',
+    paymentMethods: 'Accepted Payments',
   },
 
   policies: {
@@ -1514,6 +1522,8 @@ export const en: TranslationResource = {
     returnsDisputes: 'Disputes',
     returnsDisputesDesc:
       'If you and the seller cannot reach an agreement, you can open a dispute. A moderator will review the case and make a decision.',
+    noPolicies: 'This store has not published any policies yet.',
+    backToStore: 'Back to Store',
     privacyTitle: 'Privacy Policy',
     privacyIntro:
       'Your privacy is important to us. This policy explains how we handle your information.',
@@ -1544,7 +1554,6 @@ export const en: TranslationResource = {
     termsLiabilityDesc:
       'Mobazha is a decentralized platform and does not control transactions between buyers and sellers. Use the platform at your own risk.',
     lastUpdated: 'Last updated',
-    backToStore: 'Back to Store',
   },
 
   trust: {
@@ -1566,6 +1575,10 @@ export const en: TranslationResource = {
       shipped: 'Shipped',
       delivered: 'Delivered',
       released: 'Released',
+    },
+    badge: {
+      title: 'Buyer Protection',
+      description: 'Your payment is held securely until you confirm delivery',
     },
   },
 

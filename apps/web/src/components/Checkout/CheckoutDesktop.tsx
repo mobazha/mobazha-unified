@@ -15,6 +15,7 @@ import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
+import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -447,8 +448,10 @@ export function CheckoutDesktop({ checkout }: Props) {
                       </div>
                     </div>
 
+                    <BuyerProtectionBadge variant="card" className="mt-4" />
+
                     <Button
-                      className="w-full mt-6"
+                      className="w-full mt-4"
                       size="default"
                       onClick={handleCreateOrder}
                       disabled={!canSubmit}

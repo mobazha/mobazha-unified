@@ -17,7 +17,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const { t } = useI18n();
-  const { formatPrice } = useCurrency();
+  const { renderPairedPrice } = useCurrency();
   const router = useRouter();
 
   const items = useCartStore(state => state.items);
@@ -181,7 +181,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </div>
 
                         <span className="text-sm font-semibold">
-                          {formatPrice(lineTotal, currency)}
+                          {renderPairedPrice(lineTotal, currency, { isMinimalUnit: false })}
                         </span>
                       </div>
                     </div>
@@ -210,7 +210,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             <VStack gap="sm" className="w-full">
               <HStack className="justify-between">
                 <span className="text-sm text-muted-foreground">{t('cart.subtotal')}</span>
-                <span className="text-lg font-bold">{formatPrice(subtotal, currency)}</span>
+                <span className="text-lg font-bold">
+                  {renderPairedPrice(subtotal, currency, { isMinimalUnit: false })}
+                </span>
               </HStack>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
                 {t('cart.checkout')}

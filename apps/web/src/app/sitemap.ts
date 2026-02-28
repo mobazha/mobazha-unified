@@ -37,5 +37,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  return [...staticRoutes, ...productRoutes];
+  const peerIds = new Set<string>();
+  for (const listing of listings) {
+    const parts = listing.slug.split('/');
+    if (parts.length >= 2 && parts[0].startsWith('Qm')) {
+      peerIds.add(parts[0]);
+    }
+  }
+  const storeRoutes: MetadataRoute.Sitemap = Array.from(peerIds).map(peerId => ({
+    url: `${SITE_URL}/store/${peerId}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...productRoutes, ...storeRoutes];
 }
