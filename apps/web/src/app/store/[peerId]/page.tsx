@@ -42,6 +42,7 @@ import {
   stripHtmlTags,
   sanitizeHtml,
   collectionsApi,
+  useStorefrontConfigPublic,
 } from '@mobazha/core';
 import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
 import {
@@ -70,6 +71,7 @@ import {
   StoreReviewsTab,
   FollowTab,
 } from '@/components/store';
+import { StoreSections } from '@/components/store-sections';
 
 // 默认统计数据
 const defaultStats = {
@@ -111,6 +113,9 @@ export default function StorePage() {
     requestorPeerID: currentUserProfile?.peerID || '',
     autoCheck: !isOwnStore && isAuthenticated,
   });
+
+  const { config: storefrontConfig } = useStorefrontConfigPublic(peerId);
+  const hasSections = !!storefrontConfig?.sections?.length;
 
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
@@ -1048,303 +1053,321 @@ export default function StorePage() {
           </Container>
         </div>
 
-        {/* Tabs - 精简为 3 个 */}
-        <div className="sticky top-16 z-30 bg-background border-b border-border">
-          <Container size="xl">
-            <div className="flex items-center px-4 sm:px-6">
-              <HStack gap="md">
-                {/* 简介 Tab */}
-                <button
-                  onClick={() => setActiveTab('about')}
-                  className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                    activeTab === 'about'
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('profile.about')}
-                </button>
+        {hasSections && (
+          <StoreSections
+            peerId={peerId}
+            profile={store ?? undefined}
+            ownerConfig={storefrontConfig}
+          />
+        )}
 
-                {/* 商品 Tab - 带数量（不包含 RWA 商品） */}
-                <button
-                  onClick={() => setActiveTab('products')}
-                  className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                    activeTab === 'products'
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('profile.listings')}
-                  {storeListingCount > 0 && (
-                    <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                      {storeListingCount}
-                    </span>
-                  )}
-                </button>
+        {!hasSections && (
+          <>
+            {/* Tabs - 精简为 3 个 */}
+            <div className="sticky top-16 z-30 bg-background border-b border-border">
+              <Container size="xl">
+                <div className="flex items-center px-4 sm:px-6">
+                  <HStack gap="md">
+                    {/* 简介 Tab */}
+                    <button
+                      onClick={() => setActiveTab('about')}
+                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'about'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.about')}
+                    </button>
 
-                {/* RWA 数字资产 Tab - 带数量 */}
-                <button
-                  onClick={() => setActiveTab('rwa')}
-                  className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                    activeTab === 'rwa'
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('profile.rwa')}
-                  {rwaListingCount > 0 && (
-                    <span className="ml-1.5 text-xs sm:text-sm opacity-70">{rwaListingCount}</span>
-                  )}
-                </button>
-              </HStack>
+                    {/* 商品 Tab - 带数量（不包含 RWA 商品） */}
+                    <button
+                      onClick={() => setActiveTab('products')}
+                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'products'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.listings')}
+                      {storeListingCount > 0 && (
+                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                          {storeListingCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* RWA 数字资产 Tab - 带数量 */}
+                    <button
+                      onClick={() => setActiveTab('rwa')}
+                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'rwa'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.rwa')}
+                      {rwaListingCount > 0 && (
+                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                          {rwaListingCount}
+                        </span>
+                      )}
+                    </button>
+                  </HStack>
+                </div>
+              </Container>
             </div>
-          </Container>
-        </div>
 
-        {/* Tab Content */}
-        <div className="py-2 sm:py-4">
-          {activeTab === 'products' && (
-            <Container size="xl">
-              {/* 桌面端：左侧边栏 + 右侧内容 */}
-              <div className="flex gap-6">
-                {/* 左侧筛选边栏 - 仅桌面端显示 */}
-                {!productsLoading && storeListingCount > 0 && (
-                  <FilterSidebar
-                    filter={filter}
-                    onFilterChange={setFilter}
-                    categories={categories}
-                    className="hidden lg:block"
-                  />
-                )}
+            {/* Tab Content */}
+            <div className="py-2 sm:py-4">
+              {activeTab === 'products' && (
+                <Container size="xl">
+                  {/* 桌面端：左侧边栏 + 右侧内容 */}
+                  <div className="flex gap-6">
+                    {/* 左侧筛选边栏 - 仅桌面端显示 */}
+                    {!productsLoading && storeListingCount > 0 && (
+                      <FilterSidebar
+                        filter={filter}
+                        onFilterChange={setFilter}
+                        categories={categories}
+                        className="hidden lg:block"
+                      />
+                    )}
 
-                {/* 右侧主内容区 */}
-                <div className="flex-1 min-w-0 space-y-4">
-                  {/* 顶部工具栏：搜索 + 数量 + 排序 */}
-                  {!productsLoading && storeListingCount > 0 && (
-                    <StoreListingsToolbar
-                      filter={filter}
-                      onFilterChange={setFilter}
-                      totalCount={storeListingCount}
-                      filteredCount={filteredProducts.length}
-                      categories={categories}
-                      onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
-                      compact
-                    />
-                  )}
+                    {/* 右侧主内容区 */}
+                    <div className="flex-1 min-w-0 space-y-4">
+                      {/* 顶部工具栏：搜索 + 数量 + 排序 */}
+                      {!productsLoading && storeListingCount > 0 && (
+                        <StoreListingsToolbar
+                          filter={filter}
+                          onFilterChange={setFilter}
+                          totalCount={storeListingCount}
+                          filteredCount={filteredProducts.length}
+                          categories={categories}
+                          onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
+                          compact
+                        />
+                      )}
 
-                  {/* Collections Section */}
-                  {storeCollections.length > 0 && (
-                    <div className="space-y-2 mb-4">
-                      <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                        <Layers className="w-4 h-4" />
-                        {t('admin.nav.collections')}
-                      </h3>
-                      <div className="flex gap-3 overflow-x-auto pb-2">
-                        {storeCollections.map(col => (
-                          <Link
-                            key={col.id}
-                            href={`/store/${peerId}/collection/${col.id}`}
-                            className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
-                          >
-                            {col.image ? (
-                              <img
-                                src={getImageUrl(col.image)}
-                                alt={col.title}
-                                className="w-full h-20 object-cover"
+                      {/* Collections Section */}
+                      {storeCollections.length > 0 && (
+                        <div className="space-y-2 mb-4">
+                          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                            <Layers className="w-4 h-4" />
+                            {t('admin.nav.collections')}
+                          </h3>
+                          <div className="flex gap-3 overflow-x-auto pb-2">
+                            {storeCollections.map(col => (
+                              <Link
+                                key={col.id}
+                                href={`/store/${peerId}/collection/${col.id}`}
+                                className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
+                              >
+                                {col.image ? (
+                                  <img
+                                    src={getImageUrl(col.image)}
+                                    alt={col.title}
+                                    className="w-full h-20 object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-20 bg-muted flex items-center justify-center">
+                                    <Layers className="w-6 h-6 text-muted-foreground/30" />
+                                  </div>
+                                )}
+                                <div className="p-2">
+                                  <p className="text-xs font-medium truncate">{col.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {col.products?.length || 0}{' '}
+                                    {t('listing.tabs.productType').toLowerCase()}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Products Grid */}
+                      {productsLoading ? (
+                        <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+                          {Array.from({ length: 6 }).map((_, i) => (
+                            <ProductCardSkeleton key={i} />
+                          ))}
+                        </Grid>
+                      ) : filteredProducts.length > 0 ? (
+                        <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+                          {filteredProducts.map((product, index) => (
+                            <Link
+                              key={`${product.slug}-${index}`}
+                              href={`/product/${product.slug}?peerID=${peerId}`}
+                              onClick={e => {
+                                // 桌面端使用弹框
+                                if (!isMobile) {
+                                  e.preventDefault();
+                                  openProduct(product.slug, peerId);
+                                }
+                              }}
+                            >
+                              <ProductCard
+                                title={product.title}
+                                imageUrl={getImageUrl(product.thumbnail?.medium)}
+                                price={Number(product.price?.amount || 0)}
+                                currency={product.price?.currency?.code || 'USD'}
+                                divisibility={product.price?.currency?.divisibility}
+                                // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                                vendorPeerID={peerId}
+                                rating={product.averageRating}
+                                reviewCount={product.ratingCount}
+                                freeShipping={
+                                  product.freeShipping && product.freeShipping.length > 0
+                                }
+                                contractType={product.contractType as ProductContractType}
+                                tokenStandard={product.tokenStandard}
+                                rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                                hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                                isOwnListing={isOwnStore}
+                                onReport={() => {
+                                  /* TODO: 打开举报对话框 */
+                                }}
+                                onBlock={() => {
+                                  /* TODO: 实现屏蔽卖家功能 */
+                                }}
+                                // 自己商品的快捷操作
+                                onEdit={
+                                  isOwnStore ? () => handleEditListing(product.slug) : undefined
+                                }
+                                onClone={
+                                  isOwnStore ? () => handleCloneListing(product.slug) : undefined
+                                }
+                                onDelete={
+                                  isOwnStore
+                                    ? () => handleOpenDeleteDialog(product.slug, product.title)
+                                    : undefined
+                                }
                               />
-                            ) : (
-                              <div className="w-full h-20 bg-muted flex items-center justify-center">
-                                <Layers className="w-6 h-6 text-muted-foreground/30" />
-                              </div>
-                            )}
-                            <div className="p-2">
-                              <p className="text-xs font-medium truncate">{col.title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {col.products?.length || 0}{' '}
-                                {t('listing.tabs.productType').toLowerCase()}
+                            </Link>
+                          ))}
+                        </Grid>
+                      ) : storeListingCount > 0 ? (
+                        // 有商品但筛选后为空
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                            <Package className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-base font-medium text-foreground mb-2">
+                            {t('empty.noProductsFound')}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {t('empty.tryAdjustingFilters')}
+                          </p>
+                        </div>
+                      ) : (
+                        // 店铺本身没有普通商品（但可能有 RWA 商品）
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                            <Package className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-base font-medium text-foreground mb-2">
+                            {t('empty.noProductsFound')}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Container>
+              )}
+
+              {activeTab === 'rwa' && (
+                <Container size="xl">
+                  <RwaTab peerId={peerId} isOwnStore={isOwnStore} products={products} />
+                </Container>
+              )}
+
+              {activeTab === 'about' && (
+                <Container size="xl">
+                  <Grid cols={3} colsMobile={1} gap="md">
+                    <div className="lg:col-span-2">
+                      <Card className="p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
+                          {t('profile.about')}
+                        </h2>
+                        <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
+                          {store.about ? (
+                            <div
+                              className="text-sm sm:text-base text-muted-foreground [&>p]:mb-3 [&>p:last-child]:mb-0"
+                              dangerouslySetInnerHTML={{ __html: sanitizeHtml(store.about) }}
+                            />
+                          ) : (
+                            <p className="text-sm sm:text-base text-muted-foreground">
+                              {t('common.noData')}
+                            </p>
+                          )}
+                        </div>
+                      </Card>
+                    </div>
+
+                    <div>
+                      <Card className="p-4 sm:p-6">
+                        <h3 className="font-semibold text-foreground mb-3 text-base">
+                          {t('profile.contactInformation')}
+                        </h3>
+                        <VStack gap="sm" align="stretch">
+                          {store.contactInfo?.email && (
+                            <div>
+                              <span className="text-xs sm:text-sm text-muted-foreground">
+                                {t('profile.email')}
+                              </span>
+                              <p className="font-medium text-foreground text-sm">
+                                {store.contactInfo.email}
                               </p>
                             </div>
-                          </Link>
-                        ))}
-                      </div>
+                          )}
+                          {store.contactInfo?.phoneNumber && (
+                            <div>
+                              <span className="text-xs sm:text-sm text-muted-foreground">
+                                {t('profile.phone')}
+                              </span>
+                              <p className="font-medium text-foreground text-sm">
+                                {store.contactInfo.phoneNumber}
+                              </p>
+                            </div>
+                          )}
+                          {store.contactInfo?.website && (
+                            <div>
+                              <span className="text-xs sm:text-sm text-muted-foreground">
+                                {t('profile.website')}
+                              </span>
+                              <a
+                                href={store.contactInfo.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block font-medium text-primary hover:underline text-sm"
+                              >
+                                {store.contactInfo.website}
+                              </a>
+                            </div>
+                          )}
+                          {!store.contactInfo?.email &&
+                            !store.contactInfo?.phoneNumber &&
+                            !store.contactInfo?.website && (
+                              <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
+                            )}
+                        </VStack>
+                      </Card>
                     </div>
-                  )}
+                  </Grid>
+                </Container>
+              )}
 
-                  {/* Products Grid */}
-                  {productsLoading ? (
-                    <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <ProductCardSkeleton key={i} />
-                      ))}
-                    </Grid>
-                  ) : filteredProducts.length > 0 ? (
-                    <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-                      {filteredProducts.map((product, index) => (
-                        <Link
-                          key={`${product.slug}-${index}`}
-                          href={`/product/${product.slug}?peerID=${peerId}`}
-                          onClick={e => {
-                            // 桌面端使用弹框
-                            if (!isMobile) {
-                              e.preventDefault();
-                              openProduct(product.slug, peerId);
-                            }
-                          }}
-                        >
-                          <ProductCard
-                            title={product.title}
-                            imageUrl={getImageUrl(product.thumbnail?.medium)}
-                            price={Number(product.price?.amount || 0)}
-                            currency={product.price?.currency?.code || 'USD'}
-                            divisibility={product.price?.currency?.divisibility}
-                            // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
-                            vendorPeerID={peerId}
-                            rating={product.averageRating}
-                            reviewCount={product.ratingCount}
-                            freeShipping={product.freeShipping && product.freeShipping.length > 0}
-                            contractType={product.contractType as ProductContractType}
-                            tokenStandard={product.tokenStandard}
-                            rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                            hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                            isOwnListing={isOwnStore}
-                            onReport={() => {
-                              /* TODO: 打开举报对话框 */
-                            }}
-                            onBlock={() => {
-                              /* TODO: 实现屏蔽卖家功能 */
-                            }}
-                            // 自己商品的快捷操作
-                            onEdit={isOwnStore ? () => handleEditListing(product.slug) : undefined}
-                            onClone={
-                              isOwnStore ? () => handleCloneListing(product.slug) : undefined
-                            }
-                            onDelete={
-                              isOwnStore
-                                ? () => handleOpenDeleteDialog(product.slug, product.title)
-                                : undefined
-                            }
-                          />
-                        </Link>
-                      ))}
-                    </Grid>
-                  ) : storeListingCount > 0 ? (
-                    // 有商品但筛选后为空
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                        <Package className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-base font-medium text-foreground mb-2">
-                        {t('empty.noProductsFound')}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t('empty.tryAdjustingFilters')}
-                      </p>
-                    </div>
-                  ) : (
-                    // 店铺本身没有普通商品（但可能有 RWA 商品）
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                        <Package className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-base font-medium text-foreground mb-2">
-                        {t('empty.noProductsFound')}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Container>
-          )}
+              {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
 
-          {activeTab === 'rwa' && (
-            <Container size="xl">
-              <RwaTab peerId={peerId} isOwnStore={isOwnStore} products={products} />
-            </Container>
-          )}
+              {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
 
-          {activeTab === 'about' && (
-            <Container size="xl">
-              <Grid cols={3} colsMobile={1} gap="md">
-                <div className="lg:col-span-2">
-                  <Card className="p-4 sm:p-6">
-                    <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
-                      {t('profile.about')}
-                    </h2>
-                    <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
-                      {store.about ? (
-                        <div
-                          className="text-sm sm:text-base text-muted-foreground [&>p]:mb-3 [&>p:last-child]:mb-0"
-                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(store.about) }}
-                        />
-                      ) : (
-                        <p className="text-sm sm:text-base text-muted-foreground">
-                          {t('common.noData')}
-                        </p>
-                      )}
-                    </div>
-                  </Card>
-                </div>
-
-                <div>
-                  <Card className="p-4 sm:p-6">
-                    <h3 className="font-semibold text-foreground mb-3 text-base">
-                      {t('profile.contactInformation')}
-                    </h3>
-                    <VStack gap="sm" align="stretch">
-                      {store.contactInfo?.email && (
-                        <div>
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('profile.email')}
-                          </span>
-                          <p className="font-medium text-foreground text-sm">
-                            {store.contactInfo.email}
-                          </p>
-                        </div>
-                      )}
-                      {store.contactInfo?.phoneNumber && (
-                        <div>
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('profile.phone')}
-                          </span>
-                          <p className="font-medium text-foreground text-sm">
-                            {store.contactInfo.phoneNumber}
-                          </p>
-                        </div>
-                      )}
-                      {store.contactInfo?.website && (
-                        <div>
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('profile.website')}
-                          </span>
-                          <a
-                            href={store.contactInfo.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block font-medium text-primary hover:underline text-sm"
-                          >
-                            {store.contactInfo.website}
-                          </a>
-                        </div>
-                      )}
-                      {!store.contactInfo?.email &&
-                        !store.contactInfo?.phoneNumber &&
-                        !store.contactInfo?.website && (
-                          <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
-                        )}
-                    </VStack>
-                  </Card>
-                </div>
-              </Grid>
-            </Container>
-          )}
-
-          {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
-
-          {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
-
-          {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
-        </div>
+              {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
+            </div>
+          </>
+        )}
       </main>
 
       <Footer />

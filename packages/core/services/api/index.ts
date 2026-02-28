@@ -130,6 +130,9 @@ export * as notificationChannelsApi from './notificationChannels';
 // 法币支付 API
 export * as fiatApi from './fiat';
 
+// Storefront Config API (PG-201)
+export * as storefrontApi from './storefront';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type { AIConfig, AIConfigInput, AIProviderInfo, AITestConnectionResult } from './aiSettings';
