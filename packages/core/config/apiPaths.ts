@@ -184,6 +184,10 @@ export const NODE_API = {
   FIAT_PROVIDER_CONFIG: '/fiat/config',
   FIAT_PROVIDER_CONFIG_BY_ID: (provider: string) => `/fiat/config/${provider}`,
 
+  // --- Storefront (PG-201) ---
+  SETTINGS_STOREFRONT: '/settings/storefront',
+  SETTINGS_STOREFRONT_PEER: (peerID: string) => `/settings/storefront/${peerID}`,
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',

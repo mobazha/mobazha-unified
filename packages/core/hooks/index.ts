@@ -99,3 +99,6 @@ export * from './useFiatPayment';
 
 // 认证守卫相关
 export * from './useAuthGuard';
+
+// 店铺品牌化相关 (PG-201)
+export * from './useStorefrontConfig';
