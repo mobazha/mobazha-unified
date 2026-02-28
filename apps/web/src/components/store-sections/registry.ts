@@ -16,6 +16,8 @@ import { WEB3_TRUST_KIT } from '@mobazha/core';
 export interface SectionMeta {
   type: SectionType;
   label: string;
+  /** i18n key for the section label (e.g. 'admin.storeBranding.sectionHero') */
+  labelKey: string;
   description: string;
   icon: string;
   /** Priority for ordering: 0 = P0, 1 = P1, 2 = P2 */
@@ -26,6 +28,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'hero',
     label: 'Hero Banner',
+    labelKey: 'admin.storeBranding.sectionHero',
     description: 'Full-width banner with title, subtitle, and call to action',
     icon: '🖼️',
     priority: 0,
@@ -33,6 +36,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'featured-products',
     label: 'Featured Products',
+    labelKey: 'admin.storeBranding.sectionFeatured',
     description: 'Hand-picked or auto-selected product showcase',
     icon: '⭐',
     priority: 0,
@@ -40,6 +44,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'product-grid',
     label: 'Product Grid',
+    labelKey: 'admin.storeBranding.sectionProductGrid',
     description: 'Browseable product catalog with filters and search',
     icon: '📦',
     priority: 0,
@@ -47,6 +52,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'announcement-bar',
     label: 'Announcement Bar',
+    labelKey: 'admin.storeBranding.sectionAnnouncement',
     description: 'Dismissible banner for sales, news, or updates',
     icon: '📢',
     priority: 0,
@@ -54,6 +60,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'trust-badges',
     label: 'Trust Badges',
+    labelKey: 'admin.storeBranding.sectionTrustBadges',
     description: 'Web3 trust signals like Buyer Protection and Direct Trade',
     icon: '🛡️',
     priority: 0,
@@ -61,6 +68,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'about',
     label: 'About',
+    labelKey: 'admin.storeBranding.sectionAbout',
     description: 'Tell your story with text and an image',
     icon: '📝',
     priority: 1,
@@ -68,6 +76,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'testimonials',
     label: 'Testimonials',
+    labelKey: 'admin.storeBranding.sectionTestimonials',
     description: 'Customer reviews and social proof',
     icon: '💬',
     priority: 1,
@@ -75,6 +84,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'faq',
     label: 'FAQ',
+    labelKey: 'admin.storeBranding.sectionFaq',
     description: 'Frequently asked questions with expandable answers',
     icon: '❓',
     priority: 1,
@@ -82,6 +92,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'collections',
     label: 'Collections',
+    labelKey: 'admin.storeBranding.sectionCollections',
     description: 'Showcase product collections in a carousel or grid',
     icon: '🗂️',
     priority: 1,
@@ -89,6 +100,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'gallery',
     label: 'Image Gallery',
+    labelKey: 'admin.storeBranding.sectionGallery',
     description: 'Photo grid with optional lightbox',
     icon: '🖼️',
     priority: 2,
@@ -96,6 +108,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'rich-text',
     label: 'Rich Text',
+    labelKey: 'admin.storeBranding.sectionRichText',
     description: 'Free-form HTML content area',
     icon: '📄',
     priority: 2,
@@ -103,6 +116,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'contact',
     label: 'Contact Info',
+    labelKey: 'admin.storeBranding.sectionContact',
     description: 'Display email, phone, website, and social links',
     icon: '📧',
     priority: 2,
@@ -110,6 +124,7 @@ export const SECTION_REGISTRY: SectionMeta[] = [
   {
     type: 'store-tabs',
     label: 'Store Tabs',
+    labelKey: 'admin.storeBranding.sectionStoreTabs',
     description: 'Reviews, Following, and Followers tabs (system)',
     icon: '📋',
     priority: 0,

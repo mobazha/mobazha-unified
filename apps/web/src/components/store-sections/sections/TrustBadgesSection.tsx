@@ -1,10 +1,14 @@
+'use client';
+
 /**
- * TrustBadgesSection — PG-201 (Server Component)
+ * TrustBadgesSection — PG-201
  *
- * Renders Web3 trust signals like Buyer Protection, Direct Trade, etc.
+ * Renders Web3 trust signals. Known badge types (escrow, crypto, etc.)
+ * use i18n translations; custom badges use their own title/description.
  */
 
 import type { TrustBadgesProps, TrustBadge } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
 
 const ICON_MAP: Record<string, string> = {
   escrow: '🛡️',
@@ -15,8 +19,26 @@ const ICON_MAP: Record<string, string> = {
   custom: '⭐',
 };
 
+const TRUST_I18N: Record<string, { title: string; desc: string }> = {
+  escrow: { title: 'admin.storeBranding.trustEscrow', desc: 'admin.storeBranding.trustEscrowDesc' },
+  crypto: { title: 'admin.storeBranding.trustCrypto', desc: 'admin.storeBranding.trustCryptoDesc' },
+  selfHosted: {
+    title: 'admin.storeBranding.trustSelfHosted',
+    desc: 'admin.storeBranding.trustSelfHostedDesc',
+  },
+  p2p: { title: 'admin.storeBranding.trustP2p', desc: 'admin.storeBranding.trustP2pDesc' },
+  privacy: {
+    title: 'admin.storeBranding.trustPrivacy',
+    desc: 'admin.storeBranding.trustPrivacyDesc',
+  },
+};
+
 function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProps['style'] }) {
+  const { t } = useI18n();
   const icon = badge.customIcon || ICON_MAP[badge.icon] || '⭐';
+  const i18nKeys = TRUST_I18N[badge.icon];
+  const title = i18nKeys ? t(i18nKeys.title) : badge.title;
+  const description = i18nKeys ? t(i18nKeys.desc) : badge.description;
 
   if (style === 'minimal') {
     return (
@@ -24,9 +46,9 @@ function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProp
         <span className="text-2xl">{icon}</span>
         <div>
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--store-font)' }}>
-            {badge.title}
+            {title}
           </p>
-          <p className="text-xs opacity-60">{badge.description}</p>
+          <p className="text-xs opacity-60">{description}</p>
         </div>
       </div>
     );
@@ -43,9 +65,9 @@ function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProp
       >
         <span className="text-4xl">{icon}</span>
         <p className="text-sm font-semibold" style={{ fontFamily: 'var(--store-font)' }}>
-          {badge.title}
+          {title}
         </p>
-        <p className="text-xs opacity-60">{badge.description}</p>
+        <p className="text-xs opacity-60">{description}</p>
       </div>
     );
   }
@@ -60,9 +82,9 @@ function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProp
     >
       <span className="text-3xl">{icon}</span>
       <p className="text-sm font-semibold" style={{ fontFamily: 'var(--store-font)' }}>
-        {badge.title}
+        {title}
       </p>
-      <p className="text-xs opacity-60">{badge.description}</p>
+      <p className="text-xs opacity-60">{description}</p>
     </div>
   );
 }
