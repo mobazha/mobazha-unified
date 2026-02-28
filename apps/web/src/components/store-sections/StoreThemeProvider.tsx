@@ -6,9 +6,11 @@
  * Injects --store-* CSS custom properties based on the seller's
  * StoreConfig.theme. Children (Section components) read these vars
  * instead of using Tailwind theme colors or hardcoded values.
+ *
+ * Google Fonts are loaded via dynamic <link> injection to prevent FOUC.
  */
 
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useEffect, useRef, type ReactNode } from 'react';
 import type { StoreTheme } from '@mobazha/core';
 import { getContrastText, FONT_FAMILY_MAP, RADIUS_MAP } from '@mobazha/core';
 
@@ -37,15 +39,37 @@ export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps)
 
   const fontFamily = theme.fontFamily || 'inter';
   const googleFont = FONT_FAMILY_MAP[fontFamily]?.match(/'([^']+)'/)?.[1];
+  const linkRef = useRef<Element | null>(null);
+
+  useEffect(() => {
+    if (!googleFont || googleFont === 'Inter') {
+      if (linkRef.current) {
+        linkRef.current.remove();
+        linkRef.current = null;
+      }
+      return;
+    }
+
+    const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googleFont)}:wght@300;400;500;600;700&display=swap`;
+
+    if (linkRef.current?.getAttribute('href') === href) return;
+
+    if (linkRef.current) linkRef.current.remove();
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+    linkRef.current = link;
+
+    return () => {
+      link.remove();
+      linkRef.current = null;
+    };
+  }, [googleFont]);
 
   return (
     <div style={cssVars} className="store-theme-root">
-      {googleFont && googleFont !== 'Inter' && (
-        <link
-          rel="stylesheet"
-          href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(googleFont)}:wght@300;400;500;600;700&display=swap`}
-        />
-      )}
       {children}
     </div>
   );

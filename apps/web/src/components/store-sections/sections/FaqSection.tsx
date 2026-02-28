@@ -13,7 +13,7 @@ import { ChevronDown } from 'lucide-react';
 export function FaqSection({ title, items }: FaqSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  if (!items.length) return null;
+  if (!items?.length) return null;
 
   return (
     <div className="py-4">
