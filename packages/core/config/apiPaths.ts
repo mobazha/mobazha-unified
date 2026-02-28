@@ -171,6 +171,10 @@ export const NODE_API = {
   COLLECTIONS_PUBLISHED: '/collections/published',
   COLLECTION_PUBLISHED: (collectionID: string) => `/collections/published/${collectionID}`,
 
+  // --- Storefront (PG-201) ---
+  SETTINGS_STOREFRONT: '/settings/storefront',
+  SETTINGS_STOREFRONT_PEER: (peerID: string) => `/settings/storefront/${peerID}`,
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',

@@ -38,6 +38,9 @@ export * from './priceUtils';
 // 身份展示工具
 export * from './identity';
 
+// 店铺品牌化主题工具 (PG-201)
+export * from './theme';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

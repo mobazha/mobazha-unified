@@ -329,5 +329,41 @@ export {
   createEmptyShippingOption,
 } from './shippingConfig';
 
+// Store branding types (PG-201)
+export type {
+  StoreConfig,
+  StoreTheme,
+  StoreSection,
+  SectionType,
+  SectionLayout,
+  SpacingSize,
+  ThemePalette,
+  FontFamily,
+  BorderRadius,
+  HeaderStyle,
+  HeroSectionProps,
+  AnnouncementBarProps,
+  FeaturedProductsProps,
+  ProductGridProps,
+  AboutSectionProps,
+  TrustBadge,
+  TrustBadgesProps,
+  TestimonialsProps,
+  FaqSectionProps,
+  CollectionsSectionProps,
+  GallerySectionProps,
+  RichTextSectionProps,
+  ContactSectionProps,
+  StoreTabsProps,
+} from './storeConfig';
+
+export {
+  MAX_SECTIONS,
+  WEB3_TRUST_KIT,
+  SECTION_TYPE_LIST,
+  SYSTEM_SECTION_TYPES,
+  ADDABLE_SECTION_TYPES,
+} from './storeConfig';
+
 // OpenAPI auto-generated types (from hosting openapi.yaml)
 export type { paths as ApiPaths, components as ApiComponents } from './api-generated';
