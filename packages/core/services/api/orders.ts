@@ -28,6 +28,7 @@ export interface PurchaseData {
     memo?: string;
     coupons?: string[];
   }>;
+  discountCodes?: string[];
   moderatorId?: string;
   paymentCoin: string;
   pricingCoin?: string;
@@ -42,6 +43,16 @@ export interface PurchaseData {
 /**
  * 订单估算结果
  */
+export interface DiscountDetailItem {
+  discountID: string;
+  title: string;
+  code?: string;
+  valueType: string;
+  value: string;
+  amount: string;
+  auto?: boolean;
+}
+
 export interface OrderEstimate {
   subtotal: string;
   shippingTotal: string;
@@ -50,6 +61,7 @@ export interface OrderEstimate {
   total: string;
   paymentCoin: string;
   pricingCoin: string;
+  discountDetails?: DiscountDetailItem[];
 }
 
 /**
@@ -404,6 +416,11 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
       ...(item.coupons && item.coupons.length > 0 ? { coupons: item.coupons } : {}),
     })),
   };
+
+  // 添加 discountCodes（如果有）
+  if (restData.discountCodes && restData.discountCodes.length > 0) {
+    apiData.discountCodes = restData.discountCodes;
+  }
 
   // 添加 pricingCoin（如果有）
   if (restData.pricingCoin) {
