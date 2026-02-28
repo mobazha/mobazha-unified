@@ -1,0 +1,246 @@
+# 法币支付前端开发规范
+
+## 设计文档
+
+完整设计位于 hosting 仓库：`docs/FIAT_PAYMENT_DESIGN.md`（v1.1）
+
+> 多仓库开发时，设计文档在 hosting worktree 中。
+> 路径：`~/go/src/github.com/mobazha/mobazha_hosting-fiat-payment/docs/FIAT_PAYMENT_DESIGN.md`
+
+## 核心原则
+
+1. **PCI DSS 合规**：前端不触碰卡号数据，全部通过 Stripe Elements / PayPal JS SDK
+2. **Provider 抽象**：统一 FiatPaymentForm 组件，内部根据 provider 切换
+3. **动态支付方式**：从后端查询卖家启用的支付方式，不硬编码
+4. **法币优先展示**：Checkout 中法币选项在上，加密货币在下
+5. **部署模式感知**：卖家设置页根据 SaaS/独立站模式显示不同 UI
+
+## SDK 依赖
+
+```bash
+# Stripe
+npm install @stripe/stripe-js @stripe/react-stripe-js
+
+# PayPal
+npm install @paypal/react-paypal-js
+```
+
+## 组件结构
+
+```
+apps/web/src/components/Payment/
+  PaymentMethodSelector.tsx   — 支付方式选择器（法币 + 加密）
+  FiatPaymentForm.tsx         — 统一法币支付入口
+  StripePaymentForm.tsx       — Stripe Elements 表单
+  PayPalPaymentForm.tsx       — PayPal 按钮
+  RateLockBanner.tsx          — 汇率锁定倒计时
+
+apps/web/src/app/admin/settings/payment/
+  page.tsx                    — 卖家支付设置页
+  OAuthConnectButton.tsx      — SaaS OAuth 连接按钮
+  ApiKeyConfigForm.tsx        — 独立站 API 密钥配置表单
+
+packages/core/
+  config/paymentProviders.ts  — 法币 Provider 配置
+  services/api/fiat.ts        — 法币 API 服务
+  utils/deploymentMode.ts     — 部署模式检测
+```
+
+## 部署模式检测
+
+```typescript
+// packages/core/utils/deploymentMode.ts
+
+export function isStandaloneMode(): boolean {
+  return import.meta.env.VITE_DEPLOYMENT_MODE === 'standalone';
+}
+
+// ✅ 卖家设置页根据模式显示不同 UI
+function PaymentProviderCard({ providerID }: Props) {
+  if (isStandaloneMode()) {
+    return <ApiKeyConfigForm providerID={providerID} />;
+  }
+  return <OAuthConnectButton providerID={providerID} />;
+}
+
+// ❌ 禁止硬编码模式
+const isSaaS = true;
+```
+
+## API 调用规范
+
+```typescript
+// ✅ 使用 apiPaths 常量
+import { NODE_API } from '../../config/apiPaths';
+const session = await authFetch(NODE_API.FIAT_PAYMENTS, { method: 'POST', body });
+
+// ❌ 禁止硬编码路径
+const session = await fetch(`${getGatewayUrl()}/fiat/payments`);
+```
+
+## 支付方式选择
+
+```typescript
+// ✅ 从后端动态获取卖家支持的支付方式
+const methods = await publicFetch(
+  NODE_API.LISTING_PAYMENT_METHODS(peerID, slug)
+);
+
+// ✅ 根据返回数据动态渲染
+{methods.fiat.map(p => <FiatOption key={p.provider} {...p} />)}
+{methods.crypto.map(c => <CryptoOption key={c.chain} {...c} />)}
+
+// ❌ 禁止在前端硬编码可用支付方式
+```
+
+## 支付流程简化
+
+```typescript
+// 买家支付只需 2 步 API 调用（Webhook 自动完成剩余）：
+
+// Step 1: 创建订单
+const order = await authFetch(NODE_API.ORDERS, {
+  method: 'POST',
+  body: { pricingCoin: 'USD', fiatProvider: 'stripe', method: 'FIAT', ... }
+});
+
+// Step 2: 创建支付会话
+const session = await authFetch(NODE_API.FIAT_PAYMENTS, {
+  method: 'POST',
+  body: { providerID: 'stripe', orderID: order.id, currency: 'USD' }
+});
+
+// Step 3: 前端 SDK 完成支付
+await stripe.confirmPayment({ clientSecret: session.stripe.clientSecret });
+
+// Step 4: Webhook 自动完成 → WebSocket 推送状态更新
+// 前端监听 WebSocket 事件，显示成功页面
+```
+
+## Stripe 集成
+
+```tsx
+// StripePaymentForm.tsx
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+// ✅ 使用 PaymentElement（自动支持 Card + Apple Pay + Google Pay）
+<Elements stripe={stripePromise} options={{ clientSecret: session.stripe.clientSecret }}>
+  <PaymentElement />
+</Elements>
+
+// ❌ 禁止使用 CardElement（只支持卡）
+// ❌ 禁止收集卡号
+```
+
+## PayPal 集成
+
+```tsx
+// PayPalPaymentForm.tsx
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+
+<PayPalScriptProvider options={{ clientId: session.paypal.clientID }}>
+  <PayPalButtons
+    createOrder={async () => {
+      const session = await createFiatPayment({
+        providerID: 'paypal', orderID, currency
+      });
+      return session.paypal.orderID;
+    }}
+    onApprove={async (data) => {
+      await captureFiatPayment(data.orderID);
+      // Webhook 自动完成后续
+    }}
+  />
+</PayPalScriptProvider>
+```
+
+## 支付超时处理
+
+```typescript
+// ✅ 展示超时倒计时
+<RateLockBanner expiresAt={session.expiresAt} />
+
+// ✅ 过期后禁用支付、提示重试
+if (isExpired(session.expiresAt)) {
+  showToast({ type: 'warning', message: t('payment.sessionExpired') });
+  // 重新创建 PaymentSession
+}
+```
+
+## 汇率展示
+
+```typescript
+// ✅ 跨币种时显示汇率锁定信息
+{needsCurrencyConversion && (
+  <RateLockBanner
+    fromCurrency={listing.pricingCurrency}
+    toCurrency={paymentCurrency}
+    rate={rateLock.rates[fromCurrency][toCurrency]}
+    expiresAt={rateLock.expiresAt}
+  />
+)}
+
+// ✅ 显示双价格：商品原价 + 支付币种价格
+<PriceDisplay
+  originalAmount={listing.price}
+  originalCurrency={listing.pricingCurrency}
+  paymentAmount={convertedAmount}
+  paymentCurrency={paymentCurrency}
+/>
+```
+
+## 卖家设置页
+
+```
+SaaS 模式：
+  - "Connect Stripe" / "Connect PayPal" 按钮 → OAuth 跳转
+  - 显示连接状态 + 账户信息
+  - "Disconnect" 按钮（检查进行中订单）
+
+独立站模式：
+  - API Keys 输入表单（Stripe: pk/sk/whsec; PayPal: client_id/secret/webhook_id）
+  - "Verify" 按钮验证配置有效性
+  - "Save" 保存配置
+  - 密钥显示脱敏（sk_live_****xxx）
+```
+
+## 错误处理
+
+```typescript
+// ✅ 支付失败展示友好提示
+try {
+  const { error } = await stripe.confirmPayment({ ... });
+  if (error) {
+    showToast({ type: 'error', message: t('payment.failed', { reason: error.message }) });
+  }
+} catch (err) {
+  showToast({ type: 'error', message: t('payment.unexpectedError') });
+}
+
+// ❌ 禁止展示原始技术错误
+alert(error.raw_message);
+```
+
+## i18n 键名
+
+```
+payment.selectMethod         — "Choose Payment Method"
+payment.creditCard           — "Credit / Debit Card"
+payment.paypal               — "PayPal"
+payment.orPayWithCrypto      — "or pay with crypto"
+payment.processing           — "Processing payment..."
+payment.succeeded            — "Payment successful"
+payment.failed               — "Payment failed: {reason}"
+payment.sessionExpired       — "Payment session expired, please try again"
+payment.connectStripe        — "Connect Stripe"
+payment.connectPayPal        — "Connect PayPal"
+payment.connected            — "Connected"
+payment.notConnected         — "Not Connected"
+payment.disconnect           — "Disconnect"
+payment.disconnectWarning    — "Please complete pending orders before disconnecting"
+payment.rateLocked           — "Rate locked for {time}"
+payment.rateExpired          — "Rate expired, refreshing..."
+payment.viewReceipt          — "View Receipt"
+payment.requestRefund        — "Request Refund"
+```
