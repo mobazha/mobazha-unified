@@ -1,26 +1,16 @@
 /**
  * useShippingProfiles hook
- * 管理配送档案（Shopify 风格）
+ * 管理配送档案 — 调用独立 Shipping CRUD API（替代 preferences blob）
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { profileApi } from '../services/api';
-import type {
-  ShippingProfile,
-  ShippingZone,
-  ShippingRate,
-  ShippingLocation,
-  ShippingOptionConfig,
-} from '../types';
+import { shippingApi } from '../services/api/shipping';
+import type { ShippingProfile, ShippingZone, ShippingRate, ShippingLocation } from '../types';
 import { createEmptyZone, createEmptyRate, createEmptyLocationGroup, generateId } from '../types';
 import { toISOCountryCode } from '../utils/countryUtils';
 
-// 特殊地区代码（不需要转换）
 const SPECIAL_REGION_CODES = ['ALL', 'WORLDWIDE'];
 
-/**
- * 标准化地区代码为 ISO 格式
- */
 function normalizeRegionCode(code: string): string {
   const upperCode = code.toUpperCase();
   if (SPECIAL_REGION_CODES.includes(upperCode)) {
@@ -29,9 +19,6 @@ function normalizeRegionCode(code: string): string {
   return toISOCountryCode(code);
 }
 
-/**
- * 标准化配送区域中的地区代码
- */
 function normalizeZoneRegions(zone: ShippingZone): ShippingZone {
   return {
     ...zone,
@@ -39,9 +26,6 @@ function normalizeZoneRegions(zone: ShippingZone): ShippingZone {
   };
 }
 
-/**
- * 标准化配送档案中所有区域的地区代码
- */
 function normalizeProfileRegions(profile: ShippingProfile): ShippingProfile {
   return {
     ...profile,
@@ -52,7 +36,6 @@ function normalizeProfileRegions(profile: ShippingProfile): ShippingProfile {
   };
 }
 
-// 生成 UUID
 function generateUUID(): string {
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID();
@@ -64,41 +47,6 @@ function generateUUID(): string {
   });
 }
 
-/**
- * 将旧版 ShippingOptionConfig 迁移到新版 ShippingZone
- */
-function migrateOptionToZone(option: ShippingOptionConfig): ShippingZone {
-  const rates: ShippingRate[] = option.services.map((service, index) => ({
-    id: generateId(),
-    name: service.name || `Rate ${index + 1}`,
-    price: service.firstFreight || '0',
-    currency: option.currency,
-    estimatedDelivery: service.estimatedDelivery || '',
-    freeShippingThreshold: index === 0 ? option.freeShippingThreshold : undefined,
-  }));
-
-  // 如果没有服务，创建一个默认费率
-  if (rates.length === 0) {
-    rates.push({
-      id: generateId(),
-      name: option.name,
-      price: '0',
-      currency: option.currency,
-      estimatedDelivery: '',
-    });
-  }
-
-  return {
-    id: generateId(),
-    name: option.name,
-    regions: option.regions?.map(normalizeRegionCode) || [],
-    rates,
-  };
-}
-
-/**
- * 创建空的配送档案
- */
 export function createEmptyProfile(isDefault = false): ShippingProfile {
   return {
     profileId: generateUUID(),
@@ -114,200 +62,140 @@ export function createEmptyProfile(isDefault = false): ShippingProfile {
   };
 }
 
-/**
- * useShippingProfiles hook
- */
 export function useShippingProfiles() {
   const [profiles, setProfiles] = useState<ShippingProfile[]>([]);
   const [locations, setLocations] = useState<ShippingLocation[]>([]);
-  const [legacyOptions, setLegacyOptions] = useState<ShippingOptionConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [staleCount, setStaleCount] = useState(0);
 
-  // 是否使用配送档案模式（有 profile 存在即为 profiles 模式，即使 zone 为空）
   const isUsingProfiles = useMemo(() => profiles.length > 0, [profiles]);
-
-  // 是否有多个发货地点（渐进式 UI）
   const hasMultipleLocations = useMemo(() => locations.length > 1, [locations]);
 
-  // 获取数据
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const settings = await profileApi.getSettings();
+      const [profileList, locationList] = await Promise.all([
+        shippingApi.listProfiles(),
+        shippingApi.listLocations(),
+      ]);
 
-      // 加载发货地点
-      if (settings?.shippingLocations) {
-        setLocations(settings.shippingLocations);
-      } else {
-        setLocations([]);
-      }
+      setProfiles(profileList.map(normalizeProfileRegions));
+      setLocations(locationList);
 
-      // 加载配送档案
-      const profilesData = settings?.shippingProfiles ?? [];
-      const legacyData = settings?.shippingOptions ?? [];
-
-      if (profilesData.length > 0) {
-        // 有 profiles → 进入 profiles 模式，忽略旧版数据
-        setProfiles(profilesData.map(normalizeProfileRegions));
-        setLegacyOptions([]);
-      } else if (legacyData.length > 0) {
-        // 无 profiles 但有旧版数据 → 需要迁移
-        setProfiles([]);
-        setLegacyOptions(legacyData);
-      } else {
-        // 全空 → 新用户
-        setProfiles([]);
-        setLegacyOptions([]);
+      try {
+        const staleResult = await shippingApi.listStaleRefs(1, 1);
+        setStaleCount(staleResult?.meta?.total ?? 0);
+      } catch {
+        setStaleCount(0);
       }
     } catch (err) {
       console.error('Failed to fetch shipping data:', err);
       setError((err as Error).message);
       setProfiles([]);
-      setLegacyOptions([]);
+      setLocations([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // 初始加载
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // 保存配送档案
-  const saveProfiles = useCallback(
-    async (newProfiles: ShippingProfile[]) => {
-      setIsSaving(true);
-      setError(null);
-
-      try {
-        const result = await profileApi.setSettings({
-          shippingProfiles: newProfiles,
-        });
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        await fetchData();
-        return true;
-      } catch (err) {
-        console.error('Failed to save shipping profiles:', err);
-        setError((err as Error).message);
-        return false;
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [fetchData]
-  );
-
-  // 保存发货地点
-  const saveLocations = useCallback(
-    async (newLocations: ShippingLocation[]) => {
-      setIsSaving(true);
-      setError(null);
-
-      try {
-        const result = await profileApi.setSettings({
-          shippingLocations: newLocations,
-        });
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        await fetchData();
-        return true;
-      } catch (err) {
-        console.error('Failed to save shipping locations:', err);
-        setError((err as Error).message);
-        return false;
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [fetchData]
-  );
-
-  // ============== 档案操作 ==============
+  // ============== Profile 操作 ==============
 
   const addProfile = useCallback(
     async (profile: ShippingProfile) => {
-      const newProfile = {
-        ...profile,
-        profileId: profile.profileId || generateUUID(),
-        isDefault: profiles.length === 0 ? true : profile.isDefault,
-      };
-
-      const updatedProfiles = newProfile.isDefault
-        ? profiles.map(p => ({ ...p, isDefault: false }))
-        : [...profiles];
-
-      return saveProfiles([...updatedProfiles, newProfile]);
+      setIsSaving(true);
+      setError(null);
+      try {
+        await shippingApi.createProfile(profile);
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to create shipping profile:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
     },
-    [profiles, saveProfiles]
+    [fetchData]
   );
 
   const updateProfile = useCallback(
     async (profileId: string, updates: Partial<ShippingProfile>) => {
-      const index = profiles.findIndex(p => p.profileId === profileId);
-      if (index === -1) return false;
+      setIsSaving(true);
+      setError(null);
+      try {
+        const existing = profiles.find(p => p.profileId === profileId);
+        if (!existing) return false;
 
-      const updatedProfiles = [...profiles];
-      updatedProfiles[index] = { ...updatedProfiles[index], ...updates };
-
-      if (updates.isDefault) {
-        for (let i = 0; i < updatedProfiles.length; i++) {
-          if (i !== index) {
-            updatedProfiles[i] = { ...updatedProfiles[i], isDefault: false };
-          }
-        }
+        const merged: ShippingProfile = { ...existing, ...updates };
+        await shippingApi.updateProfile(profileId, merged);
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to update shipping profile:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
       }
-
-      return saveProfiles(updatedProfiles);
     },
-    [profiles, saveProfiles]
+    [profiles, fetchData]
   );
 
   const deleteProfile = useCallback(
-    async (profileId: string) => {
-      const profileToDelete = profiles.find(p => p.profileId === profileId);
-      const newProfiles = profiles.filter(p => p.profileId !== profileId);
-
-      if (profileToDelete?.isDefault && newProfiles.length > 0) {
-        newProfiles[0] = { ...newProfiles[0], isDefault: true };
+    async (profileId: string, migrateTo?: string) => {
+      setIsSaving(true);
+      setError(null);
+      try {
+        await shippingApi.deleteProfile(profileId, migrateTo);
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to delete shipping profile:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
       }
-
-      return saveProfiles(newProfiles);
     },
-    [profiles, saveProfiles]
+    [fetchData]
   );
 
   const setDefaultProfile = useCallback(
     async (profileId: string) => {
-      return updateProfile(profileId, { isDefault: true });
+      setIsSaving(true);
+      setError(null);
+      try {
+        await shippingApi.setDefaultProfile(profileId);
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to set default profile:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
     },
-    [updateProfile]
+    [fetchData]
   );
 
-  // ============== 区域操作 ==============
+  // ============== Zone 操作 ==============
 
   const addZone = useCallback(
     async (profileId: string, zone: ShippingZone) => {
       const profile = profiles.find(p => p.profileId === profileId);
       if (!profile) return false;
 
-      const newZone = {
-        ...zone,
-        id: zone.id || generateId(),
-      };
-
-      // 添加到第一个 LocationGroup（单仓库默认模式）
+      const newZone = { ...zone, id: zone.id || generateId() };
       const locationGroups =
         profile.locationGroups.length > 0
           ? profile.locationGroups.map((lg, idx) =>
@@ -350,9 +238,8 @@ export function useShippingProfiles() {
     [profiles, updateProfile]
   );
 
-  // ============== 费率操作 ==============
+  // ============== Rate 操作 ==============
 
-  /** 在 zones 数组中对匹配 zoneId 的 zone 执行变换 */
   const mapZones = (
     zones: ShippingZone[] | undefined,
     zoneId: string,
@@ -419,151 +306,87 @@ export function useShippingProfiles() {
     [profiles, updateProfile]
   );
 
-  // ============== 发货地点操作 ==============
+  // ============== Location 操作 ==============
 
   const addLocation = useCallback(
     async (location: ShippingLocation) => {
-      const newLocation = {
-        ...location,
-        id: location.id || generateId(),
-        isDefault: locations.length === 0 ? true : location.isDefault,
-      };
-
-      const updatedLocations = newLocation.isDefault
-        ? locations.map(l => ({ ...l, isDefault: false }))
-        : [...locations];
-
-      return saveLocations([...updatedLocations, newLocation]);
-    },
-    [locations, saveLocations]
-  );
-
-  const updateLocation = useCallback(
-    async (locationId: string, updates: Partial<ShippingLocation>) => {
-      let updatedLocations = locations.map(l => (l.id === locationId ? { ...l, ...updates } : l));
-
-      // 如果设置为默认，需要取消其他位置的默认状态（不可变更新）
-      if (updates.isDefault) {
-        updatedLocations = updatedLocations.map(loc =>
-          loc.id === locationId ? loc : { ...loc, isDefault: false }
-        );
-      }
-
-      return saveLocations(updatedLocations);
-    },
-    [locations, saveLocations]
-  );
-
-  const deleteLocation = useCallback(
-    async (locationId: string) => {
-      const locationToDelete = locations.find(l => l.id === locationId);
-      const newLocations = locations.filter(l => l.id !== locationId);
-
-      if (locationToDelete?.isDefault && newLocations.length > 0) {
-        newLocations[0] = { ...newLocations[0], isDefault: true };
-      }
-
-      return saveLocations(newLocations);
-    },
-    [locations, saveLocations]
-  );
-
-  // ============== 迁移 ==============
-
-  const migrateFromLegacy = useCallback(
-    async (profileName = '默认配送', locationName = '默认发货地点') => {
-      // 如果没有需要迁移的旧版数据，直接返回
-      if (legacyOptions.length === 0) {
-        return false;
-      }
-
-      // 如果已有 profiles，不需要迁移
-      if (profiles.length > 0) {
-        return false;
-      }
-
-      // 迁移配送选项为配送区域
-      const zones = legacyOptions.map(migrateOptionToZone);
-
-      // 如果已存在空的 profile，合并到第一个 profile 中
-      // 否则创建新的 profile
-      let migratedProfile: ShippingProfile;
-
-      const existingDefault = profiles.find(p => p.isDefault) || profiles[0];
-      if (existingDefault) {
-        // 将迁移的 zones 合并到现有 profile 的第一个 LocationGroup
-        const existingLG = existingDefault.locationGroups?.[0];
-        const mergedZones = [...(existingLG?.zones || []), ...zones];
-        migratedProfile = {
-          ...existingDefault,
-          name: existingDefault.name || profileName,
-          locationGroups: existingDefault.locationGroups.map((lg, idx) =>
-            idx === 0 ? { ...lg, zones: mergedZones } : lg
-          ),
-        };
-      } else {
-        // 创建新 profile
-        migratedProfile = {
-          profileId: generateUUID(),
-          name: profileName,
-          isDefault: true,
-          locationGroups: [
-            {
-              id: generateId(),
-              locationIds: [],
-              zones,
-            },
-          ],
-        };
-      }
-
-      // 处理发货地点
-      let finalLocations: ShippingLocation[];
-      if (locations.length > 0) {
-        finalLocations = locations;
-      } else {
-        // 创建默认发货地点
-        finalLocations = [
-          {
-            id: generateId(),
-            name: locationName,
-            isDefault: true,
-          },
-        ];
-      }
-
       setIsSaving(true);
       setError(null);
-
       try {
-        // 构建最终的 profiles 列表
-        const finalProfiles = existingDefault
-          ? profiles.map(p => (p.profileId === existingDefault.profileId ? migratedProfile : p))
-          : [migratedProfile];
-
-        const result = await profileApi.setSettings({
-          shippingProfiles: finalProfiles,
-          shippingLocations: finalLocations,
-        });
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
+        await shippingApi.createLocation(location);
         await fetchData();
         return true;
       } catch (err) {
-        console.error('Failed to migrate shipping data:', err);
+        console.error('Failed to create shipping location:', err);
         setError((err as Error).message);
         return false;
       } finally {
         setIsSaving(false);
       }
     },
-    [profiles, locations, legacyOptions, fetchData]
+    [fetchData]
   );
 
-  // ============== 辅助函数 ==============
+  const updateLocation = useCallback(
+    async (locationId: string, updates: Partial<ShippingLocation>) => {
+      setIsSaving(true);
+      setError(null);
+      try {
+        const existing = locations.find(l => l.id === locationId);
+        if (!existing) return false;
+
+        await shippingApi.updateLocation(locationId, { ...existing, ...updates });
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to update shipping location:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [locations, fetchData]
+  );
+
+  const deleteLocation = useCallback(
+    async (locationId: string) => {
+      setIsSaving(true);
+      setError(null);
+      try {
+        await shippingApi.deleteLocation(locationId);
+        await fetchData();
+        return true;
+      } catch (err) {
+        console.error('Failed to delete shipping location:', err);
+        setError((err as Error).message);
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [fetchData]
+  );
+
+  // ============== Stale 操作 ==============
+
+  const refreshStaleSnapshots = useCallback(async () => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const result = await shippingApi.refreshStaleSnapshots();
+      await fetchData();
+      return result;
+    } catch (err) {
+      console.error('Failed to refresh stale snapshots:', err);
+      setError((err as Error).message);
+      return { refreshed: 0, errors: 0 };
+    } finally {
+      setIsSaving(false);
+    }
+  }, [fetchData]);
+
+  // ============== 辅助 ==============
 
   const defaultProfile = useMemo(() => {
     return profiles.find(p => p.isDefault) || profiles[0] || null;
@@ -574,24 +397,20 @@ export function useShippingProfiles() {
   }, [locations]);
 
   const getProfileById = useCallback(
-    (profileId: string) => {
-      return profiles.find(p => p.profileId === profileId) || null;
-    },
+    (profileId: string) => profiles.find(p => p.profileId === profileId) || null,
     [profiles]
   );
 
   const getLocationById = useCallback(
-    (locationId: string) => {
-      return locations.find(l => l.id === locationId) || null;
-    },
+    (locationId: string) => locations.find(l => l.id === locationId) || null,
     [locations]
   );
 
+  const migrateToProfiles = useCallback(async (_defaultName?: string) => false, []);
+
   return {
-    // 状态
     profiles,
     locations,
-    legacyOptions,
     isLoading,
     isSaving,
     error,
@@ -599,38 +418,32 @@ export function useShippingProfiles() {
     hasMultipleLocations,
     defaultProfile,
     defaultLocation,
+    staleCount,
 
-    // 档案操作
     addProfile,
     updateProfile,
     deleteProfile,
     setDefaultProfile,
 
-    // 区域操作
     addZone,
     updateZone,
     deleteZone,
 
-    // 费率操作
     addRate,
     updateRate,
     deleteRate,
 
-    // 发货地点操作
     addLocation,
     updateLocation,
     deleteLocation,
 
-    // 迁移
-    migrateFromLegacy,
-    migrateToProfiles: migrateFromLegacy, // 兼容旧名称
+    refreshStaleSnapshots,
+    migrateToProfiles,
 
-    // 辅助函数
     getProfileById,
     getLocationById,
     refetch: fetchData,
 
-    // 工厂函数
     createEmptyProfile,
     createEmptyZone,
     createEmptyRate,

@@ -1,6 +1,6 @@
 /**
  * 配送系统类型定义 - Shopify 风格
- * 与后端 pkg/models/preferences.go 中的结构对齐
+ * 与后端 pkg/models/shipping.go 中的结构对齐
  */
 
 // ============== 核心类型 ==============
@@ -109,6 +109,8 @@ export interface ShippingProfile {
   isDefault: boolean;
   /** 发货地点组列表（至少一个） */
   locationGroups: LocationGroup[];
+  /** 乐观锁版本号（更新时必传） */
+  version?: number;
   /** 关联商品数量（只读，由后端计算） */
   listingCount?: number;
   /** 创建时间 */

@@ -47,7 +47,7 @@ type SectionType =
   | 'trust-badges'
   | 'testimonials'
   | 'faq'
-  | 'categories'
+  | 'collections'
   | 'gallery'
   | 'rich-text'
   | 'contact';

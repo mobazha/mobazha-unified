@@ -39,6 +39,14 @@ export function authPut<T>(path: string, body?: unknown): Promise<T> {
   return put<T>(`${getMyGatewayUrl()}${path}`, body, getAuthHeaders());
 }
 
+export function authPatch<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(`${getMyGatewayUrl()}${path}`, {
+    method: 'PATCH',
+    body,
+    headers: getAuthHeaders(),
+  });
+}
+
 export function authDel<T>(path: string): Promise<T> {
   return del<T>(`${getMyGatewayUrl()}${path}`, getAuthHeaders());
 }
