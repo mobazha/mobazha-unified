@@ -127,6 +127,8 @@ export const zh: TranslationResource = {
     averageRating: '平均评分',
     outOf5: '满分 5 分',
     basedOn: '基于 {{count}} 条评价',
+    showMore: '查看更多评价',
+    showLess: '收起',
   },
 
   nav: {

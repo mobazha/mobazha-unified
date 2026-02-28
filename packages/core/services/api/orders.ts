@@ -327,6 +327,7 @@ export interface CreateOrderData {
       service: string;
     };
     memo?: string;
+    coupons?: string[];
   }>;
   // 地址信息（仅物理商品需要）
   address?: {
