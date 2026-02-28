@@ -14,8 +14,13 @@ import { FeaturedProductsSection } from './sections/FeaturedProductsSection';
 import { ProductGridSection } from './sections/ProductGridSection';
 import { TrustBadgesSection } from './sections/TrustBadgesSection';
 import { StoreTabsSection } from './sections/StoreTabsSection';
-
-// P1/P2 sections — lazy loaded in Phase 5
+import { AboutSection } from './sections/AboutSection';
+import { FaqSection } from './sections/FaqSection';
+import { TestimonialsSection } from './sections/TestimonialsSection';
+import { CollectionsSection } from './sections/CollectionsSection';
+import { GallerySection } from './sections/GallerySection';
+import { RichTextSection } from './sections/RichTextSection';
+import { ContactSection } from './sections/ContactSection';
 
 interface SectionRendererProps {
   sections: StoreSection[];
@@ -60,17 +65,20 @@ function SectionSwitch({
       return <TrustBadgesSection {...section.props} />;
     case 'store-tabs':
       return <StoreTabsSection {...section.props} peerId={peerId} />;
-    // P1/P2 sections will be added in Phase 5
     case 'about':
+      return <AboutSection {...section.props} />;
     case 'testimonials':
+      return <TestimonialsSection {...section.props} />;
     case 'faq':
+      return <FaqSection {...section.props} />;
     case 'collections':
+      return <CollectionsSection {...section.props} />;
     case 'gallery':
+      return <GallerySection {...section.props} />;
     case 'rich-text':
+      return <RichTextSection {...section.props} />;
     case 'contact':
-      return (
-        <div className="py-8 text-center text-sm opacity-50">[{section.type}] Coming soon</div>
-      );
+      return <ContactSection {...section.props} />;
     default:
       return null;
   }
