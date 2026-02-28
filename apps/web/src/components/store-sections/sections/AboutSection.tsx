@@ -28,7 +28,7 @@ export function AboutSection({
             <img
               src={imgSrc}
               alt={title}
-              className="w-full rounded-lg object-cover"
+              className="w-full object-cover"
               style={{ borderRadius: 'var(--store-radius, 8px)' }}
             />
           </div>
@@ -51,7 +51,7 @@ export function AboutSection({
             <img
               src={imgSrc}
               alt={title}
-              className="w-full rounded-lg object-cover"
+              className="w-full object-cover"
               style={{ borderRadius: 'var(--store-radius, 8px)' }}
             />
           </div>
