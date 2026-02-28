@@ -1,0 +1,147 @@
+---
+description: Store Section 组件开发规范 — PG-201 Section-based 店铺品牌化的实施约束
+globs:
+  - "apps/web/src/components/store-sections/**"
+  - "apps/web/src/components/store-editor/**"
+  - "packages/core/types/storeConfig.ts"
+  - "packages/core/utils/theme.ts"
+---
+
+# Store Section 组件开发规范
+
+> 设计文档：`docs/features/PG-201_STORE_BRANDING_DESIGN.md`（v2.1，权威来源）
+
+## 类型安全
+
+### Discriminated Union（必须遵守）
+
+`StoreSection` 使用 discriminated union，`type` 字段决定 `props` 类型。
+
+```typescript
+// ✅ 正确：类型严格绑定
+export type StoreSection =
+  | { id: string; type: 'hero'; props: HeroSectionProps; visible: boolean; layout?: SectionLayout }
+  | { id: string; type: 'faq';  props: FaqSectionProps;  visible: boolean; layout?: SectionLayout };
+
+// ❌ 禁止：props 为 any 或 Record<string, unknown>
+interface StoreSection {
+  type: string;
+  props: Record<string, unknown>;  // 丢失类型安全
+}
+```
+
+### 新增 Section 类型
+
+添加新 Section 类型时必须同步修改 4 处：
+
+1. `packages/core/types/storeConfig.ts` — 添加 Props 接口 + union 分支
+2. `store-sections/SectionRenderer.tsx` — `SectionSwitch` 添加 case
+3. `store-sections/registry.ts` — 添加元数据（名称、图标、缩略图、默认 props）
+4. `store-editor/SectionPicker.tsx` — 确认新 Section 出现在添加列表中
+
+## SSR 兼容性
+
+### Server Component 优先
+
+`SectionRenderer` 是 Server Component，Section 内容必须出现在服务端渲染的 HTML 中（SEO 不可回退）。
+
+```typescript
+// ✅ 默认：Section 组件是 Server Component（不加 'use client'）
+export function HeroSection({ title, subtitle, ...props }: HeroSectionProps) {
+  return <section>...</section>;
+}
+
+// ✅ 例外：需要 DOM API 或浏览器交互的 Section 标记 'use client'
+'use client';
+export function RichTextSection({ content }: RichTextSectionProps) {
+  const clean = DOMPurify.sanitize(content);  // DOMPurify 需要 DOM
+  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+}
+```
+
+### 需要标记 `'use client'` 的 Section
+
+| Section | 原因 |
+|---|---|
+| `RichTextSection` | DOMPurify 需要 DOM |
+| `GallerySection` | Lightbox 交互 |
+| `AnnouncementBarSection` | dismissible 状态（sessionStorage） |
+| `SectionBlock` | layout.backgroundColor 动态样式可用 Server Component 处理 |
+
+### P2 Section 懒加载
+
+低优先级 Section 使用 `Suspense` + `lazy()` 减少主 bundle 体积：
+
+```typescript
+// SectionSwitch 中
+case 'gallery': return <Suspense fallback={<SectionSkeleton />}><GallerySection {...section.props} /></Suspense>;
+```
+
+## 主题变量使用
+
+### 使用 `--store-*` 变量
+
+Section 组件运行在 `StoreThemeProvider` 子树中，必须使用 `--store-*` CSS 变量：
+
+```tsx
+// ✅ 使用 store 变量
+<h2 style={{ color: 'var(--store-on-primary)', fontFamily: 'var(--store-font)' }}>Title</h2>
+<div className="bg-[var(--store-primary)] rounded-[var(--store-radius)]">Content</div>
+
+// ❌ 禁止：全局主题变量
+<h2 className="text-primary">Title</h2>
+
+// ❌ 禁止：硬编码颜色
+<div className="bg-emerald-500">Content</div>
+```
+
+### 可用 CSS 变量
+
+| 变量 | 用途 |
+|---|---|
+| `--store-primary` | 卖家品牌主色 |
+| `--store-secondary` | 辅助色 |
+| `--store-accent` | 强调色 |
+| `--store-on-primary` | primary 上的可读文字色（WCAG AA 自动计算） |
+| `--store-on-secondary` | secondary 上的可读文字色 |
+| `--store-on-accent` | accent 上的可读文字色 |
+| `--store-font` | 卖家选择的 font-family |
+| `--store-radius` | 圆角 px 值 |
+
+### 允许例外
+
+- `text-white` / `bg-white/*`：在 Hero 等深色背景区域
+- Tailwind 布局类（flex/grid/spacing/sizing）：不涉及颜色的工具类
+
+## store-tabs 系统 Section
+
+- **不可删除**：编辑器中隐藏删除按钮
+- **不出现在添加列表**：`SectionPicker` 排除 `store-tabs` 类型
+- **可排序可隐藏**：卖家可以拖拽调整位置或 toggle visible
+- **默认包含**：`DEFAULT_STORE_CONFIG` 中始终包含 `store-tabs`
+
+## 安全约束
+
+| 约束 | 实现方式 |
+|---|---|
+| XSS | `RichTextSection` 使用 DOMPurify sanitize |
+| 图片来源 | 仅接受 IPFS hash 或 `/v1/media/` 路径 |
+| Section 数量 | 编辑器最多 20 个 + 后端校验 |
+| JSON 大小 | StoreConfig 总计最大 100KB |
+| 对比度安全 | `--store-on-*` 使用 sRGB 线性化计算（`sRGBtoLinear`） |
+
+## 悬空引用处理
+
+`FeaturedProducts` 的 `productSlugs` 和 `Collections` 的 `collectionIDs` 可能指向已删除资源：
+
+- **渲染时**：自动过滤不存在的 slug/ID，只渲染有效的
+- **编辑器提示**：当有效数量 < 原始数量 50% 时，显示"部分商品已下架，建议更新精选"
+- **不自动修改 config**：避免在买家浏览时触发写操作
+
+## 代码审查检查项
+
+- [ ] 新 Section 同步修改了 4 处（types + SectionSwitch + registry + SectionPicker）
+- [ ] 使用 `--store-*` 变量而非全局主题色或硬编码颜色
+- [ ] 需要 DOM API 的组件标记了 `'use client'`
+- [ ] 图片 URL 校验为 IPFS hash 或 `/v1/media/` 路径
+- [ ] Props 有默认值（编辑器创建新 Section 时从 registry 获取）
