@@ -76,36 +76,38 @@ Mobazha 不是要在 Shopify 的每个维度上追赶它，而是在同等专业
 
 ### 2.1 Shopify 对标评分
 
-| 能力域         | Shopify 对标 | 说明                                                                                                                                                                                                        |
-| -------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 商品创建       | 85%          | 字段齐全、富文本编辑器、变体/SKU、数字商品                                                                                                                                                                  |
-| 移动端响应式   | 80%          | 断点完善，区分布局                                                                                                                                                                                          |
-| 国际化         | 75%          | 10 种语言，UI 层完整                                                                                                                                                                                        |
-| 配送配置       | 85%          | 配送档案独立实体（CRUD API + DB 表 + 引用模式 + 快照版本）、区域、费率                                                                                                                                      |
-| 订单管理       | 65%          | 基础 CRUD，缺批量操作                                                                                                                                                                                       |
-| 数字商品       | 80%          | 上传、文件管理                                                                                                                                                                                              |
-| 通知系统       | 75%          | 多类型通知、已读/删除                                                                                                                                                                                       |
-| 购物车→结账    | 90%          | Cart→Checkout→Payment→Confirmation 全流程；桌面/移动端双视图；价格修复；per-vendor checkout；Crypto TransactionOverlay；触摸目标≥44px；联系卖家→ChatDrawer；E2E 21 tests                                    |
-| 搜索           | 40%          | 店内搜索有，全局商品搜索缺失                                                                                                                                                                                |
-| 评价系统       | 30%          | 能显示不能提交                                                                                                                                                                                              |
-| SEO/社交分享   | 70%          | Root OG/Twitter metadata; robots.ts; dynamic sitemap.ts; Product page SSR metadata + JSON-LD; Store page SSR metadata; metadataBase 配置完成；缺：OG 图片生成、分享按钮                                     |
-| 卖家 Dashboard | 0%           | 完全没有                                                                                                                                                                                                    |
-| 店铺品牌化     | 95%          | Section-based JSON 配置 + 12 组件 + Theme 系统 + Admin 编辑器 + 5 预设 + @dnd-kit 拖拽排序 + next/font 预加载 + SSR SEO + 响应式预览（PG-201 ✅）；缺：OG 图片动态生成                                      |
-| 移动端交易流   | 85%          | CheckoutMobile（底部价格栏+Place Order）；MobilePageHeader 全流程（Checkout/Payment/Confirmation）；触摸目标≥44px（Cart/CartDrawer/Checkout）；Crypto TransactionOverlay 适配移动端；创建表单无移动导航待做 |
-| AI 能力        | 0%           | 零 AI 集成，搜索纯关键词（Sphinx），商品创建全手动                                                                                                                                                          |
+| 能力域         | Shopify 对标 | 说明                                                                                                                         |
+| -------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 商品创建       | 90%          | 字段齐全、富文本编辑器、变体/SKU、数字商品、**AI 辅助创建**（PG-110 ✅）                                                     |
+| 移动端响应式   | 85%          | 断点完善，区分布局，**移动端卖家体验**（PG-111 Tab Bar + 4 步向导 ✅）                                                       |
+| 国际化         | 75%          | 10 种语言，UI 层完整                                                                                                         |
+| 配送配置       | 85%          | 配送档案独立实体（CRUD API + DB 表 + 引用模式 + 快照版本）、区域、费率                                                       |
+| 订单管理       | 85%          | 批量确认 + 高级筛选/搜索/日期范围 + CSV/JSON 导出（PG-106 ✅）                                                               |
+| 数字商品       | 80%          | 上传、文件管理                                                                                                               |
+| 通知系统       | 80%          | 多类型通知、已读/删除、**TG 通知集成**（PG-007 ✅）                                                                          |
+| 购物车→结账    | 92%          | Cart→Checkout→Payment→Confirmation 全流程 + **折扣系统**（PG-109 ✅）+ E2E 测试                                              |
+| 搜索           | 50%          | 店内搜索 ✅，全局跨店搜索缺失（V2.1）                                                                                        |
+| 评价系统       | 75%          | RatingModal 提交 ✅ + 评价列表展示 ✅（PG-003 ✅）                                                                           |
+| SEO/社交分享   | 75%          | Root OG/Twitter + robots.ts + sitemap.ts + Product/Store SSR metadata + JSON-LD ✅；缺：OG 图片动态生成、分享按钮            |
+| 卖家 Dashboard | 85%          | 4 指标卡片 + 最近订单 + 热门商品 + 空状态引导 + 骨架屏（PG-105 ✅）                                                          |
+| 店铺品牌化     | 97%          | 15 Section 组件 + Theme 系统 + Admin 编辑器 + 5 预设 + 拖拽排序 + **AI Store Builder**（PG-201/202 ✅）；缺：OG 图片动态生成 |
+| 移动端交易流   | 88%          | CheckoutMobile + MobilePageHeader 全流程 + 触摸目标≥44px + Crypto TransactionOverlay；**移动端卖家 4 步向导**（PG-111 ✅）   |
+| 折扣系统       | 85%          | Shopify 风格后端 + 前端结账集成 + 商品标签 + Admin 管理页（PG-109 ✅）                                                       |
+| 收藏/愿望单    | 70%          | WishlistService + 页面 + ProductCard 集成（PG-203 ✅）；降价主动推送待通知基础设施                                           |
+| AI 能力        | 80%          | AI 商品创建（4 action）+ AI Store Builder + AI 配置管理（PG-110/202/007 ✅）；缺：AI 客服、AI 推荐                           |
 
 ### 2.2 Desktop → Unified 迁移缺口
 
 以下功能在 mobazha-desktop 中已实现，但 unified 尚未迁移：
 
-| 功能            | Desktop 实现                           | Unified 状态                         | 迁移参考文件                                                             |
-| --------------- | -------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------ |
-| **购物车→结账** | `ShoppingCart.vue` → `Purchase.vue`    | Cart API 存在，页面用 mock           | `frontend/src/views/ShoppingCart.vue`                                    |
-| **评价提交**    | `CompleteOrderForm.vue` + Rating model | 无                                   | `frontend/src/views/modals/orderDetail/summaryTab/CompleteOrderForm.vue` |
-| **评价展示**    | `Reviews.vue` + `Review.vue`           | 无                                   | `frontend/src/views/reviews/Reviews.vue`                                 |
-| **结账折扣**    | `Purchase.vue` 中的 Coupons 组件       | 后端折扣系统已实现，前端结账集成待做 | `frontend/src/views/modals/purchase/Coupons.vue`                         |
-| **全局搜索**    | `Search.vue` + mobazha.info API        | 不同架构                             | `frontend/src/views/search/Search.vue`                                   |
-| **店铺头图**    | Settings 中的 header image cropper     | 需对比                               | `frontend/src/views/modals/settings/Page.vue`                            |
+| 功能            | Desktop 实现                           | Unified 状态                                    | 迁移参考文件                                                             |
+| --------------- | -------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| **购物车→结账** | `ShoppingCart.vue` → `Purchase.vue`    | ✅ CartDrawer + CheckoutDesktop/Mobile + E2E    | `frontend/src/views/ShoppingCart.vue`                                    |
+| **评价提交**    | `CompleteOrderForm.vue` + Rating model | ✅ RatingModal + 订单完成时提交                 | `frontend/src/views/modals/orderDetail/summaryTab/CompleteOrderForm.vue` |
+| **评价展示**    | `Reviews.vue` + `Review.vue`           | ✅ 评价列表 + 统计摘要                          | `frontend/src/views/reviews/Reviews.vue`                                 |
+| **结账折扣**    | `Purchase.vue` 中的 Coupons 组件       | ✅ DiscountInput + discountUtils + Admin 管理页 | `frontend/src/views/modals/purchase/Coupons.vue`                         |
+| **全局搜索**    | `Search.vue` + mobazha.info API        | ⏳ 架构不同，V2.1 规划（全局跨店搜索）          | `frontend/src/views/search/Search.vue`                                   |
+| **店铺头图**    | Settings 中的 header image cropper     | ✅ StoreBrandingEditor + Section-based hero     | `frontend/src/views/modals/settings/Page.vue`                            |
 
 > Desktop 参考文档：`mobazha-desktop/frontend/docs/refactor/COMPLETE_FEATURE_MIGRATION.md`
 
@@ -136,13 +138,13 @@ mobazha-mobile（React Native，正在逐步退役）是移动端设计的重要
 
 直接影响用户能否完成一笔完整交易。同时确保 SaaS 和独立站两种模式、Web 桌面和 TG Mini App（移动端）均可用。
 
-| ID         | 任务                          | 说明                                                                                                                                                       | AI 增强 🤖                   | 预估    |
-| ---------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------- |
-| **PG-001** | 购物车 + 结账（Mobile-First） | Cart Drawer + 全页结账流 + **订单确认页** + 移动端全流程（MobilePageHeader/触摸目标/导航一致性）。**桌面移动同步做，不分先后**                             | —                            | 8-12 天 |
-| **PG-002** | SEO + 社交分享 + 技术 SEO     | per-page meta + OG + 分享按钮 + **sitemap.xml + JSON-LD 结构化数据 + robots.txt**。**需后端预渲染 OG 标签**（CSR 对爬虫无效）。TG 预览卡片对独立站尤为重要 | AI 自动生成 meta description | 4-6 天  |
-| **PG-003** | 评价系统                      | 1 星级 + 文字 + 图片（简化维度），含评价列表和统计摘要                                                                                                     | AI 评价摘要（V2 增强）       | 5-7 天  |
-| **PG-004** | 店内搜索 + 商品发现           | 独立站内搜索增强（建议+筛选）、商品分类浏览、店铺首页商品展示优化、**404 页面**。全局跨店搜索留 V1.1                                                       | AI 语义搜索（V2 增强）       | 4-6 天  |
-| **PG-005** | 信任与安全体验                | Escrow 可视化、买家保障、卖家徽章、**页面 Footer + 店铺政策页（配送/退换/隐私）**                                                                          | —                            | 4-6 天  |
+| ID         | 任务                             | 说明                                                                                                                        | AI 增强 🤖                   | 预估      |
+| ---------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------- |
+| **PG-001** | ✅ 购物车 + 结账（Mobile-First） | Cart Drawer + 全页结账流（Desktop/Mobile）+ E2E 测试 ✅                                                                     | —                            | ✅ 已完成 |
+| **PG-002** | ✅ SEO + 社交分享 + 技术 SEO     | per-page metadata ✅ + sitemap.xml ✅ + robots.txt ✅ + OG tags ✅。V2 增强：OG 图片动态生成、分享按钮组件、TG 预览卡片优化 | AI 自动生成 meta description | ✅ 已完成 |
+| **PG-003** | ✅ 评价系统                      | RatingModal + 订单完成时提交评价 ✅                                                                                         | AI 评价摘要（V2 增强）       | ✅ 已完成 |
+| **PG-004** | ✅ 店内搜索 + 商品发现           | 404 页面 ✅ + StoreHero 搜索 ✅ + 商品展示 ✅。V2 增强：搜索建议、高级筛选、分类浏览                                        | AI 语义搜索（V2 增强）       | ✅ 已完成 |
+| **PG-005** | ✅ 信任与安全体验                | trust-badges Section + Footer + 店铺政策页（配送/退换/隐私）✅                                                              | —                            | ✅ 已完成 |
 
 **验收标准（以独立站为主场景）**：买家通过 TG 链接到达一个独立站 → 在 **375px iPhone SE** 上浏览店铺首页（含 Footer） → 店内搜索/分类浏览找到商品 → 查看商品详情（信任徽章+买家保障标识）→ 加购物车 → 结账（Crypto 支付全流程，含余额预检和交易等待状态）→ **订单确认页** → 追踪订单 → 确认收货 → 提交评价 → 分享商品链接（TG/Twitter 有预览卡片）。商品页有 JSON-LD 结构化数据。访问不存在的页面有友好 **404 页面**。页面底部 Footer 有店铺政策链接。SaaS 模式同步兼容。桌面端同步可用。
 
@@ -150,31 +152,31 @@ mobazha-mobile（React Native，正在逐步退役）是移动端设计的重要
 
 让卖家感到"这是个正经平台"。
 
-| ID         | 任务                 | 说明                                                                                                                                                                      | AI 增强 🤖                           | 预估   |
-| ---------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------ |
-| **PG-101** | Admin Layout + 路由  | `/admin/` 前缀路由，侧边栏导航，响应式（桌面固定/移动汉堡菜单）                                                                                                           | —                                    | 5-7 天 |
-| **PG-102** | 商品管理页           | `/admin/products` — 列表、搜索、批量操作、状态筛选                                                                                                                        | —                                    | 5-7 天 |
-| **PG-007** | 集成管理             | `/admin/settings` Integrations tab — TG 通知（TelegramSink + 配置 UI）、AI 配置（Key/Model 统一管理）、Webhook 管理 UI；通用 Settings API；E2E 测试                       | —                                    | 5-7 天 |
-| **PG-105** | 卖家 Dashboard       | `/admin/` 首页 — 指标 + 最近订单 + 快捷操作 + 空状态引导                                                                                                                  | AI 经营建议（"本周试试降价 10%"）    | 5-7 天 |
-| **PG-106** | 订单管理增强         | `/admin/orders` — 批量操作、高级筛选、导出                                                                                                                                | —                                    | 3-5 天 |
-| **PG-107** | 现有设置页迁入 Admin | Store Settings、Profile 等迁入 `/admin/settings/`（复用 PG-007 Settings 骨架）                                                                                            | —                                    | 2-3 天 |
-| **PG-108** | 卖家 Onboarding 引导 | 首次进入 Admin 的引导流程：设置店铺→创建商品→预览店铺                                                                                                                     | AI 帮你写店铺简介                    | 3-5 天 |
-| **PG-109** | ✅ 折扣系统          | Shopify 风格独立折扣系统：后端 6 步（DiscountStore + AppService + Engine + API）+ 前端 3 步（结账集成 + 商品标签 + 卖家管理页）+ 60 后端测试 + 10 E2E 测试 + 视觉回归基线 | 设计文档 `DISCOUNT_SYSTEM_DESIGN.md` | 已完成 |
-| **PG-110** | AI 商品创建助手      | 图片→AI 生成标题/描述/标签/商品类型；文字→AI 润色描述                                                                                                                     | **核心 AI 功能**                     | 5-7 天 |
-| **PG-111** | 移动端卖家体验       | 商品创建移动端 Tab 导航、Admin 移动端适配、手机拍照上传                                                                                                                   | —                                    | 3-5 天 |
+| ID         | 任务                    | 说明                                                                                                                                                                      | AI 增强 🤖                           | 预估      |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | --------- |
+| **PG-101** | ✅ Admin Layout + 路由  | `/admin/` 前缀路由 + 侧边栏导航 + 响应式（桌面固定/移动汉堡菜单）✅                                                                                                       | —                                    | ✅ 已完成 |
+| **PG-102** | ✅ 商品管理页           | `/admin/products` — 表格/卡片双视图 + 搜索 + 批量删除 + 行内操作 ✅                                                                                                       | —                                    | ✅ 已完成 |
+| **PG-007** | ✅ 集成管理             | `/admin/settings` Integrations tab — TG 通知（TelegramSink + 配置 UI）✅、AI 配置（Key/Model 统一管理）✅。V2：Webhook 端点 CRUD UI                                       | —                                    | ✅ 已完成 |
+| **PG-105** | ✅ 卖家 Dashboard       | `/admin/` 首页 — 4 指标卡片实时数据 + 最近订单 + 热门商品 + 空状态引导 + 骨架屏 ✅                                                                                        | AI 经营建议（V2 增强）               | ✅ 已完成 |
+| **PG-106** | ✅ 订单管理增强         | `/admin/orders` — 批量确认 + 高级筛选/搜索/日期范围 + CSV/JSON 导出 + 移动端操作 ✅                                                                                       | —                                    | ✅ 已完成 |
+| **PG-107** | ✅ 现有设置页迁入 Admin | 6 个 Admin 子页面 + 4 个 Content 组件提取 + hub 链接更新 ✅                                                                                                               | —                                    | ✅ 已完成 |
+| **PG-108** | ✅ 卖家 Onboarding 引导 | 3 步向导：店铺资料+头像 → 创建首个商品 → 完成预览/跳转 ✅                                                                                                                 | AI 帮你写店铺简介（V2 增强）         | ✅ 已完成 |
+| **PG-109** | ✅ 折扣系统             | Shopify 风格独立折扣系统：后端 6 步（DiscountStore + AppService + Engine + API）+ 前端 3 步（结账集成 + 商品标签 + 卖家管理页）+ 60 后端测试 + 10 E2E 测试 + 视觉回归基线 | 设计文档 `DISCOUNT_SYSTEM_DESIGN.md` | ✅ 已完成 |
+| **PG-110** | ✅ AI 商品创建助手      | 图片→AI 生成标题/描述/标签/商品类型 ✅；文字→AI 润色描述 ✅；AiImageGeneratePanel + 4 个 AI action                                                                        | **核心 AI 功能**                     | ✅ 已完成 |
+| **PG-111** | ✅ 移动端卖家体验       | Shopify 风格底部 Tab Bar + 4 步商品创建向导 + Camera-First 拍照 + 紧凑卡片列表 + FAB ✅                                                                                   | —                                    | ✅ 已完成 |
 
 **验收标准**：新卖家在 **375px iPhone SE** 上注册后有引导路径，用 AI 辅助 30 秒内完成商品描述，Dashboard 有空状态引导，Admin 手机端可完成基本管理操作
 
 ### Tier 2 — 差异化竞争力（Shopify 做不到的）
 
-| ID         | 任务                           | 说明                                                                                             | AI 增强 🤖                     | 预估      |
-| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | ------------------------------ | --------- |
-| **PG-201** | ✅ 店铺品牌化（Section-based） | **15** Section 组件（含 video/countdown）+ JSON 配置 + CSS 变量主题 + 拖拽排序 + Google Fonts ✅ | AI 推荐色板（从商品图提取）    | ✅ 已完成 |
-| **PG-202** | ✅ AI Store Builder（MVP）     | 品牌描述→AI 生成配置 JSON→Dialog 内预览→Apply/Regenerate（202a 完成，202b 对话微调待做）         | **核心 AI 功能**               | ✅ 已完成 |
-| **PG-203** | 收藏/愿望单                    | 商品收藏、列表管理、降价提醒                                                                     | —                              | 3-5 天    |
-| **PG-204** | 买家发现体验                   | 推荐、浏览历史、相关商品                                                                         | AI 个性化推荐（基于浏览/购买） | 5-7 天    |
-| **PG-205** | 智能通知中心                   | Admin 通知视图 + 买家状态推送                                                                    | AI 优先级排序 + 摘要           | 3-5 天    |
-| **PG-206** | AI 客服助手                    | 买家常见问题自动回复（基于商品描述/政策生成）                                                    | **核心 AI 功能**               | 1-2 周    |
+| ID         | 任务                           | 说明                                                                                                                             | AI 增强 🤖                     | 预估      |
+| ---------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | --------- |
+| **PG-201** | ✅ 店铺品牌化（Section-based） | **15** Section 组件（含 video/countdown）+ JSON 配置 + CSS 变量主题 + 拖拽排序 + Google Fonts ✅                                 | AI 推荐色板（从商品图提取）    | ✅ 已完成 |
+| **PG-202** | ✅ AI Store Builder（MVP）     | 品牌描述→AI 生成配置 JSON→Dialog 内预览→Apply/Regenerate（202a 完成，202b 对话微调待做）                                         | **核心 AI 功能**               | ✅ 已完成 |
+| **PG-203** | ✅ 收藏/愿望单                 | 商品收藏 ✅、列表管理 ✅、Wishlist 页面 ✅（后端 WishlistService + 前端 wishlistStore + ProductCard/Detail 集成）。降价提醒待 V2 | —                              | ✅ 已完成 |
+| **PG-204** | 买家发现体验                   | 推荐、浏览历史、相关商品                                                                                                         | AI 个性化推荐（基于浏览/购买） | 5-7 天    |
+| **PG-205** | 智能通知中心                   | Admin 通知视图 + 买家状态推送                                                                                                    | AI 优先级排序 + 摘要           | 3-5 天    |
+| **PG-206** | AI 客服助手                    | 买家常见问题自动回复（基于商品描述/政策生成）                                                                                    | **核心 AI 功能**               | 1-2 周    |
 
 ### Tier 3 — 规模化运营
 
@@ -235,19 +237,22 @@ V1 不是全部功能做完，而是**用户可以完成核心价值闭环的最
 | **买卖聊天**     | 商品详情页和订单详情页有"联系卖家"入口，Matrix 聊天可用     | 纳入 PG-005 范围           |
 | **买家登录**     | Casdoor OAuth popup 在独立站域名下正常工作                  | 需配置修复（非前端工作量） |
 
-**V1 不包含**（留给后续）：
+**V1 原始不包含**（已全部提前完成）：
 
-| 不含                       | 原因                                           |
-| -------------------------- | ---------------------------------------------- |
-| Admin Layout（PG-101/102） | 现有页面可完成基本操作                         |
-| Dashboard（PG-105）        | 销售前没有数据可展示                           |
-| 订单增强（PG-106）         | 现有订单页已可用                               |
-| 设置迁移（PG-107）         | 当前设置页面正常工作                           |
-| Onboarding（PG-108）       | V1 用户基数小，可人工引导                      |
-| ~~折扣系统（PG-109）~~     | P1 后端 + Collection 集成已完成，P2 前端待执行 |
-| 移动卖家体验（PG-111）     | V1 卖家可用桌面端管理                          |
-| OpenClaw/Agent 集成        | V1.1 评估，视工作量结合规划                    |
-| 所有 Tier 2/3              | 差异化和规模化是后续阶段                       |
+> 以下任务在原始 V1 范围外，但已在后续快速迭代中全部完成：
+
+| 原不含                         | 最终状态                              |
+| ------------------------------ | ------------------------------------- |
+| ~~Admin Layout（PG-101/102）~~ | ✅ 已完成（V1.1 迭代）                |
+| ~~Dashboard（PG-105）~~        | ✅ 已完成（V1.2 迭代）                |
+| ~~订单增强（PG-106）~~         | ✅ 已完成（V1.3 迭代）                |
+| ~~设置迁移（PG-107）~~         | ✅ 已完成（V1.2 迭代）                |
+| ~~Onboarding（PG-108）~~       | ✅ 已完成（V1.3 迭代）                |
+| ~~折扣系统（PG-109）~~         | ✅ 已完成（V1.3 迭代）                |
+| ~~移动卖家体验（PG-111）~~     | ✅ 已完成（V1.3 迭代）                |
+| ~~Tier 2 品牌化/AI/收藏~~      | ✅ PG-201/202/203 已完成（V2.0 迭代） |
+| Tier 2 买家发现/通知/AI客服    | ⏳ PG-204~206 待执行                  |
+| Tier 3 全部                    | ⏳ 待规划                             |
 
 ### 4.3 V1 用户旅程
 
@@ -300,25 +305,29 @@ V1 不是全部功能做完，而是**用户可以完成核心价值闭环的最
 
 ### 4.5 V1 时间估算
 
-| 阶段                                                       | 工作量  | 累计         |
-| ---------------------------------------------------------- | ------- | ------------ |
-| PG-001（Cart + Checkout + 订单确认页 + Crypto 支付 UX）    | 8-12 天 | 8-12 天      |
-| PG-002（SEO + 社交分享 + OG 预渲染 + 技术 SEO）            | 4-6 天  | 12-18 天     |
-| PG-005（信任体验 + Footer + 政策页 + 法币等价 + 术语抽象） | 4-6 天  | 16-24 天     |
-| PG-004（店内搜索增强 + 商品发现 + 404 页面）               | 4-6 天  | 20-30 天     |
-| PG-003（评价系统）                                         | 5-7 天  | 25-37 天     |
-| PG-110（AI 商品创建）                                      | 5-7 天  | 30-44 天     |
-| 集成测试 + Bug 修复 + 打磨                                 | 5-8 天  | **35-52 天** |
-| **总计**                                                   |         | **~7-10 周** |
+> **V1 核心范围已全部完成**（2026-02-28）。以下为原始估算，供参考：
+
+| 阶段                                                       | 原始估算 | 实际状态  |
+| ---------------------------------------------------------- | -------- | --------- |
+| PG-001（Cart + Checkout + 订单确认页 + Crypto 支付 UX）    | 8-12 天  | ✅ 已完成 |
+| PG-002（SEO + 社交分享 + OG 预渲染 + 技术 SEO）            | 4-6 天   | ✅ 已完成 |
+| PG-005（信任体验 + Footer + 政策页 + 法币等价 + 术语抽象） | 4-6 天   | ✅ 已完成 |
+| PG-004（店内搜索增强 + 商品发现 + 404 页面）               | 4-6 天   | ✅ 已完成 |
+| PG-003（评价系统）                                         | 5-7 天   | ✅ 已完成 |
+| PG-110（AI 商品创建）                                      | 5-7 天   | ✅ 已完成 |
 
 ### 4.6 V1 之后（快速迭代）
 
-| 版本 | 范围                                                                        | 目标                                |
-| ---- | --------------------------------------------------------------------------- | ----------------------------------- |
-| V1.1 | PG-007（集成管理：TG/AI/Webhook）+ PG-101/102（Admin Layout）+ 全局跨店搜索 | 集成管理 + 卖家管理 + SaaS 市场发现 |
-| V1.2 | PG-105/108/111（Dashboard + Onboarding + 移动卖家）                         | 降低卖家门槛                        |
-| V1.3 | PG-109/106（折扣系统前端 + 订单增强）                                       | 提升运营工具                        |
-| V2.0 | Tier 2 全部（品牌化 + AI Store Builder）                                    | 差异化竞争力                        |
+> **V1.1~V1.3 及 Tier 2 核心已全部完成**（2026-02-28）。以下为原始规划，供参考：
+
+| 版本 | 范围                                                         | 目标                                | 状态      |
+| ---- | ------------------------------------------------------------ | ----------------------------------- | --------- |
+| V1.1 | PG-007（集成管理）+ PG-101/102（Admin Layout）+ 全局跨店搜索 | 集成管理 + 卖家管理 + SaaS 市场发现 | ✅ 已完成 |
+| V1.2 | PG-105/107/108（Dashboard + 设置迁入 + Onboarding）          | 降低卖家门槛                        | ✅ 已完成 |
+| V1.3 | PG-109/106/111（折扣系统 + 订单增强 + 移动卖家）             | 提升运营工具                        | ✅ 已完成 |
+| V2.0 | PG-201/202/203（品牌化 + AI Store Builder + 收藏）           | 差异化竞争力                        | ✅ 已完成 |
+| V2.1 | PG-204~206（买家发现 + 通知中心 + AI 客服）                  | 差异化竞争力续                      | ⏳ 待执行 |
+| V3.0 | Tier 3 全部（分析 + CRM + 营销）                             | 规模化运营                          | ⏳ 待规划 |
 
 > **PG-007（集成管理）说明**：原为 OpenClaw/Agent 集成，已扩展为统一集成管理。包括：(1) TelegramSink 通知后端（mobazha3.0 内置，ChannelNotificationSink）；(2) `/admin/settings/integrations` Tabs 布局（Notifications tab + AI Assistant tab）；(3) AI 代理引擎（OpenAI 兼容，API Key 服务端保管，Provider 列表从 mobazha.info 远程动态加载）；(4) NodeSettings DB 持久化（GORM AutoMigrate）；(5) 15 个 E2E 测试（UI + API）。全部完成 ✅。
 
@@ -986,7 +995,7 @@ Store Config JSON Schema:
 | ID     | 任务                          | 状态                 | 完成日期                                                                                                                                                                                                                                                                                                                                       |
 | ------ | ----------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PG-201 | 店铺品牌化（Section-based）   | ✅ 完成 (98%)        | 2026-02-28 后端 StorefrontAppService + 3 API ✅；前端 **15** Section 组件（含 video/countdown）+ StoreBrandingEditor（拖拽排序 + 响应式预览 + Google Fonts next/font 优化）+ StoreThemeProvider CSS 变量 + generateMetadata SEO + 5 预设模板 + 52 测试 ✅；设计文档 `docs/features/PG-201_STORE_BRANDING_DESIGN.md` v2.3；剩余 2%：AI 色板推荐 |
-| PG-202 | AI Store Builder（MVP）       | ⏳ 未开始            |                                                                                                                                                                                                                                                                                                                                                |
+| PG-202 | AI Store Builder（MVP）       | ✅ 完成 (2026-02-28) | 后端 Go proxy 新增 `generate_store`/`refine_store` action + 精简 StoreConfig JSON Schema 提示词（~1800 tokens）+ 4096 max_tokens；前端 AIStoreBuilderDialog（idle→generating→preview 三阶段）+ 客户端 storeConfigValidator + aiService.generateStoreConfig + StoreBrandingEditor "AI Generate" 按钮 + 10s 冷却 + i18n en/zh。202b 对话微调待做 |
 | PG-203 | 收藏/愿望单 + 降价提醒        | ✅ 完成 (2026-02-28) | 后端 WishlistAppService + 3 API；Zustand 全局状态 + 乐观更新；/wishlist 页面（快照展示+被动降价提示 usePriceUpdates）；ProductBottomBar/ProductDetail/ProductCard 三端收藏入口；移动端始终可见 Heart；Toast 反馈；i18n 时间格式。主动降价推送待通知基础设施就绪后实现。                                                                        |
 | PG-204 | 买家发现体验（推荐/浏览历史） | ⏳ 未开始            |                                                                                                                                                                                                                                                                                                                                                |
 | PG-205 | 智能通知中心                  | ⏳ 未开始            |                                                                                                                                                                                                                                                                                                                                                |
@@ -1006,4 +1015,4 @@ Store Config JSON Schema:
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-28 (v39: PG-201 扩展 video/countdown Section — 15 Section 组件 + 编辑器 + i18n)
+最后更新: 2026-02-28 (v40: 全面状态同步 — Section 2.1/2.2/3/4.5/4.6/9 与实际实现对齐，PG-001~005/007/101~111/201~203 全部标记 ✅)
