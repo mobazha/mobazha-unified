@@ -18,10 +18,11 @@ export interface PaymentDrawerProps {
   type: 'payment' | 'moderator';
   isOpen: boolean;
   onClose: () => void;
-  // Payment 相关
   selectedTokenId?: string;
   onSelectToken?: (tokenId: string) => void;
-  // Moderator 相关
+  selectedFiatProvider?: string;
+  onSelectFiat?: (providerID: string) => void;
+  availableFiatProviders?: string[];
   selectedModerator?: Moderator;
   onSelectModerator?: (moderator: Moderator) => void;
   moderatorList?: Moderator[];
@@ -35,6 +36,9 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   onClose,
   selectedTokenId,
   onSelectToken,
+  selectedFiatProvider,
+  onSelectFiat,
+  availableFiatProviders,
   selectedModerator,
   onSelectModerator,
   moderatorList,
@@ -45,6 +49,11 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
 
   const handleTokenSelect = (tokenId: string) => {
     onSelectToken?.(tokenId);
+    onClose();
+  };
+
+  const handleFiatSelect = (providerID: string) => {
+    onSelectFiat?.(providerID);
     onClose();
   };
 
@@ -72,6 +81,9 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             <PaymentCryptoSelector
               selectedTokenId={selectedTokenId}
               onSelect={handleTokenSelect}
+              selectedFiatProvider={selectedFiatProvider}
+              onSelectFiat={handleFiatSelect}
+              availableFiatProviders={availableFiatProviders}
               showFiatMethods={true}
             />
           ) : (

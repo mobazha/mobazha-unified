@@ -127,6 +127,9 @@ export * as matrixApi from './matrix';
 // 通知渠道 API (Telegram, Discord, etc.)
 export * as notificationChannelsApi from './notificationChannels';
 
+// 法币支付 API
+export * as fiatApi from './fiat';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type { AIConfig, AIConfigInput, AIProviderInfo, AITestConnectionResult } from './aiSettings';

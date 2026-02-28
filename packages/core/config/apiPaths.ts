@@ -175,6 +175,15 @@ export const NODE_API = {
   WISHLISTS: '/wishlists',
   WISHLIST_ITEM: (peerID: string, slug: string) => `/wishlists/${peerID}/${slug}`,
 
+  // --- Fiat Payments ---
+  FIAT_PROVIDERS: '/fiat/providers',
+  FIAT_PROVIDER_STATUS: (provider: string) => `/fiat/${provider}/status`,
+  FIAT_CREATE_PAYMENT: (provider: string) => `/fiat/${provider}/payments`,
+  FIAT_CAPTURE_PAYMENT: (provider: string, sessionID: string) =>
+    `/fiat/${provider}/payments/${sessionID}/capture`,
+  FIAT_PROVIDER_CONFIG: '/fiat/config',
+  FIAT_PROVIDER_CONFIG_BY_ID: (provider: string) => `/fiat/config/${provider}`,
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',
@@ -315,6 +324,11 @@ export const HOSTING_API = {
   MARKETPLACE_ANNOUNCEMENT: (marketplaceId: string, announcementId: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
   MARKETPLACE_ACTIVITY: (id: string) => `/platform/v1/marketplaces/${id}/activity`,
+
+  // --- Fiat Payment Onboarding (SaaS) ---
+  FIAT_ONBOARDING_START: (provider: string) =>
+    `/platform/v1/integrations/fiat/${provider}/onboarding`,
+  FIAT_ONBOARDING_STATUS: (provider: string) => `/platform/v1/integrations/fiat/${provider}/status`,
 } as const;
 
 // ============================================================
