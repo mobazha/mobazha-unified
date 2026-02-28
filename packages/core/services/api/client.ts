@@ -16,7 +16,7 @@ export function onUnauthorized(callback: UnauthorizedCallback): void {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers?: Record<string, string>;
   body?: unknown;
   timeout?: number;

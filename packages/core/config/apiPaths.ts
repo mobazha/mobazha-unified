@@ -139,6 +139,17 @@ export const NODE_API = {
   MATRIX_CREDENTIALS: '/matrix/credentials',
   MATRIX_PASSWORD: '/matrix/password',
 
+  // --- Shipping ---
+  SHIPPING_PROFILES: '/shipping/profiles',
+  SHIPPING_PROFILE: (profileID: string) => `/shipping/profiles/${profileID}`,
+  SHIPPING_PROFILE_SET_DEFAULT: (profileID: string) =>
+    `/shipping/profiles/${profileID}/set-default`,
+  SHIPPING_PROFILE_LISTINGS: (profileID: string) => `/shipping/profiles/${profileID}/listings`,
+  SHIPPING_LOCATIONS: '/shipping/locations',
+  SHIPPING_LOCATION: (locationID: string) => `/shipping/locations/${locationID}`,
+  SHIPPING_STALE_LISTINGS: '/shipping/stale-listings',
+  SHIPPING_REFRESH_SNAPSHOTS: '/shipping/refresh-snapshots',
+
   // --- Discounts ---
   DISCOUNTS: '/discounts',
   DISCOUNT: (discountID: string) => `/discounts/${discountID}`,
