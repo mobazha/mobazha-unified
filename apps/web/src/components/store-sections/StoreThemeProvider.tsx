@@ -35,8 +35,17 @@ export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps)
     } as Record<string, string>;
   }, [theme]);
 
+  const fontFamily = theme.fontFamily || 'inter';
+  const googleFont = FONT_FAMILY_MAP[fontFamily]?.match(/'([^']+)'/)?.[1];
+
   return (
     <div style={cssVars} className="store-theme-root">
+      {googleFont && googleFont !== 'Inter' && (
+        <link
+          rel="stylesheet"
+          href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(googleFont)}:wght@300;400;500;600;700&display=swap`}
+        />
+      )}
       {children}
     </div>
   );

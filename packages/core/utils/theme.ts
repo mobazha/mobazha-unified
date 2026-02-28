@@ -112,3 +112,21 @@ export function normalizeHex(hex: string): string {
   }
   return `#${clean}`;
 }
+
+// ---------------------------------------------------------------------------
+// Deterministic fallback palette from store name (no StoreConfig yet)
+// ---------------------------------------------------------------------------
+
+/**
+ * Generates a deterministic palette index from a string (store name or peerID).
+ * Used when no StoreConfig exists so every store still gets a consistent,
+ * non-default look.
+ */
+export function getFallbackPalette(seed: string): Exclude<ThemePalette, 'custom'> {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+  const keys = ALL_PALETTES;
+  return keys[Math.abs(hash) % keys.length];
+}
