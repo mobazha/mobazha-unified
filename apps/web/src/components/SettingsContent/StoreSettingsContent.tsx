@@ -77,13 +77,13 @@ export function StoreSettingsContent({
       <div className="divide-y divide-border">
         <SettingsSection
           className="pb-5 md:pb-8"
-          title="Store Appearance"
-          description="Customize your store branding and layout"
+          title={t('admin.storeBranding.pageTitle')}
+          description={t('admin.storeBranding.pageDescription')}
         >
           <Card className="overflow-hidden">
             <SettingRow
-              title="Store Branding"
-              description="Theme, colors, fonts, and section layout"
+              title={t('admin.storeBranding.pageTitle')}
+              description={t('admin.storeBranding.pageDescription')}
               onClick={() => router.push(brandingHref)}
             />
           </Card>
