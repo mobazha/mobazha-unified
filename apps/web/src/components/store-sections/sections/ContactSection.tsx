@@ -28,22 +28,28 @@ export function ContactSection({
 
   return (
     <div className="py-4">
-      <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--store-font, inherit)' }}>
+      <h2
+        className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6"
+        style={{ fontFamily: 'var(--store-font, inherit)' }}
+      >
         {title}
       </h2>
       <div
-        className="p-6 border border-border"
+        className="p-4 sm:p-6 border border-border"
         style={{ borderRadius: 'var(--store-radius, 8px)' }}
       >
         {customMessage && (
           <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{customMessage}</p>
         )}
         {fields.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {fields.map(field => (
-              <div key={field.label} className="flex items-center gap-3 text-sm">
+              <div
+                key={field.label}
+                className="flex items-center gap-3 text-sm min-h-[44px] sm:min-h-0"
+              >
                 <field.icon
-                  className="w-4 h-4 shrink-0"
+                  className="w-5 h-5 sm:w-4 sm:h-4 shrink-0"
                   style={{ color: 'var(--store-primary)' }}
                 />
                 <div>

@@ -34,14 +34,14 @@ function calcTimeLeft(target: string): TimeLeft {
 
 function TimeUnit({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center min-w-[4.5rem]">
+    <div className="flex flex-col items-center min-w-[3.5rem] sm:min-w-[4.5rem]">
       <span
-        className="text-3xl sm:text-4xl font-bold tabular-nums"
+        className="text-2xl sm:text-4xl font-bold tabular-nums"
         style={{ color: 'var(--store-primary)' }}
       >
         {String(value).padStart(2, '0')}
       </span>
-      <span className="text-xs sm:text-sm text-muted-foreground mt-1 uppercase tracking-wider">
+      <span className="text-[10px] sm:text-sm text-muted-foreground mt-1 uppercase tracking-wider">
         {label}
       </span>
     </div>
@@ -73,10 +73,10 @@ export function CountdownSection({
   if (!targetDate) return null;
 
   return (
-    <div className="py-6 text-center">
+    <div className="py-4 sm:py-6 text-center">
       {title && (
         <h2
-          className="text-2xl font-bold mb-6"
+          className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6"
           style={{ fontFamily: 'var(--store-font, inherit)' }}
         >
           {title}
