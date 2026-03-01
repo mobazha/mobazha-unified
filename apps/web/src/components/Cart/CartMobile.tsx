@@ -6,6 +6,9 @@ import { MobilePageHeader } from '@/components';
 import { Button } from '@/components/ui/button';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { useCart } from '@/hooks/useCart';
+import { useTGMainButton } from '@/hooks/useTGMainButton';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem } from '@mobazha/core';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
@@ -213,6 +216,20 @@ export function CartMobile() {
     renderPairedPrice,
   } = useCart();
 
+  const { isAvailable: isTG } = useTGMiniApp();
+
+  const handleTGCheckout = useCallback(() => {
+    if (groups.length === 1) handleCheckout(groups[0]);
+  }, [groups, handleCheckout]);
+
+  useTGMainButton({
+    text: `${t('cart.checkout')} (${renderPairedPrice(totalAmount, defaultCurrency)})`,
+    onClick: handleTGCheckout,
+    visible: isTG && items.length > 0 && groups.length === 1,
+  });
+
+  useTGBackButton({ visible: isTG });
+
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
@@ -273,26 +290,28 @@ export function CartMobile() {
         </div>
       </div>
 
-      {/* Fixed bottom bar */}
-      <div className="fixed bottom-0 inset-x-0 bg-background border-t border-border px-4 py-3 pb-safe z-40">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xs text-muted-foreground">{t('cart.total')}</span>
-            <div className="text-lg font-bold text-foreground">
-              {renderPairedPrice(totalAmount, defaultCurrency)}
+      {/* Fixed bottom bar — hidden in TG (MainButton replaces it) */}
+      {!isTG && (
+        <div className="fixed bottom-0 inset-x-0 bg-background border-t border-border px-4 py-3 pb-safe z-40">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-muted-foreground">{t('cart.total')}</span>
+              <div className="text-lg font-bold text-foreground">
+                {renderPairedPrice(totalAmount, defaultCurrency)}
+              </div>
             </div>
+            {groups.length === 1 && (
+              <Button
+                size="lg"
+                className="touch-feedback h-12 px-8 text-base"
+                onClick={() => handleCheckout(groups[0])}
+              >
+                {t('cart.checkout')}
+              </Button>
+            )}
           </div>
-          {groups.length === 1 && (
-            <Button
-              size="lg"
-              className="touch-feedback h-12 px-8 text-base"
-              onClick={() => handleCheckout(groups[0])}
-            >
-              {t('cart.checkout')}
-            </Button>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

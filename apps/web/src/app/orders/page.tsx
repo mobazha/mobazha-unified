@@ -21,6 +21,8 @@ import {
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import { useToast } from '@/components/ui/use-toast';
 import { transformOrderListItem } from '@/components/admin/orders/utils';
 
@@ -42,6 +44,9 @@ function OrdersPageContent() {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { isAvailable: isTG } = useTGMiniApp();
+
+  useTGBackButton({ visible: isTG });
 
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
