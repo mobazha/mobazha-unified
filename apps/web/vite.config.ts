@@ -188,5 +188,50 @@ export default defineConfig(({ mode }) => {
     css: {
       postcss: './postcss.config.js',
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('ethers') || id.includes('@noble') || id.includes('@adraffy')) {
+                return 'vendor-ethers';
+              }
+              if (
+                id.includes('@reown') ||
+                id.includes('@walletconnect') ||
+                id.includes('viem') ||
+                id.includes('ox/')
+              ) {
+                return 'vendor-wallet';
+              }
+              if (id.includes('matrix-js-sdk') || id.includes('matrix-events-sdk')) {
+                return 'vendor-matrix';
+              }
+              if (id.includes('recharts') || id.includes('d3-') || id.includes('victory')) {
+                return 'vendor-charts';
+              }
+              if (id.includes('@stripe') || id.includes('@paypal')) {
+                return 'vendor-payment';
+              }
+              if (id.includes('@radix-ui')) {
+                return 'vendor-radix';
+              }
+              if (id.includes('react-dom')) {
+                return 'vendor-react';
+              }
+              if (id.includes('react-router')) {
+                return 'vendor-router';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons';
+              }
+              if (id.includes('@tanstack')) {
+                return 'vendor-query';
+              }
+            }
+          },
+        },
+      },
+    },
   };
 });

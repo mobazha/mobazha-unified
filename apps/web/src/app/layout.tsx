@@ -1,9 +1,7 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import type { Metadata, Viewport } from 'next';
-import dynamic from 'next/dynamic';
 import './globals.css';
 import {
-  AppKitProvider,
   AuthProvider,
   CurrencyProvider,
   MainContent,
@@ -18,11 +16,13 @@ import {
 import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
-import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
 
-const ChatSystem = dynamic(() => import('@/components/ChatSystem').then(m => m.ChatSystem), {
-  ssr: false,
-});
+const ChatSystem = lazy(() =>
+  import('@/components/ChatSystem').then(m => ({ default: m.ChatSystem }))
+);
+const AppKitProvider = lazy(() =>
+  import('@/components/AppKitProvider').then(m => ({ default: m.AppKitProvider }))
+);
 
 /**
  * AuthProvider 加载状态
@@ -119,15 +119,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={`${defaultFont.className} ${storeFontVariableClasses}`}>
+      <body className="font-sans">
         <QueryProvider>
           <ThemeProvider>
             <TGMiniAppProvider>
               <DiscordActivityProvider>
                 <ServiceWorkerProvider>
-                  <AppKitProvider>
-                    <CurrencyProvider>
-                      <Suspense fallback={<AuthProviderLoading />}>
+                  <Suspense fallback={<AuthProviderLoading />}>
+                    <AppKitProvider>
+                      <CurrencyProvider>
                         <AuthProvider>
                           <ProductModalProvider>
                             <PaymentSelectorProvider>
@@ -135,23 +135,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                               <MobileNav />
 
-                              {/* Chat floating button and drawer */}
-                              <ChatSystem />
+                              <Suspense fallback={null}>
+                                <ChatSystem />
+                              </Suspense>
 
-                              {/* PWA install prompt */}
                               <PWAInstall />
 
-                              {/* Session expired dialog (global 401 handler) */}
                               <SessionExpiredDialog />
 
-                              {/* Toast notifications */}
                               <Toaster />
                             </PaymentSelectorProvider>
                           </ProductModalProvider>
                         </AuthProvider>
-                      </Suspense>
-                    </CurrencyProvider>
-                  </AppKitProvider>
+                      </CurrencyProvider>
+                    </AppKitProvider>
+                  </Suspense>
                 </ServiceWorkerProvider>
               </DiscordActivityProvider>
             </TGMiniAppProvider>
