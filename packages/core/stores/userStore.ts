@@ -36,6 +36,9 @@ import { disableMockData } from '../config';
 import { onUnauthorized } from '../services/api/client';
 import { onOpenApiUnauthorized } from '../services/api/openapi-client';
 
+/** Auth source tracks how the user authenticated */
+export type AuthSource = 'casdoor' | 'telegram' | 'discord' | null;
+
 interface UserState {
   // 状态
   profile: UserProfile | null;
@@ -52,6 +55,10 @@ interface UserState {
   needsOnboarding: boolean;
   /** 会话是否因 token 无效而过期（用于显示重新登录 Dialog） */
   sessionExpired: boolean;
+  /** How the current session was authenticated */
+  authSource: AuthSource;
+  /** True when browsing anonymously inside a Mini App (no account yet) */
+  isAnonymousMiniAppUser: boolean;
 
   // 动作
   /** Basic Auth 登录（VPS 模式） */
@@ -64,6 +71,10 @@ interface UserState {
   loginWithCredentials: (credentials: LoginCredentials) => Promise<boolean>;
   /** 独立站 Popup OAuth 登录 */
   loginStandalone: () => Promise<boolean>;
+  /** Mini App 登录（使用已从 Mini App auth service 获取的 JWT） */
+  loginMiniApp: (token: string, source: 'telegram' | 'discord') => Promise<boolean>;
+  /** Enter anonymous browsing mode inside a Mini App */
+  enterAnonymousMode: (source: 'telegram' | 'discord') => void;
   logout: () => void;
   /** 因 401 错误强制登出（token 无效/过期） */
   forceLogout: () => void;
@@ -92,6 +103,8 @@ export const useUserStore = create<UserState>()(
         isSessionRestored: false,
         needsOnboarding: false,
         sessionExpired: false,
+        authSource: null,
+        isAnonymousMiniAppUser: false,
 
         // Basic Auth 登录（VPS / standalone 卖家模式）
         login: async (credentials: AuthCredentials) => {
@@ -299,6 +312,77 @@ export const useUserStore = create<UserState>()(
           }
         },
 
+        // Mini App 登录 — uses a JWT obtained from the miniAppAuth service
+        loginMiniApp: async (token: string, source: 'telegram' | 'discord') => {
+          set({ isLoading: true, error: null });
+
+          try {
+            saveToken(token);
+            disableMockData();
+
+            const claims = parseJwtToken(token);
+            const casdoorId = claims?.sub || claims?.name;
+
+            const profile = await profileApi.getMyProfile();
+
+            if (profile) {
+              saveUser({
+                id: profile.peerID,
+                name: profile.name || profile.peerID,
+                casdoorId,
+              });
+              set({
+                profile,
+                token,
+                isAuthenticated: true,
+                isLoading: false,
+                authMode: 'hosted',
+                isSessionRestored: true,
+                needsOnboarding: false,
+                authSource: source,
+                isAnonymousMiniAppUser: false,
+              });
+              connectWebSocket();
+              return true;
+            }
+
+            if (casdoorId) {
+              saveUser({ id: casdoorId, name: casdoorId, casdoorId });
+            }
+            set({
+              token,
+              isAuthenticated: true,
+              isLoading: false,
+              authMode: 'hosted',
+              isSessionRestored: true,
+              needsOnboarding: true,
+              authSource: source,
+              isAnonymousMiniAppUser: false,
+            });
+            connectWebSocket();
+            return true;
+          } catch (err) {
+            set({
+              error: err instanceof Error ? err.message : 'Login failed',
+              isLoading: false,
+              isSessionRestored: true,
+            });
+            clearAuth();
+            return false;
+          }
+        },
+
+        // Enter anonymous browsing mode inside a Mini App (no account)
+        enterAnonymousMode: (source: 'telegram' | 'discord') => {
+          set({
+            isAuthenticated: false,
+            isLoading: false,
+            isSessionRestored: true,
+            authSource: source,
+            isAnonymousMiniAppUser: true,
+          });
+        },
+
         // OAuth2 回调登录（托管模式 - 处理 Casdoor 重定向回来的 code）
         loginWithOAuth: async (code: string, state: string) => {
           set({ isLoading: true, error: null });
@@ -453,9 +537,11 @@ export const useUserStore = create<UserState>()(
             isAuthenticated: false,
             error: null,
             token: null,
-            isSessionRestored: true, // 保持为 true，因为用户主动登出是有意的
+            isSessionRestored: true,
             needsOnboarding: false,
             sessionExpired: false,
+            authSource: null,
+            isAnonymousMiniAppUser: false,
           });
         },
 
@@ -723,7 +809,8 @@ export const useUserStore = create<UserState>()(
           profile: state.profile,
           isAuthenticated: state.isAuthenticated,
           authMode: state.authMode,
-          token: state.token, // 添加 token 持久化，避免 HMR 后丢失
+          token: state.token,
+          authSource: state.authSource,
         }),
       }
     ),
@@ -731,13 +818,55 @@ export const useUserStore = create<UserState>()(
   )
 );
 
-// 注册 API client 的 401 拦截回调
-// 当任何 API 请求返回 401 时，触发 forceLogout 显示会话过期提示
-const handleUnauthorized = () => {
-  useUserStore.getState().forceLogout();
+// 401 interceptor: attempt Mini App re-auth before falling back to forceLogout.
+// Returns true if the token was refreshed (request will be retried automatically).
+const handleUnauthorized = async (): Promise<boolean> => {
+  const state = useUserStore.getState();
+
+  if (state.authSource === 'telegram') {
+    try {
+      const tgWebApp = (window as Record<string, unknown>).Telegram as
+        | { WebApp?: { initData?: string } }
+        | undefined;
+      const initData = tgWebApp?.WebApp?.initData;
+      if (initData) {
+        const { signinTelegram } = await import('../services/auth/miniAppAuth');
+        const token = await signinTelegram(initData, false);
+        if (token) {
+          await state.loginMiniApp(token, 'telegram');
+          return true;
+        }
+      }
+    } catch {
+      // Re-auth failed — fall through to forceLogout
+    }
+  }
+
+  if (state.authSource === 'discord') {
+    try {
+      // Discord access_token is saved to sessionStorage by AuthProvider (URL is lost after navigation)
+      const accessToken =
+        typeof sessionStorage !== 'undefined'
+          ? sessionStorage.getItem('discord_access_token')
+          : null;
+      if (accessToken) {
+        const { signinDiscord } = await import('../services/auth/miniAppAuth');
+        const token = await signinDiscord(accessToken, false);
+        if (token) {
+          await state.loginMiniApp(token, 'discord');
+          return true;
+        }
+      }
+    } catch {
+      // Re-auth failed — fall through to forceLogout
+    }
+  }
+
+  state.forceLogout();
+  return false;
 };
 onUnauthorized(handleUnauthorized);
-onOpenApiUnauthorized(handleUnauthorized);
+onOpenApiUnauthorized(handleUnauthorized as () => void);
 
 // 选择器
 export const selectUser = (state: UserState) => state.profile;
@@ -747,3 +876,5 @@ export const selectUserError = (state: UserState) => state.error;
 export const selectIsSessionRestored = (state: UserState) => state.isSessionRestored;
 export const selectNeedsOnboarding = (state: UserState) => state.needsOnboarding;
 export const selectSessionExpired = (state: UserState) => state.sessionExpired;
+export const selectAuthSource = (state: UserState) => state.authSource;
+export const selectIsAnonymousMiniAppUser = (state: UserState) => state.isAnonymousMiniAppUser;

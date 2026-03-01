@@ -21,6 +21,9 @@ export const PUBLIC_ROUTES = [
   '/store/:peerId',
   '/product/:slug',
 
+  // 购物车（anonymous browsing in Mini App）
+  '/cart',
+
   // 市场（不含 admin 和 sell 子路由）
   '/marketplace',
   '/marketplace/:slug',
@@ -43,8 +46,7 @@ export const PRIVATE_ROUTES = [
   '/orders',
   '/orders/:orderId',
 
-  // 购物车和结账
-  '/cart',
+  // 结账（cart is now public for anonymous browsing）
   '/checkout',
   '/checkout/moderator',
   '/checkout/payment-method',
