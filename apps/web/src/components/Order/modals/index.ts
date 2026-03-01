@@ -10,8 +10,5 @@ export type { AcceptOrderModalProps } from './AcceptOrderModal';
 export { RefundModal } from './RefundModal';
 export type { RefundModalProps } from './RefundModal';
 
-export { RatingModal } from './RatingModal';
-export type { RatingModalProps, OrderRatingData } from './RatingModal';
-
 export { ContractModal } from './ContractModal';
 export type { ContractModalProps } from './ContractModal';

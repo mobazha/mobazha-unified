@@ -22,6 +22,7 @@ import {
   AcceptOrderDialog,
   FulfillOrderDialog,
   OrderConfirmDialog,
+  WriteReviewDialog,
   type OrderConfirmType,
 } from '@/components/Order';
 import {
@@ -56,6 +57,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     chatParticipants,
     isActionLoading,
     executeConfirmAction,
+    showReviewDialog,
+    reviewProductTitle,
+    submitReviewAndComplete,
+    skipReviewAndComplete,
+    closeReviewDialog,
     copyOrderId,
     copyContract,
     chatMessages,
@@ -97,7 +103,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setConfirmDialog('cancel');
           break;
         case 'Complete':
-          setConfirmDialog('complete');
+          executeConfirmAction('complete');
           break;
         case 'Accept':
           setShowAcceptDialog(true);
@@ -123,7 +129,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           break;
       }
     },
-    [router, orderId]
+    [router, orderId, executeConfirmAction]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -393,6 +399,15 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         contractType={fulfillOrderProps.contractType}
         blockchain={fulfillOrderProps.blockchain}
         onSuccess={fulfillOrderProps.onSuccess}
+      />
+
+      <WriteReviewDialog
+        open={showReviewDialog}
+        productTitle={reviewProductTitle}
+        onSubmit={submitReviewAndComplete}
+        onSkip={skipReviewAndComplete}
+        onClose={closeReviewDialog}
+        isSubmitting={isActionLoading}
       />
 
       <Footer />

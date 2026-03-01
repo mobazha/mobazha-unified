@@ -30,6 +30,7 @@ import {
   AcceptOrderDialog,
   FulfillOrderDialog,
   OrderConfirmDialog,
+  WriteReviewDialog,
   type OrderConfirmType,
 } from '@/components/Order';
 import { OrderActionSheet } from './OrderActionSheet';
@@ -67,6 +68,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     chatParticipants,
     isActionLoading,
     executeConfirmAction,
+    showReviewDialog,
+    reviewProductTitle,
+    submitReviewAndComplete,
+    skipReviewAndComplete,
+    closeReviewDialog,
     copyOrderId,
     copyContract,
     chatMessages,
@@ -110,7 +116,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setConfirmDialog('cancel');
           break;
         case 'Complete':
-          setConfirmDialog('complete');
+          executeConfirmAction('complete');
           break;
         case 'Accept':
           setShowAcceptDialog(true);
@@ -136,7 +142,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           break;
       }
     },
-    [router, orderId]
+    [router, orderId, executeConfirmAction]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -510,6 +516,22 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         onOpenChange={setShowContractModal}
         coreOrder={coreOrder}
         onCopy={copyContract}
+      />
+
+      <WriteReviewDialog
+        open={showReviewDialog}
+        productTitle={reviewProductTitle}
+        onSubmit={async data => {
+          await submitReviewAndComplete(data);
+          haptic?.notificationOccurred('success');
+        }}
+        onSkip={async () => {
+          await skipReviewAndComplete();
+          haptic?.notificationOccurred('success');
+        }}
+        onClose={closeReviewDialog}
+        isSubmitting={isActionLoading}
+        isMobile
       />
     </div>
   );
