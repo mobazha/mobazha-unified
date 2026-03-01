@@ -61,10 +61,25 @@ export function useStoreListings(peerID: string | null, _pageSize = 12) {
   };
 }
 
+export function useMyListings() {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.myListings(),
+    queryFn: () => productsApi.getListingIndex(),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  return {
+    listings: data ?? [],
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
+}
+
 export function useListing(slug: string | null, peerID?: string) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.products.detail(slug!, peerID),
-    queryFn: () => productsApi.getListing(slug!, peerID),
+    queryFn: () => productsApi.getPublicListing(slug!, peerID),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
   });
@@ -227,7 +242,7 @@ export function usePrefetchProduct() {
     (slug: string, peerID?: string) => {
       queryClient.prefetchQuery({
         queryKey: queryKeys.products.detail(slug, peerID),
-        queryFn: () => productsApi.getListing(slug, peerID),
+        queryFn: () => productsApi.getPublicListing(slug, peerID),
         staleTime: 5 * 60 * 1000,
       });
     },
