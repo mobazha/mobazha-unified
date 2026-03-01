@@ -127,11 +127,13 @@ function useDashboardData() {
 function DashboardHeader({ name }: { name: string }) {
   const { t } = useI18n();
   return (
-    <div className="mb-8">
-      <h1 className="text-2xl font-bold text-foreground">
+    <div className="mb-5 sm:mb-8">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground">
         {t('admin.dashboard.welcome', { name })}
       </h1>
-      <p className="text-muted-foreground mt-1">{t('admin.dashboard.subtitle')}</p>
+      <p className="text-sm sm:text-base text-muted-foreground mt-1">
+        {t('admin.dashboard.subtitle')}
+      </p>
     </div>
   );
 }
@@ -215,7 +217,7 @@ export default function AdminDashboardPage() {
       {salesError && <ErrorBanner message={salesError} />}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <StatCard
           icon={Package}
           label={t('admin.dashboard.activeProducts')}
@@ -254,31 +256,39 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Quick Actions — Mobile: 3-col icon grid, Desktop: full cards */}
+      <div className="grid grid-cols-3 sm:grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <Link
           href="/listing/new?from=admin"
-          className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
+          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
         >
-          <div className="p-3 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
             <Plus className="w-5 h-5" />
           </div>
-          <div>
-            <p className="font-medium text-foreground">{t('admin.dashboard.addProduct')}</p>
-            <p className="text-sm text-muted-foreground">{t('admin.dashboard.addProductDesc')}</p>
+          <div className="text-center sm:text-left">
+            <p className="text-xs sm:text-base font-medium text-foreground">
+              {t('admin.dashboard.addProduct')}
+            </p>
+            <p className="hidden sm:block text-sm text-muted-foreground">
+              {t('admin.dashboard.addProductDesc')}
+            </p>
           </div>
         </Link>
 
         <Link
           href="/admin/orders"
-          className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
+          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
         >
-          <div className="p-3 rounded-lg bg-info/10 text-info group-hover:bg-info group-hover:text-primary-foreground transition-colors">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-info/10 text-info group-hover:bg-info group-hover:text-primary-foreground transition-colors">
             <ShoppingCart className="w-5 h-5" />
           </div>
-          <div>
-            <p className="font-medium text-foreground">{t('admin.dashboard.manageOrders')}</p>
-            <p className="text-sm text-muted-foreground">{t('admin.dashboard.manageOrdersDesc')}</p>
+          <div className="text-center sm:text-left">
+            <p className="text-xs sm:text-base font-medium text-foreground">
+              {t('admin.dashboard.manageOrders')}
+            </p>
+            <p className="hidden sm:block text-sm text-muted-foreground">
+              {t('admin.dashboard.manageOrdersDesc')}
+            </p>
           </div>
         </Link>
 
@@ -286,36 +296,47 @@ export default function AdminDashboardPage() {
           href={storeUrl}
           target={standaloneMode ? undefined : '_blank'}
           rel="noopener noreferrer"
-          className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
+          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
         >
-          <div className="p-3 rounded-lg bg-success/10 text-success group-hover:bg-success group-hover:text-primary-foreground transition-colors">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-success/10 text-success group-hover:bg-success group-hover:text-primary-foreground transition-colors">
             <Eye className="w-5 h-5" />
           </div>
-          <div>
-            <p className="font-medium text-foreground">{t('admin.dashboard.viewStore')}</p>
-            <p className="text-sm text-muted-foreground">{t('admin.dashboard.viewStoreDesc')}</p>
+          <div className="text-center sm:text-left">
+            <p className="text-xs sm:text-base font-medium text-foreground">
+              {t('admin.dashboard.viewStore')}
+            </p>
+            <p className="hidden sm:block text-sm text-muted-foreground">
+              {t('admin.dashboard.viewStoreDesc')}
+            </p>
           </div>
         </a>
       </div>
 
       {/* Lists: Recent Orders + Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-foreground">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">
               {t('admin.dashboard.recentOrders')}
             </h2>
-            <Link href="/admin/orders" className="text-sm text-primary hover:underline">
+            <Link
+              href="/admin/orders"
+              className="text-sm text-primary hover:underline min-h-[44px] sm:min-h-0 flex items-center"
+            >
               {t('admin.dashboard.viewAll')}
             </Link>
           </div>
           {salesLoading ? (
             <ListSkeleton />
           ) : recentOrders.length > 0 ? (
-            <div>
-              {recentOrders.map(order => (
-                <RecentOrderRow key={order.orderID} order={order} />
-              ))}
+            <div className="-mx-4 sm:mx-0">
+              <div className="flex sm:block overflow-x-auto sm:overflow-visible gap-3 sm:gap-0 px-4 sm:px-0 pb-2 sm:pb-0 snap-x snap-mandatory">
+                {recentOrders.map(order => (
+                  <div key={order.orderID} className="min-w-[260px] sm:min-w-0 snap-start">
+                    <RecentOrderRow order={order} />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground text-sm">
@@ -324,22 +345,29 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-foreground">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">
               {t('admin.dashboard.topProducts')}
             </h2>
-            <Link href="/admin/products" className="text-sm text-primary hover:underline">
+            <Link
+              href="/admin/products"
+              className="text-sm text-primary hover:underline min-h-[44px] sm:min-h-0 flex items-center"
+            >
               {t('admin.dashboard.viewAll')}
             </Link>
           </div>
           {productsLoading ? (
             <ListSkeleton />
           ) : topProducts.length > 0 ? (
-            <div>
-              {topProducts.map(product => (
-                <TopProductRow key={product.slug} product={product} />
-              ))}
+            <div className="-mx-4 sm:mx-0">
+              <div className="flex sm:block overflow-x-auto sm:overflow-visible gap-3 sm:gap-0 px-4 sm:px-0 pb-2 sm:pb-0 snap-x snap-mandatory">
+                {topProducts.map(product => (
+                  <div key={product.slug} className="min-w-[220px] sm:min-w-0 snap-start">
+                    <TopProductRow product={product} />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground text-sm">

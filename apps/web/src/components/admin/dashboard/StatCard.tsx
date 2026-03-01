@@ -26,19 +26,26 @@ export function StatCard({
   loading,
 }: StatCardProps) {
   return (
-    <div className="bg-card border border-border rounded-xl p-5" data-testid="admin-stat-card">
+    <div
+      className="bg-card border border-border rounded-xl p-3 sm:p-5"
+      data-testid="admin-stat-card"
+    >
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
           {loading ? (
-            <Skeleton className="h-8 w-16 mt-1" />
+            <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
           ) : (
-            <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground mt-1 truncate">{value}</p>
           )}
-          {sublabel && <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>}
+          {sublabel && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">
+              {sublabel}
+            </p>
+          )}
         </div>
-        <div className={`p-2.5 rounded-lg ${COLOR_MAP[color]}`}>
-          <Icon className="w-5 h-5" />
+        <div className={`p-1.5 sm:p-2.5 rounded-lg shrink-0 ${COLOR_MAP[color]}`}>
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       </div>
     </div>
