@@ -32,6 +32,12 @@ interface OrderContractData {
   };
 }
 
+export interface ReviewSubmitData {
+  overall: number;
+  review: string;
+  anonymous: boolean;
+}
+
 export interface UseOrderDetailPageReturn {
   displayOrder: ReturnType<typeof useOrderDetail>['displayOrder'];
   coreOrder: ReturnType<typeof useOrderDetail>['coreOrder'];
@@ -46,6 +52,12 @@ export interface UseOrderDetailPageReturn {
 
   isActionLoading: boolean;
   executeConfirmAction: (actionType: OrderConfirmType) => Promise<boolean>;
+
+  showReviewDialog: boolean;
+  reviewProductTitle: string;
+  submitReviewAndComplete: (data: ReviewSubmitData) => Promise<void>;
+  skipReviewAndComplete: () => Promise<void>;
+  closeReviewDialog: () => void;
 
   copyOrderId: () => Promise<void>;
   copyContract: () => Promise<void>;
@@ -147,6 +159,81 @@ export function useOrderDetailPage(
 
   const { execute: executeOrderAction } = useOrderAction();
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+
+  const reviewProductTitle = useMemo(() => {
+    const orderData = coreOrder as OrderContractData | null;
+    const listings = orderData?.contract?.orderOpen?.listings || [];
+    return listings[0]?.listing?.slug || '';
+  }, [coreOrder]);
+
+  const doCompleteOrder = useCallback(
+    async (reviewData?: { overall: number; review: string; anonymous: boolean }) => {
+      setIsActionLoading(true);
+
+      const onSuccess = (title: string, desc: string) => {
+        toast({ title, description: desc });
+        setTimeout(() => refetch(), 500);
+      };
+      const onError = (err: Error) => {
+        toast({
+          title: t('order.actions.error'),
+          description: err.message,
+          variant: 'destructive',
+        });
+      };
+
+      try {
+        const orderData = coreOrder as OrderContractData | null;
+        const listings = orderData?.contract?.orderOpen?.listings || [];
+        const overall = reviewData?.overall || 5;
+        const reviewText = reviewData?.review || '';
+        const anonymous = reviewData?.anonymous || false;
+
+        const ratings = listings.map((item: { listing?: { slug?: string } }) => ({
+          slug: item.listing?.slug || '',
+          overall,
+          quality: overall,
+          description: overall,
+          deliverySpeed: overall,
+          customerService: overall,
+          review: reviewText,
+        }));
+
+        await executeOrderAction({
+          paymentCoin,
+          getInstructions: addr =>
+            ordersApi.getCompleteInstructions({ orderID: orderId, initiatorAddress: addr }),
+          executeAction: txID =>
+            ordersApi.completeOrder({ orderID: orderId, txID, ratings, anonymous }),
+          onSuccess: () =>
+            onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc')),
+          onError,
+        });
+      } catch {
+        // Unexpected error not handled by onError
+      } finally {
+        setIsActionLoading(false);
+        setShowReviewDialog(false);
+      }
+    },
+    [coreOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
+  );
+
+  const submitReviewAndComplete = useCallback(
+    async (data: { overall: number; review: string; anonymous: boolean }) => {
+      await doCompleteOrder(data);
+    },
+    [doCompleteOrder]
+  );
+
+  const skipReviewAndComplete = useCallback(async () => {
+    await doCompleteOrder();
+  }, [doCompleteOrder]);
+
+  const closeReviewDialog = useCallback(() => {
+    setShowReviewDialog(false);
+  }, []);
 
   const executeConfirmAction = useCallback(
     async (actionType: OrderConfirmType): Promise<boolean> => {
@@ -229,33 +316,9 @@ export function useOrderDetailPage(
               onError,
             });
             break;
-          case 'complete': {
-            const orderData = coreOrder as OrderContractData | null;
-            const listings = orderData?.contract?.orderOpen?.listings || [];
-            const ratings = listings.map((item: { listing?: { slug?: string } }) => ({
-              slug: item.listing?.slug || '',
-              overall: 5,
-              quality: 5,
-              description: 5,
-              deliverySpeed: 5,
-              customerService: 5,
-              review: '',
-            }));
-            await executeOrderAction({
-              paymentCoin,
-              getInstructions: addr =>
-                ordersApi.getCompleteInstructions({ orderID: orderId, initiatorAddress: addr }),
-              executeAction: txID =>
-                ordersApi.completeOrder({ orderID: orderId, txID, ratings, anonymous: false }),
-              onSuccess: () =>
-                onSuccess(
-                  t('order.actions.completeSuccess'),
-                  t('order.actions.completeSuccessDesc')
-                ),
-              onError,
-            });
-            break;
-          }
+          case 'complete':
+            setShowReviewDialog(true);
+            return true;
         }
       } catch {
         // Unexpected error not handled by onError
@@ -353,6 +416,11 @@ export function useOrderDetailPage(
     chatParticipants,
     isActionLoading,
     executeConfirmAction,
+    showReviewDialog,
+    reviewProductTitle,
+    submitReviewAndComplete,
+    skipReviewAndComplete,
+    closeReviewDialog,
     copyOrderId,
     copyContract,
     chatMessages,
