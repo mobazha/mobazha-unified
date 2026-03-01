@@ -682,6 +682,8 @@ export interface TranslationResource {
     serverError: string;
     timeout: string;
     offline: string;
+    offlineDesc: string;
+    backOnline: string;
     invalidInput: string;
     requiredField: string;
   };

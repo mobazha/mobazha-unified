@@ -786,15 +786,15 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 
 ### Phase M3 — 交互打磨
 
-| ID   | 任务                | 状态      | 完成日期                                                                                                                                   |
-| ---- | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| M3-1 | 滑动手势完善        | ✅ 完成   | useSwipeGesture hook + ProductDetail 图片画廊滑动 + 点指示器                                                                               |
-| M3-2 | 页面过渡动画        | ✅ 完成   | CSS pageEnter 动画 + PageTransition 组件 + Cart/Search/Checkout 集成                                                                       |
-| M3-3 | 骨架屏完善          | ✅ 完成   | 首页 isLoading 传递修复 + 各页面骨架屏审查确认                                                                                             |
-| M3-4 | 空状态移动端优化    | ✅ 完成   | EmptyState 触控友好(min-h-44px) + 大图标容器 + SearchMobile 空状态统一                                                                     |
-| M3-5 | 底部 Sheet 统一应用 | ✅ 完成   | BottomSheet 增强(拖拽关闭+部分高度) + PaymentDrawer 响应式 + SearchMobile 排序/分类 BottomSheet + ProductDetailMobile 更多操作 BottomSheet |
-| M3-6 | 键盘体验优化        | ⏳ 未开始 |                                                                                                                                            |
-| M3-7 | 错误恢复增强        | ⏳ 未开始 |                                                                                                                                            |
+| ID   | 任务                | 状态    | 完成日期                                                                                                                                   |
+| ---- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| M3-1 | 滑动手势完善        | ✅ 完成 | useSwipeGesture hook + ProductDetail 图片画廊滑动 + 点指示器                                                                               |
+| M3-2 | 页面过渡动画        | ✅ 完成 | CSS pageEnter 动画 + PageTransition 组件 + Cart/Search/Checkout 集成                                                                       |
+| M3-3 | 骨架屏完善          | ✅ 完成 | 首页 isLoading 传递修复 + 各页面骨架屏审查确认                                                                                             |
+| M3-4 | 空状态移动端优化    | ✅ 完成 | EmptyState 触控友好(min-h-44px) + 大图标容器 + SearchMobile 空状态统一                                                                     |
+| M3-5 | 底部 Sheet 统一应用 | ✅ 完成 | BottomSheet 增强(拖拽关闭+部分高度) + PaymentDrawer 响应式 + SearchMobile 排序/分类 BottomSheet + ProductDetailMobile 更多操作 BottomSheet |
+| M3-6 | 键盘体验优化        | ✅ 完成 | viewport interactiveWidget resizes-content + 全局 scroll-margin-bottom + Chat 输入栏 safe-area padding + enterKeyHint 属性                 |
+| M3-7 | 错误恢复增强        | ✅ 完成 | ServiceWorkerProvider i18n 离线横幅 + 恢复在线 toast + 订单页 LoadError 重试 + offline.html 离线回退页 + SW 缓存修复                       |
 
 ### Phase M4 — 性能优化
 

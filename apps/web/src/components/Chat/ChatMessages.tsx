@@ -573,7 +573,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-gradient-to-t from-card via-card/95 to-card/90 backdrop-blur-md border-t border-border/30 shadow-[0_-2px_20px_rgba(0,0,0,0.05)]">
+      <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-card via-card/95 to-card/90 backdrop-blur-md border-t border-border/30 shadow-[0_-2px_20px_rgba(0,0,0,0.05)]">
         <HStack gap="sm" align="center">
           <button
             className="p-2.5 hover:bg-muted/60 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 group"
@@ -602,6 +602,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               onChange={e => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={t('chat.typeMessage')}
+              enterKeyHint="send"
               className="w-full px-5 py-3 pr-12 text-[14px] bg-muted/40 rounded-2xl border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-muted/60 text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 shadow-sm focus:shadow-md"
               data-testid="chat-message-input"
             />

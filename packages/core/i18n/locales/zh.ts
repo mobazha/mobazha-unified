@@ -1466,6 +1466,8 @@ export const zh: TranslationResource = {
     serverError: '服务器错误，请稍后重试',
     timeout: '请求超时',
     offline: '您已离线',
+    offlineDesc: '部分功能可能不可用。',
+    backOnline: '网络已恢复！',
     invalidInput: '输入无效',
     requiredField: '此字段为必填项',
   },
