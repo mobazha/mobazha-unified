@@ -15,6 +15,7 @@ import {
   TGMiniAppProvider,
   ThemeProvider,
 } from '@/components';
+import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { storeFonts, storeFontVariableClasses } from '@/lib/fonts';
@@ -117,35 +118,37 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <ThemeProvider>
             <TGMiniAppProvider>
-              <ServiceWorkerProvider>
-                <AppKitProvider>
-                  <CurrencyProvider>
-                    <Suspense fallback={<AuthProviderLoading />}>
-                      <AuthProvider>
-                        <ProductModalProvider>
-                          <PaymentSelectorProvider>
-                            <MainContent>{children}</MainContent>
+              <DiscordActivityProvider>
+                <ServiceWorkerProvider>
+                  <AppKitProvider>
+                    <CurrencyProvider>
+                      <Suspense fallback={<AuthProviderLoading />}>
+                        <AuthProvider>
+                          <ProductModalProvider>
+                            <PaymentSelectorProvider>
+                              <MainContent>{children}</MainContent>
 
-                            <MobileNav />
+                              <MobileNav />
 
-                            {/* Chat floating button and drawer */}
-                            <ChatSystem />
+                              {/* Chat floating button and drawer */}
+                              <ChatSystem />
 
-                            {/* PWA install prompt */}
-                            <PWAInstall />
+                              {/* PWA install prompt */}
+                              <PWAInstall />
 
-                            {/* Session expired dialog (global 401 handler) */}
-                            <SessionExpiredDialog />
+                              {/* Session expired dialog (global 401 handler) */}
+                              <SessionExpiredDialog />
 
-                            {/* Toast notifications */}
-                            <Toaster />
-                          </PaymentSelectorProvider>
-                        </ProductModalProvider>
-                      </AuthProvider>
-                    </Suspense>
-                  </CurrencyProvider>
-                </AppKitProvider>
-              </ServiceWorkerProvider>
+                              {/* Toast notifications */}
+                              <Toaster />
+                            </PaymentSelectorProvider>
+                          </ProductModalProvider>
+                        </AuthProvider>
+                      </Suspense>
+                    </CurrencyProvider>
+                  </AppKitProvider>
+                </ServiceWorkerProvider>
+              </DiscordActivityProvider>
             </TGMiniAppProvider>
           </ThemeProvider>
         </QueryProvider>
