@@ -41,44 +41,79 @@ interface StepIndicatorProps {
 }
 
 function StepIndicator({ currentStep, totalSteps, labels }: StepIndicatorProps) {
+  const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
   return (
-    <div className="flex items-center justify-center gap-2 mb-8">
-      {Array.from({ length: totalSteps }, (_, i) => {
-        const step = i + 1;
-        const isActive = step === currentStep;
-        const isCompleted = step < currentStep;
-        return (
-          <React.Fragment key={step}>
-            {i > 0 && (
-              <div
-                className={`h-0.5 w-8 sm:w-12 transition-colors ${
-                  isCompleted ? 'bg-primary' : 'bg-border'
-                }`}
-              />
-            )}
-            <div className="flex flex-col items-center gap-1">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                  isCompleted
-                    ? 'bg-primary text-primary-foreground'
-                    : isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {isCompleted ? <Check className="w-4 h-4" /> : step}
-              </div>
+    <div className="mb-8">
+      {/* Mobile: linear progress bar */}
+      <div className="sm:hidden space-y-3">
+        <div className="flex justify-between text-xs">
+          {labels.map((label, i) => {
+            const step = i + 1;
+            const isActive = step === currentStep;
+            const isCompleted = step < currentStep;
+            return (
               <span
-                className={`text-xs hidden sm:block ${
-                  isActive ? 'text-foreground font-medium' : 'text-muted-foreground'
-                }`}
+                key={step}
+                className={
+                  isCompleted
+                    ? 'text-primary font-medium'
+                    : isActive
+                      ? 'text-foreground font-medium'
+                      : 'text-muted-foreground'
+                }
               >
-                {labels[i]}
+                {label}
               </span>
-            </div>
-          </React.Fragment>
-        );
-      })}
+            );
+          })}
+        </div>
+        <div className="h-2 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Desktop: circle step indicator */}
+      <div className="hidden sm:flex items-center justify-center gap-2">
+        {Array.from({ length: totalSteps }, (_, i) => {
+          const step = i + 1;
+          const isActive = step === currentStep;
+          const isCompleted = step < currentStep;
+          return (
+            <React.Fragment key={step}>
+              {i > 0 && (
+                <div
+                  className={`h-0.5 w-12 transition-colors ${
+                    isCompleted ? 'bg-primary' : 'bg-border'
+                  }`}
+                />
+              )}
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    isCompleted
+                      ? 'bg-primary text-primary-foreground'
+                      : isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {isCompleted ? <Check className="w-4 h-4" /> : step}
+                </div>
+                <span
+                  className={`text-xs ${
+                    isActive ? 'text-foreground font-medium' : 'text-muted-foreground'
+                  }`}
+                >
+                  {labels[i]}
+                </span>
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -197,7 +232,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       <StepIndicator currentStep={step} totalSteps={3} labels={stepLabels} />
 
       {step === 1 && (
-        <div className="bg-card rounded-xl border p-6 space-y-6">
+        <div className="bg-card rounded-xl border p-4 sm:p-6 space-y-5 sm:space-y-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Store className="w-5 h-5 text-primary" />
@@ -243,6 +278,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 ref={avatarInputRef}
                 type="file"
                 accept="image/*"
+                capture="user"
                 className="hidden"
                 onChange={handleAvatarSelect}
               />
@@ -260,7 +296,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               <input
                 id="store-name"
                 type="text"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full rounded-lg border bg-background px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 value={storeName}
                 onChange={e => setStoreName(e.target.value)}
                 placeholder={t('admin.onboarding.storeNamePlaceholder') || 'My Awesome Store'}
@@ -274,7 +310,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               </label>
               <textarea
                 id="store-desc"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                className="w-full rounded-lg border bg-background px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                 rows={3}
                 value={shortDescription}
                 onChange={e => setShortDescription(e.target.value)}
@@ -296,15 +332,15 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 dismissOnboarding();
                 onSkip();
               }}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 min-h-[44px] sm:min-h-0"
             >
-              <SkipForward className="w-3.5 h-3.5" />
+              <SkipForward className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               {t('admin.onboarding.skip') || 'Skip setup'}
             </button>
             <button
               onClick={handleStep1Save}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 sm:px-5 sm:py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors min-h-[44px] sm:min-h-0"
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -320,7 +356,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       )}
 
       {step === 2 && (
-        <div className="bg-card rounded-xl border p-6 space-y-6">
+        <div className="bg-card rounded-xl border p-4 sm:p-6 space-y-5 sm:space-y-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
               <ShoppingBag className="w-5 h-5 text-success" />
@@ -363,7 +399,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
 
           <button
             onClick={handleCreateProduct}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-3 text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-3 text-base sm:text-sm font-medium hover:bg-primary/90 transition-colors min-h-[48px] sm:min-h-0"
           >
             {t('admin.onboarding.createProduct') || 'Create Product'}
             <ChevronRight className="w-4 h-4" />
@@ -376,15 +412,15 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                   dismissOnboarding();
                   onSkip();
                 }}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 min-h-[44px] sm:min-h-0"
               >
-                <SkipForward className="w-3.5 h-3.5" />
+                <SkipForward className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 {t('admin.onboarding.skip') || 'Skip setup'}
               </button>
             ) : (
               <button
                 onClick={() => setStep(1)}
-                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0"
               >
                 <ChevronLeft className="w-4 h-4" />
                 {t('admin.onboarding.back') || 'Back'}
@@ -392,7 +428,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             )}
             <button
               onClick={() => setStep(3)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0"
             >
               {t('admin.onboarding.skipStep') || 'Skip this step'}
             </button>
@@ -401,7 +437,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       )}
 
       {step === 3 && (
-        <div className="bg-card rounded-xl border p-8 text-center space-y-6">
+        <div className="bg-card rounded-xl border p-5 sm:p-8 text-center space-y-5 sm:space-y-6">
           <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto">
             <Rocket className="w-8 h-8 text-success" />
           </div>
@@ -416,18 +452,18 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
             <a
               href={storeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border px-5 py-3 sm:py-2.5 text-sm font-medium hover:bg-accent transition-colors min-h-[44px] sm:min-h-0"
             >
               {t('admin.onboarding.viewStore') || 'View Your Store'}
             </a>
             <button
               onClick={handleFinish}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-3 sm:py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors min-h-[44px] sm:min-h-0"
             >
               {t('admin.onboarding.goToDashboard') || 'Go to Dashboard'}
               <ChevronRight className="w-4 h-4" />
