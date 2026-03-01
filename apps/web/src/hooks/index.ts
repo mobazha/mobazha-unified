@@ -36,3 +36,4 @@ export { useCart } from './useCart';
 export type { VendorGroup } from './useCart';
 export { usePullRefresh } from './usePullRefresh';
 export type { PullRefreshState, UsePullRefreshOptions } from './usePullRefresh';
+export { useOrderDetailPage, type UseOrderDetailPageReturn } from './useOrderDetailPage';

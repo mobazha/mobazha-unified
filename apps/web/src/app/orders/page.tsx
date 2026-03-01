@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { LoadError } from '@/components/ui/empty-state';
-import { OrderDetailModal, OrderTable, OrderListCompact } from '@/components/Order';
+import { OrderTable, OrderListCompact } from '@/components/Order';
 import { PullRefreshIndicator } from '@/components/ui/pull-refresh-indicator';
 import {
   useI18n,
@@ -57,9 +57,6 @@ function OrdersPageContent() {
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
   const [showStatusSheet, setShowStatusSheet] = useState(false);
-
-  // 桌面端 Modal 状态
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // 使用核心包的 hooks 获取真实数据（支持分页）
   const {
@@ -159,25 +156,13 @@ function OrdersPageContent() {
     .filter(order => statusFilter === 'all' || order.status === statusFilter)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  // 处理查看订单详情 - 桌面端打开 Modal，移动端跳转页面
-  // 跳转时带上 type 参数，用于订单详情页判断用户角色
   const handleViewDetails = useCallback(
     (orderId: string) => {
-      if (isDesktop) {
-        setSelectedOrderId(orderId);
-      } else {
-        // 带上 type 参数：sale 或 purchase
-        const type = orderType === 'sales' ? 'sale' : 'purchase';
-        router.push(`/orders/${orderId}?type=${type}`);
-      }
+      const type = orderType === 'sales' ? 'sale' : 'purchase';
+      router.push(`/orders/${orderId}?type=${type}`);
     },
-    [isDesktop, router, orderType]
+    [router, orderType]
   );
-
-  // 关闭 Modal
-  const handleCloseModal = useCallback(() => {
-    setSelectedOrderId(null);
-  }, []);
 
   const handleContact = (_vendorId: string) => {
     // Open chat drawer
@@ -581,18 +566,6 @@ function OrdersPageContent() {
           );
         })}
       </BottomSheet>
-
-      {/* 桌面端订单详情 Modal */}
-      <OrderDetailModal
-        orderId={selectedOrderId}
-        open={!!selectedOrderId}
-        onClose={handleCloseModal}
-        viewingContext={orderType === 'sales' ? 'sale' : 'purchase'}
-        onOrderUpdate={() => {
-          // 订单更新后可能需要刷新列表
-          // 可以在这里添加刷新逻辑
-        }}
-      />
     </div>
   );
 }
