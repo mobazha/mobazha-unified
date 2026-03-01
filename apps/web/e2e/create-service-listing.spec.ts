@@ -40,7 +40,7 @@ test.describe('Create Service Listing', () => {
     // ── Step 2: Navigate to /listing/new ──
     console.log('Step 2: Navigate to /listing/new');
     await page.goto('/listing/new');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const form = page.locator('[data-testid="listing-form-new"]');
     await expect(form).toBeVisible({ timeout: 60000 });

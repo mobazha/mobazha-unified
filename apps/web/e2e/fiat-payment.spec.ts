@@ -23,7 +23,7 @@ import { authenticatedTest, getCasdoorToken, BACKEND_URL } from './fixtures/auth
 authenticatedTest.describe('Integrations — Payments Tab', () => {
   authenticatedTest.beforeEach(async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
   });
 
   authenticatedTest('should display Payments tab', async ({ authedPage }) => {
@@ -64,7 +64,7 @@ authenticatedTest.describe('Integrations — Payments Tab', () => {
 authenticatedTest.describe('Standalone Provider Config', () => {
   authenticatedTest('should show API key form when Configure clicked', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const configBtn = authedPage.getByRole('button', { name: /configure api|配置 API/i }).first();
 
@@ -84,7 +84,7 @@ authenticatedTest.describe('Standalone Provider Config', () => {
 
   authenticatedTest('secret visibility toggle should work', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const configBtn = authedPage.getByRole('button', { name: /configure api|配置 API/i }).first();
     if (await configBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -108,7 +108,7 @@ authenticatedTest.describe('Standalone Provider Config', () => {
 
   authenticatedTest('Save should be disabled without required fields', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const configBtn = authedPage.getByRole('button', { name: /configure api|配置 API/i }).first();
     if (await configBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -126,7 +126,7 @@ authenticatedTest.describe('Standalone Provider Config', () => {
 test.describe('Payment Selector — Fiat Methods', () => {
   test('checkout page should render payment section', async ({ page }) => {
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const paymentSection = page.getByText(/payment|支付|pay/i);
     await expect(paymentSection.first()).toBeVisible();
@@ -134,7 +134,7 @@ test.describe('Payment Selector — Fiat Methods', () => {
 
   test('mobile payment-method page should render', async ({ page }) => {
     await page.goto('/checkout/payment-method');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const header = page.getByText(/select payment|选择支付/i);
     await expect(header.first()).toBeVisible();
@@ -147,7 +147,7 @@ test.describe('Payment Selector — Fiat Methods', () => {
 
   test('mobile payment-method page should accept vendor param', async ({ page }) => {
     await page.goto('/checkout/payment-method?vendor=QmTestVendor123');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const selector = page.locator('[class*="Payment"]');
     expect(selector).toBeDefined();
@@ -155,7 +155,7 @@ test.describe('Payment Selector — Fiat Methods', () => {
 
   test('mobile payment-method page should accept fiatProvider param', async ({ page }) => {
     await page.goto('/checkout/payment-method?fiatProvider=stripe&vendor=QmTest');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const content = page.locator('main');
     await expect(content).toBeVisible();

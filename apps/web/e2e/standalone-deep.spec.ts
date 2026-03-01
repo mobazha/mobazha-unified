@@ -25,6 +25,20 @@ const CASDOOR_URL = process.env.E2E_CASDOOR_URL || 'http://localhost:18000';
 const TEST_USERNAME = process.env.E2E_TEST_USERNAME || 'testuser1';
 const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || '123';
 
+let standaloneAvailable = false;
+test.beforeAll(async ({ request }) => {
+  try {
+    const resp = await request.get(CADDY_BASE, { timeout: 5000 });
+    standaloneAvailable = resp.status() > 0;
+  } catch {
+    standaloneAvailable = false;
+  }
+});
+
+test.beforeEach(async () => {
+  test.skip(!standaloneAvailable, `Standalone store not available at ${CADDY_BASE}`);
+});
+
 test.describe('Standalone Store — API Dual-Channel', () => {
   test('Seller API (/v1/*) requires auth', async ({ request }) => {
     const resp = await request.get(`${CADDY_BASE}/v1/config`);
@@ -75,7 +89,7 @@ test.describe('Standalone Store — API Dual-Channel', () => {
 test.describe('Standalone Store — Seller BasicAuth Login (Browser)', () => {
   test('Login page renders through Caddy', async ({ page }) => {
     await page.goto(`${CADDY_BASE}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const passwordInput = page.locator('input[type="password"]').first();
     await expect(passwordInput).toBeVisible({ timeout: 30000 });
@@ -85,7 +99,7 @@ test.describe('Standalone Store — Seller BasicAuth Login (Browser)', () => {
 
   test('Seller login with correct password succeeds', async ({ page }) => {
     await page.goto(`${CADDY_BASE}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const passwordInput = page.locator('input[type="password"]').first();
     await passwordInput.waitFor({ state: 'visible', timeout: 30000 });
@@ -116,7 +130,7 @@ test.describe('Standalone Store — Seller BasicAuth Login (Browser)', () => {
 
   test('Seller login with wrong password fails', async ({ page }) => {
     await page.goto(`${CADDY_BASE}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const passwordInput = page.locator('input[type="password"]').first();
     await passwordInput.waitFor({ state: 'visible', timeout: 30000 });
@@ -148,7 +162,7 @@ test.describe('Standalone Store — Seller BasicAuth Login (Browser)', () => {
 test.describe('Standalone Store — Buyer OAuth (Browser)', () => {
   test('Buyer button opens Casdoor popup', async ({ page, context }) => {
     await page.goto(`${CADDY_BASE}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const buyerBtn = page
       .getByRole('button', { name: /Mobazha|buyer|买家/i })
@@ -173,7 +187,7 @@ test.describe('Standalone Store — Buyer OAuth (Browser)', () => {
 
   test('Buyer popup shows Casdoor login form', async ({ page, context }) => {
     await page.goto(`${CADDY_BASE}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const buyerBtn = page
       .getByRole('button', { name: /Mobazha|buyer|买家/i })
@@ -191,7 +205,7 @@ test.describe('Standalone Store — Buyer OAuth (Browser)', () => {
       return;
     }
 
-    await popup.waitForLoadState('networkidle').catch(() => {});
+    await popup.waitForLoadState('domcontentloaded').catch(() => {});
 
     const usernameInput = popup.locator('input[type="text"], input[name="username"]').first();
     const hasLoginForm = await usernameInput.isVisible({ timeout: 15000 }).catch(() => false);
@@ -212,7 +226,7 @@ test.describe('Standalone Store — Buyer OAuth (Browser)', () => {
 test.describe('Standalone Store — Page Navigation', () => {
   test('Homepage loads through Caddy', async ({ page }) => {
     await page.goto(`${CADDY_BASE}/`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/Mobazha/);
     await page.screenshot({ path: 'deep-nav-home.png', fullPage: true });
@@ -220,7 +234,7 @@ test.describe('Standalone Store — Page Navigation', () => {
 
   test('Login page accessible', async ({ page }) => {
     await page.goto(`${CADDY_BASE}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const passwordInput = page.locator('input[type="password"]');
     await expect(passwordInput.first()).toBeVisible({ timeout: 30000 });
@@ -228,7 +242,7 @@ test.describe('Standalone Store — Page Navigation', () => {
 
   test('Unknown routes return app shell (SPA fallback)', async ({ page }) => {
     await page.goto(`${CADDY_BASE}/some-nonexistent-page`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('body')).toBeVisible();
     await page.screenshot({ path: 'deep-nav-404.png', fullPage: true });

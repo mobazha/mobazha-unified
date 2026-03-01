@@ -24,7 +24,7 @@ test.describe('Mobile Listing Wizard', () => {
   test.describe('layout', () => {
     test('wizard renders as full-screen overlay without MobileNav conflict', async ({ page }) => {
       await page.goto('/listing/new');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const wizard = page.locator('[data-testid="mobile-listing-wizard"]');
       const hasWizard = await wizard.isVisible().catch(() => false);
@@ -44,7 +44,7 @@ test.describe('Mobile Listing Wizard', () => {
 
     test('Next button is always visible and clickable at bottom', async ({ page }) => {
       await page.goto('/listing/new');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const wizard = page.locator('[data-testid="mobile-listing-wizard"]');
       const hasWizard = await wizard.isVisible().catch(() => false);
@@ -63,7 +63,7 @@ test.describe('Mobile Listing Wizard', () => {
   test.describe('step navigation', () => {
     test('can navigate through all 4 steps', async ({ page }) => {
       await page.goto('/listing/new');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const wizard = page.locator('[data-testid="mobile-listing-wizard"]');
       const hasWizard = await wizard.isVisible().catch(() => false);
@@ -108,7 +108,7 @@ test.describe('Mobile Listing Wizard', () => {
 
     test('Cancel button on step 1 navigates away', async ({ page }) => {
       await page.goto('/listing/new');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const wizard = page.locator('[data-testid="mobile-listing-wizard"]');
       const hasWizard = await wizard.isVisible().catch(() => false);
@@ -131,7 +131,7 @@ test.describe('Mobile Listing Wizard', () => {
 
     test('Back button on step 2 returns to step 1', async ({ page }) => {
       await page.goto('/listing/new');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const wizard = page.locator('[data-testid="mobile-listing-wizard"]');
       const hasWizard = await wizard.isVisible().catch(() => false);
@@ -166,7 +166,7 @@ test.describe('Mobile Listing Wizard', () => {
   test.describe('MobileNav hidden on admin pages', () => {
     test('MobileNav is hidden on /admin/products', async ({ page }) => {
       await page.goto('/admin/products');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const mobileNav = page.locator('[data-testid="mobile-nav"]');
       await expect(mobileNav).not.toBeVisible();
@@ -174,7 +174,7 @@ test.describe('Mobile Listing Wizard', () => {
 
     test('MobileNav is hidden on /admin/settings', async ({ page }) => {
       await page.goto('/admin/settings');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const mobileNav = page.locator('[data-testid="mobile-nav"]');
       await expect(mobileNav).not.toBeVisible();
@@ -184,7 +184,7 @@ test.describe('Mobile Listing Wizard', () => {
   test.describe('admin mobile bottom tabs', () => {
     test('admin pages show AdminMobileBottomTabs', async ({ page }) => {
       await page.goto('/admin');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Look for admin-specific bottom tabs
       const dashboardTab = page.locator('[data-testid="mobile-tab-dashboard"]');
@@ -212,7 +212,7 @@ test.describe('Onboarding to Listing round-trip', () => {
 
   test('listing/new with from=onboarding shows wizard and can navigate back', async ({ page }) => {
     await page.goto('/listing/new?from=onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const wizard = page.locator('[data-testid="mobile-listing-wizard"]');
     const hasWizard = await wizard.isVisible().catch(() => false);

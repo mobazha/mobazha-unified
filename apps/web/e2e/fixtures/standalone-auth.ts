@@ -21,6 +21,7 @@ function basicAuthHeader(user: string, pass: string): string {
 
 /**
  * Read admin password from the standalone Docker container if not provided.
+ * Returns empty string if standalone is not available (tests should skip).
  */
 async function resolveAdminPassword(): Promise<string> {
   if (ADMIN_PASS) return ADMIN_PASS;
@@ -36,7 +37,7 @@ async function resolveAdminPassword(): Promise<string> {
     // container not running or password file not found
   }
 
-  throw new Error('E2E_STANDALONE_PASS not set and could not read from Docker container');
+  return '';
 }
 
 let cachedPassword: string | null = null;
@@ -88,27 +89,32 @@ export function createStandaloneApi(request: APIRequestContext, password: string
 
     async getProfile() {
       const resp = await apiGet('/v1/profiles');
-      return resp.json();
+      const body = await resp.json();
+      return body.data ?? body;
     },
 
     async getListingIndex() {
       const resp = await apiGet('/v1/listings/index');
-      return resp.json();
+      const body = await resp.json();
+      return body.data ?? body;
     },
 
     async getListings(peerID: string) {
       const resp = await request.get(`${STANDALONE_API}/v1/listings/${peerID}`);
-      return resp.json();
+      const body = await resp.json();
+      return body.data ?? body;
     },
 
     async uploadProductImage(base64Data: string, filename: string) {
       const resp = await apiPost('/v1/media/product-images', [{ image: base64Data, filename }]);
-      return resp.json();
+      const body = await resp.json();
+      return body.data ?? body;
     },
 
     async createListing(listing: Record<string, unknown>) {
       const resp = await apiPost('/v1/listings', listing);
-      return resp.json();
+      const body = await resp.json();
+      return body.data ?? body;
     },
 
     async deleteListing(slug: string) {
@@ -124,7 +130,7 @@ export type StandaloneApi = ReturnType<typeof createStandaloneApi>;
  */
 export async function performStandaloneLogin(page: Page, password: string): Promise<void> {
   await page.goto('/login');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const usernameInput = page
     .getByTestId('login-username')
@@ -148,7 +154,7 @@ export async function performStandaloneLogin(page: Page, password: string): Prom
   await loginBtn.click();
 
   await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 30000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }
 
 /* eslint-disable react-hooks/rules-of-hooks */
@@ -158,8 +164,12 @@ export const standaloneTest = base.extend<{
   api: StandaloneApi;
 }>({
   // eslint-disable-next-line no-empty-pattern
-  adminPassword: async ({}, use) => {
+  adminPassword: async ({}, use, testInfo) => {
     const pw = await getPassword();
+    if (!pw) {
+      testInfo.skip(true, 'Standalone store not available (no admin password)');
+      return;
+    }
     await use(pw);
   },
 

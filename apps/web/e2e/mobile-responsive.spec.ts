@@ -39,7 +39,7 @@ test.describe('Mobile Responsive - No Horizontal Scroll', () => {
   for (const path of pagesToTest) {
     test(`${path} should not have horizontal scroll`, async ({ page }) => {
       await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // 检查是否有水平滚动
       const hasHorizontalScroll = await page.evaluate(() => {
@@ -54,7 +54,7 @@ test.describe('Mobile Responsive - No Horizontal Scroll', () => {
 test.describe('Mobile Navigation', () => {
   test('should show mobile bottom navigation', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 检查移动端导航栏可见
     const mobileNav = page.locator('[data-testid="mobile-nav"]');
@@ -63,7 +63,7 @@ test.describe('Mobile Navigation', () => {
 
   test('mobile nav should have 5 items', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const navItems = page.locator('[data-testid="mobile-nav"] a');
     await expect(navItems).toHaveCount(5);
@@ -71,7 +71,7 @@ test.describe('Mobile Navigation', () => {
 
   test('should navigate using mobile nav', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 点击 Search 导航项
     const searchNavItem = page.locator('[data-testid="mobile-nav"]').getByText('Search');
@@ -82,7 +82,7 @@ test.describe('Mobile Navigation', () => {
 
   test('should highlight active nav item', async ({ page }) => {
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Orders 导航项应该有激活状态
     const ordersNavItem = page
@@ -98,7 +98,7 @@ test.describe('Mobile Navigation', () => {
 test.describe('Footer Visibility', () => {
   test('footer should be hidden on mobile', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const footer = page.locator('footer');
     await expect(footer).toBeHidden();
@@ -108,7 +108,7 @@ test.describe('Footer Visibility', () => {
 test.describe('Touch-Friendly Elements', () => {
   test('buttons should have minimum touch target size', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const buttons = page.locator('button:visible');
     const count = await buttons.count();
@@ -130,7 +130,7 @@ test.describe('Touch-Friendly Elements', () => {
 
   test('links should have adequate spacing', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 检查导航栏链接间距
     const navLinks = page.locator('[data-testid="mobile-nav"] a');
@@ -152,7 +152,7 @@ test.describe('Touch-Friendly Elements', () => {
 test.describe('Text Readability', () => {
   test('body text should be at least 14px', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const fontSize = await page.evaluate(() => {
       const body = document.querySelector('body');
@@ -164,7 +164,7 @@ test.describe('Text Readability', () => {
 
   test('headings should be larger than body text', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const h1Size = await page.evaluate(() => {
       const h1 = document.querySelector('h1');
@@ -185,7 +185,7 @@ test.describe('Text Readability', () => {
 test.describe('Form Elements', () => {
   test('input fields should be full width on mobile', async ({ page }) => {
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const searchInput = page.locator('input[type="text"], input[type="search"]').first();
 
@@ -202,7 +202,7 @@ test.describe('Form Elements', () => {
 
   test('input fields should not cause zoom on focus', async ({ page }) => {
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const input = page.locator('input').first();
 
@@ -220,7 +220,7 @@ test.describe('Form Elements', () => {
 test.describe('Layout Integrity', () => {
   test('cards should stack vertically on mobile', async ({ page }) => {
     await page.goto('/marketplace');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const cards = page
       .locator('[data-testid="marketplace-card"], .marketplace-card, article')
@@ -239,7 +239,7 @@ test.describe('Layout Integrity', () => {
 
   test('modals should fit within viewport', async ({ page }) => {
     await page.goto('/settings/access-requests');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 点击 Review 按钮打开模态框
     const reviewButton = page.locator('button').filter({ hasText: 'Review' }).first();
@@ -269,7 +269,7 @@ test.describe('Layout Integrity', () => {
 test.describe('Safe Area Support', () => {
   test('mobile nav should have safe area padding', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const mobileNav = page.locator('[data-testid="mobile-nav"]');
 

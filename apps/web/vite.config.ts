@@ -150,6 +150,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve(__dirname, './src/compat/navigation.tsx'),
         },
         { find: 'next/image', replacement: path.resolve(__dirname, './src/compat/image.tsx') },
+        {
+          find: 'next/font/google',
+          replacement: path.resolve(__dirname, './src/compat/font-google.ts'),
+        },
       ],
     },
     server: {

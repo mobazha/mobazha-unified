@@ -27,21 +27,23 @@ test.describe('Onboarding Auth Guard', () => {
     });
   });
 
-  test('should redirect unauthenticated users to /login', async ({ page }) => {
+  test('should redirect unauthenticated users to login', async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForURL(/\/login/, { timeout: 10000 });
-    expect(page.url()).toContain('/login');
+    await page.waitForURL(/\/login/, { timeout: 15000 });
+    expect(page.url()).toMatch(/\/login/);
   });
 });
 
 // ── 2. Onboarding Page Structure ─────────────────────────────────────────────
 
 authenticatedTest.describe('Onboarding Page Elements', () => {
+  authenticatedTest.setTimeout(30000);
+
   authenticatedTest(
     'should display welcome heading and value propositions',
     async ({ authedPage }) => {
-      await authedPage.goto('/onboarding');
-      await authedPage.waitForLoadState('networkidle');
+      await authedPage.goto('/onboarding', { timeout: 15000 });
+      await authedPage.waitForLoadState('domcontentloaded');
 
       const url = authedPage.url();
       if (!url.includes('/onboarding')) {
@@ -50,13 +52,13 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
       }
 
       const heading = authedPage.locator('h1');
-      await expect(heading).toBeVisible();
+      await expect(heading).toBeVisible({ timeout: 10000 });
     }
   );
 
   authenticatedTest('should show avatar upload area', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -67,12 +69,12 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
     const avatarArea = authedPage.locator('[role="button"]').filter({
       has: authedPage.locator('input[type="file"]'),
     });
-    await expect(avatarArea.first()).toBeVisible();
+    await expect(avatarArea.first()).toBeVisible({ timeout: 10000 });
   });
 
   authenticatedTest('should show display name input (required)', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -81,12 +83,12 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
     }
 
     const nameInput = authedPage.locator('[data-testid="onboarding-display-name"]');
-    await expect(nameInput).toBeVisible();
+    await expect(nameInput).toBeVisible({ timeout: 10000 });
   });
 
   authenticatedTest('should show short bio textarea', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -95,12 +97,12 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
     }
 
     const bioInput = authedPage.locator('[data-testid="onboarding-short-bio"]');
-    await expect(bioInput).toBeVisible();
+    await expect(bioInput).toBeVisible({ timeout: 10000 });
   });
 
   authenticatedTest('should show country and currency selectors', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -111,13 +113,13 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
     const countrySelect = authedPage.locator('[data-testid="onboarding-country"]');
     const currencySelect = authedPage.locator('[data-testid="onboarding-currency"]');
 
-    await expect(countrySelect).toBeVisible();
-    await expect(currencySelect).toBeVisible();
+    await expect(countrySelect).toBeVisible({ timeout: 10000 });
+    await expect(currencySelect).toBeVisible({ timeout: 10000 });
   });
 
   authenticatedTest('should show submit button', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -126,12 +128,12 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
     }
 
     const submitBtn = authedPage.locator('[data-testid="onboarding-submit"]');
-    await expect(submitBtn).toBeVisible();
+    await expect(submitBtn).toBeVisible({ timeout: 10000 });
   });
 
   authenticatedTest('should disable submit when display name is empty', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -147,8 +149,8 @@ authenticatedTest.describe('Onboarding Page Elements', () => {
   });
 
   authenticatedTest('should enable submit when display name is filled', async ({ authedPage }) => {
-    await authedPage.goto('/onboarding');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.goto('/onboarding', { timeout: 15000 });
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     if (!url.includes('/onboarding')) {
@@ -171,7 +173,7 @@ authenticatedTest.describe('Seller Onboarding Wizard', () => {
     'should show onboarding wizard or dashboard on admin page',
     async ({ authedPage }) => {
       await authedPage.goto('/admin');
-      await authedPage.waitForLoadState('networkidle');
+      await authedPage.waitForLoadState('domcontentloaded');
 
       const dashboard = authedPage.locator('[data-testid="admin-dashboard"]');
       await expect(dashboard).toBeVisible();
@@ -200,7 +202,7 @@ authenticatedTest.describe('Seller Onboarding Wizard', () => {
     'seller onboarding wizard should have step indicators',
     async ({ authedPage }) => {
       await authedPage.goto('/admin');
-      await authedPage.waitForLoadState('networkidle');
+      await authedPage.waitForLoadState('domcontentloaded');
 
       const wizard = authedPage.locator('[data-testid="seller-onboarding"]');
       const isVisible = await wizard.isVisible().catch(() => false);

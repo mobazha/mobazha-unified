@@ -41,7 +41,7 @@ base.describe('ShareButton', () => {
 
   base('product page shows share button', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const shareBtn = page.getByTestId('share-button');
     await expect(shareBtn).toBeVisible({ timeout: 15000 });
@@ -51,7 +51,7 @@ base.describe('ShareButton', () => {
 
   base('share dropdown shows copy/twitter/telegram options', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const shareBtn = page.getByTestId('share-button');
     await shareBtn.waitFor({ state: 'visible', timeout: 15000 });
@@ -71,7 +71,7 @@ base.describe('ShareButton', () => {
 
   base('share button touch target >= 44px', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const shareBtn = page.getByTestId('share-button');
     await shareBtn.waitFor({ state: 'visible', timeout: 15000 });
@@ -92,7 +92,7 @@ base.describe('ReviewList', () => {
 
   base('product page shows review section', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // ReviewList or rating summary should be visible
     const reviewSection = page.getByTestId('review-list');
@@ -103,7 +103,7 @@ base.describe('ReviewList', () => {
 
   base('rating distribution chart renders', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const distribution = page.getByTestId('rating-distribution');
     if (await distribution.isVisible().catch(() => false)) {
@@ -126,13 +126,13 @@ base.describe('EscrowStatusBar — Mobile', () => {
   base('escrow bar renders on mobile order detail', async ({ page }) => {
     // Navigate to orders page (may require auth)
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // If there are orders, click the first one
     const orderCard = page.locator('[data-testid="order-card"], a[href*="/orders/"]').first();
     if (await orderCard.isVisible().catch(() => false)) {
       await orderCard.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const escrowBar = page.getByTestId('escrow-status-bar');
       if (await escrowBar.isVisible().catch(() => false)) {
@@ -157,13 +157,13 @@ standaloneTest.describe('WriteReviewDialog', () => {
 
   standaloneTest('review dialog opens from order detail', async ({ authedPage: page }) => {
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Find a completed order that can be reviewed
     const orderCard = page.locator('[data-testid="order-card"], a[href*="/orders/"]').first();
     if (await orderCard.isVisible().catch(() => false)) {
       await orderCard.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Look for "Confirm Receipt" or "Complete Order" button
       const confirmBtn = page
@@ -210,7 +210,7 @@ base.describe('SEO Metadata', () => {
 
   base('product page has canonical URL with store.mobazha.org', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const canonical = page.locator('link[rel="canonical"]');
     if ((await canonical.count()) > 0) {
@@ -225,7 +225,7 @@ base.describe('SEO Metadata', () => {
 
   base('product page has OG tags', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const ogTitle = page.locator('meta[property="og:title"]');
     const ogDesc = page.locator('meta[property="og:description"]');
@@ -272,7 +272,7 @@ base.describe('Trust & Protection', () => {
 
   base('product page shows buyer protection banner', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Look for buyer protection / trust indicators
     const trustIndicator = page.getByText(/protected|保护|secure|安全/i).first();
@@ -286,13 +286,13 @@ base.describe('Trust & Protection', () => {
   base('store page shows seller trust badge', async ({ page }) => {
     // Get peer ID from any product page first
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Find store link
     const storeLink = page.locator('a[href*="/store/"]').first();
     if (await storeLink.isVisible().catch(() => false)) {
       await storeLink.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const trustBadge = page.getByTestId('seller-trust-badge');
       if (await trustBadge.isVisible().catch(() => false)) {
@@ -316,7 +316,7 @@ base.describe('Mobile — PG Components', () => {
 
   base('mobile: share button accessible', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const shareBtn = page.getByTestId('share-button');
     await expect(shareBtn).toBeVisible({ timeout: 15000 });
@@ -334,7 +334,7 @@ base.describe('Mobile — PG Components', () => {
 
   base('mobile: no horizontal scroll on product page', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     const viewportWidth = await page.evaluate(() => window.innerWidth);
@@ -343,7 +343,7 @@ base.describe('Mobile — PG Components', () => {
 
   base('mobile: review section renders without overflow', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Scroll to review section
     const reviewSection = page.getByTestId('review-list');
@@ -370,7 +370,7 @@ base.describe('404 Page', () => {
 
   base('non-existent page shows localized 404', async ({ page }) => {
     await page.goto('/this-page-does-not-exist-12345');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should show 404 content (not a blank page)
     const bodyText = await page.textContent('body');

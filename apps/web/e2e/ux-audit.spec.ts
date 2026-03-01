@@ -30,7 +30,7 @@ async function hideDevOverlays(page: Page): Promise<void> {
 }
 
 async function waitForPageStable(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(1200);
   await hideDevOverlays(page);
   await page.waitForTimeout(300);

@@ -24,7 +24,7 @@ test.describe('Moderators Page', () => {
 
   test('should display moderator cards or list items', async ({ page }) => {
     // Wait for content to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check for moderator cards or loading state
     const content = page.locator('[data-testid="moderator-list"], .moderator-card, article');
@@ -45,7 +45,7 @@ test.describe('Moderators Page', () => {
   });
 
   test('should navigate to moderator detail page', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Click on first moderator card if available
     const moderatorCard = page
@@ -65,7 +65,7 @@ test.describe('Moderator Detail Page', () => {
     // Navigate to a specific moderator (using mock ID)
     await page.goto('/moderators/mod1');
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should show moderator info or 404
     const content = page.locator('main');
@@ -74,7 +74,7 @@ test.describe('Moderator Detail Page', () => {
 
   test('should show moderator stats', async ({ page }) => {
     await page.goto('/moderators/mod1');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Look for rating, disputes handled, etc.
     const statsSection = page.locator('[data-testid="moderator-stats"], .stats, .rating');
@@ -86,7 +86,7 @@ test.describe('Moderator Detail Page', () => {
 
   test('should have contact/select button', async ({ page }) => {
     await page.goto('/moderators/mod1');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Look for action buttons
     const actionButton = page.locator('button').filter({ hasText: /select|contact|message/i });

@@ -21,7 +21,7 @@ test.describe('Checkout Page', () => {
   test('should render checkout page when authenticated', async ({ page }) => {
     await performCasdoorLogin(page);
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/checkout');
     expect(page.url()).not.toContain('/login');
@@ -35,7 +35,7 @@ test.describe('Checkout Page', () => {
   test('should show order notes input', async ({ page }) => {
     await performCasdoorLogin(page);
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const notes = page.locator('[data-testid="checkout-order-notes"]');
     const notesVisible = await notes.isVisible().catch(() => false);
@@ -45,7 +45,7 @@ test.describe('Checkout Page', () => {
   test('should show submit button', async ({ page }) => {
     await performCasdoorLogin(page);
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const submitBtn = page.locator(
       '[data-testid="checkout-submit-btn"], [data-testid="checkout-submit-btn-mobile"]'
@@ -64,10 +64,8 @@ test.describe('Checkout Page - Auth Guard', () => {
     });
 
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    expect(page.url()).toContain('/login');
+    await page.waitForURL(/\/login/, { timeout: 15000 });
+    expect(page.url()).toMatch(/\/login/);
   });
 });
 
@@ -79,7 +77,7 @@ test.describe('Cart Page', () => {
   test('should display cart page when authenticated', async ({ page }) => {
     await performCasdoorLogin(page);
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/cart');
     expect(page.url()).not.toContain('/login');
@@ -91,7 +89,7 @@ test.describe('Cart Page', () => {
   test('should show cart content or empty state', async ({ page }) => {
     await performCasdoorLogin(page);
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const main = page.locator('main');
     await expect(main.first()).toBeVisible();
@@ -100,7 +98,7 @@ test.describe('Cart Page', () => {
   test('should have checkout button or empty state', async ({ page }) => {
     await performCasdoorLogin(page);
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const checkoutLink = page.locator('a, button').filter({ hasText: /checkout|结账/i });
     const emptyState = page.getByText(/empty|no items|没有商品|购物车为空/i);
@@ -127,17 +125,15 @@ test.describe('Cart Page - Auth Guard', () => {
     });
 
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    expect(page.url()).toContain('/login');
+    await page.waitForURL(/\/login/, { timeout: 15000 });
+    expect(page.url()).toMatch(/\/login/);
   });
 });
 
 test.describe('Order Confirmation', () => {
   test('should display confirmation page with order details', async ({ page }) => {
     await page.goto('/checkout/confirmation?orderId=test-order-id&slug=test-slug');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const main = page.locator('main, body');
     await expect(main.first()).toBeVisible();

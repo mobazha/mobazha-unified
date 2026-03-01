@@ -157,7 +157,8 @@ async function tryCreateListings(request: APIRequestContext): Promise<string[]> 
           data: payload,
         });
         const body = await resp.json();
-        if (body?.slug) slugs.push(body.slug);
+        const slug = body?.data?.slug || body?.slug;
+        if (slug) slugs.push(slug);
       } catch (e) {
         console.warn('Listing creation failed:', e);
       }

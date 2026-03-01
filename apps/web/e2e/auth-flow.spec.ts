@@ -40,7 +40,7 @@ test.describe('Casdoor OAuth Login', () => {
 
     // Navigate to a page that shows user info
     await page.goto('/me');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // The page should show user information, not a login prompt
     await page.screenshot({ path: 'e2e-screenshots/auth-user-info.png', fullPage: true });
@@ -57,7 +57,7 @@ test.describe('Session Persistence', () => {
 
     // Navigate to a protected page
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verify we're on settings (not redirected to login)
     const urlBeforeRefresh = page.url();
@@ -65,7 +65,7 @@ test.describe('Session Persistence', () => {
 
     // Refresh the page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should still be on settings
     const urlAfterRefresh = page.url();
@@ -80,7 +80,7 @@ test.describe('Session Persistence', () => {
 
     for (const pagePath of protectedPages) {
       await page.goto(pagePath);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Should NOT be redirected to login
       const url = page.url();
@@ -112,9 +112,12 @@ test.describe('Auth Guard Redirect', () => {
 
     // After login, should be redirected to the original target page
     // (This depends on the frontend handling the redirect param after OAuth callback)
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    await page.screenshot({ path: 'e2e-screenshots/auth-redirect-after-login.png', fullPage: true });
+    await page.screenshot({
+      path: 'e2e-screenshots/auth-redirect-after-login.png',
+      fullPage: true,
+    });
   });
 });
 
@@ -144,7 +147,7 @@ test.describe('Session Expired', () => {
 
     // Navigate to a protected page - should trigger session expired handling
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should either show session expired dialog or redirect to login
     const url = page.url();
@@ -168,7 +171,7 @@ authenticatedTest.describe('Authenticated Fixture', () => {
 
   authenticatedTest('should access protected pages via fixture', async ({ authedPage }) => {
     await authedPage.goto('/settings');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const url = authedPage.url();
     expect(url).toContain('/settings');

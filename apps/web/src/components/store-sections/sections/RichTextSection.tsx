@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import type { RichTextSectionProps } from '@mobazha/core';
-import DOMPurify from 'dompurify';
+import { sanitizeRichHtml } from '@mobazha/core';
 
 const WIDTH_CLASS = {
   sm: 'max-w-xl',
@@ -18,44 +18,11 @@ const WIDTH_CLASS = {
   full: 'max-w-full',
 } as const;
 
-const PURIFY_CONFIG = {
-  ALLOWED_TAGS: [
-    'p',
-    'br',
-    'strong',
-    'em',
-    'u',
-    's',
-    'a',
-    'ul',
-    'ol',
-    'li',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'blockquote',
-    'pre',
-    'code',
-    'img',
-    'table',
-    'thead',
-    'tbody',
-    'tr',
-    'th',
-    'td',
-    'hr',
-    'span',
-    'div',
-  ],
-  ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'width', 'height'],
-};
-
 export function RichTextSection({ content, maxWidth }: RichTextSectionProps) {
   const [sanitized, setSanitized] = useState('');
 
   useEffect(() => {
-    setSanitized(DOMPurify.sanitize(content, PURIFY_CONFIG));
+    setSanitized(sanitizeRichHtml(content));
   }, [content]);
 
   if (!content.trim()) return null;

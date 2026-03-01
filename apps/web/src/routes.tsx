@@ -289,6 +289,34 @@ const routes: RouteObject[] = [
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
       {
+        path: 'settings/general',
+        element: lazyPage(() => import('./app/admin/settings/general/page')),
+      },
+      {
+        path: 'settings/profile',
+        element: lazyPage(() => import('./app/admin/settings/profile/page')),
+      },
+      {
+        path: 'settings/store',
+        element: lazyPage(() => import('./app/admin/settings/store/page')),
+      },
+      {
+        path: 'settings/store/branding',
+        element: lazyPage(() => import('./app/admin/settings/store/branding/page')),
+      },
+      {
+        path: 'settings/shipping',
+        element: lazyPage(() => import('./app/admin/settings/shipping/page')),
+      },
+      {
+        path: 'settings/policies',
+        element: lazyPage(() => import('./app/admin/settings/policies/page')),
+      },
+      {
+        path: 'settings/moderators',
+        element: lazyPage(() => import('./app/admin/settings/moderators/page')),
+      },
+      {
         path: 'settings/integrations',
         element: lazyPage(() => import('./app/admin/settings/integrations/page')),
       },

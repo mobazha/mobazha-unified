@@ -6,7 +6,7 @@
 import DOMPurify from 'isomorphic-dompurify';
 import type { Config } from 'dompurify';
 
-// 配置允许的标签和属性
+// 基础标签：用于商品描述、用户简介等一般 HTML 内容
 const SANITIZE_CONFIG: Config = {
   ALLOWED_TAGS: [
     'p',
@@ -33,7 +33,24 @@ const SANITIZE_CONFIG: Config = {
     'div',
   ],
   ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
-  // 为所有链接添加安全属性
+  ADD_ATTR: ['target', 'rel'],
+};
+
+// 扩展标签：用于 Store Section 富文本（含图片、表格、删除线等）
+const RICH_HTML_CONFIG: Config = {
+  ALLOWED_TAGS: [
+    ...SANITIZE_CONFIG.ALLOWED_TAGS!,
+    's',
+    'img',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'hr',
+  ],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'width', 'height'],
   ADD_ATTR: ['target', 'rel'],
 };
 
@@ -72,6 +89,14 @@ export function decodeHtmlEntities(text: string): string {
  */
 export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+}
+
+/**
+ * 富文本 HTML 消毒函数
+ * 允许更多标签（img、table、s 等），用于 Store Section 富文本编辑器内容
+ */
+export function sanitizeRichHtml(html: string): string {
+  return DOMPurify.sanitize(html, RICH_HTML_CONFIG);
 }
 
 /**

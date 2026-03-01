@@ -14,7 +14,7 @@ import { loginAndSetup } from './fixtures/auth';
 const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || '';
 
 async function waitForPageStable(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(500);
 }
 
@@ -319,7 +319,7 @@ test.describe('Listing Page - Profile Selector', () => {
 
     if (hasLink) {
       await settingsLink.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       expect(page.url()).toContain('/settings/store/shipping');
     }
   });

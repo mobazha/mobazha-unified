@@ -5,6 +5,7 @@
 
 import { getEnvConfig } from '../../config/env';
 import { getHostingUrl } from '../api/config';
+import { HOSTING_API } from '../../config/apiPaths';
 import { getCasdoorThemeParams } from '../../theme/casdoorTheme';
 
 export interface CasdoorUser {
@@ -232,8 +233,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
       sessionStorage.removeItem('casdoor_state');
     }
 
-    // 调用后端交换 token（/api/signin 不需要 /v1 前缀）
-    const url = `${baseUrl}/api/signin?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+    const url = `${baseUrl}${HOSTING_API.AUTH_SIGNIN}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
 
     console.log('🔑 Exchanging code for token...');
     const response = await fetch(url, {

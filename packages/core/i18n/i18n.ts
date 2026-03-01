@@ -102,14 +102,20 @@ export function getTranslation(
     fallbackValue = (fallbackValue as Record<string, unknown>)?.[k];
   }
 
-  // 获取字符串值
+  // 获取字符串值，支持 defaultValue 作为安全网
+  const defaultValue = params && 'defaultValue' in params ? String(params.defaultValue) : undefined;
   let result = (
-    typeof value === 'string' ? value : typeof fallbackValue === 'string' ? fallbackValue : key
+    typeof value === 'string'
+      ? value
+      : typeof fallbackValue === 'string'
+        ? fallbackValue
+        : (defaultValue ?? key)
   ) as string;
 
-  // 处理插值参数
+  // 处理插值参数（跳过 defaultValue）
   if (params) {
     Object.entries(params).forEach(([paramKey, paramValue]) => {
+      if (paramKey === 'defaultValue') return;
       result = result.replace(new RegExp(`{{${paramKey}}}`, 'g'), String(paramValue));
     });
   }

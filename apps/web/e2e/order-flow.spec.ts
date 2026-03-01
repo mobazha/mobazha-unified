@@ -23,7 +23,7 @@ test.describe('Cart', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/cart');
     expect(page.url()).not.toContain('/login');
@@ -39,12 +39,10 @@ test.describe('Cart', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Look for empty cart indication
-    const emptyText = page
-      .getByText(/empty|no items|没有商品|购物车为空|cart is empty/i)
-      .first();
+    const emptyText = page.getByText(/empty|no items|没有商品|购物车为空|cart is empty/i).first();
     const isEmpty = await emptyText.isVisible().catch(() => false);
 
     if (isEmpty) {
@@ -62,7 +60,7 @@ test.describe('Orders', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/orders');
     expect(page.url()).not.toContain('/login');
@@ -74,25 +72,26 @@ test.describe('Orders', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check for order items or empty state
-    const orderCard = page.locator('[data-testid="order-card"]').or(page.locator('.order-card')).first();
+    const orderCard = page
+      .locator('[data-testid="order-card"]')
+      .or(page.locator('.order-card'))
+      .first();
     const hasOrders = await orderCard.isVisible().catch(() => false);
 
     if (hasOrders) {
       // Click on the first order to view details
       await orderCard.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Should navigate to order detail
       expect(page.url()).toMatch(/\/orders\/.+/);
       await page.screenshot({ path: 'e2e-screenshots/order-detail.png', fullPage: true });
     } else {
       // Empty state
-      const emptyText = page
-        .getByText(/no orders|没有订单|empty/i)
-        .first();
+      const emptyText = page.getByText(/no orders|没有订单|empty/i).first();
       const showsEmpty = await emptyText.isVisible().catch(() => false);
       test.info().annotations.push({
         type: 'note',
@@ -111,7 +110,7 @@ test.describe('Checkout Flow', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Checkout page should load (may redirect to cart if empty)
     expect(page.url()).not.toContain('/login');
@@ -129,7 +128,7 @@ test.describe('Wallet', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/wallet');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/wallet');
     expect(page.url()).not.toContain('/login');
@@ -147,7 +146,7 @@ test.describe('Notifications', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/notifications');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/notifications');
     expect(page.url()).not.toContain('/login');
