@@ -5,6 +5,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { profileApi } from '../services/api';
+import { queryKeys } from './queryKeys';
+import { formatQueryError } from './queryUtils';
 
 /**
  * 获取用户/店铺资料 (React Query 版本)
@@ -22,7 +24,7 @@ export function useProfile(peerID: string | null) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['profile', peerID],
+    queryKey: queryKeys.profiles.detail(peerID!),
     queryFn: () => profileApi.getProfile(peerID!),
     enabled: !!peerID,
     staleTime: 2 * 60 * 1000,
@@ -31,7 +33,7 @@ export function useProfile(peerID: string | null) {
   return {
     profile,
     isLoading,
-    error: error ? (error instanceof Error ? error.message : '获取资料失败') : null,
+    error: formatQueryError(error),
     refetch,
   };
 }

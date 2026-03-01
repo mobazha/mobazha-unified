@@ -11,7 +11,7 @@ import {
   type RwaTradeMode,
 } from '@/components/ProductCard';
 import { useProductModal } from '@/hooks';
-import { useUserStore, useVerifiedModerators } from '@mobazha/core';
+import { useUserStore, useVerifiedModerators, usePrefetchProduct } from '@mobazha/core';
 
 interface Product {
   id: string;
@@ -62,6 +62,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   const { openProduct, isMobile } = useProductModal();
   const profile = useUserStore(state => state.profile);
   const { hasVerifiedMod } = useVerifiedModerators();
+  const prefetch = usePrefetchProduct();
 
   // 处理商品点击
   const handleProductClick = useCallback(
@@ -156,6 +157,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       rwaTradeMode={product.rwaTradeMode}
                       hasVerifiedModerator={hasVerifiedMod(product.moderators)}
                       isOwnListing={isOwnListing}
+                      onPrefetch={() => prefetch(product.slug, product.vendorPeerID)}
                       onReport={() => handleReport(product)}
                       onBlock={() => handleBlock(product)}
                     />

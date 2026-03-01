@@ -1,9 +1,13 @@
 /**
- * 订单相关 Hooks
+ * 订单相关 Hooks — React Query 版本
+ *
+ * READ ops → useQuery + 手动分页
+ * WRITE ops → useMutation + cache invalidation
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { OrderListItem, Order } from '../types';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { OrderListItem } from '../types';
 import {
   ordersApi,
   type PurchaseData,
@@ -11,10 +15,9 @@ import {
   type PurchaseResult,
 } from '../services/api/orders';
 import { useNotificationStore, selectOrderRefreshTrigger } from '../stores/notificationStore';
+import { queryKeys } from './queryKeys';
+import { formatQueryError } from './queryUtils';
 
-/**
- * 订单列表过滤选项
- */
 export interface OrdersFilter {
   states?: string[];
   searchTerm?: string;
@@ -22,310 +25,245 @@ export interface OrdersFilter {
   limit?: number;
 }
 
-/** 默认每页加载数量 */
 const DEFAULT_PAGE_SIZE = 20;
 
-/**
- * 获取购买订单列表（支持分页）
- */
+function applyClientFilter(orders: OrderListItem[], filter?: OrdersFilter): OrderListItem[] {
+  let result = orders;
+  if (filter?.states && filter.states.length > 0) {
+    result = result.filter(o => filter.states?.includes(o.state));
+  }
+  if (filter?.searchTerm) {
+    const term = filter.searchTerm.toLowerCase();
+    result = result.filter(
+      o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
+    );
+  }
+  return result;
+}
+
+// ─── Internal: shared order list logic for purchases/sales ───
+
+type OrderListFetcher = (limit: string, cursor: string) => Promise<OrderListItem[]>;
+
+function useOrderList(
+  type: 'purchases' | 'sales',
+  fetcher: OrderListFetcher,
+  filter?: OrdersFilter
+) {
+  const pageSize = filter?.limit || DEFAULT_PAGE_SIZE;
+  const filterKey = JSON.stringify({ states: filter?.states, search: filter?.searchTerm });
+  const queryClient = useQueryClient();
+
+  const [extraOrders, setExtraOrders] = useState<OrderListItem[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const cursorRef = useRef('');
+
+  const queryKey =
+    type === 'purchases'
+      ? queryKeys.orders.purchases(filterKey)
+      : queryKeys.orders.sales(filterKey);
+
+  const {
+    data: firstPage,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: () => fetcher(String(pageSize), ''),
+    staleTime: 30 * 1000,
+  });
+
+  // Reset pagination state when firstPage changes (initial load or refetch)
+  useEffect(() => {
+    if (firstPage) {
+      setExtraOrders([]);
+      setHasMore(firstPage.length >= pageSize);
+      cursorRef.current = firstPage[firstPage.length - 1]?.orderID || '';
+    }
+  }, [firstPage, pageSize]);
+
+  const orders = useMemo(() => {
+    const allRaw = [...(firstPage ?? []), ...extraOrders];
+    return applyClientFilter(allRaw, filter);
+  }, [firstPage, extraOrders, filter]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore || !cursorRef.current) return;
+
+    setIsLoadingMore(true);
+    try {
+      const result = await fetcher(String(pageSize), cursorRef.current);
+
+      if (result.length === 0) {
+        setHasMore(false);
+      } else {
+        setExtraOrders(prev => [...prev, ...result]);
+        setHasMore(result.length >= pageSize);
+        cursorRef.current = result[result.length - 1]?.orderID || '';
+      }
+    } catch {
+      // loadMore errors are non-critical
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, pageSize, fetcher]);
+
+  // WebSocket notification → invalidate cache
+  const refreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
+  const prevTrigger = useRef(refreshTrigger);
+  useEffect(() => {
+    if (prevTrigger.current !== refreshTrigger) {
+      prevTrigger.current = refreshTrigger;
+      const baseKey =
+        type === 'purchases' ? queryKeys.orders.purchases() : queryKeys.orders.sales();
+      queryClient.invalidateQueries({ queryKey: baseKey });
+    }
+  }, [refreshTrigger, queryClient, type]);
+
+  return {
+    orders,
+    isLoading,
+    isLoadingMore,
+    error: formatQueryError(error),
+    hasMore,
+    refetch,
+    loadMore,
+  };
+}
+
+// ─── Public hooks ───
+
 export function usePurchases(filter?: OrdersFilter) {
-  const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const pageSize = filter?.limit || DEFAULT_PAGE_SIZE;
-
-  // 初始加载
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await ordersApi.getPurchases(String(pageSize), '');
-      // 客户端过滤（可选）
-      let filteredOrders = result;
-      if (filter?.states && filter.states.length > 0) {
-        filteredOrders = filteredOrders.filter(o => filter.states?.includes(o.state));
-      }
-      if (filter?.searchTerm) {
-        const term = filter.searchTerm.toLowerCase();
-        filteredOrders = filteredOrders.filter(
-          o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
-        );
-      }
-      setOrders(filteredOrders);
-      setHasMore(result.length >= pageSize);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取订单失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filter?.states, filter?.searchTerm, pageSize]);
-
-  // 加载更多
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore || orders.length === 0) return;
-
-    setIsLoadingMore(true);
-    try {
-      const lastOrderId = orders[orders.length - 1]?.orderID || '';
-      const result = await ordersApi.getPurchases(String(pageSize), lastOrderId);
-
-      if (result.length === 0) {
-        setHasMore(false);
-      } else {
-        // 客户端过滤
-        let filteredOrders = result;
-        if (filter?.states && filter.states.length > 0) {
-          filteredOrders = filteredOrders.filter(o => filter.states?.includes(o.state));
-        }
-        if (filter?.searchTerm) {
-          const term = filter.searchTerm.toLowerCase();
-          filteredOrders = filteredOrders.filter(
-            o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
-          );
-        }
-        setOrders(prev => [...prev, ...filteredOrders]);
-        setHasMore(result.length >= pageSize);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载更多订单失败');
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, hasMore, orders, pageSize, filter?.states, filter?.searchTerm]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  const orderRefreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
-  const initialMount = useRef(true);
-  useEffect(() => {
-    if (initialMount.current) {
-      initialMount.current = false;
-      return;
-    }
-    refetch();
-  }, [orderRefreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return { orders, isLoading, isLoadingMore, error, hasMore, refetch, loadMore };
+  return useOrderList('purchases', ordersApi.getPurchases, filter);
 }
 
-/**
- * 获取销售订单列表（支持分页）
- */
 export function useSales(filter?: OrdersFilter) {
-  const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const pageSize = filter?.limit || DEFAULT_PAGE_SIZE;
-
-  // 初始加载
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await ordersApi.getSales(String(pageSize), '');
-      // 客户端过滤
-      let filteredOrders = result;
-      if (filter?.states && filter.states.length > 0) {
-        filteredOrders = filteredOrders.filter(o => filter.states?.includes(o.state));
-      }
-      if (filter?.searchTerm) {
-        const term = filter.searchTerm.toLowerCase();
-        filteredOrders = filteredOrders.filter(
-          o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
-        );
-      }
-      setOrders(filteredOrders);
-      setHasMore(result.length >= pageSize);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取订单失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filter?.states, filter?.searchTerm, pageSize]);
-
-  // 加载更多
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore || orders.length === 0) return;
-
-    setIsLoadingMore(true);
-    try {
-      const lastOrderId = orders[orders.length - 1]?.orderID || '';
-      const result = await ordersApi.getSales(String(pageSize), lastOrderId);
-
-      if (result.length === 0) {
-        setHasMore(false);
-      } else {
-        // 客户端过滤
-        let filteredOrders = result;
-        if (filter?.states && filter.states.length > 0) {
-          filteredOrders = filteredOrders.filter(o => filter.states?.includes(o.state));
-        }
-        if (filter?.searchTerm) {
-          const term = filter.searchTerm.toLowerCase();
-          filteredOrders = filteredOrders.filter(
-            o => o.title.toLowerCase().includes(term) || o.orderID.toLowerCase().includes(term)
-          );
-        }
-        setOrders(prev => [...prev, ...filteredOrders]);
-        setHasMore(result.length >= pageSize);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载更多订单失败');
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, hasMore, orders, pageSize, filter?.states, filter?.searchTerm]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  const salesRefreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
-  const salesInitialMount = useRef(true);
-  useEffect(() => {
-    if (salesInitialMount.current) {
-      salesInitialMount.current = false;
-      return;
-    }
-    refetch();
-  }, [salesRefreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return { orders, isLoading, isLoadingMore, error, hasMore, refetch, loadMore };
+  return useOrderList('sales', ordersApi.getSales, filter);
 }
 
-/**
- * 获取订单详情
- */
 export function useOrder(orderId: string | null) {
-  const [order, setOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const refetch = useCallback(async () => {
-    if (!orderId) return;
+  const {
+    data: order,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.orders.detail(orderId!),
+    queryFn: () => ordersApi.getOrderDetails(orderId!),
+    enabled: !!orderId,
+    staleTime: 30 * 1000,
+  });
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await ordersApi.getOrderDetails(orderId);
-      setOrder(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取订单详情失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [orderId]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
+  // WebSocket notification → invalidate this order
   const detailRefreshTrigger = useNotificationStore(selectOrderRefreshTrigger);
-  const detailInitialMount = useRef(true);
+  const prevDetailTrigger = useRef(detailRefreshTrigger);
   useEffect(() => {
-    if (detailInitialMount.current) {
-      detailInitialMount.current = false;
-      return;
+    if (prevDetailTrigger.current !== detailRefreshTrigger) {
+      prevDetailTrigger.current = detailRefreshTrigger;
+      if (orderId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      }
     }
-    refetch();
-  }, [detailRefreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [detailRefreshTrigger, orderId, queryClient]);
 
-  // 标记为已读
   const markAsRead = useCallback(async () => {
     if (!orderId) return false;
     try {
       const result = await ordersApi.markOrderAsRead(orderId);
       if (result.success && order) {
-        setOrder({ ...order, read: true });
+        queryClient.setQueryData(queryKeys.orders.detail(orderId), { ...order, read: true });
       }
       return result.success;
     } catch {
       return false;
     }
-  }, [orderId, order]);
+  }, [orderId, order, queryClient]);
 
-  return { order, isLoading, error, refetch, markAsRead };
+  return {
+    order: order ?? null,
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+    markAsRead,
+  };
 }
 
-/**
- * 创建订单 Hook
- */
+// ─── Create order ───
+
 export function useCreateOrder() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [estimate, setEstimate] = useState<OrderEstimate | null>(null);
 
-  /**
-   * 估算订单总价
-   */
-  const estimateTotal = useCallback(async (data: PurchaseData): Promise<OrderEstimate | null> => {
-    setIsLoading(true);
-    setError(null);
+  const estimateMutation = useMutation({
+    mutationFn: (data: PurchaseData) => ordersApi.estimateOrderTotal(data),
+    onSuccess: result => setEstimate(result),
+  });
 
-    try {
-      const result = await ordersApi.estimateOrderTotal(data);
-      setEstimate(result);
-      return result;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '估算订单失败');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const breakdownMutation = useMutation({
+    mutationFn: (data: PurchaseData) => ordersApi.getCheckoutBreakdown(data),
+    onSuccess: result => setEstimate(result),
+  });
 
-  /**
-   * 获取结账明细
-   */
-  const getBreakdown = useCallback(async (data: PurchaseData): Promise<OrderEstimate | null> => {
-    setIsLoading(true);
-    setError(null);
+  const purchaseMutation = useMutation({
+    mutationFn: (data: PurchaseData) => ordersApi.purchaseListing(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.purchases() });
+    },
+  });
 
-    try {
-      const result = await ordersApi.getCheckoutBreakdown(data);
-      setEstimate(result);
-      return result;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取结账明细失败');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const estimateTotal = useCallback(
+    async (data: PurchaseData): Promise<OrderEstimate | null> => {
+      try {
+        return await estimateMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [estimateMutation]
+  );
 
-  /**
-   * 创建订单
-   */
-  const createOrder = useCallback(async (data: PurchaseData): Promise<PurchaseResult | null> => {
-    setIsLoading(true);
-    setError(null);
+  const getBreakdown = useCallback(
+    async (data: PurchaseData): Promise<OrderEstimate | null> => {
+      try {
+        return await breakdownMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [breakdownMutation]
+  );
 
-    try {
-      const result = await ordersApi.purchaseListing(data);
-      return result;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '创建订单失败');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const createOrder = useCallback(
+    async (data: PurchaseData): Promise<PurchaseResult | null> => {
+      try {
+        return await purchaseMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [purchaseMutation]
+  );
 
-  const clearError = useCallback(() => setError(null), []);
+  const isLoading =
+    estimateMutation.isPending || breakdownMutation.isPending || purchaseMutation.isPending;
+
+  const clearError = useCallback(() => {
+    estimateMutation.reset();
+    breakdownMutation.reset();
+    purchaseMutation.reset();
+  }, [estimateMutation, breakdownMutation, purchaseMutation]);
+
   const clearEstimate = useCallback(() => setEstimate(null), []);
 
   return {
     isLoading,
-    error,
+    error: formatQueryError(
+      estimateMutation.error || breakdownMutation.error || purchaseMutation.error
+    ),
     estimate,
     estimateTotal,
     getBreakdown,
@@ -335,12 +273,9 @@ export function useCreateOrder() {
   };
 }
 
-/**
- * 订单支付 Hook
- */
+// ─── Order payment ───
+
 export function useOrderPayment(orderId: string | null) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [paymentInfo, setPaymentInfo] = useState<{
     address?: string;
     amount?: number;
@@ -348,80 +283,60 @@ export function useOrderPayment(orderId: string | null) {
     paid?: number;
   } | null>(null);
 
-  /**
-   * 获取支付指令
-   */
+  const instructionsMutation = useMutation({
+    mutationFn: (coin: string) => ordersApi.getPaymentInstructions({ orderId: orderId!, coin }),
+    onSuccess: result => setPaymentInfo(prev => ({ ...prev, ...result })),
+  });
+
+  const fundMutation = useMutation({
+    mutationFn: (params: { coin: string; address: string; amount: number; memo?: string }) =>
+      ordersApi.fundOrder({ ...params, orderId: orderId! }),
+  });
+
   const getPaymentInstructions = useCallback(
     async (coin: string) => {
       if (!orderId) return null;
-
-      setIsLoading(true);
-      setError(null);
-
       try {
-        const result = await ordersApi.getPaymentInstructions({ orderId, coin });
-        setPaymentInfo(prev => ({ ...prev, ...result }));
-        return result;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '获取支付信息失败');
+        return await instructionsMutation.mutateAsync(coin);
+      } catch {
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    [orderId]
+    [orderId, instructionsMutation]
   );
 
-  /**
-   * 获取剩余支付金额
-   */
   const getPaymentRemaining = useCallback(async () => {
     if (!orderId) return null;
-
     try {
       const result = await ordersApi.getPaymentRemaining(orderId);
       setPaymentInfo(prev => ({ ...prev, ...result }));
       return result;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取支付状态失败');
+    } catch {
       return null;
     }
   }, [orderId]);
 
-  /**
-   * 执行支付
-   */
   const fundOrder = useCallback(
     async (params: { coin: string; address: string; amount: number; memo?: string }) => {
       if (!orderId) return null;
-
-      setIsLoading(true);
-      setError(null);
-
       try {
-        const result = await ordersApi.fundOrder({
-          ...params,
-          orderId,
-        });
-
+        const result = await fundMutation.mutateAsync(params);
         if (!result.success) {
-          throw new Error(result.error || '支付失败');
+          throw new Error(result.error || 'Payment failed');
         }
-
         return result;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '支付失败');
+      } catch {
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    [orderId]
+    [orderId, fundMutation]
   );
+
+  const isLoading = instructionsMutation.isPending || fundMutation.isPending;
 
   return {
     isLoading,
-    error,
+    error: formatQueryError(instructionsMutation.error || fundMutation.error),
     paymentInfo,
     getPaymentInstructions,
     getPaymentRemaining,
@@ -429,68 +344,55 @@ export function useOrderPayment(orderId: string | null) {
   };
 }
 
-/**
- * 订单操作 Hook
- */
-export function useOrderActions() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// ─── Order actions (seller/buyer operations) ───
 
-  /**
-   * 确认订单（卖家）
-   */
-  const confirmOrder = useCallback(async (orderID: string, reject = false) => {
-    setIsLoading(true);
-    setError(null);
+function useMutationAction<TParams>(
+  mutationFn: (params: TParams) => Promise<{ success: boolean; error?: string }>,
+  onSuccessFn?: () => void
+) {
+  const mutation = useMutation({
+    mutationFn,
+    onSuccess: () => onSuccessFn?.(),
+  });
 
-    try {
-      const result = await ordersApi.confirmOrder({ orderID, reject });
-      if (!result.success) {
-        throw new Error(result.error || '操作失败');
+  const execute = useCallback(
+    async (params: TParams): Promise<boolean> => {
+      try {
+        const result = await mutation.mutateAsync(params);
+        if (!result.success) throw new Error(result.error || 'Action failed');
+        return true;
+      } catch {
+        return false;
       }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [mutation]
+  );
 
-  /**
-   * 发货（卖家）
-   */
-  const fulfillOrder = useCallback(
-    async (params: {
+  return { execute, isPending: mutation.isPending, error: mutation.error, reset: mutation.reset };
+}
+
+export function useOrderActions() {
+  const queryClient = useQueryClient();
+
+  const invalidateOrders = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+  }, [queryClient]);
+
+  const confirm = useMutationAction(
+    (p: { orderID: string; reject?: boolean }) => ordersApi.confirmOrder(p),
+    invalidateOrders
+  );
+  const fulfill = useMutationAction(
+    (p: {
       orderID: string;
       physicalDelivery?: { shipper: string; trackingNumber: string };
       digitalDelivery?: { url?: string; password?: string };
       note?: string;
-    }) => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const result = await ordersApi.fulfillOrder(params);
-        if (!result.success) {
-          throw new Error(result.error || '操作失败');
-        }
-        return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '操作失败');
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
+    }) => ordersApi.fulfillOrder(p),
+    invalidateOrders
   );
-
-  /**
-   * 完成订单（买家）
-   */
-  const completeOrder = useCallback(
-    async (params: {
+  const complete = useMutationAction(
+    (p: {
       orderID: string;
       txID?: string;
       ratings?: Array<{
@@ -503,165 +405,136 @@ export function useOrderActions() {
         review?: string;
       }>;
       anonymous?: boolean;
-    }) => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const result = await ordersApi.completeOrder(params);
-        if (!result.success) {
-          throw new Error(result.error || '操作失败');
-        }
-        return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '操作失败');
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
+    }) => ordersApi.completeOrder(p),
+    invalidateOrders
+  );
+  const cancel = useMutationAction(
+    (p: { orderID: string; transactionID?: string }) => ordersApi.cancelOrder(p),
+    invalidateOrders
+  );
+  const refund = useMutationAction(
+    (p: { orderID: string; transactionID?: string }) => ordersApi.refundOrder(p),
+    invalidateOrders
+  );
+  const dispute = useMutationAction(
+    (p: { orderId: string; claim: string }) => ordersApi.openDispute(p.orderId, p.claim),
+    invalidateOrders
+  );
+  const acceptDisp = useMutationAction(
+    (orderId: string) => ordersApi.acceptDispute(orderId),
+    invalidateOrders
+  );
+  const resend = useMutationAction((p: { orderId: string; messageType: string }) =>
+    ordersApi.resendOrderMessage(p.orderId, p.messageType)
   );
 
-  /**
-   * 取消订单
-   */
-  const cancelOrder = useCallback(async (orderID: string, transactionID?: string) => {
-    setIsLoading(true);
-    setError(null);
+  const confirmOrder = useCallback(
+    (orderID: string, reject = false) => confirm.execute({ orderID, reject }),
+    [confirm]
+  );
+  const fulfillOrder = useCallback(
+    (params: {
+      orderID: string;
+      physicalDelivery?: { shipper: string; trackingNumber: string };
+      digitalDelivery?: { url?: string; password?: string };
+      note?: string;
+    }) => fulfill.execute(params),
+    [fulfill]
+  );
+  const completeOrder = useCallback(
+    (params: {
+      orderID: string;
+      txID?: string;
+      ratings?: Array<{
+        slug: string;
+        overall: number;
+        quality?: number;
+        description?: number;
+        deliverySpeed?: number;
+        customerService?: number;
+        review?: string;
+      }>;
+      anonymous?: boolean;
+    }) => complete.execute(params),
+    [complete]
+  );
+  const cancelOrder = useCallback(
+    (orderID: string, transactionID?: string) => cancel.execute({ orderID, transactionID }),
+    [cancel]
+  );
+  const refundOrder = useCallback(
+    (orderID: string, transactionID?: string) => refund.execute({ orderID, transactionID }),
+    [refund]
+  );
+  const openDispute = useCallback(
+    (orderId: string, claim: string) => dispute.execute({ orderId, claim }),
+    [dispute]
+  );
+  const acceptDispute = useCallback((orderId: string) => acceptDisp.execute(orderId), [acceptDisp]);
+  const resendMessage = useCallback(
+    (orderId: string, messageType: string) => resend.execute({ orderId, messageType }),
+    [resend]
+  );
 
-    try {
-      const result = await ordersApi.cancelOrder({ orderID, transactionID });
-      if (!result.success) {
-        throw new Error(result.error || '操作失败');
-      }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const isLoading =
+    confirm.isPending ||
+    fulfill.isPending ||
+    complete.isPending ||
+    cancel.isPending ||
+    refund.isPending ||
+    dispute.isPending ||
+    acceptDisp.isPending ||
+    resend.isPending;
 
-  /**
-   * 退款订单
-   */
-  const refundOrder = useCallback(async (orderID: string, transactionID?: string) => {
-    setIsLoading(true);
-    setError(null);
+  const firstError =
+    confirm.error ||
+    fulfill.error ||
+    complete.error ||
+    cancel.error ||
+    refund.error ||
+    dispute.error ||
+    acceptDisp.error ||
+    resend.error;
 
-    try {
-      const result = await ordersApi.refundOrder({ orderID, transactionID });
-      if (!result.success) {
-        throw new Error(result.error || '操作失败');
-      }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * 开启争议
-   */
-  const openDispute = useCallback(async (orderId: string, claim: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await ordersApi.openDispute(orderId, claim);
-      if (!result.success) {
-        throw new Error(result.error || '操作失败');
-      }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * 接受争议裁决
-   */
-  const acceptDispute = useCallback(async (orderId: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await ordersApi.acceptDispute(orderId);
-      if (!result.success) {
-        throw new Error(result.error || '操作失败');
-      }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * 重发订单消息
-   */
-  const resendMessage = useCallback(async (orderId: string, messageType: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await ordersApi.resendOrderMessage(orderId, messageType);
-      if (!result.success) {
-        throw new Error(result.error || '操作失败');
-      }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => {
+    confirm.reset();
+    fulfill.reset();
+    complete.reset();
+    cancel.reset();
+    refund.reset();
+    dispute.reset();
+    acceptDisp.reset();
+    resend.reset();
+  }, [confirm, fulfill, complete, cancel, refund, dispute, acceptDisp, resend]);
 
   return {
     isLoading,
-    error,
-    // 卖家操作
+    isConfirming: confirm.isPending,
+    isFulfilling: fulfill.isPending,
+    isCompleting: complete.isPending,
+    isCancelling: cancel.isPending,
+    isRefunding: refund.isPending,
+    error: formatQueryError(firstError),
     confirmOrder,
     fulfillOrder,
     refundOrder,
-    // 买家操作
     completeOrder,
     cancelOrder,
-    // 争议
     openDispute,
     acceptDispute,
-    // 其他
     resendMessage,
     clearError,
   };
 }
 
-/**
- * 统一订单 Hook - 合并所有订单功能
- */
+// ─── Composite hook ───
+
 export function useOrders() {
   const purchases = usePurchases();
   const sales = useSales();
   const actions = useOrderActions();
 
-  return {
-    purchases,
-    sales,
-    actions,
-  };
+  return { purchases, sales, actions };
 }
 
 export default useOrders;

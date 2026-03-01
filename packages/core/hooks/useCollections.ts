@@ -1,161 +1,170 @@
 /**
- * useCollections hook
+ * useCollections hook — React Query 版本
+ *
  * Collection CRUD + 商品关联管理
+ * READ → useQuery, WRITE → useMutation + invalidation
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collectionsApi } from '../services/api/collections';
 import type {
   Collection,
   CreateCollectionRequest,
   UpdateCollectionRequest,
 } from '../types/collection';
+import { queryKeys } from './queryKeys';
+import { formatQueryError } from './queryUtils';
 
 export function useCollections() {
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchCollections = useCallback(async (page = 1, pageSize = 50) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await collectionsApi.listCollections(page, pageSize);
-      setCollections(res.data);
-      setTotal(res.meta.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load collections');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch: fetchCollections,
+  } = useQuery({
+    queryKey: queryKeys.collections.list(),
+    queryFn: async () => {
+      const res = await collectionsApi.listCollections(1, 50);
+      return { collections: res.data, total: res.meta.total };
+    },
+    staleTime: 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchCollections();
-  }, [fetchCollections]);
+  const collections = data?.collections ?? [];
+  const total = data?.total ?? 0;
+
+  const invalidateAll = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.collections.all });
+
+  const createMutation = useMutation({
+    mutationFn: (req: CreateCollectionRequest) => collectionsApi.createCollection(req),
+    onSuccess: () => invalidateAll(),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (params: { id: string; data: UpdateCollectionRequest }) =>
+      collectionsApi.updateCollection(params.id, params.data),
+    onSuccess: () => invalidateAll(),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => collectionsApi.deleteCollection(id),
+    onSuccess: () => invalidateAll(),
+  });
+
+  const addProductsMutation = useMutation({
+    mutationFn: (params: { collectionID: string; slugs: string[] }) =>
+      collectionsApi.addCollectionProducts(params.collectionID, params.slugs),
+    onSuccess: () => invalidateAll(),
+  });
+
+  const removeProductMutation = useMutation({
+    mutationFn: (params: { collectionID: string; slug: string }) =>
+      collectionsApi.removeCollectionProduct(params.collectionID, params.slug),
+    onSuccess: () => invalidateAll(),
+  });
+
+  const reorderProductsMutation = useMutation({
+    mutationFn: (params: { collectionID: string; slugs: string[] }) =>
+      collectionsApi.reorderCollectionProducts(params.collectionID, params.slugs),
+    onSuccess: () => invalidateAll(),
+  });
+
+  const isSaving =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    addProductsMutation.isPending ||
+    removeProductMutation.isPending ||
+    reorderProductsMutation.isPending;
 
   const createCollection = useCallback(
-    async (data: CreateCollectionRequest): Promise<Collection | null> => {
-      setIsSaving(true);
-      setError(null);
+    async (req: CreateCollectionRequest): Promise<Collection | null> => {
       try {
-        const created = await collectionsApi.createCollection(data);
-        setCollections(prev => [created, ...prev]);
-        setTotal(prev => prev + 1);
-        return created;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create collection');
+        return await createMutation.mutateAsync(req);
+      } catch {
         return null;
-      } finally {
-        setIsSaving(false);
       }
     },
-    []
+    [createMutation]
   );
 
   const updateCollection = useCallback(
     async (id: string, data: UpdateCollectionRequest): Promise<Collection | null> => {
-      setIsSaving(true);
-      setError(null);
       try {
-        const updated = await collectionsApi.updateCollection(id, data);
-        setCollections(prev => prev.map(c => (c.id === id ? updated : c)));
-        return updated;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to update collection');
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
         return null;
-      } finally {
-        setIsSaving(false);
       }
     },
-    []
+    [updateMutation]
   );
 
-  const deleteCollection = useCallback(async (id: string): Promise<boolean> => {
-    setIsSaving(true);
-    setError(null);
-    try {
-      await collectionsApi.deleteCollection(id);
-      setCollections(prev => prev.filter(c => c.id !== id));
-      setTotal(prev => prev - 1);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete collection');
-      return false;
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
+  const deleteCollection = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        await deleteMutation.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
 
   const addProducts = useCallback(
     async (collectionID: string, slugs: string[]): Promise<boolean> => {
-      setIsSaving(true);
-      setError(null);
       try {
-        await collectionsApi.addCollectionProducts(collectionID, slugs);
-        await fetchCollections();
+        await addProductsMutation.mutateAsync({ collectionID, slugs });
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to add products');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    [fetchCollections]
+    [addProductsMutation]
   );
 
   const removeProduct = useCallback(
     async (collectionID: string, slug: string): Promise<boolean> => {
-      setIsSaving(true);
-      setError(null);
       try {
-        await collectionsApi.removeCollectionProduct(collectionID, slug);
-        setCollections(prev =>
-          prev.map(c => {
-            if (c.id !== collectionID) return c;
-            return {
-              ...c,
-              products: c.products?.filter(p => p.listingSlug !== slug),
-            };
-          })
-        );
+        await removeProductMutation.mutateAsync({ collectionID, slug });
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to remove product');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    []
+    [removeProductMutation]
   );
 
   const reorderProducts = useCallback(
     async (collectionID: string, slugs: string[]): Promise<boolean> => {
-      setIsSaving(true);
-      setError(null);
       try {
-        await collectionsApi.reorderCollectionProducts(collectionID, slugs);
+        await reorderProductsMutation.mutateAsync({ collectionID, slugs });
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to reorder products');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    []
+    [reorderProductsMutation]
   );
+
+  const mutError =
+    createMutation.error ||
+    updateMutation.error ||
+    deleteMutation.error ||
+    addProductsMutation.error ||
+    removeProductMutation.error ||
+    reorderProductsMutation.error;
 
   return {
     collections,
     total,
     isLoading,
     isSaving,
-    error,
+    error: formatQueryError(error || mutError),
     fetchCollections,
     createCollection,
     updateCollection,
@@ -168,117 +177,117 @@ export function useCollections() {
 
 /** Single collection detail + product management */
 export function useCollectionDetail(collectionID: string | undefined) {
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [isLoading, setIsLoading] = useState(!!collectionID);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchCollection = useCallback(async () => {
-    if (!collectionID) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await collectionsApi.getCollection(collectionID);
-      setCollection(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load collection');
-    } finally {
-      setIsLoading(false);
+  const {
+    data: collection,
+    isLoading,
+    error,
+    refetch: fetchCollection,
+  } = useQuery({
+    queryKey: queryKeys.collections.detail(collectionID!),
+    queryFn: () => collectionsApi.getCollection(collectionID!),
+    enabled: !!collectionID,
+    staleTime: 60 * 1000,
+  });
+
+  const invalidateDetail = () => {
+    if (collectionID) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.detail(collectionID) });
     }
-  }, [collectionID]);
+    queryClient.invalidateQueries({ queryKey: queryKeys.collections.all });
+  };
 
-  useEffect(() => {
-    fetchCollection();
-  }, [fetchCollection]);
+  const updateMutation = useMutation({
+    mutationFn: (data: UpdateCollectionRequest) =>
+      collectionsApi.updateCollection(collectionID!, data),
+    onSuccess: () => invalidateDetail(),
+  });
+
+  const addProductsMutation = useMutation({
+    mutationFn: (slugs: string[]) => collectionsApi.addCollectionProducts(collectionID!, slugs),
+    onSuccess: () => invalidateDetail(),
+  });
+
+  const removeProductMutation = useMutation({
+    mutationFn: (slug: string) => collectionsApi.removeCollectionProduct(collectionID!, slug),
+    onSuccess: () => invalidateDetail(),
+  });
+
+  const reorderProductsMutation = useMutation({
+    mutationFn: (slugs: string[]) => collectionsApi.reorderCollectionProducts(collectionID!, slugs),
+    onSuccess: () => invalidateDetail(),
+  });
+
+  const isSaving =
+    updateMutation.isPending ||
+    addProductsMutation.isPending ||
+    removeProductMutation.isPending ||
+    reorderProductsMutation.isPending;
 
   const update = useCallback(
     async (data: UpdateCollectionRequest): Promise<boolean> => {
       if (!collectionID) return false;
-      setIsSaving(true);
-      setError(null);
       try {
-        const updated = await collectionsApi.updateCollection(collectionID, data);
-        setCollection(updated);
+        await updateMutation.mutateAsync(data);
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to update collection');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    [collectionID]
+    [collectionID, updateMutation]
   );
 
   const addProducts = useCallback(
     async (slugs: string[]): Promise<boolean> => {
       if (!collectionID) return false;
-      setIsSaving(true);
-      setError(null);
       try {
-        await collectionsApi.addCollectionProducts(collectionID, slugs);
-        await fetchCollection();
+        await addProductsMutation.mutateAsync(slugs);
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to add products');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    [collectionID, fetchCollection]
+    [collectionID, addProductsMutation]
   );
 
   const removeProduct = useCallback(
     async (slug: string): Promise<boolean> => {
       if (!collectionID) return false;
-      setIsSaving(true);
-      setError(null);
       try {
-        await collectionsApi.removeCollectionProduct(collectionID, slug);
-        setCollection(prev =>
-          prev
-            ? {
-                ...prev,
-                products: prev.products?.filter(p => p.listingSlug !== slug),
-              }
-            : prev
-        );
+        await removeProductMutation.mutateAsync(slug);
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to remove product');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    [collectionID]
+    [collectionID, removeProductMutation]
   );
 
   const reorderProducts = useCallback(
     async (slugs: string[]): Promise<boolean> => {
       if (!collectionID) return false;
-      setIsSaving(true);
-      setError(null);
       try {
-        await collectionsApi.reorderCollectionProducts(collectionID, slugs);
-        await fetchCollection();
+        await reorderProductsMutation.mutateAsync(slugs);
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to reorder');
+      } catch {
         return false;
-      } finally {
-        setIsSaving(false);
       }
     },
-    [collectionID, fetchCollection]
+    [collectionID, reorderProductsMutation]
   );
 
+  const mutError =
+    updateMutation.error ||
+    addProductsMutation.error ||
+    removeProductMutation.error ||
+    reorderProductsMutation.error;
+
   return {
-    collection,
+    collection: collection ?? null,
     isLoading,
     isSaving,
-    error,
+    error: formatQueryError(error || mutError),
     fetchCollection,
     update,
     addProducts,
