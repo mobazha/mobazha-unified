@@ -1,0 +1,374 @@
+# Mobile-First Mini App 开发规范
+
+## 设计标准
+
+- 审核报告：`docs/MOBILE_AUDIT_REPORT.md`
+- 改造路线图：`docs/MOBILE_FIRST_ROADMAP.md`
+- 现有移动端 UX 指南：`.cursor/skills/mobile-ux-guide/SKILL.md`
+
+## Platform View 模式（核心规范）
+
+### 同路由分视图
+
+操作型关键页面（商品详情、搜索、购物车）**必须**拆分为独立的 Desktop/Mobile 视图。
+浏览型页面（政策页、404、订单确认）使用 Tailwind 响应式即可。
+
+```tsx
+// ✅ 正确：thin shell 路由页面
+export default function ProductPage({ params }) {
+  const { shouldUseMobileView } = usePlatform();
+  return shouldUseMobileView
+    ? <ProductDetailMobile slug={params.slug} />
+    : <ProductDetailDesktop slug={params.slug} />;
+}
+
+// ❌ 错误：单文件内 1500 行用 48 个断点硬撑
+export default function ProductPage() {
+  return <ProductDetail />; // 不拆分
+}
+```
+
+### 视图拆分三件套
+
+每个 Platform View 页面必须包含：
+
+```
+components/Xxx/
+├── XxxDesktop.tsx          ← 桌面交互范式
+├── XxxMobile.tsx           ← 移动交互范式
+└── useXxx.ts               ← 共享业务逻辑（100% 复用）
+```
+
+**严格禁止**：Mobile 视图内包含业务逻辑（API 调用、状态计算）。
+业务逻辑**全部**放在共享 hook 中，视图层只负责 UI。
+
+### 命名约定
+
+| 类型 | 命名 | 示例 |
+|------|------|------|
+| Desktop 视图 | `XxxDesktop.tsx` | `ProductDetailDesktop.tsx` |
+| Mobile 视图 | `XxxMobile.tsx` | `ProductDetailMobile.tsx` |
+| 共享 Hook | `useXxx.ts` | `useProductDetail.ts` |
+| TG 增强 Hook | `useTGXxx.ts` | `useTGMainButton.ts` |
+| 底部 Sheet | `XxxSheet.tsx` | `FilterSheet.tsx` |
+
+## 移动端 UI 规范
+
+### 触控目标
+
+```tsx
+// ✅ 正确：所有可交互元素 ≥ 44×44px
+<button className="min-h-[44px] min-w-[44px] ...">
+
+// ❌ 错误：按钮太小
+<button className="h-6 w-6 ...">
+```
+
+### 底部固定操作栏
+
+操作型页面必须有底部固定操作栏，且处理安全区：
+
+```tsx
+// ✅ 正确
+<div className="fixed bottom-0 inset-x-0 bg-background border-t p-3
+  pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+  <Button className="w-full min-h-[44px]">Add to Cart</Button>
+</div>
+
+// ❌ 错误：操作按钮在页面中间，滚动后不可见
+<Button>Add to Cart</Button>
+```
+
+### 商品网格
+
+```tsx
+// ✅ 移动端 2 列
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+
+// ❌ 移动端 1 列（浪费空间）
+<div className="grid grid-cols-1 sm:grid-cols-2">
+```
+
+### 信息折叠
+
+移动端长内容使用 Accordion 折叠，减少滚动深度：
+
+```tsx
+// ✅ 移动端折叠
+<Accordion type="single" collapsible>
+  <AccordionItem value="description">
+    <AccordionTrigger>Description</AccordionTrigger>
+    <AccordionContent>{description}</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="shipping">...</AccordionItem>
+  <AccordionItem value="reviews">...</AccordionItem>
+</Accordion>
+
+// ❌ 全部展开（移动端需无限滚动）
+<div>{description}</div>
+<div>{shipping}</div>
+<div>{reviews}</div>
+```
+
+### 筛选面板
+
+移动端筛选使用底部 Sheet，不使用侧边栏或内联展开：
+
+```tsx
+// ✅ 移动端底部 Sheet
+<BottomSheet open={filterOpen} onOpenChange={setFilterOpen}>
+  <FilterContent />
+</BottomSheet>
+
+// ❌ 移动端侧边栏筛选
+<aside className="w-64">{/* 移动端空间不够 */}</aside>
+```
+
+## Mini App 导航规范
+
+### MobileNav / MobilePageHeader 按平台显隐
+
+```tsx
+// ✅ 正确：TG/Discord 环境隐藏 MobileNav（宿主 App 有自己的底栏）
+function MobileNav() {
+  const { isTGMiniApp, isDiscordActivity } = usePlatform();
+  if (isTGMiniApp || isDiscordActivity) return null;
+  return <nav className="fixed bottom-0 ...">...</nav>;
+}
+
+// ✅ 正确：TG 环境隐藏返回箭头（用 BackButton 替代），保留标题
+function MobilePageHeader({ title, onBack, actions }) {
+  const { isTGMiniApp } = usePlatform();
+  return (
+    <header>
+      {!isTGMiniApp && <BackArrow onClick={onBack} />}
+      <span>{title}</span>
+      {actions}
+    </header>
+  );
+}
+
+// ❌ 错误：所有环境统一显示 MobileNav + MobilePageHeader
+```
+
+### Toast/Snackbar 定位
+
+```tsx
+// ✅ 正确：Mini App 中 Toast 在顶部（底部有 MainButton）
+const toastPosition = isTGMiniApp ? 'top-center' : 'bottom-center';
+
+// ✅ TG 环境优先使用原生 showPopup/showAlert
+if (isTGMiniApp && window.Telegram?.WebApp?.showPopup) {
+  window.Telegram.WebApp.showPopup({
+    title: 'Confirm',
+    message: 'Remove this item?',
+    buttons: [
+      { type: 'cancel' },
+      { id: 'confirm', type: 'destructive', text: 'Remove' },
+    ],
+  });
+} else {
+  // 降级到自定义 Modal
+}
+```
+
+## Mini App 增强规范
+
+### TG MainButton 集成
+
+关键 CTA（加购、结账、确认收货）在 TG 环境用 MainButton 替代底部操作栏：
+
+```tsx
+// ✅ 条件渲染
+const { isAvailable: isTG } = useTGMiniApp();
+
+return (
+  <>
+    {/* 页面内容 */}
+    {!isTG && <BottomActionBar />}
+  </>
+);
+
+// ✅ MainButton 通过 useEffect 绑定（在 Mobile View 内部）
+useEffect(() => {
+  if (isTG && mainButton) {
+    mainButton.setText('Add to Cart');
+    mainButton.show();
+    mainButton.onClick(handleAddToCart);
+    return () => { mainButton.offClick(handleAddToCart); mainButton.hide(); };
+  }
+}, [isTG]);
+```
+
+### BackButton 集成
+
+所有非首页的移动端页面在 TG 环境绑定 BackButton：
+
+```tsx
+// ✅ 在 MobilePageHeader 或各 Mobile View 内统一处理
+useEffect(() => {
+  if (isTG && backButton) {
+    backButton.show();
+    backButton.onClick(() => router.back());
+    return () => { backButton.offClick(() => router.back()); backButton.hide(); };
+  }
+}, [isTG]);
+```
+
+### HapticFeedback
+
+在以下场景触发触觉反馈：
+
+| 场景 | 类型 |
+|------|------|
+| 加购成功 | `notificationOccurred('success')` |
+| 支付确认 | `notificationOccurred('success')` |
+| 滑动删除 | `impactOccurred('medium')` |
+| 表单错误 | `notificationOccurred('error')` |
+
+### 渐进增强层次
+
+```
+Layer 0：Mobile Web（基线，所有环境可用）
+  └── 底部操作栏、MobilePageHeader、MobileNav
+Layer 1：TG Mini App（增强层）
+  └── MainButton 替代底部 CTA
+  └── BackButton 替代返回按钮
+  └── HapticFeedback
+  └── themeParams 主题同步
+  └── shareUrl 原生分享
+Layer 2：Discord Activity（增强层）
+  └── SDK 认证
+  └── 主题同步
+  └── Activity 生命周期
+```
+
+### 主题冲突处理
+
+Mobazha 有店铺主题系统，TG/Discord 也推送宿主主题。遵循以下优先级：
+
+```
+TG Mini App 内：
+  背景色 / 基础文本色 → 使用 TG themeParams（视觉融合）
+  品牌色 / CTA 按钮色 → 保留店铺主题色（品牌辨识度）
+  MainButton 颜色 → TG 控制（无法自定义）
+
+CSS 变量策略：
+  --color-background → TG bg_color（如有）→ 店铺背景色（降级）
+  --color-primary    → 始终使用店铺主题色
+  --color-text       → TG text_color（如有）→ 店铺文本色（降级）
+```
+
+```tsx
+// ❌ 错误：TG 环境完全覆盖店铺主题
+document.documentElement.style.setProperty('--color-primary', themeParams.button_color);
+
+// ✅ 正确：仅覆盖基础色，保留品牌色
+document.documentElement.style.setProperty('--color-background', themeParams.bg_color);
+// --color-primary 保持店铺主题色不变
+```
+
+### 支付方式 Mini App 适配
+
+```tsx
+// ✅ 正确：Mini App 中 WalletConnect 优先（QR 码可行），隐藏不可用的方式
+function PaymentMethodList() {
+  const { isTGMiniApp, isDiscordActivity } = usePlatform();
+  const isMiniApp = isTGMiniApp || isDiscordActivity;
+
+  return (
+    <>
+      {/* Crypto 始终可用（WalletConnect relay 模式） */}
+      <WalletConnectOption />
+
+      {/* 法币在 Mini App 中使用降级方案 */}
+      {isMiniApp
+        ? <StripeRedirectOption />   // openLink 跳转
+        : <StripeElementsOption />}  // iframe 内嵌
+    </>
+  );
+}
+```
+
+## 性能规范
+
+### 图片
+
+```tsx
+// ✅ 使用 next/image 或至少 lazy loading
+import Image from 'next/image';
+<Image src={url} width={300} height={300} alt={title} />
+
+// ✅ 如不能用 next/image，至少加 lazy
+<img src={url} loading="lazy" alt={title} />
+
+// ❌ 裸 img 无优化
+<img src={url} />
+```
+
+### 代码分割
+
+Mobile View 使用动态导入，桌面端不加载移动端代码：
+
+```tsx
+// ✅ 动态导入 Mobile View（桌面端不加载）
+const ProductDetailMobile = lazy(() => import('./ProductDetailMobile'));
+const ProductDetailDesktop = lazy(() => import('./ProductDetailDesktop'));
+
+// ❌ 静态导入所有视图
+import { ProductDetailMobile } from './ProductDetailMobile';
+import { ProductDetailDesktop } from './ProductDetailDesktop';
+```
+
+### 数据获取
+
+优先使用 React Query（如已集成），获得缓存和去重：
+
+```tsx
+// ✅ React Query
+const { data, isLoading } = useQuery({
+  queryKey: ['product', slug],
+  queryFn: () => fetchProduct(slug),
+  staleTime: 5 * 60 * 1000,
+});
+
+// ⚠️ 手工 fetch（如 React Query 未就绪，可继续使用，但标记为迁移对象）
+const [data, setData] = useState(null);
+useEffect(() => { fetchProduct(slug).then(setData); }, [slug]);
+```
+
+## 下拉刷新
+
+Mini App 环境下所有列表页面支持下拉刷新：
+
+```tsx
+// ✅ 在列表页面添加下拉刷新
+const pullRefreshProps = usePullRefresh(async () => {
+  await queryClient.invalidateQueries(['orders']);
+});
+
+return (
+  <div {...pullRefreshProps}>
+    <OrderList />
+  </div>
+);
+```
+
+## 审查检查项
+
+修改移动端页面时：
+
+- [ ] 触控目标 ≥ 44×44px？
+- [ ] 底部操作栏固定 + safe-area-inset 处理？
+- [ ] TG 环境 MainButton 替代底部 CTA？
+- [ ] MobileNav 在 TG/Discord 中已隐藏？
+- [ ] MobilePageHeader 返回键在 TG 中已隐藏（用 BackButton）？
+- [ ] TG 环境确认操作优先用 `showPopup()`/`showConfirm()`？
+- [ ] Toast/Snackbar 在 TG 环境定位在顶部（避免遮挡 MainButton）？
+- [ ] 图片使用 next/image 或 lazy loading？
+- [ ] 业务逻辑在共享 hook 中，不在视图组件中？
+- [ ] 移动端长内容使用 Accordion 折叠？
+- [ ] 筛选面板使用底部 Sheet？
+- [ ] 新增翻译 key 到 `en.ts`？
+- [ ] 桌面端功能未退化？（1440px 测试）
+- [ ] 支付方式在 Mini App 中可用？（WalletConnect QR 正常、法币有降级方案）
