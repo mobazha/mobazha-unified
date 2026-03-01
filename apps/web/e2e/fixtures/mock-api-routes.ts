@@ -447,6 +447,135 @@ export async function mockSearchAPI(page: Page): Promise<void> {
   });
 }
 
+const mockStoreListingItems = [
+  {
+    slug: 'wireless-headphones',
+    title: 'Wireless Noise-Cancelling Headphones',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(3),
+    price: { amount: 89.99, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.8,
+    ratingCount: 24,
+    productType: 'Electronics',
+  },
+  {
+    slug: 'vintage-camera',
+    title: 'Vintage Film Camera - Refurbished',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(36),
+    price: { amount: 245.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.5,
+    ratingCount: 8,
+    productType: 'Electronics',
+  },
+  {
+    slug: 'organic-coffee',
+    title: 'Organic Coffee Beans - Single Origin',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(63),
+    price: { amount: 22.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.9,
+    ratingCount: 42,
+    productType: 'Food',
+  },
+  {
+    slug: 'logo-design',
+    title: 'Professional Logo Design Package',
+    contractType: 'SERVICE',
+    thumbnail: mockSearchThumbnail(24),
+    price: { amount: 149.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 5.0,
+    ratingCount: 15,
+    productType: 'Services',
+  },
+  {
+    slug: 'leather-backpack',
+    title: 'Handcrafted Leather Backpack',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(119),
+    price: { amount: 175.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.7,
+    ratingCount: 31,
+    productType: 'Fashion',
+  },
+  {
+    slug: 'smart-watch',
+    title: 'Smart Watch Pro 2025',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(160),
+    price: { amount: 299.99, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.6,
+    ratingCount: 19,
+    productType: 'Electronics',
+  },
+];
+
+/**
+ * Mock store listing index (list of products for a store page).
+ */
+export async function mockStoreListingsAPI(page: Page): Promise<void> {
+  await page.route('**/v1/listings/index/**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockStoreListingItems),
+    });
+  });
+
+  await page.route('**/v1/listings/index', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockStoreListingItems),
+    });
+  });
+
+  await page.route('**/v1/collections*', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        data: [
+          { id: 'col-1', title: 'Best Sellers', products: ['a', 'b', 'c'] },
+          { id: 'col-2', title: 'New Arrivals', products: ['d', 'e'] },
+          { id: 'col-3', title: 'Holiday Deals', products: ['f'] },
+        ],
+      }),
+    });
+  });
+
+  await page.route('**/platform/v1/store-access/**', route => {
+    route.fulfill({ status: 200, contentType: 'application/json', body: wrapData({}) });
+  });
+
+  await page.route('**/v1/social/following/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ isFollowing: false }),
+    });
+  });
+
+  await page.route('**/v1/social/blocked/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ isBlocked: false }),
+    });
+  });
+
+  await page.route('**/platform/v1/integrations/storefront-config/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ sections: [] }),
+    });
+  });
+}
+
 /**
  * Mock a single product/listing detail for product detail page.
  * Intercepts GET /v1/listings/{peerID}/{slug} and /v1/listings/{slug}.

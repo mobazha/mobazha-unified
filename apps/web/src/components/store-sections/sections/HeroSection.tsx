@@ -68,7 +68,7 @@ export function HeroSection({
         {ctaText && (
           <a
             href={ctaLink || '#'}
-            className="mt-6 inline-block px-6 py-3 font-semibold transition-opacity hover:opacity-80"
+            className="mt-6 inline-block w-full sm:w-auto px-6 py-3 text-center font-semibold transition-opacity hover:opacity-80"
             style={{
               backgroundColor: 'var(--store-accent)',
               color: 'var(--store-on-accent)',

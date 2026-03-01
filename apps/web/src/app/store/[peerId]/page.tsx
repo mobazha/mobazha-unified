@@ -1083,57 +1083,77 @@ export default function StorePage() {
 
         {!hasSections && (
           <>
-            {/* Tabs - 精简为 3 个 */}
+            {/* Tabs */}
             <div className="sticky top-16 z-30 bg-background border-b border-border">
               <Container size="xl">
-                <div className="flex items-center px-4 sm:px-6">
-                  <HStack gap="md">
-                    {/* 简介 Tab */}
-                    <button
-                      onClick={() => setActiveTab('about')}
-                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'about'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.about')}
-                    </button>
+                <div className="relative">
+                  <div className="flex items-center px-4 sm:px-6 overflow-x-auto scrollbar-hide">
+                    <HStack gap="md" className="flex-nowrap">
+                      {/* 简介 Tab */}
+                      <button
+                        onClick={() => setActiveTab('about')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'about'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.about')}
+                      </button>
 
-                    {/* 商品 Tab - 带数量（不包含 RWA 商品） */}
-                    <button
-                      onClick={() => setActiveTab('products')}
-                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'products'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.listings')}
-                      {storeListingCount > 0 && (
-                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                          {storeListingCount}
-                        </span>
-                      )}
-                    </button>
+                      {/* 商品 Tab */}
+                      <button
+                        onClick={() => setActiveTab('products')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'products'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.listings')}
+                        {storeListingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {storeListingCount}
+                          </span>
+                        )}
+                      </button>
 
-                    {/* RWA 数字资产 Tab - 带数量 */}
-                    <button
-                      onClick={() => setActiveTab('rwa')}
-                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'rwa'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.rwa')}
-                      {rwaListingCount > 0 && (
-                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                          {rwaListingCount}
-                        </span>
-                      )}
-                    </button>
-                  </HStack>
+                      {/* RWA 数字资产 Tab */}
+                      <button
+                        onClick={() => setActiveTab('rwa')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'rwa'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.rwa')}
+                        {rwaListingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {rwaListingCount}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* 评价 Tab */}
+                      <button
+                        onClick={() => setActiveTab('reviews')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'reviews'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.reviews')}
+                        {stats.ratingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {stats.ratingCount}
+                          </span>
+                        )}
+                      </button>
+                    </HStack>
+                  </div>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
                 </div>
               </Container>
             </div>
@@ -1177,33 +1197,36 @@ export default function StorePage() {
                             <Layers className="w-4 h-4" />
                             {t('admin.nav.collections')}
                           </h3>
-                          <div className="flex gap-3 overflow-x-auto pb-2">
-                            {storeCollections.map(col => (
-                              <Link
-                                key={col.id}
-                                href={`/store/${peerId}/collection/${col.id}`}
-                                className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
-                              >
-                                {col.image ? (
-                                  <img
-                                    src={getImageUrl(col.image)}
-                                    alt={col.title}
-                                    className="w-full h-20 object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-20 bg-muted flex items-center justify-center">
-                                    <Layers className="w-6 h-6 text-muted-foreground/30" />
+                          <div className="relative">
+                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                              {storeCollections.map(col => (
+                                <Link
+                                  key={col.id}
+                                  href={`/store/${peerId}/collection/${col.id}`}
+                                  className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
+                                >
+                                  {col.image ? (
+                                    <img
+                                      src={getImageUrl(col.image)}
+                                      alt={col.title}
+                                      className="w-full h-20 object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-20 bg-muted flex items-center justify-center">
+                                      <Layers className="w-6 h-6 text-muted-foreground/30" />
+                                    </div>
+                                  )}
+                                  <div className="p-2">
+                                    <p className="text-xs font-medium truncate">{col.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {col.products?.length || 0}{' '}
+                                      {t('listing.tabs.productType').toLowerCase()}
+                                    </p>
                                   </div>
-                                )}
-                                <div className="p-2">
-                                  <p className="text-xs font-medium truncate">{col.title}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {col.products?.length || 0}{' '}
-                                    {t('listing.tabs.productType').toLowerCase()}
-                                  </p>
-                                </div>
-                              </Link>
-                            ))}
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
                           </div>
                         </div>
                       )}
