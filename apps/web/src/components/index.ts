@@ -1,4 +1,5 @@
 export { Header } from './Header';
+export { MainContent } from './MainContent';
 export { Hero } from './Hero';
 export { ProductSection } from './ProductSection';
 export { Footer } from './Footer';
@@ -48,6 +49,9 @@ export type {
   ModeratorSelectorProps,
   PaymentProtectionCardProps,
 } from './Payment';
+
+// Query Provider (React Query)
+export { QueryProvider } from './QueryProvider';
 
 // Platform Provider
 export { TGMiniAppProvider, useTGMiniApp } from './TGMiniAppProvider';

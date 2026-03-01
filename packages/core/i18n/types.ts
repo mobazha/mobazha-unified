@@ -273,6 +273,8 @@ export interface TranslationResource {
     bestRating: string;
     listings: string;
     users: string;
+    category: string;
+    allCategories: string;
   };
 
   // 购物车
@@ -680,6 +682,8 @@ export interface TranslationResource {
     serverError: string;
     timeout: string;
     offline: string;
+    offlineDesc: string;
+    backOnline: string;
     invalidInput: string;
     requiredField: string;
   };

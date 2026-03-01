@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   useI18n,
   useSales,
@@ -26,7 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OrderTable, OrderDetailModal, OrderListCompact } from '@/components/Order';
+import { OrderTable, OrderListCompact } from '@/components/Order';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -100,6 +101,7 @@ function useAdminOrders() {
 export default function AdminOrdersPage() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const router = useRouter();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
 
@@ -112,7 +114,6 @@ export default function AdminOrdersPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const { execute: executeOrderAction, isLoading: isOrderActionLoading } = useOrderAction();
 
@@ -179,15 +180,6 @@ export default function AdminOrdersPage() {
       setSelectedIds(new Set(filteredOrders.map(o => o.id)));
     }
   }, [isAllSelected, filteredOrders]);
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
 
   const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
@@ -339,9 +331,12 @@ export default function AdminOrdersPage() {
     [isProcessing, isOrderActionLoading, executeOrderAction, t, toast, refetch]
   );
 
-  const handleViewDetails = useCallback((orderId: string) => {
-    setSelectedOrderId(orderId);
-  }, []);
+  const handleViewDetails = useCallback(
+    (orderId: string) => {
+      router.push(`/orders/${orderId}?type=sale`);
+    },
+    [router]
+  );
 
   const handleContact = useCallback(
     (_peerId: string) => {
@@ -364,7 +359,9 @@ export default function AdminOrdersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('admin.orders.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            {t('admin.orders.title')}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">{t('admin.orders.subtitle')}</p>
         </div>
         <div className="relative">
@@ -455,7 +452,7 @@ export default function AdminOrdersPage() {
                 type="date"
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
-                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                className="h-11 sm:h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
                 aria-label={t('admin.orders.dateFrom')}
               />
             </div>
@@ -466,7 +463,7 @@ export default function AdminOrdersPage() {
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
-                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                className="h-11 sm:h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
                 aria-label={t('admin.orders.dateTo')}
               />
             </div>
@@ -474,12 +471,12 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Status tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
           {statusTabs.map(tab => (
             <button
               key={tab.value}
               onClick={() => setStatusFilter(tab.value)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] sm:min-h-0 snap-start ${
                 statusFilter === tab.value
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border'
@@ -494,7 +491,7 @@ export default function AdminOrdersPage() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0 snap-start"
             >
               {t('admin.orders.clearFilters')}
             </button>
@@ -596,15 +593,6 @@ export default function AdminOrdersPage() {
           )}
         </>
       )}
-
-      {/* Order Detail Modal */}
-      <OrderDetailModal
-        orderId={selectedOrderId}
-        open={!!selectedOrderId}
-        onClose={() => setSelectedOrderId(null)}
-        viewingContext="sale"
-        onOrderUpdate={() => refetch()}
-      />
     </div>
   );
 }

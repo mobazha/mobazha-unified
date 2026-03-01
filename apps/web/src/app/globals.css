@@ -485,6 +485,16 @@ body {
     color 0.3s ease;
 }
 
+/* Mobile keyboard: ensure focused inputs stay visible */
+@media (max-width: 1023px) {
+  input:focus,
+  textarea:focus,
+  select:focus,
+  [contenteditable]:focus {
+    scroll-margin-bottom: 8rem;
+  }
+}
+
 /* Safe area utilities */
 @utility pt-safe {
   padding-top: var(--safe-area-inset-top);
@@ -777,6 +787,28 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Page entrance animation — fade + subtle slide-up on mobile */
+@utility animate-page-enter {
+  animation: pageEnter 0.25s ease-out both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter {
+    animation: none !important;
   }
 }
 

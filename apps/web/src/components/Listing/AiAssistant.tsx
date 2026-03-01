@@ -43,10 +43,15 @@ export function AiAssistButton({
         bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-600 dark:text-purple-400
         hover:from-purple-500/20 hover:to-blue-500/20
         disabled:opacity-50 disabled:cursor-not-allowed
-        ${size === 'xs' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'}
+        min-h-[44px] sm:min-h-0
+        ${size === 'xs' ? 'px-3 py-2 text-sm sm:px-2 sm:py-0.5 sm:text-xs' : 'px-3 py-2 text-sm sm:px-2.5 sm:py-1'}
       `}
     >
-      {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+      {isLoading ? (
+        <Loader2 className="w-4 h-4 sm:w-3 sm:h-3 animate-spin" />
+      ) : (
+        <Sparkles className="w-4 h-4 sm:w-3 sm:h-3" />
+      )}
       {label || t('ai.assist', { defaultValue: 'AI' })}
     </button>
   );
@@ -166,7 +171,7 @@ export function AiImageGeneratePanel({
           type="button"
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white min-h-[44px] sm:min-h-0"
           size="sm"
         >
           {isGenerating ? (
@@ -239,11 +244,22 @@ export function AiImageGeneratePanel({
           </div>
 
           <div className="flex gap-2">
-            <Button type="button" onClick={() => onApply(result)} size="sm" className="flex-1">
+            <Button
+              type="button"
+              onClick={() => onApply(result)}
+              size="sm"
+              className="flex-1 min-h-[44px] sm:min-h-0"
+            >
               <Check className="w-4 h-4 mr-1" />
               {t('ai.applyAll', { defaultValue: 'Apply All' })}
             </Button>
-            <Button type="button" onClick={handleGenerate} variant="outline" size="sm">
+            <Button
+              type="button"
+              onClick={handleGenerate}
+              variant="outline"
+              size="sm"
+              className="min-h-[44px] sm:min-h-0"
+            >
               <Wand2 className="w-4 h-4 mr-1" />
               {t('ai.regenerate', { defaultValue: 'Regenerate' })}
             </Button>

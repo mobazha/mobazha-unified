@@ -74,20 +74,20 @@ formatNotificationName(data?) → 通知发送者名（空=省略主语）
 
 20+ 文件完成身份人性化，所有 UI fallback 文案已 i18n 化：
 
-| 组件 / 文件                                       | 修改内容                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------- |
-| `app/page.tsx` / `app/search/page.tsx`            | vendorName 空时用截断 peerID，再空则隐藏                      |
-| `app/orders/page.tsx`                             | 角色标签 i18n 兜底 (`t('order.seller')` / `t('order.buyer')`) |
-| `OrderDetailModal.tsx` / `OrderDetailContent.tsx` | 截断 peerID + `t('common.user')` 兜底                         |
-| `OrderListCompact.tsx`                            | `t('order.untitledItem')` 替代 "Unknown"                      |
-| `NotificationCard.tsx` / `notificationService.ts` | 空字符串省略主语                                              |
-| `ChatDrawer.tsx`                                  | `t('chat.defaultRoom')` 兜底                                  |
-| `app/payment/page.tsx`                            | `t('order.seller')` 兜底                                      |
-| `ProductDetail.tsx`                               | 截断 peerID，无数据则隐藏                                     |
-| `ReviewList.tsx` / `ReviewCard.tsx`               | 统一截断格式 + `t('review.anonymous')` 兜底                   |
-| `UserInfoCard.tsx` / blocked-users                | 截断 peerID 展示                                              |
-| `moderator/cases/[orderId]/page.tsx`              | 截断 peerID + `t('order.fundsProtected')`                     |
-| `orderTransform.ts` (core)                        | `formatUserName()` + 'Seller'/'Buyer' 英文兜底                |
+| 组件 / 文件                                        | 修改内容                                                      |
+| -------------------------------------------------- | ------------------------------------------------------------- |
+| `app/page.tsx` / `app/search/page.tsx`             | vendorName 空时用截断 peerID，再空则隐藏                      |
+| `app/orders/page.tsx`                              | 角色标签 i18n 兜底 (`t('order.seller')` / `t('order.buyer')`) |
+| `OrderDetailDesktop.tsx` / `OrderDetailMobile.tsx` | 截断 peerID + `t('common.user')` 兜底（M5-2 重构后）          |
+| `OrderListCompact.tsx`                             | `t('order.untitledItem')` 替代 "Unknown"                      |
+| `NotificationCard.tsx` / `notificationService.ts`  | 空字符串省略主语                                              |
+| `ChatDrawer.tsx`                                   | `t('chat.defaultRoom')` 兜底                                  |
+| `app/payment/page.tsx`                             | `t('order.seller')` 兜底                                      |
+| `ProductDetail.tsx`                                | 截断 peerID，无数据则隐藏                                     |
+| `ReviewList.tsx` / `ReviewCard.tsx`                | 统一截断格式 + `t('review.anonymous')` 兜底                   |
+| `UserInfoCard.tsx` / blocked-users                 | 截断 peerID 展示                                              |
+| `moderator/cases/[orderId]/page.tsx`               | 截断 peerID + `t('order.fundsProtected')`                     |
+| `orderTransform.ts` (core)                         | `formatUserName()` + 'Seller'/'Buyer' 英文兜底                |
 
 新增 i18n keys：`common.user`、`common.event`、`chat.defaultRoom`、`order.untitledItem`、`order.fundsProtected`
 

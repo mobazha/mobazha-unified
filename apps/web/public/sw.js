@@ -7,10 +7,10 @@
 // 版本号：每次部署更新时递增此版本号
 const CACHE_VERSION = '2';
 const CACHE_NAME = `mobazha-v${CACHE_VERSION}`;
-const OFFLINE_URL = '/offline';
+const OFFLINE_URL = '/offline.html';
 
 // Assets to cache on install
-const PRECACHE_ASSETS = ['/manifest.json', '/offline'];
+const PRECACHE_ASSETS = ['/manifest.json', '/offline.html'];
 
 // Cache strategies
 const CACHE_STRATEGIES = {

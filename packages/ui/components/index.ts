@@ -8,3 +8,6 @@
 export * from './OptimizedImage';
 export * from './LazyLoad';
 export * from './VirtualList';
+
+// 移动端交互组件
+export * from './BottomSheet';

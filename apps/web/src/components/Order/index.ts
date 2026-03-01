@@ -63,19 +63,6 @@ export { RwaTokenFulfill } from './RwaTokenFulfill';
 export type { RwaTokenFulfillProps } from './RwaTokenFulfill';
 export type { TokenInfo } from '@mobazha/core';
 
-export { OrderDetailContent } from './OrderDetailContent';
-export type {
-  OrderDetailContentProps,
-  DisplayOrder,
-  OrderItem as DetailOrderItem,
-  OrderVendor,
-  Moderator,
-  TimelineEvent,
-} from './OrderDetailContent';
-
-export { OrderDetailModal } from './OrderDetailModal';
-export type { OrderDetailModalProps } from './OrderDetailModal';
-
 export { OrderTable } from './OrderTable';
 export type { OrderTableProps } from './OrderTable';
 
@@ -99,6 +86,17 @@ export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDi
 
 // Review
 export { WriteReviewDialog } from './WriteReviewDialog';
+
+// Desktop / Mobile views
+export { OrderDetailDesktop } from './OrderDetailDesktop';
+export type { OrderDetailDesktopProps } from './OrderDetailDesktop';
+export { OrderDetailMobile } from './OrderDetailMobile';
+export type { OrderDetailMobileProps } from './OrderDetailMobile';
+export { OrderActionSheet } from './OrderActionSheet';
+export type { OrderActionSheetProps } from './OrderActionSheet';
+
+// Sub-card components
+export * from './cards';
 
 // Selectors
 export { ReceivingAccountSelector } from './ReceivingAccountSelector';

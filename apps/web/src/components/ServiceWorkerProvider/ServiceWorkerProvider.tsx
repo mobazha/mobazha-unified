@@ -1,22 +1,33 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
+import { useI18n } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 
 export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isOnline, updateAvailable, update } = useServiceWorker();
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const wasOfflineRef = useRef(false);
 
-  // Compute showOffline based on isOnline (no need for separate state)
-  const showOffline = useMemo(() => !isOnline, [isOnline]);
+  useEffect(() => {
+    if (!isOnline) {
+      wasOfflineRef.current = true;
+    } else if (wasOfflineRef.current) {
+      wasOfflineRef.current = false;
+      toast({ description: t('errors.backOnline'), duration: 3000 });
+    }
+  }, [isOnline, toast, t]);
 
   return (
     <>
       {children}
 
       {/* Offline Indicator */}
-      {showOffline && (
+      {!isOnline && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-warning text-white text-center py-2 px-4 text-sm font-medium animate-in slide-in-from-top duration-300">
           <div className="flex items-center justify-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +38,7 @@ export const ServiceWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
                 d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829"
               />
             </svg>
-            You&apos;re offline. Some features may be unavailable.
+            {t('errors.offline')}. {t('errors.offlineDesc')}
           </div>
         </div>
       )}

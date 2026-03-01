@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, type ReactNode } from 'react';
+import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useUserStore, useMatrixInit } from '@mobazha/core';
 import {
@@ -8,7 +8,11 @@ import {
   getOAuthParams,
   clearOAuthParams,
   getLoginRedirectPath,
+  attemptSilentAuth,
+  completeTelegramBind,
+  parseBindSessionFromStartParam,
 } from '@mobazha/core';
+import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -55,10 +59,19 @@ export function AuthProvider({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { isAuthenticated, restoreSession, loginWithOAuth, isLoading, needsOnboarding } =
-    useUserStore();
+  const {
+    isAuthenticated,
+    restoreSession,
+    loginWithOAuth,
+    loginMiniApp,
+    enterAnonymousMode,
+    isLoading,
+    needsOnboarding,
+  } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
+  const tg = useTGMiniApp();
 
   // HMR 保护：使用 ref 避免热更新导致的重复执行
   const hasRestoredSession = useRef(false);
@@ -76,6 +89,72 @@ export function AuthProvider({
     autoConnect: true,
   });
 
+  // Detect Mini App platform (non-reactive, determined at mount)
+  const isTGMiniApp = tg.isAvailable;
+  const isDiscordActivity =
+    typeof window !== 'undefined' &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((window as any).__DISCORD_EMBEDDED__ ||
+      new URLSearchParams(window.location.search).has('frame_id'));
+  const isMiniApp = isTGMiniApp || isDiscordActivity;
+
+  // Mini App authentication flow
+  const handleMiniAppAuth = useCallback(async () => {
+    if (!isMiniApp) return false;
+
+    const platform = isTGMiniApp ? 'telegram' : 'discord';
+    let credential: string | null = null;
+    if (isTGMiniApp) {
+      credential = tg.initData;
+    } else {
+      credential = new URLSearchParams(window.location.search).get('access_token');
+      if (credential) {
+        // Persist Discord access_token for 401 re-auth (URL is lost after navigation)
+        sessionStorage.setItem('discord_access_token', credential);
+      }
+    }
+
+    if (!credential) {
+      enterAnonymousMode(platform as 'telegram' | 'discord');
+      return true;
+    }
+
+    // Check for binding deep link return (TG only)
+    if (isTGMiniApp && tg.initDataUnsafe?.start_param) {
+      const bindSessionId = parseBindSessionFromStartParam(tg.initDataUnsafe.start_param);
+      if (bindSessionId && tg.initData) {
+        setLoadingMessage('Linking account…');
+        try {
+          const token = await completeTelegramBind(tg.initData, bindSessionId);
+          if (token) {
+            await loginMiniApp(token, 'telegram');
+            return true;
+          }
+        } catch {
+          // Binding failed, fall through to normal auth
+        }
+      }
+    }
+
+    // Attempt silent sign-in
+    setLoadingMessage(isTGMiniApp ? 'Connecting…' : 'Signing in…');
+    try {
+      const token = await attemptSilentAuth(platform as 'telegram' | 'discord', credential);
+
+      if (token) {
+        await loginMiniApp(token, platform as 'telegram' | 'discord');
+        return true;
+      }
+
+      // User doesn't have an account — enter anonymous mode
+      enterAnonymousMode(platform as 'telegram' | 'discord');
+      return true;
+    } catch {
+      enterAnonymousMode(platform as 'telegram' | 'discord');
+      return true;
+    }
+  }, [isMiniApp, isTGMiniApp, tg.initData, tg.initDataUnsafe, loginMiniApp, enterAnonymousMode]);
+
   // 处理 OAuth 回调（在任何页面都可能发生）
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -84,22 +163,16 @@ export function AuthProvider({
         const { code, state } = getOAuthParams();
 
         if (code && state) {
-          console.log('🔑 Processing OAuth callback in AuthProvider...');
           const success = await loginWithOAuth(code, state);
-
-          // 清理 URL 中的 OAuth 参数
           clearOAuthParams();
 
           if (success) {
-            // OAuth 登录成功，标记会话已恢复，防止后续不必要的 restoreSession 调用
             hasRestoredSession.current = true;
 
-            // 检查是否需要 onboarding（无 profile）
             const currentState = useUserStore.getState();
             if (currentState.needsOnboarding) {
               router.push('/onboarding');
             } else {
-              // 获取登录前的页面路径
               const redirectPath = getRedirectPath(searchParams);
               router.push(redirectPath);
             }
@@ -114,10 +187,8 @@ export function AuthProvider({
   }, [loginWithOAuth, router, isProcessingOAuth, searchParams]);
 
   // 恢复会话（仅在没有 OAuth 回调时）
-  // 使用 ref 防止 HMR 导致的重复执行
   useEffect(() => {
     const initAuth = async () => {
-      // HMR 保护：如果已经恢复过会话，跳过
       if (hasRestoredSession.current) {
         setIsInitialized(true);
         return;
@@ -125,14 +196,20 @@ export function AuthProvider({
 
       if (!hasOAuthCallback() && !isProcessingOAuth) {
         hasRestoredSession.current = true;
-        // 尝试恢复会话
-        await restoreSession();
+
+        // Mini App environments use platform credentials instead of stored tokens
+        if (isMiniApp) {
+          await handleMiniAppAuth();
+        } else {
+          await restoreSession();
+        }
+        setLoadingMessage(null);
         setIsInitialized(true);
       }
     };
 
     initAuth();
-  }, [restoreSession, isProcessingOAuth]);
+  }, [restoreSession, isProcessingOAuth, isMiniApp, handleMiniAppAuth]);
 
   useEffect(() => {
     if (!isInitialized || isProcessingOAuth) return;
@@ -161,25 +238,14 @@ export function AuthProvider({
     needsOnboarding,
   ]);
 
-  // 正在处理 OAuth 回调
-  if (isProcessingOAuth) {
+  // 正在处理 OAuth 回调 or Mini App auth
+  if (isProcessingOAuth || (!isInitialized && (isLoading || loadingMessage))) {
+    const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : 'Loading…');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-foreground">正在登录...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 初始化中显示加载状态
-  if (!isInitialized && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">加载中...</p>
+          <p className="text-muted-foreground">{message}</p>
         </div>
       </div>
     );

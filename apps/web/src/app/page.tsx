@@ -133,6 +133,7 @@ export default function HomePage() {
       const mockMode = isMockMode();
       setDataSource(mockMode ? 'mock' : 'api');
 
+      // eslint-disable-next-line no-console
       console.log(`📦 Fetching products (${mockMode ? 'Mock' : 'Real API'} mode)`);
 
       try {
@@ -236,6 +237,7 @@ export default function HomePage() {
               : t('homeExtended.trendingSubtitle')
           }
           products={trendingProducts}
+          isLoading={isLoading}
           showViewAll={!standalone}
           viewAllHref="/marketplace?sort=trending"
         />
@@ -246,6 +248,7 @@ export default function HomePage() {
               title={t('homeExtended.featuredServices')}
               subtitle={t('homeExtended.featuredSubtitle')}
               products={featuredProducts}
+              isLoading={isLoading}
               viewAllHref="/marketplace?category=featured"
             />
           </div>

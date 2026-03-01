@@ -4,6 +4,7 @@
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, Outlet, createBrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // 导入全局样式
 import './app/globals.css';
@@ -21,6 +22,17 @@ import {
 } from '@/components';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // 导入路由配置
 import { routes } from './routes';
@@ -75,15 +87,17 @@ const router = createBrowserRouter([
 // 应用根组件 - 不使用路由 hooks 的 Provider 放在外层
 function App() {
   return (
-    <ThemeProvider>
-      <ServiceWorkerProvider>
-        <AppKitProvider>
-          <CurrencyProvider>
-            <RouterProvider router={router} />
-          </CurrencyProvider>
-        </AppKitProvider>
-      </ServiceWorkerProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <ServiceWorkerProvider>
+          <AppKitProvider>
+            <CurrencyProvider>
+              <RouterProvider router={router} />
+            </CurrencyProvider>
+          </AppKitProvider>
+        </ServiceWorkerProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

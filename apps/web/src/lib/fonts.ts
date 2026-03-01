@@ -1,23 +1,13 @@
 /**
- * Pre-loaded Google Fonts — PG-201
+ * Store Fonts — PG-201
  *
- * All store-supported fonts are loaded via next/font/google at build time.
- * Each font exposes a CSS variable (--font-*) that StoreThemeProvider
- * selects at runtime based on the seller's StoreConfig.theme.fontFamily.
- *
- * This eliminates FOUT and external Google Fonts requests at runtime.
+ * Inter is the default UI font and is preloaded at build time via next/font/google.
+ * Other store fonts are loaded on demand when a store theme requires them,
+ * using Google Fonts CSS links injected at runtime. This avoids downloading
+ * all 8 font families on initial page load.
  */
 
-import {
-  Inter,
-  DM_Sans,
-  Space_Grotesk,
-  Playfair_Display,
-  Lora,
-  Merriweather,
-  Josefin_Sans,
-  Poppins,
-} from 'next/font/google';
+import { Inter } from 'next/font/google';
 import type { FontFamily } from '@mobazha/core';
 
 const inter = Inter({
@@ -26,70 +16,45 @@ const inter = Inter({
   display: 'swap',
 });
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  display: 'swap',
-});
+export const defaultFont = inter;
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-  display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
-
-const lora = Lora({
-  subsets: ['latin'],
-  variable: '--font-lora',
-  display: 'swap',
-});
-
-const merriweather = Merriweather({
-  subsets: ['latin'],
-  weight: ['300', '400', '700'],
-  variable: '--font-merriweather',
-  display: 'swap',
-});
-
-const josefinSans = Josefin_Sans({
-  subsets: ['latin'],
-  variable: '--font-josefin-sans',
-  display: 'swap',
-});
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-poppins',
-  display: 'swap',
-});
-
-export const storeFonts = [
-  inter,
-  dmSans,
-  spaceGrotesk,
-  playfair,
-  lora,
-  merriweather,
-  josefinSans,
-  poppins,
-] as const;
-
-export const storeFontVariableClasses = storeFonts.map(f => f.variable).join(' ');
+export const storeFontVariableClasses = inter.variable;
 
 export const FONT_CSS_VAR_MAP: Record<FontFamily, string> = {
   inter: 'var(--font-inter)',
-  'dm-sans': 'var(--font-dm-sans)',
-  'space-grotesk': 'var(--font-space-grotesk)',
-  playfair: 'var(--font-playfair)',
-  lora: 'var(--font-lora)',
-  merriweather: 'var(--font-merriweather)',
-  'josefin-sans': 'var(--font-josefin-sans)',
-  poppins: 'var(--font-poppins)',
+  'dm-sans': "'DM Sans', sans-serif",
+  'space-grotesk': "'Space Grotesk', sans-serif",
+  playfair: "'Playfair Display', serif",
+  lora: "'Lora', serif",
+  merriweather: "'Merriweather', serif",
+  'josefin-sans': "'Josefin Sans', sans-serif",
+  poppins: "'Poppins', sans-serif",
 };
+
+const GOOGLE_FONTS_URL_MAP: Record<string, string> = {
+  'dm-sans': 'DM+Sans:wght@400;500;600;700',
+  'space-grotesk': 'Space+Grotesk:wght@400;500;600;700',
+  playfair: 'Playfair+Display:wght@400;500;600;700',
+  lora: 'Lora:wght@400;500;600;700',
+  merriweather: 'Merriweather:wght@300;400;700',
+  'josefin-sans': 'Josefin+Sans:wght@400;500;600;700',
+  poppins: 'Poppins:wght@300;400;500;600;700',
+};
+
+const loadedFonts = new Set<string>();
+
+/**
+ * Dynamically load a store font by injecting a Google Fonts stylesheet link.
+ * Idempotent — repeated calls for the same font are no-ops.
+ */
+export function loadStoreFont(family: FontFamily): void {
+  if (family === 'inter' || loadedFonts.has(family)) return;
+  const spec = GOOGLE_FONTS_URL_MAP[family];
+  if (!spec) return;
+
+  loadedFonts.add(family);
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${spec}&display=swap`;
+  document.head.appendChild(link);
+}

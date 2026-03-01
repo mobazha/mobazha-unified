@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { ChevronDown, ChevronUp, CreditCard, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@mobazha/core';
+import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
 import { TOKENS, CHAINS, FIAT_METHODS } from './config';
 import { CryptoTokenCard } from './CryptoTokenCard';
@@ -32,6 +33,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   showFiatMethods = true,
 }) => {
   const { t } = useI18n();
+  const { isEmbedded } = useMiniAppPayment();
   const [activeChain, setActiveChain] = useState<string>('all');
   const [showAllTokens, setShowAllTokens] = useState(false);
   const maxVisibleTokens = 8;
@@ -122,7 +124,10 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
                 >
                   <CreditCard className="w-5 h-5 shrink-0" style={{ color: method.color }} />
                   <div className="flex flex-col items-start flex-1 min-w-0">
-                    <span className="text-sm font-medium">{method.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium">{method.name}</span>
+                      {isEmbedded && <ExternalLink className="w-3 h-3 text-muted-foreground" />}
+                    </div>
                     {method.brandLabels && method.brandLabels.length > 0 && (
                       <span className="text-xs text-muted-foreground truncate w-full text-left">
                         {method.brandLabels.join(' · ')}
@@ -140,9 +145,16 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
       {/* Crypto section */}
       <div className="space-y-3">
         {activeFiatMethods.length > 0 && (
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            {t('fiat.cryptoSection', { defaultValue: 'Pay with cryptocurrency' })}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              {t('fiat.cryptoSection', { defaultValue: 'Pay with cryptocurrency' })}
+            </span>
+            {isEmbedded && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                Recommended
+              </span>
+            )}
+          </div>
         )}
 
         {/* Chain tabs */}

@@ -282,16 +282,22 @@ const mockSearchResults = {
 
 const mockOrderDetail = {
   contract: {
+    OrderID: 'QmOrder001',
     orderOpen: {
       listings: [
         {
+          vendorID: { peerID: MOCK_PEER_ID },
           listing: {
             slug: 'wireless-headphones',
-            metadata: { contractType: 'PHYSICAL_GOOD' },
+            metadata: {
+              contractType: 'PHYSICAL_GOOD',
+              pricingCurrency: { code: 'USD', divisibility: 2 },
+            },
+            vendorID: { peerID: MOCK_PEER_ID, handle: 'TechStore' },
             item: {
               title: 'Wireless Noise-Cancelling Headphones',
               description: 'Premium over-ear headphones with ANC',
-              price: '8999',
+              price: 8999,
               images: [{ ...mockThumbnail(3), filename: 'headphones.png' }],
               skus: [{ productID: '1', quantity: '100' }],
             },
@@ -311,9 +317,11 @@ const mockOrderDetail = {
       payment: {
         coin: 'ETH',
         chaincode: '',
-        amount: '8999',
+        amount: 8999,
         method: 'DIRECT',
       },
+      pricingCoin: 'USD',
+      amount: 8999,
       shipping: {
         shipTo: 'John Smith',
         address: '123 Blockchain Avenue',
@@ -322,13 +330,27 @@ const mockOrderDetail = {
         postalCode: '94105',
         country: 'US',
       },
-      items: [{ listingHash: '', quantity: '1' }],
+      items: [
+        {
+          listingHash: '',
+          quantity: 1,
+          memo: 'Please ship ASAP, thank you!',
+          shippingOption: { name: 'Standard', service: 'Standard' },
+        },
+      ],
       timestamp: WEEK_AGO,
-      buyerID: { peerID: MOCK_BUYER_PEER_ID },
+      buyerID: { peerID: MOCK_BUYER_PEER_ID, handle: 'CryptoBuyer' },
+      alternateContactInfo: 'john@example.com',
     },
     orderConfirmation: {
       timestamp: DAY_AGO,
     },
+    orderFulfillments: [
+      {
+        timestamp: DAY_AGO,
+        physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX1234567890' }],
+      },
+    ],
     vendorListings: [
       {
         slug: 'wireless-headphones',
@@ -347,7 +369,7 @@ const mockOrderDetail = {
   read: true,
   funded: true,
   paymentAddressTransactions: [
-    { txid: '0x1234567890abcdef', value: '8999', confirmations: 12, timestamp: WEEK_AGO },
+    { txid: '0x1234567890abcdef', value: 8999, confirmations: 12, timestamp: WEEK_AGO },
   ],
 };
 
@@ -383,8 +405,27 @@ export async function mockOrdersAPI(page: Page): Promise<void> {
   });
 }
 
+const mockVendorProfile = {
+  peerID: MOCK_PEER_ID,
+  name: 'TechStore',
+  handle: 'techstore',
+  location: 'San Francisco, CA',
+  avatarHashes: { medium: '', small: '', tiny: '' },
+  about: 'Premium electronics store',
+};
+
+const mockBuyerProfile = {
+  peerID: MOCK_BUYER_PEER_ID,
+  name: 'CryptoBuyer',
+  handle: 'cryptobuyer',
+  location: 'New York, NY',
+  avatarHashes: { medium: '', small: '', tiny: '' },
+  about: '',
+};
+
 /**
  * Set up route mocking for order detail page.
+ * Includes order data + profile data for counterparty card rendering.
  */
 export async function mockOrderDetailAPI(page: Page): Promise<void> {
   await page.route('**/v1/orders/**', route => {
@@ -392,6 +433,27 @@ export async function mockOrderDetailAPI(page: Page): Promise<void> {
       status: 200,
       contentType: 'application/json',
       body: wrapData(mockOrderDetail),
+    });
+  });
+
+  await page.route('**/search/v1/profiles/raw/**', route => {
+    const url = route.request().url();
+    const profile = url.includes(MOCK_PEER_ID) ? mockVendorProfile : mockBuyerProfile;
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(profile),
+    });
+  });
+
+  await page.route('**/v1/profiles/**', route => {
+    const url = route.request().url();
+    if (url.includes('/profiles/batch')) return route.fallback();
+    const profile = url.includes(MOCK_PEER_ID) ? mockVendorProfile : mockBuyerProfile;
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(profile),
     });
   });
 }
@@ -443,6 +505,135 @@ export async function mockSearchAPI(page: Page): Promise<void> {
       status: 200,
       contentType: 'application/json',
       body: wrapData(mockSearchResults),
+    });
+  });
+}
+
+const mockStoreListingItems = [
+  {
+    slug: 'wireless-headphones',
+    title: 'Wireless Noise-Cancelling Headphones',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(3),
+    price: { amount: 89.99, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.8,
+    ratingCount: 24,
+    productType: 'Electronics',
+  },
+  {
+    slug: 'vintage-camera',
+    title: 'Vintage Film Camera - Refurbished',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(36),
+    price: { amount: 245.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.5,
+    ratingCount: 8,
+    productType: 'Electronics',
+  },
+  {
+    slug: 'organic-coffee',
+    title: 'Organic Coffee Beans - Single Origin',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(63),
+    price: { amount: 22.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.9,
+    ratingCount: 42,
+    productType: 'Food',
+  },
+  {
+    slug: 'logo-design',
+    title: 'Professional Logo Design Package',
+    contractType: 'SERVICE',
+    thumbnail: mockSearchThumbnail(24),
+    price: { amount: 149.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 5.0,
+    ratingCount: 15,
+    productType: 'Services',
+  },
+  {
+    slug: 'leather-backpack',
+    title: 'Handcrafted Leather Backpack',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(119),
+    price: { amount: 175.0, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.7,
+    ratingCount: 31,
+    productType: 'Fashion',
+  },
+  {
+    slug: 'smart-watch',
+    title: 'Smart Watch Pro 2025',
+    contractType: 'PHYSICAL_GOOD',
+    thumbnail: mockSearchThumbnail(160),
+    price: { amount: 299.99, currency: { code: 'USD', divisibility: 2 } },
+    averageRating: 4.6,
+    ratingCount: 19,
+    productType: 'Electronics',
+  },
+];
+
+/**
+ * Mock store listing index (list of products for a store page).
+ */
+export async function mockStoreListingsAPI(page: Page): Promise<void> {
+  await page.route('**/v1/listings/index/**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockStoreListingItems),
+    });
+  });
+
+  await page.route('**/v1/listings/index', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockStoreListingItems),
+    });
+  });
+
+  await page.route('**/v1/collections*', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        data: [
+          { id: 'col-1', title: 'Best Sellers', products: ['a', 'b', 'c'] },
+          { id: 'col-2', title: 'New Arrivals', products: ['d', 'e'] },
+          { id: 'col-3', title: 'Holiday Deals', products: ['f'] },
+        ],
+      }),
+    });
+  });
+
+  await page.route('**/platform/v1/store-access/**', route => {
+    route.fulfill({ status: 200, contentType: 'application/json', body: wrapData({}) });
+  });
+
+  await page.route('**/v1/social/following/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ isFollowing: false }),
+    });
+  });
+
+  await page.route('**/v1/social/blocked/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ isBlocked: false }),
+    });
+  });
+
+  await page.route('**/platform/v1/integrations/storefront-config/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ sections: [] }),
     });
   });
 }
@@ -523,6 +714,56 @@ export async function mockImageRoutes(page: Page): Promise<void> {
       headers: { Location: 'https://picsum.photos/id/237/300/300' },
     });
   });
+}
+
+/**
+ * Inject mock cart data into localStorage for Zustand persist store.
+ * Call via page.addInitScript() BEFORE page.goto().
+ */
+export function getCartLocalStorageScript(): string {
+  const cartState = {
+    state: {
+      items: [
+        {
+          listing: {
+            slug: 'wireless-headphones',
+            title: 'Premium Wireless Noise-Canceling Headphones',
+            thumbnail: mockSearchThumbnail(96),
+            price: { amount: 149.99, currency: { code: 'USD', divisibility: 2 } },
+            vendorPeerID: MOCK_PEER_ID,
+            vendorHandle: 'techstore',
+          },
+          quantity: 1,
+          options: [{ name: 'Color', value: 'Midnight Black' }],
+        },
+        {
+          listing: {
+            slug: 'usb-c-cable',
+            title: 'USB-C Fast Charging Cable 2m',
+            thumbnail: mockSearchThumbnail(60),
+            price: { amount: 12.99, currency: { code: 'USD', divisibility: 2 } },
+            vendorPeerID: MOCK_PEER_ID,
+            vendorHandle: 'techstore',
+          },
+          quantity: 2,
+        },
+        {
+          listing: {
+            slug: 'leather-wallet',
+            title: 'Handcrafted Genuine Leather Bifold Wallet',
+            thumbnail: mockSearchThumbnail(119),
+            price: { amount: 59.99, currency: { code: 'USD', divisibility: 2 } },
+            vendorPeerID: 'QmVendor2PeerID',
+            vendorHandle: 'craftshop',
+          },
+          quantity: 1,
+        },
+      ],
+      isLoading: false,
+    },
+    version: 0,
+  };
+  return `localStorage.setItem('mobazha-cart-storage', '${JSON.stringify(cartState).replace(/'/g, "\\'")}');`;
 }
 
 /**

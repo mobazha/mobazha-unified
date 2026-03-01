@@ -8,7 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { StarRating } from '@/components/ui/star-rating';
 import { cn } from '@/lib/utils';
+import { useTGMainButton } from '@/hooks/useTGMainButton';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import {
   productDataService,
   profileApi,
@@ -23,15 +28,12 @@ import {
   useChatStore,
   productsApi,
   discountsApi,
+  useListing,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
-import {
-  getProductWithDedup,
-  getProfileWithDedup,
-  getRatingsWithDedup,
-} from '@/utils/requestDedup';
+import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
 import { Heart } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
@@ -41,30 +43,6 @@ import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
 import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
-
-// 星星评分组件
-function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {
-  const sizeClass = {
-    sm: 'w-3 h-3 sm:w-4 sm:h-4',
-    md: 'w-4 h-4 sm:w-5 sm:h-5',
-    lg: 'w-5 h-5 sm:w-6 sm:h-6',
-  }[size];
-
-  return (
-    <HStack gap="xs" align="center">
-      {[...Array(5)].map((_, i) => (
-        <svg
-          key={i}
-          className={`${sizeClass} ${i < Math.floor(rating) ? 'text-warning' : 'text-muted-foreground/40'}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </HStack>
-  );
-}
 
 // 获取库存数量（从 SKU 计算）
 function getStockQuantity(product: Product): number {
@@ -223,82 +201,41 @@ export function ProductDetail({
     };
   }, [product]);
 
-  // 获取商品数据（不包含评论，评论单独加载）
+  // 通过 React Query 获取商品数据（自动消费 prefetch 缓存）
+  const { listing: rqListing, isLoading: rqLoading, error: rqError } = useListing(slug, peerID);
+
   useEffect(() => {
-    // 生成唯一的请求标识
-    const requestKey = `${slug}-${peerID || ''}`;
-
-    // 如果已经加载过相同的数据，直接返回
-    if (loadedDataRef.current === requestKey) {
-      return;
-    }
-
-    // 用于取消过期请求的标志
-    let isCancelled = false;
-
-    const fetchProductData = async () => {
-      if (!slug) return;
-
-      setIsLoading(true);
+    if (rqListing) {
+      setProduct(rqListing);
+      setIsLoading(false);
       setError(null);
+      loadedDataRef.current = `${slug}-${peerID || ''}`;
+      onProductLoadedRef.current?.(rqListing);
+    } else if (rqError) {
+      setError(rqError);
+      setIsLoading(false);
+      onProductLoadedRef.current?.(null);
+    } else if (rqLoading) {
+      setIsLoading(true);
+    }
+  }, [rqListing, rqError, rqLoading, slug, peerID]);
 
-      try {
-        // 获取商品详情（使用去重函数）
-        const productData = await getProductWithDedup(slug, peerID, () =>
-          productDataService.getProduct(slug, peerID)
-        );
+  // 获取卖家信息（不阻塞商品显示）
+  useEffect(() => {
+    const vendorPeerID = product?.vendorID?.peerID;
+    if (!vendorPeerID) return;
 
-        // 检查请求是否已被取消
-        if (isCancelled) return;
+    let isCancelled = false;
+    getProfileWithDedup(vendorPeerID, () => profileApi.getProfile(vendorPeerID))
+      .then(vendorData => {
+        if (!isCancelled && vendorData) setVendor(vendorData);
+      })
+      .catch(err => console.error('Failed to fetch vendor:', err));
 
-        if (!productData) {
-          setError(t('product.notFound'));
-          setIsLoading(false);
-          onProductLoadedRef.current?.(null);
-          return;
-        }
-
-        // 标记数据已加载
-        loadedDataRef.current = requestKey;
-
-        setProduct(productData);
-        onProductLoadedRef.current?.(productData);
-
-        // 获取卖家信息（不阻塞商品显示）
-        const vendorPeerID = productData.vendorID?.peerID;
-        if (vendorPeerID) {
-          try {
-            // 使用去重函数
-            const vendorData = await getProfileWithDedup(vendorPeerID, () =>
-              profileApi.getProfile(vendorPeerID)
-            );
-            if (!isCancelled && vendorData) {
-              setVendor(vendorData);
-            }
-          } catch (err) {
-            console.error('Failed to fetch vendor:', err);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch product:', err);
-        if (!isCancelled) {
-          setError(t('common.error'));
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchProductData();
-
-    // 清理函数：取消过期请求，但不重置已加载数据的标记
     return () => {
       isCancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- t 函数变化不应该触发重新获取数据
-  }, [slug, peerID]);
+  }, [product?.vendorID?.peerID]);
 
   // 独立获取评论数据（不阻塞商品页面渲染）
   useEffect(() => {
@@ -375,6 +312,18 @@ export function ProductDetail({
       .filter((url): url is string => !!url);
   }, [product]);
 
+  const imageSwipeHandlers = useSwipeGesture({
+    onSwipeLeft: useCallback(
+      () => setSelectedImage(prev => (prev >= imageUrls.length - 1 ? 0 : prev + 1)),
+      [imageUrls.length]
+    ),
+    onSwipeRight: useCallback(
+      () => setSelectedImage(prev => (prev <= 0 ? imageUrls.length - 1 : prev - 1)),
+      [imageUrls.length]
+    ),
+    enabled: imageUrls.length > 1,
+  });
+
   // 计算价格信息
   const priceInfo = useMemo(() => {
     if (!product)
@@ -448,6 +397,30 @@ export function ProductDetail({
 
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [product, quantity, isModal, onClose, router]);
+
+  // TG Mini App integration
+  const { isAvailable: isTG, haptic } = useTGMiniApp();
+  const tgStock = useMemo(() => (product ? getStockQuantity(product) : 0), [product]);
+  const tgPriceDisplay = useMemo(() => {
+    if (!product) return '';
+    const price = Number(product.item?.price) || 0;
+    const curr = product.metadata?.pricingCurrency?.code || 'USD';
+    return formatPrice(price, curr);
+  }, [product, formatPrice]);
+
+  const handleTGAddToCart = useCallback(() => {
+    handleAddToCart();
+    haptic?.notificationOccurred('success');
+  }, [handleAddToCart, haptic]);
+
+  useTGMainButton({
+    text: tgStock === 0 ? t('product.outOfStock') : `${t('product.addToCart')} - ${tgPriceDisplay}`,
+    onClick: handleTGAddToCart,
+    visible: isTG && !!product && !isModal,
+    disabled: tgStock === 0,
+  });
+
+  useTGBackButton({ visible: isTG && !isModal });
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
@@ -630,6 +603,7 @@ export function ProductDetail({
             <div
               className={`relative ${isModal ? 'aspect-[4/3]' : 'aspect-square'} rounded-xl sm:rounded-2xl overflow-hidden bg-muted cursor-pointer group`}
               onClick={() => imageUrls.length > 0 && setIsImagePreviewOpen(true)}
+              {...imageSwipeHandlers}
             >
               {imageUrls.length > 0 ? (
                 <>
@@ -656,6 +630,21 @@ export function ProductDetail({
                       </svg>
                     </div>
                   </div>
+
+                  {/* Swipe dot indicators (mobile) */}
+                  {imageUrls.length > 1 && (
+                    <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5 sm:hidden">
+                      {imageUrls.map((_, idx) => (
+                        <span
+                          key={idx}
+                          className={cn(
+                            'w-1.5 h-1.5 rounded-full transition-all',
+                            idx === selectedImage ? 'bg-white w-3' : 'bg-white/50'
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -730,7 +719,7 @@ export function ProductDetail({
                 )}
               </HStack>
               <HStack gap="sm" align="center">
-                <StarRating rating={averageRating} size={isModal ? 'sm' : 'md'} />
+                <StarRating value={averageRating} size={isModal ? 'sm' : 'md'} />
                 <span className={cn('text-muted-foreground ml-1', isModal ? 'text-xs' : 'text-sm')}>
                   {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
                 </span>
@@ -1534,4 +1523,4 @@ export function ProductDetail({
 }
 
 // 导出内部使用的数据和函数，供 BottomBar 使用
-export { getStockQuantity, hasFreeShipping, getEstimatedDelivery, StarRating };
+export { getStockQuantity, hasFreeShipping, getEstimatedDelivery };

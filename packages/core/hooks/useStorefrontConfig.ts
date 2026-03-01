@@ -1,92 +1,81 @@
 'use client';
 
 /**
- * Store Branding Config Hook — PG-201
+ * Store Branding Config Hook — React Query 版本
  *
- * Provides storefront config fetching and saving for both
- * the owner (admin editor) and public (store visitor) contexts.
+ * Owner (admin editor) → useQuery + useMutation
+ * Public (store visitor) → useQuery
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { StoreConfig } from '../types/storeConfig';
 import * as storefrontApi from '../services/api/storefront';
+import { queryKeys } from './queryKeys';
+import { formatQueryError } from './queryUtils';
 
-// ---------------------------------------------------------------------------
-// Owner hook (authenticated — admin editor)
-// ---------------------------------------------------------------------------
-
+/**
+ * Owner hook (authenticated — admin editor)
+ */
 export function useStorefrontConfig() {
-  const [config, setConfig] = useState<StoreConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await storefrontApi.getStorefrontConfig();
-      setConfig(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load storefront config');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data: config,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.storefront.config(),
+    queryFn: () => storefrontApi.getStorefrontConfig(),
+    staleTime: 60 * 1000,
+  });
 
-  const save = useCallback(async (newConfig: StoreConfig) => {
-    setIsSaving(true);
-    setError(null);
-    try {
-      const saved = await storefrontApi.saveStorefrontConfig(newConfig);
-      setConfig(saved);
-      return saved;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to save storefront config';
-      setError(msg);
-      throw err;
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
+  const saveMutation = useMutation({
+    mutationFn: (newConfig: StoreConfig) => storefrontApi.saveStorefrontConfig(newConfig),
+    onSuccess: saved => {
+      queryClient.setQueryData(queryKeys.storefront.config(), saved);
+      queryClient.invalidateQueries({ queryKey: queryKeys.storefront.all });
+    },
+  });
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
+  const save = useCallback(
+    async (newConfig: StoreConfig) => {
+      return saveMutation.mutateAsync(newConfig);
+    },
+    [saveMutation]
+  );
 
-  return { config, isLoading, isSaving, error, refetch: fetch, save };
+  return {
+    config: config ?? null,
+    isLoading,
+    isSaving: saveMutation.isPending,
+    error: formatQueryError(error || saveMutation.error),
+    refetch,
+    save,
+  };
 }
 
-// ---------------------------------------------------------------------------
-// Public hook (no auth — store visitor)
-// ---------------------------------------------------------------------------
-
+/**
+ * Public hook (no auth — store visitor)
+ */
 export function useStorefrontConfigPublic(peerID: string | null) {
-  const [config, setConfig] = useState<StoreConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const prevPeerID = useRef<string | null>(null);
+  const {
+    data: config,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.storefront.configPublic(peerID!),
+    queryFn: () => storefrontApi.getStorefrontConfigPublic(peerID!),
+    enabled: !!peerID,
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const fetch = useCallback(async () => {
-    if (!peerID) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await storefrontApi.getStorefrontConfigPublic(peerID);
-      setConfig(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load storefront config');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [peerID]);
-
-  useEffect(() => {
-    if (peerID && peerID !== prevPeerID.current) {
-      prevPeerID.current = peerID;
-      fetch();
-    }
-  }, [peerID, fetch]);
-
-  return { config, isLoading, error, refetch: fetch };
+  return {
+    config: config ?? null,
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }

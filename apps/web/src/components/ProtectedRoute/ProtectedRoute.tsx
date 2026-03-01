@@ -1,50 +1,68 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthGuard, useI18n } from '@mobazha/core';
+import { useMiniAppRegister } from '../../hooks/useMiniAppRegister';
+import { useMiniAppBind } from '../../hooks/useMiniAppBind';
+import { Lock, UserPlus } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  /** 自定义未认证时的重定向路径 */
   redirectTo?: string;
-  /** 自定义加载状态 */
   fallback?: React.ReactNode;
 }
 
 /**
- * 路由保护组件（用于 Vite/React Router）
+ * Route protection component.
  *
- * 保护需要登录才能访问的页面。
- * 未登录用户将被重定向到登录页面，并保存原始路径用于登录后返回。
- *
- * @example
- * ```tsx
- * // 在 routes.tsx 中使用
- * {
- *   path: '/wallet',
- *   element: (
- *     <ProtectedRoute>
- *       <WalletPage />
- *     </ProtectedRoute>
- *   ),
- * }
- * ```
+ * - Web: redirects to /login
+ * - Mini App (anonymous): shows native registration prompt (TG popup / Discord BottomSheet)
  */
 export function ProtectedRoute({ children, redirectTo = '/login', fallback }: ProtectedRouteProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { shouldRedirect, isSessionRestored, isLoading } = useAuthGuard(location.pathname);
+  const { shouldRedirect, shouldPromptRegister, isSessionRestored, isLoading, isAuthenticated } =
+    useAuthGuard(location.pathname);
   const { t } = useI18n();
   const hasRedirected = useRef(false);
+  const hasPrompted = useRef(false);
+  const [showGate, setShowGate] = useState(false);
+  const { startBind } = useMiniAppBind();
+
+  const { promptRegister } = useMiniAppRegister({
+    onBindRequested: () => {
+      startBind();
+      setShowGate(false);
+    },
+  });
+
+  const handlePrompt = useCallback(async () => {
+    if (hasPrompted.current) return;
+    hasPrompted.current = true;
+
+    const action = await promptRegister();
+
+    if (action === 'register') {
+      setShowGate(false);
+      return;
+    }
+
+    if (action === null) {
+      // Non-TG platform (Discord etc.): show inline gate UI
+      setShowGate(true);
+      return;
+    }
+
+    // User cancelled — go back
+    navigate(-1);
+  }, [promptRegister, navigate]);
 
   useEffect(() => {
-    // 等待会话恢复完成
     if (!isSessionRestored) return;
 
     if (shouldRedirect && !hasRedirected.current) {
       hasRedirected.current = true;
-      // 使用 state 传递原始路径，登录后可以重定向回来
       navigate(redirectTo, {
         replace: true,
         state: { from: location.pathname },
@@ -52,12 +70,49 @@ export function ProtectedRoute({ children, redirectTo = '/login', fallback }: Pr
     }
   }, [isSessionRestored, shouldRedirect, navigate, location.pathname, redirectTo]);
 
-  // 重置重定向标志（当路径变化时）
+  useEffect(() => {
+    if (!isSessionRestored) return;
+
+    if (shouldPromptRegister && !hasPrompted.current) {
+      handlePrompt(); // eslint-disable-line react-hooks/set-state-in-effect -- setState in handlePrompt occurs after await (async), not synchronously
+    }
+  }, [isSessionRestored, shouldPromptRegister, handlePrompt]);
+
   useEffect(() => {
     hasRedirected.current = false;
+    hasPrompted.current = false;
+    setShowGate(false); // eslint-disable-line react-hooks/set-state-in-effect -- intentional reset on path change
   }, [location.pathname]);
 
-  // 会话恢复中或需要重定向时显示加载状态
+  // Inline gate for non-TG Mini App platforms (Discord)
+  if (showGate && !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 rounded-full bg-muted/80 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg font-semibold mb-2">
+            {t('auth.accountRequired', 'Account Required')}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            {t('auth.createAccountPrompt', 'Create a free account to access this feature.')}
+          </p>
+          <button
+            onClick={() => {
+              hasPrompted.current = false;
+              handlePrompt();
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium min-h-[44px]"
+          >
+            <UserPlus className="w-4 h-4" />
+            {t('auth.createAccount', 'Create Account')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!isSessionRestored || shouldRedirect) {
     if (fallback) {
       return <>{fallback}</>;
