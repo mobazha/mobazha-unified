@@ -19,10 +19,13 @@ export function AboutSection({
 
   return (
     <div className="py-4">
-      <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--store-font, inherit)' }}>
+      <h2
+        className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6"
+        style={{ fontFamily: 'var(--store-font, inherit)' }}
+      >
         {title}
       </h2>
-      <div className={`flex flex-col gap-8 ${imgSrc ? 'md:flex-row md:items-start' : ''}`}>
+      <div className={`flex flex-col gap-6 sm:gap-8 ${imgSrc ? 'md:flex-row md:items-start' : ''}`}>
         {imgSrc && isLeft && (
           <div className="md:w-2/5 shrink-0">
             <img

@@ -62,13 +62,13 @@ export function HeroSection({
           />
         </>
       )}
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
-        <h1 className="text-3xl font-bold sm:text-4xl lg:text-5xl">{displayTitle}</h1>
-        {subtitle && <p className="mt-4 text-lg opacity-90 sm:text-xl">{subtitle}</p>}
+      <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-12">
+        <h1 className="text-2xl font-bold sm:text-4xl lg:text-5xl">{displayTitle}</h1>
+        {subtitle && <p className="mt-3 sm:mt-4 text-base sm:text-xl opacity-90">{subtitle}</p>}
         {ctaText && (
           <a
             href={ctaLink || '#'}
-            className="mt-6 inline-block w-full sm:w-auto px-6 py-3 text-center font-semibold transition-opacity hover:opacity-80"
+            className="mt-5 sm:mt-6 inline-flex items-center justify-center w-full sm:w-auto min-h-[44px] px-6 py-3 text-center font-semibold transition-opacity hover:opacity-80"
             style={{
               backgroundColor: 'var(--store-accent)',
               color: 'var(--store-on-accent)',

@@ -824,10 +824,10 @@ export default function StorePage() {
                 <button
                   type="button"
                   onClick={() => headerInputRef.current?.click()}
-                  className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
                 >
                   <Camera className="h-4 w-4" />
-                  {t('settings.loadHeader')}
+                  <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
                 </button>
               </>
             )}
@@ -913,21 +913,25 @@ export default function StorePage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 flex-shrink-0">
+                    {/* Actions — wrap on mobile for better touch targets */}
+                    <div className="flex flex-wrap gap-2 flex-shrink-0">
                       {isOwnStore ? (
                         <>
                           <Button
                             variant="outline"
                             onClick={() => router.push('/settings/page-profile')}
                             size="sm"
-                            className="touch-feedback gap-1.5"
+                            className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
                           >
                             <Settings className="h-4 w-4" />
                             <span className="hidden sm:inline">{t('settingsModal.customize')}</span>
                           </Button>
                           <Link href="/listing/new">
-                            <Button variant="outline" size="sm" className="touch-feedback gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                            >
                               <Plus className="h-4 w-4" />
                               <span className="hidden sm:inline">
                                 {t('userPage.createListing')}
@@ -935,7 +939,11 @@ export default function StorePage() {
                             </Button>
                           </Link>
                           <Link href="/listing/import">
-                            <Button variant="outline" size="sm" className="touch-feedback gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                            >
                               <Upload className="h-4 w-4" />
                               <span className="hidden sm:inline">
                                 {t('userPage.importListings')}
@@ -950,7 +958,7 @@ export default function StorePage() {
                             onClick={handleFollowToggle}
                             disabled={followLoading || !isAuthenticated}
                             size="sm"
-                            className="touch-feedback"
+                            className="touch-feedback min-h-[44px] sm:min-h-0"
                           >
                             {followLoading ? (
                               <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
@@ -963,7 +971,7 @@ export default function StorePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="touch-feedback"
+                            className="touch-feedback min-h-[44px] sm:min-h-0"
                             onClick={handleMessage}
                           >
                             {t('profile.message')}
@@ -973,7 +981,7 @@ export default function StorePage() {
                             onClick={handleBlockToggle}
                             disabled={blockLoading || !isAuthenticated}
                             size="sm"
-                            className="touch-feedback"
+                            className="touch-feedback min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
                             title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
                           >
                             {blockLoading ? (
@@ -1013,7 +1021,7 @@ export default function StorePage() {
               <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
                 <button
                   onClick={() => setActiveTab('following')}
-                  className="flex items-baseline gap-1 hover:text-primary transition-colors"
+                  className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
                 >
                   <span className="font-semibold text-foreground">{stats.followingCount}</span>
                   <span className="text-muted-foreground hover:text-primary">
@@ -1022,7 +1030,7 @@ export default function StorePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('followers')}
-                  className="flex items-baseline gap-1 hover:text-primary transition-colors"
+                  className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
                 >
                   <span className="font-semibold text-foreground">{stats.followerCount}</span>
                   <span className="text-muted-foreground hover:text-primary">
@@ -1331,9 +1339,12 @@ export default function StorePage() {
                               <span className="text-xs sm:text-sm text-muted-foreground">
                                 {t('profile.email')}
                               </span>
-                              <p className="font-medium text-foreground text-sm">
+                              <a
+                                href={`mailto:${store.contactInfo.email}`}
+                                className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                              >
                                 {store.contactInfo.email}
-                              </p>
+                              </a>
                             </div>
                           )}
                           {store.contactInfo?.phoneNumber && (
@@ -1341,9 +1352,12 @@ export default function StorePage() {
                               <span className="text-xs sm:text-sm text-muted-foreground">
                                 {t('profile.phone')}
                               </span>
-                              <p className="font-medium text-foreground text-sm">
+                              <a
+                                href={`tel:${store.contactInfo.phoneNumber}`}
+                                className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                              >
                                 {store.contactInfo.phoneNumber}
-                              </p>
+                              </a>
                             </div>
                           )}
                           {store.contactInfo?.website && (
