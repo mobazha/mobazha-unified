@@ -10,6 +10,7 @@ export const queryKeys = {
     all: ['products'] as const,
     trending: () => [...queryKeys.products.all, 'trending'] as const,
     featured: () => [...queryKeys.products.all, 'featured'] as const,
+    myListings: () => [...queryKeys.products.all, 'my-listings'] as const,
     store: (peerID: string) => [...queryKeys.products.all, 'store', peerID] as const,
     detail: (slug: string, peerID?: string) =>
       [...queryKeys.products.all, 'detail', slug, peerID] as const,

@@ -43,7 +43,12 @@ import {
   sanitizeHtml,
   collectionsApi,
   useStorefrontConfigPublic,
+  useStoreListings,
+  useMyListings,
+  usePrefetchProduct,
+  queryKeys,
 } from '@mobazha/core';
+import { useQueryClient } from '@tanstack/react-query';
 import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
 import {
   Settings,
@@ -61,7 +66,7 @@ import {
 import { ShareButton } from '@/components/Share';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
-import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
+import { getProfileWithDedup } from '@/utils/requestDedup';
 import {
   RwaTab,
   StoreListingsToolbar,
@@ -102,8 +107,6 @@ export default function StorePage() {
     updateProfile,
     fetchProfile: refreshCurrentUserProfile,
   } = useUserStore();
-  // 获取 session 恢复状态，确保在 token 验证完成后再发起需要认证的请求
-  const isSessionRestored = useUserStore(state => state.isSessionRestored);
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 判断是否是自己的店铺
@@ -132,8 +135,14 @@ export default function StorePage() {
   const [blockLoading, setBlockLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<UserProfile | null>(null);
-  const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const { listings: storeListings, isLoading: storeListingsLoading } = useStoreListings(
+    isOwnStore ? null : peerId
+  );
+  const { listings: myListings, isLoading: myListingsLoading } = useMyListings();
+  const products = isOwnStore ? myListings : storeListings;
+  const productsLoading = isOwnStore ? myListingsLoading : storeListingsLoading;
+  const prefetchProduct = usePrefetchProduct();
+  const queryClient = useQueryClient();
   const [storeCollections, setStoreCollections] = useState<Collection[]>([]);
 
   // 筛选相关状态
@@ -186,8 +195,6 @@ export default function StorePage() {
 
   // 用于跟踪已加载的数据
   const storeLoadedRef = useRef<string | null>(null);
-  const productsLoadedRef = useRef<string | null>(null);
-
   // 获取店铺数据
   useEffect(() => {
     // 如果已经加载过相同的数据，直接返回
@@ -250,57 +257,22 @@ export default function StorePage() {
     }
   }, [store, isOwnStore]);
 
-  // 获取店铺商品
+  // 获取店铺集合列表（商品列表通过 useStoreListings / useMyListings 获取）
   useEffect(() => {
-    // 等待 session 恢复完成，确保 token 状态已确定
-    // 这样可以避免在 token 未验证时发起需要认证的请求
-    if (!isSessionRestored) {
-      return;
-    }
-
-    // 如果已经加载过相同的数据，直接返回
-    const loadKey = `products-${peerId}-${isOwnStore}`;
-    if (productsLoadedRef.current === loadKey) return;
+    if (!peerId || productsLoading) return;
 
     let isCancelled = false;
-
-    const fetchStoreProducts = async () => {
-      if (!peerId) return;
-
-      setProductsLoading(true);
-      try {
-        // 如果是自己的店铺，使用 getMyListings，否则获取店铺商品
-        const productsData = await getListingsWithDedup(loadKey, () =>
-          isOwnStore
-            ? productDataService.getMyListings()
-            : productDataService.getStoreListings(peerId)
-        );
-
-        if (!isCancelled) {
-          setProducts(productsData as ProductListItem[]);
-          productsLoadedRef.current = loadKey;
-          collectionsApi
-            .listPublishedCollections(1, 20)
-            .then(res => {
-              if (!isCancelled) setStoreCollections(res.data || []);
-            })
-            .catch(() => {});
-        }
-      } catch (err) {
-        console.error('Failed to fetch store products:', err);
-      } finally {
-        if (!isCancelled) {
-          setProductsLoading(false);
-        }
-      }
-    };
-
-    fetchStoreProducts();
+    collectionsApi
+      .listPublishedCollections(1, 20)
+      .then(res => {
+        if (!isCancelled) setStoreCollections(res.data || []);
+      })
+      .catch(() => {});
 
     return () => {
       isCancelled = true;
     };
-  }, [peerId, isOwnStore, isSessionRestored]);
+  }, [peerId, productsLoading]);
 
   // 检查是否已关注该店铺（仅当不是自己的店铺时）
   useEffect(() => {
@@ -704,10 +676,7 @@ export default function StorePage() {
     setIsDeleting(true);
     try {
       await productDataService.deleteListing(productToDelete.slug);
-      // 从本地状态中移除被删除的商品
-      setProducts(prev => prev.filter(p => p.slug !== productToDelete.slug));
-      // 清除加载缓存，以便下次能重新加载
-      productsLoadedRef.current = null;
+      await queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       toast({
         title: t('common.success'),
         description: t('listing.deleteSuccess'),

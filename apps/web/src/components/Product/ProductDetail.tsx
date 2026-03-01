@@ -27,15 +27,12 @@ import {
   useChatStore,
   productsApi,
   discountsApi,
+  useListing,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
-import {
-  getProductWithDedup,
-  getProfileWithDedup,
-  getRatingsWithDedup,
-} from '@/utils/requestDedup';
+import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
 import { Heart } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
@@ -227,82 +224,41 @@ export function ProductDetail({
     };
   }, [product]);
 
-  // 获取商品数据（不包含评论，评论单独加载）
+  // 通过 React Query 获取商品数据（自动消费 prefetch 缓存）
+  const { listing: rqListing, isLoading: rqLoading, error: rqError } = useListing(slug, peerID);
+
   useEffect(() => {
-    // 生成唯一的请求标识
-    const requestKey = `${slug}-${peerID || ''}`;
-
-    // 如果已经加载过相同的数据，直接返回
-    if (loadedDataRef.current === requestKey) {
-      return;
-    }
-
-    // 用于取消过期请求的标志
-    let isCancelled = false;
-
-    const fetchProductData = async () => {
-      if (!slug) return;
-
-      setIsLoading(true);
+    if (rqListing) {
+      setProduct(rqListing);
+      setIsLoading(false);
       setError(null);
+      loadedDataRef.current = `${slug}-${peerID || ''}`;
+      onProductLoadedRef.current?.(rqListing);
+    } else if (rqError) {
+      setError(rqError);
+      setIsLoading(false);
+      onProductLoadedRef.current?.(null);
+    } else if (rqLoading) {
+      setIsLoading(true);
+    }
+  }, [rqListing, rqError, rqLoading, slug, peerID]);
 
-      try {
-        // 获取商品详情（使用去重函数）
-        const productData = await getProductWithDedup(slug, peerID, () =>
-          productDataService.getProduct(slug, peerID)
-        );
+  // 获取卖家信息（不阻塞商品显示）
+  useEffect(() => {
+    const vendorPeerID = product?.vendorID?.peerID;
+    if (!vendorPeerID) return;
 
-        // 检查请求是否已被取消
-        if (isCancelled) return;
+    let isCancelled = false;
+    getProfileWithDedup(vendorPeerID, () => profileApi.getProfile(vendorPeerID))
+      .then(vendorData => {
+        if (!isCancelled && vendorData) setVendor(vendorData);
+      })
+      .catch(err => console.error('Failed to fetch vendor:', err));
 
-        if (!productData) {
-          setError(t('product.notFound'));
-          setIsLoading(false);
-          onProductLoadedRef.current?.(null);
-          return;
-        }
-
-        // 标记数据已加载
-        loadedDataRef.current = requestKey;
-
-        setProduct(productData);
-        onProductLoadedRef.current?.(productData);
-
-        // 获取卖家信息（不阻塞商品显示）
-        const vendorPeerID = productData.vendorID?.peerID;
-        if (vendorPeerID) {
-          try {
-            // 使用去重函数
-            const vendorData = await getProfileWithDedup(vendorPeerID, () =>
-              profileApi.getProfile(vendorPeerID)
-            );
-            if (!isCancelled && vendorData) {
-              setVendor(vendorData);
-            }
-          } catch (err) {
-            console.error('Failed to fetch vendor:', err);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch product:', err);
-        if (!isCancelled) {
-          setError(t('common.error'));
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchProductData();
-
-    // 清理函数：取消过期请求，但不重置已加载数据的标记
     return () => {
       isCancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- t 函数变化不应该触发重新获取数据
-  }, [slug, peerID]);
+  }, [product?.vendorID?.peerID]);
 
   // 独立获取评论数据（不阻塞商品页面渲染）
   useEffect(() => {
