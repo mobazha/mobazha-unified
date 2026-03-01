@@ -354,6 +354,8 @@ export const en: TranslationResource = {
     bestRating: 'Best Rating',
     listings: 'Listings',
     users: 'Users',
+    category: 'Category',
+    allCategories: 'All Categories',
   },
 
   cart: {

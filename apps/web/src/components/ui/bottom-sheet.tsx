@@ -3,31 +3,33 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-// ============ Types ============
-
 export interface BottomSheetProps {
-  /** 是否显示 */
   open: boolean;
-  /** 关闭回调 */
   onClose: () => void;
-  /** 标题（可选） */
   title?: string;
-  /** 子内容 */
   children: React.ReactNode;
-  /** 自定义类名 */
   className?: string;
+  /** Use full-screen height (default: auto-height up to 85vh) */
+  fullScreen?: boolean;
 }
 
-// ============ Main Component ============
-
 /**
- * 移动端底部弹窗组件
- * - 全屏展示，从底部滑入
- * - 点击遮罩或关闭按钮关闭
- * - 支持滚动内容
+ * Mobile bottom sheet with drag-to-dismiss, backdrop, and optional full-screen mode.
+ * Hidden on lg+ viewports.
  */
-export function BottomSheet({ open, onClose, title, children, className }: BottomSheetProps) {
-  // 防止背景滚动
+export function BottomSheet({
+  open,
+  onClose,
+  title,
+  children,
+  className,
+  fullScreen = false,
+}: BottomSheetProps) {
+  const sheetRef = React.useRef<HTMLDivElement>(null);
+  const dragStartY = React.useRef(0);
+  const dragDelta = React.useRef(0);
+  const isDragging = React.useRef(false);
+
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -39,7 +41,6 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
     };
   }, [open]);
 
-  // ESC 键关闭
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) {
@@ -50,53 +51,104 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
     return () => window.removeEventListener('keydown', handleEsc);
   }, [open, onClose]);
 
+  const handleDragStart = React.useCallback((clientY: number) => {
+    dragStartY.current = clientY;
+    dragDelta.current = 0;
+    isDragging.current = true;
+  }, []);
+
+  const handleDragMove = React.useCallback((clientY: number) => {
+    if (!isDragging.current) return;
+    const delta = clientY - dragStartY.current;
+    dragDelta.current = Math.max(0, delta);
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = `translateY(${dragDelta.current}px)`;
+      sheetRef.current.style.transition = 'none';
+    }
+  }, []);
+
+  const handleDragEnd = React.useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = '';
+      sheetRef.current.style.transform = '';
+    }
+    if (dragDelta.current > 100) {
+      onClose();
+    }
+    dragDelta.current = 0;
+  }, [onClose]);
+
+  const onTouchStart = React.useCallback(
+    (e: React.TouchEvent) => handleDragStart(e.touches[0].clientY),
+    [handleDragStart]
+  );
+  const onTouchMove = React.useCallback(
+    (e: React.TouchEvent) => handleDragMove(e.touches[0].clientY),
+    [handleDragMove]
+  );
+  const onTouchEnd = React.useCallback(() => handleDragEnd(), [handleDragEnd]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
-      {/* 遮罩 */}
+    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
       <div
-        className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+        className="absolute inset-0 bg-black/40 animate-in fade-in duration-200"
         onClick={onClose}
+        aria-hidden="true"
       />
 
-      {/* 底部弹窗 - 全屏 */}
       <div
+        ref={sheetRef}
         className={cn(
-          'absolute inset-x-0 bottom-0 top-0 bg-background',
+          'absolute inset-x-0 bottom-0 bg-background',
           'flex flex-col',
-          'transform transition-transform duration-300 ease-out',
-          'animate-in slide-in-from-bottom',
+          'rounded-t-2xl',
+          'transition-transform duration-300 ease-out',
+          'animate-in slide-in-from-bottom duration-300',
+          fullScreen ? 'top-0 rounded-t-none' : 'max-h-[85vh]',
           className
         )}
       >
-        {/* 头部 - 关闭按钮 */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
-          <button
-            onClick={onClose}
-            className="p-1.5 -ml-1.5 rounded-lg active:bg-muted/50 transition-colors"
-            aria-label="关闭"
-          >
-            <svg
-              className="w-5 h-5 text-foreground"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          {title && <h2 className="text-base font-semibold text-foreground">{title}</h2>}
-          {/* 占位，保持标题居中 */}
-          <div className="w-8" />
+        {/* Drag handle */}
+        <div
+          className="flex-shrink-0 flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
-        {/* 内容区域 - 可滚动 */}
+        {/* Header */}
+        {title && (
+          <div className="flex-shrink-0 flex items-center justify-between px-4 pb-3 border-b border-border">
+            <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            <button
+              onClick={onClose}
+              className="p-1.5 -mr-1.5 rounded-lg active:bg-muted/50 transition-colors"
+              aria-label="Close"
+            >
+              <svg
+                className="w-5 h-5 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>
@@ -106,26 +158,19 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
 // ============ Sub Components ============
 
 export interface BottomSheetItemProps {
-  /** 标题 */
   title: string;
-  /** 描述（可选） */
   description?: string;
-  /** 右侧内容（如数量） */
+  icon?: React.ReactNode;
   trailing?: React.ReactNode;
-  /** 点击回调 */
   onClick?: () => void;
-  /** 是否选中 */
   selected?: boolean;
-  /** 自定义类名 */
   className?: string;
 }
 
-/**
- * 底部弹窗列表项
- */
 export function BottomSheetItem({
   title,
   description,
+  icon,
   trailing,
   onClick,
   selected,
@@ -135,21 +180,37 @@ export function BottomSheetItem({
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-center justify-between px-4 py-4',
+        'w-full flex items-center gap-3 px-4 py-4',
         'border-b border-border/50 last:border-0',
-        'active:bg-muted/30 transition-colors text-left',
-        selected && 'bg-muted/20',
+        'active:bg-muted/30 transition-colors text-left min-h-[48px]',
+        selected && 'bg-primary/5',
         className
       )}
     >
+      {icon && <div className="flex-shrink-0 text-muted-foreground">{icon}</div>}
       <div className="flex-1 min-w-0">
-        <div className="text-[15px] font-semibold text-foreground">{title}</div>
+        <div
+          className={cn(
+            'text-[15px] font-medium',
+            selected ? 'text-primary font-semibold' : 'text-foreground'
+          )}
+        >
+          {title}
+        </div>
         {description && (
           <div className="text-[13px] text-muted-foreground mt-0.5 leading-snug">{description}</div>
         )}
       </div>
-      {trailing && (
-        <div className="ml-4 flex-shrink-0 text-base text-muted-foreground">{trailing}</div>
+      {trailing && <div className="ml-3 flex-shrink-0 text-muted-foreground">{trailing}</div>}
+      {selected && !trailing && (
+        <svg
+          className="w-5 h-5 text-primary flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
       )}
     </button>
   );

@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { cn } from '@/lib/utils';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
 import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import {
   productDataService,
@@ -378,6 +379,18 @@ export function ProductDetail({
       .filter((url): url is string => !!url);
   }, [product]);
 
+  const imageSwipeHandlers = useSwipeGesture({
+    onSwipeLeft: useCallback(
+      () => setSelectedImage(prev => (prev >= imageUrls.length - 1 ? 0 : prev + 1)),
+      [imageUrls.length]
+    ),
+    onSwipeRight: useCallback(
+      () => setSelectedImage(prev => (prev <= 0 ? imageUrls.length - 1 : prev - 1)),
+      [imageUrls.length]
+    ),
+    enabled: imageUrls.length > 1,
+  });
+
   // 计算价格信息
   const priceInfo = useMemo(() => {
     if (!product)
@@ -657,6 +670,7 @@ export function ProductDetail({
             <div
               className={`relative ${isModal ? 'aspect-[4/3]' : 'aspect-square'} rounded-xl sm:rounded-2xl overflow-hidden bg-muted cursor-pointer group`}
               onClick={() => imageUrls.length > 0 && setIsImagePreviewOpen(true)}
+              {...imageSwipeHandlers}
             >
               {imageUrls.length > 0 ? (
                 <>
@@ -683,6 +697,21 @@ export function ProductDetail({
                       </svg>
                     </div>
                   </div>
+
+                  {/* Swipe dot indicators (mobile) */}
+                  {imageUrls.length > 1 && (
+                    <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5 sm:hidden">
+                      {imageUrls.map((_, idx) => (
+                        <span
+                          key={idx}
+                          className={cn(
+                            'w-1.5 h-1.5 rounded-full transition-all',
+                            idx === selectedImage ? 'bg-white w-3' : 'bg-white/50'
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">

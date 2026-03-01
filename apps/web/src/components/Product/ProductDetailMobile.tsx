@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
-import { getImageUrl, decodeHtmlEntities, sanitizeHtml } from '@mobazha/core';
+import { getImageUrl, decodeHtmlEntities, sanitizeHtml, useI18n } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, Share2, Copy, Flag, MoreHorizontal } from 'lucide-react';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
@@ -16,7 +17,6 @@ import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
-import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
 
 function StarRating({ rating }: { rating: number }) {
@@ -210,17 +210,13 @@ export function ProductDetailMobile({
           <BuyerProtectionBadge variant="inline" />
         </div>
 
-        {/* Title + Rating + Share */}
+        {/* Title + Rating + More */}
         <div>
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground leading-tight flex-1">
               {decodeHtmlEntities(product.item.title)}
             </h1>
-            <ShareButton
-              url={typeof window !== 'undefined' ? window.location.href : ''}
-              title={product.item.title}
-              description={product.item.description?.substring(0, 100)}
-            />
+            <ProductMoreButton product={product} />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <StarRating rating={averageRating} />
@@ -795,5 +791,63 @@ export function ProductDetailMobile({
         </div>
       )}
     </div>
+  );
+}
+
+function ProductMoreButton({ product }: { product: Product }) {
+  const [open, setOpen] = useState(false);
+  const { t } = useI18n();
+
+  const handleShare = useCallback(async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const title = product.item.title;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch {
+        // user cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+    }
+    setOpen(false);
+  }, [product.item.title]);
+
+  const handleCopyLink = useCallback(async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    await navigator.clipboard.writeText(url);
+    setOpen(false);
+  }, []);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="p-2 -mr-2 rounded-lg active:bg-muted/50 transition-colors"
+        aria-label={t('common.more')}
+      >
+        <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
+      </button>
+
+      <BottomSheet open={open} onClose={() => setOpen(false)}>
+        <div className="py-1 pb-safe">
+          <BottomSheetItem
+            title={t('common.share')}
+            icon={<Share2 className="w-5 h-5" />}
+            onClick={handleShare}
+          />
+          <BottomSheetItem
+            title={t('share.copyLink')}
+            icon={<Copy className="w-5 h-5" />}
+            onClick={handleCopyLink}
+          />
+          <BottomSheetItem
+            title={t('product.report')}
+            icon={<Flag className="w-5 h-5" />}
+            onClick={() => setOpen(false)}
+          />
+        </div>
+      </BottomSheet>
+    </>
   );
 }

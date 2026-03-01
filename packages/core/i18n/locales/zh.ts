@@ -344,6 +344,8 @@ export const zh: TranslationResource = {
     bestRating: '好评优先',
     listings: '商品',
     users: '用户',
+    category: '分类',
+    allCategories: '全部分类',
   },
 
   cart: {

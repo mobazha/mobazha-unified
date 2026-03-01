@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Button } from '@/components/ui/button';
+import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { useSearch } from '@/hooks/useSearch';
 import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
@@ -59,7 +60,7 @@ export function SearchMobile() {
   }, [search.queryParam]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-page-enter">
       <MobilePageHeader title={search.t('nav.search')} />
 
       {/* Search Input Bar */}
@@ -196,25 +197,8 @@ export function SearchMobile() {
             </div>
           </div>
 
-          {/* Sort + Filter Bar */}
-          {search.activeTab === 'listings' && (
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-border overflow-x-auto">
-              {/* Sort chips */}
-              {search.sortOptions.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => search.setSortBy(opt.value)}
-                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    search.sortBy === opt.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Sort + Category Bar */}
+          {search.activeTab === 'listings' && <SortCategoryBar search={search} />}
 
           {/* Product Grid / User List */}
           <div className="px-3 py-3">
@@ -243,12 +227,14 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
 
   if (search.products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <SearchIcon className="w-12 h-12 text-muted-foreground mb-3" />
-        <h3 className="text-base font-semibold text-foreground mb-1">
+      <div className="flex flex-col items-center justify-center py-16 px-6">
+        <div className="w-20 h-20 rounded-full bg-muted/80 flex items-center justify-center mb-5">
+          <SearchIcon className="w-10 h-10 text-muted-foreground/60" strokeWidth={1.5} />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
           {search.t('empty.noProductsFound')}
         </h3>
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-xs">
           {search.t('empty.tryAdjustingFilters')}
         </p>
       </div>
@@ -391,6 +377,106 @@ function UserResults({ search }: { search: ReturnType<typeof useSearch> }) {
           </Button>
         </div>
       )}
+    </>
+  );
+}
+
+function SortCategoryBar({ search }: { search: ReturnType<typeof useSearch> }) {
+  const [showSort, setShowSort] = useState(false);
+  const [showCategory, setShowCategory] = useState(false);
+
+  const currentSort = search.sortOptions.find(o => o.value === search.sortBy);
+  const currentCategory = search.categoryOptions?.find(
+    (c: { value: string }) => c.value === search.category
+  );
+
+  return (
+    <>
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
+        <button
+          onClick={() => setShowSort(true)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground active:bg-muted/70 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+            />
+          </svg>
+          {currentSort?.label || search.t('search.sortBy')}
+        </button>
+
+        {search.categoryOptions && search.categoryOptions.length > 0 && (
+          <button
+            onClick={() => setShowCategory(true)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors active:bg-muted/70 ${
+              search.category !== 'all'
+                ? 'bg-primary/10 text-primary'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+              />
+            </svg>
+            {currentCategory?.label || search.t('search.allCategories')}
+          </button>
+        )}
+      </div>
+
+      <BottomSheet
+        open={showSort}
+        onClose={() => setShowSort(false)}
+        title={search.t('search.sortBy')}
+      >
+        <div className="py-1">
+          {search.sortOptions.map(opt => (
+            <BottomSheetItem
+              key={opt.value}
+              title={opt.label}
+              selected={search.sortBy === opt.value}
+              onClick={() => {
+                search.setSortBy(opt.value);
+                setShowSort(false);
+              }}
+            />
+          ))}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={showCategory}
+        onClose={() => setShowCategory(false)}
+        title={search.t('search.category')}
+      >
+        <div className="py-1">
+          <BottomSheetItem
+            title={search.t('common.all')}
+            selected={search.category === 'all'}
+            onClick={() => {
+              search.setCategory('all');
+              setShowCategory(false);
+            }}
+          />
+          {search.categoryOptions?.map((cat: { value: string; label: string }) => (
+            <BottomSheetItem
+              key={cat.value}
+              title={cat.label}
+              selected={search.category === cat.value}
+              onClick={() => {
+                search.setCategory(cat.value);
+                setShowCategory(false);
+              }}
+            />
+          ))}
+        </div>
+      </BottomSheet>
     </>
   );
 }
