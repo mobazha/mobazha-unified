@@ -1441,6 +1441,8 @@ export const en: TranslationResource = {
     serverError: 'Server error. Please try again later.',
     timeout: 'Request timed out',
     offline: "You're offline",
+    offlineDesc: 'Some features may be unavailable.',
+    backOnline: "You're back online!",
     invalidInput: 'Invalid input',
     requiredField: 'This field is required',
   },

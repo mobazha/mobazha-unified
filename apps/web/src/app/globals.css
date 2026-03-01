@@ -485,6 +485,16 @@ body {
     color 0.3s ease;
 }
 
+/* Mobile keyboard: ensure focused inputs stay visible */
+@media (max-width: 1023px) {
+  input:focus,
+  textarea:focus,
+  select:focus,
+  [contenteditable]:focus {
+    scroll-margin-bottom: 8rem;
+  }
+}
+
 /* Safe area utilities */
 @utility pt-safe {
   padding-top: var(--safe-area-inset-top);
