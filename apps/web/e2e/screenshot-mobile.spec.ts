@@ -25,6 +25,7 @@ import {
   mockProductDetailAPI,
   mockImageRoutes,
   mockSearchAPI,
+  mockStoreListingsAPI,
   getCartLocalStorageScript,
 } from './fixtures/mock-api-routes';
 
@@ -44,6 +45,7 @@ const MOBILE_UA =
 async function setupMockRoutes(page: Page): Promise<void> {
   if (!mockAPI) return;
 
+  await mockStoreListingsAPI(page);
   await mockProductDetailAPI(page);
   await mockSearchAPI(page);
   await mockImageRoutes(page);
