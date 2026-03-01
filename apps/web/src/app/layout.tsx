@@ -6,8 +6,10 @@ import {
   AuthProvider,
   ChatSystem,
   CurrencyProvider,
+  MainContent,
   MobileNav,
   PWAInstall,
+  QueryProvider,
   ServiceWorkerProvider,
   SessionExpiredDialog,
   TGMiniAppProvider,
@@ -112,41 +114,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${storeFonts[0].className} ${storeFontVariableClasses}`}>
-        <ThemeProvider>
-          <TGMiniAppProvider>
-            <ServiceWorkerProvider>
-              <AppKitProvider>
-                <CurrencyProvider>
-                  <Suspense fallback={<AuthProviderLoading />}>
-                    <AuthProvider>
-                      <ProductModalProvider>
-                        <PaymentSelectorProvider>
-                          {/* Main content with bottom padding for mobile nav */}
-                          <div className="pb-20 md:pb-0">{children}</div>
+        <QueryProvider>
+          <ThemeProvider>
+            <TGMiniAppProvider>
+              <ServiceWorkerProvider>
+                <AppKitProvider>
+                  <CurrencyProvider>
+                    <Suspense fallback={<AuthProviderLoading />}>
+                      <AuthProvider>
+                        <ProductModalProvider>
+                          <PaymentSelectorProvider>
+                            <MainContent>{children}</MainContent>
 
-                          {/* Mobile bottom navigation */}
-                          <MobileNav />
+                            <MobileNav />
 
-                          {/* Chat floating button and drawer */}
-                          <ChatSystem />
+                            {/* Chat floating button and drawer */}
+                            <ChatSystem />
 
-                          {/* PWA install prompt */}
-                          <PWAInstall />
+                            {/* PWA install prompt */}
+                            <PWAInstall />
 
-                          {/* Session expired dialog (global 401 handler) */}
-                          <SessionExpiredDialog />
+                            {/* Session expired dialog (global 401 handler) */}
+                            <SessionExpiredDialog />
 
-                          {/* Toast notifications */}
-                          <Toaster />
-                        </PaymentSelectorProvider>
-                      </ProductModalProvider>
-                    </AuthProvider>
-                  </Suspense>
-                </CurrencyProvider>
-              </AppKitProvider>
-            </ServiceWorkerProvider>
-          </TGMiniAppProvider>
-        </ThemeProvider>
+                            {/* Toast notifications */}
+                            <Toaster />
+                          </PaymentSelectorProvider>
+                        </ProductModalProvider>
+                      </AuthProvider>
+                    </Suspense>
+                  </CurrencyProvider>
+                </AppKitProvider>
+              </ServiceWorkerProvider>
+            </TGMiniAppProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

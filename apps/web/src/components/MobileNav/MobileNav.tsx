@@ -11,6 +11,7 @@ import {
   useI18n,
   getImageUrl,
 } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 
 interface NavItem {
   labelKey: string; // i18n key
@@ -159,6 +160,7 @@ const AUTH_REQUIRED_LABEL_KEYS = ['nav.orders', 'chat.title'];
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
   const { t } = useI18n();
+  const { isEmbeddedApp } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const totalUnread = useChatStore(selectTotalUnreadCount);
@@ -166,13 +168,10 @@ export const MobileNav: React.FC = () => {
 
   const cartItemCount = useCartStore(state => state.getItemCount());
 
-  // 获取用户头像 URL（和 Me 页面使用相同的方式）
   const userAvatarUrl = getImageUrl(profile?.avatarHashes?.small);
 
-  // 根据登录状态过滤导航项
   const filteredNavItems = navItems.filter(item => {
     if (!isAuthenticated) {
-      // 未登录时隐藏需要登录的项
       return !AUTH_REQUIRED_LABEL_KEYS.includes(item.labelKey);
     }
     return true;
@@ -186,11 +185,10 @@ export const MobileNav: React.FC = () => {
     return pathname.startsWith(href);
   };
 
-  // 检查当前页面是否需要隐藏底部导航栏（有自己的底部操作栏）
   const shouldHideNav = HIDE_NAV_PATTERNS.some(pattern => pattern.test(pathname));
 
-  // 如果需要隐藏，不渲染导航栏
-  if (shouldHideNav) {
+  // Embedded apps (TG/Discord/Farcaster) have their own navigation controls
+  if (isEmbeddedApp || shouldHideNav) {
     return null;
   }
 

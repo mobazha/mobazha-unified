@@ -286,7 +286,12 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
         <Label>{t('admin.collections.imageLabel')}</Label>
         {image ? (
           <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
-            <img src={getImageUrl(image)} alt="Collection" className="w-full h-full object-cover" />
+            <img
+              src={getImageUrl(image)}
+              alt="Collection"
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
             <Button
               variant="destructive"
               size="icon"

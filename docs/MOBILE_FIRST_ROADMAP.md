@@ -9,6 +9,7 @@
 > **前置审核**：`docs/MOBILE_AUDIT_REPORT.md`（移动端体验审核报告）
 >
 > **与其他路线图的关系**：
+>
 > - `docs/PROFESSIONAL_GRADE_ROADMAP.md` — 前端产品专业化（Phase PG，Tier 0-2 ✅）
 > - Phase M 是 Phase PG 的**移动端深化**，PG 建立了 Platform View 模式和基础设施，M 全面实施
 
@@ -18,12 +19,12 @@
 
 ### 1.1 为什么移动端是重中之重
 
-| 维度 | 说明 |
-|------|------|
-| **分发渠道** | TG Mini App + Discord Activity 是主要买家入口，用户在手机上打开链接 |
+| 维度         | 说明                                                                  |
+| ------------ | --------------------------------------------------------------------- |
+| **分发渠道** | TG Mini App + Discord Activity 是主要买家入口，用户在手机上打开链接   |
 | **用户行为** | 买家从 TG 群/Discord 频道看到商品链接 → 点击 → 在 Mini App 内完成购买 |
-| **竞争优势** | 嵌入式购物（不离开社交 App）> 跳转浏览器，转化率可提升 2-3x |
-| **技术趋势** | TG Mini App 月活 5 亿+、Discord Activity 覆盖 1.5 亿+ 活跃用户 |
+| **竞争优势** | 嵌入式购物（不离开社交 App）> 跳转浏览器，转化率可提升 2-3x           |
+| **技术趋势** | TG Mini App 月活 5 亿+、Discord Activity 覆盖 1.5 亿+ 活跃用户        |
 
 ### 1.2 目标用户旅程
 
@@ -58,19 +59,20 @@ TG 群/Discord 频道
 
 为所有后续改造提供基座。
 
-| ID | 任务 | 说明 | 预估 |
-|----|------|------|------|
-| **M0-1** | React Query 集成 | 安装 + QueryClientProvider + devtools + 示例 hook | 0.5-1d |
-| **M0-2** | 图片统一优化 | raw `<img>` → `next/image` 或 `loading="lazy"` + `srcset` | 1d |
-| **M0-3** | Discord Activity Provider | 参照 TGMiniAppProvider，封装 `@discord/embedded-app-sdk` | 1-2d |
-| **M0-4** | 手势库集成 | 引入 `@use-gesture/react`，封装 `useSwipeAction`/`usePullRefresh` hooks | 1d |
-| **M0-5** | 底部 Sheet 统一组件 | 基于 Radix Dialog 封装 `BottomSheet` 组件（支持拖拽关闭、snap points） | 0.5d |
-| **M0-6** | Mini App 导航架构 | 处理 MobileNav/MobilePageHeader 在 TG/Discord 中的显隐策略 | 0.5d |
+| ID       | 任务                      | 说明                                                                    | 预估   |
+| -------- | ------------------------- | ----------------------------------------------------------------------- | ------ |
+| **M0-1** | React Query 集成          | 安装 + QueryClientProvider + devtools + 示例 hook                       | 0.5-1d |
+| **M0-2** | 图片统一优化              | raw `<img>` → `next/image` 或 `loading="lazy"` + `srcset`               | 1d     |
+| **M0-3** | Discord Activity Provider | 参照 TGMiniAppProvider，封装 `@discord/embedded-app-sdk`                | 1-2d   |
+| **M0-4** | 手势库集成                | 引入 `@use-gesture/react`，封装 `useSwipeAction`/`usePullRefresh` hooks | 1d     |
+| **M0-5** | 底部 Sheet 统一组件       | 基于 Radix Dialog 封装 `BottomSheet` 组件（支持拖拽关闭、snap points）  | 0.5d   |
+| **M0-6** | Mini App 导航架构         | 处理 MobileNav/MobilePageHeader 在 TG/Discord 中的显隐策略              | 0.5d   |
 
 **M0-1 React Query 集成 — 评估结论：**
 
 > **收益确认**：当前 ~25 个手工 fetch hooks 全部使用 `useState + useEffect + useCallback`，
 > 无共享缓存、无去重、无后台刷新。React Query 引入后：
+>
 > - 请求去重（多组件共享同一数据 → 单次请求）
 > - stale-while-revalidate（移动端页面切换时立即显示缓存 → 后台刷新）
 > - 自动重试（适配弱网环境）
@@ -127,6 +129,7 @@ MobilePageHeader.tsx：
 ```
 
 **交付物**：
+
 - `MobileNav` 按平台条件渲染
 - `MobilePageHeader` 返回按钮按平台条件渲染
 - `useTGBackButton` hook（统一绑定路由回退栈）
@@ -183,6 +186,7 @@ TG Mini App 内：
 ```
 
 **AI 增强子任务：**
+
 - 如 AI 商品描述功能存在（PG-107 AI Product Assistant），在移动端适配输入方式
 - 优先支持拍照上传图片 → AI 自动生成描述（移动端拍照 > 桌面端文件选择）
 - AI 生成结果使用 Skeleton + 流式展示
@@ -244,6 +248,7 @@ components/Cart/
 ```
 
 **Mobile View 特点：**
+
 - 全页显示（非 Drawer）
 - 商品项支持左滑删除
 - 数量步进器加大到 44px
@@ -314,24 +319,24 @@ function ProductDetailMobile() {
 
 **集成页面清单：**
 
-| 页面 | MainButton 文案 | BackButton | HapticFeedback |
-|------|-----------------|------------|----------------|
-| 商品详情 | "Add to Cart - ¥42" | ✅ | 加购成功 |
-| 购物车 | "Checkout (¥128)" | ✅ | — |
-| 结账 | "Pay ¥128" | ✅ | 支付确认 |
-| 搜索 | 隐藏 | ✅ | — |
-| 订单详情 | "Confirm Receipt" (如适用) | ✅ | 确认收货 |
+| 页面     | MainButton 文案            | BackButton | HapticFeedback |
+| -------- | -------------------------- | ---------- | -------------- |
+| 商品详情 | "Add to Cart - ¥42"        | ✅         | 加购成功       |
+| 购物车   | "Checkout (¥128)"          | ✅         | —              |
+| 结账     | "Pay ¥128"                 | ✅         | 支付确认       |
+| 搜索     | 隐藏                       | ✅         | —              |
+| 订单详情 | "Confirm Receipt" (如适用) | ✅         | 确认收货       |
 
 **TG 额外 SDK 能力优先级（M2 范围）：**
 
-| TG SDK 能力 | 优先级 | 用途 |
-|-------------|--------|------|
-| `showPopup()` | P1 | 替代自定义 Modal 做确认对话框（原生风格，更快） |
-| `showAlert()` | P1 | 简单提示（替代 Toast/Snackbar 的部分场景） |
-| `showConfirm()` | P1 | 二次确认（删除商品、取消订单） |
-| `requestWriteAccess` | P2 | 获得向用户发消息的权限（订单通知推送） |
-| `switchInlineQuery` | P2 | 支持 inline 模式商品搜索（在聊天中 @bot 搜商品） |
-| `openInvoice()` | P3 | TG Payments（如未来接入 TG 原生支付） |
+| TG SDK 能力          | 优先级 | 用途                                             |
+| -------------------- | ------ | ------------------------------------------------ |
+| `showPopup()`        | P1     | 替代自定义 Modal 做确认对话框（原生风格，更快）  |
+| `showAlert()`        | P1     | 简单提示（替代 Toast/Snackbar 的部分场景）       |
+| `showConfirm()`      | P1     | 二次确认（删除商品、取消订单）                   |
+| `requestWriteAccess` | P2     | 获得向用户发消息的权限（订单通知推送）           |
+| `switchInlineQuery`  | P2     | 支持 inline 模式商品搜索（在聊天中 @bot 搜商品） |
+| `openInvoice()`      | P3     | TG Payments（如未来接入 TG 原生支付）            |
 
 #### M2-2：TG 主题同步（P1，预估 1d）
 
@@ -384,7 +389,7 @@ function useShare() {
       } else {
         navigator.clipboard.writeText(url);
       }
-    }
+    },
   };
 }
 ```
@@ -399,6 +404,7 @@ components/DiscordActivityProvider/
 ```
 
 功能清单：
+
 - `@discord/embedded-app-sdk` 初始化
 - OAuth2 PKCE 认证（iframe 内，无弹窗）
 - 主题同步（跟随 Discord 深色/浅色）
@@ -430,12 +436,12 @@ Mini App 环境下支付流程需特殊处理：
 
 **支付方式可行性矩阵：**
 
-| 支付方式 | TG Mini App | Discord Activity | Mobile Web | 实现方式 |
-|---------|-------------|-----------------|------------|---------|
-| **Crypto — WalletConnect** | ✅ 可行 | ✅ 可行 | ✅ 可行 | Reown AppKit 弹出 QR 码 → 手机钱包扫描 → 签名交易 → 回调确认 |
-| **Crypto — MetaMask 浏览器** | ❌ 无法直接调用 | ❌ 无法直接调用 | ✅ 可行 | 仅 dApp 浏览器内可用 |
-| **Stripe（信用卡/借记卡）** | ⚠️ 需 openLink | ⚠️ iframe 限制 | ✅ 可行 | iframe 内嵌可能受限 → 使用 `openLink` 跳转外部支付页或 Payment Request API |
-| **PayPal** | ⚠️ 需 openLink | ⚠️ 需 openLink | ✅ 可行 | PayPal 弹窗在 iframe 内受限 → `openLink` 或 redirect 模式 |
+| 支付方式                     | TG Mini App     | Discord Activity | Mobile Web | 实现方式                                                                   |
+| ---------------------------- | --------------- | ---------------- | ---------- | -------------------------------------------------------------------------- |
+| **Crypto — WalletConnect**   | ✅ 可行         | ✅ 可行          | ✅ 可行    | Reown AppKit 弹出 QR 码 → 手机钱包扫描 → 签名交易 → 回调确认               |
+| **Crypto — MetaMask 浏览器** | ❌ 无法直接调用 | ❌ 无法直接调用  | ✅ 可行    | 仅 dApp 浏览器内可用                                                       |
+| **Stripe（信用卡/借记卡）**  | ⚠️ 需 openLink  | ⚠️ iframe 限制   | ✅ 可行    | iframe 内嵌可能受限 → 使用 `openLink` 跳转外部支付页或 Payment Request API |
+| **PayPal**                   | ⚠️ 需 openLink  | ⚠️ 需 openLink   | ✅ 可行    | PayPal 弹窗在 iframe 内受限 → `openLink` 或 redirect 模式                  |
 
 **WalletConnect 在 Mini App 中的流程：**
 
@@ -468,6 +474,7 @@ PayPal：
 ```
 
 **实施步骤：**
+
 - 检测 Mini App 环境 → 选择合适的支付方式展示和流程
 - CheckoutMobile 中的 PaymentDrawer/PaymentMethodSelector 按平台适配
 - WalletConnect QR 展示适配移动端视口
@@ -477,28 +484,28 @@ PayPal：
 
 ### Phase M3：交互体验打磨（预估 1-2 周）
 
-| ID | 任务 | 说明 | 预估 |
-|----|------|------|------|
-| **M3-1** | 滑动手势完善 | 购物车滑动删除、订单卡片滑动操作、图片画廊滑动 | 2d |
-| **M3-2** | 页面过渡动画 | 页面间滑入/滑出，模拟原生 App 体感 | 1-2d |
-| **M3-3** | 骨架屏完善 | 所有数据页面对应 Skeleton 布局 | 1d |
-| **M3-4** | 空状态移动端优化 | 插图 + 引导按钮 + 触控友好 | 0.5d |
-| **M3-5** | 底部 Sheet 统一应用 | 筛选、支付方式、更多操作 → BottomSheet | 1d |
-| **M3-6** | 键盘体验优化 | 输入框聚焦时布局不跳动、键盘上方固定操作栏 | 1d |
-| **M3-7** | 错误恢复增强 | 网络断开→重连提示、支付失败→重试、离线→缓存页 | 1d |
+| ID       | 任务                | 说明                                           | 预估 |
+| -------- | ------------------- | ---------------------------------------------- | ---- |
+| **M3-1** | 滑动手势完善        | 购物车滑动删除、订单卡片滑动操作、图片画廊滑动 | 2d   |
+| **M3-2** | 页面过渡动画        | 页面间滑入/滑出，模拟原生 App 体感             | 1-2d |
+| **M3-3** | 骨架屏完善          | 所有数据页面对应 Skeleton 布局                 | 1d   |
+| **M3-4** | 空状态移动端优化    | 插图 + 引导按钮 + 触控友好                     | 0.5d |
+| **M3-5** | 底部 Sheet 统一应用 | 筛选、支付方式、更多操作 → BottomSheet         | 1d   |
+| **M3-6** | 键盘体验优化        | 输入框聚焦时布局不跳动、键盘上方固定操作栏     | 1d   |
+| **M3-7** | 错误恢复增强        | 网络断开→重连提示、支付失败→重试、离线→缓存页  | 1d   |
 
 ---
 
 ### Phase M4：性能优化（预估 1 周）
 
-| ID | 任务 | 目标 | 预估 |
-|----|------|------|------|
-| **M4-1** | JS 包瘦身 | 分析 bundle，首屏 JS < 200KB gzip | 1-2d |
-| **M4-2** | 字体按需加载 | 8 个 Google Font → 仅加载当前店铺使用的 | 0.5d |
-| **M4-3** | API 请求优化 | React Query 预取 + stale-while-revalidate + 请求合并 | 1d |
-| **M4-4** | 列表虚拟化 | 商品 > 50 时虚拟滚动（`@tanstack/react-virtual`） | 1d |
-| **M4-5** | Lighthouse 达标 | Performance ≥ 90、Accessibility ≥ 90、LCP < 2.5s | 1d（调优） |
-| **M4-6** | 图片预加载策略 | 首屏图片 priority + viewport 外 lazy | 0.5d |
+| ID       | 任务            | 目标                                                 | 预估       |
+| -------- | --------------- | ---------------------------------------------------- | ---------- |
+| **M4-1** | JS 包瘦身       | 分析 bundle，首屏 JS < 200KB gzip                    | 1-2d       |
+| **M4-2** | 字体按需加载    | 8 个 Google Font → 仅加载当前店铺使用的              | 0.5d       |
+| **M4-3** | API 请求优化    | React Query 预取 + stale-while-revalidate + 请求合并 | 1d         |
+| **M4-4** | 列表虚拟化      | 商品 > 50 时虚拟滚动（`@tanstack/react-virtual`）    | 1d         |
+| **M4-5** | Lighthouse 达标 | Performance ≥ 90、Accessibility ≥ 90、LCP < 2.5s     | 1d（调优） |
+| **M4-6** | 图片预加载策略  | 首屏图片 priority + viewport 外 lazy                 | 0.5d       |
 
 ---
 
@@ -571,22 +578,22 @@ M1-4/M1-5（剩余页面）  ← 按需
 
 ### 4.2 Mini App 专项测试
 
-| 环境 | 测试方式 | 关键验证点 |
-|------|---------|-----------|
-| TG Mini App（iOS） | TG Bot 测试模式 + iPhone 真机 | MainButton/BackButton 绑定、safe-area、主题 |
-| TG Mini App（Android） | TG Bot 测试模式 + Android 真机 | 同上 + 返回键行为 |
-| Discord Activity | Discord Dev Portal + 浏览器 | OAuth 流程、主题同步、iframe 限制 |
-| Mobile Web（Safari） | iPhone Safari + Remote Debugging | 基线功能、无 TG/Discord 增强 |
-| Mobile Web（Chrome） | Android Chrome + DevTools | 同上 |
+| 环境                   | 测试方式                         | 关键验证点                                  |
+| ---------------------- | -------------------------------- | ------------------------------------------- |
+| TG Mini App（iOS）     | TG Bot 测试模式 + iPhone 真机    | MainButton/BackButton 绑定、safe-area、主题 |
+| TG Mini App（Android） | TG Bot 测试模式 + Android 真机   | 同上 + 返回键行为                           |
+| Discord Activity       | Discord Dev Portal + 浏览器      | OAuth 流程、主题同步、iframe 限制           |
+| Mobile Web（Safari）   | iPhone Safari + Remote Debugging | 基线功能、无 TG/Discord 增强                |
+| Mobile Web（Chrome）   | Android Chrome + DevTools        | 同上                                        |
 
 ### 4.3 支付流程测试矩阵
 
-| 支付方式 | TG Mini App | Discord Activity | Mobile Web |
-|---------|-------------|-----------------|------------|
-| WalletConnect QR | ✅ 扫码 → 签名 → 确认 | ✅ 同上 | ✅ 同上 |
-| WalletConnect 已连接 | ✅ 直接唤起 → 签名 | ✅ 同上 | ✅ 同上 |
-| Stripe（信用卡） | ✅ Payment Request / openLink | ⚠️ iframe 测试 | ✅ Stripe Elements |
-| PayPal | ✅ redirect 模式 | ⚠️ redirect 测试 | ✅ popup/redirect |
+| 支付方式             | TG Mini App                   | Discord Activity | Mobile Web         |
+| -------------------- | ----------------------------- | ---------------- | ------------------ |
+| WalletConnect QR     | ✅ 扫码 → 签名 → 确认         | ✅ 同上          | ✅ 同上            |
+| WalletConnect 已连接 | ✅ 直接唤起 → 签名            | ✅ 同上          | ✅ 同上            |
+| Stripe（信用卡）     | ✅ Payment Request / openLink | ⚠️ iframe 测试   | ✅ Stripe Elements |
+| PayPal               | ✅ redirect 模式              | ⚠️ redirect 测试 | ✅ popup/redirect  |
 
 ### 4.4 E2E 测试覆盖
 
@@ -606,43 +613,43 @@ test('mobile buyer journey', async ({ page }) => {
 
 ### 5.1 功能验收
 
-| 维度 | 标准 |
-|------|------|
-| **触控目标** | 所有可交互元素 ≥ 44×44px，间距 ≥ 8px |
-| **手势** | 购物车滑动删除、图片滑动浏览、下拉刷新 |
-| **导航** | MobileNav 底部导航 + MobilePageHeader 返回 + TG BackButton |
-| **安全区** | iOS 刘海/底部 `env(safe-area-inset-*)` 正确处理 |
+| 维度         | 标准                                                       |
+| ------------ | ---------------------------------------------------------- |
+| **触控目标** | 所有可交互元素 ≥ 44×44px，间距 ≥ 8px                       |
+| **手势**     | 购物车滑动删除、图片滑动浏览、下拉刷新                     |
+| **导航**     | MobileNav 底部导航 + MobilePageHeader 返回 + TG BackButton |
+| **安全区**   | iOS 刘海/底部 `env(safe-area-inset-*)` 正确处理            |
 
 ### 5.2 Mini App 验收
 
-| 维度 | 标准 |
-|------|------|
+| 维度              | 标准                                        |
+| ----------------- | ------------------------------------------- |
 | **TG MainButton** | 商品详情/购物车/结账 关键 CTA 用 MainButton |
-| **TG BackButton** | 所有非首页页面绑定 BackButton 返回 |
-| **TG 主题** | 深色/浅色模式跟随 TG 主题自动切换 |
-| **TG 分享** | 商品/店铺可通过 TG 原生分享 |
-| **Discord 认证** | Activity 内 OAuth 无弹窗完成 |
-| **Discord 主题** | 跟随 Discord 主题 |
+| **TG BackButton** | 所有非首页页面绑定 BackButton 返回          |
+| **TG 主题**       | 深色/浅色模式跟随 TG 主题自动切换           |
+| **TG 分享**       | 商品/店铺可通过 TG 原生分享                 |
+| **Discord 认证**  | Activity 内 OAuth 无弹窗完成                |
+| **Discord 主题**  | 跟随 Discord 主题                           |
 
 ### 5.3 性能验收
 
-| 指标 | 目标 | 测试条件 |
-|------|------|---------|
-| LCP | < 2.5s | 4G Throttle, iPhone SE |
-| FID/INP | < 200ms | 真机测试 |
-| CLS | < 0.1 | — |
-| 首屏 JS | < 200KB gzip | Bundle 分析 |
-| 帧率 | ≥ 55fps | 滚动/动画场景 |
+| 指标    | 目标         | 测试条件               |
+| ------- | ------------ | ---------------------- |
+| LCP     | < 2.5s       | 4G Throttle, iPhone SE |
+| FID/INP | < 200ms      | 真机测试               |
+| CLS     | < 0.1        | —                      |
+| 首屏 JS | < 200KB gzip | Bundle 分析            |
+| 帧率    | ≥ 55fps      | 滚动/动画场景          |
 
 ### 5.4 支付验收
 
-| 维度 | 标准 |
-|------|------|
-| **WalletConnect** | TG/Discord 内 QR 码正常显示 + 扫码签名 + 回调确认 |
-| **已连接钱包** | 直接唤起签名，无需重新扫码 |
-| **Stripe 降级** | iframe 受限时 `openLink` 跳转 → 支付完成 → 返回 Mini App |
-| **PayPal 降级** | redirect 模式完成支付 → 返回 Mini App |
-| **超时处理** | 30s 无响应 → 友好提示 + 重试按钮 |
+| 维度              | 标准                                                     |
+| ----------------- | -------------------------------------------------------- |
+| **WalletConnect** | TG/Discord 内 QR 码正常显示 + 扫码签名 + 回调确认        |
+| **已连接钱包**    | 直接唤起签名，无需重新扫码                               |
+| **Stripe 降级**   | iframe 受限时 `openLink` 跳转 → 支付完成 → 返回 Mini App |
+| **PayPal 降级**   | redirect 模式完成支付 → 返回 Mini App                    |
+| **超时处理**      | 30s 无响应 → 友好提示 + 重试按钮                         |
 
 ### 5.5 端到端验收场景
 
@@ -731,14 +738,14 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 
 ### 6.4 文件命名约定
 
-| 类型 | 命名 | 示例 |
-|------|------|------|
-| Desktop 视图 | `XxxDesktop.tsx` | `ProductDetailDesktop.tsx` |
-| Mobile 视图 | `XxxMobile.tsx` | `ProductDetailMobile.tsx` |
-| 共享 Hook | `useXxx.ts` | `useProductDetail.ts` |
-| 移动端子组件 | 描述性名称 | `ProductImageSwiper.tsx` |
-| TG 增强 Hook | `useTGXxx.ts` | `useTGMainButton.ts` |
-| Discord 增强 Hook | `useDiscordXxx.ts` | `useDiscordActivity.ts` |
+| 类型              | 命名               | 示例                       |
+| ----------------- | ------------------ | -------------------------- |
+| Desktop 视图      | `XxxDesktop.tsx`   | `ProductDetailDesktop.tsx` |
+| Mobile 视图       | `XxxMobile.tsx`    | `ProductDetailMobile.tsx`  |
+| 共享 Hook         | `useXxx.ts`        | `useProductDetail.ts`      |
+| 移动端子组件      | 描述性名称         | `ProductImageSwiper.tsx`   |
+| TG 增强 Hook      | `useTGXxx.ts`      | `useTGMainButton.ts`       |
+| Discord 增强 Hook | `useDiscordXxx.ts` | `useDiscordActivity.ts`    |
 
 ---
 
@@ -746,63 +753,136 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 
 ### Phase M0 — 基础设施增强
 
-| ID | 任务 | 状态 | 完成日期 |
-|----|------|------|---------|
-| M0-1 | React Query 集成 | ⏳ 未开始 | |
-| M0-2 | 图片统一优化 | ⏳ 未开始 | |
-| M0-3 | Discord Activity Provider | ⏳ 未开始 | |
-| M0-4 | 手势库集成 | ⏳ 未开始 | |
-| M0-5 | 底部 Sheet 组件 | ⏳ 未开始 | |
-| M0-6 | Mini App 导航架构 | ⏳ 未开始 | |
+| ID   | 任务                      | 状态         | 完成日期   |
+| ---- | ------------------------- | ------------ | ---------- |
+| M0-1 | React Query 集成          | ✅ 完成      | 2026-03-01 |
+| M0-2 | 图片统一优化              | ✅ 完成      | 2026-03-01 |
+| M0-3 | Discord Activity Provider | ⏳ 延后至 M2 |            |
+| M0-4 | 手势库集成                | ✅ 完成      | 2026-03-01 |
+| M0-5 | 底部 Sheet 组件           | ✅ 完成      | 2026-03-01 |
+| M0-6 | Mini App 导航架构         | ✅ 完成      | 2026-03-01 |
 
 ### Phase M1 — 关键页面 Platform View 拆分
 
-| ID | 任务 | 状态 | 完成日期 |
-|----|------|------|---------|
-| M1-0 | Mini App 导航架构实施 | ⏳ 未开始 | |
-| M1-1 | 商品详情 Platform View | ⏳ 未开始 | |
-| M1-2 | 搜索 Mobile View | ⏳ 未开始 | |
-| M1-3 | 购物车 Mobile View | ⏳ 未开始 | |
-| M1-4 | 店铺首页优化 | ⏳ 未开始 | |
-| M1-5 | 订单列表优化 | ⏳ 未开始 | |
+| ID   | 任务                   | 状态      | 完成日期   |
+| ---- | ---------------------- | --------- | ---------- |
+| M1-0 | Mini App 导航架构实施  | ✅ 完成   | 2026-03-01 |
+| M1-1 | 商品详情 Platform View | ✅ 完成   | 2026-03-01 |
+| M1-2 | 搜索 Mobile View       | ⏳ 未开始 |            |
+| M1-3 | 购物车 Mobile View     | ⏳ 未开始 |            |
+| M1-4 | 店铺首页优化           | ⏳ 未开始 |            |
+| M1-5 | 订单列表优化           | ⏳ 未开始 |            |
 
 ### Phase M2 — Mini App 专项增强
 
-| ID | 任务 | 状态 | 完成日期 |
-|----|------|------|---------|
-| M2-1 | TG MainButton/BackButton 集成 | ⏳ 未开始 | |
-| M2-2 | TG 主题同步 | ⏳ 未开始 | |
-| M2-3 | TG 分享集成 | ⏳ 未开始 | |
-| M2-4 | Discord Activity Provider | ⏳ 未开始 | |
-| M2-5 | 下拉刷新 | ⏳ 未开始 | |
-| M2-6 | Mini App 支付方式适配 | ⏳ 未开始 | |
+| ID   | 任务                          | 状态      | 完成日期 |
+| ---- | ----------------------------- | --------- | -------- |
+| M2-1 | TG MainButton/BackButton 集成 | ⏳ 未开始 |          |
+| M2-2 | TG 主题同步                   | ⏳ 未开始 |          |
+| M2-3 | TG 分享集成                   | ⏳ 未开始 |          |
+| M2-4 | Discord Activity Provider     | ⏳ 未开始 |          |
+| M2-5 | 下拉刷新                      | ⏳ 未开始 |          |
+| M2-6 | Mini App 支付方式适配         | ⏳ 未开始 |          |
 
 ### Phase M3 — 交互打磨
 
-| ID | 任务 | 状态 | 完成日期 |
-|----|------|------|---------|
-| M3-1 | 滑动手势完善 | ⏳ 未开始 | |
-| M3-2 | 页面过渡动画 | ⏳ 未开始 | |
-| M3-3 | 骨架屏完善 | ⏳ 未开始 | |
-| M3-4 | 空状态移动端优化 | ⏳ 未开始 | |
-| M3-5 | 底部 Sheet 统一应用 | ⏳ 未开始 | |
-| M3-6 | 键盘体验优化 | ⏳ 未开始 | |
-| M3-7 | 错误恢复增强 | ⏳ 未开始 | |
+| ID   | 任务                | 状态      | 完成日期 |
+| ---- | ------------------- | --------- | -------- |
+| M3-1 | 滑动手势完善        | ⏳ 未开始 |          |
+| M3-2 | 页面过渡动画        | ⏳ 未开始 |          |
+| M3-3 | 骨架屏完善          | ⏳ 未开始 |          |
+| M3-4 | 空状态移动端优化    | ⏳ 未开始 |          |
+| M3-5 | 底部 Sheet 统一应用 | ⏳ 未开始 |          |
+| M3-6 | 键盘体验优化        | ⏳ 未开始 |          |
+| M3-7 | 错误恢复增强        | ⏳ 未开始 |          |
 
 ### Phase M4 — 性能优化
 
-| ID | 任务 | 状态 | 完成日期 |
-|----|------|------|---------|
-| M4-1 | JS 包瘦身 | ⏳ 未开始 | |
-| M4-2 | 字体按需加载 | ⏳ 未开始 | |
-| M4-3 | API 请求优化 | ⏳ 未开始 | |
-| M4-4 | 列表虚拟化 | ⏳ 未开始 | |
-| M4-5 | Lighthouse 达标 | ⏳ 未开始 | |
-| M4-6 | 图片预加载策略 | ⏳ 未开始 | |
+| ID   | 任务            | 状态      | 完成日期 |
+| ---- | --------------- | --------- | -------- |
+| M4-1 | JS 包瘦身       | ⏳ 未开始 |          |
+| M4-2 | 字体按需加载    | ⏳ 未开始 |          |
+| M4-3 | API 请求优化    | ⏳ 未开始 |          |
+| M4-4 | 列表虚拟化      | ⏳ 未开始 |          |
+| M4-5 | Lighthouse 达标 | ⏳ 未开始 |          |
+| M4-6 | 图片预加载策略  | ⏳ 未开始 |          |
 
 ---
 
-## 8. AI 执行协议
+## 8. 截图验证工作流
+
+每个页面级改造完成后，Playwright 自动截取三种视图：
+
+| 视图        | 尺寸                      | 说明                        | 存放目录                    |
+| ----------- | ------------------------- | --------------------------- | --------------------------- |
+| Mobile      | 375×812 @3x               | 标准 iPhone 移动端          | `docs/screenshots/mobile/`  |
+| Desktop     | 1440×900                  | 标准桌面端（对照参考）      | `docs/screenshots/desktop/` |
+| TG Mini App | 375×812 @3x + TG SDK 注入 | 模拟 Telegram Mini App 环境 | `docs/screenshots/tg/`      |
+
+**实现**：`apps/web/e2e/screenshot-mobile.spec.ts`，集成 Playwright mock API routes。
+
+**命令**：
+
+```bash
+cd apps/web
+SCREENSHOT_PATH=/product/wireless-headphones SCREENSHOT_NAME=m1-1-product-detail \
+  npx playwright test e2e/screenshot-mobile.spec.ts --project=chromium
+```
+
+**TG 模拟原理**：通过 `page.addInitScript()` 注入 `window.Telegram.WebApp` 对象（含 `initData`、`themeParams`、`MainButton`、`BackButton` 等），使 `TGMiniAppProvider` 检测到 TG 环境并触发 TG 专属 UI 适配。
+
+**流程**：截图 → AI 自审（检查布局/间距/可读性/TG 适配） → 修复问题 → 最终截图存档。
+
+**命名**：
+
+- Mobile: `{任务ID}-{页面名}-375.png`
+- Desktop: `{任务ID}-{页面名}-1440.png`
+- TG: `{任务ID}-{页面名}-tg-375.png`
+
+**环境变量**：
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `SCREENSHOT_PATH` | URL 路径 | `/` |
+| `SCREENSHOT_NAME` | 输出文件名前缀 | `screenshot` |
+| `BASE_URL` | 基础 URL | `http://localhost:3001` |
+| `SKIP_TG` | 设为 `1` 跳过 TG 截图 | 不跳过 |
+| `MOCK_API` | 设为 `0` 禁用 API mock | 启用 |
+
+### Phase M1 截图审核
+
+| 页面     | Mobile | Desktop | TG  | AI 自审 | 人工审核 | 备注                              |
+| -------- | ------ | ------- | --- | ------- | -------- | --------------------------------- |
+| 商品详情 | ✅     | ✅      | ✅  | ✅      | ⏳       | PWA 提示遮挡内容，TG 模式下应隐藏 |
+| 搜索     | ⏳     | ⏳      | ⏳  |         |          |                                   |
+| 购物车   | ⏳     | ⏳      | ⏳  |         |          |                                   |
+| 店铺首页 | ⏳     | ⏳      | ⏳  |         |          |                                   |
+| 订单列表 | ⏳     | ⏳      | ⏳  |         |          |                                   |
+
+### AI 自审发现
+
+#### M1-0 导航架构验证
+
+| 检查项                                | 结果    | 说明                           |
+| ------------------------------------- | ------- | ------------------------------ |
+| MobileNav TG 隐藏                     | ✅ 通过 | TG 主页截图无底部导航栏        |
+| MobileNav Mobile 显示                 | ✅ 通过 | 普通移动端主页截图有底部导航栏 |
+| MobilePageHeader 返回按钮 TG 隐藏     | ✅ 通过 | TG 商品详情截图无 `<` 返回箭头 |
+| MobilePageHeader 返回按钮 Mobile 显示 | ✅ 通过 | 普通移动端有 `<` 返回箭头      |
+| MainContent 底部间距 TG               | ✅ 通过 | TG 模式无 `pb-20` 多余间距     |
+| Desktop 不受影响                      | ✅ 通过 | 桌面端布局完整无变化           |
+
+#### M1-1 商品详情
+
+| 问题                   | 严重度 | 说明                                                                    |
+| ---------------------- | ------ | ----------------------------------------------------------------------- |
+| PWA 安装提示遮挡       | 中     | "Install Mobazha" 横幅覆盖了 Buyer Protection 区域，TG 模式下应自动隐藏 |
+| Mobile/TG 视图几乎相同 | 低     | 当前 TG 无专属 UI 差异化（预期，后续 Phase 可增加 TG MainButton 集成）  |
+| Desktop 布局完整       | —      | 左图右详情、卖家卡片、运费表、评价区域均正常渲染                        |
+| Mock 数据注入正常      | —      | 三种视图均显示 "Wireless Noise-Cancelling Headphones"、$89.99、4.8 评分 |
+
+---
+
+## 9. AI 执行协议
 
 当用户说"继续移动端改造"、"Phase M 下一步"、"Mini App 优化"时，AI 执行：
 
@@ -811,12 +891,11 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 3. 读取对应的 `.cursor/rules/mobile-first-rules.mdc` — 执行规范
 4. 告知用户待执行任务摘要
 5. 按技术规范（Section 6）执行
-6. 完成后更新 Section 7 进度表
+6. **完成后执行截图验证流程（Section 8）**
+7. 完成后更新 Section 7 进度表
 
 ---
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-03-01 (v2: 合并审核意见 — 新增 M0-6/M1-0/M2-6、React Query 评估确认、
-  支付方式可行性矩阵、导航架构策略、主题冲突处理、AI 增强子任务、测试策略章节、
-  TG SDK 能力补全)
+最后更新: 2026-03-01 (v5: M1-0 导航架构实施完成，M1-1 商品详情完成，截图验证通过)

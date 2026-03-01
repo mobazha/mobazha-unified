@@ -159,13 +159,13 @@ export function EncryptedImage({
   onRequestAccess,
 }: EncryptedImageProps) {
   if (!encrypted) {
-    return <img src={src} alt={alt} className={className} />;
+    return <img src={src} alt={alt} loading="lazy" className={className} />;
   }
 
   if (hasAccess) {
     return (
       <div className="relative">
-        <img src={src} alt={alt} className={className} />
+        <img src={src} alt={alt} loading="lazy" className={className} />
         <div className="absolute top-2 right-2">
           <EncryptionBadge status="decrypted" size="sm" />
         </div>

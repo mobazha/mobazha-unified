@@ -17,7 +17,7 @@ export function TopProductRow({ product }: { product: ProductListItem }) {
     >
       <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0">
         {thumbnail ? (
-          <img src={thumbnail} alt="" className="w-full h-full object-cover" />
+          <img src={thumbnail} alt="" loading="lazy" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Package className="w-4 h-4 text-muted-foreground" />

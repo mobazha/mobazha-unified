@@ -1,6 +1,9 @@
 export { ProductDetail } from './ProductDetail';
 export type { ProductDetailProps } from './ProductDetail';
 
+export { ProductDetailDesktop } from './ProductDetailDesktop';
+export { ProductDetailMobile } from './ProductDetailMobile';
+
 export { ProductBottomBar } from './ProductBottomBar';
 export type { ProductBottomBarProps } from './ProductBottomBar';
 
