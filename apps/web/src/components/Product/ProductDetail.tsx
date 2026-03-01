@@ -9,6 +9,9 @@ import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { cn } from '@/lib/utils';
+import { useTGMainButton } from '@/hooks/useTGMainButton';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import {
   productDataService,
   profileApi,
@@ -448,6 +451,30 @@ export function ProductDetail({
 
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [product, quantity, isModal, onClose, router]);
+
+  // TG Mini App integration
+  const { isAvailable: isTG, haptic } = useTGMiniApp();
+  const tgStock = useMemo(() => (product ? getStockQuantity(product) : 0), [product]);
+  const tgPriceDisplay = useMemo(() => {
+    if (!product) return '';
+    const price = Number(product.item?.price) || 0;
+    const curr = product.metadata?.pricingCurrency?.code || 'USD';
+    return formatPrice(price, curr);
+  }, [product, formatPrice]);
+
+  const handleTGAddToCart = useCallback(() => {
+    handleAddToCart();
+    haptic?.notificationOccurred('success');
+  }, [handleAddToCart, haptic]);
+
+  useTGMainButton({
+    text: tgStock === 0 ? t('product.outOfStock') : `${t('product.addToCart')} - ${tgPriceDisplay}`,
+    onClick: handleTGAddToCart,
+    visible: isTG && !!product && !isModal,
+    disabled: tgStock === 0,
+  });
+
+  useTGBackButton({ visible: isTG && !isModal });
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, useCallback, useState } from 'react';
+import React, { createContext, useContext, useMemo, useCallback, useState, useEffect } from 'react';
 
 // ---------------------------------------------------------------------------
 // Telegram WebApp SDK types (subset used by the provider)
@@ -130,6 +130,31 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
     (color: string) => webApp?.setBackgroundColor?.(color),
     [webApp]
   );
+
+  // Sync TG theme colors → CSS custom properties
+  useEffect(() => {
+    const tp = webApp?.themeParams;
+    if (!tp) return;
+    const root = document.documentElement;
+    const map: Record<string, string | undefined> = {
+      '--tg-bg': tp.bg_color,
+      '--tg-text': tp.text_color,
+      '--tg-hint': tp.hint_color,
+      '--tg-link': tp.link_color,
+      '--tg-button': tp.button_color,
+      '--tg-button-text': tp.button_text_color,
+      '--tg-secondary-bg': tp.secondary_bg_color,
+      '--tg-header-bg': tp.header_bg_color,
+      '--tg-accent-text': tp.accent_text_color,
+      '--tg-section-bg': tp.section_bg_color,
+      '--tg-section-header': tp.section_header_text_color,
+      '--tg-subtitle': tp.subtitle_text_color,
+      '--tg-destructive': tp.destructive_text_color,
+    };
+    Object.entries(map).forEach(([prop, val]) => {
+      if (val) root.style.setProperty(prop, val);
+    });
+  }, [webApp]);
 
   const value = useMemo<TGMiniAppContextValue>(() => {
     const isAvailable = !!webApp?.initData;

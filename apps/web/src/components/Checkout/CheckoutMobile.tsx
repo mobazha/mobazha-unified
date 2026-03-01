@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import Link from 'next/link';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { AddressSummary } from '@/components/Address';
@@ -15,6 +15,9 @@ import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
+import { useTGMainButton } from '@/hooks/useTGMainButton';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -56,6 +59,23 @@ export function CheckoutMobile({ checkout }: Props) {
     handleApplyDiscountCode,
     handleRemoveDiscount,
   } = checkout;
+
+  const { isAvailable: isTG, haptic } = useTGMiniApp();
+
+  const handleTGPlaceOrder = useCallback(() => {
+    handleCreateOrder();
+    haptic?.notificationOccurred('success');
+  }, [handleCreateOrder, haptic]);
+
+  useTGMainButton({
+    text: `${t('checkout.placeOrder')} - ${renderPairedPrice(total, currency)}`,
+    onClick: handleTGPlaceOrder,
+    visible: isTG && checkoutItems.length > 0,
+    disabled: !canSubmit,
+    showProgress: isSubmitting,
+  });
+
+  useTGBackButton({ visible: isTG });
 
   return (
     <div className="min-h-screen bg-background pb-24" data-testid="checkout-page-mobile">
@@ -395,8 +415,8 @@ export function CheckoutMobile({ checkout }: Props) {
         )}
       </div>
 
-      {/* Mobile Bottom Bar */}
-      {checkoutItems.length > 0 && (
+      {/* Mobile Bottom Bar — hidden in TG (MainButton replaces it) */}
+      {checkoutItems.length > 0 && !isTG && (
         <div className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-sm border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-50">
           <HStack justify="between" align="center">
             <div>
