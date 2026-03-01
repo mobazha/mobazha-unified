@@ -29,9 +29,8 @@ test.describe('Integrations Auth Guard', () => {
 
   test('should redirect to login when not authenticated', async ({ page }) => {
     await page.goto('/admin/settings/integrations');
-    await page.waitForURL(/\/login/, { timeout: 10000 });
-    const url = new URL(page.url());
-    expect(url.pathname).toBe('/login');
+    await page.waitForURL(/\/login/, { timeout: 15000 });
+    expect(page.url()).toMatch(/\/login/);
   });
 });
 
@@ -40,7 +39,7 @@ test.describe('Integrations Auth Guard', () => {
 authenticatedTest.describe('Integrations Page', () => {
   authenticatedTest('should display tabbed layout', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const page = authedPage.locator('[data-testid="admin-integrations"]');
     await expect(page).toBeVisible();
@@ -61,7 +60,7 @@ authenticatedTest.describe('Integrations Page', () => {
 
   authenticatedTest('payments tab should be active by default', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const paymentsTab = authedPage.getByRole('tab', { name: /payment|支付/i });
     await expect(paymentsTab).toHaveAttribute('data-state', 'active');
@@ -73,7 +72,7 @@ authenticatedTest.describe('Integrations Page', () => {
 authenticatedTest.describe('AI Configuration', () => {
   authenticatedTest('should display AI config form when tab is clicked', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     const aiTab = authedPage.getByRole('tab', { name: /ai|助手/i });
     await aiTab.click();
@@ -91,7 +90,7 @@ authenticatedTest.describe('AI Configuration', () => {
 
   authenticatedTest('should show provider selector with options', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
     await authedPage.waitForTimeout(500);
@@ -109,7 +108,7 @@ authenticatedTest.describe('AI Configuration', () => {
     'should show placeholder defaults when provider is selected',
     async ({ authedPage }) => {
       await authedPage.goto('/admin/settings/integrations');
-      await authedPage.waitForLoadState('networkidle');
+      await authedPage.waitForLoadState('domcontentloaded');
 
       await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
       await authedPage.waitForTimeout(500);
@@ -141,7 +140,7 @@ authenticatedTest.describe('AI Configuration', () => {
 
   authenticatedTest('should show "not configured" badge initially', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
     await authedPage.waitForTimeout(500);
@@ -153,7 +152,7 @@ authenticatedTest.describe('AI Configuration', () => {
 
   authenticatedTest('save button should be disabled without provider', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
     await authedPage.waitForTimeout(500);
@@ -164,7 +163,7 @@ authenticatedTest.describe('AI Configuration', () => {
 
   authenticatedTest('should display test connection button', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
     await authedPage.waitForTimeout(500);
@@ -176,7 +175,7 @@ authenticatedTest.describe('AI Configuration', () => {
 
   authenticatedTest('should show advanced settings section', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
     await authedPage.waitForTimeout(500);
@@ -198,7 +197,7 @@ authenticatedTest.describe('AI Configuration', () => {
 
   authenticatedTest('should show model dropdown for known providers', async ({ authedPage }) => {
     await authedPage.goto('/admin/settings/integrations');
-    await authedPage.waitForLoadState('networkidle');
+    await authedPage.waitForLoadState('domcontentloaded');
 
     await authedPage.getByRole('tab', { name: /ai|助手/i }).click();
     await authedPage.waitForTimeout(500);

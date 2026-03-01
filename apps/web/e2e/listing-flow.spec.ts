@@ -23,7 +23,7 @@ test.describe('Listing - Create', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/listing/new');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should be on the listing creation page
     expect(page.url()).toContain('/listing/new');
@@ -39,7 +39,7 @@ test.describe('Listing - Create', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/listing/new');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check for common listing form fields
     const titleInput = page
@@ -83,7 +83,7 @@ test.describe('Store - Browse', () => {
     // Store pages are public - no login required
     // Use a test peer ID (may or may not exist)
     await page.goto('/store/QmTestPeerID12345');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should not redirect to login (store is public)
     expect(page.url()).not.toContain('/login');
@@ -95,7 +95,7 @@ test.describe('Store - Browse', () => {
 test.describe('Search', () => {
   test('should display search page', async ({ page }) => {
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/search');
     expect(page.url()).not.toContain('/login');
@@ -105,7 +105,7 @@ test.describe('Search', () => {
 
   test('should perform a search query', async ({ page }) => {
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Find the search input
     const searchInput = page
@@ -119,7 +119,7 @@ test.describe('Search', () => {
       await searchInput.press('Enter');
 
       // Wait for results
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.screenshot({ path: 'e2e-screenshots/search-results.png', fullPage: true });
     }
@@ -130,7 +130,7 @@ test.describe('Product Detail', () => {
   test('should display product page', async ({ page }) => {
     // Product pages are public
     await page.goto('/product/test-slug');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should not redirect to login
     expect(page.url()).not.toContain('/login');

@@ -24,7 +24,7 @@ import type { DataEnvelope } from '../../types/common';
 export async function getProviders(vendorPeerID?: string): Promise<FiatProviderInfo[]> {
   const qs = vendorPeerID ? `?vendor=${vendorPeerID}` : '';
   const res = await publicGet<DataEnvelope<FiatProviderInfo[]>>(`${NODE_API.FIAT_PROVIDERS}${qs}`);
-  return res.data;
+  return Array.isArray(res?.data) ? res.data : [];
 }
 
 export async function createPayment(

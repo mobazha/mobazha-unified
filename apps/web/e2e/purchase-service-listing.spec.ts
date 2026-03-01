@@ -66,7 +66,7 @@ test.describe('Purchase Service Listing', () => {
         .catch(() => null);
 
       await sellerPage.goto('/listing/new');
-      await sellerPage.waitForLoadState('networkidle');
+      await sellerPage.waitForLoadState('domcontentloaded');
 
       const listingIndexResp = await listingIndexPromise;
       if (listingIndexResp) {
@@ -136,7 +136,7 @@ test.describe('Purchase Service Listing', () => {
       const productUrl = `/product/${listingSlug}?peerID=${sellerPeerID}`;
       console.log('Product URL:', productUrl);
       await page.goto(productUrl);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const productDetail = page.getByTestId('product-detail');
       await expect(productDetail).toBeVisible({ timeout: 60000 });
@@ -161,7 +161,7 @@ test.describe('Purchase Service Listing', () => {
       await buyNowBtn.click();
 
       await page.waitForURL(url => url.pathname === '/checkout', { timeout: 30000 });
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       console.log('On checkout page, URL:', page.url());
 
       const checkoutPage = page.getByTestId('checkout-page');
@@ -194,7 +194,7 @@ test.describe('Purchase Service Listing', () => {
       expect(orderID).toBeTruthy();
       console.log('Order created! Order ID:', orderID);
 
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       const mainContent = page.locator('main');
       await expect(mainContent).toBeVisible({ timeout: 15000 });
 

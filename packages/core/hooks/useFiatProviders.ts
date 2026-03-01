@@ -27,7 +27,7 @@ export function useFiatProviders(vendorPeerID?: string): UseFiatProvidersResult 
     setError(null);
     try {
       const data = await fiatApi.getProviders(vendorPeerID);
-      setProviders(data);
+      setProviders(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load payment providers');
       setProviders([]);

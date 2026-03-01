@@ -35,6 +35,11 @@ playwright/.auth/
 test-results/
 e2e-screenshots/
 apps/web/e2e-screenshots/
+apps/web/playwright/.auth/
+
+# Temporary E2E screenshots (not baselines)
+apps/web/smoke-*.png
+apps/web/standalone-smoke-*.png
 
 # Reports (keep structure, ignore content)
 reports/*.md

@@ -6,12 +6,12 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test.describe('Smoke Test', () => {
   test('1. Page Load - Home page loads', async ({ page }) => {
     await page.goto(BASE_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Take screenshot
     await page.screenshot({ path: 'smoke-1-home.png', fullPage: true });
@@ -26,7 +26,7 @@ test.describe('Smoke Test', () => {
 
   test('2. Login button - Click and check redirect', async ({ page }) => {
     await page.goto(BASE_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Find and click login/sign-in button
     const loginBtn = page
@@ -45,7 +45,7 @@ test.describe('Smoke Test', () => {
     } else {
       // Maybe already on login page or different layout
       await page.goto(`${BASE_URL}/login`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.screenshot({ path: 'smoke-2-login-page.png', fullPage: true });
     }
   });
@@ -62,7 +62,7 @@ test.describe('Smoke Test', () => {
   test('4. Casdoor Login - Attempt login with admin/123', async ({ page }) => {
     // Navigate to login page (will redirect to Casdoor in hosted mode)
     await page.goto(`${BASE_URL}/login`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait for Casdoor login form (might be on same or different origin)
     const usernameInput = page.getByPlaceholder(/username|email|phone/i).first();

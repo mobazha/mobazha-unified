@@ -23,7 +23,7 @@ test.describe('Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/settings');
     expect(page.url()).not.toContain('/login');
@@ -35,7 +35,7 @@ test.describe('Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/general');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/settings/general');
 
@@ -50,7 +50,7 @@ test.describe('Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/account');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/settings/account');
 
@@ -67,7 +67,7 @@ test.describe('Access Control Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/access-control/privacy');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/privacy');
 
@@ -78,7 +78,7 @@ test.describe('Access Control Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/access-control/user-groups');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/user-groups');
 
@@ -89,7 +89,7 @@ test.describe('Access Control Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/access-control/product-groups');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     expect(page.url()).toContain('/product-groups');
 
@@ -100,7 +100,7 @@ test.describe('Access Control Settings', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/access-control/requests');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await page.screenshot({ path: 'e2e-screenshots/settings-access-requests.png', fullPage: true });
   });
@@ -115,16 +115,17 @@ test.describe('Settings - Linked Accounts', () => {
     await performCasdoorLogin(page);
 
     await page.goto('/settings/account');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Look for linked accounts section
-    const linkedSection = page
-      .getByText(/linked|关联|绑定|accounts|账号/i)
-      .first();
+    const linkedSection = page.getByText(/linked|关联|绑定|accounts|账号/i).first();
     const hasLinkedSection = await linkedSection.isVisible().catch(() => false);
 
     if (hasLinkedSection) {
-      await page.screenshot({ path: 'e2e-screenshots/settings-linked-accounts.png', fullPage: true });
+      await page.screenshot({
+        path: 'e2e-screenshots/settings-linked-accounts.png',
+        fullPage: true,
+      });
     }
   });
 });
@@ -146,7 +147,7 @@ test.describe('Settings - Other Pages', () => {
       await performCasdoorLogin(page);
 
       await page.goto(sp.path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Should be on the settings page, not redirected to login
       expect(page.url()).not.toContain('/login');

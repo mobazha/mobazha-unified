@@ -145,6 +145,7 @@ export const en: TranslationResource = {
     wallet: 'Wallet',
     cart: 'Cart',
     notifications: 'Notifications',
+    explore: 'Explore',
     login: 'Login',
     logout: 'Logout',
   },
@@ -3843,6 +3844,7 @@ export const en: TranslationResource = {
     integrations: {
       title: 'Integrations',
       subtitle: 'Manage AI assistant, notifications, and external services',
+      tabPayments: 'Payments',
       tabNotifications: 'Notifications',
       tabAI: 'AI Assistant',
       channels: 'Notification Channels',
@@ -3941,7 +3943,10 @@ export const en: TranslationResource = {
       unsavedChanges: 'Unsaved changes',
 
       // Payment Providers
-      paymentProviders: 'Payment Providers',
+      paymentProviders: {
+        title: 'Payment Providers',
+        subtitle: 'Accept fiat payments from your customers',
+      },
       paymentProvidersDesc: 'Accept credit card and PayPal payments from your customers',
       stripeTitle: 'Stripe',
       stripeDesc: 'Accept credit/debit cards, Apple Pay, and Google Pay',
@@ -4162,6 +4167,20 @@ export const en: TranslationResource = {
       "Payment is being confirmed. You'll receive a notification when it's complete.",
     providerNotAvailable: 'Not available from this seller',
     acceptedPayments: 'Accepted payments',
+    connected: 'Connected',
+    notConnected: 'Not connected',
+    connectProvider: 'Connect {{provider}}',
+    configureApiKeys: 'Configure API Keys',
+    disconnect: 'Disconnect',
+    saveFailed: 'Failed to save configuration',
+    deleteFailed: 'Failed to disconnect',
+    genericError: 'Payment failed',
+    payNow: 'Pay Now',
+    stripeLoadFailed: 'Failed to load payment form',
+    cryptoBadge: 'Crypto',
+    sectionTitle: 'Pay with card or wallet',
+    cryptoSection: 'Pay with cryptocurrency',
+    captureFailed: 'Payment capture failed. Please contact support.',
   },
 };
 

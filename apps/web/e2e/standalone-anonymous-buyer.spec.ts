@@ -22,6 +22,20 @@ test.use({
   ignoreHTTPSErrors: true,
 });
 
+let standaloneAvailable = false;
+test.beforeAll(async ({ request }) => {
+  try {
+    const resp = await request.get(BASE_URL, { timeout: 5000, ignoreHTTPSErrors: true });
+    standaloneAvailable = resp.status() > 0;
+  } catch {
+    standaloneAvailable = false;
+  }
+});
+
+test.beforeEach(async () => {
+  test.skip(!standaloneAvailable, `Standalone store not available at ${BASE_URL}`);
+});
+
 test.describe('Standalone Store — Anonymous Buyer (No Login)', () => {
   test('Test 1: Landing page loads and no 401 in console', async ({ page }) => {
     const consoleErrors: string[] = [];

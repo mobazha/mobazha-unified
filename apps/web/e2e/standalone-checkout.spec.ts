@@ -91,7 +91,7 @@ base.describe('Buyer Journey — Anonymous', () => {
     for (const [type, listing] of Object.entries(LISTINGS)) {
       base(`${type} product detail page loads`, async ({ page }) => {
         await page.goto(`/product/${listing.slug}`);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
 
         await expect(page.getByText(listing.title).first()).toBeVisible({ timeout: 15000 });
 
@@ -113,7 +113,7 @@ base.describe('Buyer Journey — Anonymous', () => {
   base.describe('Price Display Verification', () => {
     base('physical product price formatted correctly ($29.99 not $2999)', async ({ page }) => {
       await page.goto(`/product/${LISTINGS.physical.slug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await expect(page.getByText(LISTINGS.physical.title).first()).toBeVisible({ timeout: 15000 });
 
@@ -129,7 +129,7 @@ base.describe('Buyer Journey — Anonymous', () => {
 
     base('service price formatted correctly ($99.00)', async ({ page }) => {
       await page.goto(`/product/${LISTINGS.service.slug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await expect(page.getByText(LISTINGS.service.title).first()).toBeVisible({ timeout: 15000 });
 
@@ -141,7 +141,7 @@ base.describe('Buyer Journey — Anonymous', () => {
 
     base('digital good price formatted correctly ($14.99)', async ({ page }) => {
       await page.goto(`/product/${LISTINGS.digital.slug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await expect(page.getByText(LISTINGS.digital.title).first()).toBeVisible({ timeout: 15000 });
 
@@ -157,26 +157,26 @@ base.describe('Buyer Journey — Anonymous', () => {
   base.describe('Cart Operations', () => {
     base('add physical product to cart', async ({ page }) => {
       await page.goto(`/product/${LISTINGS.physical.slug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const addBtn = page.getByRole('button', { name: /add to cart|加入购物车/i }).first();
       await addBtn.waitFor({ state: 'visible', timeout: 15000 });
       await addBtn.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.screenshot({ path: 'test-results/checkout-cart-added.png', fullPage: true });
     });
 
     base('cart page shows added items with correct price', async ({ page }) => {
       await page.goto(`/product/${LISTINGS.physical.slug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       const addBtn = page.getByRole('button', { name: /add to cart|加入购物车/i }).first();
       await addBtn.waitFor({ state: 'visible', timeout: 15000 });
       await addBtn.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.goto('/cart');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await expect(page.locator('h1').first()).toContainText(/cart|购物车/i);
 
@@ -190,16 +190,16 @@ base.describe('Buyer Journey — Anonymous', () => {
     base('add multiple product types to cart', async ({ page }) => {
       for (const listing of Object.values(LISTINGS)) {
         await page.goto(`/product/${listing.slug}`);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         const addBtn = page.getByRole('button', { name: /add to cart|加入购物车/i }).first();
         if (await addBtn.isVisible().catch(() => false)) {
           await addBtn.click();
-          await page.waitForLoadState('networkidle');
+          await page.waitForLoadState('domcontentloaded');
         }
       }
 
       await page.goto('/cart');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.screenshot({ path: 'test-results/checkout-cart-multi.png', fullPage: true });
     });
@@ -211,7 +211,7 @@ base.describe('Buyer Journey — Anonymous', () => {
 standaloneTest.describe('Seller View', () => {
   standaloneTest('product shows Edit button for seller', async ({ authedPage: page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const editBtn = page
       .getByRole('button', { name: /edit product|编辑/i })
@@ -230,7 +230,7 @@ standaloneTest.describe('Checkout Flow', () => {
     standaloneTest(`checkout ${type} good`, async ({ authedPage: page }) => {
       const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
       await page.goto(`/checkout?slug=${listing.slug}&peerID=${peerID}&quantity=1`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const content = page
         .locator(
@@ -258,7 +258,7 @@ standaloneTest.describe('Checkout Flow', () => {
       .map(l => l.slug)
       .join(',');
     await page.goto(`/checkout?slugs=${slugs}&vendorPeerID=${peerID}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const content = page
       .locator(
@@ -273,7 +273,7 @@ standaloneTest.describe('Checkout Flow', () => {
   standaloneTest('place order for service → redirect to payment', async ({ authedPage: page }) => {
     const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait for checkout page to fully render
     const submitBtn = page
@@ -302,7 +302,7 @@ standaloneTest.describe('Checkout Flow', () => {
     expect(orderID).toBeTruthy();
     console.log('Order created! ID:', orderID);
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/checkout-payment-page.png', fullPage: true });
 
     // Verify payment page content
@@ -314,7 +314,7 @@ standaloneTest.describe('Checkout Flow', () => {
     await page.goto(
       '/checkout/confirmation?orderID=test-order&total=99.00&currency=USD&title=Test+Service&vendorName=TestStore'
     );
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const content = page.locator('main, [role="main"]').first();
     await expect(content).toBeVisible();
@@ -335,7 +335,7 @@ base.describe('Mobile Experience', () => {
 
   base('mobile: product page is touch-friendly', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Use a heading or main content locator to avoid matching truncated breadcrumb spans
     const title = page
@@ -360,15 +360,15 @@ base.describe('Mobile Experience', () => {
   base('mobile: cart page layout', async ({ page }) => {
     // Add item first
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const addBtn = page.getByRole('button', { name: /add to cart|加入购物车/i }).first();
     if (await addBtn.isVisible().catch(() => false)) {
       await addBtn.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
     }
 
     await page.goto('/cart');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Cart should not have horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
@@ -393,7 +393,7 @@ standaloneTest.describe('Mobile Checkout', () => {
   standaloneTest('mobile: checkout page uses mobile layout', async ({ authedPage: page }) => {
     const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Mobile layout should show mobile header or bottom bar
     const mobileIndicator = page
@@ -414,7 +414,7 @@ standaloneTest.describe('Mobile Checkout', () => {
   standaloneTest('mobile: place order via bottom bar button', async ({ authedPage: page }) => {
     const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Mobile uses bottom-bar submit button
     const submitBtn = page.getByTestId('checkout-submit-btn-mobile').first();
@@ -437,7 +437,7 @@ standaloneTest.describe('Mobile Checkout', () => {
     expect(orderID).toBeTruthy();
     console.log('Mobile order created! ID:', orderID);
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/mobile-payment-page.png', fullPage: true });
   });
 });
@@ -455,7 +455,7 @@ standaloneTest.describe('EVM Testnet Payment', () => {
 
     // Create a real order first
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const submitBtn = page
       .getByTestId('checkout-submit-btn')
@@ -469,7 +469,7 @@ standaloneTest.describe('EVM Testnet Payment', () => {
       { timeout: 60000 }
     );
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Payment page should show wallet connection or chain selector
     const paymentContent = page.locator('main').first();

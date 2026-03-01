@@ -27,7 +27,7 @@ test.describe('Mobile UX Audit - iPhone 12 (390x844)', () => {
   for (const pageInfo of publicPages) {
     test(`[${pageInfo.name}] ${pageInfo.description}`, async ({ page }) => {
       await page.goto(pageInfo.path, { waitUntil: 'domcontentloaded' });
-      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(1500);
 
       // 隐藏开发工具 overlay

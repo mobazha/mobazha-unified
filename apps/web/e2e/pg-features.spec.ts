@@ -28,7 +28,7 @@ base.describe('PG-001: Cart — Add, Badge, Remove', () => {
 
   base('add to cart shows badge in header', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const addBtn = page.locator('[data-testid="product-detail-add-to-cart"]');
     if (!(await addBtn.isVisible().catch(() => false))) {
@@ -48,7 +48,7 @@ base.describe('PG-001: Cart — Add, Badge, Remove', () => {
 
   base('cart drawer shows item after adding', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const addBtn = page.locator('[data-testid="product-detail-add-to-cart"]');
     if (!(await addBtn.isVisible().catch(() => false))) {
@@ -74,7 +74,7 @@ base.describe('PG-001: Cart — Add, Badge, Remove', () => {
 
   base('increase and decrease quantity in cart', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const addBtn = page.locator('[data-testid="product-detail-add-to-cart"]');
     if (!(await addBtn.isVisible().catch(() => false))) {
@@ -109,7 +109,7 @@ base.describe('PG-001: Cart — Add, Badge, Remove', () => {
 
   base('remove item from cart', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const addBtn = page.locator('[data-testid="product-detail-add-to-cart"]');
     if (!(await addBtn.isVisible().catch(() => false))) {
@@ -149,7 +149,7 @@ base.describe('PG-001: Cart — Add, Badge, Remove', () => {
       });
     });
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Badge should not be visible when cart is empty
     const badge = page.locator('[data-testid="header-cart-badge"]');
@@ -168,7 +168,7 @@ standaloneTest.describe('PG-003: Review Submit', () => {
 
   standaloneTest('star rating selection updates visual state', async ({ authedPage: page }) => {
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const orderCard = page.locator('[data-testid="order-card"], a[href*="/orders/"]').first();
     if (!(await orderCard.isVisible().catch(() => false))) {
@@ -177,7 +177,7 @@ standaloneTest.describe('PG-003: Review Submit', () => {
     }
 
     await orderCard.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Find review-triggering button
     const reviewBtn = page
@@ -229,13 +229,13 @@ base.describe('PG-004: Search Results', () => {
 
   base('search returns results for known product', async ({ page }) => {
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const searchInput = page.locator('input[type="search"], input[placeholder*="earch"]').first();
     if (!(await searchInput.isVisible().catch(() => false))) {
       // Try marketplace search
       await page.goto('/marketplace');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
     }
 
     const input = page.locator('input[type="search"], input[placeholder*="earch"]').first();
@@ -246,7 +246,7 @@ base.describe('PG-004: Search Results', () => {
 
     await input.fill('T-Shirt');
     await input.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     // Should show at least one result card or a "no results" message
@@ -265,7 +265,7 @@ base.describe('PG-004: Search Results', () => {
 
   base('homepage search on standalone navigates to marketplace', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const heroSearch = page.locator('[data-testid="store-hero"] input[type="text"]');
     if (!(await heroSearch.isVisible().catch(() => false))) {
@@ -287,7 +287,7 @@ base.describe('PG-005: Trust Indicators', () => {
 
   base('product page has buyer protection section', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check for trust/protection indicators
     const protectionText = page.locator(
@@ -317,7 +317,7 @@ base.describe('PG-005: Trust Indicators', () => {
     }
 
     await page.goto(`/store/${peerID}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const trustBadge = page.locator('[data-testid="seller-trust-badge"]');
     const trustText = page.locator('text=/verified|trusted|信誉|认证/i');
@@ -334,7 +334,7 @@ base.describe('PG-005: Trust Indicators', () => {
 
   base('escrow status bar renders on order detail page', async ({ page }) => {
     await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const orderCard = page.locator('[data-testid="order-card"], a[href*="/orders/"]').first();
     if (!(await orderCard.isVisible().catch(() => false))) {
@@ -343,7 +343,7 @@ base.describe('PG-005: Trust Indicators', () => {
     }
 
     await orderCard.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const escrowBar = page.getByTestId('escrow-status-bar');
     if (await escrowBar.isVisible().catch(() => false)) {
@@ -369,7 +369,7 @@ base.describe('PG-002: Share Actions', () => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const shareBtn = page.locator('[data-testid="share-button"]');
     if (!(await shareBtn.isVisible().catch(() => false))) {
@@ -396,7 +396,7 @@ base.describe('PG-002: Share Actions', () => {
 
   base('share dropdown Twitter link has correct href', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const shareBtn = page.locator('[data-testid="share-button"]');
     if (!(await shareBtn.isVisible().catch(() => false))) {

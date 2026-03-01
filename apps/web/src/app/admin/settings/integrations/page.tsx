@@ -32,7 +32,7 @@ export default function AdminIntegrationsPage() {
         <TabsList>
           <TabsTrigger value="payments" className="gap-1.5">
             <CreditCard className="w-4 h-4" />
-            {t('admin.integrations.tabPayments', { defaultValue: 'Payments' })}
+            {t('admin.integrations.tabPayments')}
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-1.5">
             <Bell className="w-4 h-4" />

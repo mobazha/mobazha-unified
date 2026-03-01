@@ -45,7 +45,7 @@ export async function performCasdoorLogin(
     timeout: 30000,
   });
 
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const usernameInput = page.locator('input[type="text"]').first();
   await usernameInput.waitFor({ state: 'visible', timeout: 30000 });
@@ -69,7 +69,20 @@ export async function performCasdoorLogin(
     { timeout: 60000 }
   );
 
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
+
+  // Wait for the app to finish auth initialization.
+  // After OAuth redirect, the frontend calls signin + restoreSession which
+  // fetches the user profile. The node may need time to fully initialize,
+  // so we wait until the "Loading..." spinner disappears.
+  const loadingIndicator = page.getByText('Loading...', { exact: true });
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const isLoading = await loadingIndicator.isVisible().catch(() => false);
+    if (!isLoading) break;
+    await page.waitForTimeout(2000);
+  }
+
+  await page.waitForTimeout(1000);
 }
 
 /**
@@ -131,20 +144,93 @@ export async function getPeerID(
 }
 
 /**
+ * Worker-scoped hosting token obtained after the first browser login.
+ * This is the token returned by /platform/v1/auth/signin, NOT a raw Casdoor JWT.
+ * Raw Casdoor JWTs (from type:"token") can cause hosting to hang.
+ */
+let cachedHostingToken: string | undefined;
+
+/**
+ * Worker-scoped flag: true once the first test in this worker
+ * has completed a browser-based Casdoor login and saved storageState.
+ */
+let workerAuthStateReady = false;
+
+/**
+ * Extract the hosting auth token from the browser's localStorage
+ * after a successful OAuth login.
+ */
+async function extractHostingToken(page: Page): Promise<string | undefined> {
+  return page.evaluate(() => window.localStorage.getItem('mobazha_auth_token') || undefined);
+}
+
+/**
+ * Wait for hosting backend to be reachable (unauthenticated health check).
+ * Uses an unauthenticated endpoint to avoid the token-format hang issue.
+ */
+async function waitForBackend(request: APIRequestContext): Promise<void> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
+      const resp = await request.get(`${BACKEND_URL}/v1/exchange-rates`, { timeout: 5000 });
+      if (resp.ok()) return;
+    } catch {
+      // timeout or network error, retry
+    }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  console.warn('⚠️ Backend may not be reachable — proceeding anyway');
+}
+
+/**
  * Extended test type with authenticated page and API context.
+ * The first test per Playwright worker does a real Casdoor login.
+ * Subsequent tests inject the saved localStorage token via addInitScript.
  */
 /* eslint-disable react-hooks/rules-of-hooks */
 export const authenticatedTest = base.extend<{
   authedPage: Page;
   casdoorToken: string;
 }>({
-  authedPage: async ({ page }, use) => {
-    await performCasdoorLogin(page);
+  authedPage: async ({ page, request }, use) => {
+    if (!workerAuthStateReady) {
+      // First test: quick backend health check, then full browser login
+      await waitForBackend(request);
+      await performCasdoorLogin(page);
+      await completeOnboardingIfNeeded(page);
+      cachedHostingToken = await extractHostingToken(page);
+      workerAuthStateReady = true;
+    } else {
+      // Subsequent tests: inject the hosting token extracted from the first login
+      const token = cachedHostingToken;
+      if (token) {
+        await page.addInitScript((authToken: string) => {
+          window.localStorage.setItem('mobazha_auth_token', authToken);
+        }, token);
+      }
+      await page.goto('/admin');
+      await page.waitForLoadState('domcontentloaded');
+
+      // Wait for Loading to finish or redirect to login
+      const loadingIndicator = page.getByText('Loading...', { exact: true });
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const isLoading = await loadingIndicator.isVisible().catch(() => false);
+        if (!isLoading) break;
+        await page.waitForTimeout(2000);
+      }
+
+      // Verify we're authenticated; fallback to browser login if not
+      if (page.url().includes('/login')) {
+        await performCasdoorLogin(page);
+        cachedHostingToken = await extractHostingToken(page);
+      }
+    }
     await use(page);
   },
 
   casdoorToken: async ({ request }, use) => {
-    const token = await getCasdoorToken(request);
+    // For API-only usage, prefer the hosting token from browser login.
+    // Fall back to raw Casdoor token for tests that only need /platform/ endpoints.
+    const token = cachedHostingToken || (await getCasdoorToken(request));
     await use(token);
   },
 });
@@ -155,7 +241,7 @@ export const authenticatedTest = base.extend<{
  * Fills in a display name and clicks "Start Exploring", then waits for redirect.
  */
 export async function completeOnboardingIfNeeded(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(500);
 
   const url = page.url();
@@ -176,7 +262,7 @@ export async function completeOnboardingIfNeeded(page: Page): Promise<void> {
   await submitBtn.click();
 
   await page.waitForURL(u => !u.toString().includes('/onboarding'), { timeout: 30000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }
 
 /**
