@@ -111,14 +111,6 @@ async function setupMockRoutes(page: Page): Promise<void> {
       }),
     });
   });
-
-  await page.route('**/search/v1/listings**', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: { results: { results: [], total: 0 } } }),
-    });
-  });
 }
 
 const TG_WEBAPP_INJECT_SCRIPT = `

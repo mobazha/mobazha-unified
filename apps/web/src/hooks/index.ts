@@ -25,3 +25,5 @@ export {
   type UseRwaSellerConfirmOptions,
 } from './useRwaSellerConfirm';
 export { useTGBackButton } from './useTGBackButton';
+export { useSearch } from './useSearch';
+export type { DisplayProduct, SearchUser, TabType } from './useSearch';
