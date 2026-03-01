@@ -27,6 +27,8 @@ export {
 export { useTGBackButton } from './useTGBackButton';
 export { useTGMainButton } from './useTGMainButton';
 export { useShare } from './useShare';
+export { useMiniAppPayment } from './useMiniAppPayment';
+export type { MiniAppPaymentCapabilities } from './useMiniAppPayment';
 export { useSearch } from './useSearch';
 export type { DisplayProduct, SearchUser, TabType } from './useSearch';
 export { useCart } from './useCart';
