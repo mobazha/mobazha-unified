@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   useI18n,
   useSales,
@@ -26,7 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OrderTable, OrderDetailModal, OrderListCompact } from '@/components/Order';
+import { OrderTable, OrderListCompact } from '@/components/Order';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -100,6 +101,7 @@ function useAdminOrders() {
 export default function AdminOrdersPage() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const router = useRouter();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
 
@@ -112,7 +114,6 @@ export default function AdminOrdersPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const { execute: executeOrderAction, isLoading: isOrderActionLoading } = useOrderAction();
 
@@ -179,15 +180,6 @@ export default function AdminOrdersPage() {
       setSelectedIds(new Set(filteredOrders.map(o => o.id)));
     }
   }, [isAllSelected, filteredOrders]);
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
 
   const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
@@ -339,9 +331,12 @@ export default function AdminOrdersPage() {
     [isProcessing, isOrderActionLoading, executeOrderAction, t, toast, refetch]
   );
 
-  const handleViewDetails = useCallback((orderId: string) => {
-    setSelectedOrderId(orderId);
-  }, []);
+  const handleViewDetails = useCallback(
+    (orderId: string) => {
+      router.push(`/orders/${orderId}?type=sale`);
+    },
+    [router]
+  );
 
   const handleContact = useCallback(
     (_peerId: string) => {
@@ -596,15 +591,6 @@ export default function AdminOrdersPage() {
           )}
         </>
       )}
-
-      {/* Order Detail Modal */}
-      <OrderDetailModal
-        orderId={selectedOrderId}
-        open={!!selectedOrderId}
-        onClose={() => setSelectedOrderId(null)}
-        viewingContext="sale"
-        onOrderUpdate={() => refetch()}
-      />
     </div>
   );
 }
