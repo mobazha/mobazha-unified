@@ -155,7 +155,9 @@ export default function AdminDiscountsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('admin.discounts.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            {t('admin.discounts.title')}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t('admin.discounts.subtitle', { count: discounts.length })}
           </p>
@@ -215,7 +217,7 @@ export default function AdminDiscountsPage() {
                   {items.map(d => (
                     <div
                       key={d.id}
-                      className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -246,7 +248,7 @@ export default function AdminDiscountsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="min-w-[36px] min-h-[36px] shrink-0"
+                            className="min-w-[44px] min-h-[44px] shrink-0"
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
