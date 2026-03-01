@@ -21,7 +21,12 @@
 
 import { test, type BrowserContext, type Page } from '@playwright/test';
 import path from 'path';
-import { mockProductDetailAPI, mockImageRoutes, mockSearchAPI } from './fixtures/mock-api-routes';
+import {
+  mockProductDetailAPI,
+  mockImageRoutes,
+  mockSearchAPI,
+  getCartLocalStorageScript,
+} from './fixtures/mock-api-routes';
 
 const urlPath = process.env.SCREENSHOT_PATH || '/';
 const outputName = process.env.SCREENSHOT_NAME || 'screenshot';
@@ -189,12 +194,14 @@ async function takeScreenshot(
   url: string,
   outputPath: string,
   label: string,
-  preScript?: string
+  preScripts?: string[]
 ): Promise<void> {
   const page = await ctx.newPage();
 
-  if (preScript) {
-    await page.addInitScript(preScript);
+  if (preScripts) {
+    for (const script of preScripts) {
+      await page.addInitScript(script);
+    }
   }
 
   await setupMockRoutes(page);
@@ -206,12 +213,22 @@ async function takeScreenshot(
   console.log(`${label} screenshot saved: ${path.basename(outputPath)}`);
 }
 
+const cartScript = getCartLocalStorageScript();
+
 test(`screenshot: ${outputName}`, async ({ browser }) => {
   const url = `${baseUrl}${urlPath}`;
+  const isCartPage = urlPath.startsWith('/cart');
+  const extraScripts = isCartPage ? [cartScript] : [];
 
   // 1. Mobile screenshot
   const mobileCtx = await createMobileContext(browser);
-  await takeScreenshot(mobileCtx, url, path.join(MOBILE_DIR, `${outputName}-375.png`), 'Mobile');
+  await takeScreenshot(
+    mobileCtx,
+    url,
+    path.join(MOBILE_DIR, `${outputName}-375.png`),
+    'Mobile',
+    extraScripts.length > 0 ? extraScripts : undefined
+  );
   await mobileCtx.close();
 
   // 2. Desktop screenshot
@@ -222,20 +239,18 @@ test(`screenshot: ${outputName}`, async ({ browser }) => {
     desktopCtx,
     url,
     path.join(DESKTOP_DIR, `${outputName}-1440.png`),
-    'Desktop'
+    'Desktop',
+    extraScripts.length > 0 ? extraScripts : undefined
   );
   await desktopCtx.close();
 
   // 3. TG Mini App screenshot
   if (!skipTG) {
     const tgCtx = await createMobileContext(browser);
-    await takeScreenshot(
-      tgCtx,
-      url,
-      path.join(TG_DIR, `${outputName}-tg-375.png`),
-      'TG Mini App',
-      TG_WEBAPP_INJECT_SCRIPT
-    );
+    await takeScreenshot(tgCtx, url, path.join(TG_DIR, `${outputName}-tg-375.png`), 'TG Mini App', [
+      TG_WEBAPP_INJECT_SCRIPT,
+      ...extraScripts,
+    ]);
     await tgCtx.close();
   }
 });

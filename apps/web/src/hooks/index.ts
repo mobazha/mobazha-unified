@@ -27,3 +27,5 @@ export {
 export { useTGBackButton } from './useTGBackButton';
 export { useSearch } from './useSearch';
 export type { DisplayProduct, SearchUser, TabType } from './useSearch';
+export { useCart } from './useCart';
+export type { VendorGroup } from './useCart';

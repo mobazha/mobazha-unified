@@ -526,6 +526,56 @@ export async function mockImageRoutes(page: Page): Promise<void> {
 }
 
 /**
+ * Inject mock cart data into localStorage for Zustand persist store.
+ * Call via page.addInitScript() BEFORE page.goto().
+ */
+export function getCartLocalStorageScript(): string {
+  const cartState = {
+    state: {
+      items: [
+        {
+          listing: {
+            slug: 'wireless-headphones',
+            title: 'Premium Wireless Noise-Canceling Headphones',
+            thumbnail: mockSearchThumbnail(96),
+            price: { amount: 149.99, currency: { code: 'USD', divisibility: 2 } },
+            vendorPeerID: MOCK_PEER_ID,
+            vendorHandle: 'techstore',
+          },
+          quantity: 1,
+          options: [{ name: 'Color', value: 'Midnight Black' }],
+        },
+        {
+          listing: {
+            slug: 'usb-c-cable',
+            title: 'USB-C Fast Charging Cable 2m',
+            thumbnail: mockSearchThumbnail(60),
+            price: { amount: 12.99, currency: { code: 'USD', divisibility: 2 } },
+            vendorPeerID: MOCK_PEER_ID,
+            vendorHandle: 'techstore',
+          },
+          quantity: 2,
+        },
+        {
+          listing: {
+            slug: 'leather-wallet',
+            title: 'Handcrafted Genuine Leather Bifold Wallet',
+            thumbnail: mockSearchThumbnail(119),
+            price: { amount: 59.99, currency: { code: 'USD', divisibility: 2 } },
+            vendorPeerID: 'QmVendor2PeerID',
+            vendorHandle: 'craftshop',
+          },
+          quantity: 1,
+        },
+      ],
+      isLoading: false,
+    },
+    version: 0,
+  };
+  return `localStorage.setItem('mobazha-cart-storage', '${JSON.stringify(cartState).replace(/'/g, "\\'")}');`;
+}
+
+/**
  * Set up all mocks for a comprehensive visual test run.
  */
 export async function mockAllAPIs(page: Page): Promise<void> {
