@@ -122,7 +122,12 @@ function CollectionCard({
     >
       {imgSrc && (
         <div className="aspect-[16/9] overflow-hidden">
-          <img src={imgSrc} alt={collection.title} className="w-full h-full object-cover" />
+          <img
+            src={imgSrc}
+            alt={collection.title}
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
         </div>
       )}
       <div className="p-4">

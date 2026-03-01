@@ -32,6 +32,8 @@ import {
   DigitalFileSection,
   ProcessingTimeSelect,
   ReturnPolicySelector,
+  AiImageGeneratePanel,
+  AiSetupPrompt,
 } from '@/components/Listing';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { cn } from '@/lib/utils';
@@ -67,6 +69,9 @@ interface MobileListingWizardProps {
   onAiImproveTitle?: () => void;
   onAiPolishDescription?: () => void;
   onAiSuggestTags?: () => void;
+  aiImageUrls?: string[];
+  aiNotConfigured?: boolean;
+  onAiApplyAll?: (result: import('@mobazha/core').AiGenerateResponse) => void;
 }
 
 interface AccordionItemProps {
@@ -128,6 +133,9 @@ export function MobileListingWizard({
   onAiImproveTitle,
   onAiPolishDescription,
   onAiSuggestTags,
+  aiImageUrls,
+  aiNotConfigured,
+  onAiApplyAll,
 }: MobileListingWizardProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
@@ -454,15 +462,27 @@ export function MobileListingWizard({
 
         {/* Step 2: Media */}
         {currentStep === 'media' && (
-          <MediaSection
-            images={formData.images}
-            introVideo={formData.introVideo}
-            altIntroVideoLinks={formData.altIntroVideoLinks}
-            onImagesChange={handleImagesChange}
-            onVideoChange={handleVideoChange}
-            onAltVideoLinksChange={handleAltVideoLinksChange}
-            errors={errors}
-          />
+          <div className="space-y-4">
+            <MediaSection
+              images={formData.images}
+              introVideo={formData.introVideo}
+              altIntroVideoLinks={formData.altIntroVideoLinks}
+              onImagesChange={handleImagesChange}
+              onVideoChange={handleVideoChange}
+              onAltVideoLinksChange={handleAltVideoLinksChange}
+              errors={errors}
+            />
+
+            {aiNotConfigured && <AiSetupPrompt />}
+
+            {aiImageUrls && aiImageUrls.length > 0 && !aiNotConfigured && onAiApplyAll && (
+              <AiImageGeneratePanel
+                imageUrls={aiImageUrls}
+                contractType={formData.contractType}
+                onApply={onAiApplyAll}
+              />
+            )}
+          </div>
         )}
 
         {/* Step 3: Details (accordion sections) */}
@@ -484,14 +504,14 @@ export function MobileListingWizard({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-xs h-7 px-2"
+                    className="text-sm h-11 px-3 sm:text-xs sm:h-7 sm:px-2"
                     onClick={onAiSuggestTags}
                     disabled={aiLoadingAction === 'suggest_tags'}
                   >
                     {aiLoadingAction === 'suggest_tags' ? (
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1 animate-spin" />
                     ) : (
-                      <Tags className="w-3 h-3 mr-1 text-purple-500" />
+                      <Tags className="w-4 h-4 sm:w-3 sm:h-3 mr-1 text-purple-500" />
                     )}
                     {t('ai.suggestTags', { defaultValue: 'AI Suggest' })}
                   </Button>

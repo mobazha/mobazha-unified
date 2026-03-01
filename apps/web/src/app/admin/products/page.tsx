@@ -276,7 +276,9 @@ export default function AdminProductsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('admin.products.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            {t('admin.products.title')}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t('admin.products.count', { count: products.length })}
           </p>
@@ -528,7 +530,7 @@ export default function AdminProductsPage() {
       {/* Mobile FAB */}
       <Link
         href="/listing/new?from=admin"
-        className="md:hidden fixed right-4 bottom-20 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="md:hidden fixed right-4 bottom-24 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
         aria-label={t('admin.products.addProduct')}
       >
         <Plus className="w-6 h-6" />

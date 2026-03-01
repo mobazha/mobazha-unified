@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Offline - Mobazha</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 1.5rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0f172a; color: #e2e8f0; }
+      .card { background: #1e293b; border-color: #334155; }
+      .icon-bg { background: #334155; }
+      .desc { color: #94a3b8; }
+      .btn { background: #6366f1; }
+      .btn:hover { background: #818cf8; }
+    }
+    .card {
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      padding: 2.5rem 1.5rem;
+      border-radius: 1rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .icon-bg {
+      width: 5rem;
+      height: 5rem;
+      margin: 0 auto 1.25rem;
+      border-radius: 50%;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-bg svg { width: 2.5rem; height: 2.5rem; color: #94a3b8; }
+    h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .desc { font-size: 0.875rem; color: #64748b; line-height: 1.5; margin-bottom: 1.5rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      min-height: 44px;
+      border: none;
+      border-radius: 0.5rem;
+      background: #6366f1;
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+    .btn:hover { background: #4f46e5; }
+    .btn:active { transform: scale(0.98); }
+    .btn svg { width: 1rem; height: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-bg">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829" />
+      </svg>
+    </div>
+    <h1>You're offline</h1>
+    <p class="desc">Please check your internet connection and try again. Mobazha requires a network connection to browse products and manage orders.</p>
+    <button class="btn" onclick="location.reload()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Try again
+    </button>
+  </div>
+</body>
+</html>

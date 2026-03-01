@@ -7,7 +7,9 @@ import { Container, VStack, HStack } from '@/components/layouts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
-import { Order, OrderDetailModal, OrderTable, OrderListCompact } from '@/components/Order';
+import { LoadError } from '@/components/ui/empty-state';
+import { OrderTable, OrderListCompact } from '@/components/Order';
+import { PullRefreshIndicator } from '@/components/ui/pull-refresh-indicator';
 import {
   useI18n,
   usePurchases,
@@ -19,6 +21,9 @@ import {
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import { useToast } from '@/components/ui/use-toast';
 import { transformOrderListItem } from '@/components/admin/orders/utils';
 
@@ -40,6 +45,9 @@ function OrdersPageContent() {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { isAvailable: isTG } = useTGMiniApp();
+
+  useTGBackButton({ visible: isTG });
 
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
@@ -50,9 +58,6 @@ function OrdersPageContent() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
   const [showStatusSheet, setShowStatusSheet] = useState(false);
 
-  // 桌面端 Modal 状态
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-
   // 使用核心包的 hooks 获取真实数据（支持分页）
   const {
     orders: purchaseOrders,
@@ -61,6 +66,7 @@ function OrdersPageContent() {
     error: purchasesError,
     hasMore: purchasesHasMore,
     loadMore: loadMorePurchases,
+    refetch: refetchPurchases,
   } = usePurchases();
 
   const {
@@ -150,25 +156,13 @@ function OrdersPageContent() {
     .filter(order => statusFilter === 'all' || order.status === statusFilter)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  // 处理查看订单详情 - 桌面端打开 Modal，移动端跳转页面
-  // 跳转时带上 type 参数，用于订单详情页判断用户角色
   const handleViewDetails = useCallback(
     (orderId: string) => {
-      if (isDesktop) {
-        setSelectedOrderId(orderId);
-      } else {
-        // 带上 type 参数：sale 或 purchase
-        const type = orderType === 'sales' ? 'sale' : 'purchase';
-        router.push(`/orders/${orderId}?type=${type}`);
-      }
+      const type = orderType === 'sales' ? 'sale' : 'purchase';
+      router.push(`/orders/${orderId}?type=${type}`);
     },
-    [isDesktop, router, orderType]
+    [router, orderType]
   );
-
-  // 关闭 Modal
-  const handleCloseModal = useCallback(() => {
-    setSelectedOrderId(null);
-  }, []);
 
   const handleContact = (_vendorId: string) => {
     // Open chat drawer
@@ -279,14 +273,42 @@ function OrdersPageContent() {
     [isProcessing, isOrderActionLoading, executeOrderAction, t, toast, refetchSales]
   );
 
+  // Pull-to-refresh for mobile
+  const refetch = orderType === 'purchases' ? refetchPurchases : refetchSales;
+  const {
+    containerRef: pullRefreshRef,
+    pullDistance,
+    isRefreshing,
+    canRelease,
+  } = usePullRefresh({
+    onRefresh: refetch,
+    disabled: isDesktop,
+  });
+
+  // Confirm delivery for purchases (shipped/delivered orders)
+  const handleConfirmDelivery = useCallback(
+    (orderId: string) => {
+      router.push(`/orders/${orderId}?type=purchase`);
+    },
+    [router]
+  );
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" ref={pullRefreshRef}>
       <Header />
       {/* 移动端顶部导航栏 */}
       <MobilePageHeader title={t('nav.orders')} />
 
       <main className="py-3 sm:py-8">
         <Container>
+          {/* Pull-to-refresh indicator (mobile only) */}
+          {!isDesktop && (
+            <PullRefreshIndicator
+              pullDistance={pullDistance}
+              isRefreshing={isRefreshing}
+              canRelease={canRelease}
+            />
+          )}
           {/* Page Header - 仅桌面端显示 */}
           <div className="hidden lg:block mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">{t('nav.orders')}</h1>
@@ -396,27 +418,10 @@ function OrdersPageContent() {
               ))}
             </VStack>
           ) : error ? (
-            <Card className="text-center">
-              <CardContent className="py-16">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-error/15 flex items-center justify-center">
-                  <svg
-                    className="w-10 h-10 text-error"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">{t('common.error')}</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">{error}</p>
-              </CardContent>
-            </Card>
+            <LoadError
+              message={error}
+              onRetry={orderType === 'purchases' ? refetchPurchases : refetchSales}
+            />
           ) : filteredOrders.length === 0 ? (
             <Card className="text-center">
               <CardContent className="py-16">
@@ -463,12 +468,16 @@ function OrdersPageContent() {
                   onReject={handleReject}
                 />
               ) : (
-                /* 移动端：紧凑列表视图 */
+                /* 移动端：紧凑列表视图 with swipe actions */
                 <Card className="overflow-hidden">
                   <OrderListCompact
                     orders={filteredOrders}
                     type={orderType === 'purchases' ? 'purchase' : 'sale'}
                     onViewDetails={handleViewDetails}
+                    onAccept={handleAccept}
+                    onReject={handleReject}
+                    onContact={handleContact}
+                    onConfirmDelivery={handleConfirmDelivery}
                   />
                 </Card>
               )}
@@ -557,18 +566,6 @@ function OrdersPageContent() {
           );
         })}
       </BottomSheet>
-
-      {/* 桌面端订单详情 Modal */}
-      <OrderDetailModal
-        orderId={selectedOrderId}
-        open={!!selectedOrderId}
-        onClose={handleCloseModal}
-        viewingContext={orderType === 'sales' ? 'sale' : 'purchase'}
-        onOrderUpdate={() => {
-          // 订单更新后可能需要刷新列表
-          // 可以在这里添加刷新逻辑
-        }}
-      />
     </div>
   );
 }

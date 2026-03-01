@@ -1,220 +1,176 @@
 /**
- * 商品相关 Hooks
+ * 商品相关 Hooks — React Query 版本
+ *
+ * 迁移自手工 useState + useEffect + fetch 模式，自动获得：
+ * - 多组件共享同一数据时请求去重
+ * - stale-while-revalidate（页面切换时立即显示缓存）
+ * - 自动重试（适配弱网环境）
+ * - 后台刷新
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { ProductListItem, Product, RatingIndex, RatingDetail } from '../types';
+import { useState, useCallback, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ProductListItem, RatingDetail } from '../types';
 import { productsApi } from '../services/api';
+import { queryKeys } from './queryKeys';
+import { formatQueryError } from './queryUtils';
 
-/**
- * 获取热门商品列表
- */
 export function useTrendingListings() {
-  const [listings, setListings] = useState<ProductListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.trending(),
+    queryFn: () => productsApi.fetchTrendingListings(),
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await productsApi.fetchTrendingListings();
-      setListings(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取商品失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { listings, isLoading, error, refetch };
+  return {
+    listings: data ?? [],
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }
 
-/**
- * 获取精选商品列表
- */
 export function useFeaturedListings() {
-  const [listings, setListings] = useState<ProductListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.featured(),
+    queryFn: () => productsApi.fetchFeaturedListings(),
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await productsApi.fetchFeaturedListings();
-      setListings(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取商品失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { listings, isLoading, error, refetch };
+  return {
+    listings: data ?? [],
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }
 
-/**
- * 获取店铺商品列表
- * 使用网关 API 直接获取，比搜索服务更可靠
- */
 export function useStoreListings(peerID: string | null, _pageSize = 12) {
-  const [listings, setListings] = useState<ProductListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.store(peerID!),
+    queryFn: () => productsApi.getStoreListingIndex(peerID!),
+    enabled: !!peerID,
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const refetch = useCallback(async () => {
-    if (!peerID) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // 使用网关 API 直接获取店铺商品列表，比搜索服务更可靠
-      const result = await productsApi.getStoreListingIndex(peerID);
-      setListings(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取商品失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [peerID]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { listings, isLoading, error, refetch };
+  return {
+    listings: data ?? [],
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }
 
-/**
- * 获取商品详情
- */
+export function useMyListings() {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.myListings(),
+    queryFn: () => productsApi.getListingIndex(),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  return {
+    listings: data ?? [],
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
+}
+
 export function useListing(slug: string | null, peerID?: string) {
-  const [listing, setListing] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.detail(slug!, peerID),
+    queryFn: () => productsApi.getPublicListing(slug!, peerID),
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const refetch = useCallback(async () => {
-    if (!slug) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await productsApi.getListing(slug, peerID);
-      setListing(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取商品详情失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [slug, peerID]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { listing, isLoading, error, refetch };
+  return {
+    listing: data ?? null,
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }
 
-/**
- * 获取商品评价索引
- */
 export function useListingRatings(slug: string | null, peerID?: string) {
-  const [ratingIndex, setRatingIndex] = useState<RatingIndex | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.products.ratings(slug!, peerID),
+    queryFn: () => productsApi.getRatingIndex(peerID, slug!),
+    enabled: !!slug,
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const refetch = useCallback(async () => {
-    if (!slug) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await productsApi.getRatingIndex(peerID, slug);
-      setRatingIndex(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取评价失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [slug, peerID]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { ratingIndex, isLoading, error, refetch };
+  return {
+    ratingIndex: data ?? null,
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }
 
 /**
  * 获取店铺评价（包含统计和详细评价列表）
- * @param peerID 店铺 peerID
- * @param pageSize 每页加载数量，默认 5
+ *
+ * 评价索引通过 useQuery 获取；首页详情在 useEffect 中加载（避免 queryFn 内 setState）。
+ * 后续分页通过 loadMore 手动追加。
  */
 export function useStoreRatings(peerID: string | null, pageSize = 5) {
-  const [ratingIndex, setRatingIndex] = useState<RatingIndex | null>(null);
   const [ratings, setRatings] = useState<RatingDetail[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
+  const [initialLoaded, setInitialLoaded] = useState(false);
 
-  // 获取评价索引
-  const fetchIndex = useCallback(async () => {
-    if (!peerID) return;
+  const {
+    data: ratingIndex,
+    isLoading,
+    error,
+    refetch: refetchIndex,
+  } = useQuery({
+    queryKey: queryKeys.products.storeRatings(peerID!),
+    queryFn: () => productsApi.getRatingIndex(peerID!),
+    enabled: !!peerID,
+    staleTime: 2 * 60 * 1000,
+  });
 
-    setIsLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (!ratingIndex) return;
 
-    try {
-      const index = await productsApi.getRatingIndex(peerID);
-      setRatingIndex(index);
-      setHasMore(index.ratings.length > 0);
-      setLoadedCount(0);
-      setRatings([]);
+    let cancelled = false;
 
-      // 自动加载第一页详细评价
-      if (index.ratings.length > 0) {
-        const firstPageIds = index.ratings.slice(0, pageSize);
-        const details = await productsApi.fetchRatings(firstPageIds);
+    if (ratingIndex.ratings.length > 0) {
+      const firstPageIds = ratingIndex.ratings.slice(0, pageSize);
+      productsApi.fetchRatings(firstPageIds).then(details => {
+        if (cancelled) return;
         setRatings(details);
         setLoadedCount(firstPageIds.length);
-        setHasMore(index.ratings.length > firstPageIds.length);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取评价失败');
-    } finally {
-      setIsLoading(false);
+        setHasMore(ratingIndex.ratings.length > firstPageIds.length);
+        setInitialLoaded(true);
+      });
+    } else {
+      setRatings([]);
+      setLoadedCount(0);
+      setHasMore(false);
+      setInitialLoaded(true);
     }
-  }, [peerID, pageSize]);
 
-  // 加载更多评价
+    return () => {
+      cancelled = true;
+    };
+  }, [ratingIndex, pageSize]);
+
   const loadMore = useCallback(async () => {
     if (!ratingIndex || isLoadingMore || !hasMore) return;
 
     setIsLoadingMore(true);
-
     try {
       const nextIds = ratingIndex.ratings.slice(loadedCount, loadedCount + pageSize);
       if (nextIds.length > 0) {
         const newDetails = await productsApi.fetchRatings(nextIds);
         setRatings(prev => [...prev, ...newDetails]);
-        setLoadedCount(prev => prev + nextIds.length);
-        setHasMore(loadedCount + nextIds.length < ratingIndex.ratings.length);
+        const newCount = loadedCount + nextIds.length;
+        setLoadedCount(newCount);
+        setHasMore(newCount < ratingIndex.ratings.length);
       } else {
         setHasMore(false);
       }
@@ -225,24 +181,20 @@ export function useStoreRatings(peerID: string | null, pageSize = 5) {
     }
   }, [ratingIndex, loadedCount, pageSize, isLoadingMore, hasMore]);
 
-  useEffect(() => {
-    fetchIndex();
-  }, [fetchIndex]);
-
   return {
-    ratingIndex,
+    ratingIndex: ratingIndex ?? null,
     ratings,
-    isLoading,
+    isLoading: isLoading || (!initialLoaded && !!peerID),
     isLoadingMore,
-    error,
+    error: formatQueryError(error),
     hasMore,
     loadMore,
-    refetch: fetchIndex,
+    refetch: refetchIndex,
   };
 }
 
 /**
- * 商品搜索
+ * 商品搜索（TODO: 实现实际搜索 API，迁移为 useQuery）
  */
 export function useProductSearch(initialQuery = '') {
   const [query, setQuery] = useState(initialQuery);
@@ -261,11 +213,9 @@ export function useProductSearch(initialQuery = '') {
     setQuery(searchQuery);
 
     try {
-      // TODO: 实现实际的搜索 API 调用
-      // 暂时返回空数组
       setResults([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '搜索失败');
+      setError(err instanceof Error ? err.message : 'Search failed');
     } finally {
       setIsLoading(false);
     }
@@ -277,4 +227,25 @@ export function useProductSearch(initialQuery = '') {
   }, []);
 
   return { query, results, isLoading, error, search, clearResults };
+}
+
+/**
+ * 预取商品详情（用于列表→详情页的无缝跳转）
+ *
+ * Desktop: hover 触发（onMouseEnter）
+ * Mobile: touchStart 触发 或 Intersection Observer
+ */
+export function usePrefetchProduct() {
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    (slug: string, peerID?: string) => {
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.products.detail(slug, peerID),
+        queryFn: () => productsApi.getPublicListing(slug, peerID),
+        staleTime: 5 * 60 * 1000,
+      });
+    },
+    [queryClient]
+  );
 }

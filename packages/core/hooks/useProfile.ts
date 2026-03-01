@@ -3,41 +3,39 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { UserProfile } from '../types';
+import { useQuery } from '@tanstack/react-query';
 import { profileApi } from '../services/api';
+import { queryKeys } from './queryKeys';
+import { formatQueryError } from './queryUtils';
 
 /**
- * 获取用户/店铺资料
+ * 获取用户/店铺资料 (React Query 版本)
+ *
+ * 相比手工 fetch 版本，自动获得：
+ * - 多组件共享同一 peerID 时请求去重
+ * - stale-while-revalidate（页面切换时立即显示缓存）
+ * - 自动重试（适配弱网环境）
+ * - 后台刷新（refetchOnMount）
  */
 export function useProfile(peerID: string | null) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: profile = null,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.profiles.detail(peerID!),
+    queryFn: () => profileApi.getProfile(peerID!),
+    enabled: !!peerID,
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const refetch = useCallback(async () => {
-    if (!peerID) {
-      setProfile(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await profileApi.getProfile(peerID);
-      setProfile(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '获取资料失败');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [peerID]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { profile, isLoading, error, refetch };
+  return {
+    profile,
+    isLoading,
+    error: formatQueryError(error),
+    refetch,
+  };
 }
 
 /**
@@ -56,7 +54,6 @@ export function useUserOnline(peerID: string | null) {
     setIsChecking(true);
 
     try {
-      // 通过获取资料来判断是否在线
       const profile = await profileApi.getProfile(peerID);
       setIsOnline(!!profile);
     } catch {

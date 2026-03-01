@@ -43,7 +43,12 @@ import {
   sanitizeHtml,
   collectionsApi,
   useStorefrontConfigPublic,
+  useStoreListings,
+  useMyListings,
+  usePrefetchProduct,
+  queryKeys,
 } from '@mobazha/core';
+import { useQueryClient } from '@tanstack/react-query';
 import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
 import {
   Settings,
@@ -61,7 +66,7 @@ import {
 import { ShareButton } from '@/components/Share';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
-import { getProfileWithDedup, getListingsWithDedup } from '@/utils/requestDedup';
+import { getProfileWithDedup } from '@/utils/requestDedup';
 import {
   RwaTab,
   StoreListingsToolbar,
@@ -102,8 +107,6 @@ export default function StorePage() {
     updateProfile,
     fetchProfile: refreshCurrentUserProfile,
   } = useUserStore();
-  // 获取 session 恢复状态，确保在 token 验证完成后再发起需要认证的请求
-  const isSessionRestored = useUserStore(state => state.isSessionRestored);
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 判断是否是自己的店铺
@@ -132,8 +135,14 @@ export default function StorePage() {
   const [blockLoading, setBlockLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<UserProfile | null>(null);
-  const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const { listings: storeListings, isLoading: storeListingsLoading } = useStoreListings(
+    isOwnStore ? null : peerId
+  );
+  const { listings: myListings, isLoading: myListingsLoading } = useMyListings();
+  const products = isOwnStore ? myListings : storeListings;
+  const productsLoading = isOwnStore ? myListingsLoading : storeListingsLoading;
+  const prefetchProduct = usePrefetchProduct();
+  const queryClient = useQueryClient();
   const [storeCollections, setStoreCollections] = useState<Collection[]>([]);
 
   // 筛选相关状态
@@ -186,8 +195,6 @@ export default function StorePage() {
 
   // 用于跟踪已加载的数据
   const storeLoadedRef = useRef<string | null>(null);
-  const productsLoadedRef = useRef<string | null>(null);
-
   // 获取店铺数据
   useEffect(() => {
     // 如果已经加载过相同的数据，直接返回
@@ -250,57 +257,22 @@ export default function StorePage() {
     }
   }, [store, isOwnStore]);
 
-  // 获取店铺商品
+  // 获取店铺集合列表（商品列表通过 useStoreListings / useMyListings 获取）
   useEffect(() => {
-    // 等待 session 恢复完成，确保 token 状态已确定
-    // 这样可以避免在 token 未验证时发起需要认证的请求
-    if (!isSessionRestored) {
-      return;
-    }
-
-    // 如果已经加载过相同的数据，直接返回
-    const loadKey = `products-${peerId}-${isOwnStore}`;
-    if (productsLoadedRef.current === loadKey) return;
+    if (!peerId || productsLoading) return;
 
     let isCancelled = false;
-
-    const fetchStoreProducts = async () => {
-      if (!peerId) return;
-
-      setProductsLoading(true);
-      try {
-        // 如果是自己的店铺，使用 getMyListings，否则获取店铺商品
-        const productsData = await getListingsWithDedup(loadKey, () =>
-          isOwnStore
-            ? productDataService.getMyListings()
-            : productDataService.getStoreListings(peerId)
-        );
-
-        if (!isCancelled) {
-          setProducts(productsData as ProductListItem[]);
-          productsLoadedRef.current = loadKey;
-          collectionsApi
-            .listPublishedCollections(1, 20)
-            .then(res => {
-              if (!isCancelled) setStoreCollections(res.data || []);
-            })
-            .catch(() => {});
-        }
-      } catch (err) {
-        console.error('Failed to fetch store products:', err);
-      } finally {
-        if (!isCancelled) {
-          setProductsLoading(false);
-        }
-      }
-    };
-
-    fetchStoreProducts();
+    collectionsApi
+      .listPublishedCollections(1, 20)
+      .then(res => {
+        if (!isCancelled) setStoreCollections(res.data || []);
+      })
+      .catch(() => {});
 
     return () => {
       isCancelled = true;
     };
-  }, [peerId, isOwnStore, isSessionRestored]);
+  }, [peerId, productsLoading]);
 
   // 检查是否已关注该店铺（仅当不是自己的店铺时）
   useEffect(() => {
@@ -704,10 +676,7 @@ export default function StorePage() {
     setIsDeleting(true);
     try {
       await productDataService.deleteListing(productToDelete.slug);
-      // 从本地状态中移除被删除的商品
-      setProducts(prev => prev.filter(p => p.slug !== productToDelete.slug));
-      // 清除加载缓存，以便下次能重新加载
-      productsLoadedRef.current = null;
+      await queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       toast({
         title: t('common.success'),
         description: t('listing.deleteSuccess'),
@@ -855,10 +824,10 @@ export default function StorePage() {
                 <button
                   type="button"
                   onClick={() => headerInputRef.current?.click()}
-                  className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
                 >
                   <Camera className="h-4 w-4" />
-                  {t('settings.loadHeader')}
+                  <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
                 </button>
               </>
             )}
@@ -944,21 +913,25 @@ export default function StorePage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 flex-shrink-0">
+                    {/* Actions — wrap on mobile for better touch targets */}
+                    <div className="flex flex-wrap gap-2 flex-shrink-0">
                       {isOwnStore ? (
                         <>
                           <Button
                             variant="outline"
                             onClick={() => router.push('/settings/page-profile')}
                             size="sm"
-                            className="touch-feedback gap-1.5"
+                            className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
                           >
                             <Settings className="h-4 w-4" />
                             <span className="hidden sm:inline">{t('settingsModal.customize')}</span>
                           </Button>
                           <Link href="/listing/new">
-                            <Button variant="outline" size="sm" className="touch-feedback gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                            >
                               <Plus className="h-4 w-4" />
                               <span className="hidden sm:inline">
                                 {t('userPage.createListing')}
@@ -966,7 +939,11 @@ export default function StorePage() {
                             </Button>
                           </Link>
                           <Link href="/listing/import">
-                            <Button variant="outline" size="sm" className="touch-feedback gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                            >
                               <Upload className="h-4 w-4" />
                               <span className="hidden sm:inline">
                                 {t('userPage.importListings')}
@@ -981,7 +958,7 @@ export default function StorePage() {
                             onClick={handleFollowToggle}
                             disabled={followLoading || !isAuthenticated}
                             size="sm"
-                            className="touch-feedback"
+                            className="touch-feedback min-h-[44px] sm:min-h-0"
                           >
                             {followLoading ? (
                               <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
@@ -994,7 +971,7 @@ export default function StorePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="touch-feedback"
+                            className="touch-feedback min-h-[44px] sm:min-h-0"
                             onClick={handleMessage}
                           >
                             {t('profile.message')}
@@ -1004,7 +981,7 @@ export default function StorePage() {
                             onClick={handleBlockToggle}
                             disabled={blockLoading || !isAuthenticated}
                             size="sm"
-                            className="touch-feedback"
+                            className="touch-feedback min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
                             title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
                           >
                             {blockLoading ? (
@@ -1044,7 +1021,7 @@ export default function StorePage() {
               <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
                 <button
                   onClick={() => setActiveTab('following')}
-                  className="flex items-baseline gap-1 hover:text-primary transition-colors"
+                  className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
                 >
                   <span className="font-semibold text-foreground">{stats.followingCount}</span>
                   <span className="text-muted-foreground hover:text-primary">
@@ -1053,7 +1030,7 @@ export default function StorePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('followers')}
-                  className="flex items-baseline gap-1 hover:text-primary transition-colors"
+                  className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
                 >
                   <span className="font-semibold text-foreground">{stats.followerCount}</span>
                   <span className="text-muted-foreground hover:text-primary">
@@ -1083,57 +1060,77 @@ export default function StorePage() {
 
         {!hasSections && (
           <>
-            {/* Tabs - 精简为 3 个 */}
+            {/* Tabs */}
             <div className="sticky top-16 z-30 bg-background border-b border-border">
               <Container size="xl">
-                <div className="flex items-center px-4 sm:px-6">
-                  <HStack gap="md">
-                    {/* 简介 Tab */}
-                    <button
-                      onClick={() => setActiveTab('about')}
-                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'about'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.about')}
-                    </button>
+                <div className="relative">
+                  <div className="flex items-center px-4 sm:px-6 overflow-x-auto scrollbar-hide">
+                    <HStack gap="md" className="flex-nowrap">
+                      {/* 简介 Tab */}
+                      <button
+                        onClick={() => setActiveTab('about')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'about'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.about')}
+                      </button>
 
-                    {/* 商品 Tab - 带数量（不包含 RWA 商品） */}
-                    <button
-                      onClick={() => setActiveTab('products')}
-                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'products'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.listings')}
-                      {storeListingCount > 0 && (
-                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                          {storeListingCount}
-                        </span>
-                      )}
-                    </button>
+                      {/* 商品 Tab */}
+                      <button
+                        onClick={() => setActiveTab('products')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'products'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.listings')}
+                        {storeListingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {storeListingCount}
+                          </span>
+                        )}
+                      </button>
 
-                    {/* RWA 数字资产 Tab - 带数量 */}
-                    <button
-                      onClick={() => setActiveTab('rwa')}
-                      className={`px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'rwa'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.rwa')}
-                      {rwaListingCount > 0 && (
-                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                          {rwaListingCount}
-                        </span>
-                      )}
-                    </button>
-                  </HStack>
+                      {/* RWA 数字资产 Tab */}
+                      <button
+                        onClick={() => setActiveTab('rwa')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'rwa'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.rwa')}
+                        {rwaListingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {rwaListingCount}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* 评价 Tab */}
+                      <button
+                        onClick={() => setActiveTab('reviews')}
+                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'reviews'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.reviews')}
+                        {stats.ratingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {stats.ratingCount}
+                          </span>
+                        )}
+                      </button>
+                    </HStack>
+                  </div>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
                 </div>
               </Container>
             </div>
@@ -1177,33 +1174,36 @@ export default function StorePage() {
                             <Layers className="w-4 h-4" />
                             {t('admin.nav.collections')}
                           </h3>
-                          <div className="flex gap-3 overflow-x-auto pb-2">
-                            {storeCollections.map(col => (
-                              <Link
-                                key={col.id}
-                                href={`/store/${peerId}/collection/${col.id}`}
-                                className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
-                              >
-                                {col.image ? (
-                                  <img
-                                    src={getImageUrl(col.image)}
-                                    alt={col.title}
-                                    className="w-full h-20 object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-20 bg-muted flex items-center justify-center">
-                                    <Layers className="w-6 h-6 text-muted-foreground/30" />
+                          <div className="relative">
+                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                              {storeCollections.map(col => (
+                                <Link
+                                  key={col.id}
+                                  href={`/store/${peerId}/collection/${col.id}`}
+                                  className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
+                                >
+                                  {col.image ? (
+                                    <img
+                                      src={getImageUrl(col.image)}
+                                      alt={col.title}
+                                      className="w-full h-20 object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-20 bg-muted flex items-center justify-center">
+                                      <Layers className="w-6 h-6 text-muted-foreground/30" />
+                                    </div>
+                                  )}
+                                  <div className="p-2">
+                                    <p className="text-xs font-medium truncate">{col.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {col.products?.length || 0}{' '}
+                                      {t('listing.tabs.productType').toLowerCase()}
+                                    </p>
                                   </div>
-                                )}
-                                <div className="p-2">
-                                  <p className="text-xs font-medium truncate">{col.title}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {col.products?.length || 0}{' '}
-                                    {t('listing.tabs.productType').toLowerCase()}
-                                  </p>
-                                </div>
-                              </Link>
-                            ))}
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
                           </div>
                         </div>
                       )}
@@ -1339,9 +1339,12 @@ export default function StorePage() {
                               <span className="text-xs sm:text-sm text-muted-foreground">
                                 {t('profile.email')}
                               </span>
-                              <p className="font-medium text-foreground text-sm">
+                              <a
+                                href={`mailto:${store.contactInfo.email}`}
+                                className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                              >
                                 {store.contactInfo.email}
-                              </p>
+                              </a>
                             </div>
                           )}
                           {store.contactInfo?.phoneNumber && (
@@ -1349,9 +1352,12 @@ export default function StorePage() {
                               <span className="text-xs sm:text-sm text-muted-foreground">
                                 {t('profile.phone')}
                               </span>
-                              <p className="font-medium text-foreground text-sm">
+                              <a
+                                href={`tel:${store.contactInfo.phoneNumber}`}
+                                className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                              >
                                 {store.contactInfo.phoneNumber}
-                              </p>
+                              </a>
                             </div>
                           )}
                           {store.contactInfo?.website && (

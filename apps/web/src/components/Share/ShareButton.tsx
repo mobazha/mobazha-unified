@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
+import { useShare } from '@/hooks/useShare';
 import { cn } from '@/lib/utils';
 
 export interface ShareButtonProps {
@@ -27,6 +28,7 @@ const TELEGRAM_SHARE_BASE = 'https://t.me/share/url';
 export function ShareButton({ url, title, description, className }: ShareButtonProps) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const { share: platformShare, isTG } = useShare();
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = useCallback(async () => {
@@ -50,6 +52,26 @@ export function ShareButton({ url, title, description, className }: ShareButtonP
   const handleShareTelegram = useCallback(() => {
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   }, [telegramUrl]);
+
+  const shareText = description ? `${title} - ${description}` : title;
+
+  if (isTG) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          'min-h-[44px] min-w-[44px] text-foreground hover:bg-primary/10 hover:text-primary',
+          className
+        )}
+        aria-label={t('share.shareProduct')}
+        data-testid="share-button"
+        onClick={() => platformShare({ url, text: shareText })}
+      >
+        <Share2 className="h-5 w-5" aria-hidden />
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>

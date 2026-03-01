@@ -209,6 +209,10 @@ export const HOSTING_API = {
   AUTH_DISCORD_CHECK_USER: '/platform/v1/auth/discord/check-user',
   AUTH_DISCORD_OAUTH_CALLBACK: '/platform/v1/auth/discord/oauth-callback',
 
+  // --- Mini App Binding ---
+  AUTH_TELEGRAM_BIND_START: '/platform/v1/auth/telegram/bind-start',
+  AUTH_TELEGRAM_BIND_RESULT: '/platform/v1/auth/telegram/bind-result',
+
   // --- Accounts ---
   ACCOUNTS_ME: '/platform/v1/accounts/me',
   ACCOUNTS_LINKED: '/platform/v1/accounts/linked',

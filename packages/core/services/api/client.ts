@@ -8,7 +8,11 @@
 import type { ErrorEnvelope, ApiErrorCode } from '../../types';
 import { isStandaloneBuyerAuth, getBuyerGatewayUrl } from './config';
 
-type UnauthorizedCallback = () => void;
+/**
+ * Return true if the token was refreshed and the request should be retried.
+ * Return false to propagate the 401 error (fallback to forceLogout).
+ */
+type UnauthorizedCallback = () => boolean | Promise<boolean>;
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
 
 export function onUnauthorized(callback: UnauthorizedCallback): void {
@@ -22,6 +26,8 @@ export interface RequestOptions {
   timeout?: number;
   /** If true, return the raw JSON without unwrapping the data envelope. */
   raw?: boolean;
+  /** @internal Prevent infinite 401 retry loops. */
+  _retried?: boolean;
 }
 
 export class ApiError extends Error {
@@ -62,7 +68,14 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
  * For error responses, throws `ApiError` with structured code/details.
  */
 export async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', headers = {}, body, timeout = 30000, raw = false } = options;
+  const {
+    method = 'GET',
+    headers = {},
+    body,
+    timeout = 30000,
+    raw = false,
+    _retried = false,
+  } = options;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -84,10 +97,14 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     const response = await fetch(url, requestInit);
 
     if (!response.ok) {
-      if (response.status === 401 && onUnauthorizedCallback) {
+      if (response.status === 401 && onUnauthorizedCallback && !_retried) {
         const isLocalNodeReject = isStandaloneBuyerAuth() && !url.startsWith(getBuyerGatewayUrl());
         if (!isLocalNodeReject) {
-          onUnauthorizedCallback();
+          const refreshed = await Promise.resolve(onUnauthorizedCallback());
+          if (refreshed) {
+            clearTimeout(timeoutId);
+            return request<T>(url, { ...options, _retried: true });
+          }
         }
       }
       throw await parseErrorResponse(response);

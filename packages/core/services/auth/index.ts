@@ -73,6 +73,26 @@ export {
   type StoredUser,
 } from './token';
 
+// ============ Mini App 认证服务 ============
+
+export {
+  checkTelegramUser,
+  signinTelegram,
+  registerTelegram,
+  checkDiscordUser,
+  signinDiscord,
+  registerDiscord,
+  startTelegramBind,
+  completeTelegramBind,
+  attemptSilentAuth,
+  isInitDataFresh,
+  parseBindSessionFromStartParam,
+  type MiniAppPlatform,
+  type MiniAppSigninResult,
+  type MiniAppCheckResult,
+  type MiniAppBindStartResult,
+} from './miniAppAuth';
+
 // ============ 账号绑定服务 ============
 
 export {
