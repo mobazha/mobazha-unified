@@ -1,10 +1,10 @@
 import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
+import dynamic from 'next/dynamic';
 import './globals.css';
 import {
   AppKitProvider,
   AuthProvider,
-  ChatSystem,
   CurrencyProvider,
   MainContent,
   MobileNav,
@@ -18,7 +18,11 @@ import {
 import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
-import { storeFonts, storeFontVariableClasses } from '@/lib/fonts';
+import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
+
+const ChatSystem = dynamic(() => import('@/components/ChatSystem').then(m => m.ChatSystem), {
+  ssr: false,
+});
 
 /**
  * AuthProvider 加载状态
@@ -115,7 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={`${storeFonts[0].className} ${storeFontVariableClasses}`}>
+      <body className={`${defaultFont.className} ${storeFontVariableClasses}`}>
         <QueryProvider>
           <ThemeProvider>
             <TGMiniAppProvider>

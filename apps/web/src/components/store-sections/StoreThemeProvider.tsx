@@ -7,14 +7,15 @@
  * StoreConfig.theme. Children (Section components) read these vars
  * instead of using Tailwind theme colors or hardcoded values.
  *
- * Fonts are pre-loaded via next/font/google in lib/fonts.ts; this
- * component simply selects the right CSS variable at runtime.
+ * The default font (Inter) is pre-loaded via next/font/google; other
+ * store fonts are loaded on demand via loadStoreFont() when the theme
+ * specifies a non-default font family.
  */
 
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import type { StoreTheme } from '@mobazha/core';
 import { getContrastText, RADIUS_MAP } from '@mobazha/core';
-import { FONT_CSS_VAR_MAP } from '@/lib/fonts';
+import { FONT_CSS_VAR_MAP, loadStoreFont } from '@/lib/fonts';
 
 interface StoreThemeProviderProps {
   theme: StoreTheme;
@@ -22,6 +23,10 @@ interface StoreThemeProviderProps {
 }
 
 export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps) {
+  useEffect(() => {
+    loadStoreFont(theme.fontFamily);
+  }, [theme.fontFamily]);
+
   const cssVars = useMemo(() => {
     const primary = theme.primaryColor || '#000000';
     const secondary = theme.secondaryColor || '#6b7280';

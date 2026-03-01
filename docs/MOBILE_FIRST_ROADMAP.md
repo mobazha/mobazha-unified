@@ -272,6 +272,59 @@ components/Cart/
 - 下拉刷新（`usePullRefresh` hook）
 - 订单卡片滑动操作（确认收货/联系卖家）
 
+#### M1-6：店铺品牌化移动端深化（P1，预估 2-3d）
+
+**背景**：PG-201/202 实现了 15 个 Section 组件 + Theme 系统 + AI Store Builder，
+但这些组件的移动端体验仅有基础 Tailwind 响应式，没有做过 M1-M3 同等级别的移动端专项优化。
+作为 V1 典型用户路径的核心（TG 链接 → 到达卖家独立站），店铺页面的移动端品牌展示至关重要。
+
+**目标**：
+
+```
+store/[peerId]/page.tsx 内品牌化区块的移动端深化：
+├── 店铺头部移动端布局重构       ← 按钮区域紧凑化、头像/名称/操作分层排列
+├── Section 组件移动端增强        ← 触摸友好、间距调整、动画
+├── HeroSection 移动端优化        ← 高度适配、文字层级、CTA 全宽
+├── ProductGridSection 移动端增强 ← 商品卡触摸反馈、图片比例
+├── GallerySection 滑动手势       ← useSwipeGesture 集成
+├── FaqSection 手风琴触摸增强     ← 44px 触摸目标、展开动画
+├── TestimonialsSection 滑动浏览  ← 卡片横滑 + 指示器
+└── 全局 Section 间距移动端缩小   ← 减少垂直留白
+```
+
+**店铺头部移动端布局设计：**
+
+```
+当前（按钮横排拥挤）：
+┌─────────────────────────────┐
+│ [Avatar] Name    [Follow][Msg][Block][Share] │ ← 4 按钮挤在一行
+└─────────────────────────────┘
+
+目标（分层排列）：
+┌─────────────────────────────┐
+│ [Avatar]                    │
+│ Store Name  ★4.8 (23)      │
+│ 📍 Location                │
+│ Short description...        │
+│ 128 Following · 256 Fans    │
+│ [Follow] [Message] [···]   │ ← 按钮独占一行，更多操作收入 BottomSheet
+└─────────────────────────────┘
+```
+
+**Section 增强清单：**
+
+| Section 组件        | 移动端增强                                                       |
+| ------------------- | ---------------------------------------------------------------- |
+| HeroSection         | 移动端 min-h 降低、文字 text-2xl、CTA min-h-[44px] 全宽          |
+| ProductGridSection  | 商品卡 active 态反馈、图片 aspect-square                         |
+| GallerySection      | 横向滑动 + swipe 手势 + 页面指示器                               |
+| TestimonialsSection | 卡片横向滑动浏览 + snap scroll                                   |
+| FaqSection          | 触摸目标 ≥ 44px、展开/折叠过渡动画                               |
+| ContactSection      | 电话/邮件可点击（`tel:` / `mailto:`）                            |
+| CountdownSection    | 数字字号增大、移动端居中                                         |
+| VideoSection        | 全宽嵌入、16:9 响应式                                            |
+| 全部 Section        | 移动端 `py-6`（桌面端 `py-10`）、`px-4`（桌面端 `px-6`）间距缩小 |
+
 ---
 
 ### Phase M2：Mini App 专项增强（预估 1-2 周）
@@ -509,6 +562,179 @@ PayPal：
 
 ---
 
+### Phase M5：PG 功能移动端深化（预估 1-2 周）
+
+已完成的 PG 功能（Tier 0-2）大多只有基础 Tailwind 响应式，没有做过 M1-M3 同等级别的
+移动端专项优化。Phase M5 按照 V1 用户旅程的影响度逐一深化。
+
+> **设计原则**：买家在 TG 中的完整购买旅程（浏览→购买→追踪→评价）和卖家在手机上的
+> 核心管理操作（Onboarding→创建商品→管理订单→查看 Dashboard）都应达到原生级体验。
+
+#### M5-1：Mini App 无缝认证 — Seamless Auth（P0，✅ 完成 2026-02-28）
+
+**涉及 PG**：PG-008 登录品牌化
+
+**实现方案（v3 — 服务端 OAuth 闭环绑定）**：
+
+- **后端**：`login.go` 修复 check-user Bug + signin `?create=false`；新增 3 个绑定 API（`bind-start`/`bind-complete`/`bind-result`）使用 Redis session + deep link 回跳
+- **前端 SDK**：`TGMiniAppProvider` 扩展（showPopup/showConfirm/version/initDataUnsafe/openLink）
+- **认证服务**：`miniAppAuth.ts`（signin/register/bind API 封装 + initData 过期预检 + start_param 解析）
+- **AuthProvider**：Mini App 环境检测 + 自动登录/匿名模式 + bind 回跳检测 + 特化 loading 文案
+- **注册 UI**：`useMiniAppRegister` hook（TG showPopup 三按钮 / fallback showConfirm）
+- **受保护路由**：`useAuthGuard` 新增 `shouldPromptRegister`，Mini App 不跳 /login 改为弹注册
+- **Token 刷新**：401 拦截器 Mini App 感知，透明重新认证 + 自动重试
+- **账号绑定**：`useMiniAppBind` hook + 服务端 OAuth 闭环（Redis session → 外部浏览器 OAuth → deep link 回跳）
+- **Mobile Web fallback**：非嵌入环境保留 Casdoor redirect，`isMiniApp` 分支保证 web 不受影响
+
+**原始问题（已解决）**：
+
+- Casdoor OAuth 使用 `window.open()` 弹窗，移动端浏览器可能拦截
+- 弹窗固定尺寸，不适配小屏
+- TG Mini App 的 iframe 环境下弹窗完全不可用
+
+**目标**：
+
+- 移动端和 Mini App 环境改用 redirect 模式（非 popup）
+- 支付前登录流程（"登录以完成购买"）在 redirect 后恢复原页面状态
+- TG 环境优先使用 `Telegram.WebApp.openLink()` 或内置 OAuth
+
+```
+当前流程（桌面端可用，移动端有问题）：
+  点击登录 → window.open(casdoor) → 弹窗内登录 → postMessage 回传 token
+  问题：移动端弹窗被拦截 / TG iframe 内弹窗不可用
+
+目标流程（移动端/Mini App）：
+  点击登录 → 检测环境
+  ├── Mobile Web → redirect 到 Casdoor → 登录 → redirect 回来 + URL 参数传 token
+  ├── TG Mini App → Telegram.WebApp.openLink(casdoor) 或 redirect
+  └── Desktop → 保留 popup 模式（已可用）
+```
+
+#### M5-2：订单详情移动端重构（P0，预估 2d）
+
+**涉及 PG**：核心交易流（`OrderDetailContent` 1,664 行）
+
+**现状问题**：
+
+- 桌面端 Modal 在移动端打开，内容密集、操作拥挤
+- Skeleton 假定桌面布局（`w-56` 侧边栏）
+- Tabs（商品/物流/时间线/操作）在小屏上信息过载
+- Escrow 进度条 — 买家最关心的信任可视化 — 在移动端缺少针对性设计
+
+**目标**：
+
+```
+components/Order/
+├── OrderDetailDesktop.tsx       ← 保留现有 Modal 布局
+├── OrderDetailMobile.tsx        ← 全页视图（非 Modal）
+├── useOrderDetail.ts            ← 共享业务逻辑
+├── OrderProgressBar.tsx         ← 移动端优化的 Escrow 进度可视化
+└── OrderActionSheet.tsx         ← 移动端操作用 BottomSheet
+
+Mobile Layout：
+┌─────────────────────┐
+│ ← Order #QmXx…     │ MobilePageHeader
+├─────────────────────┤
+│ ■━━━━━━○━━━━━━○━━━━│ Escrow 进度条（大号、清晰）
+│ Paid    Shipped  Done│
+├─────────────────────┤
+│ 商品信息（图+名+价）│ 紧凑卡片
+├─────────────────────┤
+│ ▼ 物流详情          │ 折叠区
+│ ▼ 交易时间线        │
+│ ▼ 争议/仲裁         │
+├─────────────────────┤
+│ [确认收货] [联系卖家]│ 底部固定操作栏
+└─────────────────────┘
+```
+
+#### M5-3：评价系统移动端优化（P1，预估 1d）
+
+**涉及 PG**：PG-003 评价系统（`RatingModal` 238 行）
+
+**现状问题**：
+
+- 星级按钮可能小于 44px 触摸目标
+- `grid-cols-2` 的多维度评分在小屏上拥挤
+- 作为 Dialog Modal 打开，移动端应为 BottomSheet
+- 图片上传没有 Camera-First 入口
+
+**目标**：
+
+- 移动端评价改为全屏 BottomSheet（拖拽关闭）
+- 星级区域放大到 48px，间距增大
+- 多维度评分改为垂直排列（非 grid-cols-2）
+- 图片上传增加拍照优先按钮（`capture="environment"`）
+- 提交成功后 HapticFeedback
+
+#### M5-4：AI 商品创建助手移动端增强（P1，预估 1d）
+
+**涉及 PG**：PG-110 AI 商品创建助手（`AiAssistant` 344 行）
+
+**现状问题**：
+
+- AI 触发按钮 `px-2 py-0.5` 在移动端过小（远低于 44px）
+- AI 生成面板没有移动端专属布局
+- 与 PG-111 的 Camera-First 4 步向导缺少深度整合
+
+**目标**：
+
+- AI 按钮移动端放大（min-h-[44px]），使用图标+标签样式
+- AI 生成面板移动端改为 BottomSheet 或全屏覆盖层
+- AI 图片分析 → 自动生成描述 → 流式展示，全程适配移动端
+- 与 4 步向导中的拍照步骤无缝衔接：拍照 → AI 自动填充标题/描述
+
+#### M5-5：卖家 Onboarding 移动端优化（P1，预估 1d）
+
+**涉及 PG**：PG-108 卖家 Onboarding 引导（471 行）
+
+**现状问题**：
+
+- 步骤标签在移动端被隐藏（`hidden sm:block`），只显示数字
+- 价值图标区域 `gap-8` 在窄屏可能溢出
+- `grid-cols-2` 的国家/币种选择在小屏上紧凑
+
+**目标**：
+
+- 步骤标签始终可见（缩小字号而非隐藏）
+- 价值图标区域改为 `flex-wrap` 或横向滚动
+- 表单布局移动端全宽（`grid-cols-1`）
+- 头像上传支持拍照（`capture="user"`）
+- 移动端增加进度条（线性，非圆形步骤）
+
+#### M5-6：卖家 Dashboard 移动端优化（P2，预估 1d）
+
+**涉及 PG**：PG-105 卖家 Dashboard（353 行）
+
+**现状问题**：
+
+- 4 指标卡片 `grid-cols-1` 在移动端纵向堆叠，占据大量滚动空间
+- 快速操作区域在小屏上密集
+- 最近订单 + 热门商品区域无移动端专属布局
+
+**目标**：
+
+- 指标卡片改为 2×2 紧凑网格（移动端），或横向滑动卡片
+- 快速操作使用图标网格（2×2 或 3×1）
+- 最近订单/热门商品使用横向滚动卡片（非纵向堆叠）
+- 空状态引导按钮增大到 min-h-[44px]
+
+#### M5-7：Admin 触摸目标 & 交互统一修复（P2，预估 1d）
+
+**涉及 PG**：PG-106 订单管理 + PG-109 折扣管理 + PG-102 商品管理
+
+**批量修复清单**：
+
+| 组件              | 问题                            | 修复                           |
+| ----------------- | ------------------------------- | ------------------------------ |
+| 折扣管理 Dropdown | 36×36px                         | → min-h-[44px] min-w-[44px]    |
+| 订单状态标签页    | `px-3 py-1.5` 偏小              | → `px-4 py-2` + `min-h-[44px]` |
+| 订单日期筛选      | 移动端拥挤                      | → BottomSheet 日期选择器       |
+| 商品管理 FAB      | `bottom-20` 可能遮挡 BottomTabs | → 计算安全距离                 |
+| 收藏列表商品      | 无手势操作                      | → swipe-to-remove              |
+
+---
+
 ## 3. 执行顺序与依赖
 
 ```
@@ -552,6 +778,20 @@ M4（性能优化）  ← "好用" → "丝滑"
   │
   ↓
 M1-4/M1-5（剩余页面）  ← 按需
+  │
+  ↓
+M1-6（店铺品牌化移动端深化）  ← PG-201/202 Section 组件移动端增强
+  │
+  ↓
+M5（PG 功能移动端深化）  ← "基础可用" → "专业级移动体验"
+  │
+  ├── M5-1（OAuth 登录适配）  ← P0，转化漏斗关键断裂点
+  ├── M5-2（订单详情重构）    ← P0，信任闭环最后一公里
+  ├── M5-3（评价 BottomSheet） ← P1，提升评价率
+  ├── M5-4（AI 助手移动增强）  ← P1，核心差异化叙事
+  ├── M5-5（Onboarding 优化）  ← P1，新卖家第一印象
+  ├── M5-6（Dashboard 优化）   ← P2，卖家移动管理
+  └── M5-7（Admin 触摸修复）   ← P2，批量 touch target 修复
 ```
 
 ---
@@ -764,14 +1004,15 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 
 ### Phase M1 — 关键页面 Platform View 拆分
 
-| ID   | 任务                   | 状态    | 完成日期   |
-| ---- | ---------------------- | ------- | ---------- |
-| M1-0 | Mini App 导航架构实施  | ✅ 完成 | 2026-03-01 |
-| M1-1 | 商品详情 Platform View | ✅ 完成 | 2026-03-01 |
-| M1-2 | 搜索 Mobile View       | ✅ 完成 | 2026-03-01 |
-| M1-3 | 购物车 Mobile View     | ✅ 完成 | 2026-03-01 |
-| M1-4 | 店铺首页优化           | ✅ 完成 | 2026-03-01 |
-| M1-5 | 订单列表优化           | ✅ 完成 | 2026-03-01 |
+| ID   | 任务                   | 状态      | 完成日期   |
+| ---- | ---------------------- | --------- | ---------- |
+| M1-0 | Mini App 导航架构实施  | ✅ 完成   | 2026-03-01 |
+| M1-1 | 商品详情 Platform View | ✅ 完成   | 2026-03-01 |
+| M1-2 | 搜索 Mobile View       | ✅ 完成   | 2026-03-01 |
+| M1-3 | 购物车 Mobile View     | ✅ 完成   | 2026-03-01 |
+| M1-4 | 店铺首页优化           | ✅ 完成   | 2026-03-01 |
+| M1-5 | 订单列表优化           | ✅ 完成   | 2026-03-01 |
+| M1-6 | 店铺品牌化移动端深化   | ⏳ 未开始 |            |
 
 ### Phase M2 — Mini App 专项增强
 
@@ -806,6 +1047,18 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 | M4-4 | 列表虚拟化      | ⏳ 未开始 |          |
 | M4-5 | Lighthouse 达标 | ⏳ 未开始 |          |
 | M4-6 | 图片预加载策略  | ⏳ 未开始 |          |
+
+### Phase M5 — PG 功能移动端深化
+
+| ID   | 任务                               | 涉及 PG        | 优先级 | 状态      | 完成日期   |
+| ---- | ---------------------------------- | -------------- | ------ | --------- | ---------- |
+| M5-1 | Mini App 无缝认证（Seamless Auth） | PG-008         | P0     | ✅ 完成   | 2026-02-28 |
+| M5-2 | 订单详情移动端重构                 | 核心交易流     | P0     | ⏳ 未开始 |            |
+| M5-3 | 评价系统移动端优化                 | PG-003         | P1     | ⏳ 未开始 |            |
+| M5-4 | AI 商品创建助手移动端增强          | PG-110         | P1     | ⏳ 未开始 |            |
+| M5-5 | 卖家 Onboarding 移动端优化         | PG-108         | P1     | ⏳ 未开始 |            |
+| M5-6 | 卖家 Dashboard 移动端优化          | PG-105         | P2     | ⏳ 未开始 |            |
+| M5-7 | Admin 触摸目标 & 交互统一修复      | PG-106/109/102 | P2     | ⏳ 未开始 |            |
 
 ---
 
@@ -898,4 +1151,4 @@ SCREENSHOT_PATH=/product/wireless-headphones SCREENSHOT_NAME=m1-1-product-detail
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-03-01 (v5: M1-0 导航架构实施完成，M1-1 商品详情完成，截图验证通过)
+最后更新: 2026-03-01 (v7: M5-1 Mini App 无缝认证完成 — 后端 3 API + 前端 AuthProvider/useAuthGuard/ProtectedRoute/miniAppAuth/useMiniAppRegister/useMiniAppBind + 401 透明刷新)
