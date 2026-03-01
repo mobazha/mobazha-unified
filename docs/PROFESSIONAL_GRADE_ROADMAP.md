@@ -1013,6 +1013,34 @@ Store Config JSON Schema:
 
 ---
 
+## 10. Phase M — Mobile-First Mini App 改造
+
+> **独立路线图**：`docs/MOBILE_FIRST_ROADMAP.md`
+> **审核报告**：`docs/MOBILE_AUDIT_REPORT.md`
+> **开发规范**：`.cursor/rules/mobile-first-rules.mdc`
+> **执行 Skill**：`.cursor/skills/mobile-first-miniapp/SKILL.md`
+
+Phase M 是 Phase PG 的**移动端深化**。PG 建立了 Platform View 模式（Section 5b）和基础设施
+（`usePlatform`/`TGMiniAppProvider`/`CheckoutMobile`），Phase M 全面实施到所有核心页面，
+并深度集成 Telegram Mini App 和 Discord Activity 的原生能力。
+
+| Phase | 目标 | 预估 |
+|-------|------|------|
+| **M0** | 基础设施增强（React Query、手势库、BottomSheet、Discord Provider、导航架构） | 1 周 |
+| **M1** | 关键页面 Platform View 拆分（导航实施、商品详情、搜索、购物车、店铺、订单） | 2-3 周 |
+| **M2** | Mini App 专项增强（TG MainButton/BackButton/Share/Theme、Discord Activity、支付适配） | 1-2 周 |
+| **M3** | 交互打磨（滑动手势、页面过渡、骨架屏、错误恢复） | 1-2 周 |
+| **M4** | 性能优化（JS 瘦身、字体按需、API 缓存、列表虚拟化） | 1 周 |
+
+**关键设计决策（v2 审核后确认）**：
+- **React Query**：M0 早期引入（0.5-1d），收益显著，新 hooks 直接使用
+- **支付适配**：Crypto 走 WalletConnect relay（QR 码可行），法币走 openLink 降级
+- **导航架构**：TG/Discord 环境隐藏 MobileNav + MobilePageHeader 返回键
+
+**触发词**："继续移动端改造"、"Phase M 下一步"、"Mini App 优化"
+
+---
+
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-02-28 (v40: 全面状态同步 — Section 2.1/2.2/3/4.5/4.6/9 与实际实现对齐，PG-001~005/007/101~111/201~203 全部标记 ✅)
+最后更新: 2026-03-01 (v42: Phase M 合并审核意见)
