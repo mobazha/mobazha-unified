@@ -50,19 +50,37 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={cn('flex flex-col items-center justify-center py-12 px-4 text-center', className)}
+      className={cn(
+        'flex flex-col items-center justify-center py-16 px-6 text-center animate-page-enter',
+        className
+      )}
     >
-      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-        <Icon className="w-8 h-8 text-muted-foreground" />
+      <div className="w-20 h-20 sm:w-16 sm:h-16 rounded-full bg-muted/80 flex items-center justify-center mb-5">
+        <Icon className="w-10 h-10 sm:w-8 sm:h-8 text-muted-foreground/60" strokeWidth={1.5} />
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-      {description && <p className="text-muted-foreground max-w-sm mb-6">{description}</p>}
+      {description && (
+        <p className="text-sm text-muted-foreground max-w-xs sm:max-w-sm mb-6 leading-relaxed">
+          {description}
+        </p>
+      )}
       {children}
       {(action || secondaryAction) && (
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {action && <Button onClick={action.onClick}>{action.label}</Button>}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto px-4 sm:px-0">
+          {action && (
+            <Button
+              onClick={action.onClick}
+              className="w-full sm:w-auto min-h-[44px] touch-feedback"
+            >
+              {action.label}
+            </Button>
+          )}
           {secondaryAction && (
-            <Button variant="outline" onClick={secondaryAction.onClick}>
+            <Button
+              variant="outline"
+              onClick={secondaryAction.onClick}
+              className="w-full sm:w-auto min-h-[44px] touch-feedback"
+            >
               {secondaryAction.label}
             </Button>
           )}

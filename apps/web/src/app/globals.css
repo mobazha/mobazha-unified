@@ -780,6 +780,28 @@ body {
   }
 }
 
+/* Page entrance animation — fade + subtle slide-up on mobile */
+@utility animate-page-enter {
+  animation: pageEnter 0.25s ease-out both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter {
+    animation: none !important;
+  }
+}
+
 /* ===== 触摸目标最小尺寸 ===== */
 
 /* 确保触摸目标符合 44x44pt 最小要求 */

@@ -11,6 +11,7 @@ import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem } from '@mobazha/core';
+import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
 
 function SwipeableCartItem({
@@ -232,7 +233,7 @@ export function CartMobile() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <PageTransition className="min-h-screen bg-background">
         <MobilePageHeader title={t('cart.title')} />
         <div className="flex flex-col items-center justify-center px-6 pt-24">
           <ShoppingBag className="w-16 h-16 text-muted-foreground/40 mb-4" />
@@ -242,12 +243,12 @@ export function CartMobile() {
             <Button className="touch-feedback">{t('cart.continueShopping')}</Button>
           </Link>
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <PageTransition className="min-h-screen bg-background pb-24">
       <MobilePageHeader
         title={t('cart.title')}
         rightAction={
@@ -312,6 +313,6 @@ export function CartMobile() {
           </div>
         </div>
       )}
-    </div>
+    </PageTransition>
   );
 }

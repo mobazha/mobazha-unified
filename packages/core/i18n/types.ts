@@ -273,6 +273,8 @@ export interface TranslationResource {
     bestRating: string;
     listings: string;
     users: string;
+    category: string;
+    allCategories: string;
   };
 
   // 购物车

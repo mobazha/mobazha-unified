@@ -78,7 +78,10 @@ export function CheckoutMobile({ checkout }: Props) {
   useTGBackButton({ visible: isTG });
 
   return (
-    <div className="min-h-screen bg-background pb-24" data-testid="checkout-page-mobile">
+    <div
+      className="min-h-screen bg-background pb-24 animate-page-enter"
+      data-testid="checkout-page-mobile"
+    >
       <MobilePageHeader title={t('checkout.title')} />
 
       <div className="px-4 py-3">

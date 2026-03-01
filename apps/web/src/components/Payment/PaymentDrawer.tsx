@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks';
 import { PaymentCryptoSelector } from './PaymentCryptoSelector';
 import { ModeratorSelector } from './ModeratorSelector';
 import { Moderator } from './types';
@@ -46,6 +47,7 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   className,
 }) => {
   const { t } = useI18n();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const handleTokenSelect = (tokenId: string) => {
     onSelectToken?.(tokenId);
@@ -62,10 +64,25 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
     onClose();
   };
 
+  const side = isDesktop ? 'right' : 'bottom';
+
   return (
     <Sheet open={isOpen} onOpenChange={open => !open && onClose()}>
-      <SheetContent side="right" className={cn('w-full sm:max-w-md', className)}>
-        <SheetHeader>
+      <SheetContent
+        side={side}
+        className={cn(
+          side === 'bottom' ? 'max-h-[85vh] rounded-t-2xl pb-safe' : 'w-full sm:max-w-md',
+          className
+        )}
+      >
+        {/* Drag indicator for mobile bottom sheet */}
+        {side === 'bottom' && (
+          <div className="flex justify-center pt-2 pb-1">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+          </div>
+        )}
+
+        <SheetHeader className={side === 'bottom' ? 'px-4' : undefined}>
           <SheetTitle>
             {type === 'payment' ? t('payment.selectPaymentMethod') : t('payment.selectModerator')}
           </SheetTitle>
@@ -76,7 +93,7 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6">
+        <div className={cn('mt-4', side === 'bottom' && 'overflow-y-auto px-1')}>
           {type === 'payment' ? (
             <PaymentCryptoSelector
               selectedTokenId={selectedTokenId}
