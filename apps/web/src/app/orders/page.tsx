@@ -7,7 +7,8 @@ import { Container, VStack, HStack } from '@/components/layouts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
-import { Order, OrderDetailModal, OrderTable, OrderListCompact } from '@/components/Order';
+import { OrderDetailModal, OrderTable, OrderListCompact } from '@/components/Order';
+import { PullRefreshIndicator } from '@/components/ui/pull-refresh-indicator';
 import {
   useI18n,
   usePurchases,
@@ -19,6 +20,7 @@ import {
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 import { useToast } from '@/components/ui/use-toast';
 import { transformOrderListItem } from '@/components/admin/orders/utils';
 
@@ -61,6 +63,7 @@ function OrdersPageContent() {
     error: purchasesError,
     hasMore: purchasesHasMore,
     loadMore: loadMorePurchases,
+    refetch: refetchPurchases,
   } = usePurchases();
 
   const {
@@ -279,14 +282,42 @@ function OrdersPageContent() {
     [isProcessing, isOrderActionLoading, executeOrderAction, t, toast, refetchSales]
   );
 
+  // Pull-to-refresh for mobile
+  const refetch = orderType === 'purchases' ? refetchPurchases : refetchSales;
+  const {
+    containerRef: pullRefreshRef,
+    pullDistance,
+    isRefreshing,
+    canRelease,
+  } = usePullRefresh({
+    onRefresh: refetch,
+    disabled: isDesktop,
+  });
+
+  // Confirm delivery for purchases (shipped/delivered orders)
+  const handleConfirmDelivery = useCallback(
+    (orderId: string) => {
+      router.push(`/orders/${orderId}?type=purchase`);
+    },
+    [router]
+  );
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" ref={pullRefreshRef}>
       <Header />
       {/* 移动端顶部导航栏 */}
       <MobilePageHeader title={t('nav.orders')} />
 
       <main className="py-3 sm:py-8">
         <Container>
+          {/* Pull-to-refresh indicator (mobile only) */}
+          {!isDesktop && (
+            <PullRefreshIndicator
+              pullDistance={pullDistance}
+              isRefreshing={isRefreshing}
+              canRelease={canRelease}
+            />
+          )}
           {/* Page Header - 仅桌面端显示 */}
           <div className="hidden lg:block mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">{t('nav.orders')}</h1>
@@ -463,12 +494,16 @@ function OrdersPageContent() {
                   onReject={handleReject}
                 />
               ) : (
-                /* 移动端：紧凑列表视图 */
+                /* 移动端：紧凑列表视图 with swipe actions */
                 <Card className="overflow-hidden">
                   <OrderListCompact
                     orders={filteredOrders}
                     type={orderType === 'purchases' ? 'purchase' : 'sale'}
                     onViewDetails={handleViewDetails}
+                    onAccept={handleAccept}
+                    onReject={handleReject}
+                    onContact={handleContact}
+                    onConfirmDelivery={handleConfirmDelivery}
                   />
                 </Card>
               )}
