@@ -10,7 +10,7 @@
 
 ```typescript
 // ❌ Wrong
-// apps/web/src/components/Order/OrderDetailModal.tsx
+// apps/web/src/components/Order/OrderDetailDesktop.tsx (M5-2 前为 OrderDetailModal.tsx)
 interface DisplayOrder { ... }  // should be in @mobazha/core/types/
 function transformCoreOrder() { ... }  // should be in @mobazha/core/utils/
 const order = await ordersApi.getOrder(id);  // should use hooks
