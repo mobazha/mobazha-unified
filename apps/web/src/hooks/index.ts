@@ -24,3 +24,4 @@ export {
   type UseRwaSellerConfirmReturn,
   type UseRwaSellerConfirmOptions,
 } from './useRwaSellerConfirm';
+export { useTGBackButton } from './useTGBackButton';

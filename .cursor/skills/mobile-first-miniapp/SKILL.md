@@ -419,3 +419,94 @@ Mini App 特定：
 - ✅ TG/Discord 增强使用条件检测，非 Mini App 环境不影响
 - ✅ 底部操作栏要处理 safe-area-inset
 - ✅ 新增组件要导出到对应包的 index.ts
+- ✅ 每个完整页面改造完成后执行截图验证流程（见 Section 7）
+
+---
+
+## 7. 截图验证工作流
+
+每个页面级 Platform View 拆分完成后，必须执行以下截图验证流程。
+
+### 目的
+
+1. **AI 自审**：AI 阅读截图发现布局/间距/交互问题，立即修复
+2. **人工检查**：截图存档供用户批量 review，避免逐页手动打开
+3. **回归基线**：后续改动可与截图对比，发现视觉退化
+
+### 截图存储位置
+
+```
+docs/screenshots/mobile/
+├── M1-1-product-detail-375.png
+├── M1-1-product-detail-375-scroll.png
+├── M1-2-search-375.png
+├── M1-3-cart-375.png
+├── M1-4-store-home-375.png
+├── M1-5-order-list-375.png
+├── M1-5-order-detail-375.png
+└── ...
+```
+
+命名规则：`{任务ID}-{页面名}-{宽度}[-{状态}].png`
+
+状态后缀（可选）：
+
+- `-scroll`：滚动后的视图
+- `-loading`：加载中骨架屏
+- `-empty`：空状态
+- `-action`：操作中（如展开菜单）
+
+### 执行步骤
+
+每个页面改造完成后：
+
+```
+Step 1：启动 dev server（如未运行）
+  确认 http://localhost:5173 可访问
+
+Step 2：截图 — 使用 browser-use subagent
+  viewport: { width: 375, height: 812 }（iPhone 13/14 尺寸）
+  a. 默认状态截图（页面初始加载完成）
+  b. 滚动到底截图（如有长内容）
+  c. 关键交互状态截图（如展开筛选、底部 sheet 打开）
+  d. 保存至 docs/screenshots/mobile/{ID}-{name}-375.png
+
+Step 3：AI 自审截图
+  阅读截图，检查：
+  □ 内容是否被截断或溢出
+  □ 文字大小是否可读（≥14px body）
+  □ 触控目标是否足够大
+  □ 间距是否合理（无过大空白或过于拥挤）
+  □ 底部安全区是否正确
+  □ 骨架屏/加载态是否合理
+  □ 与桌面版功能一致性（无遗漏功能）
+
+Step 4：修复问题
+  如发现问题，立即修复后重新截图
+
+Step 5：记录到进度表
+  在 MOBILE_FIRST_ROADMAP.md 的对应任务行添加截图路径引用
+```
+
+### 桌面端对比截图（可选）
+
+关键页面建议同时截一张 1440px 桌面端截图，确认桌面功能无退化：
+
+```
+docs/screenshots/desktop/
+├── M1-1-product-detail-1440.png
+└── ...
+```
+
+### 截图审核清单模板
+
+每个 Phase 完成后，在 ROADMAP 中添加审核记录：
+
+```markdown
+### Phase M1 截图审核
+
+| 页面     | 截图                                                    | AI 自审 | 人工审核 | 备注 |
+| -------- | ------------------------------------------------------- | ------- | -------- | ---- |
+| 商品详情 | [375px](screenshots/mobile/M1-1-product-detail-375.png) | ✅      | ⏳       |      |
+| 搜索     | [375px](screenshots/mobile/M1-2-search-375.png)         | ✅      | ⏳       |      |
+```
