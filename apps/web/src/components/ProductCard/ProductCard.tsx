@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Shield, Flag, EyeOff, Pencil, Copy, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -91,6 +91,8 @@ export interface ProductCardProps {
   isWishlist?: boolean;
   /** 收藏/取消收藏回调 */
   onToggleWishlist?: (e: React.MouseEvent) => void;
+  /** 预取回调（鼠标悬停/触摸时触发） */
+  onPrefetch?: () => void;
   /** 自定义类名 */
   className?: string;
 }
@@ -134,6 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onClone,
   onDelete,
+  onPrefetch,
   isWishlist = false,
   onToggleWishlist,
   className,
@@ -142,6 +145,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { formatLocalPrice } = useCurrencyFormat();
   const { t } = useI18n();
   const [isHovered, setIsHovered] = useState(false);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const prefetchedRef = useRef(false);
+
+  const triggerPrefetch = useCallback(() => {
+    if (prefetchedRef.current || !onPrefetch) return;
+    prefetchedRef.current = true;
+    onPrefetch();
+  }, [onPrefetch]);
+
+  useEffect(() => {
+    if (!onPrefetch || !cardRef.current) return;
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          triggerPrefetch();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [onPrefetch, triggerPrefetch]);
 
   const hasDiscount = originalPrice && Number(originalPrice) > Number(price);
   const discountPercent = hasDiscount
@@ -202,6 +232,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card
+      ref={cardRef}
       data-testid="product-card"
       className={cn(
         'overflow-hidden group cursor-pointer transition-all duration-200',
@@ -210,8 +241,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className
       )}
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        triggerPrefetch();
+      }}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={triggerPrefetch}
     >
       {/* 商品图片 */}
       <div className="relative aspect-square overflow-hidden bg-muted">

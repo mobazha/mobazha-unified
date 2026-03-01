@@ -4,13 +4,12 @@
  * ProductGridSection — PG-201
  *
  * Full product catalog with optional filters and search.
- * This is a simplified version; the store page's existing product tab
- * will be reused for full functionality.
+ * Uses React Query via useStoreListings for cache-first data loading.
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import type { ProductGridProps, ProductListItem } from '@mobazha/core';
-import { productDataService, getImageUrl } from '@mobazha/core';
+import { useState, useMemo } from 'react';
+import type { ProductGridProps } from '@mobazha/core';
+import { useStoreListings, usePrefetchProduct, getImageUrl } from '@mobazha/core';
 
 interface Props extends ProductGridProps {
   peerId: string;
@@ -23,30 +22,18 @@ const COL_CLASS: Record<number, string> = {
 };
 
 export function ProductGridSection({ title, showSearch, columns, peerId }: Props) {
-  const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { listings, isLoading } = useStoreListings(peerId);
+  const prefetch = usePrefetchProduct();
   const [search, setSearch] = useState('');
 
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const items = await productDataService.getStoreListings(peerId);
-      setProducts(items || []);
-    } catch {
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [peerId]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
   const colClass = COL_CLASS[columns] || COL_CLASS[4];
-  const filtered = search
-    ? products.filter(p => p.title.toLowerCase().includes(search.toLowerCase()))
-    : products;
+  const filtered = useMemo(
+    () =>
+      search
+        ? listings.filter(p => p.title.toLowerCase().includes(search.toLowerCase()))
+        : listings,
+    [listings, search]
+  );
 
   return (
     <div>
@@ -91,6 +78,7 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
               href={`/store/${peerId}/products/${product.slug}`}
               className="group overflow-hidden border border-gray-200 transition-shadow hover:shadow-lg dark:border-gray-700"
               style={{ borderRadius: 'var(--store-radius)' }}
+              onMouseEnter={() => prefetch(product.slug, peerId)}
             >
               <div className="aspect-square bg-gray-100 dark:bg-gray-800">
                 {product.thumbnail && (

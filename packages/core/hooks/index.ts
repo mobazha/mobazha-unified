@@ -102,3 +102,10 @@ export * from './useAuthGuard';
 
 // 店铺品牌化相关 (PG-201)
 export * from './useStorefrontConfig';
+
+// 渐进渲染 (M4-4)
+export * from './useProgressiveList';
+
+// React Query key factory + utils (M4-3)
+export { queryKeys } from './queryKeys';
+export { formatQueryError } from './queryUtils';

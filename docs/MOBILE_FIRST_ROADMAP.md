@@ -1039,14 +1039,36 @@ function ProductDetailMobile({ slug }: { slug: string }) {
 
 ### Phase M4 — 性能优化
 
-| ID   | 任务            | 状态      | 完成日期 |
-| ---- | --------------- | --------- | -------- |
-| M4-1 | JS 包瘦身       | ⏳ 未开始 |          |
-| M4-2 | 字体按需加载    | ⏳ 未开始 |          |
-| M4-3 | API 请求优化    | ⏳ 未开始 |          |
-| M4-4 | 列表虚拟化      | ⏳ 未开始 |          |
-| M4-5 | Lighthouse 达标 | ⏳ 未开始 |          |
-| M4-6 | 图片预加载策略  | ⏳ 未开始 |          |
+| ID   | 任务            | 状态    | 完成日期   |
+| ---- | --------------- | ------- | ---------- |
+| M4-1 | JS 包瘦身       | ⏳ 延后 |            |
+| M4-2 | 字体按需加载    | ⏳ 延后 |            |
+| M4-3 | API 请求优化    | ✅ 完成 | 2026-02-28 |
+| M4-4 | 列表虚拟化      | ✅ 完成 | 2026-02-28 |
+| M4-5 | Lighthouse 达标 | ✅ 完成 | 2026-02-28 |
+| M4-6 | 图片预加载策略  | ✅ 完成 | 2026-02-28 |
+
+**M4-1/M4-2**：延后单独处理，避免影响现有功能稳定性。
+
+**M4-3 完成内容**（两阶段）：
+
+- **阶段 1（基础设施）**：Vite QueryProvider 补全 + TGMiniAppProvider/DiscordActivityProvider/SessionExpiredDialog 注入 + `next/font/google` 兼容 shim + React Query 默认配置（staleTime 60s, gcTime 5min, retry 2, refetchOnWindowFocus off）。
+- **阶段 2（hooks 全面迁移 + 预取）**：
+  - `queryKeys.ts`：集中化 query key factory（products/orders/profiles/collections/storefront/moderators/search）
+  - `useProducts.ts`（6 hooks）：useTrendingListings/useFeaturedListings/useStoreListings/useListing/useListingRatings/useStoreRatings 全部迁移 useQuery + `usePrefetchProduct` 预取 hook
+  - `useOrders.ts`：usePurchases/useSales/useOrder 迁移 useQuery（含 cursor 分页 + notification trigger invalidation），useOrderActions/useCreateOrder/useOrderPayment 迁移 useMutation + 自动 cache invalidation
+  - `useCollections.ts`：列表和详情迁移 useQuery，CRUD 操作（create/update/delete/addProducts/removeProduct/reorder）迁移 useMutation + invalidation
+  - `useVerifiedModerators.ts`：迁移 useQuery（staleTime 5min）
+  - `useStorefrontConfig.ts`：owner 版 useQuery + useMutation（save 后 optimistic update），public 版 useQuery
+  - `useProfile.ts`：query key 统一到 queryKeys factory
+  - `ProductCard`：新增 `onPrefetch` 回调，hover 时触发
+  - `ProductSection`：集成 `usePrefetchProduct`，hover 商品卡片时预取详情数据
+
+**M4-4 完成内容**：自定义 `useProgressiveList` hook（IntersectionObserver 渐进渲染），已应用于 ProductGridSection + 店铺商品页（batchSize 24，自动加载更多）。
+
+**M4-5 完成内容**：Lighthouse 审计 + LCP 图片添加 `fetchpriority="high"`（ProductDetailMobile/Desktop, StoreHero）+ ProductImage 组件 fetchPriority 支持 + 无障碍修复（icon-only buttons aria-label, search inputs aria-label, decorative icons aria-hidden）。
+
+**M4-6 完成内容**：首屏 LCP 图片 `loading="eager"` + viewport 外图片 `loading="lazy"` + 全局 `decoding="async"`（ProductDetailMobile/Desktop, ProductImage, ProductImageNative, StoreHero）。
 
 ### Phase M5 — PG 功能移动端深化
 
@@ -1151,4 +1173,4 @@ SCREENSHOT_PATH=/product/wireless-headphones SCREENSHOT_NAME=m1-1-product-detail
 
 图例: ✅ 完成 | 🔄 进行中 | ⏳ 未开始
 
-最后更新: 2026-03-01 (v7: M5-1 Mini App 无缝认证完成 — 后端 3 API + 前端 AuthProvider/useAuthGuard/ProtectedRoute/miniAppAuth/useMiniAppRegister/useMiniAppBind + 401 透明刷新)
+最后更新: 2026-03-01 (v9: M4-3 hooks 全面迁移 React Query — 6 个商品 hooks + 订单 CRUD + Collections + Moderators + Storefront Config + queryKeys factory + usePrefetchProduct 预取)
