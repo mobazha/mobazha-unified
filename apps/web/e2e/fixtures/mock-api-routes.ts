@@ -282,16 +282,22 @@ const mockSearchResults = {
 
 const mockOrderDetail = {
   contract: {
+    OrderID: 'QmOrder001',
     orderOpen: {
       listings: [
         {
+          vendorID: { peerID: MOCK_PEER_ID },
           listing: {
             slug: 'wireless-headphones',
-            metadata: { contractType: 'PHYSICAL_GOOD' },
+            metadata: {
+              contractType: 'PHYSICAL_GOOD',
+              pricingCurrency: { code: 'USD', divisibility: 2 },
+            },
+            vendorID: { peerID: MOCK_PEER_ID, handle: 'TechStore' },
             item: {
               title: 'Wireless Noise-Cancelling Headphones',
               description: 'Premium over-ear headphones with ANC',
-              price: '8999',
+              price: 8999,
               images: [{ ...mockThumbnail(3), filename: 'headphones.png' }],
               skus: [{ productID: '1', quantity: '100' }],
             },
@@ -311,9 +317,11 @@ const mockOrderDetail = {
       payment: {
         coin: 'ETH',
         chaincode: '',
-        amount: '8999',
+        amount: 8999,
         method: 'DIRECT',
       },
+      pricingCoin: 'USD',
+      amount: 8999,
       shipping: {
         shipTo: 'John Smith',
         address: '123 Blockchain Avenue',
@@ -322,13 +330,27 @@ const mockOrderDetail = {
         postalCode: '94105',
         country: 'US',
       },
-      items: [{ listingHash: '', quantity: '1' }],
+      items: [
+        {
+          listingHash: '',
+          quantity: 1,
+          memo: 'Please ship ASAP, thank you!',
+          shippingOption: { name: 'Standard', service: 'Standard' },
+        },
+      ],
       timestamp: WEEK_AGO,
-      buyerID: { peerID: MOCK_BUYER_PEER_ID },
+      buyerID: { peerID: MOCK_BUYER_PEER_ID, handle: 'CryptoBuyer' },
+      alternateContactInfo: 'john@example.com',
     },
     orderConfirmation: {
       timestamp: DAY_AGO,
     },
+    orderFulfillments: [
+      {
+        timestamp: DAY_AGO,
+        physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX1234567890' }],
+      },
+    ],
     vendorListings: [
       {
         slug: 'wireless-headphones',
@@ -347,7 +369,7 @@ const mockOrderDetail = {
   read: true,
   funded: true,
   paymentAddressTransactions: [
-    { txid: '0x1234567890abcdef', value: '8999', confirmations: 12, timestamp: WEEK_AGO },
+    { txid: '0x1234567890abcdef', value: 8999, confirmations: 12, timestamp: WEEK_AGO },
   ],
 };
 
@@ -383,8 +405,27 @@ export async function mockOrdersAPI(page: Page): Promise<void> {
   });
 }
 
+const mockVendorProfile = {
+  peerID: MOCK_PEER_ID,
+  name: 'TechStore',
+  handle: 'techstore',
+  location: 'San Francisco, CA',
+  avatarHashes: { medium: '', small: '', tiny: '' },
+  about: 'Premium electronics store',
+};
+
+const mockBuyerProfile = {
+  peerID: MOCK_BUYER_PEER_ID,
+  name: 'CryptoBuyer',
+  handle: 'cryptobuyer',
+  location: 'New York, NY',
+  avatarHashes: { medium: '', small: '', tiny: '' },
+  about: '',
+};
+
 /**
  * Set up route mocking for order detail page.
+ * Includes order data + profile data for counterparty card rendering.
  */
 export async function mockOrderDetailAPI(page: Page): Promise<void> {
   await page.route('**/v1/orders/**', route => {
@@ -392,6 +433,27 @@ export async function mockOrderDetailAPI(page: Page): Promise<void> {
       status: 200,
       contentType: 'application/json',
       body: wrapData(mockOrderDetail),
+    });
+  });
+
+  await page.route('**/search/v1/profiles/raw/**', route => {
+    const url = route.request().url();
+    const profile = url.includes(MOCK_PEER_ID) ? mockVendorProfile : mockBuyerProfile;
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(profile),
+    });
+  });
+
+  await page.route('**/v1/profiles/**', route => {
+    const url = route.request().url();
+    if (url.includes('/profiles/batch')) return route.fallback();
+    const profile = url.includes(MOCK_PEER_ID) ? mockVendorProfile : mockBuyerProfile;
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(profile),
     });
   });
 }
