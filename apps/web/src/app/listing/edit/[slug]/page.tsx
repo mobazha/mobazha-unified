@@ -429,6 +429,9 @@ export default function EditListingPage() {
           onAiImproveTitle={handleAiImproveTitle}
           onAiPolishDescription={handleAiPolishDescription}
           onAiSuggestTags={handleAiSuggestTags}
+          aiImageUrls={aiImageUrls}
+          aiNotConfigured={aiNotConfigured}
+          onAiApplyAll={handleAiApplyAll}
         />
         {/* Delete dialog (shared with desktop) */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

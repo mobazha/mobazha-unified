@@ -428,6 +428,9 @@ function CreateListingContent() {
         onAiImproveTitle={handleAiImproveTitle}
         onAiPolishDescription={handleAiPolishDescription}
         onAiSuggestTags={handleAiSuggestTags}
+        aiImageUrls={aiImageUrls}
+        aiNotConfigured={aiNotConfigured}
+        onAiApplyAll={handleAiApplyAll}
       />
     );
   }
