@@ -10,7 +10,16 @@ import {
   isStandalone,
 } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
-import { Package, ShoppingCart, TrendingUp, Star, Plus, Eye, AlertCircle } from 'lucide-react';
+import {
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Star,
+  Plus,
+  Eye,
+  Palette,
+  AlertCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -256,8 +265,8 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* Quick Actions — Mobile: 3-col icon grid, Desktop: full cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
+      {/* Quick Actions — Mobile: 2x2 icon grid, Desktop: 4 cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Link
           href="/listing/new?from=admin"
           className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
@@ -288,6 +297,23 @@ export default function AdminDashboardPage() {
             </p>
             <p className="hidden sm:block text-sm text-muted-foreground">
               {t('admin.dashboard.manageOrdersDesc')}
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/storefront"
+          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+        >
+          <div className="p-2.5 sm:p-3 rounded-lg bg-warning/10 text-warning group-hover:bg-warning group-hover:text-primary-foreground transition-colors">
+            <Palette className="w-5 h-5" />
+          </div>
+          <div className="text-center sm:text-left">
+            <p className="text-xs sm:text-base font-medium text-foreground">
+              {t('admin.dashboard.designStore')}
+            </p>
+            <p className="hidden sm:block text-sm text-muted-foreground">
+              {t('admin.dashboard.designStoreDesc')}
             </p>
           </div>
         </Link>

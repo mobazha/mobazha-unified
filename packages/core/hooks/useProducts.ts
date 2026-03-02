@@ -136,15 +136,16 @@ export function useStoreRatings(peerID: string | null, pageSize = 5) {
   useEffect(() => {
     if (!ratingIndex) return;
 
+    const ratingIds = ratingIndex.ratings ?? [];
     let cancelled = false;
 
-    if (ratingIndex.ratings.length > 0) {
-      const firstPageIds = ratingIndex.ratings.slice(0, pageSize);
+    if (ratingIds.length > 0) {
+      const firstPageIds = ratingIds.slice(0, pageSize);
       productsApi.fetchRatings(firstPageIds).then(details => {
         if (cancelled) return;
         setRatings(details);
         setLoadedCount(firstPageIds.length);
-        setHasMore(ratingIndex.ratings.length > firstPageIds.length);
+        setHasMore(ratingIds.length > firstPageIds.length);
         setInitialLoaded(true);
       });
     } else {
@@ -162,15 +163,16 @@ export function useStoreRatings(peerID: string | null, pageSize = 5) {
   const loadMore = useCallback(async () => {
     if (!ratingIndex || isLoadingMore || !hasMore) return;
 
+    const ratingIds = ratingIndex.ratings ?? [];
     setIsLoadingMore(true);
     try {
-      const nextIds = ratingIndex.ratings.slice(loadedCount, loadedCount + pageSize);
+      const nextIds = ratingIds.slice(loadedCount, loadedCount + pageSize);
       if (nextIds.length > 0) {
         const newDetails = await productsApi.fetchRatings(nextIds);
         setRatings(prev => [...prev, ...newDetails]);
         const newCount = loadedCount + nextIds.length;
         setLoadedCount(newCount);
-        setHasMore(newCount < ratingIndex.ratings.length);
+        setHasMore(newCount < ratingIds.length);
       } else {
         setHasMore(false);
       }

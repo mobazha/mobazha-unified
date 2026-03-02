@@ -21,6 +21,8 @@ const COL_CLASS: Record<number, string> = {
   4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
 };
 
+const PREVIEW_PEER = 'preview';
+
 export function FeaturedProductsSection({
   title,
   mode,
@@ -29,10 +31,12 @@ export function FeaturedProductsSection({
   columns,
   peerId,
 }: Props) {
+  const isPreview = peerId === PREVIEW_PEER;
   const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isPreview);
 
   const fetchProducts = useCallback(async () => {
+    if (isPreview) return;
     setIsLoading(true);
     try {
       const all = await productDataService.getStoreListings(peerId);
@@ -51,7 +55,7 @@ export function FeaturedProductsSection({
     } finally {
       setIsLoading(false);
     }
-  }, [peerId, mode, productSlugs, count]);
+  }, [peerId, mode, productSlugs, count, isPreview]);
 
   useEffect(() => {
     fetchProducts();
@@ -69,10 +73,10 @@ export function FeaturedProductsSection({
           {title}
         </h2>
       )}
-      {isLoading ? (
+      {isPreview || isLoading ? (
         <div className={`grid gap-4 ${colClass}`}>
           {Array.from({ length: count || 4 }).map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <div key={i} className="h-64 rounded-lg bg-muted/50" />
           ))}
         </div>
       ) : products.length === 0 ? (

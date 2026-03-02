@@ -17,8 +17,11 @@ const TAB_LABELS: Record<TabKey, string> = {
   followers: 'profile.followers',
 };
 
+const PREVIEW_PEER = 'preview';
+
 export function StoreTabsSection({ tabs, peerId }: StoreTabsSectionProps) {
   const { t } = useI18n();
+  const isPreview = peerId === PREVIEW_PEER;
   const [activeTab, setActiveTab] = useState<TabKey | null>(tabs[0] ?? null);
 
   if (!tabs.length) return null;
@@ -43,9 +46,17 @@ export function StoreTabsSection({ tabs, peerId }: StoreTabsSectionProps) {
         ))}
       </div>
 
-      {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
-      {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
-      {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
+      {isPreview ? (
+        <div className="py-8 text-center text-sm text-muted-foreground opacity-50">
+          {t(TAB_LABELS[activeTab ?? 'reviews'])}
+        </div>
+      ) : (
+        <>
+          {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
+          {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
+          {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
+        </>
+      )}
     </div>
   );
 }
