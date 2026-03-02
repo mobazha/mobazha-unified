@@ -24,7 +24,8 @@ export function CollectionsSection({
   collectionIDs,
   layout,
   columns = 3,
-}: CollectionsSectionProps) {
+  peerId,
+}: CollectionsSectionProps & { peerId: string }) {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +33,7 @@ export function CollectionsSection({
     let cancelled = false;
     (async () => {
       try {
-        const resp = await collectionsApi.listPublishedCollections(1, 20);
+        const resp = await collectionsApi.listPublishedCollections(peerId, 1, 20);
         if (cancelled) return;
         let items = resp.data ?? [];
         if (mode === 'manual' && collectionIDs?.length) {

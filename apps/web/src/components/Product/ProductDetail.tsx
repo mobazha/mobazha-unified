@@ -297,9 +297,10 @@ export function ProductDetail({
   // 自动折扣标签
   const [applicableDiscounts, setApplicableDiscounts] = useState<ApplicableDiscount[]>([]);
   useEffect(() => {
-    if (!product) return;
+    const vendorPID = product?.vendorID?.peerID;
+    if (!product || !vendorPID) return;
     discountsApi
-      .getApplicableDiscounts()
+      .getApplicableDiscounts(vendorPID)
       .then(setApplicableDiscounts)
       .catch(() => {});
   }, [product]);

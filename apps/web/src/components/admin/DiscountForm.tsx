@@ -41,7 +41,7 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
 
   useEffect(() => {
     collectionsApi
-      .listPublishedCollections(1, 100)
+      .listCollections(1, 100, true)
       .then(res => setAllCollections(res.data || []))
       .catch(() => {});
   }, []);

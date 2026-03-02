@@ -74,7 +74,7 @@ function SectionSwitch({
     case 'faq':
       return <FaqSection {...section.props} />;
     case 'collections':
-      return <CollectionsSection {...section.props} />;
+      return <CollectionsSection {...section.props} peerId={peerId} />;
     case 'gallery':
       return <GallerySection {...section.props} />;
     case 'rich-text':

@@ -169,19 +169,21 @@ export async function listDiscountRedemptions(discountID: string): Promise<Disco
 // ========== 公开 API (买家结账) ==========
 
 export async function validateDiscountCode(
+  peerID: string,
   data: ValidateDiscountRequest
 ): Promise<ValidateDiscountResponse> {
-  return publicPost<ValidateDiscountResponse>(NODE_API.DISCOUNTS_VALIDATE, data);
+  return publicPost<ValidateDiscountResponse>(NODE_API.DISCOUNTS_VALIDATE(peerID), data);
 }
 
-export async function getApplicableDiscounts(): Promise<ApplicableDiscount[]> {
-  return publicGet<ApplicableDiscount[]>(NODE_API.DISCOUNTS_APPLICABLE);
+export async function getApplicableDiscounts(peerID: string): Promise<ApplicableDiscount[]> {
+  return publicGet<ApplicableDiscount[]>(NODE_API.DISCOUNTS_APPLICABLE(peerID));
 }
 
 export async function calculateDiscounts(
+  peerID: string,
   data: CalculateDiscountsRequest
 ): Promise<CalculateDiscountsResponse> {
-  return publicPost<CalculateDiscountsResponse>(NODE_API.DISCOUNTS_CALCULATE, data);
+  return publicPost<CalculateDiscountsResponse>(NODE_API.DISCOUNTS_CALCULATE(peerID), data);
 }
 
 // ========== 导出 ==========

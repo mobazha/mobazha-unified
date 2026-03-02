@@ -156,9 +156,9 @@ export const NODE_API = {
   DISCOUNT_CODES: (discountID: string) => `/discounts/${discountID}/codes`,
   DISCOUNT_CODE: (discountID: string, codeID: string) => `/discounts/${discountID}/codes/${codeID}`,
   DISCOUNT_REDEMPTIONS: (discountID: string) => `/discounts/${discountID}/redemptions`,
-  DISCOUNTS_VALIDATE: '/discounts/validate',
-  DISCOUNTS_APPLICABLE: '/discounts/applicable',
-  DISCOUNTS_CALCULATE: '/discounts/calculate',
+  DISCOUNTS_VALIDATE: (peerID: string) => `/discounts/${peerID}/validate`,
+  DISCOUNTS_APPLICABLE: (peerID: string) => `/discounts/${peerID}/applicable`,
+  DISCOUNTS_CALCULATE: (peerID: string) => `/discounts/${peerID}/calculate`,
 
   // --- Collections ---
   COLLECTIONS: '/collections',
@@ -168,8 +168,9 @@ export const NODE_API = {
     `/collections/${collectionID}/products/${slug}`,
   COLLECTION_PRODUCTS_REORDER: (collectionID: string) =>
     `/collections/${collectionID}/products/reorder`,
-  COLLECTIONS_PUBLISHED: '/collections/published',
-  COLLECTION_PUBLISHED: (collectionID: string) => `/collections/published/${collectionID}`,
+  COLLECTIONS_PUBLISHED: (peerID: string) => `/collections/${peerID}/published`,
+  COLLECTION_PUBLISHED: (peerID: string, collectionID: string) =>
+    `/collections/${peerID}/published/${collectionID}`,
 
   // --- Wishlists ---
   WISHLISTS: '/wishlists',

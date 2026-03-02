@@ -307,9 +307,10 @@ export function useProductDetail({
 
   // Discounts
   useEffect(() => {
-    if (!product) return;
+    const vendorPID = product?.vendorID?.peerID;
+    if (!product || !vendorPID) return;
     discountsApi
-      .getApplicableDiscounts()
+      .getApplicableDiscounts(vendorPID)
       .then(setApplicableDiscounts)
       .catch(() => {});
   }, [product]);
