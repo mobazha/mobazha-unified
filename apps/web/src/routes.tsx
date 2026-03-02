@@ -286,6 +286,7 @@ const routes: RouteObject[] = [
         path: 'collections/:id',
         element: lazyPage(() => import('./app/admin/collections/[id]/page')),
       },
+      { path: 'storefront', element: lazyPage(() => import('./app/admin/storefront/page')) },
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
       {
@@ -319,6 +320,26 @@ const routes: RouteObject[] = [
       {
         path: 'settings/integrations',
         element: lazyPage(() => import('./app/admin/settings/integrations/page')),
+      },
+      {
+        path: 'settings/account',
+        element: lazyPage(() => import('./app/admin/settings/account/page')),
+      },
+      {
+        path: 'settings/access-control',
+        element: lazyPage(() => import('./app/admin/settings/access-control/page')),
+      },
+      {
+        path: 'settings/blocked',
+        element: lazyPage(() => import('./app/admin/settings/blocked/page')),
+      },
+      {
+        path: 'settings/chat-encryption',
+        element: lazyPage(() => import('./app/admin/settings/chat-encryption/page')),
+      },
+      {
+        path: 'settings/advanced',
+        element: lazyPage(() => import('./app/admin/settings/advanced/page')),
       },
     ],
   },

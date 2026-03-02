@@ -26,7 +26,7 @@ export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${baseUrl}/api/account/linked`, {
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/linked`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -35,16 +35,11 @@ export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to get linked accounts: ${errorText}`);
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error?.message || 'Failed to get linked accounts');
   }
 
   const data = await response.json();
-
-  if (data.status !== 'ok') {
-    throw new Error(data.msg || 'Failed to get linked accounts');
-  }
-
   return data.data as LinkedAccountsResponse;
 }
 
@@ -132,7 +127,7 @@ export async function handleLinkCallback(
 
   const params = new URLSearchParams({ code, state });
 
-  const response = await fetch(`${baseUrl}/api/account/link-callback?${params}`, {
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/link-callback?${params}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -141,16 +136,11 @@ export async function handleLinkCallback(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    return { success: false, error: `Link failed: ${errorText}` };
+    const errorData = await response.json().catch(() => null);
+    return { success: false, error: errorData?.error?.message || 'Link failed' };
   }
 
   const data = await response.json();
-
-  if (data.status !== 'ok') {
-    return { success: false, error: data.msg || 'Link failed' };
-  }
-
   return data.data as LinkCallbackResponse;
 }
 
@@ -167,7 +157,7 @@ export async function unlinkAccount(provider: OAuthProvider): Promise<UnlinkResp
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${baseUrl}/api/account/unlink`, {
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/unlink`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -177,16 +167,11 @@ export async function unlinkAccount(provider: OAuthProvider): Promise<UnlinkResp
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to unlink account: ${errorText}`);
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error?.message || 'Failed to unlink account');
   }
 
   const data = await response.json();
-
-  if (data.status !== 'ok') {
-    throw new Error(data.msg || 'Failed to unlink account');
-  }
-
   return data.data as UnlinkResponse;
 }
 

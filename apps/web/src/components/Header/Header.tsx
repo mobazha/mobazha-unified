@@ -33,15 +33,10 @@ import {
   Search,
   ShoppingCart,
   LogIn,
-  Store,
-  Plus,
-  Package,
   ShoppingBag,
-  Settings,
   LogOut,
   MessageCircle,
-  Shield,
-  PieChart,
+  User,
   LayoutDashboard,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
@@ -212,7 +207,7 @@ export const Header: React.FC = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
-                  {/* 主要操作 — 买家跳过卖家管理项 */}
+                  {/* 卖家核心入口 */}
                   {!isBuyer && (
                     <>
                       <DropdownMenuItem
@@ -223,78 +218,33 @@ export const Header: React.FC = () => {
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         {t('admin.title')}
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+
+                  {/* 买家购买订单（hosted 模式双角色也显示） */}
+                  {!isSeller && (
+                    <>
                       <DropdownMenuItem
-                        onClick={() => router.push(`/store/${profile.peerID}`)}
+                        onClick={() => router.push('/orders?tab=purchases')}
                         className="cursor-pointer"
-                        data-testid="header-menu-my-store"
+                        data-testid="header-menu-purchases"
                       >
-                        <Store className="mr-2 h-4 w-4" />
-                        {t('userMenu.myStore')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/listing/new')}
-                        className="cursor-pointer"
-                        data-testid="header-menu-create-listing"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        {t('userMenu.createListing')}
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        {t('userMenu.purchases')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
                   )}
 
-                  {/* 订单管理 — 卖家看 Sales，买家看 Purchases */}
-                  {!isBuyer && (
-                    <DropdownMenuItem
-                      onClick={() => router.push('/orders?tab=sales')}
-                      className="cursor-pointer"
-                      data-testid="header-menu-sales"
-                    >
-                      <Package className="mr-2 h-4 w-4" />
-                      {t('userMenu.sales')}
-                    </DropdownMenuItem>
-                  )}
-                  {!isSeller && (
-                    <DropdownMenuItem
-                      onClick={() => router.push('/orders?tab=purchases')}
-                      className="cursor-pointer"
-                      data-testid="header-menu-purchases"
-                    >
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      {t('userMenu.purchases')}
-                    </DropdownMenuItem>
-                  )}
-                  {!isBuyer && (
-                    <DropdownMenuItem
-                      onClick={() => router.push('/rwa-dashboard')}
-                      className="cursor-pointer"
-                    >
-                      <PieChart className="mr-2 h-4 w-4" />
-                      {t('userMenu.rwaAssets')}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-
-                  {/* 系统操作 — 买家无需 settings/access-control */}
-                  {!isBuyer && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/settings/general')}
-                        className="cursor-pointer"
-                        data-testid="header-menu-settings"
-                      >
-                        <Settings className="mr-2 h-4 w-4" />
-                        {t('userMenu.settings')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/settings/access-control')}
-                        className="cursor-pointer"
-                      >
-                        <Shield className="mr-2 h-4 w-4" />
-                        {t('settings.sidebar.accessControl')}
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  <DropdownMenuItem
+                    onClick={() => router.push('/settings/general')}
+                    className="cursor-pointer"
+                    data-testid="header-menu-settings"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    {t('userMenu.account')}
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}

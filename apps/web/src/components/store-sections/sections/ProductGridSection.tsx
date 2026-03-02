@@ -21,8 +21,11 @@ const COL_CLASS: Record<number, string> = {
   4: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
 };
 
+const PREVIEW_PEER = 'preview';
+
 export function ProductGridSection({ title, showSearch, columns, peerId }: Props) {
-  const { listings, isLoading } = useStoreListings(peerId);
+  const isPreview = peerId === PREVIEW_PEER;
+  const { listings, isLoading } = useStoreListings(isPreview ? null : peerId);
   const prefetch = usePrefetchProduct();
   const [search, setSearch] = useState('');
 
@@ -60,10 +63,10 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
           />
         )}
       </div>
-      {isLoading ? (
+      {isPreview || isLoading ? (
         <div className={`grid gap-4 ${colClass}`}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <div key={i} className="h-64 rounded-lg bg-muted/50" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
