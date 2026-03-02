@@ -30,7 +30,7 @@ export default function StoreCollectionPage() {
     let cancelled = false;
     (async () => {
       try {
-        const col = await collectionsApi.getPublishedCollection(collectionId);
+        const col = await collectionsApi.getPublishedCollection(peerId, collectionId);
         if (cancelled) return;
         setCollection(col);
         if (col.products && col.products.length > 0) {

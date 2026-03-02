@@ -75,15 +75,19 @@ export async function reorderCollectionProducts(
 // ========== 公开 API (买家浏览) ==========
 
 export async function listPublishedCollections(
+  peerID: string,
   page = 1,
   pageSize = 20
 ): Promise<CollectionListResponse> {
-  const path = `${NODE_API.COLLECTIONS_PUBLISHED}?page=${page}&pageSize=${pageSize}`;
+  const path = `${NODE_API.COLLECTIONS_PUBLISHED(peerID)}?page=${page}&pageSize=${pageSize}`;
   return publicGet<CollectionListResponse>(path);
 }
 
-export async function getPublishedCollection(collectionID: string): Promise<Collection> {
-  return publicGet<Collection>(NODE_API.COLLECTION_PUBLISHED(collectionID));
+export async function getPublishedCollection(
+  peerID: string,
+  collectionID: string
+): Promise<Collection> {
+  return publicGet<Collection>(NODE_API.COLLECTION_PUBLISHED(peerID, collectionID));
 }
 
 // ========== 导出 ==========

@@ -373,10 +373,11 @@ export function useCheckout(): UseCheckoutReturn {
 
   // ---- Fetch applicable automatic discounts and auto-apply qualifying ones ----
   useEffect(() => {
-    if (!checkoutItems.length) return;
+    const vendorPID = checkoutItems[0]?.vendor?.peerID;
+    if (!checkoutItems.length || !vendorPID) return;
     let cancelled = false;
     discountsApi
-      .getApplicableDiscounts()
+      .getApplicableDiscounts(vendorPID)
       .then(result => {
         if (cancelled) return;
         setApplicableDiscounts(result);
@@ -422,7 +423,9 @@ export function useCheckout(): UseCheckoutReturn {
     async (code: string) => {
       setIsValidatingDiscount(true);
       try {
-        const result = await discountsApi.validateDiscountCode({ code });
+        const vendorPID = checkoutItems[0]?.vendor?.peerID;
+        if (!vendorPID) throw new Error('Missing vendor');
+        const result = await discountsApi.validateDiscountCode(vendorPID, { code });
 
         if (result.valid) {
           const alreadyApplied = appliedDiscounts.some(ad => ad.code === code);
