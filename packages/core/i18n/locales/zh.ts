@@ -3404,6 +3404,7 @@ export const zh: TranslationResource = {
       viewAll: '查看全部',
       noOrdersYet: '暂无订单。分享你的店铺以开始销售！',
       noProductsYet: '暂无商品。创建你的第一个商品吧！',
+      failedToLoadProducts: '加载商品失败',
       totalOrders: '总订单',
       completedOrders: '已完成订单',
       reviewCount: '{{count}} 条评价',

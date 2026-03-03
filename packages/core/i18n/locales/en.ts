@@ -3607,6 +3607,7 @@ export const en: TranslationResource = {
       viewAll: 'View All',
       noOrdersYet: 'No orders yet. Share your store to get started!',
       noProductsYet: 'No products yet. Create your first listing!',
+      failedToLoadProducts: 'Failed to load products',
       totalOrders: 'Total Orders',
       completedOrders: 'Completed orders',
       reviewCount: '{{count}} reviews',
