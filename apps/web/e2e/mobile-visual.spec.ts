@@ -1,6 +1,9 @@
 /**
  * Mobile Visual Regression Tests
  * 移动端视觉回归测试 — 公开页面 + 登录态业务页面（含真实数据 + API Mock）
+ *
+ * 认证优化：登录一次提取 Token，后续测试通过 addInitScript 注入，
+ * 避免每个测试重复完整 OAuth 流程（~40 次 → 1 次）。
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -22,6 +25,80 @@ import {
 
 let seededData: SeededVisualData | null = null;
 
+let cachedLocalStorage: Record<string, string> | undefined;
+let cachedProfileJSON: string | undefined;
+
+async function ensureAuthenticated(page: Page): Promise<void> {
+  if (!cachedLocalStorage) {
+    await loginAndSetup(page);
+
+    try {
+      await page.waitForFunction(
+        () => {
+          const stored = localStorage.getItem('mobazha-user-storage');
+          if (!stored) return false;
+          try {
+            const parsed = JSON.parse(stored);
+            return !!parsed.state?.profile;
+          } catch {
+            return false;
+          }
+        },
+        { timeout: 10000 }
+      );
+    } catch {
+      /* proceed anyway */
+    }
+
+    cachedLocalStorage = await page.evaluate(() => {
+      const items: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const value = localStorage.getItem(key);
+          if (value) items[key] = value;
+        }
+      }
+      return items;
+    });
+
+    try {
+      const userStorage = JSON.parse(cachedLocalStorage['mobazha-user-storage'] || '{}');
+      if (userStorage.state?.profile) {
+        cachedProfileJSON = JSON.stringify({ data: userStorage.state.profile });
+      }
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+
+  const escaped = JSON.stringify(cachedLocalStorage);
+  const profileJSON = cachedProfileJSON ? JSON.stringify(cachedProfileJSON) : 'null';
+  await page.addInitScript(`
+    const items = ${escaped};
+    for (const [key, value] of Object.entries(items)) {
+      window.localStorage.setItem(key, value);
+    }
+
+    const _origFetch = window.fetch;
+    window.fetch = function(input, init) {
+      const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : '');
+      const method = (init && init.method) || (input instanceof Request ? input.method : 'GET');
+      if (method.toUpperCase() === 'GET' && url.includes('/v1/profiles')) {
+        const profileData = ${profileJSON};
+        if (profileData) {
+          return Promise.resolve(new Response(profileData, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }));
+        }
+      }
+      return _origFetch.apply(this, arguments);
+    };
+  `);
+}
+
 async function hideDevOverlays(page: Page): Promise<void> {
   await page.addStyleTag({
     content: `
@@ -34,16 +111,46 @@ async function hideDevOverlays(page: Page): Promise<void> {
   });
 }
 
+async function waitForLoadingToDisappear(page: Page): Promise<void> {
+  const indicators = [
+    page.getByText('Loading...', { exact: true }),
+    page.getByText('Loading\u2026', { exact: true }),
+    page.locator('.animate-spin'),
+  ];
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const visible = await Promise.all(
+      indicators.map(loc =>
+        loc
+          .first()
+          .isVisible()
+          .catch(() => false)
+      )
+    );
+    if (!visible.some(Boolean)) break;
+    await page.waitForTimeout(500);
+  }
+}
+
 async function waitForPageStable(page: Page): Promise<void> {
-  await page.waitForLoadState('domcontentloaded');
-  await page.waitForTimeout(800);
+  try {
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+  } catch {
+    // networkidle may not fire if WebSocket or long-poll is active; proceed anyway
+  }
+  await waitForLoadingToDisappear(page);
+  await page.waitForTimeout(500);
   await hideDevOverlays(page);
   await page.waitForTimeout(200);
 }
 
 async function waitForDOMStable(page: Page): Promise<void> {
-  await page.waitForLoadState('domcontentloaded');
-  await page.waitForTimeout(2000);
+  try {
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+  } catch {
+    // proceed anyway
+  }
+  await waitForLoadingToDisappear(page);
+  await page.waitForTimeout(1000);
   await hideDevOverlays(page);
 }
 
@@ -55,13 +162,6 @@ async function navigateAndVerify(page: Page, path: string): Promise<void> {
     throw new Error(`Expected ${path} but got redirected to ${url}`);
   }
 }
-
-test.beforeEach(async ({ page: _page }, testInfo) => {
-  const isMobileProject = testInfo.project.name.toLowerCase().includes('mobile');
-  if (!isMobileProject) {
-    test.skip();
-  }
-});
 
 // ─── Part 1: Public Pages (no auth) ───
 
@@ -123,7 +223,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
 
   for (const p of simplePages) {
     test(`authed: ${p.name}`, async ({ page }) => {
-      await loginAndSetup(page);
+      await ensureAuthenticated(page);
       if (p.path === '/onboarding') {
         await page.goto(p.path);
         await waitForPageStable(page);
@@ -137,7 +237,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   // ── Pages with mocked API data ──
 
   test('authed: orders-purchases (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockOrdersAPI(page);
     await page.goto('/orders');
     await waitForDOMStable(page);
@@ -145,7 +245,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: orders-sales (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockOrdersAPI(page);
     await page.goto('/orders?tab=sales');
     await waitForDOMStable(page);
@@ -153,7 +253,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: order-detail (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockOrderDetailAPI(page);
     await page.goto('/orders/QmOrder001');
     await waitForDOMStable(page);
@@ -161,7 +261,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: notifications (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockNotificationsAPI(page);
     await page.goto('/notifications');
     await waitForDOMStable(page);
@@ -169,7 +269,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: search (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockSearchAPI(page);
     await page.goto('/search?q=headphones');
     await waitForDOMStable(page);
@@ -177,7 +277,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: cart (with items)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await page.goto('/');
     await waitForPageStable(page);
     if (seededData) {
@@ -189,7 +289,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: checkout (with items)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockPreferencesAPI(page);
     await mockProductDetailAPI(page);
     await page.goto('/');
@@ -207,7 +307,7 @@ test.describe('Mobile Visual - Authenticated Main', () => {
   });
 
   test('authed: product-detail (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockProductDetailAPI(page);
     await page.goto(
       '/product/wireless-headphones?peer=QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P'
@@ -239,14 +339,14 @@ const settingsPages = [
 test.describe('Mobile Visual - Authenticated Settings', () => {
   for (const p of settingsPages) {
     test(`authed: ${p.name}`, async ({ page }) => {
-      await loginAndSetup(page);
+      await ensureAuthenticated(page);
       await navigateAndVerify(page, p.path);
       await expect(page).toHaveScreenshot(`mobile-authed-${p.name}.png`, { fullPage: true });
     });
   }
 
   test('authed: settings-addresses (mocked)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await mockPreferencesAPI(page);
     await navigateAndVerify(page, '/settings/addresses');
     await expect(page).toHaveScreenshot('mobile-authed-settings-addresses.png', { fullPage: true });
@@ -257,37 +357,37 @@ test.describe('Mobile Visual - Authenticated Settings', () => {
 
 test.describe('Mobile Visual - Authenticated Admin', () => {
   test('authed: moderator-cases', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await navigateAndVerify(page, '/moderator/cases');
     await expect(page).toHaveScreenshot('mobile-authed-moderator-cases.png', { fullPage: true });
   });
 
   test('authed: admin-dashboard', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin');
     await expect(page).toHaveScreenshot('mobile-authed-admin-dashboard.png', { fullPage: true });
   });
 
   test('authed: admin-products', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/products');
     await expect(page).toHaveScreenshot('mobile-authed-admin-products.png', { fullPage: true });
   });
 
   test('authed: admin-orders', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/orders');
     await expect(page).toHaveScreenshot('mobile-authed-admin-orders.png', { fullPage: true });
   });
 
   test('authed: admin-analytics', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/analytics');
     await expect(page).toHaveScreenshot('mobile-authed-admin-analytics.png', { fullPage: true });
   });
 
   test('authed: admin-settings', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/settings');
     await expect(page).toHaveScreenshot('mobile-authed-admin-settings.png', { fullPage: true });
   });
@@ -304,7 +404,7 @@ test.describe('Mobile Visual - Bottom Nav', () => {
   });
 
   test('bottom nav (authenticated)', async ({ page }) => {
-    await loginAndSetup(page);
+    await ensureAuthenticated(page);
     await page.goto('/');
     await waitForPageStable(page);
     const nav = page.locator('nav').last();
