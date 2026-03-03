@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@mobazha/core';
+import { useUserStore, useI18n } from '@mobazha/core';
 import { Header, Footer } from '@/components';
 
 /**
@@ -13,6 +13,7 @@ import { Header, Footer } from '@/components';
  */
 export default function ProfilePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const { profile, isAuthenticated, isLoading } = useUserStore();
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function ProfilePage() {
       <main className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-success border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </main>
       <Footer />

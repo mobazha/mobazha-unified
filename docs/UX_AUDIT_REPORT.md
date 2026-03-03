@@ -268,11 +268,21 @@
 | 11  | P2-C2 | P2     | Checkout | CheckoutProgressBar 缺 role="progressbar"         | ⏳ 待修复                                               |
 | 12  | P3-A1 | P3     | Admin    | Admin 页面缺面包屑导航（大功能）                  | ⏳ 待规划                                               |
 
-## 十一、下一步
+## 十一、第四轮 AI 审查发现（Product Detail/Store/Profile 深度扫描）
+
+| #   | ID    | 优先级 | 页面           | 问题                                              | 状态                                                                     |
+| --- | ----- | ------ | -------------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1   | P1-P1 | P1     | Profile        | "Loading..." 硬编码英文                           | ✅ 已修复 — 改用 t('common.loading')                                     |
+| 2   | P1-P2 | P1     | Product Detail | ProductDetailMobile 数量按钮 w-8（32px）且缺 i18n | ✅ 已修复 — 改为 w-10 h-10 + t('cart.decreaseQuantity/increaseQuantity') |
+| 3   | P1-P3 | P1     | Product Detail | ProductDetailModal "Product Details" 硬编码英文   | ✅ 已修复 — 改用 t('product.details') + t('common.close')                |
+| 4   | P1-P4 | P1     | Store          | FollowTab "Failed to fetch list" 硬编码英文       | ✅ 已修复 — 改用 t('common.error')                                       |
+| 5   | P2-R1 | P2     | Store          | ReviewCard 日期格式硬编码 'en-US'                 | ✅ 已修复 — 改用 undefined（浏览器自适应 locale）                        |
+
+## 十二、下一步
 
 1. **P0-002（Casdoor Logo）**：在 Casdoor 管理后台修复 Application 的 logo URL 和 displayName
 2. 创建 demo-journey specs 覆盖更多状态（空购物车、争议订单、退款等）
-3. 运行 journey 截图 + 第四轮 AI 审查（覆盖完整卖家开店、买家售后流程）
+3. 运行 journey 截图 + 第五轮 AI 审查（覆盖完整卖家开店、买家售后流程）
 4. 独立站专项审查（买家 OAuth 流程、政策页面、卖家登录体验）
 5. 完成其他语言的 Escrow → Buyer Protection 术语替换（ja/fr/de/es/ko）
 6. P2 级别 i18n 修复（Admin PaymentProviders、Settings Profile/Store）
