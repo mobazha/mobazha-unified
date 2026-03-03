@@ -88,7 +88,7 @@ function ProductActions({ slug, onRequestDelete, deleting }: ProductActionsProps
 
 export default function AdminProductsPage() {
   const { t } = useI18n();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, fromMinimalUnit } = useCurrency();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [products, setProducts] = useState<ProductListItem[]>([]);
@@ -215,9 +215,15 @@ export default function AdminProductsPage() {
     }
   };
 
-  function renderPrice(price: { amount?: number; currencyCode?: string }): string {
+  function renderPrice(price: {
+    amount?: number;
+    currency?: { code?: string; divisibility?: number };
+    currencyCode?: string;
+  }): string {
     if (!price.amount) return '—';
-    return formatPrice(price.amount, price.currencyCode || 'USD');
+    const code = price.currency?.code || price.currencyCode || 'USD';
+    const standardAmount = fromMinimalUnit(price.amount, code);
+    return formatPrice(standardAmount, code);
   }
 
   function contractTypeLabel(type?: string): string {

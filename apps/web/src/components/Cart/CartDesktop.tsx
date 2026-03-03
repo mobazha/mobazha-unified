@@ -80,7 +80,9 @@ export function CartDesktop() {
             <div>
               <h1 className="text-2xl font-bold text-foreground">{t('cart.title')}</h1>
               <p className="text-sm text-muted-foreground">
-                {t('cart.itemsInCart', { count: items.length })}
+                {items.length === 1
+                  ? t('cart.itemsInCartOne')
+                  : t('cart.itemsInCart', { count: items.length })}
               </p>
             </div>
             <ClearCartAlert onConfirm={clearCart}>
@@ -96,7 +98,9 @@ export function CartDesktop() {
           </HStack>
 
           <p className="lg:hidden text-xs text-muted-foreground mb-3">
-            {t('cart.itemsInCart', { count: items.length })}
+            {items.length === 1
+              ? t('cart.itemsInCartOne')
+              : t('cart.itemsInCart', { count: items.length })}
           </p>
 
           <div className="space-y-3 sm:space-y-4">
