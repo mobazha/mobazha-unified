@@ -17,6 +17,9 @@ import {
   mockNotificationsAPI,
   mockStoreListingsAPI,
   mockImageRoutes,
+  mockStorefrontConfigAPI,
+  mockDiscountsAPI,
+  mockCollectionsAdminAPI,
 } from './fixtures/mock-api-routes';
 import {
   mockFullLifecycleAPIs,
@@ -279,6 +282,9 @@ test.describe('Seller Journey — 20-step AI UX Audit', () => {
   // S05: Branding Editor
   test('S05 — Branding Editor', async ({ page }) => {
     await setupMockAuth(page);
+    await mockStorefrontConfigAPI(page);
+    await mockStoreListingsAPI(page);
+    await mockImageRoutes(page);
     await page.goto('/admin/settings/store/branding');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
@@ -315,6 +321,7 @@ test.describe('Seller Journey — 20-step AI UX Audit', () => {
   // S09: Discounts
   test('S09 — Discount Management', async ({ page }) => {
     await setupMockAuth(page);
+    await mockDiscountsAPI(page);
     await page.goto('/admin/discounts');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
@@ -324,6 +331,8 @@ test.describe('Seller Journey — 20-step AI UX Audit', () => {
   // S10: Collections
   test('S10 — Collections', async ({ page }) => {
     await setupMockAuth(page);
+    await mockCollectionsAdminAPI(page);
+    await mockImageRoutes(page);
     await page.goto('/admin/collections');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);

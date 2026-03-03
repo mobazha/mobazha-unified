@@ -43,13 +43,15 @@ const STATE_TO_I18N_KEY: Record<string, string> = {
 
 export function RecentOrderRow({ order }: { order: OrderListItem }) {
   const { t } = useI18n();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, fromMinimalUnit } = useCurrency();
 
   const stateColor = STATE_COLORS[order.state] || STATE_COLORS.PENDING;
   const stateLabel = t(`orders.statusLabels.${STATE_TO_I18N_KEY[order.state] || 'unknown'}`);
   const dateStr = order.timestamp ? new Date(order.timestamp).toLocaleDateString() : '';
   const currencyCode = getOrderCurrencyCode(order);
-  const formattedTotal = order.total?.amount ? formatPrice(order.total.amount, currencyCode) : '';
+  const formattedTotal = order.total?.amount
+    ? formatPrice(fromMinimalUnit(order.total.amount, currencyCode), currencyCode)
+    : '';
 
   return (
     <Link

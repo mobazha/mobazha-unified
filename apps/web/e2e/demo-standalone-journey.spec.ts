@@ -75,11 +75,11 @@ const STEPS: StepMeta[] = [
     reviewFocus: 'Can anonymous users add to cart? Login prompt timing.',
   },
   {
-    id: '05-checkout-anon',
-    title: 'Checkout (Anonymous)',
-    description: 'Anonymous user tries to checkout.',
-    phase: 'Buyer Auth',
-    reviewFocus: 'Login/OAuth prompt clarity, trust feeling.',
+    id: '05-checkout',
+    title: 'Checkout',
+    description: 'Authenticated checkout with product.',
+    phase: 'Purchase',
+    reviewFocus: 'Checkout form completeness, product display, payment options.',
   },
   {
     id: '06-about',
@@ -242,24 +242,14 @@ test.describe('Standalone Journey — 10-step AI UX Audit (Real Backend)', () =>
     await captureStep(page, '04-cart');
   });
 
-  // SA05: Checkout (anonymous — should prompt login)
-  test('SA05 — Checkout (Anonymous)', async ({ page }) => {
-    await page.goto(`/product/${LISTING_SLUGS[1]}`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
-    await page.waitForTimeout(1000);
-
-    const addBtn = page.getByRole('button', { name: /add to cart/i });
-    if (await addBtn.isVisible()) {
-      await addBtn.click();
-      await page.waitForTimeout(500);
-    }
-
-    await page.goto('/checkout');
+  // SA05: Checkout (authenticated — shows checkout with product)
+  test('SA05 — Checkout', async ({ page }) => {
+    await setupSellerAuth(page);
+    await page.goto(`/checkout?slug=${LISTING_SLUGS[0]}&peerID=${PEER_ID}&quantity=1`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
-    await captureStep(page, '05-checkout-anon');
+    await captureStep(page, '05-checkout');
   });
 
   // SA06: About / Store Profile (about is a tab within store page, not a separate route)

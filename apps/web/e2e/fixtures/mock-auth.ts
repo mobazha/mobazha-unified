@@ -78,12 +78,26 @@ const FAKE_EXCHANGE_RATES = {
 
 /**
  * Inject fake auth state into localStorage via addInitScript.
+ * Sets both legacy keys and Zustand persist store to ensure the app
+ * recognizes the user as authenticated and skips onboarding.
  * Must be called BEFORE page.goto().
  */
 export async function injectMockAuth(page: Page): Promise<void> {
+  const zustandUserState = JSON.stringify({
+    state: {
+      profile: FAKE_PROFILE,
+      isAuthenticated: true,
+      authMode: 'basic',
+      token: FAKE_TOKEN,
+      authSource: 'basic',
+    },
+    version: 0,
+  });
+
   const authItems = {
     mobazha_auth_token: FAKE_TOKEN,
     mobazha_auth_user: JSON.stringify(FAKE_USER),
+    'mobazha-user-storage': zustandUserState,
   };
 
   const escaped = JSON.stringify(authItems);
