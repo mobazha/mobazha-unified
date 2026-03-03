@@ -105,6 +105,8 @@ export const zh: TranslationResource = {
     selectAll: '全选',
     selected: '已选',
     new: '新品',
+    moveUp: '上移',
+    moveDown: '下移',
   },
 
   validation: {
@@ -145,6 +147,9 @@ export const zh: TranslationResource = {
     notifications: '通知',
     login: '登录',
     logout: '退出',
+    openMessages: '打开消息',
+    viewCart: '查看购物车',
+    openUserMenu: '打开用户菜单',
   },
 
   login: {
@@ -3574,6 +3579,8 @@ export const zh: TranslationResource = {
       addProducts: '添加商品',
       removeProduct: '从系列中移除',
       noProducts: '此系列暂无商品。',
+      imageAlt: '系列图片',
+      empty: '暂无系列。',
       addProductsHint: '从你的商品中选择添加到此系列。',
       selectProducts: '选择商品',
       selectProductsDesc: '选择要添加到此系列的商品。',

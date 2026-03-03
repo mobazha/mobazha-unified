@@ -11,6 +11,7 @@ import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
@@ -28,6 +29,7 @@ function SwipeableCartItem({
   onUpdateQuantity: (qty: number) => void;
   renderPrice: (amount: number, currency: string) => string;
 }) {
+  const { t } = useI18n();
   const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
@@ -112,7 +114,7 @@ function SwipeableCartItem({
                   onClick={() => onUpdateQuantity(item.quantity - 1)}
                   disabled={item.quantity <= 1}
                   className="w-11 h-11 flex items-center justify-center disabled:opacity-40 touch-feedback"
-                  aria-label="Decrease"
+                  aria-label={t('cart.decreaseQuantity')}
                 >
                   <Minus className="w-4 h-4" />
                 </button>
@@ -122,7 +124,7 @@ function SwipeableCartItem({
                 <button
                   onClick={() => onUpdateQuantity(item.quantity + 1)}
                   className="w-11 h-11 flex items-center justify-center touch-feedback"
-                  aria-label="Increase"
+                  aria-label={t('cart.increaseQuantity')}
                 >
                   <Plus className="w-4 h-4" />
                 </button>

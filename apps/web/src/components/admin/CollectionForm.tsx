@@ -288,7 +288,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
           <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
             <img
               src={getImageUrl(image)}
-              alt="Collection"
+              alt={t('admin.collections.imageAlt')}
               loading="lazy"
               className="w-full h-full object-cover"
             />
@@ -389,7 +389,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
                       className="w-5 h-5"
                       disabled={index === 0}
                       onClick={() => handleMoveProduct(index, 'up')}
-                      aria-label="Move up"
+                      aria-label={t('common.moveUp')}
                     >
                       <ChevronUp className="w-3 h-3" />
                     </Button>
@@ -399,7 +399,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
                       className="w-5 h-5"
                       disabled={index === displaySlugs.length - 1}
                       onClick={() => handleMoveProduct(index, 'down')}
-                      aria-label="Move down"
+                      aria-label={t('common.moveDown')}
                     >
                       <ChevronDown className="w-3 h-3" />
                     </Button>
