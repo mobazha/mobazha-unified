@@ -208,7 +208,7 @@ export default function NotificationsPage() {
                   key={tab.key}
                   onClick={() => setFilter(tab.key)}
                   className={cn(
-                    'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback',
+                    'px-4 py-2.5 min-h-[44px] rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback',
                     currentFilter === tab.key
                       ? 'bg-primary text-white'
                       : 'text-muted-foreground hover:bg-surface-hover'

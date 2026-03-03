@@ -90,7 +90,7 @@ export const mockProductService = {
 
   async getFeaturedProducts(): Promise<ProductListItem[]> {
     await delay();
-    return mockProducts.slice(0, 8).map(toListItem);
+    return mockProducts.slice(4, 12).map(toListItem);
   },
 
   async getStoreListings(_peerID: string): Promise<ProductListItem[]> {

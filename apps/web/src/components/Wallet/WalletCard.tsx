@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
+import { useI18n } from '@mobazha/core';
 
 export interface WalletBalance {
   currency: string;
@@ -21,6 +22,7 @@ export interface WalletCardProps {
 }
 
 export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onReceive, onClick }) => {
+  const { t } = useI18n();
   return (
     <Card
       className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
@@ -85,7 +87,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
                 d="M7 11l5-5m0 0l5 5m-5-5v12"
               />
             </svg>
-            <span>Send</span>
+            <span>{t('wallet.send')}</span>
           </button>
           <button
             onClick={e => {
@@ -107,7 +109,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ balance, onSend, onRecei
                 d="M17 13l-5 5m0 0l-5-5m5 5V6"
               />
             </svg>
-            <span>Receive</span>
+            <span>{t('wallet.receive')}</span>
           </button>
         </div>
       </div>

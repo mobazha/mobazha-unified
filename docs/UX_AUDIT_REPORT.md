@@ -211,20 +211,51 @@
 | 6   | P1-004 | P1     | 裸 Peer ID 暴露                    | 1h         | ✅ 已修复 — OrderCounterpartyCard 使用 formatUserName + 角色标签        |
 | 7   | P1-005 | P1     | 购物车 Clear All 无确认            | 0.5h       | ✅ 已修复 — ClearCartAlert 确认对话框（3 组件）                         |
 | 8   | P2-003 | P2     | 搜索结果被 BottomNav 遮挡          | 0.5h       | ✅ 已修复 — SearchMobile 添加 pb-24                                     |
-| 9   | P2-001 | P2     | 首页内容重复                       | 2h         | ⏳ 待修复                                                               |
+| 9   | P2-001 | P2     | 首页内容重复                       | 2h         | ✅ 已修复 — mock data slice 去重 + placeholder 空数组回退               |
 | 10  | P1-006 | P1     | 零评分显示策略                     | 1h         | ✅ 已修复 — "New" 标签替代空星 + Collection 页 props bug 修复           |
 
 **额外修复**：
 
 - P2-005: `order.additionalInfo` 字段名暴露 → ✅ 已添加 i18n key（en.ts + zh.ts）
+- P1-N1: 主题名称硬编码中文 → ✅ ThemeSwitcher + GeneralSettings 改用 i18n `t()` 查找
 
 ---
 
-## 九、下一步
+## 九、第二轮 AI 审查发现（Settings/Admin/Wallet/Notifications/Order Detail）
+
+| #   | ID     | 优先级 | 页面          | 问题                                     | 状态                                                        |
+| --- | ------ | ------ | ------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| 1   | P1-N1  | P1     | Settings      | 主题名称硬编码中文，非英语用户看到中文   | ✅ 已修复                                                   |
+| 2   | P1-N2  | P1     | Notifications | 通知触摸目标偏小（< 44px），移动端难点击 | ✅ 已修复 — Tab min-h 44px + 卡片 min-h 56px + padding 增强 |
+| 3   | P1-N3  | P1     | Order Detail  | 订单状态无进度时间线可视化               | ✅ 非问题 — OrderTimeline.tsx 已存在（368 行）              |
+| 4   | P1-N4  | P1     | Wallet        | 余额展示缺法币等价换算                   | ✅ 非问题 — WalletCard 已有 balanceUSD 显示                 |
+| 5   | P2-N1  | P2     | Settings      | 设置页缺搜索/筛选功能                    | ⏳ 待修复                                                   |
+| 6   | P2-N2  | P2     | Notifications | 通知列表无分组（按天/按类型）            | ⏳ 待修复                                                   |
+| 7   | P2-N3  | P2     | Notifications | 无空状态设计（零通知时显示空白）         | ⏳ 待修复                                                   |
+| 8   | P2-N4  | P2     | Order Detail  | 订单操作按钮缺确认对话框                 | ⏳ 待修复                                                   |
+| 9   | P2-N5  | P2     | Admin         | Admin 页面缺面包屑导航                   | ⏳ 待修复                                                   |
+| 10  | P2-N6  | P2     | Wallet        | 交易历史无筛选/搜索                      | ⏳ 待修复                                                   |
+| 11  | P2-N7  | P2     | Settings      | 部分设置项缺说明文案                     | ⏳ 待修复                                                   |
+| 12  | P2-N8  | P2     | Notifications | 通知未读/已读视觉区分不明显              | ⏳ 待修复                                                   |
+| 13  | P2-N9  | P2     | Order Detail  | 对方信息卡片缺头像                       | ⏳ 待修复                                                   |
+| 14  | P2-N10 | P2     | Admin         | 仪表盘缺数据可视化图表                   | ⏳ 待修复                                                   |
+| 15  | P2-N11 | P2     | Wallet        | 发送/接收按钮缺 loading 状态             | ⏳ 待修复                                                   |
+| 16  | P2-N12 | P2     | Settings      | 货币选择器缺搜索功能                     | ⏳ 待修复                                                   |
+| 17  | P2-N13 | P2     | Notifications | 下拉刷新未实现                           | ⏳ 待修复                                                   |
+| 18  | P3-N1  | P3     | Settings      | 设置项间距不一致                         | ⏳ 待修复                                                   |
+| 19  | P3-N2  | P3     | Notifications | 通知文案可读性（过长截断）               | ⏳ 待修复                                                   |
+| 20  | P3-N3  | P3     | Order Detail  | 金额显示精度不统一                       | ⏳ 待修复                                                   |
+| 21  | P3-N4  | P3     | Admin         | 移动端 Admin 响应式布局需优化            | ⏳ 待修复                                                   |
+| 22  | P3-N5  | P3     | Wallet        | 地址复制缺 toast 反馈                    | ⏳ 待修复                                                   |
+| 23  | P3-N6  | P3     | Settings      | 深色模式下部分卡片边框对比度低           | ⏳ 待修复                                                   |
+
+---
+
+## 十、下一步
 
 1. **P0-002（Casdoor Logo）**：在 Casdoor 管理后台修复 Application 的 logo URL 和 displayName
 2. 创建 demo-journey specs 覆盖更多状态（空购物车、争议订单、退款等）
-3. 运行 journey 截图 + 第二轮 AI 审查（覆盖完整卖家开店、买家售后流程）
+3. 运行 journey 截图 + 第三轮 AI 审查（覆盖完整卖家开店、买家售后流程）
 4. 独立站专项审查（买家 OAuth 流程、政策页面、卖家登录体验）
 5. 完成其他语言的 Escrow → Buyer Protection 术语替换（ja/fr/de/es/ko）
-6. **P2-001（首页内容重复）**：调查 Home 页面组件渲染逻辑
+6. 第二轮 P1 问题修复（P1-N2 通知触摸目标、P1-N3 订单时间线、P1-N4 法币等价）

@@ -157,7 +157,7 @@ export const GeneralSettingsContent: React.FC = () => {
           <Card className="p-4 md:p-6">
             <SettingRow
               label={t('settingsExtended.themeStyle')}
-              value={`${THEME_INFO[theme]?.icon || '🌊'} ${THEME_INFO[theme]?.displayName || 'Classic'} · ${mode === 'system' ? t('settings.system') : isDark ? t('settingsExtended.dark') : t('settingsExtended.light')}`}
+              value={`${THEME_INFO[theme]?.icon || '🌊'} ${t(`theme.${theme}` as Parameters<typeof t>[0]) || THEME_INFO[theme]?.displayName || 'Classic'} · ${mode === 'system' ? t('settings.system') : isDark ? t('settingsExtended.dark') : t('settingsExtended.light')}`}
               onClick={() => setShowThemeModal(true)}
             />
           </Card>
