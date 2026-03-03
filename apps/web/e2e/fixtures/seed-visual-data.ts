@@ -85,6 +85,35 @@ async function tryGetPeerID(request: APIRequestContext): Promise<string> {
   }
 }
 
+async function ensureShippingProfile(
+  request: APIRequestContext,
+  headers: Record<string, string>
+): Promise<void> {
+  try {
+    const listResp = await request.get(`${BACKEND_URL}/v1/shipping/profiles`, { headers });
+    if (listResp.ok()) {
+      const body = await listResp.json();
+      const profiles = body?.data || [];
+      if (profiles.length > 0) {
+        console.log(`[seed] Shipping profile already exists (count=${profiles.length})`);
+        return;
+      }
+    }
+  } catch {
+    // fall through to create
+  }
+
+  const resp = await request.post(`${BACKEND_URL}/v1/shipping/profiles`, {
+    headers,
+    data: { name: 'Standard Shipping', isDefault: true },
+  });
+  if (resp.ok()) {
+    console.log('[seed] Created default shipping profile');
+  } else {
+    console.warn(`[seed] Shipping profile creation failed: status=${resp.status()}`);
+  }
+}
+
 async function tryCreateListings(request: APIRequestContext): Promise<string[]> {
   try {
     const token = await getCasdoorToken(request);
@@ -92,6 +121,8 @@ async function tryCreateListings(request: APIRequestContext): Promise<string[]> 
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     };
+
+    await ensureShippingProfile(request, headers);
 
     const listingPayloads = [
       {
@@ -116,15 +147,6 @@ async function tryCreateListings(request: APIRequestContext): Promise<string[]> 
           images: [MOCK_IMAGES[0]],
           skus: [{ productID: '1', quantity: '100', price: '8999' }],
         },
-        shippingOptions: [
-          {
-            name: 'Standard Shipping',
-            type: 'FIXED_PRICE',
-            currency: 'USD',
-            regions: ['ALL'],
-            services: [{ name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '599' }],
-          },
-        ],
       },
       {
         metadata: {
@@ -158,9 +180,14 @@ async function tryCreateListings(request: APIRequestContext): Promise<string[]> 
         });
         const body = await resp.json();
         const slug = body?.data?.slug || body?.slug;
-        if (slug) slugs.push(slug);
+        if (slug) {
+          slugs.push(slug);
+          console.log(`[seed] Created listing: ${slug}`);
+        } else {
+          console.warn(`[seed] Listing POST returned no slug, status=${resp.status()}`);
+        }
       } catch (e) {
-        console.warn('Listing creation failed:', e);
+        console.warn('[seed] Listing creation failed:', (e as Error).message?.slice(0, 200));
       }
     }
     return slugs;
@@ -177,9 +204,14 @@ export async function seedVisualTestData(request: APIRequestContext): Promise<Se
   const peerID = await tryGetPeerID(request);
   const slugs = await tryCreateListings(request);
 
+  const fallbackSlugs = [
+    'wireless-noise-cancelling-headphones',
+    'professional-logo-design-package',
+  ];
+
   const listings: SeededVisualData['listings'] = [
     {
-      slug: slugs[0] || 'wireless-noise-cancelling-headphones',
+      slug: slugs[0] || fallbackSlugs[0],
       title: 'Wireless Noise-Cancelling Headphones',
       price: '8999',
       priceCurrency: 'USD',
@@ -187,7 +219,7 @@ export async function seedVisualTestData(request: APIRequestContext): Promise<Se
       image: MOCK_IMAGES[0],
     },
     {
-      slug: slugs[1] || 'professional-logo-design-package',
+      slug: slugs[1] || fallbackSlugs[1],
       title: 'Professional Logo Design Package',
       price: '14900',
       priceCurrency: 'USD',
@@ -195,6 +227,17 @@ export async function seedVisualTestData(request: APIRequestContext): Promise<Se
       image: MOCK_IMAGES[1],
     },
   ];
+
+  const realCount = slugs.length;
+  const fallbackCount = listings.length - realCount;
+  if (fallbackCount > 0) {
+    console.warn(
+      `[seed] WARNING: ${fallbackCount}/${listings.length} listings using fallback slugs (API creation failed)`
+    );
+  }
+  console.log(
+    `[seed] peerID=${peerID.substring(0, 16)}..., real=${realCount}, fallback=${fallbackCount}`
+  );
 
   return { listings, peerID };
 }
