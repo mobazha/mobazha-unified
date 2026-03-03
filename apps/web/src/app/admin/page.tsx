@@ -35,6 +35,7 @@ import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/Onbo
 const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
 
 function useDashboardData() {
+  const { t } = useI18n();
   const { profile } = useUserStore();
   const { formatPrice, localCurrency, convertToLocal } = useCurrency();
 
@@ -58,7 +59,9 @@ function useDashboardData() {
         if (!cancelled) setProducts(data);
       } catch (err) {
         if (!cancelled)
-          setProductsError(err instanceof Error ? err.message : 'Failed to load products');
+          setProductsError(
+            err instanceof Error ? err.message : t('admin.dashboard.failedToLoadProducts')
+          );
       } finally {
         if (!cancelled) setProductsLoading(false);
       }
@@ -180,7 +183,7 @@ export default function AdminDashboardPage() {
   const hasProducts = products.length > 0;
   const hasOrders = salesOrders.length > 0;
   const isEmpty = !isDataLoading && !hasProducts && !hasOrders;
-  const displayName = profile?.name || 'Seller';
+  const displayName = profile?.name || t('common.seller');
 
   const cameFromOnboarding = searchParams.get('onboarding') === 'complete';
 

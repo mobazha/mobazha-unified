@@ -223,39 +223,56 @@
 
 ## 九、第二轮 AI 审查发现（Settings/Admin/Wallet/Notifications/Order Detail）
 
-| #   | ID     | 优先级 | 页面          | 问题                                     | 状态                                                        |
-| --- | ------ | ------ | ------------- | ---------------------------------------- | ----------------------------------------------------------- |
-| 1   | P1-N1  | P1     | Settings      | 主题名称硬编码中文，非英语用户看到中文   | ✅ 已修复                                                   |
-| 2   | P1-N2  | P1     | Notifications | 通知触摸目标偏小（< 44px），移动端难点击 | ✅ 已修复 — Tab min-h 44px + 卡片 min-h 56px + padding 增强 |
-| 3   | P1-N3  | P1     | Order Detail  | 订单状态无进度时间线可视化               | ✅ 非问题 — OrderTimeline.tsx 已存在（368 行）              |
-| 4   | P1-N4  | P1     | Wallet        | 余额展示缺法币等价换算                   | ✅ 非问题 — WalletCard 已有 balanceUSD 显示                 |
-| 5   | P2-N1  | P2     | Settings      | 设置页缺搜索/筛选功能                    | ⏳ 待修复                                                   |
-| 6   | P2-N2  | P2     | Notifications | 通知列表无分组（按天/按类型）            | ⏳ 待修复                                                   |
-| 7   | P2-N3  | P2     | Notifications | 无空状态设计（零通知时显示空白）         | ⏳ 待修复                                                   |
-| 8   | P2-N4  | P2     | Order Detail  | 订单操作按钮缺确认对话框                 | ⏳ 待修复                                                   |
-| 9   | P2-N5  | P2     | Admin         | Admin 页面缺面包屑导航                   | ⏳ 待修复                                                   |
-| 10  | P2-N6  | P2     | Wallet        | 交易历史无筛选/搜索                      | ⏳ 待修复                                                   |
-| 11  | P2-N7  | P2     | Settings      | 部分设置项缺说明文案                     | ⏳ 待修复                                                   |
-| 12  | P2-N8  | P2     | Notifications | 通知未读/已读视觉区分不明显              | ⏳ 待修复                                                   |
-| 13  | P2-N9  | P2     | Order Detail  | 对方信息卡片缺头像                       | ⏳ 待修复                                                   |
-| 14  | P2-N10 | P2     | Admin         | 仪表盘缺数据可视化图表                   | ⏳ 待修复                                                   |
-| 15  | P2-N11 | P2     | Wallet        | 发送/接收按钮缺 loading 状态             | ⏳ 待修复                                                   |
-| 16  | P2-N12 | P2     | Settings      | 货币选择器缺搜索功能                     | ⏳ 待修复                                                   |
-| 17  | P2-N13 | P2     | Notifications | 下拉刷新未实现                           | ⏳ 待修复                                                   |
-| 18  | P3-N1  | P3     | Settings      | 设置项间距不一致                         | ⏳ 待修复                                                   |
-| 19  | P3-N2  | P3     | Notifications | 通知文案可读性（过长截断）               | ⏳ 待修复                                                   |
-| 20  | P3-N3  | P3     | Order Detail  | 金额显示精度不统一                       | ⏳ 待修复                                                   |
-| 21  | P3-N4  | P3     | Admin         | 移动端 Admin 响应式布局需优化            | ⏳ 待修复                                                   |
-| 22  | P3-N5  | P3     | Wallet        | 地址复制缺 toast 反馈                    | ⏳ 待修复                                                   |
-| 23  | P3-N6  | P3     | Settings      | 深色模式下部分卡片边框对比度低           | ⏳ 待修复                                                   |
+| #   | ID     | 优先级 | 页面          | 问题                                     | 状态                                                           |
+| --- | ------ | ------ | ------------- | ---------------------------------------- | -------------------------------------------------------------- |
+| 1   | P1-N1  | P1     | Settings      | 主题名称硬编码中文，非英语用户看到中文   | ✅ 已修复                                                      |
+| 2   | P1-N2  | P1     | Notifications | 通知触摸目标偏小（< 44px），移动端难点击 | ✅ 已修复 — Tab min-h 44px + 卡片 min-h 56px + padding 增强    |
+| 3   | P1-N3  | P1     | Order Detail  | 订单状态无进度时间线可视化               | ✅ 非问题 — OrderTimeline.tsx 已存在（368 行）                 |
+| 4   | P1-N4  | P1     | Wallet        | 余额展示缺法币等价换算                   | ✅ 非问题 — WalletCard 已有 balanceUSD 显示                    |
+| 5   | P2-N1  | P2     | Settings      | 设置页缺搜索/筛选功能                    | ⏳ 待修复                                                      |
+| 6   | P2-N2  | P2     | Notifications | 通知列表无分组（按天/按类型）            | ⏳ 待修复                                                      |
+| 7   | P2-N3  | P2     | Notifications | 无空状态设计（零通知时显示空白）         | ✅ 非问题 — 空状态已实现（Bell 图标 + 分类描述文案）           |
+| 8   | P2-N4  | P2     | Order Detail  | 订单操作按钮缺确认对话框                 | ⏳ 待修复                                                      |
+| 9   | P2-N5  | P2     | Admin         | Admin 页面缺面包屑导航                   | ⏳ 待修复                                                      |
+| 10  | P2-N6  | P2     | Wallet        | 交易历史无筛选/搜索                      | ⏳ 待修复                                                      |
+| 11  | P2-N7  | P2     | Settings      | 部分设置项缺说明文案                     | ⏳ 待修复                                                      |
+| 12  | P2-N8  | P2     | Notifications | 通知未读/已读视觉区分不明显              | ✅ 非问题 — 未读有 bg-primary/5 + border-l-4 + ring-1 视觉提示 |
+| 13  | P2-N9  | P2     | Order Detail  | 对方信息卡片缺头像                       | ⏳ 待修复                                                      |
+| 14  | P2-N10 | P2     | Admin         | 仪表盘缺数据可视化图表                   | ⏳ 待修复                                                      |
+| 15  | P2-N11 | P2     | Wallet        | 发送/接收按钮缺 loading 状态             | ⏳ 待修复                                                      |
+| 16  | P2-N12 | P2     | Settings      | 货币选择器缺搜索功能                     | ⏳ 待修复                                                      |
+| 17  | P2-N13 | P2     | Notifications | 下拉刷新未实现                           | ⏳ 待修复                                                      |
+| 18  | P3-N1  | P3     | Settings      | 设置项间距不一致                         | ⏳ 待修复                                                      |
+| 19  | P3-N2  | P3     | Notifications | 通知文案可读性（过长截断）               | ⏳ 待修复                                                      |
+| 20  | P3-N3  | P3     | Order Detail  | 金额显示精度不统一                       | ⏳ 待修复                                                      |
+| 21  | P3-N4  | P3     | Admin         | 移动端 Admin 响应式布局需优化            | ⏳ 待修复                                                      |
+| 22  | P3-N5  | P3     | Wallet        | 地址复制缺 toast 反馈                    | ⏳ 待修复                                                      |
+| 23  | P3-N6  | P3     | Settings      | 深色模式下部分卡片边框对比度低           | ⏳ 待修复                                                      |
 
 ---
 
-## 十、下一步
+## 十、第三轮 AI 审查发现（Checkout/Admin/Settings 深度扫描）
+
+| #   | ID    | 优先级 | 页面     | 问题                                              | 状态                                                    |
+| --- | ----- | ------ | -------- | ------------------------------------------------- | ------------------------------------------------------- |
+| 1   | P1-C1 | P1     | Checkout | 返回按钮 aria-label 硬编码英文 "Go back"          | ✅ 已修复 — 改用 t('common.back') + 增大触摸区域        |
+| 2   | P1-C2 | P1     | Checkout | 数量按钮 w-8 h-8（32px）低于 44px 且缺 aria-label | ✅ 已修复 — 改为 w-9 h-9 + 添加 aria-label              |
+| 3   | P1-C3 | P1     | Checkout | DiscountInput 移除按钮触摸区域过小                | ✅ 已修复 — 增大 padding 和最小尺寸                     |
+| 4   | P1-A1 | P1     | Admin    | 仪表盘 "Seller" fallback 和错误信息硬编码英文     | ✅ 已修复 — 改用 t('common.seller') 和 i18n 错误信息    |
+| 5   | P1-W1 | P1     | Wallet   | WalletCard Send/Receive 按钮硬编码英文            | ✅ 已修复 — 改用 t('wallet.send') / t('wallet.receive') |
+| 6   | P1-W2 | P1     | Wallet   | WalletListItem Send/Receive 按钮硬编码英文        | ✅ 已修复 — 同上                                        |
+| 7   | P2-A1 | P2     | Admin    | PaymentProvidersSection 硬编码 Provider 描述      | ⏳ 待修复                                               |
+| 8   | P2-S1 | P2     | Settings | ProfileSettings LINK_TYPES 标签硬编码             | ⏳ 待修复                                               |
+| 9   | P2-S2 | P2     | Settings | StoreSettings acceptedCoins 名称硬编码            | ⏳ 待修复                                               |
+| 10  | P2-C1 | P2     | Checkout | layout.tsx metadata title/description 硬编码英文  | ⏳ 待修复                                               |
+| 11  | P2-C2 | P2     | Checkout | CheckoutProgressBar 缺 role="progressbar"         | ⏳ 待修复                                               |
+| 12  | P3-A1 | P3     | Admin    | Admin 页面缺面包屑导航（大功能）                  | ⏳ 待规划                                               |
+
+## 十一、下一步
 
 1. **P0-002（Casdoor Logo）**：在 Casdoor 管理后台修复 Application 的 logo URL 和 displayName
 2. 创建 demo-journey specs 覆盖更多状态（空购物车、争议订单、退款等）
-3. 运行 journey 截图 + 第三轮 AI 审查（覆盖完整卖家开店、买家售后流程）
+3. 运行 journey 截图 + 第四轮 AI 审查（覆盖完整卖家开店、买家售后流程）
 4. 独立站专项审查（买家 OAuth 流程、政策页面、卖家登录体验）
 5. 完成其他语言的 Escrow → Buyer Protection 术语替换（ja/fr/de/es/ko）
-6. 第二轮 P1 问题修复（P1-N2 通知触摸目标、P1-N3 订单时间线、P1-N4 法币等价）
+6. P2 级别 i18n 修复（Admin PaymentProviders、Settings Profile/Store）

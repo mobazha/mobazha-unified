@@ -101,7 +101,7 @@ export function DiscountInput({
                 </span>
                 <button
                   onClick={() => onRemoveDiscount(d.id)}
-                  className="p-1 hover:bg-destructive/10 rounded transition-colors"
+                  className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center hover:bg-destructive/10 rounded transition-colors"
                   aria-label={t('checkout.discount.remove')}
                   data-testid="discount-remove-btn"
                 >
