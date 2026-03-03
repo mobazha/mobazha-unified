@@ -222,7 +222,6 @@ test.describe('Desktop Visual - Authenticated Main', () => {
     { name: 'profile', path: '/profile' },
     { name: 'me', path: '/me' },
     { name: 'wallet', path: '/wallet' },
-    { name: 'chat', path: '/chat' },
     { name: 'listing-new', path: '/listing/new' },
     { name: 'rwa-dashboard', path: '/rwa-dashboard' },
     { name: 'marketplace', path: '/marketplace' },

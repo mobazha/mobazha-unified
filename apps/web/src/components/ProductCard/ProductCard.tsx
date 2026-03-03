@@ -456,7 +456,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             )}
           </div>
-          {/* 评分显示：有评价才显示评分，否则显示空心星 */}
           <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
             {reviewCount !== undefined && reviewCount > 0 ? (
               <>
@@ -464,7 +463,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="text-muted-foreground">{Number(rating || 0).toFixed(1)}</span>
               </>
             ) : (
-              <span className="text-muted-foreground/50">☆</span>
+              <span className="text-[10px] text-primary/70 font-medium px-1.5 py-0.5 bg-primary/10 rounded-full">
+                {t('common.new')}
+              </span>
             )}
           </div>
         </div>

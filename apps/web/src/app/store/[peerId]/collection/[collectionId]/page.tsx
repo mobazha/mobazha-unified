@@ -135,8 +135,8 @@ export default function StoreCollectionPage() {
                   contractType={product.contractType as ProductContractType}
                   rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
                   peerID={peerId}
-                  averageRating={product.averageRating}
-                  ratingCount={product.ratingCount}
+                  rating={product.averageRating}
+                  reviewCount={product.ratingCount}
                   onClick={() => openProduct(product.slug, peerId)}
                 />
               ))}

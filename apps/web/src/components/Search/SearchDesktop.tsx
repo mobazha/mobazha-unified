@@ -68,12 +68,18 @@ export function SearchDesktop() {
                 <span className="text-muted-foreground">
                   {user.listingCount} {search.t('search.listings')}
                 </span>
-                <HStack gap="xs" align="center">
-                  <span className="text-warning">★</span>
-                  <span className="text-muted-foreground">
-                    {user.rating.toFixed(1)} ({user.reviewCount})
+                {user.reviewCount > 0 ? (
+                  <HStack gap="xs" align="center">
+                    <span className="text-warning">★</span>
+                    <span className="text-muted-foreground">
+                      {user.rating.toFixed(1)} ({user.reviewCount})
+                    </span>
+                  </HStack>
+                ) : (
+                  <span className="text-xs text-primary/70 font-medium px-1.5 py-0.5 bg-primary/10 rounded-full">
+                    {search.t('common.new')}
                   </span>
-                </HStack>
+                )}
               </HStack>
             </div>
           </HStack>

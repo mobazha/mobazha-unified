@@ -107,6 +107,7 @@ export const en: TranslationResource = {
     selected: 'selected',
     user: 'User',
     event: 'Event',
+    new: 'New',
   },
 
   share: {
@@ -385,6 +386,9 @@ export const en: TranslationResource = {
     startShopping: 'Start Shopping',
     clear: 'Clear',
     p2pNotice: 'P2P transactions require separate checkout for each vendor',
+    clearConfirmTitle: 'Clear Cart',
+    clearConfirmMessage:
+      'Are you sure you want to remove all items from your cart? This cannot be undone.',
   },
 
   checkout: {
@@ -589,6 +593,7 @@ export const en: TranslationResource = {
     shippingService: 'Shipping Service',
     memo: 'Memo',
     additionalContact: 'Additional Contact Information',
+    additionalInfo: 'Additional Information',
     coupons: 'Coupons',
     unknownItem: 'Unknown Item',
     // Product info
@@ -638,7 +643,7 @@ export const en: TranslationResource = {
     openDispute: 'Open Dispute',
     disputeTimeoutHint:
       'This order can be disputed for {{blocksRemaining}} blocks or approximately {{timeRemaining}}.',
-    disputeHelpTip: 'After this time, the escrow will be released to the seller.',
+    disputeHelpTip: 'After this time, the funds will be released to the seller.',
     markAsShipped: 'Mark as Shipped',
     refundOrder: 'Refund Order',
     shipOrder: 'Ship Order',
@@ -676,7 +681,7 @@ export const en: TranslationResource = {
     orderNotes: 'Order Notes',
     // Payment card
     paid: 'Paid',
-    fundsInEscrow: 'Funds held in escrow until order completion.',
+    fundsInEscrow: 'Funds held securely under Buyer Protection until order completion.',
     directPaymentDesc: 'Direct payment - funds sent directly to seller.',
     // Dispute
     disputeOpen: 'Dispute Open',
@@ -894,7 +899,7 @@ export const en: TranslationResource = {
     // Dispute modal
     dispute: {
       escrowHint:
-        'Funds are being held in escrow for approximately {{time}} or until the buyer completes the order. If you have any questions about the order, you can open a dispute with the moderator.',
+        'Funds are being held securely for approximately {{time}} or until the buyer completes the order. If you have any questions about the order, you can open a dispute with the moderator.',
       title: 'Open Dispute',
       description:
         'Please describe the issue with your order. The moderator will review your case and help resolve the dispute.',
@@ -985,14 +990,14 @@ export const en: TranslationResource = {
     payment: {
       title: 'Payment Details',
       method: 'Method',
-      moderated: 'Moderated (Escrow)',
+      moderated: 'Moderated (Buyer Protection)',
       direct: 'Direct',
       addressRequest: 'Address Request',
       coin: 'Payment Coin',
       amount: 'Amount',
-      escrowPeriod: 'Escrow Period',
-      escrowExpired: 'Escrow period has expired. Funds can now be claimed.',
-      escrowNote: 'Funds are held in escrow until the order is completed or disputed.',
+      escrowPeriod: 'Protection Period',
+      escrowExpired: 'Protection period has expired. Funds can now be claimed.',
+      escrowNote: 'Funds are held securely until the order is completed or disputed.',
       escrowAddress: 'Escrow Address',
       paymentAddress: 'Payment Address',
       transactions: 'Transactions',
@@ -1549,12 +1554,12 @@ export const en: TranslationResource = {
     termsUse: 'Acceptable Use',
     termsUseDesc:
       'You agree to use Mobazha in compliance with all applicable laws. Prohibited items and activities are not allowed on the platform.',
-    termsEscrow: 'Escrow & Payments',
+    termsEscrow: 'Payments & Buyer Protection',
     termsEscrowDesc:
-      'All cryptocurrency payments are processed through smart contract escrow. Funds are held securely until the buyer confirms receipt or a dispute is resolved.',
+      'All cryptocurrency payments are processed with Buyer Protection. Funds are held securely until the buyer confirms receipt or a dispute is resolved.',
     termsDisputes: 'Dispute Resolution',
     termsDisputesDesc:
-      'Disputes are resolved by community moderators. Their decisions are final and binding within the escrow system.',
+      'Disputes are resolved by community moderators. Their decisions are final and binding.',
     termsLiability: 'Limitation of Liability',
     termsLiabilityDesc:
       'Mobazha is a decentralized platform and does not control transactions between buyers and sellers. Use the platform at your own risk.',

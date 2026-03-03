@@ -201,7 +201,7 @@ export function SearchMobile() {
           {search.activeTab === 'listings' && <SortCategoryBar search={search} />}
 
           {/* Product Grid / User List */}
-          <div className="px-3 py-3">
+          <div className="px-3 py-3 pb-24">
             {search.activeTab === 'listings' ? (
               <ProductResults search={search} />
             ) : (
@@ -351,10 +351,16 @@ function UserResults({ search }: { search: ReturnType<typeof useSearch> }) {
                   <span>
                     {user.listingCount} {search.t('search.listings')}
                   </span>
-                  <span className="flex items-center gap-0.5">
-                    <span className="text-warning">★</span>
-                    {user.rating.toFixed(1)} ({user.reviewCount})
-                  </span>
+                  {user.reviewCount > 0 ? (
+                    <span className="flex items-center gap-0.5">
+                      <span className="text-warning">★</span>
+                      {user.rating.toFixed(1)} ({user.reviewCount})
+                    </span>
+                  ) : (
+                    <span className="text-primary/70 font-medium px-1.5 py-0.5 bg-primary/10 rounded-full">
+                      {search.t('common.new')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -9,6 +9,7 @@ import { HStack, VStack } from '@/components/layouts';
 import { useCartStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ProductImageNative } from '@/components/ui/product-image';
+import { ClearCartAlert } from '@/components/Cart/ClearCartAlert';
 
 interface CartDrawerProps {
   open: boolean;
@@ -66,14 +67,18 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           <SheetTitle className="flex items-center justify-between pr-6">
             <span>{t('nav.cart')}</span>
             {items.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-destructive"
-                onClick={clearCart}
-              >
-                {t('common.clearAll')}
-              </Button>
+              <ClearCartAlert onConfirm={clearCart}>
+                {openDialog => (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-destructive"
+                    onClick={openDialog}
+                  >
+                    {t('common.clearAll')}
+                  </Button>
+                )}
+              </ClearCartAlert>
             )}
           </SheetTitle>
         </SheetHeader>

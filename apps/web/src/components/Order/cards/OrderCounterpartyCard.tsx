@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { HStack, VStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n, type DisplayOrder } from '@mobazha/core';
+import { formatUserName } from '@mobazha/core/utils/identity';
 
 export interface OrderCounterpartyCardProps {
   displayOrder: DisplayOrder;
@@ -22,7 +23,10 @@ export const OrderCounterpartyCard = memo(function OrderCounterpartyCard({
 
   if (variant === 'compact') {
     const other = order.userRole === 'buyer' ? order.vendor : order.buyer;
+    const roleLabel = order.userRole === 'buyer' ? t('order.seller') : t('order.buyer');
     if (!other?.peerID) return null;
+
+    const displayName = formatUserName(other, { fallback: roleLabel });
 
     return (
       <Link
@@ -31,19 +35,13 @@ export const OrderCounterpartyCard = memo(function OrderCounterpartyCard({
       >
         <Avatar
           src={other.avatar}
-          name={other.name}
+          name={displayName}
           size="md"
           className="w-9 h-9 ring-1 ring-border/50"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{other.name}</p>
-          {other.peerID && (
-            <p className="text-xs text-muted-foreground truncate font-mono">
-              {other.peerID.length > 16
-                ? `${other.peerID.slice(0, 6)}…${other.peerID.slice(-4)}`
-                : other.peerID}
-            </p>
-          )}
+          <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+          <p className="text-xs text-muted-foreground">{roleLabel}</p>
         </div>
       </Link>
     );
@@ -53,26 +51,24 @@ export const OrderCounterpartyCard = memo(function OrderCounterpartyCard({
     <div className={`grid grid-cols-2 sm:grid-cols-3 gap-4 ${className ?? ''}`}>
       <PartyCard
         label={t('order.seller')}
-        name={order.vendor?.name}
+        name={formatUserName(order.vendor, { fallback: t('order.seller') })}
         avatar={order.vendor?.avatar}
         location={order.vendor?.location}
-        peerID={order.vendor?.peerID}
         href={order.vendor?.peerID ? `/store/${order.vendor.peerID}` : '#'}
       />
       {order.buyer && (
         <PartyCard
           label={t('order.buyer')}
-          name={order.buyer.name}
+          name={formatUserName(order.buyer, { fallback: t('order.buyer') })}
           avatar={order.buyer.avatar}
           location={order.buyer.location}
-          peerID={order.buyer.peerID}
           href={order.buyer.peerID ? `/store/${order.buyer.peerID}` : '#'}
         />
       )}
       {order.moderator && (
         <PartyCard
           label={t('order.moderator')}
-          name={order.moderator.name}
+          name={formatUserName(order.moderator, { fallback: t('order.moderator') })}
           avatar={order.moderator.avatar}
           location={order.moderator.location}
           href={`/moderators/${order.moderator.id}`}
@@ -92,7 +88,6 @@ function PartyCard({
   name,
   avatar,
   location,
-  peerID: _peerID,
   href,
   extra,
 }: {
@@ -100,7 +95,6 @@ function PartyCard({
   name?: string;
   avatar?: string;
   location?: string;
-  peerID?: string;
   href: string;
   extra?: React.ReactNode;
 }) {
