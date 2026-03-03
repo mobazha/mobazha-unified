@@ -201,18 +201,18 @@
 
 ## 八、Top 10 优先修复清单
 
-| #   | ID     | 优先级 | 问题                               | 工作量预估 | 状态                                                             |
-| --- | ------ | ------ | ---------------------------------- | ---------- | ---------------------------------------------------------------- |
-| 1   | P0-001 | P0     | 聊天页面 404 崩溃                  | 0.5h       | ✅ 已修复 — E2E 测试移除无效 /chat 路由                          |
-| 2   | P0-002 | P0     | 登录页 Logo 破损                   | 0.5h       | ⏳ 待修复（Casdoor 配置问题）                                    |
-| 3   | P1-001 | P1     | 结账页商品重复显示                 | 2h         | ⏳ 待修复                                                        |
-| 4   | P1-002 | P1     | Shipping 选项重复                  | 2h         | ⏳ 待修复                                                        |
-| 5   | P1-003 | P1     | Escrow → Buyer Protection 术语统一 | 1h         | ✅ 已修复 — en.ts + zh.ts 全量替换                               |
-| 6   | P1-004 | P1     | 裸 Peer ID 暴露                    | 1h         | ✅ 已修复 — OrderCounterpartyCard 使用 formatUserName + 角色标签 |
-| 7   | P1-005 | P1     | 购物车 Clear All 无确认            | 0.5h       | ✅ 已修复 — ClearCartAlert 确认对话框（3 组件）                  |
-| 8   | P2-003 | P2     | 搜索结果被 BottomNav 遮挡          | 0.5h       | ✅ 已修复 — SearchMobile 添加 pb-24                              |
-| 9   | P2-001 | P2     | 首页内容重复                       | 2h         | ⏳ 待修复                                                        |
-| 10  | P1-006 | P1     | 零评分显示策略                     | 1h         | ✅ 已修复 — "New" 标签替代空星 + Collection 页 props bug 修复    |
+| #   | ID     | 优先级 | 问题                               | 工作量预估 | 状态                                                                    |
+| --- | ------ | ------ | ---------------------------------- | ---------- | ----------------------------------------------------------------------- |
+| 1   | P0-001 | P0     | 聊天页面 404 崩溃                  | 0.5h       | ✅ 已修复 — E2E 测试移除无效 /chat 路由                                 |
+| 2   | P0-002 | P0     | 登录页 Logo 破损                   | 0.5h       | ⚠️ Casdoor 后台配置问题（非代码 bug），需在 Casdoor admin 修复 logo URL |
+| 3   | P1-001 | P1     | 结账页商品重复显示                 | 2h         | ✅ 已修复 — mock data 按 slug 返回不同商品（非生产 bug）                |
+| 4   | P1-002 | P1     | Shipping 选项重复                  | 2h         | ✅ 已修复 — 同 P1-001，mock data 修复后自动消失                         |
+| 5   | P1-003 | P1     | Escrow → Buyer Protection 术语统一 | 1h         | ✅ 已修复 — en.ts + zh.ts 全量替换                                      |
+| 6   | P1-004 | P1     | 裸 Peer ID 暴露                    | 1h         | ✅ 已修复 — OrderCounterpartyCard 使用 formatUserName + 角色标签        |
+| 7   | P1-005 | P1     | 购物车 Clear All 无确认            | 0.5h       | ✅ 已修复 — ClearCartAlert 确认对话框（3 组件）                         |
+| 8   | P2-003 | P2     | 搜索结果被 BottomNav 遮挡          | 0.5h       | ✅ 已修复 — SearchMobile 添加 pb-24                                     |
+| 9   | P2-001 | P2     | 首页内容重复                       | 2h         | ⏳ 待修复                                                               |
+| 10  | P1-006 | P1     | 零评分显示策略                     | 1h         | ✅ 已修复 — "New" 标签替代空星 + Collection 页 props bug 修复           |
 
 **额外修复**：
 
@@ -222,8 +222,9 @@
 
 ## 九、下一步
 
-1. **剩余 P0/P1 修复**：P0-002（Casdoor Logo）、P1-001（结账重复）、P1-002（Shipping 重复）
+1. **P0-002（Casdoor Logo）**：在 Casdoor 管理后台修复 Application 的 logo URL 和 displayName
 2. 创建 demo-journey specs 覆盖更多状态（空购物车、争议订单、退款等）
 3. 运行 journey 截图 + 第二轮 AI 审查（覆盖完整卖家开店、买家售后流程）
 4. 独立站专项审查（买家 OAuth 流程、政策页面、卖家登录体验）
 5. 完成其他语言的 Escrow → Buyer Protection 术语替换（ja/fr/de/es/ko）
+6. **P2-001（首页内容重复）**：调查 Home 页面组件渲染逻辑

@@ -671,51 +671,98 @@ export async function mockStoreListingsAPI(page: Page): Promise<void> {
 }
 
 /**
- * Mock a single product/listing detail for product detail page.
+ * Mock product/listing detail. Returns different products based on the slug
+ * in the URL so checkout and multi-product views render distinct items.
  * Intercepts GET /v1/listings/{peerID}/{slug} and /v1/listings/{slug}.
  */
-const mockProductListing = {
-  slug: 'wireless-headphones',
-  metadata: {
-    version: 1,
-    contractType: 'PHYSICAL_GOOD',
-    format: 'FIXED_PRICE',
-    pricingCurrency: { code: 'USD', divisibility: 2 },
-    expiry: '2030-12-31T23:59:59Z',
-    acceptedCurrencies: ['ETH', 'BTC'],
-  },
-  item: {
-    title: 'Wireless Noise-Cancelling Headphones',
-    description:
-      'Premium over-ear headphones with active noise cancellation, 40hr battery life, and Bluetooth 5.3. Features include multipoint connection, wear detection, and customizable EQ.',
-    processingTime: '1-3 business days',
-    price: '8999',
-    nsfw: false,
-    tags: ['electronics', 'headphones', 'audio'],
+function makeMockProduct(
+  slug: string,
+  title: string,
+  price: string,
+  imageId: number,
+  opts?: {
+    categories?: string[];
+    tags?: string[];
+    grams?: number;
+    ratingCount?: number;
+    averageRating?: number;
+    shippingOnly?: string;
+  }
+) {
+  return {
+    slug,
+    metadata: {
+      version: 1,
+      contractType: 'PHYSICAL_GOOD',
+      format: 'FIXED_PRICE',
+      pricingCurrency: { code: 'USD', divisibility: 2 },
+      expiry: '2030-12-31T23:59:59Z',
+      acceptedCurrencies: ['ETH', 'BTC'],
+    },
+    item: {
+      title,
+      description: `High-quality ${title.toLowerCase()} with premium build and fast shipping.`,
+      processingTime: '1-3 business days',
+      price,
+      nsfw: false,
+      tags: opts?.tags ?? ['general'],
+      categories: opts?.categories ?? ['General'],
+      grams: opts?.grams ?? 200,
+      condition: 'New',
+      images: [{ ...mockThumbnail(imageId), filename: `${slug}.png` }],
+      skus: [{ productID: slug, quantity: '100', price }],
+    },
+    shippingOptions: [
+      {
+        name: 'Standard Shipping',
+        type: 'FIXED_PRICE',
+        regions: ['ALL'],
+        services: [{ name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '499' }],
+      },
+    ],
+    averageRating: opts?.averageRating ?? 4.7,
+    ratingCount: opts?.ratingCount ?? 20,
+    vendorID: { peerID: MOCK_PEER_ID },
+  };
+}
+
+const mockProductCatalog: Record<string, ReturnType<typeof makeMockProduct>> = {
+  'wireless-headphones': makeMockProduct(
+    'wireless-headphones',
+    'Wireless Noise-Cancelling Headphones',
+    '8999',
+    3,
+    {
+      categories: ['Electronics'],
+      tags: ['electronics', 'headphones', 'audio'],
+      grams: 280,
+      averageRating: 4.8,
+      ratingCount: 24,
+    }
+  ),
+  'usb-c-cable': makeMockProduct('usb-c-cable', 'USB-C Fast Charging Cable (2m)', '1499', 80, {
     categories: ['Electronics'],
-    grams: 280,
-    condition: 'New',
-    images: [{ ...mockThumbnail(3), filename: 'headphones.png' }],
-    skus: [{ productID: '1', quantity: '100', price: '8999' }],
-  },
-  shippingOptions: [
-    {
-      name: 'Standard Shipping',
-      type: 'FIXED_PRICE',
-      regions: ['ALL'],
-      services: [{ name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '599' }],
-    },
-    {
-      name: 'Express Shipping',
-      type: 'FIXED_PRICE',
-      regions: ['US'],
-      services: [{ name: 'Express', estimatedDelivery: '2-3 days', firstFreight: '1299' }],
-    },
-  ],
-  averageRating: 4.8,
-  ratingCount: 24,
-  vendorID: { peerID: MOCK_PEER_ID },
+    tags: ['electronics', 'accessories', 'cable'],
+    grams: 45,
+    averageRating: 4.6,
+    ratingCount: 87,
+  }),
+  'leather-wallet': makeMockProduct('leather-wallet', 'Minimalist Leather Wallet', '4500', 140, {
+    categories: ['Fashion'],
+    tags: ['fashion', 'accessories', 'wallet'],
+    grams: 85,
+    averageRating: 4.9,
+    ratingCount: 53,
+  }),
 };
+
+const defaultMockProduct = mockProductCatalog['wireless-headphones'];
+
+function getProductBySlug(url: string) {
+  const parts = url.split('/');
+  const slug = parts[parts.length - 1]?.split('?')[0] ?? '';
+  return mockProductCatalog[slug] ?? defaultMockProduct;
+}
 
 export async function mockProductDetailAPI(page: Page): Promise<void> {
   await page.route('**/v1/listings/**', route => {
@@ -727,7 +774,7 @@ export async function mockProductDetailAPI(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapData(mockProductListing),
+        body: wrapData(getProductBySlug(url)),
       });
     } else {
       route.continue();
