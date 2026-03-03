@@ -131,7 +131,7 @@ export const Header: React.FC = () => {
                   size="icon"
                   className="hover:bg-primary/10 hover:text-primary transition-colors relative"
                   onClick={openChatDrawer}
-                  aria-label="Open messages"
+                  aria-label={t('nav.openMessages')}
                   data-testid="header-messages-btn"
                 >
                   <MessageCircle className="h-5 w-5" />
@@ -154,7 +154,7 @@ export const Header: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 className="hover:bg-primary/10 hover:text-primary transition-colors"
-                aria-label="View shopping cart"
+                aria-label={t('nav.viewCart')}
                 asChild
               >
                 <span>
@@ -185,7 +185,7 @@ export const Header: React.FC = () => {
                 <DropdownMenuTrigger asChild>
                   <button
                     className="h-8 w-8 p-0 hover:opacity-80 transition-opacity focus:outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-full"
-                    aria-label="Open user menu"
+                    aria-label={t('nav.openUserMenu')}
                     data-testid="header-user-menu-trigger"
                   >
                     <Avatar

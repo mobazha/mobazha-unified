@@ -108,6 +108,8 @@ export const en: TranslationResource = {
     user: 'User',
     event: 'Event',
     new: 'New',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
   },
 
   share: {
@@ -149,6 +151,9 @@ export const en: TranslationResource = {
     explore: 'Explore',
     login: 'Login',
     logout: 'Logout',
+    openMessages: 'Open messages',
+    viewCart: 'View shopping cart',
+    openUserMenu: 'Open user menu',
   },
 
   login: {
@@ -3780,6 +3785,8 @@ export const en: TranslationResource = {
       addProducts: 'Add Products',
       removeProduct: 'Remove from collection',
       noProducts: 'No products in this collection yet.',
+      imageAlt: 'Collection image',
+      empty: 'No collections available yet.',
       addProductsHint: 'Browse your products to add them to this collection.',
       selectProducts: 'Select Products',
       selectProductsDesc: 'Choose products to add to this collection.',

@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import type { CollectionsSectionProps } from '@mobazha/core';
 import type { Collection } from '@mobazha/core';
-import { collectionsApi, getImageUrl } from '@mobazha/core';
+import { collectionsApi, getImageUrl, useI18n } from '@mobazha/core';
 
 const COLS_CLASS = {
   2: 'sm:grid-cols-2',
@@ -26,6 +26,7 @@ export function CollectionsSection({
   columns = 3,
   peerId,
 }: CollectionsSectionProps & { peerId: string }) {
+  const { t } = useI18n();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +63,7 @@ export function CollectionsSection({
           {title}
         </h2>
         <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-          Loading collections...
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -78,7 +79,7 @@ export function CollectionsSection({
           {title}
         </h2>
         <p className="text-sm text-muted-foreground text-center py-8">
-          No collections available yet.
+          {t('admin.collections.empty')}
         </p>
       </div>
     );

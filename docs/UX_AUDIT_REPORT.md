@@ -278,11 +278,23 @@
 | 4   | P1-P4 | P1     | Store          | FollowTab "Failed to fetch list" 硬编码英文       | ✅ 已修复 — 改用 t('common.error')                                       |
 | 5   | P2-R1 | P2     | Store          | ReviewCard 日期格式硬编码 'en-US'                 | ✅ 已修复 — 改用 undefined（浏览器自适应 locale）                        |
 
-## 十二、下一步
+## 十二、第五轮 AI 审查发现（Search/Collection/Cart/Header 深度扫描）
+
+| #   | ID     | 优先级 | 页面               | 问题                                                | 状态                                                                           |
+| --- | ------ | ------ | ------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | P1-H1  | P1     | Header             | aria-label "Open messages" 等三处硬编码英文         | ✅ 已修复 — 改用 t('nav.openMessages/viewCart/openUserMenu')                   |
+| 2   | P1-CM1 | P1     | CartMobile         | qty 按钮 aria-label "Decrease/Increase" 硬编码      | ✅ 已修复 — 改用 t('cart.decreaseQuantity/increaseQuantity')                   |
+| 3   | P1-CS1 | P1     | CollectionsSection | "Loading collections..." 和空状态硬编码             | ✅ 已修复 — 改用 t('common.loading') + t('admin.collections.empty')            |
+| 4   | P1-CF1 | P1     | CollectionForm     | alt="Collection" + "Move up/down" 硬编码            | ✅ 已修复 — 改用 t('admin.collections.imageAlt') + t('common.moveUp/moveDown') |
+| 5   | P2-SM1 | P2     | SearchMobile       | 清除搜索按钮 w-8（32px）触摸目标过小                | ⏳ 待修复                                                                      |
+| 6   | P2-FT1 | P2     | Footer             | 社交链接 label 硬编码 + 触摸目标过小                | ⏳ 待修复                                                                      |
+| 7   | P2-LG1 | P2     | Login              | "Decentralized Commerce, Powered by Mobazha" 硬编码 | ⏳ 待修复（品牌文案，优先级低）                                                |
+
+## 十三、下一步
 
 1. **P0-002（Casdoor Logo）**：在 Casdoor 管理后台修复 Application 的 logo URL 和 displayName
 2. 创建 demo-journey specs 覆盖更多状态（空购物车、争议订单、退款等）
-3. 运行 journey 截图 + 第五轮 AI 审查（覆盖完整卖家开店、买家售后流程）
+3. 运行 journey 截图 + 第六轮 AI 审查（覆盖完整卖家开店、买家售后流程）
 4. 独立站专项审查（买家 OAuth 流程、政策页面、卖家登录体验）
 5. 完成其他语言的 Escrow → Buyer Protection 术语替换（ja/fr/de/es/ko）
-6. P2 级别 i18n 修复（Admin PaymentProviders、Settings Profile/Store）
+6. P2 级别 i18n 修复（Admin PaymentProviders、Settings Profile/Store、Footer、Login）
