@@ -56,7 +56,7 @@ export function FollowTab({ peerID, type }: FollowTabProps) {
         }
       } catch (err) {
         if (!isCancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to fetch list');
+          setError(err instanceof Error ? err.message : t('common.error'));
         }
       } finally {
         if (!isCancelled) {

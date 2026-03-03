@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProductDetail } from './ProductDetail';
 import { ConnectingModal } from './ConnectingModal';
-import { productDataService, profileApi, getImageUrl } from '@mobazha/core';
+import { productDataService, profileApi, getImageUrl, useI18n } from '@mobazha/core';
 
 export interface ProductDetailModalProps {
   /** 是否打开弹框 */
@@ -28,6 +28,7 @@ interface VendorInfo {
 }
 
 export function ProductDetailModal({ open, onOpenChange, slug, peerID }: ProductDetailModalProps) {
+  const { t } = useI18n();
   // 连接状态
   const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'failed'>(
     'connecting'
@@ -237,13 +238,13 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden p-0 gap-0">
         <DialogHeader className="sr-only">
-          <DialogTitle>Product Details</DialogTitle>
+          <DialogTitle>{t('product.details')}</DialogTitle>
         </DialogHeader>
         {/* 关闭按钮 - 放在右上角，与商家栏分开 */}
         <button
           onClick={handleClose}
           className="absolute right-3 top-3 z-[60] w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted border border-border/50 shadow-sm transition-colors"
-          aria-label="Close"
+          aria-label={t('common.close')}
         >
           <svg
             className="w-4 h-4 text-foreground"

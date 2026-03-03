@@ -39,7 +39,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
   const formatDate = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
-      return date.toLocaleDateString('en-US', {
+      return date.toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',

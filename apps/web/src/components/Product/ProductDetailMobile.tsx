@@ -352,16 +352,16 @@ export function ProductDetailMobile({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                  className="w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback"
-                  aria-label="Decrease quantity"
+                  className="w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback"
+                  aria-label={t('cart.decreaseQuantity')}
                 >
                   -
                 </button>
                 <span className="w-8 text-center text-sm font-medium">{quantity}</span>
                 <button
                   onClick={() => setQuantity(prev => Math.min(stock, prev + 1))}
-                  className="w-8 h-8 rounded-lg border border-border flex items-center justify-center touch-feedback"
-                  aria-label="Increase quantity"
+                  className="w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback"
+                  aria-label={t('cart.increaseQuantity')}
                 >
                   +
                 </button>
