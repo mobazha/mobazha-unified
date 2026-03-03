@@ -6,7 +6,7 @@ import type { ProductListItem } from '@mobazha/core';
 import { getProductCurrencyCode } from './utils';
 
 export function TopProductRow({ product }: { product: ProductListItem }) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice, fromMinimalUnit } = useCurrency();
   const thumbnail = product.thumbnail?.small ? getImageUrl(product.thumbnail.small) : '';
   const currencyCode = getProductCurrencyCode(product);
 
@@ -28,7 +28,7 @@ export function TopProductRow({ product }: { product: ProductListItem }) {
         <p className="text-sm font-medium text-foreground truncate">{product.title}</p>
         {product.price?.amount != null && (
           <p className="text-xs text-muted-foreground">
-            {formatPrice(product.price.amount, currencyCode)}
+            {formatPrice(fromMinimalUnit(product.price.amount, currencyCode), currencyCode)}
           </p>
         )}
       </div>

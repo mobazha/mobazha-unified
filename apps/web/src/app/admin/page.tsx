@@ -37,7 +37,7 @@ const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
 function useDashboardData() {
   const { t } = useI18n();
   const { profile } = useUserStore();
-  const { formatPrice, localCurrency, convertToLocal } = useCurrency();
+  const { formatPrice, fromMinimalUnit, localCurrency, convertToLocal } = useCurrency();
 
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -111,14 +111,14 @@ function useDashboardData() {
       if (!order.total?.amount || !REVENUE_STATES.has(order.state)) continue;
       const cc = getOrderCurrencyCode(order);
       try {
-        total += convertToLocal(order.total.amount, cc);
+        total += convertToLocal(fromMinimalUnit(order.total.amount, cc), cc);
       } catch {
         // Skip orders with unknown currencies
       }
     }
     if (total <= 0) return '—';
     return formatPrice(total, localCurrency);
-  }, [salesOrders, convertToLocal, formatPrice, localCurrency]);
+  }, [salesOrders, convertToLocal, fromMinimalUnit, formatPrice, localCurrency]);
 
   return {
     profile,

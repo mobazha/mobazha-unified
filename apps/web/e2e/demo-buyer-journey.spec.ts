@@ -339,7 +339,8 @@ test.describe('Buyer Journey — 19-step AI UX Audit', () => {
     await mockPreferencesAPI(page);
     await mockImageRoutes(page);
     await page.addInitScript(getCartLocalStorageScript());
-    await page.goto('/checkout');
+    const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
+    await page.goto(`/checkout?vendorPeerID=${MOCK_PEER_ID}&slugs=wireless-headphones,usb-c-cable`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     await page.waitForTimeout(1000);
@@ -352,7 +353,8 @@ test.describe('Buyer Journey — 19-step AI UX Audit', () => {
     await mockPreferencesAPI(page);
     await mockImageRoutes(page);
     await page.addInitScript(getCartLocalStorageScript());
-    await page.goto('/checkout');
+    const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
+    await page.goto(`/checkout?vendorPeerID=${MOCK_PEER_ID}&slugs=wireless-headphones,usb-c-cable`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     await page.waitForTimeout(1000);
@@ -365,7 +367,10 @@ test.describe('Buyer Journey — 19-step AI UX Audit', () => {
     await mockPreferencesAPI(page);
     await mockImageRoutes(page);
     await page.addInitScript(getCartLocalStorageScript());
-    await page.goto('/checkout/payment-method');
+    const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
+    await page.goto(
+      `/checkout/payment-method?vendorPeerID=${MOCK_PEER_ID}&slugs=wireless-headphones,usb-c-cable`
+    );
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     await captureStep(page, '12-payment-method');

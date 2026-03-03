@@ -515,7 +515,7 @@ const mockStoreListingItems = [
     title: 'Wireless Noise-Cancelling Headphones',
     contractType: 'PHYSICAL_GOOD',
     thumbnail: mockSearchThumbnail(3),
-    price: { amount: 89.99, currency: { code: 'USD', divisibility: 2 } },
+    price: { amount: 8999, currency: { code: 'USD', divisibility: 2 } },
     averageRating: 4.8,
     ratingCount: 24,
     productType: 'Electronics',
@@ -525,7 +525,7 @@ const mockStoreListingItems = [
     title: 'Vintage Film Camera - Refurbished',
     contractType: 'PHYSICAL_GOOD',
     thumbnail: mockSearchThumbnail(36),
-    price: { amount: 245.0, currency: { code: 'USD', divisibility: 2 } },
+    price: { amount: 24500, currency: { code: 'USD', divisibility: 2 } },
     averageRating: 4.5,
     ratingCount: 8,
     productType: 'Electronics',
@@ -535,7 +535,7 @@ const mockStoreListingItems = [
     title: 'Organic Coffee Beans - Single Origin',
     contractType: 'PHYSICAL_GOOD',
     thumbnail: mockSearchThumbnail(63),
-    price: { amount: 22.0, currency: { code: 'USD', divisibility: 2 } },
+    price: { amount: 2200, currency: { code: 'USD', divisibility: 2 } },
     averageRating: 4.9,
     ratingCount: 42,
     productType: 'Food',
@@ -545,7 +545,7 @@ const mockStoreListingItems = [
     title: 'Professional Logo Design Package',
     contractType: 'SERVICE',
     thumbnail: mockSearchThumbnail(24),
-    price: { amount: 149.0, currency: { code: 'USD', divisibility: 2 } },
+    price: { amount: 14900, currency: { code: 'USD', divisibility: 2 } },
     averageRating: 5.0,
     ratingCount: 15,
     productType: 'Services',
@@ -555,7 +555,7 @@ const mockStoreListingItems = [
     title: 'Handcrafted Leather Backpack',
     contractType: 'PHYSICAL_GOOD',
     thumbnail: mockSearchThumbnail(119),
-    price: { amount: 175.0, currency: { code: 'USD', divisibility: 2 } },
+    price: { amount: 17500, currency: { code: 'USD', divisibility: 2 } },
     averageRating: 4.7,
     ratingCount: 31,
     productType: 'Fashion',
@@ -565,7 +565,7 @@ const mockStoreListingItems = [
     title: 'Smart Watch Pro 2025',
     contractType: 'PHYSICAL_GOOD',
     thumbnail: mockSearchThumbnail(160),
-    price: { amount: 299.99, currency: { code: 'USD', divisibility: 2 } },
+    price: { amount: 29999, currency: { code: 'USD', divisibility: 2 } },
     averageRating: 4.6,
     ratingCount: 19,
     productType: 'Electronics',
@@ -808,7 +808,7 @@ export function getCartLocalStorageScript(): string {
             slug: 'wireless-headphones',
             title: 'Premium Wireless Noise-Canceling Headphones',
             thumbnail: mockSearchThumbnail(96),
-            price: { amount: 149.99, currency: { code: 'USD', divisibility: 2 } },
+            price: { amount: 14999, currency: { code: 'USD', divisibility: 2 } },
             vendorPeerID: MOCK_PEER_ID,
             vendorHandle: 'techstore',
           },
@@ -820,7 +820,7 @@ export function getCartLocalStorageScript(): string {
             slug: 'usb-c-cable',
             title: 'USB-C Fast Charging Cable 2m',
             thumbnail: mockSearchThumbnail(60),
-            price: { amount: 12.99, currency: { code: 'USD', divisibility: 2 } },
+            price: { amount: 1299, currency: { code: 'USD', divisibility: 2 } },
             vendorPeerID: MOCK_PEER_ID,
             vendorHandle: 'techstore',
           },
@@ -831,11 +831,12 @@ export function getCartLocalStorageScript(): string {
             slug: 'leather-wallet',
             title: 'Handcrafted Genuine Leather Bifold Wallet',
             thumbnail: mockSearchThumbnail(119),
-            price: { amount: 59.99, currency: { code: 'USD', divisibility: 2 } },
+            price: { amount: 5999, currency: { code: 'USD', divisibility: 2 } },
             vendorPeerID: 'QmVendor2PeerID',
             vendorHandle: 'craftshop',
           },
           quantity: 1,
+          options: [{ name: 'Color', value: 'Cognac Brown' }],
         },
       ],
       isLoading: false,
@@ -843,6 +844,172 @@ export function getCartLocalStorageScript(): string {
     version: 0,
   };
   return `localStorage.setItem('mobazha-cart-storage', '${JSON.stringify(cartState).replace(/'/g, "\\'")}');`;
+}
+
+/**
+ * Mock storefront configuration for branding editor page.
+ * Intercepts GET /v1/settings/storefront.
+ */
+export async function mockStorefrontConfigAPI(page: Page): Promise<void> {
+  await page.route('**/v1/settings/storefront**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        sections: [
+          {
+            id: 'hero',
+            type: 'hero',
+            visible: true,
+            order: 0,
+            config: {
+              headline: 'Welcome to TechStore',
+              subheadline: 'Premium electronics with crypto-native payments',
+              ctaText: 'Shop Now',
+              ctaLink: '/search',
+              backgroundImage: '',
+            },
+          },
+          {
+            id: 'featured',
+            type: 'product_grid',
+            visible: true,
+            order: 1,
+            config: { title: 'Featured Products', maxItems: 6 },
+          },
+          {
+            id: 'trust',
+            type: 'trust_badges',
+            visible: true,
+            order: 2,
+            config: {
+              badges: [
+                { icon: 'shield', text: 'Buyer Protection' },
+                { icon: 'truck', text: 'Free Shipping' },
+                { icon: 'refresh', text: '30-Day Returns' },
+              ],
+            },
+          },
+          {
+            id: 'about',
+            type: 'about',
+            visible: true,
+            order: 3,
+            config: {
+              title: 'About Us',
+              body: 'We are a premium electronics store with crypto-native payments.',
+            },
+          },
+        ],
+        theme: {
+          primaryColor: '#2563eb',
+          fontFamily: 'Inter',
+        },
+      }),
+    });
+  });
+}
+
+/**
+ * Mock discounts API for admin discounts page.
+ * Intercepts GET /v1/discounts.
+ */
+export async function mockDiscountsAPI(page: Page): Promise<void> {
+  await page.route('**/v1/discounts**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([
+        {
+          id: 'disc-001',
+          title: 'Summer Sale 20%',
+          type: 'percentage',
+          value: 20,
+          code: 'SUMMER20',
+          status: 'active',
+          usageCount: 15,
+          usageLimit: 100,
+          startsAt: WEEK_AGO,
+          endsAt: '2030-12-31T23:59:59Z',
+          appliesTo: 'all',
+          createdAt: WEEK_AGO,
+        },
+        {
+          id: 'disc-002',
+          title: 'New Customer $10 Off',
+          type: 'fixed_amount',
+          value: 1000,
+          code: 'WELCOME10',
+          status: 'active',
+          usageCount: 42,
+          usageLimit: 500,
+          startsAt: WEEK_AGO,
+          endsAt: '2030-06-30T23:59:59Z',
+          appliesTo: 'all',
+          createdAt: WEEK_AGO,
+        },
+        {
+          id: 'disc-003',
+          title: 'Flash Sale 30%',
+          type: 'percentage',
+          value: 30,
+          code: 'FLASH30',
+          status: 'expired',
+          usageCount: 89,
+          usageLimit: 100,
+          startsAt: WEEK_AGO,
+          endsAt: DAY_AGO,
+          appliesTo: 'specific_products',
+          createdAt: WEEK_AGO,
+        },
+      ]),
+    });
+  });
+}
+
+/**
+ * Mock collections admin API for admin collections page.
+ * Intercepts GET /v1/collections (broader pattern than mock-auth.ts).
+ */
+export async function mockCollectionsAdminAPI(page: Page): Promise<void> {
+  await page.route('**/v1/collections**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([
+        {
+          id: 'col-1',
+          title: 'Best Sellers',
+          description: 'Our most popular products',
+          productCount: 6,
+          publishedAt: WEEK_AGO,
+          createdAt: WEEK_AGO,
+          updatedAt: DAY_AGO,
+        },
+        {
+          id: 'col-2',
+          title: 'New Arrivals',
+          description: 'Latest additions to our store',
+          productCount: 4,
+          publishedAt: DAY_AGO,
+          createdAt: DAY_AGO,
+          updatedAt: NOW,
+        },
+        {
+          id: 'col-3',
+          title: 'Holiday Deals',
+          description: 'Special holiday discounts',
+          productCount: 8,
+          publishedAt: WEEK_AGO,
+          createdAt: WEEK_AGO,
+          updatedAt: WEEK_AGO,
+        },
+      ]),
+    });
+  });
 }
 
 /**
