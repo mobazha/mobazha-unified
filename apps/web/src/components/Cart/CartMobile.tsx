@@ -270,7 +270,9 @@ export function CartMobile() {
 
       <div className="px-4 pt-2 pb-4">
         <p className="text-xs text-muted-foreground mb-3">
-          {t('cart.itemsInCart', { count: items.length })}
+          {items.length === 1
+            ? t('cart.itemsInCartOne')
+            : t('cart.itemsInCart', { count: items.length })}
         </p>
 
         <div className="space-y-3">

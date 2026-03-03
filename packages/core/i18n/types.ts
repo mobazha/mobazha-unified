@@ -292,7 +292,9 @@ export interface TranslationResource {
     quantity: string;
     items: string;
     itemCount: string;
+    itemCountOne: string;
     itemsInCart: string;
+    itemsInCartOne: string;
     selectAll: string;
     deselectAll: string;
     orderSummary: string;

@@ -47,12 +47,12 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
       testIgnore: [/standalone/, /desktop-visual/],
     },
-    // Standalone store (port 3002) — only standalone tests
+    // Standalone store (port 3002, or 3000 for demo capture) — only standalone tests
     {
       name: 'standalone',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: 'http://localhost:3002',
+        baseURL: process.env.STANDALONE_BASE_URL || 'http://localhost:3002',
       },
       testMatch: /standalone/,
     },
@@ -60,7 +60,7 @@ export default defineConfig({
       name: 'standalone-mobile',
       use: {
         ...devices['iPhone 12'],
-        baseURL: 'http://localhost:3002',
+        baseURL: process.env.STANDALONE_BASE_URL || 'http://localhost:3002',
       },
       testMatch: /standalone/,
     },
