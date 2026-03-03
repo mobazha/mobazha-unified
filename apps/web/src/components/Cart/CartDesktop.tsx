@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { useCart } from '@/hooks/useCart';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { ClearCartAlert } from './ClearCartAlert';
 
 export function CartDesktop() {
   const {
@@ -60,12 +61,16 @@ export function CartDesktop() {
       <MobilePageHeader
         title={t('cart.title')}
         rightAction={
-          <button
-            onClick={clearCart}
-            className="text-muted-foreground hover:text-error font-medium text-xs touch-feedback"
-          >
-            {t('common.clearAll')}
-          </button>
+          <ClearCartAlert onConfirm={clearCart}>
+            {openDialog => (
+              <button
+                onClick={openDialog}
+                className="text-muted-foreground hover:text-error font-medium text-xs touch-feedback"
+              >
+                {t('common.clearAll')}
+              </button>
+            )}
+          </ClearCartAlert>
         }
       />
 
@@ -78,12 +83,16 @@ export function CartDesktop() {
                 {t('cart.itemsInCart', { count: items.length })}
               </p>
             </div>
-            <button
-              onClick={clearCart}
-              className="text-muted-foreground hover:text-error font-medium text-sm touch-feedback"
-            >
-              {t('common.clearAll')}
-            </button>
+            <ClearCartAlert onConfirm={clearCart}>
+              {openDialog => (
+                <button
+                  onClick={openDialog}
+                  className="text-muted-foreground hover:text-error font-medium text-sm touch-feedback"
+                >
+                  {t('common.clearAll')}
+                </button>
+              )}
+            </ClearCartAlert>
           </HStack>
 
           <p className="lg:hidden text-xs text-muted-foreground mb-3">

@@ -104,6 +104,7 @@ export const zh: TranslationResource = {
     urlPlaceholder: 'https://example.com',
     selectAll: '全选',
     selected: '已选',
+    new: '新品',
   },
 
   validation: {
@@ -372,6 +373,8 @@ export const zh: TranslationResource = {
     startShopping: '开始购物',
     clear: '清空',
     p2pNotice: '每次只能结算一个商户的商品，不同商户需分开结算',
+    clearConfirmTitle: '清空购物车',
+    clearConfirmMessage: '确定要移除购物车中的所有商品吗？此操作无法撤销。',
   },
 
   checkout: {
@@ -569,6 +572,7 @@ export const zh: TranslationResource = {
     shippingService: '配送服务',
     memo: '备注',
     additionalContact: '其他联系方式',
+    additionalInfo: '附加信息',
     coupons: '优惠券',
     unknownItem: '未知商品',
     // 商品信息
@@ -654,7 +658,7 @@ export const zh: TranslationResource = {
     orderNotes: '订单备注',
     // 支付卡片
     paid: '已付款',
-    fundsInEscrow: '资金托管中，直到订单完成。',
+    fundsInEscrow: '资金受买家保障保护，直到订单完成。',
     directPaymentDesc: '直接付款 - 资金直接发送给卖家。',
     // 申诉
     disputeOpen: '申诉进行中',
@@ -846,7 +850,7 @@ export const zh: TranslationResource = {
     // 申诉模态框
     dispute: {
       escrowHint:
-        '订单资金正在第三方托管约 {{time}} 或直到买家完成订单为止。如您对订单有任何疑问，可以与仲裁人提出争议。',
+        '订单资金在买家保障下安全持有约 {{time}}，或直到买家完成订单。如您对订单有任何疑问，可以与仲裁人提出争议。',
       title: '发起申诉',
       description: '请描述您遇到的问题，仲裁员将审核您的申诉并帮助解决争议。',
       placeholder: '详细说明问题，提供任何有助于仲裁员理解情况的相关信息。',
@@ -939,14 +943,14 @@ export const zh: TranslationResource = {
     payment: {
       title: '支付详情',
       method: '支付方式',
-      moderated: '仲裁托管',
+      moderated: '仲裁保障',
       direct: '直接支付',
       addressRequest: '地址请求',
       coin: '支付币种',
       amount: '金额',
-      escrowPeriod: '托管期限',
-      escrowExpired: '托管期已过。资金现在可以领取。',
-      escrowNote: '资金将托管至订单完成或发起争议。',
+      escrowPeriod: '保障期限',
+      escrowExpired: '保障期已过。资金现在可以领取。',
+      escrowNote: '资金在保障下安全持有至订单完成或发起争议。',
       escrowAddress: '托管地址',
       paymentAddress: '支付地址',
       transactions: '交易记录',
@@ -1422,11 +1426,10 @@ export const zh: TranslationResource = {
     termsIntro: '使用 Mobazha 即表示您同意这些条款。',
     termsUse: '合规使用',
     termsUseDesc: '您同意遵守所有适用法律使用 Mobazha。平台禁止违规物品和活动。',
-    termsEscrow: '托管与支付',
-    termsEscrowDesc:
-      '所有加密货币支付通过智能合约托管处理。资金安全保管，直到买家确认收货或争议解决。',
+    termsEscrow: '支付与买家保障',
+    termsEscrowDesc: '所有加密货币支付均受买家保障保护。资金安全保管，直到买家确认收货或争议解决。',
     termsDisputes: '争议解决',
-    termsDisputesDesc: '争议由社区仲裁员解决。他们的决定在托管系统内是最终且有约束力的。',
+    termsDisputesDesc: '争议由社区仲裁员解决。他们的决定是最终且有约束力的。',
     termsLiability: '责任限制',
     termsLiabilityDesc:
       'Mobazha 是去中心化平台，不控制买卖双方之间的交易。请自行承担使用平台的风险。',

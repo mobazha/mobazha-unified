@@ -1,235 +1,229 @@
-# Mobazha 全量 UX 审核报告
+# Mobazha AI UX 体验审查报告
 
-> 审核日期：2026-02-26
-> 审核范围：70+ 页面 × Desktop + Mobile 双端
-> 重点：移动端用户体验与整体一致性
+> 审查日期: 2026-02-28
+> 审查范围: 90 张视觉基线截图（44 Desktop + 46 Mobile）
+> 审查方法: AI 三层评审（评分卡 + 竞品对标 + 移动专项）
 
----
+## 一、发现汇总
 
-## 一、审核摘要
-
-| 严重级别     | 数量 | 说明                 |
-| ------------ | ---- | -------------------- |
-| **Critical** | 7    | 功能不可达、无法操作 |
-| **Major**    | 12   | 体验严重受损、不一致 |
-| **Minor**    | 8    | 细节瑕疵、可改进     |
-
----
-
-## 二、Critical 问题（必须修复）
-
-### C1. 通知页删除按钮在移动端不可见
-
-- **文件**: `apps/web/src/app/notifications/page.tsx`
-- **问题**: 删除按钮使用 `opacity-0 group-hover:opacity-100`，移动端无 hover 事件，用户永远看不到删除按钮
-- **影响**: 移动端用户无法删除通知
-- **修复**: 改为 swipe-to-delete 或长按菜单，或默认可见
-
-### C2. 店铺仲裁员删除按钮在移动端不可见
-
-- **文件**: `apps/web/src/app/settings/store/moderators/page.tsx`
-- **问题**: 同 C1，删除按钮仅 hover 可见
-- **影响**: 移动端用户无法移除仲裁员
-- **修复**: 改为滑动删除或默认显示删除图标
-
-### C3. MobileNav 标签文字过小
-
-- **文件**: `apps/web/src/components/MobileNav/MobileNav.tsx`
-- **问题**: 底部导航标签使用 `text-[10px]`（10px），低于 WCAG 推荐的 12px 最小字号
-- **影响**: 老年用户和视力不佳用户难以辨认导航文字
-- **修复**: 改为 `text-[11px]` 或 `text-xs`（12px）
-
-### C4. MobileHeader 扫码按钮触摸目标过小
-
-- **文件**: `apps/web/src/components/MobileHeader/MobileHeader.tsx`
-- **问题**: 扫码按钮 `w-9 h-9`（36px），低于 44px 最小触摸目标
-- **影响**: 用户难以准确点击
-- **修复**: 改为 `w-11 h-11`（44px）
-
-### C5. 根布局禁止缩放
-
-- **文件**: `apps/web/src/app/layout.tsx`
-- **问题**: `maximumScale: 1, userScalable: false` 阻止用户缩放页面
-- **影响**: 违反 WCAG 2.1 AA 标准，视力障碍用户无法放大文字
-- **修复**: 移除 `maximumScale` 和 `userScalable` 限制
-
-### C6. /me 页面在桌面端空白
-
-- **文件**: `apps/web/src/app/me/page.tsx`
-- **问题**: 整个页面 `md:hidden`，桌面端用户看到空白页
-- **影响**: 桌面端用户通过 MobileNav 链接或直接 URL 访问时看到空白
-- **修复**: 桌面端重定向到 `/profile` 或 `/settings`
-
-### C7. 隐私设置使用 window.alert
-
-- **文件**: `apps/web/src/app/settings/privacy/page.tsx`
-- **问题**: 使用 `window.alert()` 显示操作结果
-- **影响**: 破坏移动端体验，弹出原生对话框不可定制
-- **修复**: 改用 toast 通知
+| 优先级          | 数量 | 说明                       |
+| --------------- | ---- | -------------------------- |
+| **P0 阻断级**   | 2    | 功能不可用，必须立即修复   |
+| **P1 体验差**   | 7    | 严重影响用户信任或流程完成 |
+| **P2 可改进**   | 8    | 体验优化点                 |
+| **P3 锦上添花** | 5    | 竞品对标提升               |
 
 ---
 
-## 三、Major 问题（严重影响体验）
+## 二、P0 阻断级
 
-### M1. 8 个页面缺少 MobilePageHeader
+### P0-001: 聊天页面 404 崩溃
 
-以下页面在移动端没有页面标题头和返回按钮：
+- **截图**: `mobile-authed-chat`
+- **问题**: 聊天/消息页面显示 React Router 默认错误页 "Unexpected Application Error! 404 Not Found" + 开发者调试信息
+- **影响**: 用户点击底部导航 "Messages" 后看到技术错误页面 — 完全不可用
+- **建议**: 修复路由注册（`routes.tsx` 中添加 `/messages` 或 `/chat` 路由），或添加自定义 ErrorBoundary 替代 React Router 默认错误页
 
-- `/search` — 搜索页
-- `/wallet` — 钱包总览
-- `/notifications` — 通知中心
-- `/listing/new` — 创建商品
-- `/listing/edit/[slug]` — 编辑商品
-- `/listing/import` — 导入商品
-- `/moderator/cases` — 仲裁案例
-- `/moderators/[id]` — 仲裁员详情
+### P0-002: 登录页 Logo 图片破损
 
-**影响**: 移动端用户无法通过页面头部返回，依赖底部导航或浏览器后退
-**修复**: 统一添加 `MobilePageHeader`
-
-### M2. Checkout 子页面头部不一致
-
-- `checkout/payment-method` 和 `checkout/moderator` 使用自定义 sticky header
-- `checkout/confirmation` 使用 `MobilePageHeader`
-- 主 `checkout` 页面无头部
-  **修复**: 统一使用 `MobilePageHeader` 或统一的 checkout header
-
-### M3. 订单详情 More 按钮过小
-
-- **文件**: `apps/web/src/app/orders/[orderId]/page.tsx`
-- **问题**: More actions 按钮 `w-6 h-6`（24px），远低于 44px
-- **修复**: 增大触摸区域到 `w-11 h-11`
-
-### M4. 搜索输入框高度不足
-
-- **文件**: `apps/web/src/components/MobileHeader/MobileHeader.tsx`
-- **问题**: 搜索输入 `h-10`（40px），低于 44px 推荐值
-- **修复**: 改为 `h-11`
-
-### M5. Receiving 设置布局不一致
-
-- **文件**: `apps/web/src/app/settings/receiving/page.tsx`
-- **问题**: 使用自定义 Header/Footer 而非 Settings layout，与其他设置页面风格割裂
-- **修复**: 重写为使用 `SettingsPageHeader` + `SettingsSection`
-
-### M6. Privacy 设置布局不一致
-
-- **文件**: `apps/web/src/app/settings/privacy/page.tsx`
-- **问题**: 同 M5，使用自定义布局和 `window.alert`
-- **修复**: 重写为标准 Settings 布局 + toast
-
-### M7. Listing 页面底部操作栏缺少 Safe Area
-
-- **文件**: `apps/web/src/app/listing/new/page.tsx`
-- **问题**: 底部固定栏没有 `pb-[env(safe-area-inset-bottom)]`
-- **影响**: iPhone X+ 刘海屏设备操作栏被 home indicator 遮挡
-- **修复**: 添加 safe-area padding
-
-### M8. Listing 编辑页头部按钮溢出
-
-- **文件**: `apps/web/src/app/listing/edit/[slug]/page.tsx`
-- **问题**: 头部 5 个按钮（Preview/Delete/Cancel/Save Draft/Publish）在移动端会水平溢出
-- **修复**: 移动端收纳为 dropdown menu
-
-### M9. 店铺页按钮缺少文字
-
-- **文件**: `apps/web/src/app/store/[peerId]/page.tsx`
-- **问题**: `hidden sm:inline` 隐藏按钮文字，仅显示图标，功能不明确
-- **修复**: 添加 tooltip 或移动端也显示简短文字
-
-### M10. Tab 按钮触摸目标偏小
-
-多个页面的 tab 按钮 padding 过小（`px-2 py-1` ≈ 28px 高）：
-
-- 钱包币种详情页
-- 通知页
-- 订单列表页
-  **修复**: 统一 tab 高度为 `min-h-[44px]`
-
-### M11. 仲裁案例页面全硬编码文案
-
-- **文件**: `apps/web/src/app/moderator/cases/page.tsx` 及 `[orderId]/page.tsx`
-- **问题**: 所有文案（"Moderation Cases"、"Review and resolve disputes"等）硬编码英文
-- **修复**: 使用 i18n `t()` 函数
-
-### M12. Settings 页面 redirect 使用 window.innerWidth
-
-- **文件**: `apps/web/src/app/settings/page.tsx`
-- **问题**: 用 `window.innerWidth >= 1024` 检测桌面端进行 redirect，resize 时行为不可预测
-- **修复**: 使用 `useIsDesktop()` hook 或 CSS `lg:` 方案
+- **截图**: `mobile-public-login`
+- **问题**: 登录页面显示 alt text "Mobazha E2E" 而非实际 Logo 图片
+- **影响**: 登录是用户第一个接触点，品牌展示失败严重影响信任
+- **建议**: 检查 Casdoor 应用配置中的 Logo URL 是否正确指向有效图片
 
 ---
 
-## 四、Minor 问题（可改进）
+## 三、P1 体验差
 
-### m1. Login 页面 padding 不响应
+### P1-001: 结账页同一商品重复显示
 
-`max-w-md px-8` 在极窄屏幕（<375px）上两侧 padding 过大
+- **截图**: `mobile-authed-checkout`, `desktop-authed-checkout`
+- **问题**: 同一商品（Wireless Noise-Cancelling Headphones）出现两次作为独立行项，各 Qty:2，应合并为 Qty:4 单行
+- **影响**: 用户误以为重复下单，增加认知负担
+- **建议**: 相同商品（同 SKU）在 Order Summary 中合并显示
 
-### m2. Onboarding 页面间距过大
+### P1-002: Shipping 选项重复
 
-`gap-8` 在小屏幕上过于分散
+- **截图**: `mobile-authed-checkout`, `desktop-authed-checkout`
+- **问题**: Standard Shipping 和 Express Shipping 各出现两次（来自两个 Shipping Profile）
+- **影响**: 用户面对 4 个配送选项但实际只有 2 种，选择困惑
+- **建议**: 合并同名 Shipping 选项，或按 Profile 分组显示
 
-### m3. 钱包页面使用 mock 数据
+### P1-003: 术语不一致 — Escrow vs Buyer Protection
 
-`mockAssets`、`mockTransactions` 硬编码
+- **截图**: `mobile-authed-order-detail`（"held in escrow"）vs `mobile-authed-product-detail`（"Buyer Protection"）
+- **问题**: 订单详情使用 "Funds are being held in escrow" 技术术语，而商品详情统一使用 "Buyer Protection"
+- **影响**: 违反 identity-display-rules 中"禁止在 UI 中使用 Escrow 术语"的规定
+- **建议**: 全局替换为 "Your funds are held securely under Buyer Protection until you confirm delivery"
 
-### m4. 收款设置硬编码中文
+### P1-004: 订单详情暴露裸 Peer ID
 
-"收款地址"、"加载失败"等中文硬编码
+- **截图**: `mobile-authed-order-detail`
+- **问题**: 买卖双方均显示 "testuser1" + 裸 Peer ID "QmY8tR...cj8P"
+- **影响**: 违反 identity-display-rules，技术细节不应暴露给普通用户
+- **建议**: 使用 `formatUserName()` 处理，fallback 为角色标签 "Seller" / "Buyer"
 
-### m5. Profile 页面无 MobilePageHeader
+### P1-005: 购物车 "Clear All" 无确认
 
-/profile 只做 redirect，无独立移动端 UI
+- **截图**: `mobile-authed-cart`
+- **问题**: "Clear All" 按钮直接清空购物车，无确认弹窗
+- **影响**: 高破坏性操作（丢失所有购物车商品）缺乏防误操作保护
+- **建议**: 添加确认 Dialog "确定清空购物车？此操作不可撤销"
 
-### m6. Settings categories 间距偏大
+### P1-006: 新卖家零评分零销量的信任问题
 
-移动端 `p-4` 应为 `p-3` 以符合 mobile-ux-guide 规范
+- **截图**: `mobile-authed-product-detail`, `desktop-authed-product-detail`
+- **问题**: 卖家信息区显示 "testuser1 ★ 0.0 (0)" — 零评分零评价
+- **影响**: 在真实环境中，新卖家零评分会严重影响买家购买意愿
+- **建议**: 新卖家阶段隐藏评分（而非显示 0.0），或显示 "New Seller" 徽章替代
 
-### m7. 产品详情页底部固定栏与 MobileNav 冲突处理
+### P1-007: Profile 商品卡片无图片
 
-虽然 MobileNav 在 product detail 隐藏了，但 checkout 相关页面的底部栏高度不统一
-
-### m8. 订单详情页 orderId 截断硬编码
-
-`Order #{displayOrder.orderId.slice(0, 8)}...` 应使用 i18n
+- **截图**: `mobile-authed-profile`
+- **问题**: 个人店铺的两个商品卡片（Test Digital Good, Professional Logo Design Package）无图片，显示空白
+- **影响**: 店铺主页是卖家对外展示的核心页面，无图商品显得不专业
+- **建议**: 确保商品创建时至少有一张图片，或显示品类 placeholder 图标
 
 ---
 
-## 五、页面一致性矩阵
+## 四、P2 可改进
 
-| 特性             | 首页 | 搜索 | 购物车 | 结账 | 订单 | 钱包 | 设置 | 商品 | 店铺 |
-| ---------------- | ---- | ---- | ------ | ---- | ---- | ---- | ---- | ---- | ---- |
-| MobilePageHeader | ✗    | ✗    | ✓      | ✗    | ✓    | ✗    | ✗    | ✓    | ✗    |
-| MobileHeader     | ✓    | ✗    | ✗      | ✗    | ✗    | ✗    | ✗    | ✗    | ✗    |
-| Footer           | ✓    | ✗    | ✗      | ✗    | ✗    | ✗    | ✗    | ✓    | ✗    |
-| Bottom Bar       | ✗    | ✗    | ✗      | ✓    | ✗    | ✗    | ✗    | ✓    | ✗    |
-| Safe Area        | ✓    | —    | —      | ?    | ✓    | —    | —    | ✓    | —    |
-| Touch 44px       | ✓    | ✗    | ✓      | ✓    | ✗    | ✗    | ✓    | ✓    | ✓    |
-| i18n             | ✓    | ✓    | ✓      | ✓    | ✓    | ✗    | ✓    | ✓    | ✓    |
+### P2-001: 首页 Trending Now 与 Featured & Services 内容重复
+
+- **截图**: `mobile-public-home`, `mobile-authed-home`
+- **问题**: 两个板块展示完全相同的 4 个商品
+- **建议**: 差异化内容（Trending = 按浏览量排序，Featured = 编辑精选或新品）
+
+### P2-002: "Real API" 调试徽章残留
+
+- **截图**: `mobile-public-home`, `mobile-authed-home`
+- **问题**: "Real API" 绿色 badge 出现在商品列表上方
+- **建议**: 仅在开发模式显示（`process.env.NODE_ENV === 'development'`）
+
+### P2-003: 搜索结果底部被 Bottom Nav 遮挡
+
+- **截图**: `mobile-public-search-results`
+- **问题**: 底部两个商品的价格和评分行被 Bottom Nav 遮挡
+- **建议**: 添加 Bottom Nav 高度的 padding-bottom（约 64px）
+
+### P2-004: Community Marketplaces Featured 卡片无滑动指示器
+
+- **截图**: `mobile-public-marketplace`
+- **问题**: Featured Marketplaces 可横向滚动但无 dot 指示器或 peek 效果
+- **建议**: 添加 peek（右侧露出 1/4 卡片）或 dot 指示器
+
+### P2-005: `order.additionalInfo` 字段名暴露在 UI
+
+- **截图**: `mobile-authed-order-detail`
+- **问题**: 显示原始字段名 "order.additionalInfo" 而非本地化标签
+- **建议**: 替换为 "Additional Information" 或 "附加信息"
+
+### P2-006: Dashboard "Total Sales" 和 "Avg. Rating" 显示 "—"
+
+- **截图**: `mobile-authed-admin-dashboard`
+- **问题**: 空值显示为破折号 "—"，含义模糊
+- **建议**: 显示 "$0" + "Completed orders" 和 "No reviews yet" 文案
+
+### P2-007: Me 页面显示截断 Peer ID
+
+- **截图**: `mobile-authed-me`
+- **问题**: 用户名下方显示 "12D3KooW...tAG8"
+- **建议**: 对普通用户隐藏 Peer ID，仅在高级设置中显示；或添加 "Copy ID" 按钮替代直接展示
+
+### P2-008: 订单详情进度条在小屏幕压缩
+
+- **截图**: `mobile-authed-order-detail`
+- **问题**: 5 步订单进度指示器在 390px 宽度下步骤 4/5 被压缩，数字不清晰
+- **建议**: 移动端使用竖向 Timeline 替代水平进度条
 
 ---
 
-## 六、修复优先级路线图
+## 五、P3 锦上添花
 
-### P0 — 立即修复（Critical）
+### P3-001: Dashboard 缺少新卖家引导进度
 
-1. C1/C2: hover-only 删除按钮 → 移动端可见
-2. C3: MobileNav 字号 → 12px
-3. C4: 扫码按钮触摸目标 → 44px
-4. C5: 移除缩放限制
-5. C6: /me 桌面端 redirect
-6. C7: window.alert → toast
+- **建议**: 添加 "完成这 3 步开启销售" 进度条（设置 Profile → 添加商品 → 连接支付）
 
-### P1 — 本周修复（Major）
+### P3-002: 首页分类入口在页面底部
 
-7. M1: 8 个页面添加 MobilePageHeader
-8. M2: Checkout header 统一
-9. M3-M4: 触摸目标修正
-10. M5-M6: Settings 布局统一
-11. M7: Safe Area 补全
-12. M8: Listing 按钮收纳
+- **建议**: "Browse Categories" 提升到首屏或第二屏可见区域
 
-### P2 — 下周改进（Minor）
+### P3-003: Analytics "Coming Soon" 页面
 
-13. m1-m8: 各细节修正
+- **建议**: 即使功能未就绪，可展示 mock 数据预览 + "Analytics is coming soon — here's a preview"
+
+### P3-004: 产品详情缺少社交分享按钮的视觉提示
+
+- **桌面端有分享图标**，移动端不明显
+- **建议**: 移动端添加浮动分享按钮或在操作栏中更醒目
+
+### P3-005: 钱包页可增加交易记录入口
+
+- **截图**: `mobile-authed-wallet`
+- **现状**: 展示余额 + 4 币种列表，但无交易历史入口
+- **建议**: 每个币种点击后展示交易记录
+
+---
+
+## 六、竞品对标总结
+
+### 买家体验
+
+| 阶段 | vs Amazon/淘宝         | vs Shopify Storefront           | Mobazha 独特优势                         |
+| ---- | ---------------------- | ------------------------------- | ---------------------------------------- |
+| 发现 | 略落后（缺个性化推荐） | 持平（搜索 + 分类基础功能到位） | 社区市集(Community Marketplaces)模式独特 |
+| 评估 | 略落后（缺 Q&A、对比） | 持平                            | Buyer Protection 信任卡片设计优秀        |
+| 购买 | 持平（3步结账标准）    | 持平                            | 加密 + 法币双轨支付                      |
+| 售后 | 略落后（缺追踪可视化） | 持平                            | 去中心化争议仲裁(Moderator)独特          |
+
+### 卖家体验
+
+| 阶段 | vs Shopify           | vs Etsy          | Mobazha 独特优势                      |
+| ---- | -------------------- | ---------------- | ------------------------------------- |
+| 开店 | 持平（4步向导优秀）  | 略领先（更简洁） | AI Store Builder + RWA Token 商品类型 |
+| 运营 | 略落后（缺数据图表） | 持平             | 零佣金                                |
+| 管理 | 持平                 | 持平             | Collection + Discount 管理到位        |
+
+---
+
+## 七、移动端专项评估
+
+| 检查项       | 评分 | 发现                                                                            |
+| ------------ | ---- | ------------------------------------------------------------------------------- |
+| **拇指区**   | 4/5  | CTA 按钮基本在底部安全区；但商品详情的 "Add to Cart" 在屏幕中间                 |
+| **导航深度** | 4/5  | 核心路径 4-5 步，合理；但购物车→结账可加智能提示                                |
+| **滚动长度** | 3/5  | 首页需滚动 3-4 屏才到分类；商品详情也偏长                                       |
+| **底部导航** | 4/5  | 5 Tab 高亮正确，Cart Badge 有效；但登录后 Tab 从 3→5 的变化可能令用户短暂迷失   |
+| **手势暗示** | 2/5  | **最弱环节**：多处横滑内容无 peek/dot 指示器（首页商品、Featured Marketplaces） |
+| **键盘适配** | 3/5  | 从截图无法验证，需运行时测试                                                    |
+
+---
+
+## 八、Top 10 优先修复清单
+
+| #   | ID     | 优先级 | 问题                               | 工作量预估 | 状态                                                             |
+| --- | ------ | ------ | ---------------------------------- | ---------- | ---------------------------------------------------------------- |
+| 1   | P0-001 | P0     | 聊天页面 404 崩溃                  | 0.5h       | ✅ 已修复 — E2E 测试移除无效 /chat 路由                          |
+| 2   | P0-002 | P0     | 登录页 Logo 破损                   | 0.5h       | ⏳ 待修复（Casdoor 配置问题）                                    |
+| 3   | P1-001 | P1     | 结账页商品重复显示                 | 2h         | ⏳ 待修复                                                        |
+| 4   | P1-002 | P1     | Shipping 选项重复                  | 2h         | ⏳ 待修复                                                        |
+| 5   | P1-003 | P1     | Escrow → Buyer Protection 术语统一 | 1h         | ✅ 已修复 — en.ts + zh.ts 全量替换                               |
+| 6   | P1-004 | P1     | 裸 Peer ID 暴露                    | 1h         | ✅ 已修复 — OrderCounterpartyCard 使用 formatUserName + 角色标签 |
+| 7   | P1-005 | P1     | 购物车 Clear All 无确认            | 0.5h       | ✅ 已修复 — ClearCartAlert 确认对话框（3 组件）                  |
+| 8   | P2-003 | P2     | 搜索结果被 BottomNav 遮挡          | 0.5h       | ✅ 已修复 — SearchMobile 添加 pb-24                              |
+| 9   | P2-001 | P2     | 首页内容重复                       | 2h         | ⏳ 待修复                                                        |
+| 10  | P1-006 | P1     | 零评分显示策略                     | 1h         | ✅ 已修复 — "New" 标签替代空星 + Collection 页 props bug 修复    |
+
+**额外修复**：
+
+- P2-005: `order.additionalInfo` 字段名暴露 → ✅ 已添加 i18n key（en.ts + zh.ts）
+
+---
+
+## 九、下一步
+
+1. **剩余 P0/P1 修复**：P0-002（Casdoor Logo）、P1-001（结账重复）、P1-002（Shipping 重复）
+2. 创建 demo-journey specs 覆盖更多状态（空购物车、争议订单、退款等）
+3. 运行 journey 截图 + 第二轮 AI 审查（覆盖完整卖家开店、买家售后流程）
+4. 独立站专项审查（买家 OAuth 流程、政策页面、卖家登录体验）
+5. 完成其他语言的 Escrow → Buyer Protection 术语替换（ja/fr/de/es/ko）

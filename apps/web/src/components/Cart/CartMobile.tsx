@@ -13,6 +13,7 @@ import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem } from '@mobazha/core';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
+import { ClearCartAlert } from './ClearCartAlert';
 
 function SwipeableCartItem({
   item,
@@ -252,12 +253,16 @@ export function CartMobile() {
       <MobilePageHeader
         title={t('cart.title')}
         rightAction={
-          <button
-            onClick={clearCart}
-            className="text-muted-foreground hover:text-destructive font-medium text-xs touch-feedback"
-          >
-            {t('common.clearAll')}
-          </button>
+          <ClearCartAlert onConfirm={clearCart}>
+            {openDialog => (
+              <button
+                onClick={openDialog}
+                className="text-muted-foreground hover:text-destructive font-medium text-xs touch-feedback"
+              >
+                {t('common.clearAll')}
+              </button>
+            )}
+          </ClearCartAlert>
         }
       />
 

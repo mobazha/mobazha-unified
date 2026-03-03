@@ -410,8 +410,8 @@ const mockVendorProfile = {
   name: 'TechStore',
   handle: 'techstore',
   location: 'San Francisco, CA',
-  avatarHashes: { medium: '', small: '', tiny: '' },
-  about: 'Premium electronics store',
+  avatarHashes: mockThumbnail(64),
+  about: 'Premium electronics store with crypto-native payments and worldwide shipping.',
 };
 
 const mockBuyerProfile = {
@@ -419,8 +419,8 @@ const mockBuyerProfile = {
   name: 'CryptoBuyer',
   handle: 'cryptobuyer',
   location: 'New York, NY',
-  avatarHashes: { medium: '', small: '', tiny: '' },
-  about: '',
+  avatarHashes: mockThumbnail(177),
+  about: 'Web3 enthusiast and frequent buyer.',
 };
 
 /**
@@ -633,7 +633,39 @@ export async function mockStoreListingsAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: wrapData({ sections: [] }),
+      body: wrapData({
+        sections: [
+          {
+            id: 'hero',
+            type: 'hero',
+            visible: true,
+            config: {
+              headline: 'Welcome to TechStore',
+              subheadline: 'Premium electronics with crypto-native payments',
+              ctaText: 'Shop Now',
+              ctaLink: '/search',
+            },
+          },
+          {
+            id: 'featured',
+            type: 'product_grid',
+            visible: true,
+            config: { title: 'Featured Products', maxItems: 6 },
+          },
+          {
+            id: 'trust',
+            type: 'trust_badges',
+            visible: true,
+            config: {
+              badges: [
+                { icon: 'shield', text: 'Buyer Protection' },
+                { icon: 'truck', text: 'Free Shipping' },
+                { icon: 'refresh', text: '30-Day Returns' },
+              ],
+            },
+          },
+        ],
+      }),
     });
   });
 }
