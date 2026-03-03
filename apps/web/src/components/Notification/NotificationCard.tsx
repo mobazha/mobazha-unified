@@ -139,7 +139,7 @@ export function OrderNotificationCard({
   const content = (
     <div
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all',
+        'flex items-start gap-3 p-3 sm:p-4 min-h-[56px] rounded-lg cursor-pointer transition-all',
         !read ? 'bg-primary/5 border-l-4 border-l-primary' : 'bg-transparent hover:bg-muted/50',
         className
       )}
@@ -236,13 +236,12 @@ export function FollowNotificationCard({
   const content = (
     <div
       className={cn(
-        'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all',
+        'flex items-center gap-3 p-3 sm:p-4 min-h-[56px] rounded-lg cursor-pointer transition-all',
         !read ? 'bg-primary/5 border-l-4 border-l-primary' : 'bg-transparent hover:bg-muted/50',
         className
       )}
       onClick={handleClick}
     >
-      {/* 头像 */}
       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
         {avatarHash ? (
           <img
@@ -314,7 +313,7 @@ export function DisputeNotificationCard({
   const content = (
     <div
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all',
+        'flex items-start gap-3 p-3 sm:p-4 min-h-[56px] rounded-lg cursor-pointer transition-all',
         !read ? 'bg-warning/8 border-l-4 border-l-warning' : 'bg-transparent hover:bg-muted/50',
         className
       )}

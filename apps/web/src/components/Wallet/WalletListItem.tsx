@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useCurrency } from '@mobazha/core';
+import { useCurrency, useI18n } from '@mobazha/core';
 import { WalletBalance } from './WalletCard';
 
 export interface WalletListItemProps {
@@ -20,6 +20,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   onReceive,
 }) => {
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { t } = useI18n();
 
   return (
     <div className="overflow-hidden">
@@ -99,7 +100,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                   d="M7 11l5-5m0 0l5 5m-5-5v12"
                 />
               </svg>
-              Send
+              {t('wallet.send')}
             </button>
             <button
               onClick={e => {
@@ -116,7 +117,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                   d="M17 13l-5 5m0 0l-5-5m5 5V6"
                 />
               </svg>
-              Receive
+              {t('wallet.receive')}
             </button>
           </div>
         </div>

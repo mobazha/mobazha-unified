@@ -170,14 +170,13 @@ export default function HomePage() {
         if (featured.length > 0) {
           setFeaturedProducts(featured.map(convertToDisplayProduct));
         } else {
-          setFeaturedProducts(placeholderProducts.slice(0, 4));
+          setFeaturedProducts([]);
         }
       } catch (error) {
         console.error('Failed to fetch products:', error);
-        // 出错时使用占位数据
         if (!isCancelled) {
           setTrendingProducts(placeholderProducts);
-          setFeaturedProducts(placeholderProducts.slice(0, 4));
+          setFeaturedProducts([]);
         }
       } finally {
         if (!isCancelled) {
