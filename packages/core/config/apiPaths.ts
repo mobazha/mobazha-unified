@@ -335,9 +335,8 @@ export const HOSTING_API = {
   MARKETPLACE_ACTIVITY: (id: string) => `/platform/v1/marketplaces/${id}/activity`,
 
   // --- Fiat Payment Onboarding (SaaS) ---
-  FIAT_ONBOARDING_START: (provider: string) =>
-    `/platform/v1/integrations/fiat/${provider}/onboarding`,
-  FIAT_ONBOARDING_STATUS: (provider: string) => `/platform/v1/integrations/fiat/${provider}/status`,
+  FIAT_ONBOARDING_START: (provider: string) => `/platform/v1/fiat/providers/${provider}/onboarding`,
+  FIAT_ONBOARDING_STATUS: (provider: string) => `/platform/v1/fiat/providers/${provider}/status`,
 } as const;
 
 // ============================================================
