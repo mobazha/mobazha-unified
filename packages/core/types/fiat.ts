@@ -58,6 +58,7 @@ export interface FiatProviderInfo {
 
 export interface FiatAccountStatus {
   accountID: string;
+  email?: string;
   isActive: boolean;
   status: string;
   chargesEnabled: boolean;

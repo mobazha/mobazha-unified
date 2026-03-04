@@ -40,7 +40,7 @@ export function useFiatProviders(vendorPeerID?: string): UseFiatProvidersResult 
     fetchProviders();
   }, [fetchProviders]);
 
-  const activeProviders = providers.filter(p => p.status === 'active');
+  const activeProviders = providers.filter(p => p.status === 'active' || p.status === 'restricted');
 
   const hasActiveProvider = useCallback(
     (providerID: string) => activeProviders.some(p => p.providerID === providerID),

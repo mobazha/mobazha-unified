@@ -4,6 +4,9 @@
  * Buyer endpoints: getProviders, createPayment, capturePayment
  * Seller endpoints: getConfig, saveConfig, deleteConfig, getProviderStatus
  * SaaS onboarding: startOnboarding, getOnboardingStatus
+ *
+ * NOTE: client.ts request() auto-unwraps {"data": ...} envelopes,
+ * so callers receive the inner payload directly — do NOT access .data again.
  */
 
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
@@ -17,57 +20,57 @@ import type {
   FiatProviderConfigInput,
   CreateFiatPaymentParams,
 } from '../../types/fiat';
-import type { DataEnvelope } from '../../types/common';
 
 // ========== Buyer-facing ==========
 
 export async function getProviders(vendorPeerID?: string): Promise<FiatProviderInfo[]> {
-  const qs = vendorPeerID ? `?vendor=${vendorPeerID}` : '';
-  const res = await publicGet<DataEnvelope<FiatProviderInfo[]>>(`${NODE_API.FIAT_PROVIDERS}${qs}`);
-  return Array.isArray(res?.data) ? res.data : [];
+  const path = vendorPeerID
+    ? NODE_API.FIAT_PROVIDERS_PUBLIC(vendorPeerID)
+    : NODE_API.FIAT_PROVIDERS;
+  const res = await publicGet<FiatProviderInfo[]>(path);
+  return Array.isArray(res) ? res : [];
 }
 
 export async function createPayment(
   provider: string,
   params: CreateFiatPaymentParams
 ): Promise<FiatPaymentSession> {
-  const res = await authPost<DataEnvelope<FiatPaymentSession>>(
-    NODE_API.FIAT_CREATE_PAYMENT(provider),
-    params
-  );
-  return res.data;
+  return authPost<FiatPaymentSession>(NODE_API.FIAT_CREATE_PAYMENT(provider), params);
 }
 
 export async function capturePayment(
   provider: string,
   sessionID: string
 ): Promise<FiatPaymentResult> {
-  const res = await authPost<DataEnvelope<FiatPaymentResult>>(
-    NODE_API.FIAT_CAPTURE_PAYMENT(provider, sessionID)
-  );
-  return res.data;
+  return authPost<FiatPaymentResult>(NODE_API.FIAT_CAPTURE_PAYMENT(provider, sessionID));
 }
 
 // ========== Seller-facing (standalone mode) ==========
 
 export async function getProviderStatus(provider: string): Promise<FiatAccountStatus> {
-  const res = await authGet<DataEnvelope<FiatAccountStatus>>(
-    NODE_API.FIAT_PROVIDER_STATUS(provider)
-  );
-  return res.data;
+  return authGet<FiatAccountStatus>(NODE_API.FIAT_PROVIDER_STATUS(provider));
 }
 
+const FIAT_PROVIDER_IDS = ['stripe', 'paypal'] as const;
+
 export async function getConfig(): Promise<FiatProviderConfigView[]> {
-  const res = await authGet<DataEnvelope<FiatProviderConfigView[]>>(NODE_API.FIAT_PROVIDER_CONFIG);
-  return res.data;
+  const results = await Promise.allSettled(
+    FIAT_PROVIDER_IDS.map(id => authGet<FiatProviderConfigView>(NODE_API.FIAT_PROVIDER_CONFIG(id)))
+  );
+  return results
+    .filter(
+      (r): r is PromiseFulfilledResult<FiatProviderConfigView> =>
+        r.status === 'fulfilled' && r.value != null
+    )
+    .map(r => r.value);
 }
 
 export async function saveConfig(provider: string, input: FiatProviderConfigInput): Promise<void> {
-  await authPut<DataEnvelope<null>>(NODE_API.FIAT_PROVIDER_CONFIG_BY_ID(provider), input);
+  await authPut<null>(NODE_API.FIAT_PROVIDER_CONFIG(provider), input);
 }
 
 export async function deleteConfig(provider: string): Promise<void> {
-  await authDel<DataEnvelope<null>>(NODE_API.FIAT_PROVIDER_CONFIG_BY_ID(provider));
+  await authDel<null>(NODE_API.FIAT_PROVIDER_CONFIG(provider));
 }
 
 // ========== SaaS onboarding ==========
@@ -76,19 +79,12 @@ export async function startOnboarding(
   provider: string,
   opts?: { returnURL?: string; refreshURL?: string }
 ): Promise<{ url: string }> {
-  const res = await hostingPost<DataEnvelope<{ url: string }>>(
-    HOSTING_API.FIAT_ONBOARDING_START(provider),
-    {
-      returnURL: opts?.returnURL || '',
-      refreshURL: opts?.refreshURL || '',
-    }
-  );
-  return res.data;
+  return hostingPost<{ url: string }>(HOSTING_API.FIAT_ONBOARDING_START(provider), {
+    returnURL: opts?.returnURL || '',
+    refreshURL: opts?.refreshURL || '',
+  });
 }
 
 export async function getOnboardingStatus(provider: string): Promise<FiatAccountStatus> {
-  const res = await hostingGet<DataEnvelope<FiatAccountStatus>>(
-    HOSTING_API.FIAT_ONBOARDING_STATUS(provider)
-  );
-  return res.data;
+  return hostingGet<FiatAccountStatus>(HOSTING_API.FIAT_ONBOARDING_STATUS(provider));
 }
