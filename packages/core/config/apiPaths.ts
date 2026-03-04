@@ -232,8 +232,6 @@ export const HOSTING_API = {
   STREAM_AUTH: '/platform/v1/stream/auth',
 
   // --- Integrations ---
-  INTEGRATIONS_STRIPE_ACCOUNT: (peerID: string) =>
-    `/platform/v1/integrations/stripe/accounts/${peerID}`,
   INTEGRATIONS_TELEGRAM_WEBHOOK: '/platform/v1/integrations/telegram/webhook',
 
   // --- Relay ---
