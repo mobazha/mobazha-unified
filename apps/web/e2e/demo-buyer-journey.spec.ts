@@ -19,6 +19,7 @@ import {
   mockProductDetailAPI,
   mockImageRoutes,
   mockPreferencesAPI,
+  mockFiatProvidersAPI,
   getCartLocalStorageScript,
 } from './fixtures/mock-api-routes';
 import {
@@ -365,6 +366,7 @@ test.describe('Buyer Journey — 19-step AI UX Audit', () => {
     await setupMockAuth(page);
     await mockProductDetailAPI(page);
     await mockPreferencesAPI(page);
+    await mockFiatProvidersAPI(page);
     await mockImageRoutes(page);
     await page.addInitScript(getCartLocalStorageScript());
     const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';

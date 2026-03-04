@@ -1013,6 +1013,36 @@ export async function mockCollectionsAdminAPI(page: Page): Promise<void> {
 }
 
 /**
+ * Mock fiat payment providers API for visual tests.
+ * Returns Stripe + PayPal as active providers.
+ */
+export async function mockFiatProvidersAPI(page: Page): Promise<void> {
+  await page.route('**/fiat/providers**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([
+        { providerID: 'stripe', status: 'active', accountID: 'acct_stripe_mock' },
+        { providerID: 'paypal', status: 'active', accountID: 'paypal_mock@example.com' },
+      ]),
+    });
+  });
+
+  await page.route('**/fiat/config**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([
+        { providerID: 'stripe', enabled: true, mode: 'live' },
+        { providerID: 'paypal', enabled: true, mode: 'live' },
+      ]),
+    });
+  });
+}
+
+/**
  * Set up all mocks for a comprehensive visual test run.
  */
 export async function mockAllAPIs(page: Page): Promise<void> {
@@ -1020,4 +1050,5 @@ export async function mockAllAPIs(page: Page): Promise<void> {
   await mockNotificationsAPI(page);
   await mockSearchAPI(page);
   await mockImageRoutes(page);
+  await mockFiatProvidersAPI(page);
 }

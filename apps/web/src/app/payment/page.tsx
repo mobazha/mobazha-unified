@@ -8,6 +8,7 @@ import {
   PaymentProtectionCard,
   CheckoutBottomBar,
   TransactionOverlay,
+  FiatPaymentSection,
 } from '@/components/Payment';
 import type { PaymentStep } from '@/components/Payment';
 import { OrderSummaryCard } from '@/components/Order';
@@ -144,10 +145,12 @@ export default function PaymentPage() {
   // 使用支付选择器 Hook
   const {
     selectedTokenId,
+    selectedFiatProvider,
     selectedModerator: paymentModerator,
     openPaymentSelector,
     openModeratorSelector,
     restoreFromSession,
+    setVendorPeerID,
   } = usePaymentSelector();
 
   // 页面聚焦时恢复 sessionStorage 状态
@@ -165,6 +168,13 @@ export default function PaymentPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [restoreFromSession]);
+
+  // 设置卖家 PeerID 以获取可用法币支付方式
+  useEffect(() => {
+    if (orderDetails?.vendor?.peerID) {
+      setVendorPeerID(orderDetails.vendor.peerID);
+    }
+  }, [orderDetails?.vendor?.peerID, setVendorPeerID]);
 
   // 加载订单详情
   useEffect(() => {
@@ -412,8 +422,10 @@ export default function PaymentPage() {
   const cryptoAmount = totalWithFee / exchangeRate;
   const nativeSymbol = 'ETH'; // TODO: 根据选择的支付方式确定
 
-  // 执行支付
+  // 执行支付（仅加密货币，法币由 FiatPaymentSection 独立处理）
   const handlePayment = useCallback(async () => {
+    if (selectedFiatProvider) return;
+
     if (!orderDetails) {
       toast({
         title: t('payment.noOrderData'),
@@ -614,6 +626,7 @@ export default function PaymentPage() {
     orderDetails,
     orderID,
     selectedTokenId,
+    selectedFiatProvider,
     paymentProtectionEnabled,
     paymentModerator,
     isConnected,
@@ -741,19 +754,50 @@ export default function PaymentPage() {
                         </h2>
                         <PaymentMethodSummary
                           selectedTokenId={selectedTokenId}
+                          selectedFiatProvider={selectedFiatProvider}
                           onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
                         />
                       </CardContent>
                     </Card>
 
-                    {/* Payment Protection */}
-                    <PaymentProtectionCard
-                      enabled={paymentProtectionEnabled}
-                      onEnabledChange={setPaymentProtectionEnabled}
-                      selectedModerator={paymentModerator}
-                      onChangeModerator={() => openModeratorSelector('/payment?orderID=' + orderID)}
-                      protectionDays={45}
-                    />
+                    {/* Fiat Payment Form (Stripe / PayPal) */}
+                    {selectedFiatProvider && (
+                      <Card>
+                        <CardContent className="p-4 sm:p-6">
+                          <FiatPaymentSection
+                            providerID={selectedFiatProvider}
+                            orderID={orderDetails.orderID}
+                            amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
+                            currency={orderDetails.currency}
+                            description={orderDetails.items[0]?.title}
+                            returnUrl={buildConfirmationUrl(orderDetails)}
+                            onPaymentSuccess={() => {
+                              router.push(buildConfirmationUrl(orderDetails));
+                            }}
+                            onPaymentError={msg => {
+                              toast({
+                                title: t('fiat.genericError'),
+                                description: msg,
+                                variant: 'destructive',
+                              });
+                            }}
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Payment Protection (crypto only) */}
+                    {!selectedFiatProvider && (
+                      <PaymentProtectionCard
+                        enabled={paymentProtectionEnabled}
+                        onEnabledChange={setPaymentProtectionEnabled}
+                        selectedModerator={paymentModerator}
+                        onChangeModerator={() =>
+                          openModeratorSelector('/payment?orderID=' + orderID)
+                        }
+                        protectionDays={45}
+                      />
+                    )}
                   </>
                 )}
               </div>
@@ -822,62 +866,68 @@ export default function PaymentPage() {
                         </div>
                       </HStack>
 
-                      {/* Pay Button - Desktop */}
-                      <Button
-                        className="w-full touch-feedback hidden sm:flex"
-                        size="default"
-                        onClick={!isConnected ? connect : handlePayment}
-                        disabled={
-                          isProcessing ||
-                          isConnecting ||
-                          (isConnected &&
-                            (!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)))
-                        }
-                      >
-                        {isProcessing ? (
-                          <HStack gap="sm" align="center" justify="center">
-                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            <span>{t('payment.processing')}</span>
-                          </HStack>
-                        ) : isConnecting ? (
-                          <HStack gap="sm" align="center" justify="center">
-                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            <span>{t('payment.connecting')}</span>
-                          </HStack>
-                        ) : !isConnected ? (
-                          t('payment.connectWallet')
-                        ) : (
-                          `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
-                        )}
-                      </Button>
+                      {/* Pay Button - Desktop (crypto only) */}
+                      {selectedFiatProvider ? (
+                        <div className="p-3 bg-muted/50 rounded-lg text-center">
+                          <p className="text-sm text-muted-foreground">{t('fiat.sectionTitle')}</p>
+                        </div>
+                      ) : (
+                        <Button
+                          className="w-full touch-feedback hidden sm:flex"
+                          size="default"
+                          onClick={!isConnected ? connect : handlePayment}
+                          disabled={
+                            isProcessing ||
+                            isConnecting ||
+                            (isConnected &&
+                              (!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)))
+                          }
+                        >
+                          {isProcessing ? (
+                            <HStack gap="sm" align="center" justify="center">
+                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                              <span>{t('payment.processing')}</span>
+                            </HStack>
+                          ) : isConnecting ? (
+                            <HStack gap="sm" align="center" justify="center">
+                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                              <span>{t('payment.connecting')}</span>
+                            </HStack>
+                          ) : !isConnected ? (
+                            t('payment.connectWallet')
+                          ) : (
+                            `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
+                          )}
+                        </Button>
+                      )}
 
                       {/* Warnings */}
                       {!selectedTokenId && (
@@ -923,8 +973,8 @@ export default function PaymentPage() {
 
       <Footer />
 
-      {/* Mobile Bottom Bar - 仅非 RWA 商品显示 */}
-      {orderDetails && !orderDetails.isRwaToken && (
+      {/* Mobile Bottom Bar (crypto only, fiat uses FiatPaymentSection) */}
+      {orderDetails && !orderDetails.isRwaToken && !selectedFiatProvider && (
         <CheckoutBottomBar
           totalAmount={totalWithFee}
           currency={orderDetails.currency}
