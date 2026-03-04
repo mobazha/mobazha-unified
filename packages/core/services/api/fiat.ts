@@ -32,17 +32,21 @@ export async function getProviders(vendorPeerID?: string): Promise<FiatProviderI
 }
 
 export async function createPayment(
+  vendorPeerID: string,
   provider: string,
   params: CreateFiatPaymentParams
 ): Promise<FiatPaymentSession> {
-  return authPost<FiatPaymentSession>(NODE_API.FIAT_CREATE_PAYMENT(provider), params);
+  return authPost<FiatPaymentSession>(NODE_API.FIAT_CREATE_PAYMENT(vendorPeerID, provider), params);
 }
 
 export async function capturePayment(
+  vendorPeerID: string,
   provider: string,
   sessionID: string
 ): Promise<FiatPaymentResult> {
-  return authPost<FiatPaymentResult>(NODE_API.FIAT_CAPTURE_PAYMENT(provider, sessionID));
+  return authPost<FiatPaymentResult>(
+    NODE_API.FIAT_CAPTURE_PAYMENT(vendorPeerID, provider, sessionID)
+  );
 }
 
 // ========== Seller-facing (standalone mode) ==========
