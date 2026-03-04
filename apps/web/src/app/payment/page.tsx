@@ -766,6 +766,7 @@ export default function PaymentPage() {
                         <CardContent className="p-4 sm:p-6">
                           <FiatPaymentSection
                             providerID={selectedFiatProvider}
+                            vendorPeerID={orderDetails.vendor.peerID}
                             orderID={orderDetails.orderID}
                             amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
                             currency={orderDetails.currency}
@@ -930,14 +931,14 @@ export default function PaymentPage() {
                       )}
 
                       {/* Warnings */}
-                      {!selectedTokenId && (
+                      {!selectedTokenId && !selectedFiatProvider && (
                         <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
                           <p className="text-xs sm:text-sm text-warning">
                             {t('payment.selectPaymentMethodWarning')}
                           </p>
                         </div>
                       )}
-                      {paymentProtectionEnabled && !paymentModerator && (
+                      {!selectedFiatProvider && paymentProtectionEnabled && !paymentModerator && (
                         <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
                           <p className="text-xs sm:text-sm text-warning">
                             {t('payment.selectModeratorWarning')}

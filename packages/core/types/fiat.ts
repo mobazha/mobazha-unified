@@ -7,6 +7,7 @@ export type CaptureMode = 'automatic' | 'manual';
 export interface StripeSessionData {
   clientSecret: string;
   publishableKey: string;
+  connectedAccountId?: string;
 }
 
 export interface PayPalSessionData {

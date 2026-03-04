@@ -16,10 +16,12 @@ interface UseFiatPaymentResult {
   result: FiatPaymentResult | null;
   error: string | null;
   createSession: (
+    vendorPeerID: string,
     provider: FiatProviderID,
     params: CreateFiatPaymentParams
   ) => Promise<FiatPaymentSession | null>;
   captureSession: (
+    vendorPeerID: string,
     provider: FiatProviderID,
     sessionID: string
   ) => Promise<FiatPaymentResult | null>;
@@ -50,13 +52,14 @@ export function useFiatPayment(): UseFiatPaymentResult {
 
   const createSession = useCallback(
     async (
+      vendorPeerID: string,
       provider: FiatProviderID,
       params: CreateFiatPaymentParams
     ): Promise<FiatPaymentSession | null> => {
       setStatus('creating');
       setError(null);
       try {
-        const sess = await fiatApi.createPayment(provider, params);
+        const sess = await fiatApi.createPayment(vendorPeerID, provider, params);
         if (abortRef.current) return null;
         setSession(sess);
         setStatus('pending');
@@ -73,11 +76,15 @@ export function useFiatPayment(): UseFiatPaymentResult {
   );
 
   const captureSession = useCallback(
-    async (provider: FiatProviderID, sessionID: string): Promise<FiatPaymentResult | null> => {
+    async (
+      vendorPeerID: string,
+      provider: FiatProviderID,
+      sessionID: string
+    ): Promise<FiatPaymentResult | null> => {
       setStatus('processing');
       setError(null);
       try {
-        const res = await fiatApi.capturePayment(provider, sessionID);
+        const res = await fiatApi.capturePayment(vendorPeerID, provider, sessionID);
         if (abortRef.current) return null;
         setResult(res);
         setStatus(res.status === 'succeeded' ? 'succeeded' : 'failed');

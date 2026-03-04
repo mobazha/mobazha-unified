@@ -10,6 +10,7 @@ import { PayPalPaymentForm } from './PayPalPaymentForm';
 
 export interface FiatPaymentSectionProps {
   providerID: string;
+  vendorPeerID: string;
   orderID: string;
   amount: number;
   currency: string;
@@ -24,6 +25,7 @@ export interface FiatPaymentSectionProps {
 
 export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   providerID,
+  vendorPeerID,
   orderID,
   amount,
   currency,
@@ -40,11 +42,12 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   const [paymentDone, setPaymentDone] = useState(false);
   const [paymentError, setPaymentError] = useState<string>();
   const createdRef = useRef(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (createdRef.current || !orderID || !providerID) return;
+    if (createdRef.current || !orderID || !providerID || !vendorPeerID) return;
     createdRef.current = true;
-    createSession(providerID as FiatProviderID, {
+    createSession(vendorPeerID, providerID as FiatProviderID, {
       providerID,
       orderID,
       amount,
@@ -53,7 +56,18 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
       returnURL: returnUrl,
       cancelURL: cancelUrl || returnUrl,
     } satisfies CreateFiatPaymentParams);
-  }, [orderID, providerID, amount, currency, description, returnUrl, cancelUrl, createSession]);
+  }, [
+    orderID,
+    providerID,
+    vendorPeerID,
+    amount,
+    currency,
+    description,
+    returnUrl,
+    cancelUrl,
+    createSession,
+    retryKey,
+  ]);
 
   const handleSuccess = useCallback(() => {
     setPaymentDone(true);
@@ -73,6 +87,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     createdRef.current = false;
     setPaymentDone(false);
     setPaymentError(undefined);
+    setRetryKey(k => k + 1);
   }, [reset]);
 
   if (paymentDone) {
