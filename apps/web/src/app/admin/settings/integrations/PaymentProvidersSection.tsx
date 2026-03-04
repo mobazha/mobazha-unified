@@ -300,7 +300,11 @@ export const PaymentProvidersSection: React.FC = () => {
   );
 
   const handleStartOnboarding = useCallback(async (providerID: string) => {
-    const result = await fiatApi.startOnboarding(providerID);
+    const currentUrl = window.location.href;
+    const result = await fiatApi.startOnboarding(providerID, {
+      returnURL: currentUrl,
+      refreshURL: currentUrl,
+    });
     if (result?.url) {
       window.open(result.url, '_blank', 'noopener');
     }

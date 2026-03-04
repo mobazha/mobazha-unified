@@ -12,7 +12,8 @@ import { authGet, authPost, authPut, publicGet, searchPost } from './helpers';
 /**
  * 获取用户资料
  *
- * 使用共享的 get() client，确保 401 等错误被统一拦截处理。
+ * SaaS 模式优先从 search 服务获取（索引更快），失败时回退到 node 直连 API。
+ * 独立站模式直接使用 node API。
  */
 export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   try {
@@ -22,9 +23,14 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
     if (isStandaloneMode()) {
       return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
     }
-    const timestamp = Date.now();
-    const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}?${timestamp}`;
-    return await get<UserProfile>(url, getAuthHeaders());
+    // SaaS: search service first, node API fallback
+    try {
+      const timestamp = Date.now();
+      const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}?${timestamp}`;
+      return await get<UserProfile>(url, getAuthHeaders());
+    } catch {
+      return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
+    }
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       return null;

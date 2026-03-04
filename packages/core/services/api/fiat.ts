@@ -7,7 +7,7 @@
  */
 
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
-import { authGet, authPost, authPut, authDel, publicGet } from './helpers';
+import { authGet, authPost, authPut, authDel, publicGet, hostingPost, hostingGet } from './helpers';
 import type {
   FiatProviderInfo,
   FiatPaymentSession,
@@ -72,15 +72,22 @@ export async function deleteConfig(provider: string): Promise<void> {
 
 // ========== SaaS onboarding ==========
 
-export async function startOnboarding(provider: string): Promise<{ url: string }> {
-  const res = await authPost<DataEnvelope<{ url: string }>>(
-    HOSTING_API.FIAT_ONBOARDING_START(provider)
+export async function startOnboarding(
+  provider: string,
+  opts?: { returnURL?: string; refreshURL?: string }
+): Promise<{ url: string }> {
+  const res = await hostingPost<DataEnvelope<{ url: string }>>(
+    HOSTING_API.FIAT_ONBOARDING_START(provider),
+    {
+      returnURL: opts?.returnURL || '',
+      refreshURL: opts?.refreshURL || '',
+    }
   );
   return res.data;
 }
 
 export async function getOnboardingStatus(provider: string): Promise<FiatAccountStatus> {
-  const res = await authGet<DataEnvelope<FiatAccountStatus>>(
+  const res = await hostingGet<DataEnvelope<FiatAccountStatus>>(
     HOSTING_API.FIAT_ONBOARDING_STATUS(provider)
   );
   return res.data;

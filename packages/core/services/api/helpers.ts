@@ -19,6 +19,7 @@ import {
   getMyGatewayUrl,
   getGatewayUrl,
   getSearchUrl,
+  getHostingUrl,
   getAuthHeaders,
   getHeadersWithContext,
 } from './config';
@@ -84,6 +85,26 @@ export function publicSafeGet<T>(
   const reqOpts: RequestOptions = { headers: getHeadersWithContext() };
   if (opts?.timeout) reqOpts.timeout = opts.timeout;
   return safeRequest<T>(`${getGatewayUrl()}${path}`, reqOpts, fallback);
+}
+
+// =====================================================================
+// Layer H: Hosting Platform — /platform/v1/* via getHostingUrl()
+// =====================================================================
+
+export function hostingGet<T>(path: string): Promise<T> {
+  return get<T>(`${getHostingUrl()}${path}`, getAuthHeaders());
+}
+
+export function hostingPost<T>(path: string, body?: unknown): Promise<T> {
+  return post<T>(`${getHostingUrl()}${path}`, body, getAuthHeaders());
+}
+
+export function hostingPut<T>(path: string, body?: unknown): Promise<T> {
+  return put<T>(`${getHostingUrl()}${path}`, body, getAuthHeaders());
+}
+
+export function hostingDel<T>(path: string): Promise<T> {
+  return del<T>(`${getHostingUrl()}${path}`, getAuthHeaders());
 }
 
 // =====================================================================
