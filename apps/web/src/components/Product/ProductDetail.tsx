@@ -29,6 +29,7 @@ import {
   productsApi,
   discountsApi,
   useListing,
+  useFiatProviders,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
@@ -38,6 +39,7 @@ import { Heart } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
+import { PaymentMethodBadges } from '@/components/Payment/PaymentMethodBadges';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
@@ -136,6 +138,10 @@ export function ProductDetail({
     isAuthenticated &&
     !!product?.vendorID?.peerID &&
     currentUserProfile?.peerID === product.vendorID.peerID;
+
+  const { activeProviders: fiatActiveProviders } = useFiatProviders(
+    peerID || product?.vendorID?.peerID
+  );
 
   // 存储回调函数的 ref，避免在依赖数组中引用
   const onProductLoadedRef = useRef(onProductLoaded);
@@ -739,6 +745,13 @@ export function ProductDetail({
               </span>
             </div>
 
+            {fiatActiveProviders.length > 0 && (
+              <PaymentMethodBadges
+                fiatProviders={fiatActiveProviders.map(p => p.providerID)}
+                size={isModal ? 'sm' : 'md'}
+              />
+            )}
+
             <BuyerProtectionBadge variant="inline" className="mt-1" />
 
             {/* Applicable discounts */}
@@ -1164,14 +1177,25 @@ export function ProductDetail({
                   )}
                 </VStack>
 
-                {acceptedCurrencies.length > 0 && (
-                  <div className="pt-3 border-t border-border">
-                    <span className="text-xs text-muted-foreground">
-                      {t('product.acceptedCurrencies')}:{' '}
-                    </span>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {acceptedCurrencies.join(', ')}
-                    </span>
+                {(acceptedCurrencies.length > 0 || fiatActiveProviders.length > 0) && (
+                  <div className="pt-3 border-t border-border space-y-2">
+                    {fiatActiveProviders.length > 0 && (
+                      <PaymentMethodBadges
+                        fiatProviders={fiatActiveProviders.map(p => p.providerID)}
+                        showCrypto={acceptedCurrencies.length > 0}
+                        size="sm"
+                      />
+                    )}
+                    {acceptedCurrencies.length > 0 && fiatActiveProviders.length === 0 && (
+                      <div>
+                        <span className="text-xs text-muted-foreground">
+                          {t('product.acceptedCurrencies')}:{' '}
+                        </span>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {acceptedCurrencies.join(', ')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>

@@ -7,8 +7,14 @@ import { useI18n } from '@mobazha/core';
 import { getChainById, getTokenById } from './config';
 import { TokenIcon } from './TokenIcon';
 
+const FIAT_I18N_KEYS: Record<string, string> = {
+  stripe: 'fiat.creditDebitCard',
+  paypal: 'fiat.paypal',
+};
+
 export interface PaymentMethodSummaryProps {
   selectedTokenId?: string;
+  selectedFiatProvider?: string;
   onEdit: () => void;
   disabled?: boolean;
   className?: string;
@@ -16,6 +22,7 @@ export interface PaymentMethodSummaryProps {
 
 export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
   selectedTokenId,
+  selectedFiatProvider,
   onEdit,
   disabled = false,
   className,
@@ -25,7 +32,6 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
   const token = selectedTokenId ? getTokenById(selectedTokenId) : undefined;
   const chain = token ? getChainById(token.chain) : undefined;
 
-  // 判断是否需要显示链图标
   const showChainBadge = token && !token.isNative && token.chain !== token.token;
 
   return (
@@ -43,8 +49,12 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
       )}
     >
       <div className="flex items-center gap-3">
-        {/* 代币图标 */}
-        {token ? (
+        {/* Icon */}
+        {selectedFiatProvider ? (
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <CreditCard className="w-4 h-4 text-primary" />
+          </div>
+        ) : token ? (
           <TokenIcon
             token={token.id}
             size={32}
@@ -57,10 +67,16 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
           </div>
         )}
 
-        {/* 支付方式信息 */}
+        {/* Label */}
         <div className="flex flex-col">
           <span className="text-xs text-muted-foreground">{t('payment.paymentMethod')}</span>
-          {token ? (
+          {selectedFiatProvider ? (
+            <span className="font-medium text-foreground">
+              {FIAT_I18N_KEYS[selectedFiatProvider]
+                ? t(FIAT_I18N_KEYS[selectedFiatProvider])
+                : selectedFiatProvider}
+            </span>
+          ) : token ? (
             <span className="font-medium text-foreground">
               {token.token}
               {chain && token.type && (
