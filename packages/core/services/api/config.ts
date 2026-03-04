@@ -250,7 +250,7 @@ export function getHeadersWithContext(): Record<string, string> {
  * 图片通过 /v1/media/images/ 路径获取，不是 /info/v1/image/
  */
 export function getImageUrl(hash: string | undefined | null): string | undefined {
-  if (!hash || hash === '') {
+  if (!hash || typeof hash !== 'string' || hash === '') {
     return undefined;
   }
   // 如果已经是完整 URL，直接返回

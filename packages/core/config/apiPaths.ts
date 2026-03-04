@@ -178,12 +178,12 @@ export const NODE_API = {
 
   // --- Fiat Payments ---
   FIAT_PROVIDERS: '/fiat/providers',
+  FIAT_PROVIDERS_PUBLIC: (peerID: string) => `/fiat/${peerID}/providers`,
   FIAT_PROVIDER_STATUS: (provider: string) => `/fiat/${provider}/status`,
   FIAT_CREATE_PAYMENT: (provider: string) => `/fiat/${provider}/payments`,
   FIAT_CAPTURE_PAYMENT: (provider: string, sessionID: string) =>
     `/fiat/${provider}/payments/${sessionID}/capture`,
-  FIAT_PROVIDER_CONFIG: '/fiat/config',
-  FIAT_PROVIDER_CONFIG_BY_ID: (provider: string) => `/fiat/config/${provider}`,
+  FIAT_PROVIDER_CONFIG: (provider: string) => `/fiat/${provider}/config`,
 
   // --- Storefront (PG-201) ---
   SETTINGS_STOREFRONT: '/settings/storefront',

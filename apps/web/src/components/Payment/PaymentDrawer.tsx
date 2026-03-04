@@ -93,7 +93,7 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
           </SheetDescription>
         </SheetHeader>
 
-        <div className={cn('mt-4', side === 'bottom' && 'overflow-y-auto px-1')}>
+        <div className={cn('mt-4 px-4', side === 'bottom' && 'overflow-y-auto')}>
           {type === 'payment' ? (
             <PaymentCryptoSelector
               selectedTokenId={selectedTokenId}
