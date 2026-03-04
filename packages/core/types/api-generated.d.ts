@@ -762,44 +762,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/integrations/stripe/accounts/{peerID}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Stripe account info by peerID */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          peerID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Stripe account info */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/platform/v1/group-marketplace/{platform}': {
     parameters: {
       query?: never;
