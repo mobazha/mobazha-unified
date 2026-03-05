@@ -9,8 +9,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useI18n } from '@mobazha/core';
-import type { StoreSection, SectionType } from '@mobazha/core';
-import { SYSTEM_SECTION_TYPES, MAX_SECTIONS } from '@mobazha/core';
+import type { StoreSection } from '@mobazha/core';
+import { MAX_SECTIONS } from '@mobazha/core';
 import {
   DndContext,
   closestCenter,
@@ -44,7 +44,6 @@ interface SectionListEditorProps {
 interface SortableItemProps {
   section: StoreSection;
   isExpanded: boolean;
-  isSystem: boolean;
   onExpandToggle: () => void;
   onToggle: () => void;
   onRemove: () => void;
@@ -54,7 +53,6 @@ interface SortableItemProps {
 function SortableItem({
   section,
   isExpanded,
-  isSystem: isSys,
   onExpandToggle,
   onToggle,
   onRemove,
@@ -135,16 +133,14 @@ function SortableItem({
               <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
             )}
           </button>
-          {!isSys && (
-            <button
-              type="button"
-              onClick={onRemove}
-              className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
-              aria-label="Remove section"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onRemove}
+            className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
+            aria-label="Remove section"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -169,7 +165,6 @@ export function SectionListEditor({
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const canAdd = sections.length < MAX_SECTIONS;
-  const isSystem = (type: SectionType) => SYSTEM_SECTION_TYPES.includes(type);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -195,7 +190,6 @@ export function SectionListEditor({
               key={section.id}
               section={section}
               isExpanded={expandedId === section.id}
-              isSystem={isSystem(section.type)}
               onExpandToggle={() =>
                 setExpandedId(prev => (prev === section.id ? null : section.id))
               }
