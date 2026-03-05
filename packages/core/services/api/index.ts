@@ -139,7 +139,13 @@ export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from
 
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
-export type { AIConfig, AIConfigInput, AIProviderInfo, AITestConnectionResult } from './aiSettings';
+export type {
+  AIConfig,
+  AIConfigInput,
+  AIProviderInfo,
+  AIProviderState,
+  AITestConnectionResult,
+} from './aiSettings';
 export type {
   ChannelConfig,
   ChannelFieldSchema,

@@ -4021,6 +4021,9 @@ export const en: TranslationResource = {
       aiAdvancedSettings: 'Advanced Settings',
       aiModelCustom: 'Custom model...',
       aiModelCustomPlaceholder: 'Enter custom model name',
+      aiSaveActivate: 'Save & Activate',
+      aiProviderActive: 'Active',
+      aiApiKeySaved: 'API key saved',
       unsavedChanges: 'Unsaved changes',
 
       // Payment Providers

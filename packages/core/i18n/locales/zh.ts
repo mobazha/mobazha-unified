@@ -3805,6 +3805,9 @@ export const zh: TranslationResource = {
       aiAdvancedSettings: '高级设置',
       aiModelCustom: '自定义模型...',
       aiModelCustomPlaceholder: '输入自定义模型名称',
+      aiSaveActivate: '保存并启用',
+      aiProviderActive: '使用中',
+      aiApiKeySaved: '密钥已保存',
       unsavedChanges: '有未保存的更改',
 
       // Payment Providers

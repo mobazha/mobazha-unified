@@ -8,12 +8,16 @@
 import { authGet, authPut, authPost } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
-export interface AIConfig {
-  provider: string;
+export interface AIProviderState {
+  has_api_key: boolean;
   model: string;
   base_url: string;
+}
+
+export interface AIConfig {
   enabled: boolean;
-  has_api_key: boolean;
+  active_provider: string;
+  providers: Record<string, AIProviderState>;
 }
 
 export interface AIConfigInput {
