@@ -69,59 +69,8 @@ test.describe('Listing - Variant Management', () => {
   });
 });
 
-test.describe('Listing - Coupon Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/listing/new');
-    await page.waitForSelector('[data-testid="listing-form"], form', { timeout: 30000 });
-  });
-
-  test('should show coupon section', async ({ page }) => {
-    const couponSection = page.locator('[data-testid="coupons-section"]');
-    await expect(couponSection).toBeVisible();
-  });
-
-  test('should show empty state initially', async ({ page }) => {
-    // 空状态或添加按钮应可见
-    const emptyState = page.locator('[data-testid="coupon-empty-state"]');
-    const addFirstBtn = page.locator('[data-testid="coupon-add-first"]');
-
-    const hasEmptyState =
-      (await emptyState.isVisible().catch(() => false)) ||
-      (await addFirstBtn.isVisible().catch(() => false));
-    expect(hasEmptyState).toBeTruthy();
-  });
-
-  test('should add a coupon with discount code', async ({ page }) => {
-    // 点击创建优惠券
-    const addBtn = page.locator('[data-testid="coupon-add-first"]');
-    if (await addBtn.isVisible().catch(() => false)) {
-      await addBtn.click();
-
-      // 应显示优惠券标题输入框
-      const titleInput = page.locator('[data-testid="coupon-title-input"]').first();
-      await expect(titleInput).toBeVisible({ timeout: 5000 });
-    }
-  });
-
-  test('should toggle between percent and fixed discount', async ({ page }) => {
-    // 添加一个优惠券
-    const addBtn = page.locator('[data-testid="coupon-add-first"]');
-    if (await addBtn.isVisible().catch(() => false)) {
-      await addBtn.click();
-
-      // 点击固定金额切换按钮
-      const fixedToggle = page.locator('[data-testid="coupon-fixed-toggle"]').first();
-      if (await fixedToggle.isVisible().catch(() => false)) {
-        await fixedToggle.click();
-        // 验证已按下
-        await expect(fixedToggle).toHaveAttribute('aria-pressed', 'true');
-      }
-    }
-  });
-});
-
 test.describe('Listing - Clone with Variants', () => {
-  test('should load clone data including variants and coupons', async ({ page }) => {
+  test('should load clone data including variants', async ({ page }) => {
     // 导航到克隆页面（需要一个有效的 slug）
     // 这个测试在有后端 API 的集成环境中才能完整运行
     await page.goto('/listing/new?clone=test-product');

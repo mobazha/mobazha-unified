@@ -8,7 +8,6 @@ import type {
   ContractType,
   ProductCondition,
   ShippingProfile,
-  Coupon,
   BlockchainNetwork,
   Image,
   ListingStatus,
@@ -76,9 +75,6 @@ export interface ListingFormData {
 
   // 可选功能
   optionalFeatures: OptionalFeature[];
-
-  // 优惠券
-  coupons: Coupon[];
 
   // 其他
   nsfw: boolean;
@@ -186,7 +182,6 @@ export const initialFormData: ListingFormData = {
   inventoryTracking: false,
   digitalFiles: [],
   optionalFeatures: [],
-  coupons: [],
   nsfw: false,
   processingTime: '',
 };
@@ -217,13 +212,12 @@ export function getFieldsForType(contractType: ContractType): string[] {
         'skus',
         'inventoryTracking',
         'optionalFeatures',
-        'coupons',
         'processingTime',
       ];
     case 'DIGITAL_GOOD':
-      return [...commonFields, 'optionalFeatures', 'coupons', 'processingTime'];
+      return [...commonFields, 'optionalFeatures', 'processingTime'];
     case 'SERVICE':
-      return [...commonFields, 'optionalFeatures', 'coupons', 'processingTime'];
+      return [...commonFields, 'optionalFeatures', 'processingTime'];
     case 'RWA_TOKEN':
       return [
         ...commonFields,
@@ -513,22 +507,6 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       (data.item as Record<string, unknown>).altIntroVideoLinks = formData.altIntroVideoLinks;
     }
 
-    // 优惠券（Shopify 风格扁平结构，Coupon 接口已对齐 proto）
-    if (formData.coupons.length > 0) {
-      data.coupons = formData.coupons.map(c => ({
-        title: c.title,
-        discountCode: c.discountCode || undefined,
-        hash: c.hash || undefined,
-        discountType: c.discountType || 'PERCENT',
-        percentDiscount: c.discountType === 'PERCENT' ? c.percentDiscount : undefined,
-        priceDiscount: c.discountType === 'FIXED' ? c.priceDiscount : undefined,
-        usageLimit: c.usageLimit ?? 0,
-        startsAt: c.startsAt || undefined,
-        expiresAt: c.expiresAt || undefined,
-        minimumOrderAmount: c.minimumOrderAmount || undefined,
-      }));
-    }
-
     // 编辑模式添加 slug
     if (formData.slug) {
       data.slug = formData.slug;
@@ -707,39 +685,6 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     setIsDirty(true);
   }, []);
 
-  /**
-   * 添加优惠券
-   */
-  const addCoupon = useCallback((coupon: Coupon) => {
-    setFormData(prev => ({
-      ...prev,
-      coupons: [...prev.coupons, coupon],
-    }));
-    setIsDirty(true);
-  }, []);
-
-  /**
-   * 更新优惠券（按索引）
-   */
-  const updateCoupon = useCallback((index: number, coupon: Coupon) => {
-    setFormData(prev => ({
-      ...prev,
-      coupons: prev.coupons.map((c, i) => (i === index ? coupon : c)),
-    }));
-    setIsDirty(true);
-  }, []);
-
-  /**
-   * 移除优惠券
-   */
-  const removeCoupon = useCallback((index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      coupons: prev.coupons.filter((_, i) => i !== index),
-    }));
-    setIsDirty(true);
-  }, []);
-
   return {
     // 状态
     formData,
@@ -766,11 +711,6 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     // 变体操作
     updateVariantOptions,
     updateSkus,
-
-    // 优惠券操作
-    addCoupon,
-    updateCoupon,
-    removeCoupon,
 
     // 表单操作
     validate,

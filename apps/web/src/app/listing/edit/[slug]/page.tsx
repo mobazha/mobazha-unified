@@ -53,7 +53,6 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  CouponEditor,
   DigitalFileSection,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
@@ -74,7 +73,6 @@ type TabKey =
   | 'shipping'
   | 'variants'
   | 'files'
-  | 'coupons'
   | 'other';
 
 interface TabItem {
@@ -112,12 +110,6 @@ const tabs: TabItem[] = [
     showFor: ['DIGITAL_GOOD'],
   },
   {
-    key: 'coupons',
-    labelKey: 'listing.tabs.coupons',
-    icon: <Gift className="w-4 h-4" />,
-    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
-  },
-  {
     key: 'other',
     labelKey: 'listing.tabs.other',
     icon: <Settings2 className="w-4 h-4" />,
@@ -153,9 +145,6 @@ export default function EditListingPage() {
     removeTag,
     updateVariantOptions,
     updateSkus,
-    addCoupon,
-    updateCoupon,
-    removeCoupon,
     validate,
     submit,
     submitDraft,
@@ -197,7 +186,6 @@ export default function EditListingPage() {
     shipping: null,
     variants: null,
     files: null,
-    coupons: null,
     other: null,
   });
 
@@ -407,9 +395,6 @@ export default function EditListingPage() {
           removeTag={removeTag}
           updateVariantOptions={updateVariantOptions}
           updateSkus={updateSkus}
-          addCoupon={addCoupon}
-          updateCoupon={updateCoupon}
-          removeCoupon={removeCoupon}
           validate={validate}
           onSubmit={handleSubmit}
           onSaveDraft={handleSaveDraft}
@@ -851,30 +836,6 @@ export default function EditListingPage() {
                   />
                 </Card>
               )}
-
-              {/* 优惠券 - Shopify 风格 */}
-              {formData.contractType !== 'RWA_TOKEN' &&
-                formData.contractType !== 'CRYPTOCURRENCY' && (
-                  <Card
-                    className="p-6"
-                    ref={el => {
-                      sectionRefs.current.coupons = el;
-                    }}
-                  >
-                    <h2 className="text-lg font-semibold text-foreground mb-1">
-                      {t('listing.coupons')}
-                    </h2>
-                    <p className="text-sm text-muted-foreground mb-4">{t('listing.couponsDesc')}</p>
-
-                    <CouponEditor
-                      coupons={formData.coupons}
-                      onAdd={addCoupon}
-                      onUpdate={updateCoupon}
-                      onRemove={removeCoupon}
-                      pricingCurrency={formData.pricingCurrency}
-                    />
-                  </Card>
-                )}
 
               {/* 其他设置 - 处理时间 */}
               {formData.contractType !== 'RWA_TOKEN' &&

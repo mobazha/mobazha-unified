@@ -15,7 +15,7 @@ import {
   Tags,
 } from 'lucide-react';
 import { useI18n, useCurrency, getGatewayUrl, DEFAULT_LOCAL_CURRENCY } from '@mobazha/core';
-import type { ContractType, Image, ShippingProfile, Coupon } from '@mobazha/core';
+import type { ContractType, Image, ShippingProfile } from '@mobazha/core';
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -28,7 +28,6 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  CouponEditor,
   DigitalFileSection,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
@@ -53,9 +52,6 @@ interface MobileListingWizardProps {
   removeTag: (tag: string) => void;
   updateVariantOptions: (options: VariantOption[]) => void;
   updateSkus: (skus: SkuItem[]) => void;
-  addCoupon: (coupon: Coupon) => void;
-  updateCoupon: (index: number, coupon: Coupon) => void;
-  removeCoupon: (index: number) => void;
   validate: () => boolean;
 
   onSubmit: () => void;
@@ -119,9 +115,6 @@ export function MobileListingWizard({
   removeTag,
   updateVariantOptions,
   updateSkus,
-  addCoupon,
-  updateCoupon,
-  removeCoupon,
   validate,
   onSubmit,
   onSaveDraft,
@@ -564,16 +557,6 @@ export function MobileListingWizard({
             {formData.contractType !== 'RWA_TOKEN' &&
               formData.contractType !== 'CRYPTOCURRENCY' && (
                 <>
-                  <AccordionItem title={t('listing.tabs.coupons')}>
-                    <CouponEditor
-                      coupons={formData.coupons}
-                      onAdd={addCoupon}
-                      onUpdate={updateCoupon}
-                      onRemove={removeCoupon}
-                      pricingCurrency={formData.pricingCurrency}
-                    />
-                  </AccordionItem>
-
                   <AccordionItem title={t('listing.tabs.other')}>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">
