@@ -98,8 +98,6 @@ export function convertProductToFormData(
       expiresAt: c.expiresAt,
       minimumOrderAmount: c.minimumOrderAmount,
     })),
-    termsAndConditions: product.termsAndConditions || '',
-    refundPolicy: product.refundPolicy || '',
     nsfw: item.nsfw || false,
     processingTime: item.processingTime || '',
   };

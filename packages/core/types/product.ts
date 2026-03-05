@@ -69,8 +69,6 @@ export interface Product {
   taxes?: Tax[];
   coupons?: Coupon[];
   moderators?: string[];
-  termsAndConditions?: string;
-  refundPolicy?: string;
   /** 商品发布状态: draft/published/private */
   status?: ListingStatus;
 }

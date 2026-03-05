@@ -90,7 +90,6 @@ vi.mock('@/components/Listing', () => ({
   CouponEditor: () => React.createElement('div', null),
   DigitalFileSection: () => React.createElement('div', null),
   ProcessingTimeSelect: () => React.createElement('div', null),
-  ReturnPolicySelector: () => React.createElement('div', null),
 }));
 
 vi.mock('@/components/ui/button', () => ({
@@ -137,8 +136,6 @@ function makeFormData(overrides: Partial<ListingFormData> = {}): ListingFormData
     options: [],
     skus: [{ quantity: 999, productID: '' }],
     coupons: [],
-    refundPolicy: 'FULL_REFUND',
-    termsAndConditions: '',
     processingTime: '1 business day',
     inventoryPolicy: 'deny',
     brand: '',
