@@ -343,8 +343,8 @@ export function NotificationChannelsSection() {
           <p className="text-sm text-muted-foreground mt-1 max-w-sm">
             {t('admin.integrations.noChannelsDesc')}
           </p>
-          <Button onClick={openAddDialog} variant="outline" size="sm" className="mt-4">
-            <Plus className="w-4 h-4 mr-1.5" />
+          <Button onClick={openAddDialog} size="sm" className="mt-4 gap-1.5">
+            <Plus className="w-4 h-4" />
             {t('admin.integrations.addChannel')}
           </Button>
         </div>

@@ -5,7 +5,7 @@ import { useI18n } from '@mobazha/core';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const FALLBACK_CATEGORIES = [
+export const FALLBACK_CATEGORIES = [
   'order',
   'dispute',
   'social',
