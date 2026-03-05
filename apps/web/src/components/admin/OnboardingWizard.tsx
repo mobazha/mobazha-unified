@@ -15,11 +15,11 @@ import {
   Loader2,
   SkipForward,
   Camera,
-  Sparkles,
   Layers,
   Truck,
   Wand2,
   Palette,
+  Coins,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { AvatarCompat } from '@/components/ui/avatar-compat';
@@ -387,8 +387,8 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 text: t('admin.onboarding.featureShipping') || 'Shipping & delivery options',
               },
               {
-                icon: <Sparkles className="w-5 h-5 text-primary" />,
-                text: t('admin.onboarding.featureCoupons') || 'Discounts & promotions',
+                icon: <Coins className="w-5 h-5 text-primary" />,
+                text: t('admin.onboarding.featurePricing') || 'Crypto & fiat pricing',
               },
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">

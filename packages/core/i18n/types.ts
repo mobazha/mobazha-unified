@@ -658,6 +658,33 @@ export interface TranslationResource {
     };
   };
 
+  moderatorSettings?: {
+    title?: string;
+    description?: string;
+    enableToggle?: string;
+    enableDescription?: string;
+    feeSection?: string;
+    feeType?: string;
+    feeTypeFixed?: string;
+    feeTypePercentage?: string;
+    feeTypeFixedPlusPercentage?: string;
+    percentage?: string;
+    fixedAmount?: string;
+    currency?: string;
+    descriptionLabel?: string;
+    descriptionPlaceholder?: string;
+    termsLabel?: string;
+    termsPlaceholder?: string;
+    languagesLabel?: string;
+    languagesPlaceholder?: string;
+    acceptedCurrencies?: string;
+    saveSuccess?: string;
+    saveFailed?: string;
+    disableSuccess?: string;
+    disableFailed?: string;
+    disableConfirm?: string;
+  };
+
   // 主题
   theme: TranslationSection & {
     classic: string;
@@ -2638,7 +2665,7 @@ export interface TranslationResource {
       featureAi?: string;
       featureVariants?: string;
       featureShipping?: string;
-      featureCoupons?: string;
+      featurePricing?: string;
       completeTitle?: string;
       completeDesc?: string;
       viewStore?: string;

@@ -3566,7 +3566,7 @@ export const ja: TranslationResource = {
       featureAi: 'AI対応タイトルと説明',
       featureVariants: 'バリエーション、価格、在庫',
       featureShipping: '配送プロファイル管理',
-      featureCoupons: '割引とプロモーション',
+      featurePricing: '暗号通貨と法定通貨の価格設定',
       completeTitle: 'ストアの準備ができました！',
       completeDesc:
         'ストアプロフィールが設定されました。管理パネルからいつでも商品を追加できます。',

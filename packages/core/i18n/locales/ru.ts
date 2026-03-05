@@ -3556,7 +3556,7 @@ export const ru: TranslationResource = {
       featureAi: 'ИИ для названий и описаний',
       featureVariants: 'Варианты, цены, остатки',
       featureShipping: 'Профили и варианты доставки',
-      featureCoupons: 'Скидки и акции',
+      featurePricing: 'Крипто- и фиатные цены',
       completeTitle: 'Магазин готов!',
       completeDesc: 'Профиль настроен. Добавляйте товары из админ-панели.',
       designWithAi: 'Оформить магазин с ИИ',

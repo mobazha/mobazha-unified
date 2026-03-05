@@ -47,7 +47,7 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     id: 'moderation',
-    labelKey: 'settings.sidebar.moderator',
+    labelKey: 'settings.sidebar.moderation',
     href: '/settings/moderation',
     icon: <Scale className="w-4 h-4" />,
   },
