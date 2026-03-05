@@ -333,8 +333,7 @@ describe('MobileListingWizard', () => {
             title: 'My Product',
             price: '10',
             images: [{ original: 'hash', small: 'h', medium: 'h', large: 'h', tiny: 'h' }] as any,
-            tags: ['vintage'],
-            categories: ['clothing'],
+            tags: ['vintage', 'clothing'],
           })}
           {...defaultProps}
         />

@@ -52,7 +52,7 @@ export default function AdminCollectionsPage() {
     try {
       setLoading(true);
       const res = await collectionsApi.listCollections(1, 100);
-      setCollections(res.data || []);
+      setCollections(res?.data ?? []);
     } catch {
       toast({ variant: 'destructive', title: t('admin.collections.fetchError') });
     } finally {
@@ -113,13 +113,15 @@ export default function AdminCollectionsPage() {
             {t('admin.collections.subtitle', { count: collections.length })}
           </p>
         </div>
-        <Button
-          onClick={() => router.push('/admin/collections/new')}
-          data-testid="create-collection-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('admin.collections.create')}
-        </Button>
+        {collections.length > 0 && (
+          <Button
+            onClick={() => router.push('/admin/collections/new')}
+            data-testid="create-collection-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('admin.collections.create')}
+          </Button>
+        )}
       </div>
 
       {/* Search */}

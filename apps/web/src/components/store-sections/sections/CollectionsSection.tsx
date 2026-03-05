@@ -36,7 +36,7 @@ export function CollectionsSection({
       try {
         const resp = await collectionsApi.listPublishedCollections(peerId, 1, 20);
         if (cancelled) return;
-        let items = resp.data ?? [];
+        let items = resp ?? [];
         if (mode === 'manual' && collectionIDs?.length) {
           const idSet = new Set(collectionIDs);
           items = items.filter(c => idSet.has(c.id));

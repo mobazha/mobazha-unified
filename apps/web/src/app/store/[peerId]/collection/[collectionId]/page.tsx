@@ -123,18 +123,18 @@ export default function StoreCollectionPage() {
               <p className="text-muted-foreground">{t('admin.collections.noProducts')}</p>
             </div>
           ) : (
-            <Grid cols={{ default: 2, sm: 2, md: 3, lg: 4 }} gap="md">
+            <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
               {products.map(product => (
                 <ProductCard
                   key={product.slug}
-                  slug={product.slug}
                   title={product.title}
-                  price={product.price}
-                  currency={product.pricingCurrency}
-                  image={product.thumbnail}
+                  imageUrl={getImageUrl(product.thumbnail?.medium)}
+                  price={Number(product.price?.amount ?? 0)}
+                  currency={product.price?.currency?.code ?? 'USD'}
+                  divisibility={product.price?.currency?.divisibility}
                   contractType={product.contractType as ProductContractType}
                   rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                  peerID={peerId}
+                  vendorPeerID={peerId}
                   rating={product.averageRating}
                   reviewCount={product.ratingCount}
                   onClick={() => openProduct(product.slug, peerId)}

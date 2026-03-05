@@ -143,6 +143,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
         {providerID === 'paypal' && session.paypal && (
           <PayPalPaymentForm
             sessionData={session.paypal}
+            vendorPeerID={vendorPeerID}
             currency={currency}
             onSuccess={handleSuccess}
             onError={handleError}

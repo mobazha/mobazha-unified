@@ -150,6 +150,8 @@ export const ko: TranslationResource = {
     bestRating: '평점순',
     listings: '상품',
     users: '사용자',
+    category: '카테고리',
+    allCategories: '모든 카테고리',
   },
 
   cart: {
@@ -557,6 +559,8 @@ export const ko: TranslationResource = {
     serverError: '서버 오류입니다. 나중에 다시 시도하세요.',
     timeout: '요청 시간이 초과되었습니다',
     offline: '오프라인 상태입니다',
+    offlineDesc: '일부 기능을 사용할 수 없을 수 있습니다.',
+    backOnline: '다시 온라인입니다!',
     invalidInput: '잘못된 입력',
     requiredField: '필수 항목입니다',
   },

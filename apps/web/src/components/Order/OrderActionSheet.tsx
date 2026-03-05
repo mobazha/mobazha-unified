@@ -3,7 +3,6 @@
 import React, { memo, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  useI18n,
   getOrderActions,
   getPrimaryAction,
   getSecondaryActions,
@@ -32,25 +31,28 @@ export interface OrderActionSheetProps {
 export const OrderActionSheet = memo(function OrderActionSheet({
   orderState,
   userRole,
-  timestamp,
+  timestamp: _timestamp,
   isModerated,
   isFulfilled,
   paymentMethod,
   onAction,
   className,
 }: OrderActionSheetProps) {
-  const { t } = useI18n();
-
   const actions = useMemo(
-    () => getOrderActions(orderState, userRole, timestamp, isModerated, isFulfilled, paymentMethod),
-    [orderState, userRole, timestamp, isModerated, isFulfilled, paymentMethod]
+    () =>
+      getOrderActions(orderState, userRole, {
+        isModerated,
+        isFulfilled,
+        paymentMethod,
+      }),
+    [orderState, userRole, isModerated, isFulfilled, paymentMethod]
   );
 
   const primaryAction = useMemo(() => getPrimaryAction(actions), [actions]);
   const secondaryActions = useMemo(() => getSecondaryActions(actions), [actions]);
   const primaryConfig = useMemo(
-    () => (primaryAction ? getActionButtonConfig(primaryAction, t) : null),
-    [primaryAction, t]
+    () => (primaryAction ? getActionButtonConfig(primaryAction, userRole) : null),
+    [primaryAction, userRole]
   );
 
   if (actions.length === 0) return null;
@@ -72,7 +74,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
       {secondaryActions.length > 0 && (
         <div className="flex gap-2">
           {secondaryActions.map(action => {
-            const config = getActionButtonConfig(action, t);
+            const config = getActionButtonConfig(action, userRole);
             return (
               <Button
                 key={action}

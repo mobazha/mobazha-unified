@@ -150,6 +150,8 @@ export const ja: TranslationResource = {
     bestRating: '評価順',
     listings: '商品',
     users: 'ユーザー',
+    category: 'カテゴリ',
+    allCategories: 'すべてのカテゴリ',
   },
 
   cart: {
@@ -557,6 +559,8 @@ export const ja: TranslationResource = {
     serverError: 'サーバーエラー。後でもう一度お試しください。',
     timeout: 'リクエストがタイムアウトしました',
     offline: 'オフラインです',
+    offlineDesc: '一部の機能が利用できない場合があります。',
+    backOnline: 'オンラインに戻りました！',
     invalidInput: '無効な入力',
     requiredField: 'この項目は必須です',
   },

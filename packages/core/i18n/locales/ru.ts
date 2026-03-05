@@ -150,6 +150,8 @@ export const ru: TranslationResource = {
     bestRating: 'Лучший рейтинг',
     listings: 'Товары',
     users: 'Пользователи',
+    category: 'Категория',
+    allCategories: 'Все категории',
   },
 
   cart: {
@@ -557,6 +559,8 @@ export const ru: TranslationResource = {
     serverError: 'Ошибка сервера. Попробуйте позже.',
     timeout: 'Время ожидания истекло',
     offline: 'Вы не в сети',
+    offlineDesc: 'Некоторые функции могут быть недоступны.',
+    backOnline: 'Вы снова в сети!',
     invalidInput: 'Неверный ввод',
     requiredField: 'Обязательное поле',
   },
