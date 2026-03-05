@@ -2815,6 +2815,9 @@ export interface TranslationResource {
       aiAdvancedSettings?: string;
       aiModelCustom?: string;
       aiModelCustomPlaceholder?: string;
+      aiSaveActivate?: string;
+      aiProviderActive?: string;
+      aiApiKeySaved?: string;
       unsavedChanges?: string;
 
       paymentProviders?: string;
