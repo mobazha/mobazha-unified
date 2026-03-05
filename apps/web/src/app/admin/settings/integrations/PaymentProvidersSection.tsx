@@ -23,30 +23,62 @@ import type {
 
 const PROVIDERS = [
   {
-    id: 'stripe',
+    id: 'stripe' as const,
     name: 'Stripe',
     color: '#6772e5',
     dashboardUrl: 'https://dashboard.stripe.com',
-    description: 'Accept credit cards, Apple Pay, and Google Pay',
+    descKey: 'admin.integrations.stripeDesc' as const,
+    descDefault: 'Accept credit/debit cards, Apple Pay, and Google Pay',
     fields: [
-      { key: 'secretKey', label: 'Secret Key', placeholder: 'sk_live_...' },
-      { key: 'publishableKey', label: 'Publishable Key', placeholder: 'pk_live_...' },
-      { key: 'webhookSecret', label: 'Webhook Secret', placeholder: 'whsec_...' },
+      {
+        key: 'secretKey',
+        labelKey: 'admin.integrations.secretKey',
+        labelDefault: 'Secret Key',
+        placeholder: 'sk_live_...',
+      },
+      {
+        key: 'publishableKey',
+        labelKey: 'admin.integrations.publishableKey',
+        labelDefault: 'Publishable Key',
+        placeholder: 'pk_live_...',
+      },
+      {
+        key: 'webhookSecret',
+        labelKey: 'admin.integrations.webhookSecret',
+        labelDefault: 'Webhook Secret',
+        placeholder: 'whsec_...',
+      },
     ],
   },
   {
-    id: 'paypal',
+    id: 'paypal' as const,
     name: 'PayPal',
     color: '#0070ba',
     dashboardUrl: 'https://www.paypal.com/businessmanage/account/aboutBusiness',
-    description: 'Accept PayPal payments',
+    descKey: 'admin.integrations.paypalDesc' as const,
+    descDefault: 'Accept PayPal payments',
     fields: [
-      { key: 'publishableKey', label: 'Client ID', placeholder: 'AX...' },
-      { key: 'secretKey', label: 'Client Secret', placeholder: 'EL...' },
-      { key: 'webhookSecret', label: 'Webhook ID', placeholder: '' },
+      {
+        key: 'publishableKey',
+        labelKey: 'admin.integrations.clientId',
+        labelDefault: 'Client ID',
+        placeholder: 'AX...',
+      },
+      {
+        key: 'secretKey',
+        labelKey: 'admin.integrations.clientSecret',
+        labelDefault: 'Client Secret',
+        placeholder: 'EL...',
+      },
+      {
+        key: 'webhookSecret',
+        labelKey: 'admin.integrations.webhookId',
+        labelDefault: 'Webhook ID',
+        placeholder: '',
+      },
     ],
   },
-] as const;
+];
 
 function truncateAccountID(id?: string) {
   if (!id) return '';
@@ -55,15 +87,22 @@ function truncateAccountID(id?: string) {
 }
 
 function StatusBadge({ status }: { status?: string }) {
-  const map: Record<string, { color: string; label: string }> = {
-    active: { color: 'text-success bg-success/10', label: 'Active' },
+  const { t } = useI18n();
+  const map: Record<string, { color: string; labelKey: string; labelDefault: string }> = {
+    active: {
+      color: 'text-success bg-success/10',
+      labelKey: 'admin.integrations.statusActive',
+      labelDefault: 'Active',
+    },
     restricted: {
       color: 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20',
-      label: 'Restricted',
+      labelKey: 'admin.integrations.statusRestricted',
+      labelDefault: 'Restricted',
     },
     pending: {
       color: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20',
-      label: 'Pending',
+      labelKey: 'admin.integrations.statusPending',
+      labelDefault: 'Pending',
     },
   };
   const entry = map[status || ''] || map.pending;
@@ -75,7 +114,7 @@ function StatusBadge({ status }: { status?: string }) {
       )}
     >
       <CircleDot className="w-3 h-3" />
-      {entry.label}
+      {t(entry.labelKey, { defaultValue: entry.labelDefault })}
     </span>
   );
 }
@@ -162,7 +201,9 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           </div>
           <div>
             <h3 className="font-medium text-foreground">{provider.name}</h3>
-            <p className="text-xs text-muted-foreground">{provider.description}</p>
+            <p className="text-xs text-muted-foreground">
+              {t(provider.descKey, { defaultValue: provider.descDefault })}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -220,7 +261,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           {provider.fields.map(field => (
             <div key={field.key}>
               <label className="block text-xs font-medium text-muted-foreground mb-1">
-                {field.label}
+                {t(field.labelKey, { defaultValue: field.labelDefault })}
               </label>
               <div className="relative">
                 <input
