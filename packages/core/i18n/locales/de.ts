@@ -3632,7 +3632,7 @@ export const de: TranslationResource = {
       featureAi: 'KI-gestützter Titel & Beschreibung',
       featureVariants: 'Varianten, Preise & Bestand',
       featureShipping: 'Versandprofile & Lieferoptionen',
-      featureCoupons: 'Rabatte & Aktionen',
+      featurePricing: 'Krypto- & Fiat-Preise',
       completeTitle: 'Ihr Shop ist bereit!',
       completeDesc:
         'Ihr Shop-Profil ist eingerichtet. Fügen Sie jederzeit Produkte über das Admin-Panel hinzu.',

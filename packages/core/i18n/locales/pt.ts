@@ -3602,7 +3602,7 @@ export const pt: TranslationResource = {
       featureAi: 'Título e descrição com IA',
       featureVariants: 'Variantes, preços e estoque',
       featureShipping: 'Opções de envio e entrega',
-      featureCoupons: 'Descontos e promoções',
+      featurePricing: 'Preços em cripto e moeda fiduciária',
       completeTitle: 'Sua loja está pronta!',
       completeDesc:
         'O perfil da sua loja está configurado. Adicione produtos a qualquer momento no painel.',

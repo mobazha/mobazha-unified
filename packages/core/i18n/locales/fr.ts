@@ -3624,7 +3624,7 @@ export const fr: TranslationResource = {
       featureAi: 'Titre et description assistés par IA',
       featureVariants: 'Variantes, prix et stock',
       featureShipping: 'Options de livraison et expédition',
-      featureCoupons: 'Réductions et promotions',
+      featurePricing: 'Tarification crypto et fiat',
       completeTitle: 'Votre boutique est prête !',
       completeDesc:
         "Votre profil de boutique est configuré. Ajoutez des produits à tout moment depuis le panneau d'administration.",
