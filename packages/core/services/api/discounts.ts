@@ -126,14 +126,10 @@ export async function getDiscount(discountID: string): Promise<Discount> {
   return authGet<Discount>(NODE_API.DISCOUNT(discountID));
 }
 
-export async function listDiscounts(
-  page = 1,
-  pageSize = 20,
-  status?: string
-): Promise<DiscountListResponse> {
+export async function listDiscounts(page = 1, pageSize = 20, status?: string): Promise<Discount[]> {
   let path = `${NODE_API.DISCOUNTS}?page=${page}&pageSize=${pageSize}`;
   if (status) path += `&status=${encodeURIComponent(status)}`;
-  return authGet<DiscountListResponse>(path);
+  return authGet<Discount[]>(path);
 }
 
 export async function updateDiscount(

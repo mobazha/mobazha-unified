@@ -9,6 +9,7 @@ import type { PayPalSessionData, FiatProviderID } from '@mobazha/core';
 
 export interface PayPalPaymentFormProps {
   sessionData: PayPalSessionData;
+  vendorPeerID: string;
   currency?: string;
   onSuccess: () => void;
   onError: (message: string) => void;
@@ -19,6 +20,7 @@ export interface PayPalPaymentFormProps {
 
 export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   sessionData,
+  vendorPeerID,
   currency = 'USD',
   onSuccess,
   onError,
@@ -37,7 +39,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const handleApprove = useCallback(async () => {
     setIsCapturing(true);
     try {
-      const result = await fiatApi.capturePayment('paypal' as FiatProviderID, sessionData.orderID);
+      const result = await fiatApi.capturePayment(
+        vendorPeerID,
+        'paypal' as FiatProviderID,
+        sessionData.orderID
+      );
       if (result.status === 'succeeded') {
         onSuccess();
       } else {
@@ -56,7 +62,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } finally {
       setIsCapturing(false);
     }
-  }, [sessionData.orderID, onSuccess, onError, t]);
+  }, [sessionData.orderID, vendorPeerID, onSuccess, onError, t]);
 
   const handleError = useCallback(
     (err: Record<string, unknown>) => {

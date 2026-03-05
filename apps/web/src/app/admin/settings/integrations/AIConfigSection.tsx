@@ -150,7 +150,6 @@ export function AIConfigSection() {
   function handleProviderPillClick(id: string) {
     if (id === selectedProvider) return;
     applyProviderToForm(id, config, providers);
-    setEnabled(config?.enabled ?? enabled);
   }
 
   async function handleTestConnection() {

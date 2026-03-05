@@ -1041,8 +1041,10 @@ export interface TranslationResource {
 
   // 用户菜单
   userMenu: {
+    account?: string;
     myProfile: string;
     myStore: string;
+    viewStore?: string;
     createListing: string;
     sales: string;
     purchases: string;
@@ -2387,6 +2389,7 @@ export interface TranslationResource {
       analytics?: string;
       discounts?: string;
       settings?: string;
+      storefront?: string;
       viewStore?: string;
       help?: string;
       openMenu?: string;
@@ -2394,11 +2397,14 @@ export interface TranslationResource {
       expandSidebar?: string;
       collapseSidebar?: string;
       collections?: string;
+      backToMarketplace?: string;
     };
     dashboard?: {
       welcome?: string;
       subtitle?: string;
       totalSales?: string;
+      designStore?: string;
+      designStoreDesc?: string;
       totalOrders?: string;
       newOrders?: string;
       activeProducts?: string;
@@ -2425,6 +2431,10 @@ export interface TranslationResource {
       viewAll?: string;
       noOrdersYet?: string;
       noProductsYet?: string;
+      noPaymentMethodsWarning?: string;
+      setUpPayments?: string;
+      setUpPaymentsDesc?: string;
+      failedToLoadProducts?: string;
     };
     products?: {
       title?: string;
@@ -2566,6 +2576,7 @@ export interface TranslationResource {
     collections?: {
       title?: string;
       subtitle?: string;
+      empty?: string;
       create?: string;
       createTitle?: string;
       editTitle?: string;
@@ -2623,6 +2634,7 @@ export interface TranslationResource {
       addProductError?: string;
       removeProductError?: string;
       imageHint?: string;
+      imageAlt?: string;
       imageRemove?: string;
       dragToReorder?: string;
       uploadError?: string;
@@ -2634,6 +2646,8 @@ export interface TranslationResource {
       step1Label?: string;
       step2Label?: string;
       step3Label?: string;
+      designWithAi?: string;
+      designWithAiDesc?: string;
       step1Title?: string;
       step1Desc?: string;
       step2Title?: string;
@@ -2691,6 +2705,7 @@ export interface TranslationResource {
       tabNotifications?: string;
       tabWebhooks?: string;
       tabAI?: string;
+      tabPayments?: string;
       channels?: string;
       channelsDesc?: string;
       addChannel?: string;
@@ -2820,7 +2835,7 @@ export interface TranslationResource {
       aiApiKeySaved?: string;
       unsavedChanges?: string;
 
-      paymentProviders?: string;
+      paymentProviders?: { title?: string; subtitle?: string };
       paymentProvidersDesc?: string;
       stripeTitle?: string;
       stripeDesc?: string;
@@ -2830,6 +2845,9 @@ export interface TranslationResource {
       providerNotConnected?: string;
       providerPending?: string;
       providerRestricted?: string;
+      statusRestricted?: string;
+      statusActive?: string;
+      statusPending?: string;
       connectProvider?: string;
       disconnectProvider?: string;
       disconnectConfirm?: string;
@@ -3021,11 +3039,46 @@ export interface TranslationResource {
     };
   };
 
+  receivingAccounts?: {
+    title?: string;
+    subtitle?: string;
+    addAccount?: string;
+    editAccount?: string;
+    name?: string;
+    namePlaceholder?: string;
+    chain?: string;
+    address?: string;
+    addressPlaceholder?: string;
+    tokens?: string;
+    active?: string;
+    inactive?: string;
+    confirmDelete?: string;
+    confirmDeleteDesc?: string;
+    noAccounts?: string;
+    noAccountsDesc?: string;
+    copyAddress?: string;
+    addressCopied?: string;
+    connectWallet?: string;
+    useConnectedWallet?: string;
+    invalidEvmAddress?: string;
+    invalidSolAddress?: string;
+    invalidUtxoAddress?: string;
+  };
+
   fiat?: {
+    connectProvider?: string;
+    cryptoBadge?: string;
     creditDebitCard?: string;
     paypal?: string;
+    notConnected?: string;
+    cryptoSection?: string;
+    configureApiKeys?: string;
+    disconnect?: string;
+    saveFailed?: string;
     orPayWithCrypto?: string;
     protectedBy?: string;
+    sectionTitle?: string;
+    connected?: string;
     payAmount?: string;
     processing?: string;
     confirming?: string;
@@ -3040,6 +3093,21 @@ export interface TranslationResource {
     paymentBeingConfirmed?: string;
     providerNotAvailable?: string;
     acceptedPayments?: string;
+    deleteFailed?: string;
+    genericError?: string;
+    payNow?: string;
+    stripeLoadFailed?: string;
+    captureFailed?: string;
+    email?: string;
+    accountId?: string;
+    accountStatus?: string;
+    charges?: string;
+    payouts?: string;
+    enabled?: string;
+    disabled?: string;
+    pendingRequirements?: string;
+    manageDashboard?: string;
+    dashboardLoginHint?: string;
   };
 }
 

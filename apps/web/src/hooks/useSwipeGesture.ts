@@ -12,7 +12,7 @@ interface UseSwipeGestureOptions {
 interface SwipeHandlers {
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchMove: (e: React.TouchEvent) => void;
-  onTouchEnd: () => void;
+  onTouchEnd: (e: React.TouchEvent) => void;
 }
 
 export function useSwipeGesture({

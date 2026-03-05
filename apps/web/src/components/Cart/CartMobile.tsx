@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { MobilePageHeader } from '@/components';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem } from '@mobazha/core';
-import { useI18n } from '@mobazha/core';
+import { useI18n, type TranslateFunction } from '@mobazha/core';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
@@ -34,12 +34,12 @@ function SwipeableCartItem({
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
 
-  const handleTouchStart = useCallback((e: { touches: { clientX: number }[] }) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     startX.current = e.touches[0].clientX;
     setDragging(true);
   }, []);
 
-  const handleTouchMove = useCallback((e: { touches: { clientX: number }[] }) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const dx = e.touches[0].clientX - startX.current;
     if (dx < 0) {
       setOffsetX(Math.max(dx, -80));
@@ -153,7 +153,7 @@ function VendorSection({
   onUpdateQuantity: (slug: string, vendorPeerID: string, qty: number) => void;
   getThumbUrl: (item: CartItem) => string | undefined;
   renderPrice: (amount: number, currency: string) => string;
-  t: (key: string, params?: Record<string, unknown>) => string;
+  t: TranslateFunction;
   renderPairedPrice: (amount: number, currency: string) => string;
 }) {
   return (

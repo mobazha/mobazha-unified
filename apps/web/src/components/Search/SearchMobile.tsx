@@ -229,7 +229,7 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6">
         <div className="w-20 h-20 rounded-full bg-muted/80 flex items-center justify-center mb-5">
-          <SearchIcon className="w-10 h-10 text-muted-foreground/60" strokeWidth={1.5} />
+          <SearchIcon className="w-10 h-10 text-muted-foreground/60" />
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">
           {search.t('empty.noProductsFound')}

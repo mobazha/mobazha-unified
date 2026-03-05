@@ -281,7 +281,9 @@ function OrdersPageContent() {
     isRefreshing,
     canRelease,
   } = usePullRefresh({
-    onRefresh: refetch,
+    onRefresh: async () => {
+      await refetch();
+    },
     disabled: isDesktop,
   });
 

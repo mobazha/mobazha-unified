@@ -265,7 +265,7 @@ export default function StorePage() {
     collectionsApi
       .listPublishedCollections(peerId, 1, 20)
       .then(res => {
-        if (!isCancelled) setStoreCollections(res.data || []);
+        if (!isCancelled) setStoreCollections(res || []);
       })
       .catch(() => {});
 

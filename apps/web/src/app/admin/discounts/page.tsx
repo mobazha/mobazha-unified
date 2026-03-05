@@ -93,7 +93,7 @@ export default function AdminDiscountsPage() {
     try {
       setLoading(true);
       const res = await discountsApi.listDiscounts(1, 100);
-      setDiscounts(res.data || []);
+      setDiscounts(res || []);
     } catch {
       toast({ variant: 'destructive', title: t('admin.discounts.fetchError') });
     } finally {
@@ -162,13 +162,15 @@ export default function AdminDiscountsPage() {
             {t('admin.discounts.subtitle', { count: discounts.length })}
           </p>
         </div>
-        <Button
-          onClick={() => router.push('/admin/discounts/new')}
-          data-testid="create-discount-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('admin.discounts.create')}
-        </Button>
+        {discounts.length > 0 && (
+          <Button
+            onClick={() => router.push('/admin/discounts/new')}
+            data-testid="create-discount-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('admin.discounts.create')}
+          </Button>
+        )}
       </div>
 
       {/* Search */}

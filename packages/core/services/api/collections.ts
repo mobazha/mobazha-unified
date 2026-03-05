@@ -7,7 +7,7 @@
  */
 
 import { NODE_API } from '../../config/apiPaths';
-import { authGet, authPost, authPut, authDel, publicGet } from './helpers';
+import { authGet, authPost, authPut, authDel, authRequest, publicGet } from './helpers';
 import type {
   Collection,
   CollectionListResponse,
@@ -43,7 +43,7 @@ export async function listCollections(
 ): Promise<CollectionListResponse> {
   let path = `${NODE_API.COLLECTIONS}?page=${page}&pageSize=${pageSize}`;
   if (publishedOnly) path += '&publishedOnly=true';
-  return authGet<CollectionListResponse>(path);
+  return authRequest<CollectionListResponse>(path, { raw: true });
 }
 
 export async function updateCollection(
@@ -78,9 +78,9 @@ export async function listPublishedCollections(
   peerID: string,
   page = 1,
   pageSize = 20
-): Promise<CollectionListResponse> {
+): Promise<Collection[]> {
   const path = `${NODE_API.COLLECTIONS_PUBLISHED(peerID)}?page=${page}&pageSize=${pageSize}`;
-  return publicGet<CollectionListResponse>(path);
+  return publicGet<Collection[]>(path);
 }
 
 export async function getPublishedCollection(

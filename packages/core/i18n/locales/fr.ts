@@ -150,6 +150,8 @@ export const fr: TranslationResource = {
     bestRating: 'Mieux noté',
     listings: 'Produits',
     users: 'Utilisateurs',
+    category: 'Catégorie',
+    allCategories: 'Toutes les catégories',
   },
 
   cart: {
@@ -558,6 +560,8 @@ export const fr: TranslationResource = {
     serverError: 'Erreur serveur. Réessayez plus tard.',
     timeout: "Délai d'attente dépassé",
     offline: 'Vous êtes hors ligne',
+    offlineDesc: 'Certaines fonctionnalités peuvent être indisponibles.',
+    backOnline: 'Vous êtes de nouveau en ligne !',
     invalidInput: 'Entrée invalide',
     requiredField: 'Ce champ est requis',
   },

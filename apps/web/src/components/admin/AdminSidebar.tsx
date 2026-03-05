@@ -135,8 +135,6 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
       <div className="border-t border-border py-3 px-2 space-y-1 shrink-0">
         <Link
           href={storeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
           className={cn(
             'flex items-center gap-3 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
             collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'

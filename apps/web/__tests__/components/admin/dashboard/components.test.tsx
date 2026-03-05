@@ -131,7 +131,7 @@ describe('RecentOrderRow', () => {
     slug: 'test-product',
     title: 'Vintage T-Shirt',
     thumbnail: { small: 'QmHash123', tiny: '', medium: '', large: '', original: '' },
-    total: { amount: 2500, currencyCode: 'USD' },
+    total: { amount: 2500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: '2026-02-20T10:00:00Z',
     state: 'COMPLETED' as const,

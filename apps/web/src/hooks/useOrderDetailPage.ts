@@ -117,9 +117,15 @@ export function useOrderDetailPage(
   const paymentCoin =
     displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
 
-  const counterparty = useMemo(() => {
+  const counterparty = useMemo((): {
+    peerID?: string;
+    name?: string;
+    avatar?: string;
+    location?: string;
+  } | null => {
     if (!displayOrder) return null;
-    return displayOrder.userRole === 'buyer' ? displayOrder.vendor : displayOrder.buyer;
+    const p = displayOrder.userRole === 'buyer' ? displayOrder.vendor : displayOrder.buyer;
+    return p ? { peerID: p.peerID, name: p.name, avatar: p.avatar, location: p.location } : null;
   }, [displayOrder]);
 
   const chatParticipants = useMemo<OrderChatParticipant[]>(() => {

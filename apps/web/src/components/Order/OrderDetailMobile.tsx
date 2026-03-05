@@ -177,10 +177,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     const actions = getOrderActions(
       coreOrder.state || 'PENDING',
       displayOrder.userRole as CoreUserRole,
-      displayOrder.createdAt,
-      !!displayOrder.moderator,
-      isOrderFulfilled(coreOrder),
-      coreOrder.contract?.paymentSent?.method?.toString()
+      {
+        isModerated: !!displayOrder.moderator,
+        isFulfilled: isOrderFulfilled(coreOrder),
+        paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
+      }
     );
     return !!getPrimaryAction(actions);
   }, [isTG, mainButton, coreOrder, displayOrder]);
@@ -191,10 +192,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     const actions = getOrderActions(
       coreOrder.state || 'PENDING',
       displayOrder.userRole as CoreUserRole,
-      displayOrder.createdAt,
-      !!displayOrder.moderator,
-      isOrderFulfilled(coreOrder),
-      coreOrder.contract?.paymentSent?.method?.toString()
+      {
+        isModerated: !!displayOrder.moderator,
+        isFulfilled: isOrderFulfilled(coreOrder),
+        paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
+      }
     );
     const primary = getPrimaryAction(actions);
     if (!primary) {
@@ -202,7 +204,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       return;
     }
 
-    const cfg = getActionButtonConfig(primary, t);
+    const cfg = getActionButtonConfig(primary, displayOrder.userRole as CoreUserRole);
     mainButton.setText(cfg.label);
     const onMain = () => handleOrderActionRef.current(primary);
     mainButton.onClick(onMain);
@@ -211,7 +213,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       mainButton.offClick(onMain);
       mainButton.hide();
     };
-  }, [isTG, mainButton, coreOrder, displayOrder, t]);
+  }, [isTG, mainButton, coreOrder, displayOrder]);
 
   // --- Loading state ---
   if (isLoading) {

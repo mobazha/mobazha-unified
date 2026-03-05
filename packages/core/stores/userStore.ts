@@ -825,7 +825,7 @@ const handleUnauthorized = async (): Promise<boolean> => {
 
   if (state.authSource === 'telegram') {
     try {
-      const tgWebApp = (window as Record<string, unknown>).Telegram as
+      const tgWebApp = (window as unknown as Record<string, unknown>).Telegram as
         | { WebApp?: { initData?: string } }
         | undefined;
       const initData = tgWebApp?.WebApp?.initData;

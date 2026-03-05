@@ -294,6 +294,7 @@ describe('ThemeEditor', () => {
     fontFamily: 'inter',
     borderRadius: 'md',
     palette: 'ocean',
+    headerStyle: 'classic',
   };
 
   it('renders palette, font, and radius sections', () => {

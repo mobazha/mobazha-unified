@@ -1135,7 +1135,7 @@ export function ProductDetail({
                   </HStack>
                 </div>
 
-                {stock > 0 && paymentAvailable && (
+                {stock > 0 && (
                   <span className="text-xs text-muted-foreground">
                     {stock} {t('product.inStock')}
                   </span>

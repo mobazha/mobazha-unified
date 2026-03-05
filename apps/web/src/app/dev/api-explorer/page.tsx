@@ -275,12 +275,7 @@ async function typeSafeFetch(
     const { data, error, response } = await node.GET('/v1/wallet/currencies', {});
     return { status: response?.status ?? 0, ok: !error, data: data ?? error };
   }
-  if (ep.path === '/api/v1/product-groups') {
-    const { data, error, response } = await hosting.GET('/api/v1/product-groups', {});
-    return { status: response?.status ?? 0, ok: !error, data: data ?? error };
-  }
-
-  // Fallback to raw fetch
+  // Fallback to raw fetch (includes /api/v1/product-groups and other non-typed paths)
   return rawFetch(ep);
 }
 

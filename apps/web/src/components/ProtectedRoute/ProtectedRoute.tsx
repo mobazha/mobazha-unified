@@ -93,10 +93,12 @@ export function ProtectedRoute({ children, redirectTo = '/login', fallback }: Pr
             <Lock className="w-8 h-8 text-muted-foreground" />
           </div>
           <h2 className="text-lg font-semibold mb-2">
-            {t('auth.accountRequired', 'Account Required')}
+            {t('auth.accountRequired', { defaultValue: 'Account Required' })}
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            {t('auth.createAccountPrompt', 'Create a free account to access this feature.')}
+            {t('auth.createAccountPrompt', {
+              defaultValue: 'Create a free account to access this feature.',
+            })}
           </p>
           <button
             onClick={() => {
@@ -106,7 +108,7 @@ export function ProtectedRoute({ children, redirectTo = '/login', fallback }: Pr
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium min-h-[44px]"
           >
             <UserPlus className="w-4 h-4" />
-            {t('auth.createAccount', 'Create Account')}
+            {t('auth.createAccount', { defaultValue: 'Create Account' })}
           </button>
         </div>
       </div>
