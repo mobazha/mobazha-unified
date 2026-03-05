@@ -3,7 +3,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useI18n, aiSettingsApi } from '@mobazha/core';
 import type { AIConfig, AIConfigInput, AIProviderInfo } from '@mobazha/core';
-import { Sparkles, Check, AlertCircle, RefreshCw, ChevronDown, Loader2, Wifi } from 'lucide-react';
+import {
+  Sparkles,
+  Check,
+  AlertCircle,
+  RefreshCw,
+  ChevronDown,
+  Loader2,
+  Wifi,
+  Image,
+  FileText,
+  Palette,
+  ExternalLink,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +49,6 @@ export function AIConfigSection() {
   const [enabled, setEnabled] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Snapshot of saved values for dirty tracking
   const [savedSnapshot, setSavedSnapshot] = useState({
     provider: '',
     apiKey: '',
@@ -56,7 +67,6 @@ export function AIConfigSection() {
     );
   }, [provider, apiKey, model, baseUrl, enabled, savedSnapshot]);
 
-  // Warn before navigating away with unsaved changes
   useEffect(() => {
     if (!isDirty) return;
     function handleBeforeUnload(e: Event) {
@@ -211,15 +221,15 @@ export function AIConfigSection() {
 
   return (
     <div className="space-y-6">
-      {/* Header card */}
-      <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-lg">
+      {/* Header card with enable toggle */}
+      <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl">
         <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
           <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-foreground">{t('admin.integrations.aiTitle')}</h3>
-            <Badge variant={isConfigured ? 'default' : 'secondary'} className="text-xs">
+            <Badge variant={isConfigured ? 'default' : 'outline'} className="text-xs">
               {isConfigured
                 ? t('admin.integrations.aiConfigured')
                 : t('admin.integrations.aiNotConfigured')}
@@ -227,10 +237,35 @@ export function AIConfigSection() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.aiDesc')}</p>
         </div>
+        <div className="shrink-0 pt-0.5">
+          <Switch
+            id="ai-enabled-header"
+            checked={enabled}
+            onCheckedChange={setEnabled}
+            aria-label={t('admin.integrations.aiEnabled')}
+          />
+        </div>
       </div>
 
-      {/* Config form */}
-      <div className="space-y-4">
+      {/* Feature showcase */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[
+          { icon: Image, text: t('admin.integrations.aiFeatureGenerate') },
+          { icon: FileText, text: t('admin.integrations.aiFeaturePolish') },
+          { icon: Palette, text: t('admin.integrations.aiFeatureStore') },
+        ].map(({ icon: Icon, text }) => (
+          <div
+            key={text}
+            className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/50 border border-border/50"
+          >
+            <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <span className="text-xs text-muted-foreground leading-relaxed">{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Config form card */}
+      <div className="border border-border rounded-xl p-5 space-y-4 bg-card">
         {/* Provider */}
         <div className="space-y-1.5">
           <Label>
@@ -252,9 +287,22 @@ export function AIConfigSection() {
 
         {/* API Key */}
         <div className="space-y-1.5">
-          <Label>
-            {t('admin.integrations.aiApiKey')} <span className="text-destructive">*</span>
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label>
+              {t('admin.integrations.aiApiKey')} <span className="text-destructive">*</span>
+            </Label>
+            {selectedProviderInfo?.help_url && (
+              <a
+                href={selectedProviderInfo.help_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+              >
+                {t('admin.integrations.aiGetApiKey')}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
           <Input
             type="password"
             value={apiKey}
@@ -324,7 +372,7 @@ export function AIConfigSection() {
         {showAdvanced && (
           <div id="ai-config-advanced" className="space-y-4 pl-1 border-l-2 border-muted ml-1.5">
             <div className="pl-3 space-y-4">
-              {/* Model — Combobox-like: Select + free text */}
+              {/* Model */}
               <div className="space-y-1.5">
                 <Label className="flex items-center gap-1.5">
                   {t('admin.integrations.aiModel')}
@@ -406,12 +454,6 @@ export function AIConfigSection() {
             </div>
           </div>
         )}
-
-        {/* Enable toggle */}
-        <div className="flex items-center justify-between">
-          <Label htmlFor="ai-enabled">{t('admin.integrations.aiEnabled')}</Label>
-          <Switch id="ai-enabled" checked={enabled} onCheckedChange={setEnabled} />
-        </div>
 
         {/* Validation hint */}
         {enabled && !config?.has_api_key && !apiKey && (

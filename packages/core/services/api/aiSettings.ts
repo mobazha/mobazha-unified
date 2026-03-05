@@ -30,6 +30,7 @@ export interface AIProviderInfo {
   default_model: string;
   default_base_url: string;
   models?: string[];
+  help_url?: string;
 }
 
 export interface AITestConnectionResult {

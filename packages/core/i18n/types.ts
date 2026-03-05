@@ -2787,8 +2787,12 @@ export interface TranslationResource {
 
       aiTitle?: string;
       aiDesc?: string;
+      aiFeatureGenerate?: string;
+      aiFeaturePolish?: string;
+      aiFeatureStore?: string;
       aiProvider?: string;
       aiProviderPlaceholder?: string;
+      aiGetApiKey?: string;
       aiApiKey?: string;
       aiApiKeyPlaceholder?: string;
       aiApiKeySet?: string;
