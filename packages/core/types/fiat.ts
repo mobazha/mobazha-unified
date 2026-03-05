@@ -57,6 +57,11 @@ export interface FiatProviderInfo {
   accountID: string;
 }
 
+export interface PaymentMethodsResponse {
+  crypto: string[];
+  fiat: FiatProviderInfo[];
+}
+
 export interface FiatAccountStatus {
   accountID: string;
   email?: string;

@@ -96,6 +96,7 @@ export * from './useCollections';
 // 法币支付相关
 export * from './useFiatProviders';
 export * from './useFiatPayment';
+export * from './usePaymentMethods';
 
 // 认证守卫相关
 export * from './useAuthGuard';

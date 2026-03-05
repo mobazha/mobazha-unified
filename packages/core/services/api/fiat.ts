@@ -13,6 +13,7 @@ import { NODE_API, HOSTING_API } from '../../config/apiPaths';
 import { authGet, authPost, authPut, authDel, publicGet, hostingPost, hostingGet } from './helpers';
 import type {
   FiatProviderInfo,
+  PaymentMethodsResponse,
   FiatPaymentSession,
   FiatPaymentResult,
   FiatAccountStatus,
@@ -22,6 +23,14 @@ import type {
 } from '../../types/fiat';
 
 // ========== Buyer-facing ==========
+
+export async function getPaymentMethods(peerID: string): Promise<PaymentMethodsResponse> {
+  const res = await publicGet<PaymentMethodsResponse>(NODE_API.PAYMENT_METHODS_PUBLIC(peerID));
+  return {
+    crypto: Array.isArray(res?.crypto) ? res.crypto : [],
+    fiat: Array.isArray(res?.fiat) ? res.fiat : [],
+  };
+}
 
 export async function getProviders(vendorPeerID?: string): Promise<FiatProviderInfo[]> {
   const path = vendorPeerID

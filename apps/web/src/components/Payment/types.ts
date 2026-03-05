@@ -110,6 +110,7 @@ export interface PaymentCryptoSelectorProps {
   onSelectFiat?: (providerID: string) => void;
   selectedFiatProvider?: string;
   availableFiatProviders?: string[];
+  acceptedCurrencies?: string[];
   disabled?: boolean;
   className?: string;
   isRwaTokenPurchase?: boolean;
