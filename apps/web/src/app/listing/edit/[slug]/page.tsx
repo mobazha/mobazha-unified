@@ -56,7 +56,6 @@ import {
   CouponEditor,
   DigitalFileSection,
   ProcessingTimeSelect,
-  ReturnPolicySelector,
   AiImageGeneratePanel,
   AiAssistButton,
   AiSetupPrompt,
@@ -75,7 +74,6 @@ type TabKey =
   | 'shipping'
   | 'variants'
   | 'files'
-  | 'policies'
   | 'coupons'
   | 'other';
 
@@ -112,12 +110,6 @@ const tabs: TabItem[] = [
     labelKey: 'listing.tabs.files',
     icon: <Download className="w-4 h-4" />,
     showFor: ['DIGITAL_GOOD'],
-  },
-  {
-    key: 'policies',
-    labelKey: 'listing.tabs.policies',
-    icon: <FileText className="w-4 h-4" />,
-    showFor: ['PHYSICAL_GOOD', 'DIGITAL_GOOD', 'SERVICE'],
   },
   {
     key: 'coupons',
@@ -205,7 +197,6 @@ export default function EditListingPage() {
     shipping: null,
     variants: null,
     files: null,
-    policies: null,
     coupons: null,
     other: null,
   });
@@ -860,45 +851,6 @@ export default function EditListingPage() {
                   />
                 </Card>
               )}
-
-              {/* 退货政策和条款 */}
-              {formData.contractType !== 'RWA_TOKEN' &&
-                formData.contractType !== 'CRYPTOCURRENCY' && (
-                  <Card
-                    className="p-6"
-                    ref={el => {
-                      sectionRefs.current.policies = el;
-                    }}
-                  >
-                    <h2 className="text-lg font-semibold text-foreground mb-4">
-                      {t('listing.policies')}
-                    </h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                          {t('listing.returnPolicy')}
-                        </label>
-                        <ReturnPolicySelector
-                          value={formData.refundPolicy}
-                          onChange={(val: string) => updateField('refundPolicy', val)}
-                          placeholder={t('listing.returnPolicyPlaceholder')}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                          {t('listing.termsAndConditions')}
-                        </label>
-                        <textarea
-                          value={formData.termsAndConditions}
-                          onChange={e => updateField('termsAndConditions', e.target.value)}
-                          rows={3}
-                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                          placeholder={t('listing.termsPlaceholder')}
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                )}
 
               {/* 优惠券 - Shopify 风格 */}
               {formData.contractType !== 'RWA_TOKEN' &&

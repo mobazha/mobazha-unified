@@ -31,7 +31,6 @@ import {
   CouponEditor,
   DigitalFileSection,
   ProcessingTimeSelect,
-  ReturnPolicySelector,
   AiImageGeneratePanel,
   AiSetupPrompt,
 } from '@/components/Listing';
@@ -565,32 +564,6 @@ export function MobileListingWizard({
             {formData.contractType !== 'RWA_TOKEN' &&
               formData.contractType !== 'CRYPTOCURRENCY' && (
                 <>
-                  <AccordionItem title={t('listing.tabs.policies')}>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          {t('listing.returnPolicy')}
-                        </label>
-                        <ReturnPolicySelector
-                          value={formData.refundPolicy}
-                          onChange={(val: string) => updateField('refundPolicy', val)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          {t('listing.termsAndConditions')}
-                        </label>
-                        <textarea
-                          value={formData.termsAndConditions}
-                          onChange={e => updateField('termsAndConditions', e.target.value)}
-                          rows={3}
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm resize-none"
-                          placeholder={t('listing.termsPlaceholder')}
-                        />
-                      </div>
-                    </div>
-                  </AccordionItem>
-
                   <AccordionItem title={t('listing.tabs.coupons')}>
                     <CouponEditor
                       coupons={formData.coupons}

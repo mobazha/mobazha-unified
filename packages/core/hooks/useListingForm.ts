@@ -80,10 +80,6 @@ export interface ListingFormData {
   // 优惠券
   coupons: Coupon[];
 
-  // 政策
-  termsAndConditions: string;
-  refundPolicy: string;
-
   // 其他
   nsfw: boolean;
   processingTime: string;
@@ -191,8 +187,6 @@ export const initialFormData: ListingFormData = {
   digitalFiles: [],
   optionalFeatures: [],
   coupons: [],
-  termsAndConditions: '',
-  refundPolicy: '',
   nsfw: false,
   processingTime: '',
 };
@@ -224,28 +218,12 @@ export function getFieldsForType(contractType: ContractType): string[] {
         'inventoryTracking',
         'optionalFeatures',
         'coupons',
-        'termsAndConditions',
-        'refundPolicy',
         'processingTime',
       ];
     case 'DIGITAL_GOOD':
-      return [
-        ...commonFields,
-        'optionalFeatures',
-        'coupons',
-        'termsAndConditions',
-        'refundPolicy',
-        'processingTime',
-      ];
+      return [...commonFields, 'optionalFeatures', 'coupons', 'processingTime'];
     case 'SERVICE':
-      return [
-        ...commonFields,
-        'optionalFeatures',
-        'coupons',
-        'termsAndConditions',
-        'refundPolicy',
-        'processingTime',
-      ];
+      return [...commonFields, 'optionalFeatures', 'coupons', 'processingTime'];
     case 'RWA_TOKEN':
       return [
         ...commonFields,
@@ -444,8 +422,6 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         acceptedCurrencies: formData.acceptedCurrencies || ['BTC', 'ETH'],
       },
       status: formData.status || 'published',
-      termsAndConditions: formData.termsAndConditions,
-      refundPolicy: formData.refundPolicy,
     };
 
     // Build SKU array for all product types (non-variant products use default SKU)
