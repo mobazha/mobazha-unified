@@ -346,7 +346,7 @@ export const SECTION_TYPE_LIST: SectionType[] = [
 ];
 
 /** Section types that cannot be added manually via the editor picker */
-export const SYSTEM_SECTION_TYPES: SectionType[] = ['store-tabs'];
+export const SYSTEM_SECTION_TYPES: SectionType[] = [];
 
 /** Section types available in the "Add Section" picker */
 export const ADDABLE_SECTION_TYPES = SECTION_TYPE_LIST.filter(
