@@ -3657,7 +3657,7 @@ export const de: TranslationResource = {
       createProduct: 'Produkt erstellen',
       featureAi: 'KI-gestützter Titel & Beschreibung',
       featureVariants: 'Varianten, Preise & Bestand',
-      featureShipping: 'Versandprofile & Richtlinien',
+      featureShipping: 'Versandprofile & Lieferoptionen',
       featureCoupons: 'Gutscheine & Aktionen',
       completeTitle: 'Ihr Shop ist bereit!',
       completeDesc:

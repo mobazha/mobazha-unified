@@ -3649,7 +3649,7 @@ export const es: TranslationResource = {
       createProduct: 'Crear producto',
       featureAi: 'Título y descripción con IA',
       featureVariants: 'Variantes, precios e inventario',
-      featureShipping: 'Perfiles de envío y políticas',
+      featureShipping: 'Opciones de envío y entrega',
       featureCoupons: 'Cupones y promociones',
       completeTitle: '¡Tu tienda está lista!',
       completeDesc:

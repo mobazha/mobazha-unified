@@ -3581,7 +3581,7 @@ export const ru: TranslationResource = {
       createProduct: 'Создать товар',
       featureAi: 'ИИ для названий и описаний',
       featureVariants: 'Варианты, цены, остатки',
-      featureShipping: 'Профили и политики доставки',
+      featureShipping: 'Профили и варианты доставки',
       featureCoupons: 'Купоны и акции',
       completeTitle: 'Магазин готов!',
       completeDesc: 'Профиль настроен. Добавляйте товары из админ-панели.',

@@ -3591,7 +3591,7 @@ export const ja: TranslationResource = {
       createProduct: '商品を作成',
       featureAi: 'AI対応タイトルと説明',
       featureVariants: 'バリエーション、価格、在庫',
-      featureShipping: '配送プロファイルとポリシー',
+      featureShipping: '配送プロファイル管理',
       featureCoupons: 'クーポンとプロモーション',
       completeTitle: 'ストアの準備ができました！',
       completeDesc:

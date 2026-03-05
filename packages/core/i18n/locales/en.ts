@@ -3849,7 +3849,7 @@ export const en: TranslationResource = {
       createProduct: 'Create Product',
       featureAi: 'AI-powered title & description',
       featureVariants: 'Variants, pricing & inventory',
-      featureShipping: 'Shipping profiles & policies',
+      featureShipping: 'Shipping & delivery options',
       featureCoupons: 'Coupons & promotions',
       completeTitle: 'Your Store is Ready!',
       completeDesc: 'Your store profile is set up. Add products anytime from the admin panel.',
