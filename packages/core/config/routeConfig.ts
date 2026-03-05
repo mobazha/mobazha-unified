@@ -72,8 +72,8 @@ export const PRIVATE_ROUTES = [
   '/settings/user-groups/:groupId/members',
 
   // 仲裁案例管理
-  '/moderator/cases',
-  '/moderator/cases/:orderId',
+  '/moderation/cases',
+  '/moderation/cases/:orderId',
 
   // RWA 仪表盘
   '/rwa-dashboard',

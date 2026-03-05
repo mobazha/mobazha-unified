@@ -19,6 +19,7 @@ export interface UserProfile {
   nsfw?: boolean;
   vendor?: boolean;
   moderator?: boolean;
+  moderatorInfo?: ModeratorInfo;
   /** 是否为私密店铺（仅授权用户可访问） */
   private?: boolean;
   avatarHashes?: Image;
@@ -28,6 +29,24 @@ export interface UserProfile {
   lastModified?: string;
   currencies?: CryptoType[];
   contactInfo?: ContactInfo;
+}
+
+/**
+ * 仲裁员信息（来自 profile.moderatorInfo）
+ */
+export interface ModeratorInfo {
+  description?: string;
+  termsAndConditions?: string;
+  languages?: string[];
+  acceptedCurrencies?: string[];
+  fee: {
+    fixedFee?: {
+      amount: number | string;
+      currencyCode: string;
+    };
+    percentage: number;
+    feeType: string;
+  };
 }
 
 /**

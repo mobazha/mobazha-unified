@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
-import { Settings, MapPin, Link2, Ban, Key, Wrench } from 'lucide-react';
+import { Settings, MapPin, Link2, Ban, Key, Wrench, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarItem {
@@ -44,6 +44,12 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.chatEncryption',
     href: '/settings/chat-encryption',
     icon: <Key className="w-4 h-4" />,
+  },
+  {
+    id: 'moderation',
+    labelKey: 'settings.sidebar.moderator',
+    href: '/settings/moderation',
+    icon: <Scale className="w-4 h-4" />,
   },
   {
     id: 'advanced',

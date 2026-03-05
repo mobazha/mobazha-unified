@@ -72,7 +72,7 @@ export function ShippingProfileSelector({
             {t('listing.noShippingConfiguredDesc')}
           </p>
           <Button asChild>
-            <Link href="/settings/store/shipping">
+            <Link href="/admin/settings/shipping">
               <Settings className="w-4 h-4 mr-2" />
               {t('listing.goToShippingSettings')}
             </Link>
@@ -92,7 +92,7 @@ export function ShippingProfileSelector({
           <span className="text-destructive ml-1">*</span>
         </h2>
         <Button asChild variant="outline" size="sm">
-          <Link href="/settings/store/shipping">
+          <Link href="/admin/settings/shipping">
             <Settings className="w-4 h-4 mr-1" />
             {t('listing.manageProfiles')}
           </Link>

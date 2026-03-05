@@ -537,7 +537,7 @@ export function getNotificationRoute(notification: Notification): string | null 
       return `/orders/${data.orderId}?tab=dispute`;
     }
     if (data?.caseId) {
-      return `/moderator/cases/${data.caseId}`;
+      return `/moderation/cases/${data.caseId}`;
     }
   }
 
