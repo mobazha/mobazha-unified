@@ -3992,10 +3992,13 @@ export const en: TranslationResource = {
         'Failed deliveries are automatically retried with exponential backoff, up to 5 attempts. Ensure your endpoint returns a 2xx status code to confirm receipt.',
 
       aiTitle: 'AI Assistant',
-      aiDesc:
-        'Configure an AI provider to power smart features like product description generation.',
+      aiDesc: 'Connect an AI provider to unlock smart product management features.',
+      aiFeatureGenerate: 'Auto-generate titles, descriptions, and tags from product images',
+      aiFeaturePolish: 'One-click copy polish for professional listings',
+      aiFeatureStore: 'AI-powered store design and brand building',
       aiProvider: 'Provider',
-      aiProviderPlaceholder: 'Select a provider',
+      aiProviderPlaceholder: 'Select an AI provider',
+      aiGetApiKey: 'Get API Key',
       aiApiKey: 'API Key',
       aiApiKeyPlaceholder: 'Enter your API key',
       aiApiKeySet: 'API key is configured',
