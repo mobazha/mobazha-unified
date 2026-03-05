@@ -632,7 +632,11 @@ export const CryptoReceivingSection: React.FC = () => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const cryptoAccounts = useMemo(() => accounts.filter(a => a.chainType !== 'Stripe'), [accounts]);
+  const knownChainIds = useMemo(() => new Set(CHAINS.map(c => c.id)), []);
+  const cryptoAccounts = useMemo(
+    () => accounts.filter(a => knownChainIds.has(a.chainType)),
+    [accounts, knownChainIds]
+  );
 
   const handleAdd = useCallback(() => {
     setEditingId(null);

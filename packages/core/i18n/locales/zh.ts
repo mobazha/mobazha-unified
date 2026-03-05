@@ -234,6 +234,8 @@ export const zh: TranslationResource = {
     settingsDesc: '应用偏好设置',
     appearance: '外观',
     darkModeDesc: '切换深色模式',
+    storeAdmin: '店铺管理',
+    storeAdminDesc: '管理商品、订单和设置',
     support: '帮助与支持',
     supportDesc: '获取帮助和常见问题',
     logout: '退出登录',
@@ -3389,6 +3391,7 @@ export const zh: TranslationResource = {
       closeMenu: '关闭菜单',
       expandSidebar: '展开侧边栏',
       collapseSidebar: '收起侧边栏',
+      backToMarketplace: '市场',
     },
     dashboard: {
       welcome: '欢迎回来，{{name}}',

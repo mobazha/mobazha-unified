@@ -46,7 +46,7 @@ export function RecentOrderRow({ order }: { order: OrderListItem }) {
   const { formatPrice, fromMinimalUnit } = useCurrency();
 
   const stateColor = STATE_COLORS[order.state] || STATE_COLORS.PENDING;
-  const stateLabel = t(`orders.statusLabels.${STATE_TO_I18N_KEY[order.state] || 'unknown'}`);
+  const stateLabel = t(`order.statusLabels.${STATE_TO_I18N_KEY[order.state] || 'unknown'}`);
   const dateStr = order.timestamp ? new Date(order.timestamp).toLocaleDateString() : '';
   const currencyCode = getOrderCurrencyCode(order);
   const formattedTotal = order.total?.amount

@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { Eye, User, LogOut } from 'lucide-react';
+import { NotificationDropdown } from '../Notification';
+import { ArrowLeft, Eye, User, LogOut } from 'lucide-react';
 
 interface AdminHeaderProps {
   title?: string;
@@ -47,6 +48,17 @@ export function AdminHeader({ title }: AdminHeaderProps) {
       data-testid="admin-header"
     >
       <div className="flex items-center gap-3">
+        {!standaloneMode && (
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+            data-testid="admin-back-to-marketplace"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('admin.nav.backToMarketplace')}</span>
+          </Link>
+        )}
+
         <Link href="/admin" className="lg:hidden flex items-center gap-2">
           <MobazhaLogo size={24} className="text-primary" />
           <span className="font-semibold text-sm text-foreground">{t('admin.title')}</span>
@@ -56,6 +68,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        <NotificationDropdown />
         <LanguageSwitcher compact />
         <ThemeSwitcher compact />
 

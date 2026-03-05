@@ -14,6 +14,7 @@ import {
   useTheme,
   getImageUrl,
   isHosted,
+  isStandalone,
   startCasdoorLogin,
 } from '@mobazha/core';
 import {
@@ -29,6 +30,7 @@ import {
   ChevronRight,
   LogIn,
   PieChart,
+  LayoutDashboard,
 } from 'lucide-react';
 
 // 功能列表项组件
@@ -72,8 +74,10 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
 export default function MePage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { isAuthenticated, profile, isLoading, logout } = useUserStore();
+  const { isAuthenticated, profile, isLoading, logout, authMode } = useUserStore();
   const { isDark, toggleDarkMode } = useTheme();
+  const standaloneMode = isStandalone();
+  const isBuyer = standaloneMode && authMode === 'standalone';
 
   const handleLogout = () => {
     logout();
@@ -180,6 +184,22 @@ export default function MePage() {
                 </Link>
               </div>
             </div>
+          )}
+
+          {/* 店铺管理入口（仅卖家） */}
+          {isAuthenticated && !isBuyer && (
+            <Link href="/admin" className="block">
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/15 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+                  <LayoutDashboard className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary">{t('me.storeAdmin')}</p>
+                  <p className="text-xs text-muted-foreground">{t('me.storeAdminDesc')}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-primary/60 flex-shrink-0" />
+              </div>
+            </Link>
           )}
 
           {/* 功能列表 */}
