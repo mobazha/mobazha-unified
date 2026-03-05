@@ -20,6 +20,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@mobazha/core': path.resolve(__dirname, '../../packages/core'),
+      '@mobazha/ui/hooks': path.resolve(__dirname, '../../packages/ui/hooks'),
     },
   },
 });
