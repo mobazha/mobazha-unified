@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { cn } from '@/lib/utils';
 import { getImageUrl, decodeHtmlEntities, sanitizeHtml } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
-import { Heart } from 'lucide-react';
+import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -67,6 +67,7 @@ export function ProductDetailDesktop({
     category,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
+    paymentAvailable,
     quantity,
     setQuantity,
     selectedImage,
@@ -601,9 +602,22 @@ export function ProductDetailDesktop({
               <Card
                 className={cn(
                   'space-y-3 p-4 hidden lg:block',
-                  stock === 0 && 'border-destructive/30 bg-destructive/5'
+                  (stock === 0 || !paymentAvailable) && 'border-destructive/30 bg-destructive/5'
                 )}
               >
+                {!paymentAvailable && stock > 0 && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+                    <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-sm font-medium text-foreground">
+                        {t('payment.paymentUnavailable')}
+                      </span>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('payment.paymentUnavailableDesc')}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {stock === 0 && (
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
                     <svg
@@ -632,12 +646,14 @@ export function ProductDetailDesktop({
                   <HStack gap="sm" align="center">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      disabled={stock === 0}
+                      disabled={stock === 0 || !paymentAvailable}
                       aria-label="Decrease quantity"
                       data-testid="product-detail-qty-decrease"
                       className={cn(
                         'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                        stock === 0 || !paymentAvailable
+                          ? 'opacity-50 cursor-not-allowed bg-muted'
+                          : 'hover:bg-muted'
                       )}
                     >
                       -
@@ -647,7 +663,7 @@ export function ProductDetailDesktop({
                       min="1"
                       max={stock}
                       value={quantity}
-                      disabled={stock === 0}
+                      disabled={stock === 0 || !paymentAvailable}
                       aria-label="Quantity"
                       data-testid="product-detail-qty-input"
                       onChange={e => {
@@ -673,12 +689,14 @@ export function ProductDetailDesktop({
                     />
                     <button
                       onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                      disabled={stock === 0}
+                      disabled={stock === 0 || !paymentAvailable}
                       aria-label="Increase quantity"
                       data-testid="product-detail-qty-increase"
                       className={cn(
                         'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                        stock === 0 || !paymentAvailable
+                          ? 'opacity-50 cursor-not-allowed bg-muted'
+                          : 'hover:bg-muted'
                       )}
                     >
                       +
@@ -697,10 +715,10 @@ export function ProductDetailDesktop({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      stock === 0 && 'opacity-50 cursor-not-allowed'
+                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleAddToCart}
-                    disabled={stock === 0}
+                    disabled={stock === 0 || !paymentAvailable}
                     data-testid="product-detail-add-to-cart"
                   >
                     {cartSuccess ? (
@@ -720,6 +738,8 @@ export function ProductDetailDesktop({
                         </svg>
                         {t('product.addedToCart')}
                       </span>
+                    ) : !paymentAvailable ? (
+                      t('payment.paymentUnavailable')
                     ) : stock === 0 ? (
                       t('product.outOfStock')
                     ) : (
@@ -731,10 +751,10 @@ export function ProductDetailDesktop({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      stock === 0 && 'opacity-50 cursor-not-allowed'
+                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleBuyNow}
-                    disabled={stock === 0}
+                    disabled={stock === 0 || !paymentAvailable}
                     data-testid="product-detail-buy-now"
                   >
                     {t('product.buyNow')}

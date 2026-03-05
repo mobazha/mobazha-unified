@@ -1707,6 +1707,16 @@ export const en: TranslationResource = {
     selectModeratorDesc: 'Choose a moderator for payment protection',
     selectModeratorWarning: 'Please select a moderator for escrow protection',
     selectPaymentMethodWarning: 'Please select a payment method',
+    noPaymentMethods: 'No payment methods available',
+    noPaymentMethodsDesc:
+      'The seller has not configured any payment methods yet. Please contact the seller or try again later.',
+    noPaymentMethodsSellerTitle: 'Set up payment methods',
+    noPaymentMethodsSellerDesc:
+      'Configure receiving addresses so buyers can pay for your products.',
+    noPaymentMethodsSellerAction: 'Set Up Payments',
+    paymentUnavailable: 'Payment unavailable',
+    paymentUnavailableDesc:
+      'This seller has not set up payment methods. You can message the seller for more information.',
     changeModerator: 'Change',
     enableProtection: 'Enable Protection',
     disableProtection: 'Disable Protection',
@@ -3614,6 +3624,9 @@ export const en: TranslationResource = {
       viewAll: 'View All',
       noOrdersYet: 'No orders yet. Share your store to get started!',
       noProductsYet: 'No products yet. Create your first listing!',
+      noPaymentMethodsWarning:
+        "You haven't set up any payment methods yet. Buyers won't be able to purchase your products.",
+      setUpPayments: 'Set Up Payments',
       failedToLoadProducts: 'Failed to load products',
       totalOrders: 'Total Orders',
       completedOrders: 'Completed orders',

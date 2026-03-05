@@ -7,7 +7,7 @@ import { Container } from '@/components/layouts';
 import { ProductDetailDesktop } from '@/components/Product/ProductDetailDesktop';
 import { ProductDetailMobile } from '@/components/Product/ProductDetailMobile';
 import { ProductBottomBar } from '@/components/Product';
-import { useI18n, useUserStore, useWishlist } from '@mobazha/core';
+import { useI18n, useUserStore, useWishlist, usePaymentMethods } from '@mobazha/core';
 import type { Product, AddWishlistParams } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
 import { useBreakpoint } from '@mobazha/ui/hooks';
@@ -55,6 +55,14 @@ export default function ProductPage() {
       : false;
 
   const stock = useMemo(() => (product ? getStockQuantity(product) : 0), [product]);
+
+  const vendorPeerID = peerID || product?.vendorID?.peerID;
+  const {
+    crypto: vendorCrypto,
+    activeFiat: vendorActiveFiat,
+    isLoading: pmLoading,
+  } = usePaymentMethods(vendorPeerID);
+  const paymentAvailable = pmLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
   const handleToggleWishlist = useCallback(async () => {
     if (!product) return;
@@ -110,6 +118,7 @@ export default function ProductPage() {
         isOwnProduct={isOwnProduct}
         isWishlist={wishlisted}
         onToggleWishlist={handleToggleWishlist}
+        paymentAvailable={paymentAvailable}
       />
       <Footer />
     </div>

@@ -30,12 +30,13 @@ import {
   discountsApi,
   useListing,
   useFiatProviders,
+  usePaymentMethods,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
 import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
-import { Heart } from 'lucide-react';
+import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -142,6 +143,15 @@ export function ProductDetail({
   const { activeProviders: fiatActiveProviders } = useFiatProviders(
     peerID || product?.vendorID?.peerID
   );
+
+  const {
+    crypto: vendorCrypto,
+    activeFiat: vendorActiveFiat,
+    isLoading: paymentMethodsLoading,
+  } = usePaymentMethods(peerID || product?.vendorID?.peerID);
+
+  const paymentAvailable =
+    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
   // 存储回调函数的 ref，避免在依赖数组中引用
   const onProductLoadedRef = useRef(onProductLoaded);
@@ -1020,7 +1030,8 @@ export function ProductDetail({
               <Card
                 className={cn(
                   'space-y-3 p-4 hidden lg:block',
-                  stock === 0 && 'border-destructive/30 bg-destructive/5'
+                  stock === 0 && 'border-destructive/30 bg-destructive/5',
+                  !paymentAvailable && stock > 0 && 'border-warning/30 bg-warning/5'
                 )}
               >
                 {stock === 0 && (
@@ -1044,6 +1055,20 @@ export function ProductDetail({
                   </div>
                 )}
 
+                {!paymentAvailable && stock > 0 && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+                    <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-sm font-medium text-foreground">
+                        {t('payment.paymentUnavailable')}
+                      </span>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('payment.paymentUnavailableDesc')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">
                     {t('product.quantity')}
@@ -1051,12 +1076,14 @@ export function ProductDetail({
                   <HStack gap="sm" align="center">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      disabled={stock === 0}
+                      disabled={stock === 0 || !paymentAvailable}
                       aria-label="Decrease quantity"
                       data-testid="product-detail-qty-decrease"
                       className={cn(
                         'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                        stock === 0 || !paymentAvailable
+                          ? 'opacity-50 cursor-not-allowed bg-muted'
+                          : 'hover:bg-muted'
                       )}
                     >
                       -
@@ -1066,7 +1093,7 @@ export function ProductDetail({
                       min="1"
                       max={stock}
                       value={quantity}
-                      disabled={stock === 0}
+                      disabled={stock === 0 || !paymentAvailable}
                       aria-label="Quantity"
                       data-testid="product-detail-qty-input"
                       onChange={e => {
@@ -1087,17 +1114,20 @@ export function ProductDetail({
                       }}
                       className={cn(
                         'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-                        stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
+                        (stock === 0 || !paymentAvailable) &&
+                          'opacity-50 cursor-not-allowed bg-muted'
                       )}
                     />
                     <button
                       onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                      disabled={stock === 0}
+                      disabled={stock === 0 || !paymentAvailable}
                       aria-label="Increase quantity"
                       data-testid="product-detail-qty-increase"
                       className={cn(
                         'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 ? 'opacity-50 cursor-not-allowed bg-muted' : 'hover:bg-muted'
+                        stock === 0 || !paymentAvailable
+                          ? 'opacity-50 cursor-not-allowed bg-muted'
+                          : 'hover:bg-muted'
                       )}
                     >
                       +
@@ -1105,7 +1135,7 @@ export function ProductDetail({
                   </HStack>
                 </div>
 
-                {stock > 0 && (
+                {stock > 0 && paymentAvailable && (
                   <span className="text-xs text-muted-foreground">
                     {stock} {t('product.inStock')}
                   </span>
@@ -1116,10 +1146,10 @@ export function ProductDetail({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      stock === 0 && 'opacity-50 cursor-not-allowed'
+                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleAddToCart}
-                    disabled={stock === 0}
+                    disabled={stock === 0 || !paymentAvailable}
                     data-testid="product-detail-add-to-cart"
                   >
                     {cartSuccess ? (
@@ -1141,6 +1171,8 @@ export function ProductDetail({
                       </span>
                     ) : stock === 0 ? (
                       t('product.outOfStock')
+                    ) : !paymentAvailable ? (
+                      t('payment.paymentUnavailable')
                     ) : (
                       t('product.addToCart')
                     )}
@@ -1150,10 +1182,10 @@ export function ProductDetail({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      stock === 0 && 'opacity-50 cursor-not-allowed'
+                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleBuyNow}
-                    disabled={stock === 0}
+                    disabled={stock === 0 || !paymentAvailable}
                     data-testid="product-detail-buy-now"
                   >
                     {t('product.buyNow')}
