@@ -9,7 +9,16 @@ import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
 import { getImageUrl, decodeHtmlEntities, sanitizeHtml, useI18n } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
-import { Heart, ChevronLeft, ChevronRight, Share2, Copy, Flag, MoreHorizontal } from 'lucide-react';
+import {
+  Heart,
+  ChevronLeft,
+  ChevronRight,
+  Share2,
+  Copy,
+  Flag,
+  MoreHorizontal,
+  AlertTriangle,
+} from 'lucide-react';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
@@ -57,6 +66,7 @@ export function ProductDetailMobile({
     tags,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
+    paymentAvailable,
     quantity,
     setQuantity,
     selectedImage,
@@ -333,6 +343,21 @@ export function ProductDetailMobile({
 
         <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
         {!isOwnProduct && <BuyerProtectionBanner />}
+
+        {/* Payment unavailable warning */}
+        {!isOwnProduct && !paymentAvailable && stock > 0 && (
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20">
+            <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="text-sm font-medium text-foreground">
+                {t('payment.paymentUnavailable')}
+              </span>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('payment.paymentUnavailableDesc')}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Stock + Quantity (only for buyer) */}
         {!isOwnProduct && (
@@ -648,7 +673,7 @@ export function ProductDetailMobile({
                 size="sm"
                 className="flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
                 onClick={handleAddToCart}
-                disabled={stock === 0}
+                disabled={stock === 0 || !paymentAvailable}
               >
                 {cartSuccess ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -659,6 +684,8 @@ export function ProductDetailMobile({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
+                ) : !paymentAvailable ? (
+                  t('payment.paymentUnavailable')
                 ) : stock === 0 ? (
                   t('product.outOfStock')
                 ) : (
@@ -669,7 +696,7 @@ export function ProductDetailMobile({
                 size="sm"
                 className="flex-1 h-11 text-sm font-medium touch-feedback"
                 onClick={handleBuyNow}
-                disabled={stock === 0}
+                disabled={stock === 0 || !paymentAvailable}
               >
                 {t('product.buyNow')}
               </Button>

@@ -8,6 +8,7 @@ import {
   productDataService,
   useSales,
   isStandalone,
+  useReceivingAccounts,
 } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import {
@@ -19,6 +20,7 @@ import {
   Eye,
   Palette,
   AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -204,6 +206,14 @@ export default function AdminDashboardPage() {
   const standaloneMode = useMemo(() => isStandalone(), []);
   const storeUrl = profile?.peerID ? (standaloneMode ? '/' : `/store/${profile.peerID}`) : '/';
 
+  const { data: receivingAccounts } = useReceivingAccounts();
+  const hasNoPaymentMethods = !!(
+    hasProducts &&
+    receivingAccounts &&
+    Array.isArray(receivingAccounts) &&
+    receivingAccounts.filter(a => a.isActive !== false).length === 0
+  );
+
   if (showOnboarding) {
     return (
       <div data-testid="admin-dashboard">
@@ -227,6 +237,23 @@ export default function AdminDashboardPage() {
 
       {productsError && <ErrorBanner message={productsError} />}
       {salesError && <ErrorBanner message={salesError} />}
+
+      {hasNoPaymentMethods && (
+        <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-warning/10 border border-warning/20">
+          <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-foreground">
+              {t('admin.dashboard.noPaymentMethodsWarning')}
+            </p>
+            <Link
+              href="/admin/settings/payments"
+              className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
+            >
+              {t('admin.dashboard.setUpPayments')} →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">

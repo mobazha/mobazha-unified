@@ -100,6 +100,29 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     [disabled, onSelectFiat]
   );
 
+  const isEmpty = availableTokens.length === 0 && activeFiatMethods.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center py-16 px-6 text-center',
+          className
+        )}
+      >
+        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+          <CreditCard className="w-8 h-8 text-muted-foreground/50" />
+        </div>
+        <h3 className="text-base font-semibold text-foreground mb-2">
+          {t('payment.noPaymentMethods')}
+        </h3>
+        <p className="text-sm text-muted-foreground max-w-[280px]">
+          {t('payment.noPaymentMethodsDesc')}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className={cn('space-y-4', className)}>
       {/* Fiat methods — shown first when seller has providers */}

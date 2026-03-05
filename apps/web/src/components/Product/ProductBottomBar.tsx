@@ -21,6 +21,8 @@ export interface ProductBottomBarProps {
   isWishlist?: boolean;
   /** 切换收藏回调 */
   onToggleWishlist?: () => void;
+  /** 卖家是否配置了支付方式 */
+  paymentAvailable?: boolean;
 }
 
 export function ProductBottomBar({
@@ -30,6 +32,7 @@ export function ProductBottomBar({
   isOwnProduct = false,
   isWishlist = false,
   onToggleWishlist,
+  paymentAvailable = true,
 }: ProductBottomBarProps) {
   const { t } = useI18n();
   const router = useRouter();
@@ -212,7 +215,7 @@ export function ProductBottomBar({
             size="sm"
             className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
             onClick={handleAddToCart}
-            disabled={stock === 0}
+            disabled={stock === 0 || !paymentAvailable}
           >
             {cartSuccess ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,6 +226,8 @@ export function ProductBottomBar({
                   d="M5 13l4 4L19 7"
                 />
               </svg>
+            ) : !paymentAvailable ? (
+              t('payment.paymentUnavailable')
             ) : (
               t('product.addToCart')
             )}
@@ -232,7 +237,7 @@ export function ProductBottomBar({
             size="sm"
             className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback"
             onClick={handleBuyNow}
-            disabled={stock === 0}
+            disabled={stock === 0 || !paymentAvailable}
           >
             {t('product.buyNow')}
           </Button>

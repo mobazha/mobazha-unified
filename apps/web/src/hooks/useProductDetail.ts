@@ -14,6 +14,7 @@ import {
   productsApi,
   discountsApi,
   useChatStore,
+  usePaymentMethods,
 } from '@mobazha/core';
 import type {
   Product,
@@ -100,6 +101,7 @@ export interface UseProductDetailReturn {
   category: string;
   rwaTradeMode: string | undefined;
   rwaEscrowTimeoutSeconds: number;
+  paymentAvailable: boolean;
 
   // UI state
   quantity: number;
@@ -348,6 +350,15 @@ export function useProductDetail({
   const acceptedCurrencies = product?.metadata?.acceptedCurrencies || [];
   const tags = product?.item.tags || [];
   const category = product?.item.productType || '';
+
+  const {
+    crypto: vendorCrypto,
+    activeFiat: vendorActiveFiat,
+    isLoading: paymentMethodsLoading,
+  } = usePaymentMethods(vendorPeerID);
+  const paymentAvailable =
+    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rwaTradeMode = (product?.metadata as any)?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
@@ -446,6 +457,7 @@ export function useProductDetail({
     category,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
+    paymentAvailable,
     quantity,
     setQuantity,
     selectedImage,
