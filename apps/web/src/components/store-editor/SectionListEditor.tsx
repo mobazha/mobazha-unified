@@ -60,6 +60,7 @@ function SortableItem({
   onRemove,
   onUpdateProps,
 }: SortableItemProps) {
+  const { t } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: section.id,
   });
@@ -70,7 +71,8 @@ function SortableItem({
   };
 
   const meta = getSectionMeta(section.type);
-  const label = meta?.icon ? `${meta.icon} ${meta.label}` : section.type;
+  const localizedLabel = meta?.labelKey ? t(meta.labelKey) : (meta?.label ?? section.type);
+  const label = meta?.icon ? `${meta.icon} ${localizedLabel}` : localizedLabel;
 
   return (
     <div

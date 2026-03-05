@@ -1280,7 +1280,7 @@ export const pt: TranslationResource = {
       accessRequests: 'Solicitações de acesso',
       addresses: 'Endereços',
       blocked: 'Bloqueados',
-      moderation: 'Moderação',
+      moderation: 'Resolução de disputas',
       chatEncryption: 'Criptografia de chat',
       advanced: 'Avançado',
     },
@@ -1399,6 +1399,36 @@ export const pt: TranslationResource = {
       reviewNote: 'Nota (opcional)',
       reviewNotePlaceholder: 'Adicione uma nota para o usuário...',
     },
+  },
+
+  moderatorSettings: {
+    title: 'Resolução de disputas',
+    description:
+      'Registre-se como moderador de resolução de disputas para ajudar a resolver disputas comerciais entre compradores e vendedores.',
+    enableToggle: 'Ativar resolução de disputas',
+    enableDescription:
+      'Permitir que outros usuários o selecionem como moderador para suas transações.',
+    feeSection: 'Estrutura de taxas',
+    feeType: 'Tipo de taxa',
+    feeTypeFixed: 'Fixa',
+    feeTypePercentage: 'Porcentagem',
+    feeTypeFixedPlusPercentage: 'Fixa + Porcentagem',
+    percentage: 'Porcentagem',
+    fixedAmount: 'Valor fixo',
+    currency: 'Moeda',
+    descriptionLabel: 'Descrição',
+    descriptionPlaceholder: 'Descreva sua experiência e abordagem na resolução de disputas...',
+    termsLabel: 'Termos e condições',
+    termsPlaceholder: 'Insira seus termos e condições para moderação de disputas...',
+    languagesLabel: 'Idiomas',
+    languagesPlaceholder: 'ex. Português, Inglês, Espanhol',
+    acceptedCurrencies: 'Moedas aceitas',
+    saveSuccess: 'Configurações de moderador salvas',
+    saveFailed: 'Falha ao salvar configurações de moderador',
+    disableSuccess: 'Status de moderador desativado',
+    disableFailed: 'Falha ao desativar status de moderador',
+    disableConfirm:
+      'Tem certeza de que deseja desativar seu status de moderador? Você não aparecerá mais na lista de moderadores.',
   },
 
   theme: {
