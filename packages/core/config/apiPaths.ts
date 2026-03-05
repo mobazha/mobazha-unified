@@ -92,6 +92,12 @@ export const NODE_API = {
   NOTIFICATION_CHANNEL_TYPES: '/notifications/channel-types',
   NOTIFICATION_CHANNELS_DETECT_CHAT: '/notifications/channels/detect-chat',
 
+  // --- Webhooks ---
+  WEBHOOKS: '/webhooks',
+  WEBHOOK: (id: string) => `/webhooks/${id}`,
+  WEBHOOK_DELIVERIES: (id: string) => `/webhooks/${id}/deliveries`,
+  WEBHOOK_TEST: (id: string) => `/webhooks/${id}/test`,
+
   // --- AI ---
   AI_GENERATE: '/ai/generate',
   AI_CONFIG: '/settings/ai',

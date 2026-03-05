@@ -3881,13 +3881,14 @@ export const en: TranslationResource = {
       payments: 'Payments',
       paymentsDesc: 'Crypto receiving addresses and card payments',
       integrations: 'Integrations',
-      integrationsDesc: 'AI assistant, Telegram notifications, and webhooks',
+      integrationsDesc: 'Notification channels, AI assistant, and webhooks',
     },
     integrations: {
       title: 'Integrations',
-      subtitle: 'Manage AI assistant, notifications, and external services',
+      subtitle: 'Manage notification channels, AI assistant, and webhooks',
       tabPayments: 'Payments',
       tabNotifications: 'Notifications',
+      tabWebhooks: 'Webhooks',
       tabAI: 'AI Assistant',
       channels: 'Notification Channels',
       channelsDesc: 'Receive store events via Telegram, Discord, and more',
@@ -3954,6 +3955,41 @@ export const en: TranslationResource = {
       detectNoChats: 'No chats found. Send a message to your bot first, then try again.',
       detectFailed: 'Detection failed',
       detectSelectChat: 'Select a chat',
+
+      webhooks: 'Webhook Endpoints',
+      webhooksDesc: 'Send HTTP callbacks to your server when store events occur',
+      addWebhook: 'Add Webhook',
+      editWebhook: 'Edit Webhook',
+      deleteWebhook: 'Delete Webhook',
+      deleteWebhookConfirm:
+        'Are you sure you want to delete this webhook endpoint? Events will no longer be delivered to this URL.',
+      webhookUrl: 'Payload URL',
+      webhookUrlInvalid: 'Please enter a valid URL (starting with http:// or https://)',
+      webhookTest: 'Send Test',
+      webhookTestSuccess: 'Test event sent',
+      webhookTestFailed: 'Failed to send test event',
+      webhookSaved: 'Webhook saved',
+      webhookSaveFailed: 'Failed to save webhook',
+      webhookDeleted: 'Webhook deleted',
+      webhookDeleteFailed: 'Failed to delete webhook',
+      webhookDetails: 'Details',
+      webhookCreatedAt: 'Created',
+      webhookSecretTitle: 'Signing Secret',
+      webhookSecretWarning:
+        'This secret is only shown once. Copy it now and store it securely. Use it to verify webhook request signatures.',
+      webhookSecretDone: "I've copied it, close",
+      noWebhooks: 'No webhooks configured',
+      noWebhooksDesc: 'Add a webhook endpoint to receive HTTP callbacks when events occur',
+      webhookGuideTitle: 'Developer Guide: How to integrate webhooks',
+      webhookGuidePayload: 'Payload format',
+      webhookGuidePayloadDesc:
+        'Events are sent as HTTP POST requests in CloudEvents 1.0 format with a JSON body.',
+      webhookGuideSignature: 'Signature verification',
+      webhookGuideSignatureDesc:
+        'Each request includes an X-Webhook-Signature header with an HMAC-SHA256 signature. Verify the request origin using the secret provided when the endpoint was created.',
+      webhookGuideRetry: 'Retry policy',
+      webhookGuideRetryDesc:
+        'Failed deliveries are automatically retried with exponential backoff, up to 5 attempts. Ensure your endpoint returns a 2xx status code to confirm receipt.',
 
       aiTitle: 'AI Assistant',
       aiDesc:

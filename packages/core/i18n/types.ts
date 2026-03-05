@@ -2689,6 +2689,7 @@ export interface TranslationResource {
       title?: string;
       subtitle?: string;
       tabNotifications?: string;
+      tabWebhooks?: string;
       tabAI?: string;
       channels?: string;
       channelsDesc?: string;
@@ -2753,6 +2754,36 @@ export interface TranslationResource {
       detectNoChats?: string;
       detectFailed?: string;
       detectSelectChat?: string;
+
+      webhooks?: string;
+      webhooksDesc?: string;
+      addWebhook?: string;
+      editWebhook?: string;
+      deleteWebhook?: string;
+      deleteWebhookConfirm?: string;
+      webhookUrl?: string;
+      webhookUrlInvalid?: string;
+      webhookTest?: string;
+      webhookTestSuccess?: string;
+      webhookTestFailed?: string;
+      webhookSaved?: string;
+      webhookSaveFailed?: string;
+      webhookDeleted?: string;
+      webhookDeleteFailed?: string;
+      webhookDetails?: string;
+      webhookCreatedAt?: string;
+      webhookSecretTitle?: string;
+      webhookSecretWarning?: string;
+      webhookSecretDone?: string;
+      noWebhooks?: string;
+      noWebhooksDesc?: string;
+      webhookGuideTitle?: string;
+      webhookGuidePayload?: string;
+      webhookGuidePayloadDesc?: string;
+      webhookGuideSignature?: string;
+      webhookGuideSignatureDesc?: string;
+      webhookGuideRetry?: string;
+      webhookGuideRetryDesc?: string;
 
       aiTitle?: string;
       aiDesc?: string;

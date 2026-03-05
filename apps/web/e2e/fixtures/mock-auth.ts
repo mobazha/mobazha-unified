@@ -231,6 +231,14 @@ export async function mockSessionAPIs(page: Page): Promise<void> {
     })
   );
 
+  await page.route('**/v1/webhooks', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [] }),
+    })
+  );
+
   await page.route('**/v1/webhooks/**', route =>
     route.fulfill({
       status: 200,
