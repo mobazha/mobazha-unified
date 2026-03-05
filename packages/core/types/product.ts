@@ -67,7 +67,6 @@ export interface Product {
   /** Shopify 风格配送档案（新版） */
   shippingProfile?: ShippingProfile;
   taxes?: Tax[];
-  coupons?: Coupon[];
   moderators?: string[];
   /** 商品发布状态: draft/published/private */
   status?: ListingStatus;
@@ -293,27 +292,6 @@ export interface Tax {
   taxRegions: string[];
   taxShipping: boolean;
   percentage: number;
-}
-
-/**
- * 优惠券折扣类型
- */
-export type CouponDiscountType = 'PERCENT' | 'FIXED';
-
-/**
- * 优惠券（Shopify 风格扁平结构）
- */
-export interface Coupon {
-  title: string;
-  discountCode?: string; // 折扣码（明文）
-  hash?: string; // 折扣码哈希
-  discountType?: CouponDiscountType; // 折扣类型
-  percentDiscount?: number; // 百分比折扣（0-99）
-  priceDiscount?: string; // 固定金额折扣（最小单位）
-  usageLimit?: number; // 最大使用次数，0 = 无限
-  startsAt?: string; // 生效时间（ISO 8601）
-  expiresAt?: string; // 过期时间（ISO 8601）
-  minimumOrderAmount?: string; // 最低订单金额
 }
 
 /**

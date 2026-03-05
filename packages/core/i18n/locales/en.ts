@@ -1303,6 +1303,7 @@ export const en: TranslationResource = {
       moderation: 'Moderation',
       receiving: 'Receiving Addresses',
       chatEncryption: 'Chat Encryption',
+      moderator: 'Dispute Resolution',
       advanced: 'Advanced',
     },
     // Account binding
@@ -1428,6 +1429,35 @@ export const en: TranslationResource = {
       reviewNote: 'Note (optional)',
       reviewNotePlaceholder: 'Add a note for the user...',
     },
+  },
+
+  moderatorSettings: {
+    title: 'Dispute Resolution',
+    description:
+      'Register as a dispute resolution moderator to help resolve transaction disputes between buyers and sellers.',
+    enableToggle: 'Enable Dispute Resolution',
+    enableDescription: 'Allow other users to select you as a moderator for their transactions.',
+    feeSection: 'Fee Structure',
+    feeType: 'Fee Type',
+    feeTypeFixed: 'Fixed',
+    feeTypePercentage: 'Percentage',
+    feeTypeFixedPlusPercentage: 'Fixed + Percentage',
+    percentage: 'Percentage',
+    fixedAmount: 'Fixed Amount',
+    currency: 'Currency',
+    descriptionLabel: 'Description',
+    descriptionPlaceholder: 'Describe your experience and approach to dispute resolution...',
+    termsLabel: 'Terms & Conditions',
+    termsPlaceholder: 'Enter your terms and conditions for moderating disputes...',
+    languagesLabel: 'Languages',
+    languagesPlaceholder: 'e.g. English, Chinese, Spanish',
+    acceptedCurrencies: 'Accepted Currencies',
+    saveSuccess: 'Moderator settings saved successfully',
+    saveFailed: 'Failed to save moderator settings',
+    disableSuccess: 'Moderator status disabled',
+    disableFailed: 'Failed to disable moderator status',
+    disableConfirm:
+      'Are you sure you want to disable your moderator status? You will no longer appear in moderator listings.',
   },
 
   theme: {
@@ -2646,7 +2676,6 @@ export const en: TranslationResource = {
       shipping: 'Shipping',
       variants: 'Variants',
       policies: 'Policies',
-      coupons: 'Coupons',
       other: 'Other Settings',
     },
 
@@ -2811,34 +2840,6 @@ export const en: TranslationResource = {
     termsAndConditions: 'Terms and Conditions',
     termsPlaceholder: 'Enter terms and conditions...',
     termsHelper: 'If left blank, the listing will display "No terms and conditions entered"',
-
-    // Coupons
-    coupons: 'Coupons',
-    couponsDesc: 'Create discount codes to offer promotions to your buyers.',
-    addCoupon: 'Add Coupon',
-
-    coupon: {
-      untitled: 'Untitled coupon',
-      off: '{{amount}} off',
-      title: 'Coupon name',
-      titlePlaceholder: 'e.g. Summer Sale, Welcome Discount',
-      discountCode: 'Discount code',
-      discountValue: 'Discount value',
-      minimumOrder: 'Minimum order amount',
-      noMinimum: 'No minimum',
-      usageLimit: 'Usage limit',
-      unlimited: 'Unlimited',
-      activeDates: 'Active dates',
-      startsAt: 'Start date',
-      expiresAt: 'End date',
-      percentDiscount: 'Percentage discount',
-      fixedDiscount: 'Fixed amount discount',
-      discountCodePlaceholder: 'e.g. SUMMER2025',
-      removeCoupon: 'Remove coupon',
-      emptyState: 'No coupons yet. Create discount codes to attract buyers.',
-      addFirst: 'Create discount',
-      addAnother: 'Add another coupon',
-    },
 
     // RWA Token
     rwaTokenDetails: 'RWA Token Details',
@@ -3850,7 +3851,7 @@ export const en: TranslationResource = {
       featureAi: 'AI-powered title & description',
       featureVariants: 'Variants, pricing & inventory',
       featureShipping: 'Shipping & delivery options',
-      featureCoupons: 'Coupons & promotions',
+      featureCoupons: 'Discounts & promotions',
       completeTitle: 'Your Store is Ready!',
       completeDesc: 'Your store profile is set up. Add products anytime from the admin panel.',
       designWithAi: 'Design your store with AI',

@@ -19,9 +19,6 @@ export type { VariantOptionEditorProps } from './VariantOptionEditor';
 export { VariantInventoryTable } from './VariantInventoryTable';
 export type { VariantInventoryTableProps } from './VariantInventoryTable';
 
-export { CouponEditor } from './CouponEditor';
-export type { CouponEditorProps } from './CouponEditor';
-
 export { DigitalFileSection } from './DigitalFileSection';
 
 export { ProcessingTimeSelect } from './ProcessingTimeSelect';

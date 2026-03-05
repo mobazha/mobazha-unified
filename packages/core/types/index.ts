@@ -54,8 +54,6 @@ export type {
   ShippingType,
   ShippingService,
   Tax,
-  CouponDiscountType,
-  Coupon,
   ProductRating,
   RatingIndex,
   RatingDetail,

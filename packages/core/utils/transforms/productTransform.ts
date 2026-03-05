@@ -85,19 +85,6 @@ export function convertProductToFormData(
       barcode: sku.barcode || '',
       weight: sku.weight || 0,
     })),
-    // 优惠券（Shopify 风格扁平结构）
-    coupons: (product.coupons || []).map(c => ({
-      title: c.title,
-      discountCode: c.discountCode,
-      hash: c.hash,
-      discountType: c.discountType || 'PERCENT',
-      percentDiscount: c.percentDiscount,
-      priceDiscount: c.priceDiscount,
-      usageLimit: c.usageLimit,
-      startsAt: c.startsAt,
-      expiresAt: c.expiresAt,
-      minimumOrderAmount: c.minimumOrderAmount,
-    })),
     nsfw: item.nsfw || false,
     processingTime: item.processingTime || '',
   };
