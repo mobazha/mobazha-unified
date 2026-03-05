@@ -240,6 +240,8 @@ export const en: TranslationResource = {
     settingsDesc: 'App preferences',
     appearance: 'Appearance',
     darkModeDesc: 'Toggle dark mode',
+    storeAdmin: 'Store Admin',
+    storeAdminDesc: 'Manage products, orders, and settings',
     support: 'Help & Support',
     supportDesc: 'Get help and FAQ',
     logout: 'Logout',
@@ -3594,6 +3596,7 @@ export const en: TranslationResource = {
       closeMenu: 'Close menu',
       expandSidebar: 'Expand sidebar',
       collapseSidebar: 'Collapse sidebar',
+      backToMarketplace: 'Marketplace',
     },
     dashboard: {
       welcome: 'Welcome back, {{name}}',

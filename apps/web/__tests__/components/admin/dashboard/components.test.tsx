@@ -19,11 +19,11 @@ vi.mock('@mobazha/core', () => ({
         'admin.dashboard.emptyDescription': 'Get started by creating your first product.',
         'admin.dashboard.createFirstProduct': 'Create First Product',
         'admin.dashboard.setupStore': 'Set Up Store',
-        'orders.statusLabels.pending': 'Pending',
-        'orders.statusLabels.completed': 'Completed',
-        'orders.statusLabels.shipped': 'Shipped',
-        'orders.statusLabels.disputed': 'Disputed',
-        'orders.statusLabels.unknown': 'Unknown',
+        'order.statusLabels.pending': 'Pending',
+        'order.statusLabels.completed': 'Completed',
+        'order.statusLabels.shipped': 'Shipped',
+        'order.statusLabels.disputed': 'Disputed',
+        'order.statusLabels.unknown': 'Unknown',
       };
       let result = translations[key] || key;
       if (params) {

@@ -121,6 +121,20 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
+            {/* 卖家：店铺管理入口 */}
+            {isAuthenticated && !isBuyer && (
+              <Link href="/admin" data-testid="header-admin-link">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="hidden lg:inline">{t('admin.title')}</span>
+                </Button>
+              </Link>
+            )}
+
             {/* 已登录用户：通知、消息、钱包 */}
             {isAuthenticated && (
               <>

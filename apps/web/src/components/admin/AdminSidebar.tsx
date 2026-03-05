@@ -13,7 +13,7 @@ import {
   Tag,
   Layers,
   Palette,
-  ExternalLink,
+  Eye,
   HelpCircle,
   ChevronLeft,
   ChevronRight,
@@ -133,19 +133,17 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
       {/* Bottom section */}
       <div className="border-t border-border py-3 px-2 space-y-1 shrink-0">
-        <a
+        <Link
           href={storeUrl}
-          target={isStandalone() ? undefined : '_blank'}
-          rel="noopener noreferrer"
           className={cn(
             'flex items-center gap-3 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
             collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
           )}
           title={collapsed ? t('admin.nav.viewStore') : undefined}
         >
-          <ExternalLink className="w-4 h-4 shrink-0" />
+          <Eye className="w-4 h-4 shrink-0" />
           {!collapsed && <span>{t('admin.nav.viewStore')}</span>}
-        </a>
+        </Link>
         <a
           href="https://docs.mobazha.org"
           target="_blank"
