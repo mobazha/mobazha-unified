@@ -48,7 +48,7 @@ function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProp
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--store-font)' }}>
             {title}
           </p>
-          <p className="text-xs opacity-60">{description}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
     );
@@ -67,7 +67,7 @@ function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProp
         <p className="text-sm font-semibold" style={{ fontFamily: 'var(--store-font)' }}>
           {title}
         </p>
-        <p className="text-xs opacity-60">{description}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
     );
   }
@@ -84,7 +84,7 @@ function BadgeCard({ badge, style }: { badge: TrustBadge; style: TrustBadgesProp
       <p className="text-sm font-semibold" style={{ fontFamily: 'var(--store-font)' }}>
         {title}
       </p>
-      <p className="text-xs opacity-60">{description}</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
     </div>
   );
 }
