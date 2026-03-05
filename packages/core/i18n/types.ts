@@ -873,11 +873,11 @@ export interface TranslationResource {
     moderators: string;
     moderatorsDesc: string;
     acceptedCrypto: string;
-    selected: string;
+    selected?: string;
     shippingOptions: string;
     shippingOptionsDesc: string;
-    paymentAndShipping: string;
-    paymentAndShippingDesc: string;
+    paymentAndShipping?: string;
+    paymentAndShippingDesc?: string;
     storePoliciesSaved?: string;
     termsDesc?: string;
     termsPlaceholder?: string;
@@ -2663,6 +2663,9 @@ export interface TranslationResource {
     settings?: {
       title?: string;
       subtitle?: string;
+      sectionStore?: string;
+      sectionTransaction?: string;
+      sectionExtensions?: string;
       profile?: string;
       profileDesc?: string;
       store?: string;
@@ -2675,6 +2678,10 @@ export interface TranslationResource {
       moderatorsDesc?: string;
       general?: string;
       generalDesc?: string;
+      accessControl?: string;
+      accessControlDesc?: string;
+      payments?: string;
+      paymentsDesc?: string;
       integrations?: string;
       integrationsDesc?: string;
     };

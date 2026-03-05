@@ -174,7 +174,6 @@ const routes: RouteObject[] = [
       { path: 'general', element: lazyPage(() => import('./app/settings/general/page')) },
       { path: 'account', element: lazyPage(() => import('./app/settings/account/page')) },
       { path: 'page-profile', element: lazyPage(() => import('./app/settings/page-profile/page')) },
-      { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
       {
         path: 'store/shipping',
         element: lazyPage(() => import('./app/settings/store/shipping/page')),
@@ -206,44 +205,6 @@ const routes: RouteObject[] = [
       {
         path: 'access-requests',
         element: lazyPage(() => import('./app/settings/access-requests/page')),
-      },
-      {
-        path: 'access-control',
-        element: lazyPage(() => import('./app/settings/access-control/page')),
-      },
-      {
-        path: 'access-control/privacy',
-        element: lazyPage(() => import('./app/settings/access-control/privacy/page')),
-      },
-      {
-        path: 'access-control/requests',
-        element: lazyPage(() => import('./app/settings/access-control/requests/page')),
-      },
-      {
-        path: 'access-control/product-groups',
-        element: lazyPage(() => import('./app/settings/access-control/product-groups/page')),
-      },
-      {
-        path: 'access-control/product-groups/:groupId',
-        element: lazyPage(
-          () => import('./app/settings/access-control/product-groups/[groupId]/page')
-        ),
-      },
-      {
-        path: 'access-control/product-groups/:groupId/authorization',
-        element: lazyPage(
-          () => import('./app/settings/access-control/product-groups/[groupId]/authorization/page')
-        ),
-      },
-      {
-        path: 'access-control/user-groups',
-        element: lazyPage(() => import('./app/settings/access-control/user-groups/page')),
-      },
-      {
-        path: 'access-control/user-groups/:groupId/members',
-        element: lazyPage(
-          () => import('./app/settings/access-control/user-groups/[groupId]/members/page')
-        ),
       },
       {
         path: 'product-groups',
@@ -290,20 +251,8 @@ const routes: RouteObject[] = [
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
       {
-        path: 'settings/general',
-        element: lazyPage(() => import('./app/admin/settings/general/page')),
-      },
-      {
         path: 'settings/profile',
         element: lazyPage(() => import('./app/admin/settings/profile/page')),
-      },
-      {
-        path: 'settings/store',
-        element: lazyPage(() => import('./app/admin/settings/store/page')),
-      },
-      {
-        path: 'settings/store/branding',
-        element: lazyPage(() => import('./app/admin/settings/store/branding/page')),
       },
       {
         path: 'settings/shipping',
@@ -326,24 +275,43 @@ const routes: RouteObject[] = [
         element: lazyPage(() => import('./app/admin/settings/integrations/page')),
       },
       {
-        path: 'settings/account',
-        element: lazyPage(() => import('./app/admin/settings/account/page')),
-      },
-      {
         path: 'settings/access-control',
         element: lazyPage(() => import('./app/admin/settings/access-control/page')),
       },
       {
-        path: 'settings/blocked',
-        element: lazyPage(() => import('./app/admin/settings/blocked/page')),
+        path: 'settings/access-control/privacy',
+        element: lazyPage(() => import('./app/admin/settings/access-control/privacy/page')),
       },
       {
-        path: 'settings/chat-encryption',
-        element: lazyPage(() => import('./app/admin/settings/chat-encryption/page')),
+        path: 'settings/access-control/user-groups',
+        element: lazyPage(() => import('./app/admin/settings/access-control/user-groups/page')),
       },
       {
-        path: 'settings/advanced',
-        element: lazyPage(() => import('./app/admin/settings/advanced/page')),
+        path: 'settings/access-control/product-groups',
+        element: lazyPage(() => import('./app/admin/settings/access-control/product-groups/page')),
+      },
+      {
+        path: 'settings/access-control/product-groups/:groupId',
+        element: lazyPage(
+          () => import('./app/admin/settings/access-control/product-groups/[groupId]/page')
+        ),
+      },
+      {
+        path: 'settings/access-control/product-groups/:groupId/authorization',
+        element: lazyPage(
+          () =>
+            import('./app/admin/settings/access-control/product-groups/[groupId]/authorization/page')
+        ),
+      },
+      {
+        path: 'settings/access-control/user-groups/:groupId/members',
+        element: lazyPage(
+          () => import('./app/admin/settings/access-control/user-groups/[groupId]/members/page')
+        ),
+      },
+      {
+        path: 'settings/access-control/requests',
+        element: lazyPage(() => import('./app/admin/settings/access-control/requests/page')),
       },
     ],
   },

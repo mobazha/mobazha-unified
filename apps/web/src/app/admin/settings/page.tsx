@@ -2,20 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '@mobazha/core';
-import {
-  Settings,
-  Store,
-  Shield,
-  Truck,
-  Scale,
-  User,
-  Plug,
-  Link2,
-  Ban,
-  Key,
-  Wrench,
-  Wallet,
-} from 'lucide-react';
+import { Shield, Truck, Scale, User, Plug, Wallet } from 'lucide-react';
 import Link from 'next/link';
 
 interface SettingsCardProps {
@@ -69,8 +56,8 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="space-y-8">
-        {/* Personal & Store */}
-        <SettingsSection title={t('admin.settings.sectionPersonal')}>
+        {/* Store */}
+        <SettingsSection title={t('admin.settings.sectionStore')}>
           <SettingsCard
             icon={User}
             title={t('admin.settings.profile')}
@@ -78,22 +65,10 @@ export default function AdminSettingsPage() {
             href="/admin/settings/profile"
           />
           <SettingsCard
-            icon={Store}
-            title={t('admin.settings.store')}
-            description={t('admin.settings.storeDesc')}
-            href="/admin/settings/store"
-          />
-          <SettingsCard
-            icon={Settings}
-            title={t('admin.settings.general')}
-            description={t('admin.settings.generalDesc')}
-            href="/admin/settings/general"
-          />
-          <SettingsCard
-            icon={Link2}
-            title={t('admin.settings.account')}
-            description={t('admin.settings.accountDesc')}
-            href="/admin/settings/account"
+            icon={Shield}
+            title={t('admin.settings.accessControl')}
+            description={t('admin.settings.accessControlDesc')}
+            href="/admin/settings/access-control"
           />
         </SettingsSection>
 
@@ -122,34 +97,6 @@ export default function AdminSettingsPage() {
             title={t('admin.settings.moderators')}
             description={t('admin.settings.moderatorsDesc')}
             href="/admin/settings/moderators"
-          />
-        </SettingsSection>
-
-        {/* Privacy & Security */}
-        <SettingsSection title={t('admin.settings.sectionPrivacy')}>
-          <SettingsCard
-            icon={Shield}
-            title={t('admin.settings.accessControl')}
-            description={t('admin.settings.accessControlDesc')}
-            href="/admin/settings/access-control"
-          />
-          <SettingsCard
-            icon={Ban}
-            title={t('admin.settings.blocked')}
-            description={t('admin.settings.blockedDesc')}
-            href="/admin/settings/blocked"
-          />
-          <SettingsCard
-            icon={Key}
-            title={t('admin.settings.chatEncryption')}
-            description={t('admin.settings.chatEncryptionDesc')}
-            href="/admin/settings/chat-encryption"
-          />
-          <SettingsCard
-            icon={Wrench}
-            title={t('admin.settings.advanced')}
-            description={t('admin.settings.advancedDesc')}
-            href="/admin/settings/advanced"
           />
         </SettingsSection>
 
