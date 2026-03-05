@@ -1179,6 +1179,8 @@ export const ja: TranslationResource = {
     failed: '支払い失敗: ',
     securityNote: 'マルチシグエスクロー保護による安全な支払い',
     subtotal: '小計',
+    shipping: '送料',
+    moderatorFeeNote: '販売者から差し引かれます',
     connectWalletFirst: 'まずウォレットを接続してください',
     noPaymentAddress: '支払いアドレスがありません',
     noPaymentInstructions: '支払い指示の取得に失敗しました',
