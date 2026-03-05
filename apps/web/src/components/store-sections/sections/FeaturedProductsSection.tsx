@@ -9,7 +9,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { FeaturedProductsProps, ProductListItem } from '@mobazha/core';
-import { productDataService, getImageUrl } from '@mobazha/core';
+import { productDataService, getImageUrl, useI18n, useCurrencyFormat } from '@mobazha/core';
 
 interface Props extends FeaturedProductsProps {
   peerId: string;
@@ -31,6 +31,8 @@ export function FeaturedProductsSection({
   columns,
   peerId,
 }: Props) {
+  const { t } = useI18n();
+  const { formatLocalPrice } = useCurrencyFormat();
   const isPreview = peerId === PREVIEW_PEER;
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(!isPreview);
@@ -80,13 +82,13 @@ export function FeaturedProductsSection({
           ))}
         </div>
       ) : products.length === 0 ? (
-        <p className="text-center text-sm opacity-50">No products to display</p>
+        <p className="text-center text-sm text-muted-foreground">{t('empty.noProductsFound')}</p>
       ) : (
         <div className={`grid gap-4 ${colClass}`}>
           {products.map(product => (
             <a
               key={product.slug}
-              href={`/store/${peerId}/products/${product.slug}`}
+              href={`/product/${product.slug}?peerID=${peerId}`}
               className="group overflow-hidden transition-shadow hover:shadow-lg"
               style={{ borderRadius: 'var(--store-radius)' }}
             >
@@ -107,8 +109,12 @@ export function FeaturedProductsSection({
                   {product.title}
                 </h3>
                 {product.price && (
-                  <p className="mt-1 text-sm opacity-70">
-                    {product.price.currency?.code} {product.price.amount}
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatLocalPrice(
+                      Number(product.price.amount || 0),
+                      product.price.currency?.code || 'USD',
+                      product.price.currency?.divisibility
+                    )}
                   </p>
                 )}
               </div>
