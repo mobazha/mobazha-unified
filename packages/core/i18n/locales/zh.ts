@@ -3759,7 +3759,7 @@ export const zh: TranslationResource = {
       createProduct: '创建商品',
       featureAi: 'AI 智能生成标题和描述',
       featureVariants: '变体、定价和库存管理',
-      featureShipping: '配送方案和退换政策',
+      featureShipping: '配送方案管理',
       featureCoupons: '优惠券和促销活动',
       completeTitle: '你的店铺已就绪！',
       completeDesc: '店铺资料已设置完成。你可以随时在管理面板中添加商品。',

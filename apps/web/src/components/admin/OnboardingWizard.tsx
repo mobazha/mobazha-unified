@@ -384,7 +384,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               },
               {
                 icon: <Truck className="w-5 h-5 text-primary" />,
-                text: t('admin.onboarding.featureShipping') || 'Shipping profiles & policies',
+                text: t('admin.onboarding.featureShipping') || 'Shipping & delivery options',
               },
               {
                 icon: <Sparkles className="w-5 h-5 text-primary" />,

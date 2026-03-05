@@ -3463,7 +3463,7 @@ export const ko: TranslationResource = {
       createProduct: '상품 만들기',
       featureAi: 'AI-powered 제목 및 설명',
       featureVariants: '변형, 가격 및 재고',
-      featureShipping: '배송 프로필 및 정책',
+      featureShipping: '배송 프로필 관리',
       featureCoupons: '쿠폰 및 프로모션',
       completeTitle: '스토어 준비 완료!',
       completeDesc:

@@ -3650,7 +3650,7 @@ export const fr: TranslationResource = {
       createProduct: 'Créer un produit',
       featureAi: 'Titre et description assistés par IA',
       featureVariants: 'Variantes, prix et stock',
-      featureShipping: 'Profils et politiques de livraison',
+      featureShipping: 'Options de livraison et expédition',
       featureCoupons: 'Coupons et promotions',
       completeTitle: 'Votre boutique est prête !',
       completeDesc:
