@@ -829,6 +829,7 @@ export const es: TranslationResource = {
       receivingAccount: 'Cuenta de recepción',
       selectReceivingAccount: 'Seleccionar cuenta de recepción',
       receivingAccountHint: 'Selecciona la dirección donde quieres recibir el pago',
+      receivingAccountRequired: 'Por favor selecciona una cuenta de recepción',
       noReceivingAccount:
         'No hay cuentas de recepción configuradas. Agrega una en Ajustes para recibir pagos.',
     },
@@ -1317,6 +1318,18 @@ export const es: TranslationResource = {
     },
     accessControl: {
       privacyDesc: 'Controla quién puede ver tu tienda',
+      privacyTitle: 'Configuración de privacidad',
+      privacyDescription: 'Controla quién puede acceder a tu tienda y productos',
+      privateStore: 'Tienda privada',
+      privateStoreDesc: 'Solo usuarios aprobados pueden ver tu tienda',
+      allowRequests: 'Permitir solicitudes de acceso',
+      allowRequestsDesc: 'Permite a los usuarios solicitar acceso a tu tienda privada',
+      autoApprove: 'Aprobar solicitudes automáticamente',
+      autoApproveDesc: 'Aprobar automáticamente todas las solicitudes de acceso',
+      welcomeMessage: 'Mensaje de bienvenida',
+      welcomeMessageDesc: 'Mensaje mostrado a los usuarios después de la aprobación',
+      welcomeMessagePlaceholder: '¡Bienvenido a mi tienda! Siéntete libre de explorar...',
+      settingsSaved: 'Configuración de privacidad guardada',
       userGroupsDesc: 'Crear y gestionar grupos de clientes',
       productGroupsDesc: 'Organizar productos por visibilidad',
       requestsDesc: 'Gestionar solicitudes de acceso',
@@ -1421,6 +1434,8 @@ export const es: TranslationResource = {
     generic: 'Algo salió mal',
     network: 'Error de red. Verifica tu conexión.',
     notFound: 'No encontrado',
+    notFoundDesc:
+      'La página que buscas no existe o ha sido movida. Intenta buscar o volver al inicio.',
     unauthorized: 'Inicia sesión para continuar',
     forbidden: 'Acceso denegado',
     serverError: 'Error del servidor. Intenta más tarde.',
@@ -1737,6 +1752,14 @@ export const es: TranslationResource = {
     privateStoreDesc: 'Solo usuarios aprobados pueden ver tus productos',
     storePolicies: 'Políticas de Tienda',
     storePoliciesDesc: 'Política de devolución, términos y condiciones',
+    storePoliciesSaved: 'Las políticas de la tienda se han guardado',
+    termsDesc:
+      'Establece los términos y condiciones que se aplican a todas las compras en tu tienda',
+    termsPlaceholder:
+      'Ingresa los términos y condiciones de tu tienda, ej. condiciones de pago, proceso de resolución de disputas, limitaciones de responsabilidad...',
+    storeModerators: 'Moderadores de la Tienda',
+    storeModeratorsDesc:
+      'Selecciona moderadores para gestionar disputas de las transacciones de tu tienda',
     moderators: 'Moderadores',
     moderatorsDesc: 'Gestionar moderadores de disputas',
     acceptedCrypto: 'Criptomonedas Aceptadas',
@@ -2465,6 +2488,16 @@ export const es: TranslationResource = {
       rwaToken: 'Token RWA',
       rwaTokenDesc: 'Activo del mundo real tokenizado en blockchain',
     },
+    mobile: {
+      stepEssentials: 'Esenciales',
+      stepMedia: 'Fotos y video',
+      stepDetails: 'Detalles',
+      stepReview: 'Revisar',
+      stepOf: 'Paso {{current}} de {{total}}',
+      readinessCheck: 'Verificación de preparación',
+      takePhoto: 'Tomar foto',
+      chooseFromLibrary: 'Desde biblioteca',
+    },
     wizard: {
       steps: {
         type: 'Tipo de producto',
@@ -2525,9 +2558,11 @@ export const es: TranslationResource = {
     },
     photos: 'Fotos',
     photosHelper: 'Incluye hasta 30 fotos. Arrastra para reordenar.',
+    photosHelperMobile: 'Incluye hasta 30 fotos. Mantén presionado para reordenar.',
     primaryPhoto: 'FOTO PRINCIPAL',
     add: 'Agregar',
     introVideo: 'Video de introducción',
+    videoUrlPlaceholder: 'https://www.youtube.com/watch?v=...',
     externalVideoLink: 'O agrega un enlace de video externo (YouTube, etc.)',
     videoTooLarge: 'El video debe ser menor a 15MB',
     noImage: 'Sin imagen',
@@ -2546,7 +2581,11 @@ export const es: TranslationResource = {
     selectShippingOptions: 'Seleccionar opciones de envío',
     noShippingSelected: 'No hay opciones de envío seleccionadas',
     noShippingOptionsConfigured: 'No hay opciones de envío configuradas',
+    noShippingConfigured: 'Sin perfiles de envío',
+    noShippingConfiguredDesc:
+      'Crea un perfil de envío en la configuración antes de listar productos físicos.',
     goToSettings: 'Ir a configuración',
+    goToShippingSettings: 'Ir a configuración de envío',
     services: 'servicio(s)',
     localPickup: 'Recogida local',
     fixedPrice: 'Precio fijo',
@@ -2568,6 +2607,19 @@ export const es: TranslationResource = {
     termsAndConditions: 'Términos y condiciones',
     termsPlaceholder: 'Ingresa términos y condiciones...',
     termsHelper: 'Si se deja en blanco, mostrará "Sin términos y condiciones"',
+    termsTemplates: {
+      placeholder: 'Seleccionar plantilla de términos',
+      standardLabel: 'Términos de transacción estándar',
+      standard:
+        'Al realizar un pedido, aceptas los siguientes términos:\n\n1. Pago: Todos los pagos se realizan mediante criptomonedas a través de custodia. Los fondos se liberan al vendedor tras la confirmación de entrega del comprador o al expirar el período de disputa.\n\n2. Disputas: Si no estás satisfecho con tu pedido, puedes abrir una disputa dentro del período de protección de custodia. Un moderador acordado mutuamente revisará el caso y tomará una decisión vinculante.\n\n3. Envío: El vendedor es responsable de enviar el artículo según lo descrito. Se debe proporcionar información de seguimiento cuando esté disponible.\n\n4. Responsabilidad: El vendedor no ofrece garantías más allá de lo explícitamente indicado en la descripción del listado. Todos los artículos se venden tal como se describen.\n\n5. Privacidad: Los detalles de la transacción se almacenan en una red peer-to-peer. No se comparten datos personales con terceros más allá de lo necesario para completar la transacción.',
+      digitalLabel: 'Términos para productos digitales',
+      digital:
+        'Al comprar productos digitales de esta tienda, aceptas lo siguiente:\n\n1. Entrega: Los artículos digitales se entregarán por mensaje cifrado o enlace de descarga tras la confirmación del pago. La entrega suele ser en 24 horas.\n\n2. Sin devoluciones: Por la naturaleza de los productos digitales, todas las ventas son definitivas una vez entregado y accedido al contenido digital.\n\n3. Licencia: Salvo indicación contraria, recibes una licencia personal e intransferible para usar el contenido digital. No se permite redistribución ni reventa.\n\n4. Disputas: Si el contenido entregado no coincide con la descripción del listado, puedes abrir una disputa dentro del período de protección de custodia.\n\n5. Soporte: El vendedor proporcionará soporte razonable para problemas relacionados con la accesibilidad o uso del contenido digital comprado.',
+      handmadeLabel: 'Términos para artículos hechos a mano / personalizados',
+      handmade:
+        'Al pedir artículos hechos a mano o personalizados, aceptas lo siguiente:\n\n1. Tiempo de producción: Los artículos hechos a mano y personalizados requieren tiempo adicional de producción según indicado en el listado. Por favor permite el tiempo especificado antes de esperar el envío.\n\n2. Variaciones: Los artículos hechos a mano pueden tener ligeras variaciones en color, tamaño o apariencia. Son inherentes a los productos artesanales y no se consideran defectos.\n\n3. Personalización: Los pedidos personalizados se realizan según tus especificaciones. Revisa todos los detalles antes de confirmar. Los cambios tras iniciar la producción pueden no ser posibles.\n\n4. Devoluciones: Por la naturaleza personalizada de los artículos personalizados, las devoluciones solo se aceptan si el artículo difiere significativamente de lo acordado.\n\n5. Disputas: Si el artículo recibido no coincide con las especificaciones acordadas, puedes abrir una disputa dentro del período de protección de custodia.',
+      custom: 'Términos personalizados',
+    },
     coupons: 'Cupones',
     addCoupon: 'Agregar cupón',
     rwaTokenDetails: 'Detalles del token RWA',
