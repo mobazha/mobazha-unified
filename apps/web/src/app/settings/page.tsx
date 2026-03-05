@@ -6,8 +6,6 @@ import { useI18n } from '@mobazha/core';
 import {
   Settings,
   User,
-  Store,
-  Shield,
   MapPin,
   Ban,
   Scale,
@@ -83,21 +81,6 @@ export default function SettingsPage() {
           title={t('settings.sidebar.page')}
           description={t('settingsModal.shortDescription')}
           onClick={() => router.push('/settings/page-profile')}
-        />
-        <SettingsCategory
-          icon={<Store className="w-5 h-5" />}
-          title={t('settings.sidebar.store')}
-          description={t('settingsExtended.storePoliciesDesc')}
-          onClick={() => router.push('/settings/store')}
-        />
-      </div>
-
-      <div className="bg-card rounded-lg border overflow-hidden mb-4">
-        <SettingsCategory
-          icon={<Shield className="w-5 h-5" />}
-          title={t('settings.sidebar.accessControl')}
-          description={t('settingsExtended.privateStoreDesc')}
-          onClick={() => router.push('/settings/access-control')}
         />
       </div>
 
