@@ -8,11 +8,11 @@ import {
   User,
   MapPin,
   Ban,
-  Scale,
   Lock,
   Wrench,
   ChevronRight,
   Link2,
+  Scale,
 } from 'lucide-react';
 
 interface SettingsCategoryProps {
@@ -98,15 +98,18 @@ export default function SettingsPage() {
           onClick={() => router.push('/settings/blocked')}
         />
         <SettingsCategory
-          icon={<Scale className="w-5 h-5" />}
-          title={t('settings.sidebar.moderation')}
-          description={t('settingsExtended.moderatorsDesc')}
-          onClick={() => router.push('/settings/moderation')}
-        />
-        <SettingsCategory
           icon={<Lock className="w-5 h-5" />}
           title={t('settings.sidebar.chatEncryption')}
           onClick={() => router.push('/settings/chat-encryption')}
+        />
+      </div>
+
+      <div className="bg-card rounded-lg border overflow-hidden mb-4">
+        <SettingsCategory
+          icon={<Scale className="w-5 h-5" />}
+          title={t('settings.sidebar.moderator')}
+          description={t('moderatorSettings.description')}
+          onClick={() => router.push('/settings/moderation')}
         />
       </div>
 

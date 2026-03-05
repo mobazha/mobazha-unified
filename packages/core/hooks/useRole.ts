@@ -112,12 +112,10 @@ export function useRole(): UseRoleReturn {
   // 启用仲裁功能
   const enableModeration = useCallback(async (): Promise<boolean> => {
     try {
-      // 注册为仲裁人
-      await moderatorsApi.registerAsModerator({
-        shortDescription: '',
+      await moderatorsApi.setAsModerator({
         description: '',
         languages: ['en'],
-        fee: { percentage: 1, feeType: 'percentage' },
+        fee: { percentage: 1, feeType: 'PERCENTAGE' },
         termsAndConditions: '',
         acceptedCurrencies: ['BTC', 'ETH'],
       });
@@ -131,8 +129,7 @@ export function useRole(): UseRoleReturn {
   // 禁用仲裁功能
   const disableModeration = useCallback(async (): Promise<boolean> => {
     try {
-      // 停用仲裁人身份
-      await moderatorsApi.deactivateModerator();
+      await moderatorsApi.unsetAsModerator();
       disableModerator();
       return true;
     } catch {

@@ -112,6 +112,9 @@ export const NODE_API = {
   FOLLOWERS_PEER: (peerID: string) => `/followers/${peerID}`,
   FOLLOWERS_CHECK: (peerID: string) => `/followers/${peerID}/check`,
 
+  // --- Moderator (self) ---
+  SELF_MODERATOR: '/moderators',
+
   // --- Cart ---
   CARTS: '/carts',
   CARTS_COUNT: '/carts/count',

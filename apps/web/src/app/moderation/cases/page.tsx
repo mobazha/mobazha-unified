@@ -277,7 +277,7 @@ export default function ModeratorCasesPage() {
           ) : (
             <VStack gap="sm" className="md:gap-3">
               {filteredCases.map(caseItem => (
-                <Link key={caseItem.caseId} href={`/moderator/cases/${caseItem.orderId}`}>
+                <Link key={caseItem.caseId} href={`/moderation/cases/${caseItem.orderId}`}>
                   <Card
                     className={`p-3 md:p-4 transition-all hover:shadow-md active:bg-surface-hover ${
                       !caseItem.read ? 'border-l-4 border-l-primary' : ''

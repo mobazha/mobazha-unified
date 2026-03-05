@@ -16,11 +16,15 @@ vi.mock('../../../services/api/client', () => ({
   },
 }));
 
-// Mock helpers used by getModerators (authGet for preferences, publicPost for fetchProfiles)
+// Mock helpers used by getModerators and setAsModerator/unsetAsModerator
 const mockAuthGet = vi.fn();
+const mockAuthPost = vi.fn();
+const mockAuthDel = vi.fn();
 const mockPublicPost = vi.fn();
 vi.mock('../../../services/api/helpers', () => ({
   authGet: (...args: unknown[]) => mockAuthGet(...args),
+  authPost: (...args: unknown[]) => mockAuthPost(...args),
+  authDel: (...args: unknown[]) => mockAuthDel(...args),
   publicPost: (...args: unknown[]) => mockPublicPost(...args),
 }));
 
@@ -233,23 +237,29 @@ describe('Moderators API', () => {
     });
   });
 
-  describe('registerAsModerator', () => {
-    it('should register as moderator', async () => {
-      mockApiClient.post.mockResolvedValueOnce(mockModerator);
+  describe('setAsModerator', () => {
+    it('should set self as moderator via Node API', async () => {
+      mockAuthPost.mockResolvedValueOnce(undefined);
 
-      await moderatorsApi.registerAsModerator({
-        shortDescription: 'Fair mediator',
+      await moderatorsApi.setAsModerator({
         description: 'Full description',
         languages: ['en'],
-        fee: { percentage: 1, feeType: 'percentage' },
+        fee: { percentage: 1, feeType: 'PERCENTAGE' },
         termsAndConditions: 'Fair resolution',
         acceptedCurrencies: ['BTC'],
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/platform/v1/moderators/register',
-        expect.any(Object)
-      );
+      expect(mockAuthPost).toHaveBeenCalledWith('/moderators', expect.any(Object));
+    });
+  });
+
+  describe('unsetAsModerator', () => {
+    it('should unset self as moderator via Node API', async () => {
+      mockAuthDel.mockResolvedValueOnce(undefined);
+
+      await moderatorsApi.unsetAsModerator();
+
+      expect(mockAuthDel).toHaveBeenCalledWith('/moderators');
     });
   });
 });

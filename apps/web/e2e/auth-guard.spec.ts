@@ -19,7 +19,7 @@ const protectedRoutes = [
   { path: '/wallet', name: 'Wallet' },
   { path: '/notifications', name: 'Notifications' },
   { path: '/listing/new', name: 'New Listing' },
-  { path: '/moderator/cases', name: 'Moderator Cases' },
+  { path: '/moderation/cases', name: 'Moderation Cases' },
   { path: '/admin', name: 'Admin Dashboard' },
   { path: '/admin/products', name: 'Admin Products' },
   { path: '/admin/orders', name: 'Admin Orders' },

@@ -103,7 +103,7 @@ const authedCheckoutPages: Array<{ name: string; path: string; description: stri
 ];
 
 const authedModeratorPages: Array<{ name: string; path: string; description: string }> = [
-  { name: '50-moderator-cases', path: '/moderator/cases', description: '仲裁案例列表' },
+  { name: '50-moderation-cases', path: '/moderation/cases', description: '仲裁案例列表' },
 ];
 
 test.describe('UX Audit - Authenticated Core Pages', () => {
@@ -163,8 +163,7 @@ const settingsPages: Array<{ name: string; path: string; description: string }> 
     description: '聊天加密',
   },
   { name: '69-settings-advanced', path: '/settings/advanced', description: '高级设置' },
-  { name: '70-settings-moderator', path: '/settings/moderator', description: '仲裁员设置' },
-  { name: '71-settings-moderation', path: '/settings/moderation', description: '仲裁管理' },
+  { name: '70-settings-moderation', path: '/settings/moderation', description: '仲裁服务设置' },
   { name: '72-settings-blocked', path: '/settings/blocked', description: '黑名单' },
   { name: '73-settings-blocked-users', path: '/settings/blocked-users', description: '已屏蔽用户' },
   { name: '74-settings-store', path: '/settings/store', description: '店铺设置主页' },

@@ -146,10 +146,13 @@ const routes: RouteObject[] = [
   { path: '/profile', element: protectedPage(() => import('./app/profile/page')) },
 
   // 仲裁案例管理
-  { path: '/moderator/cases', element: protectedPage(() => import('./app/moderator/cases/page')) },
   {
-    path: '/moderator/cases/:orderId',
-    element: protectedPage(() => import('./app/moderator/cases/[orderId]/page')),
+    path: '/moderation/cases',
+    element: protectedPage(() => import('./app/moderation/cases/page')),
+  },
+  {
+    path: '/moderation/cases/:orderId',
+    element: protectedPage(() => import('./app/moderation/cases/[orderId]/page')),
   },
 
   // 通知
@@ -174,26 +177,12 @@ const routes: RouteObject[] = [
       { path: 'general', element: lazyPage(() => import('./app/settings/general/page')) },
       { path: 'account', element: lazyPage(() => import('./app/settings/account/page')) },
       { path: 'page-profile', element: lazyPage(() => import('./app/settings/page-profile/page')) },
-      {
-        path: 'store/shipping',
-        element: lazyPage(() => import('./app/settings/store/shipping/page')),
-      },
-      {
-        path: 'store/policies',
-        element: lazyPage(() => import('./app/settings/store/policies/page')),
-      },
-      {
-        path: 'store/moderators',
-        element: lazyPage(() => import('./app/settings/store/moderators/page')),
-      },
       { path: 'addresses', element: lazyPage(() => import('./app/settings/addresses/page')) },
       { path: 'blocked', element: lazyPage(() => import('./app/settings/blocked/page')) },
       {
         path: 'blocked-users',
         element: lazyPage(() => import('./app/settings/blocked-users/page')),
       },
-      { path: 'moderation', element: lazyPage(() => import('./app/settings/moderation/page')) },
-      { path: 'moderator', element: lazyPage(() => import('./app/settings/moderator/page')) },
       {
         path: 'chat-encryption',
         element: lazyPage(() => import('./app/settings/chat-encryption/page')),
@@ -202,6 +191,7 @@ const routes: RouteObject[] = [
       { path: 'privacy', element: lazyPage(() => import('./app/settings/privacy/page')) },
       { path: 'receiving', element: lazyPage(() => import('./app/settings/receiving/page')) },
       { path: 'advanced', element: lazyPage(() => import('./app/settings/advanced/page')) },
+      { path: 'moderation', element: lazyPage(() => import('./app/settings/moderation/page')) },
       {
         path: 'access-requests',
         element: lazyPage(() => import('./app/settings/access-requests/page')),

@@ -227,7 +227,7 @@ export default function CaseDetailPage() {
       });
 
       // Redirect after short delay
-      setTimeout(() => router.push('/moderator/cases'), 2000);
+      setTimeout(() => router.push('/moderation/cases'), 2000);
     } catch (error) {
       toast({
         title: 'Error',

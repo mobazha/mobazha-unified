@@ -8,7 +8,7 @@
 
 import { apiClient } from './client';
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
-import { authGet, publicPost } from './helpers';
+import { authGet, authPost, authDel, publicPost } from './helpers';
 
 // Types
 export interface Moderator {
@@ -529,51 +529,33 @@ export async function reviewModerator(
 }
 
 /**
- * 成为仲裁员（注册）
+ * 成为仲裁员（注册）— 调用 Node API
+ * POST /v1/moderators
+ * Body: ModeratorInfo (description, termsAndConditions, languages, acceptedCurrencies, fee)
  */
-export async function registerAsModerator(data: {
-  shortDescription: string;
+export interface SetModeratorRequest {
   description: string;
-  languages: string[];
-  fee: Moderator['fee'];
   termsAndConditions: string;
+  languages: string[];
   acceptedCurrencies: string[];
-  contactInfo?: Moderator['contactInfo'];
-}): Promise<Moderator> {
-  return apiClient.post<Moderator>(HOSTING_API.MODERATORS_REGISTER, data);
+  fee: {
+    fixedFee?: {
+      amount: number;
+      currencyCode: string;
+    };
+    percentage: number;
+    feeType: 'FIXED' | 'PERCENTAGE' | 'FIXED_PLUS_PERCENTAGE';
+  };
+}
+
+export async function setAsModerator(data: SetModeratorRequest): Promise<void> {
+  await authPost(NODE_API.SELF_MODERATOR, data);
 }
 
 /**
- * 更新仲裁员资料
+ * 取消仲裁员身份 — 调用 Node API
+ * DELETE /v1/moderators
  */
-export async function updateModeratorProfile(
-  data: Partial<{
-    shortDescription: string;
-    description: string;
-    languages: string[];
-    fee: Moderator['fee'];
-    termsAndConditions: string;
-    acceptedCurrencies: string[];
-    contactInfo: Moderator['contactInfo'];
-  }>
-): Promise<Moderator> {
-  return apiClient.put<Moderator>(HOSTING_API.MODERATORS_ME, data);
-}
-
-/**
- * 获取我的仲裁员资料
- */
-export async function getMyModeratorProfile(): Promise<Moderator | null> {
-  try {
-    return await apiClient.get<Moderator>(HOSTING_API.MODERATORS_ME);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * 停用仲裁员身份
- */
-export async function deactivateModerator(): Promise<void> {
-  return apiClient.delete(HOSTING_API.MODERATORS_ME);
+export async function unsetAsModerator(): Promise<void> {
+  await authDel(NODE_API.SELF_MODERATOR);
 }

@@ -324,7 +324,7 @@ const settingsPages = [
   { name: 'settings-store', path: '/settings/store' },
   { name: 'settings-store-shipping', path: '/settings/store/shipping' },
   { name: 'settings-store-policies', path: '/settings/store/policies' },
-  { name: 'settings-moderator', path: '/settings/moderator' },
+  { name: 'settings-moderation', path: '/settings/moderation' },
   { name: 'settings-privacy', path: '/settings/privacy' },
   { name: 'settings-blocked', path: '/settings/blocked' },
   { name: 'settings-advanced', path: '/settings/advanced' },
@@ -357,7 +357,7 @@ test.describe('Mobile Visual - Authenticated Settings', () => {
 test.describe('Mobile Visual - Authenticated Admin', () => {
   test('authed: moderator-cases', async ({ page }) => {
     await ensureAuthenticated(page);
-    await navigateAndVerify(page, '/moderator/cases');
+    await navigateAndVerify(page, '/moderation/cases');
     await expect(page).toHaveScreenshot('mobile-authed-moderator-cases.png', { fullPage: true });
   });
 
