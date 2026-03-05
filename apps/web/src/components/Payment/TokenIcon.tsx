@@ -25,7 +25,7 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   BUSD: 'busd',
   BSCUSDT: 'usdt',
   // Base
-  BASE: 'eth', // Base 链用 ETH 图标
+  BASE: 'base',
   BASEETH: 'eth',
   BASEUSDC: 'usdc',
   BASEUSDT: 'usdt',
@@ -112,7 +112,7 @@ const getCDNIconUrl = (symbol: string): string => {
 const getLocalIconUrl = (symbol: string): string => {
   const s = symbol.toLowerCase();
   const fileName = LOCAL_ICON_MAP[s] || symbol.toUpperCase();
-  return `/icons/crypto/${fileName}.png`;
+  return `/icons/crypto/${fileName}.svg`;
 };
 
 /**

@@ -14,6 +14,7 @@ import {
   Ban,
   Key,
   Wrench,
+  Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -103,6 +104,12 @@ export default function AdminSettingsPage() {
             title={t('admin.settings.policies')}
             description={t('admin.settings.policiesDesc')}
             href="/admin/settings/policies"
+          />
+          <SettingsCard
+            icon={Wallet}
+            title={t('admin.settings.payments')}
+            description={t('admin.settings.paymentsDesc')}
+            href="/admin/settings/payments"
           />
           <SettingsCard
             icon={Truck}

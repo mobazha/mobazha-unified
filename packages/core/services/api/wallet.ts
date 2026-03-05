@@ -194,9 +194,6 @@ export async function validateAddress(
 
 // ========== 收款账户管理 ==========
 
-/**
- * 收款账户信息
- */
 export interface ReceivingAccount {
   id: number;
   name: string;
@@ -211,11 +208,44 @@ export interface ReceivingAccount {
   updatedAt: string;
 }
 
-/**
- * 获取所有收款账户列表
- */
+export interface ReceivingAccountInput {
+  name: string;
+  chainType: string;
+  address: string;
+  activeTokens: string[];
+  inactiveTokens: string[];
+  isActive: boolean;
+}
+
 export async function getReceivingAccounts(): Promise<ReceivingAccount[]> {
-  return authSafeGet<ReceivingAccount[]>(NODE_API.WALLET_RECEIVING_ACCOUNTS, []);
+  const resp = await authSafeGet<{ receivingAccounts: ReceivingAccount[] } | ReceivingAccount[]>(
+    NODE_API.WALLET_RECEIVING_ACCOUNTS,
+    []
+  );
+  if (Array.isArray(resp)) return resp;
+  return resp.receivingAccounts ?? [];
+}
+
+export async function addReceivingAccount(
+  input: ReceivingAccountInput
+): Promise<{ success: boolean; account: ReceivingAccount }> {
+  return authPost(NODE_API.WALLET_RECEIVING_ACCOUNTS, input);
+}
+
+export async function updateReceivingAccount(
+  id: number,
+  input: ReceivingAccountInput
+): Promise<{ success: boolean; account: ReceivingAccount }> {
+  return authRequest(NODE_API.WALLET_RECEIVING_ACCOUNTS, {
+    method: 'PUT',
+    body: { id, ...input },
+  });
+}
+
+export async function deleteReceivingAccount(id: number): Promise<{ success: boolean }> {
+  return authRequest(`${NODE_API.WALLET_RECEIVING_ACCOUNTS}/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 // ========== 导出 API 对象 ==========
@@ -238,6 +268,9 @@ export const walletApi = {
 
   // 收款账户
   getReceivingAccounts,
+  addReceivingAccount,
+  updateReceivingAccount,
+  deleteReceivingAccount,
 
   // 交易
   getTransactions,

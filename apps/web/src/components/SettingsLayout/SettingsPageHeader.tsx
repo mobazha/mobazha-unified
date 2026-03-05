@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
@@ -15,16 +16,24 @@ interface SettingsPageHeaderProps {
 export const SettingsPageHeader: React.FC<SettingsPageHeaderProps> = ({
   title,
   description,
-  backHref = '/settings',
+  backHref,
   actions,
 }) => {
   const { t } = useI18n();
+  const pathname = usePathname();
+
+  const isAdminRoute = pathname?.startsWith('/admin/settings');
+  const resolvedBackHref = backHref ?? (isAdminRoute ? '/admin/settings' : '/settings');
+
+  // /admin/settings/* has no sidebar → always show back link
+  // /settings/* has a desktop sidebar → only show on mobile
+  const backLinkClass = isAdminRoute ? 'mb-3' : 'lg:hidden mb-3';
 
   return (
     <div className="mb-4 md:mb-6">
-      <div className="lg:hidden mb-3">
+      <div className={backLinkClass}>
         <Link
-          href={backHref}
+          href={resolvedBackHref}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground min-h-[44px]"
         >
           <ChevronLeft className="w-5 h-5" />

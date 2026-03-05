@@ -310,6 +310,10 @@ const routes: RouteObject[] = [
         element: lazyPage(() => import('./app/admin/settings/shipping/page')),
       },
       {
+        path: 'settings/payments',
+        element: lazyPage(() => import('./app/admin/settings/payments/page')),
+      },
+      {
         path: 'settings/policies',
         element: lazyPage(() => import('./app/admin/settings/policies/page')),
       },

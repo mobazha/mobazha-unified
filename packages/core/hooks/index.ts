@@ -98,6 +98,9 @@ export * from './useFiatProviders';
 export * from './useFiatPayment';
 export * from './usePaymentMethods';
 
+// 收款账户相关
+export * from './useReceivingAccounts';
+
 // 认证守卫相关
 export * from './useAuthGuard';
 
