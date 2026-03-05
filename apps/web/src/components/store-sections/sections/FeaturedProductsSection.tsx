@@ -67,8 +67,8 @@ export function FeaturedProductsSection({
     <div>
       {title && (
         <h2
-          className="mb-6 text-2xl font-bold"
-          style={{ fontFamily: 'var(--store-font)', color: 'var(--store-primary)' }}
+          className="mb-6 text-2xl font-bold text-foreground"
+          style={{ fontFamily: 'var(--store-font)' }}
         >
           {title}
         </h2>
@@ -90,7 +90,7 @@ export function FeaturedProductsSection({
               className="group overflow-hidden transition-shadow hover:shadow-lg"
               style={{ borderRadius: 'var(--store-radius)' }}
             >
-              <div className="aspect-square bg-gray-100 dark:bg-gray-800">
+              <div className="aspect-square bg-muted">
                 {product.thumbnail && (
                   <img
                     src={getImageUrl(product.thumbnail?.medium)}

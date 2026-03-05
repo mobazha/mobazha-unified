@@ -519,11 +519,18 @@ function CollectionsEditor({ props, onUpdate }: EditorProps<CollectionsSectionPr
 }
 
 function StoreTabsEditor({ props, onUpdate }: EditorProps<StoreTabsProps>) {
+  const { t } = useI18n();
   const allTabs: Array<'reviews' | 'following' | 'followers'> = [
     'reviews',
     'following',
     'followers',
   ];
+
+  const tabLabelKeys: Record<string, string> = {
+    reviews: 'profile.reviews',
+    following: 'profile.following',
+    followers: 'profile.followers',
+  };
 
   const toggleTab = (tab: (typeof allTabs)[number]) => {
     const current = props.tabs || [];
@@ -536,7 +543,7 @@ function StoreTabsEditor({ props, onUpdate }: EditorProps<StoreTabsProps>) {
       {allTabs.map(tab => (
         <ToggleInput
           key={tab}
-          label={tab.charAt(0).toUpperCase() + tab.slice(1)}
+          label={t(tabLabelKeys[tab])}
           checked={(props.tabs || []).includes(tab)}
           onChange={() => toggleTab(tab)}
         />

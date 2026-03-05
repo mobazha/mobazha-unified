@@ -1324,7 +1324,7 @@ export const fr: TranslationResource = {
       accessRequests: "Demandes d'accès",
       addresses: 'Adresses',
       blocked: 'Bloqués',
-      moderation: 'Modération',
+      moderation: 'Résolution des litiges',
       receiving: 'Adresses de réception',
       chatEncryption: 'Chiffrement du chat',
       advanced: 'Avancé',
@@ -1446,6 +1446,37 @@ export const fr: TranslationResource = {
       reviewNote: 'Note (optionnel)',
       reviewNotePlaceholder: "Ajoutez une note pour l'utilisateur...",
     },
+  },
+
+  moderatorSettings: {
+    title: 'Résolution des litiges',
+    description:
+      'Inscrivez-vous en tant que modérateur de résolution des litiges pour aider à résoudre les différends commerciaux entre acheteurs et vendeurs.',
+    enableToggle: 'Activer la résolution des litiges',
+    enableDescription:
+      'Permettre aux autres utilisateurs de vous sélectionner comme modérateur pour leurs transactions.',
+    feeSection: 'Structure tarifaire',
+    feeType: 'Type de frais',
+    feeTypeFixed: 'Fixe',
+    feeTypePercentage: 'Pourcentage',
+    feeTypeFixedPlusPercentage: 'Fixe + Pourcentage',
+    percentage: 'Pourcentage',
+    fixedAmount: 'Montant fixe',
+    currency: 'Devise',
+    descriptionLabel: 'Description',
+    descriptionPlaceholder:
+      'Décrivez votre expérience et votre approche en résolution de litiges...',
+    termsLabel: 'Conditions générales',
+    termsPlaceholder: 'Entrez vos conditions générales pour la modération des litiges...',
+    languagesLabel: 'Langues',
+    languagesPlaceholder: 'ex. Français, Anglais, Espagnol',
+    acceptedCurrencies: 'Devises acceptées',
+    saveSuccess: 'Paramètres de modérateur enregistrés',
+    saveFailed: "Échec de l'enregistrement des paramètres de modérateur",
+    disableSuccess: 'Statut de modérateur désactivé',
+    disableFailed: 'Échec de la désactivation du statut de modérateur',
+    disableConfirm:
+      'Êtes-vous sûr de vouloir désactiver votre statut de modérateur ? Vous ne serez plus affiché dans la liste des modérateurs.',
   },
 
   theme: {

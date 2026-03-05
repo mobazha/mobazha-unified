@@ -36,7 +36,7 @@ export function StoreTabsSection({ tabs, peerId }: StoreTabsSectionProps) {
             onClick={() => setActiveTab(tab)}
             className={`px-4 sm:px-5 py-3 text-sm sm:text-base font-medium transition-colors border-b-2 ${
               activeTab === tab
-                ? 'border-[var(--store-primary,hsl(var(--primary)))] text-[var(--store-primary,hsl(var(--primary)))]'
+                ? 'border-[var(--store-primary,hsl(var(--primary)))] text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
             style={{ fontFamily: 'var(--store-font, inherit)' }}
@@ -47,7 +47,7 @@ export function StoreTabsSection({ tabs, peerId }: StoreTabsSectionProps) {
       </div>
 
       {isPreview ? (
-        <div className="py-8 text-center text-sm text-muted-foreground opacity-50">
+        <div className="py-8 text-center text-sm text-muted-foreground">
           {t(TAB_LABELS[activeTab ?? 'reviews'])}
         </div>
       ) : (

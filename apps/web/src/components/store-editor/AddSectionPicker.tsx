@@ -71,10 +71,10 @@ export function AddSectionPicker({
                 >
                   <span className="text-2xl">{meta.icon}</span>
                   <span className="text-xs font-medium group-hover:text-primary transition-colors">
-                    {meta.label}
+                    {t(meta.labelKey)}
                   </span>
                   <span className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">
-                    {meta.description}
+                    {t(meta.descriptionKey)}
                   </span>
                 </button>
               );

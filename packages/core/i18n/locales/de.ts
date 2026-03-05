@@ -1292,7 +1292,7 @@ export const de: TranslationResource = {
       accessRequests: 'Zugriffsanfragen',
       addresses: 'Adressen',
       blocked: 'Blockiert',
-      moderation: 'Moderation',
+      moderation: 'Streitbeilegung',
       receiving: 'Empfangsadressen',
       chatEncryption: 'Chat-Verschlüsselung',
       advanced: 'Erweitert',
@@ -1412,6 +1412,37 @@ export const de: TranslationResource = {
       reviewNote: 'Notiz (optional)',
       reviewNotePlaceholder: 'Notiz für den Benutzer hinzufügen...',
     },
+  },
+
+  moderatorSettings: {
+    title: 'Streitbeilegung',
+    description:
+      'Registrieren Sie sich als Streitbeilegungsmoderator, um bei der Lösung von Handelsstreitigkeiten zwischen Käufern und Verkäufern zu helfen.',
+    enableToggle: 'Streitbeilegung aktivieren',
+    enableDescription:
+      'Erlauben Sie anderen Benutzern, Sie als Moderator für ihre Transaktionen auszuwählen.',
+    feeSection: 'Gebührenstruktur',
+    feeType: 'Gebührentyp',
+    feeTypeFixed: 'Fest',
+    feeTypePercentage: 'Prozentsatz',
+    feeTypeFixedPlusPercentage: 'Fest + Prozentsatz',
+    percentage: 'Prozentsatz',
+    fixedAmount: 'Festbetrag',
+    currency: 'Währung',
+    descriptionLabel: 'Beschreibung',
+    descriptionPlaceholder:
+      'Beschreiben Sie Ihre Erfahrung und Ihren Ansatz zur Streitbeilegung...',
+    termsLabel: 'Geschäftsbedingungen',
+    termsPlaceholder: 'Geben Sie Ihre Geschäftsbedingungen für die Streitmoderation ein...',
+    languagesLabel: 'Sprachen',
+    languagesPlaceholder: 'z.B. Deutsch, Englisch, Französisch',
+    acceptedCurrencies: 'Akzeptierte Währungen',
+    saveSuccess: 'Moderatoreinstellungen gespeichert',
+    saveFailed: 'Fehler beim Speichern der Moderatoreinstellungen',
+    disableSuccess: 'Moderatorstatus deaktiviert',
+    disableFailed: 'Fehler beim Deaktivieren des Moderatorstatus',
+    disableConfirm:
+      'Möchten Sie Ihren Moderatorstatus wirklich deaktivieren? Sie werden nicht mehr in der Moderatorenliste angezeigt.',
   },
 
   theme: {
