@@ -106,6 +106,7 @@ vi.mock('lucide-react', () => ({
   Monitor: () => <span data-testid="icon-monitor" />,
   Tablet: () => <span data-testid="icon-tablet" />,
   Smartphone: () => <span data-testid="icon-smartphone" />,
+  Sparkles: () => <span data-testid="icon-sparkles" />,
 }));
 
 vi.mock('@dnd-kit/core', () => ({
@@ -148,6 +149,7 @@ vi.mock('@/lib/fonts', () => ({
   },
   storeFonts: [{ className: 'font-inter', variable: '--font-inter' }],
   storeFontVariableClasses: '--font-inter',
+  loadStoreFont: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -569,7 +571,7 @@ describe('StoreBrandingEditor', () => {
   });
 
   it('has a back link to store settings', () => {
-    render(<StoreBrandingEditor />);
+    render(<StoreBrandingEditor backHref="/admin/settings/store" />);
     const backLink = screen.getByRole('link');
     expect(backLink.getAttribute('href')).toBe('/admin/settings/store');
   });

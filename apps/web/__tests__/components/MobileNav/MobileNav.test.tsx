@@ -46,6 +46,10 @@ vi.mock('@mobazha/core', () => ({
   getImageUrl: () => undefined,
 }));
 
+vi.mock('@mobazha/ui/hooks', () => ({
+  usePlatform: () => ({ isTelegram: false, isMiniApp: false }),
+}));
+
 // ── Import (after mocks) ─────────────────────────────────────────────────────
 
 import { MobileNav } from '@/components/MobileNav/MobileNav';

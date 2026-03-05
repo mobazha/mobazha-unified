@@ -35,7 +35,8 @@ vi.mock('@mobazha/core', () => ({
     },
   }),
   useCurrency: () => ({
-    formatPrice: (amount: number, currency: string) => `${currency} ${(amount / 100).toFixed(2)}`,
+    formatPrice: (amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`,
+    fromMinimalUnit: (amount: number, _currency: string) => amount / 100,
   }),
   getImageUrl: (hash: string) => `https://img.test/${hash}`,
   isStandalone: () => false,

@@ -22,6 +22,11 @@
       "require": "./dist/layouts/*.js",
       "types": "./dist/layouts/*.d.ts"
     },
+    "./hooks": {
+      "import": "./dist/hooks/index.mjs",
+      "require": "./dist/hooks/index.js",
+      "types": "./dist/hooks/index.d.ts"
+    },
     "./hooks/*": {
       "import": "./dist/hooks/*.mjs",
       "require": "./dist/hooks/*.js",

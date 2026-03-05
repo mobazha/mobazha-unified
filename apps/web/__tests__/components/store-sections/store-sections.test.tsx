@@ -101,6 +101,7 @@ vi.mock('@/lib/fonts', () => ({
     'josefin-sans': 'var(--font-josefin-sans)',
     poppins: 'var(--font-poppins)',
   },
+  loadStoreFont: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -231,8 +232,8 @@ describe('SectionBlock', () => {
 
     const section = container.querySelector('section') as HTMLElement;
     expect(section).toBeTruthy();
-    expect(section.style.paddingTop).toBe('3rem');
-    expect(section.style.paddingBottom).toBe('1rem');
+    expect(section.style.paddingTop).toBe('clamp(1.5rem, 7.5vw, 3rem)');
+    expect(section.style.paddingBottom).toBe('clamp(0.5rem, 2.5vw, 1rem)');
   });
 });
 
