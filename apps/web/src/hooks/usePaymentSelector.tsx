@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo, createContext, useContext } from
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from './useMediaQuery';
 import { useModerators } from './useModerators';
-import { useFiatProviders } from '@mobazha/core';
+import { usePaymentMethods } from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
 type PaymentCategory = 'crypto' | 'fiat';
@@ -26,6 +26,7 @@ interface PaymentSelectorState {
  */
 interface PaymentSelectorContextValue extends PaymentSelectorState {
   availableFiatProviders: string[];
+  acceptedCurrencies: string[];
   openPaymentSelector: (returnUrl?: string) => void;
   openModeratorSelector: (returnUrl?: string) => void;
   closePaymentDrawer: () => void;
@@ -49,13 +50,10 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   // 获取调解员列表
   const { moderators, isLoading: isLoadingModerators } = useModerators({ autoFetch: true });
 
-  // 卖家 PeerID — 用于获取该卖家支持的法币支付方式
+  // 卖家 PeerID — 用于获取该卖家支持的支付方式（crypto + fiat）
   const [vendorPeerID, setVendorPeerID] = useState<string | undefined>();
-  const { activeProviders } = useFiatProviders(vendorPeerID);
-  const availableFiatProviders = useMemo(
-    () => activeProviders.map(p => p.providerID),
-    [activeProviders]
-  );
+  const { activeFiat, crypto: acceptedCurrencies } = usePaymentMethods(vendorPeerID);
+  const availableFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
 
   const [state, setState] = useState<PaymentSelectorState>(() => {
     if (typeof window === 'undefined') {
@@ -220,6 +218,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const contextValue: PaymentSelectorContextValue = {
     ...state,
     availableFiatProviders,
+    acceptedCurrencies,
     openPaymentSelector,
     openModeratorSelector,
     closePaymentDrawer,
@@ -247,6 +246,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
             selectedFiatProvider={state.selectedFiatProvider}
             onSelectFiat={handleFiatSelect}
             availableFiatProviders={availableFiatProviders}
+            acceptedCurrencies={acceptedCurrencies}
           />
           <PaymentDrawer
             type="moderator"

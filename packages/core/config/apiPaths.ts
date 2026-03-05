@@ -176,6 +176,9 @@ export const NODE_API = {
   WISHLISTS: '/wishlists',
   WISHLIST_ITEM: (peerID: string, slug: string) => `/wishlists/${peerID}/${slug}`,
 
+  // --- Payment Methods (unified public endpoint) ---
+  PAYMENT_METHODS_PUBLIC: (peerID: string) => `/payment-methods/${peerID}`,
+
   // --- Fiat Payments ---
   FIAT_PROVIDERS: '/fiat/providers',
   FIAT_PROVIDERS_PUBLIC: (peerID: string) => `/fiat/${peerID}/providers`,

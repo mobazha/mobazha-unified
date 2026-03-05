@@ -3,7 +3,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { useI18n, useFiatProviders } from '@mobazha/core';
+import { useI18n, usePaymentMethods } from '@mobazha/core';
 import { PaymentCryptoSelector } from '@/components/Payment';
 
 /**
@@ -20,11 +20,8 @@ export default function PaymentMethodPage() {
   const vendorPeerID = searchParams.get('vendor') || undefined;
   const returnUrl = searchParams.get('returnUrl') || '/checkout';
 
-  const { providers } = useFiatProviders(vendorPeerID);
-  const availableFiatProviders = useMemo(
-    () => providers.filter(p => p.status === 'active').map(p => p.providerID),
-    [providers]
-  );
+  const { activeFiat, crypto: acceptedCurrencies } = usePaymentMethods(vendorPeerID);
+  const availableFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
 
   const handleSelect = useCallback(
     (tokenId: string) => {
@@ -69,6 +66,7 @@ export default function PaymentMethodPage() {
           selectedTokenId={initialTokenId}
           selectedFiatProvider={initialFiatProvider}
           availableFiatProviders={availableFiatProviders}
+          acceptedCurrencies={acceptedCurrencies}
           onSelect={handleSelect}
           onSelectFiat={handleFiatSelect}
           showFiatMethods={true}

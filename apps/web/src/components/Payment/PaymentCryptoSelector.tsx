@@ -26,6 +26,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   onSelectFiat,
   selectedFiatProvider,
   availableFiatProviders,
+  acceptedCurrencies,
   disabled = false,
   className,
   isRwaTokenPurchase = false,
@@ -59,8 +60,12 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
       );
     }
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
-    return TOKENS.filter(t => !comingSoonChains.includes(t.chain) && !t.disabled);
-  }, [isRwaTokenPurchase, rwaBlockchain]);
+    let tokens = TOKENS.filter(t => !comingSoonChains.includes(t.chain) && !t.disabled);
+    if (acceptedCurrencies) {
+      tokens = tokens.filter(t => acceptedCurrencies.includes(t.id));
+    }
+    return tokens;
+  }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
 
   const filteredTokens = useMemo(() => {
     if (activeChain === 'all') return availableTokens;
@@ -142,94 +147,88 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
         </div>
       )}
 
-      {/* Crypto section */}
-      <div className="space-y-3">
-        {activeFiatMethods.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              {t('fiat.cryptoSection', { defaultValue: 'Pay with cryptocurrency' })}
-            </span>
-            {isEmbedded && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                Recommended
+      {/* Crypto section — hidden entirely when seller accepts no crypto */}
+      {availableTokens.length > 0 && (
+        <div className="space-y-3">
+          {activeFiatMethods.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                {t('fiat.cryptoSection', { defaultValue: 'Pay with cryptocurrency' })}
               </span>
-            )}
-          </div>
-        )}
-
-        {/* Chain tabs */}
-        {!isRwaTokenPurchase && (
-          <div className="flex flex-wrap gap-2">
-            {availableChains.map(chain => (
-              <button
-                key={chain.id}
-                type="button"
-                onClick={() => handleChainClick(chain.id)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
-                  'hover:opacity-80 active:scale-95',
-                  activeChain === chain.id
-                    ? cn(
-                        CHAIN_COLORS[chain.id] || CHAIN_COLORS['all'],
-                        'ring-1 ring-inset ring-current/20'
-                      )
-                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                )}
-              >
-                {chain.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Token grid */}
-        <div className="flex flex-wrap gap-2">
-          {visibleTokens.length > 0 ? (
-            <>
-              {visibleTokens.map(token => (
-                <CryptoTokenCard
-                  key={token.id}
-                  token={token}
-                  selected={selectedTokenId === token.id && !selectedFiatProvider}
-                  onClick={() => handleTokenSelect(token)}
-                  disabled={disabled}
-                />
-              ))}
-
-              {hasMoreTokens && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllTokens(!showAllTokens)}
-                  className={cn(
-                    'flex items-center gap-1 min-w-[100px] h-11 px-3 rounded-lg',
-                    'border border-border bg-muted/30',
-                    'text-sm text-muted-foreground',
-                    'hover:bg-muted/50 transition-colors'
-                  )}
-                >
-                  {showAllTokens ? (
-                    <>
-                      <ChevronUp className="w-4 h-4" />
-                      <span>{t('payment.showLess')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-4 h-4" />
-                      <span>
-                        {t('payment.showMore')} ({filteredTokens.length - maxVisibleTokens})
-                      </span>
-                    </>
-                  )}
-                </button>
+              {isEmbedded && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  Recommended
+                </span>
               )}
-            </>
-          ) : (
-            <div className="w-full py-4 text-center text-muted-foreground text-sm">
-              {t('payment.noTokensAvailable')}
             </div>
           )}
+
+          {/* Chain tabs */}
+          {!isRwaTokenPurchase && (
+            <div className="flex flex-wrap gap-2">
+              {availableChains.map(chain => (
+                <button
+                  key={chain.id}
+                  type="button"
+                  onClick={() => handleChainClick(chain.id)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
+                    'hover:opacity-80 active:scale-95',
+                    activeChain === chain.id
+                      ? cn(
+                          CHAIN_COLORS[chain.id] || CHAIN_COLORS['all'],
+                          'ring-1 ring-inset ring-current/20'
+                        )
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  {chain.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Token grid */}
+          <div className="flex flex-wrap gap-2">
+            {visibleTokens.map(token => (
+              <CryptoTokenCard
+                key={token.id}
+                token={token}
+                selected={selectedTokenId === token.id && !selectedFiatProvider}
+                onClick={() => handleTokenSelect(token)}
+                disabled={disabled}
+              />
+            ))}
+
+            {hasMoreTokens && (
+              <button
+                type="button"
+                onClick={() => setShowAllTokens(!showAllTokens)}
+                className={cn(
+                  'flex items-center gap-1 min-w-[100px] h-11 px-3 rounded-lg',
+                  'border border-border bg-muted/30',
+                  'text-sm text-muted-foreground',
+                  'hover:bg-muted/50 transition-colors'
+                )}
+              >
+                {showAllTokens ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    <span>{t('payment.showLess')}</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    <span>
+                      {t('payment.showMore')} ({filteredTokens.length - maxVisibleTokens})
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

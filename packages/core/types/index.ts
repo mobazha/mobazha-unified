@@ -339,6 +339,7 @@ export type {
   FiatPaymentResult,
   FiatPaymentDetail,
   FiatProviderInfo,
+  PaymentMethodsResponse,
   FiatAccountStatus,
   FiatProviderConfigView,
   FiatProviderConfigInput,

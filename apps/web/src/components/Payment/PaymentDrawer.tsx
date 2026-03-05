@@ -24,6 +24,7 @@ export interface PaymentDrawerProps {
   selectedFiatProvider?: string;
   onSelectFiat?: (providerID: string) => void;
   availableFiatProviders?: string[];
+  acceptedCurrencies?: string[];
   selectedModerator?: Moderator;
   onSelectModerator?: (moderator: Moderator) => void;
   moderatorList?: Moderator[];
@@ -40,6 +41,7 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   selectedFiatProvider,
   onSelectFiat,
   availableFiatProviders,
+  acceptedCurrencies,
   selectedModerator,
   onSelectModerator,
   moderatorList,
@@ -82,7 +84,7 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
           </div>
         )}
 
-        <SheetHeader className={side === 'bottom' ? 'px-4' : undefined}>
+        <SheetHeader className="px-4">
           <SheetTitle>
             {type === 'payment' ? t('payment.selectPaymentMethod') : t('payment.selectModerator')}
           </SheetTitle>
@@ -101,6 +103,7 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
               selectedFiatProvider={selectedFiatProvider}
               onSelectFiat={handleFiatSelect}
               availableFiatProviders={availableFiatProviders}
+              acceptedCurrencies={acceptedCurrencies}
               showFiatMethods={true}
             />
           ) : (
