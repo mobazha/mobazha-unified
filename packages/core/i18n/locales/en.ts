@@ -4025,6 +4025,9 @@ export const en: TranslationResource = {
       configSaveFailed: 'Failed to save configuration',
       configDeleted: 'Payment provider disconnected',
       configDeleteFailed: 'Failed to disconnect provider',
+      statusActive: 'Active',
+      statusRestricted: 'Restricted',
+      statusPending: 'Pending',
     },
     storeBranding: {
       pageTitle: 'Store Branding',
@@ -4262,6 +4265,16 @@ export const en: TranslationResource = {
     sectionTitle: 'Pay with card or wallet',
     cryptoSection: 'Pay with cryptocurrency',
     captureFailed: 'Payment capture failed. Please contact support.',
+    email: 'Email',
+    accountId: 'Account',
+    accountStatus: 'Status',
+    charges: 'Charges',
+    payouts: 'Payouts',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    pendingRequirements: 'Action needed',
+    manageDashboard: '{{provider}} Dashboard',
+    dashboardLoginHint: 'Sign in to {{provider}} with {{email}}',
   },
 };
 
