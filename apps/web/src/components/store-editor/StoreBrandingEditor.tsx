@@ -42,7 +42,11 @@ function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-export function StoreBrandingEditor() {
+interface StoreBrandingEditorProps {
+  backHref?: string;
+}
+
+export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { config: savedConfig, isLoading, isSaving, error, save } = useStorefrontConfig();
@@ -191,13 +195,15 @@ export function StoreBrandingEditor() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-border bg-card shrink-0">
         <div className="flex items-center gap-3">
-          <Link
-            href="/admin/settings/store"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('common.back')}</span>
-          </Link>
+          {backHref && (
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('common.back')}</span>
+            </Link>
+          )}
           <span className="text-sm font-medium">{t('admin.storeBranding.pageTitle')}</span>
         </div>
         <div className="flex items-center gap-2">

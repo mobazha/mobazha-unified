@@ -56,4 +56,9 @@ export const queryKeys = {
       [...queryKeys.search.all, 'products', query, sort, category] as const,
     users: (query: string) => [...queryKeys.search.all, 'users', query] as const,
   },
+
+  receivingAccounts: {
+    all: ['receivingAccounts'] as const,
+    list: () => [...queryKeys.receivingAccounts.all, 'list'] as const,
+  },
 } as const;
