@@ -112,6 +112,36 @@ export const productDataService = {
   },
 
   /**
+   * 获取最新商品列表（SaaS 首页）
+   */
+  async getLatestProducts(limit = 12): Promise<ProductListItem[]> {
+    if (isMockMode()) {
+      return mockServices.products.getTrendingProducts();
+    }
+    return await productsApi.fetchLatestListings(limit);
+  },
+
+  /**
+   * 获取精选店铺（SaaS 首页）
+   */
+  async getFeaturedStores(limit = 6) {
+    if (isMockMode()) {
+      return [];
+    }
+    return await productsApi.fetchFeaturedStores(limit);
+  },
+
+  /**
+   * 获取平台统计（SaaS 首页）
+   */
+  async getPlatformStats() {
+    if (isMockMode()) {
+      return { storeCount: 0, listingCount: 0 };
+    }
+    return await productsApi.fetchPlatformStats();
+  },
+
+  /**
    * 获取商品分类
    */
   async getCategories(): Promise<ProductCategory[]> {

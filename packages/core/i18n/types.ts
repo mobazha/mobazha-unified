@@ -3136,6 +3136,46 @@ export interface TranslationResource {
     invalidUtxoAddress?: string;
   };
 
+  saasHome?: {
+    hero: {
+      title: string;
+      subtitle: string;
+      ctaCreate: string;
+      ctaExplore: string;
+      welcomeBack: string;
+      ctaDashboard: string;
+      ctaViewStore: string;
+      ctaStartSelling: string;
+      ctaBrowse: string;
+    };
+    valueProps: {
+      buyerProtection: { title: string; description: string };
+      selfHosted: { title: string; description: string };
+      lowFees: { title: string; description: string };
+      cryptoNative: { title: string; description: string };
+    };
+    featuredStores: {
+      title: string;
+      subtitle: string;
+      visitStore: string;
+      products: string;
+      viewAll: string;
+      emptyTitle: string;
+      emptySubtitle: string;
+      growingCta: string;
+    };
+    networkActivity: {
+      title: string;
+      subtitle: string;
+      fromStore: string;
+    };
+    stats: {
+      activeStores: string;
+      productsListed: string;
+      chainsSupported: string;
+    };
+  };
+
   fiat?: {
     connectProvider?: string;
     cryptoBadge?: string;

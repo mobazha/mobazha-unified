@@ -368,6 +368,69 @@ export async function fetchRatings(ratingIDs: string[]): Promise<RatingDetail[]>
 }
 
 /**
+ * 获取最新商品列表（SaaS 首页 Network Activity）
+ */
+export async function fetchLatestListings(limit = 12): Promise<ProductListItem[]> {
+  try {
+    const response = await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit), {});
+    return parseSearchResults(response);
+  } catch (error) {
+    console.error('Failed to fetch latest listings:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取精选店铺（SaaS 首页 Featured Stores）
+ * 客户端排序：综合活跃度 + 品牌化完成度
+ */
+export async function fetchFeaturedStores(limit = 6): Promise<SearchedUser[]> {
+  try {
+    const result = await searchProfiles({ query: '*', pageSize: 20 });
+    return result.users
+      .map(user => ({ ...user, _score: computeStoreScore(user) }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, limit)
+      .map(({ _score: _, ...user }) => user);
+  } catch (error) {
+    console.error('Failed to fetch featured stores:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取平台统计（SaaS 首页 Platform Stats）
+ */
+export async function fetchPlatformStats(): Promise<{
+  storeCount: number;
+  listingCount: number;
+}> {
+  try {
+    const [profilesResult, listingsResult] = await Promise.all([
+      searchProfiles({ query: '*', pageSize: 1 }),
+      searchListings({ query: '*', pageSize: 1 }),
+    ]);
+    return {
+      storeCount: profilesResult.total,
+      listingCount: listingsResult.total,
+    };
+  } catch (error) {
+    console.error('Failed to fetch platform stats:', error);
+    return { storeCount: 0, listingCount: 0 };
+  }
+}
+
+function computeStoreScore(user: SearchedUser): number {
+  const activityScore = user.listingCount * 0.3 + user.reviewCount * 0.2;
+  const qualityScore = user.rating * 0.2;
+  const brandScore =
+    (user.avatar ? 1 : 0) * 0.1 +
+    (user.shortDescription ? 1 : 0) * 0.1 +
+    (user.listingCount > 0 ? 1 : 0) * 0.1;
+  return activityScore + qualityScore + brandScore;
+}
+
+/**
  * 举报商品
  */
 export async function reportListing(
