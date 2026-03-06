@@ -9,7 +9,13 @@
 
 import { useState, useMemo } from 'react';
 import type { ProductGridProps } from '@mobazha/core';
-import { useStoreListings, usePrefetchProduct, getImageUrl } from '@mobazha/core';
+import {
+  useStoreListings,
+  usePrefetchProduct,
+  getImageUrl,
+  useI18n,
+  useCurrencyFormat,
+} from '@mobazha/core';
 
 interface Props extends ProductGridProps {
   peerId: string;
@@ -28,6 +34,8 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
   const { listings, isLoading } = useStoreListings(isPreview ? null : peerId);
   const prefetch = usePrefetchProduct();
   const [search, setSearch] = useState('');
+  const { t } = useI18n();
+  const { formatLocalPrice } = useCurrencyFormat();
 
   const colClass = COL_CLASS[columns] || COL_CLASS[4];
   const filtered = useMemo(
@@ -52,7 +60,7 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
         {showSearch && (
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder={t('admin.storeBranding.searchProducts')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full max-w-xs rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
@@ -71,19 +79,21 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
         </div>
       ) : filtered.length === 0 ? (
         <p className="py-8 text-center text-sm opacity-50">
-          {search ? 'No products match your search' : 'No products available'}
+          {search
+            ? t('admin.storeBranding.noProductsMatch')
+            : t('admin.storeBranding.noProductsAvailable')}
         </p>
       ) : (
         <div className={`grid gap-4 ${colClass}`}>
           {filtered.map(product => (
             <a
               key={product.slug}
-              href={`/store/${peerId}/products/${product.slug}`}
-              className="group overflow-hidden border border-gray-200 transition-shadow hover:shadow-lg dark:border-gray-700"
+              href={`/product/${product.slug}?peerID=${peerId}`}
+              className="group overflow-hidden border border-border transition-shadow hover:shadow-lg"
               style={{ borderRadius: 'var(--store-radius)' }}
               onMouseEnter={() => prefetch(product.slug, peerId)}
             >
-              <div className="aspect-square bg-gray-100 dark:bg-gray-800">
+              <div className="aspect-square bg-muted">
                 {product.thumbnail && (
                   <img
                     src={getImageUrl(product.thumbnail?.medium)}
@@ -100,8 +110,12 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
                   {product.title}
                 </h3>
                 {product.price && (
-                  <p className="mt-1 text-sm opacity-70">
-                    {product.price.currency?.code} {product.price.amount}
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatLocalPrice(
+                      Number(product.price.amount || 0),
+                      product.price.currency?.code || 'USD',
+                      { divisibility: product.price.currency?.divisibility }
+                    )}
                   </p>
                 )}
               </div>

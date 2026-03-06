@@ -70,7 +70,7 @@ const DEFAULT_FALLBACK: StoreConfig = {
     {
       id: 'default-trust',
       type: 'trust-badges',
-      props: { badges: [...WEB3_TRUST_KIT], layout: 'horizontal', style: 'card' },
+      props: { badges: [...WEB3_TRUST_KIT], layout: 'grid', style: 'card' },
       visible: true,
     },
     {

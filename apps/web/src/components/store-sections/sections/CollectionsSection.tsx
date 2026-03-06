@@ -10,7 +10,8 @@
 import { useState, useEffect } from 'react';
 import type { CollectionsSectionProps } from '@mobazha/core';
 import type { Collection } from '@mobazha/core';
-import { collectionsApi, getImageUrl, useI18n } from '@mobazha/core';
+import { collectionsApi, getImageUrl, useI18n, isStandalone } from '@mobazha/core';
+import Link from 'next/link';
 
 const COLS_CLASS = {
   2: 'sm:grid-cols-2',
@@ -27,6 +28,7 @@ export function CollectionsSection({
   peerId,
 }: CollectionsSectionProps & { peerId: string }) {
   const { t } = useI18n();
+  const standalone = isStandalone();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,7 @@ export function CollectionsSection({
     return () => {
       cancelled = true;
     };
-  }, [mode, collectionIDs]);
+  }, [mode, collectionIDs, peerId]);
 
   if (loading) {
     return (
@@ -69,21 +71,7 @@ export function CollectionsSection({
     );
   }
 
-  if (!collections.length) {
-    return (
-      <div className="py-4">
-        <h2
-          className="text-2xl font-bold mb-6"
-          style={{ fontFamily: 'var(--store-font, inherit)' }}
-        >
-          {title}
-        </h2>
-        <p className="text-sm text-muted-foreground text-center py-8">
-          {t('admin.collections.empty')}
-        </p>
-      </div>
-    );
-  }
+  if (!collections.length) return null;
 
   const isCarousel = layout === 'carousel';
 
@@ -95,13 +83,19 @@ export function CollectionsSection({
       {isCarousel ? (
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4">
           {collections.map(col => (
-            <CollectionCard key={col.id} collection={col} className="snap-start shrink-0 w-64" />
+            <CollectionCard
+              key={col.id}
+              collection={col}
+              peerId={peerId}
+              standalone={standalone}
+              className="snap-start shrink-0 w-64"
+            />
           ))}
         </div>
       ) : (
         <div className={`grid gap-4 ${COLS_CLASS[columns] ?? COLS_CLASS[3]}`}>
           {collections.map(col => (
-            <CollectionCard key={col.id} collection={col} />
+            <CollectionCard key={col.id} collection={col} peerId={peerId} standalone={standalone} />
           ))}
         </div>
       )}
@@ -111,15 +105,23 @@ export function CollectionsSection({
 
 function CollectionCard({
   collection,
+  peerId,
+  standalone,
   className = '',
 }: {
   collection: Collection;
+  peerId: string;
+  standalone: boolean;
   className?: string;
 }) {
   const imgSrc = collection.image ? getImageUrl(collection.image) : null;
+  const href = standalone
+    ? `/collections/${collection.id}`
+    : `/store/${peerId}/collection/${collection.id}`;
   return (
-    <div
-      className={`border border-border overflow-hidden hover:shadow-md transition-shadow ${className}`}
+    <Link
+      href={href}
+      className={`block border border-border overflow-hidden hover:shadow-md transition-shadow ${className}`}
       style={{ borderRadius: 'var(--store-radius, 8px)' }}
     >
       {imgSrc && (
@@ -142,6 +144,6 @@ function CollectionCard({
           </p>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

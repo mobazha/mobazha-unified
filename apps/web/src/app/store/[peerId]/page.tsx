@@ -79,8 +79,10 @@ import {
   FollowTab,
 } from '@/components/store';
 import { StoreSections } from '@/components/store-sections';
+import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
 
-// 默认统计数据
+const STORE_PAGE_EXCLUDE_TYPES = new Set(['testimonials', 'store-tabs']);
+
 const defaultStats = {
   followerCount: 0,
   followingCount: 0,
@@ -121,6 +123,20 @@ export default function StorePage() {
 
   const { config: storefrontConfig } = useStorefrontConfigPublic(peerId);
   const hasSections = !!storefrontConfig?.sections?.length;
+  const hasHeroSection = !!storefrontConfig?.sections?.some(
+    s => s.type === 'hero' && s.visible !== false
+  );
+  const heroMode = hasSections && hasHeroSection ? 'fused' : 'separate';
+
+  const filteredSections = useMemo(() => {
+    if (!storefrontConfig) return storefrontConfig;
+    const exclude = new Set(STORE_PAGE_EXCLUDE_TYPES);
+    if (heroMode === 'fused') exclude.add('hero');
+    return {
+      ...storefrontConfig,
+      sections: storefrontConfig.sections.filter(s => !exclude.has(s.type)),
+    };
+  }, [storefrontConfig, heroMode]);
 
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
@@ -774,637 +790,672 @@ export default function StorePage() {
       <Header />
 
       <main>
-        {/* Store Header */}
-        <div className="relative">
-          {/* Cover Image */}
-          <div
-            className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-primary/80 to-primary/60 relative overflow-hidden group"
-            onDragOver={isOwnStore ? handleCoverDragOver : undefined}
-            onDragLeave={isOwnStore ? handleCoverDragLeave : undefined}
-            onDrop={isOwnStore ? handleCoverDrop : undefined}
-          >
-            {displayHeaderUrl && (
-              <img
-                src={displayHeaderUrl}
-                alt={`${store.name || peerId.slice(0, 8)} store header`}
-                className="w-full h-full object-cover"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        {heroMode === 'fused' ? (
+          /* ── Fused mode: BrandedHeroHeader ── */
+          <>
+            <BrandedHeroHeader
+              store={store}
+              peerId={peerId}
+              stats={stats}
+              isOwnStore={isOwnStore}
+              isAuthenticated={isAuthenticated}
+              storefrontConfig={storefrontConfig}
+              isFollowing={isFollowing}
+              followLoading={followLoading}
+              onFollowToggle={handleFollowToggle}
+              isBlocked={isBlockedUser}
+              blockLoading={blockLoading}
+              onBlockToggle={handleBlockToggle}
+              onMessage={handleMessage}
+              onTabChange={tab => setActiveTab(tab as TabType)}
+            />
 
-            {/* Drag overlay */}
-            {isOwnStore && isDragOver && (
-              <div className="absolute inset-0 bg-primary/30 border-2 border-dashed border-primary-foreground/60 flex items-center justify-center z-20 backdrop-blur-sm">
-                <div className="flex flex-col items-center gap-2 text-white">
-                  <ImageIcon className="w-8 h-8" />
-                  <p className="text-sm font-medium">{t('settings.dragOrClickCover')}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Upload progress overlay */}
-            {headerUploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                <div className="flex flex-col items-center gap-3">
-                  <span className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent" />
-                  <p className="text-white text-sm">{t('common.uploading')}</p>
-                </div>
-              </div>
-            )}
-
-            {isOwnStore && !headerUploading && (
-              <>
-                <input
-                  ref={headerInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={e => handleFileSelect(e, 'cover')}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => headerInputRef.current?.click()}
-                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
-                >
-                  <Camera className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Store Info - 白色背景卡片 */}
-          <Container size="xl" className="relative">
-            <div className="bg-background -mt-12 sm:-mt-16 rounded-t-2xl pt-4 px-4 sm:px-6">
-              {/* 头像和信息 */}
-              <div className="flex items-start gap-4">
-                {/* Avatar */}
-                <div className="relative flex-shrink-0 -mt-10 sm:-mt-12">
-                  <Avatar
-                    src={displayAvatarUrl}
-                    name={store.name || peerId.slice(0, 8)}
-                    size="xl"
-                    className="ring-4 ring-background w-20 h-20 sm:w-24 sm:h-24 shadow-lg"
-                  />
-                  {isOwnStore && (
-                    <>
-                      <input
-                        ref={avatarInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handleFileSelect(e, 'avatar')}
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => avatarInputRef.current?.click()}
-                        disabled={avatarUploading}
-                        className="absolute -bottom-1 -right-1 z-10 w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-background cursor-pointer"
-                      >
-                        {avatarUploading ? (
-                          <span className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent" />
-                        ) : (
-                          <Camera className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* 信息区域 */}
-                <div className="flex-1 min-w-0 pt-1">
-                  {/* 名称和操作按钮 */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                          {store.name || peerId.slice(0, 8)}
-                        </h1>
-                        {/* 隐私店铺徽标 */}
-                        {store.private && (
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
-                            title={t('storeAccess.privateStore')}
-                          >
-                            <Lock className="h-3 w-3" />
-                            {t('storeAccess.privateStoreBadge') || t('common.private')}
-                          </span>
-                        )}
-                      </div>
-                      {/* 位置 + 评分（桌面端） */}
-                      <div className="flex items-center gap-3 mt-0.5">
-                        {store.location && (
-                          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                            <span>📍</span>
-                            <span>{store.location}</span>
-                          </p>
-                        )}
-                        {/* 评分 - 点击进入评价 Tab */}
-                        <button
-                          onClick={() => setActiveTab('reviews')}
-                          className="text-xs sm:text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
-                        >
-                          <span className="text-warning">★</span>
-                          <span className="font-medium text-foreground">
-                            {stats.averageRating.toFixed(1)}
-                          </span>
-                          <span className="text-muted-foreground">({stats.ratingCount})</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Actions — wrap on mobile for better touch targets */}
-                    <div className="flex flex-wrap gap-2 flex-shrink-0">
-                      {isOwnStore ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            onClick={() => router.push('/settings/page-profile')}
-                            size="sm"
-                            className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
-                          >
-                            <Settings className="h-4 w-4" />
-                            <span className="hidden sm:inline">{t('settingsModal.customize')}</span>
-                          </Button>
-                          <Link href="/listing/new">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
-                            >
-                              <Plus className="h-4 w-4" />
-                              <span className="hidden sm:inline">
-                                {t('userPage.createListing')}
-                              </span>
-                            </Button>
-                          </Link>
-                          <Link href="/listing/import">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
-                            >
-                              <Upload className="h-4 w-4" />
-                              <span className="hidden sm:inline">
-                                {t('userPage.importListings')}
-                              </span>
-                            </Button>
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant={isFollowing ? 'outline' : 'default'}
-                            onClick={handleFollowToggle}
-                            disabled={followLoading || !isAuthenticated}
-                            size="sm"
-                            className="touch-feedback min-h-[44px] sm:min-h-0"
-                          >
-                            {followLoading ? (
-                              <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                            ) : isFollowing ? (
-                              t('profile.unfollow')
-                            ) : (
-                              t('profile.follow')
-                            )}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="touch-feedback min-h-[44px] sm:min-h-0"
-                            onClick={handleMessage}
-                          >
-                            {t('profile.message')}
-                          </Button>
-                          <Button
-                            variant={isBlockedUser ? 'destructive' : 'outline'}
-                            onClick={handleBlockToggle}
-                            disabled={blockLoading || !isAuthenticated}
-                            size="sm"
-                            className="touch-feedback min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
-                            title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
-                          >
-                            {blockLoading ? (
-                              <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                            ) : (
-                              <Ban className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <ShareButton
-                            url={
-                              typeof window !== 'undefined'
-                                ? window.location.href
-                                : `/store/${peerId}`
-                            }
-                            title={store.name || peerId.slice(0, 8)}
-                            description={
-                              store.shortDescription
-                                ? stripHtmlTags(store.shortDescription)
-                                : undefined
-                            }
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 简介 */}
-                  {store.shortDescription && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                      {stripHtmlTags(store.shortDescription)}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* 统计数据：关注中 / 粉丝 - 点击可查看列表 */}
-              <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
-                <button
-                  onClick={() => setActiveTab('following')}
-                  className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
-                >
-                  <span className="font-semibold text-foreground">{stats.followingCount}</span>
-                  <span className="text-muted-foreground hover:text-primary">
-                    {t('profile.following')}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('followers')}
-                  className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
-                >
-                  <span className="font-semibold text-foreground">{stats.followerCount}</span>
-                  <span className="text-muted-foreground hover:text-primary">
-                    {t('profile.followers')}
-                  </span>
-                </button>
-              </div>
-
-              {/* 私密店铺完整访问权限提示 */}
-              {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
+            {/* Private store access notice */}
+            {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
+              <Container size="xl">
                 <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
                   <ShieldCheck className="h-4 w-4 shrink-0" />
                   <span>{t('storeAccess.fullAccessGranted')}</span>
                 </div>
+              </Container>
+            )}
+          </>
+        ) : (
+          /* ── Separate mode: original Cover + Profile Card ── */
+          <div className="relative">
+            {/* Cover Image */}
+            <div
+              className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-primary/80 to-primary/60 relative overflow-hidden group"
+              onDragOver={isOwnStore ? handleCoverDragOver : undefined}
+              onDragLeave={isOwnStore ? handleCoverDragLeave : undefined}
+              onDrop={isOwnStore ? handleCoverDrop : undefined}
+            >
+              {displayHeaderUrl && (
+                <img
+                  src={displayHeaderUrl}
+                  alt={`${store.name || peerId.slice(0, 8)} store header`}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+
+              {/* Drag overlay */}
+              {isOwnStore && isDragOver && (
+                <div className="absolute inset-0 bg-primary/30 border-2 border-dashed border-primary-foreground/60 flex items-center justify-center z-20 backdrop-blur-sm">
+                  <div className="flex flex-col items-center gap-2 text-white">
+                    <ImageIcon className="w-8 h-8" />
+                    <p className="text-sm font-medium">{t('settings.dragOrClickCover')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload progress overlay */}
+              {headerUploading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                  <div className="flex flex-col items-center gap-3">
+                    <span className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent" />
+                    <p className="text-white text-sm">{t('common.uploading')}</p>
+                  </div>
+                </div>
+              )}
+
+              {isOwnStore && !headerUploading && (
+                <>
+                  <input
+                    ref={headerInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={e => handleFileSelect(e, 'cover')}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => headerInputRef.current?.click()}
+                    className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
+                  >
+                    <Camera className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
+                  </button>
+                </>
               )}
             </div>
-          </Container>
-        </div>
+
+            {/* Store Info - 白色背景卡片 */}
+            <Container size="xl" className="relative">
+              <div className="bg-background -mt-12 sm:-mt-16 rounded-t-2xl pt-4 px-4 sm:px-6">
+                {/* 头像和信息 */}
+                <div className="flex items-start gap-4">
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0 -mt-10 sm:-mt-12">
+                    <Avatar
+                      src={displayAvatarUrl}
+                      name={store.name || peerId.slice(0, 8)}
+                      size="xl"
+                      className="ring-4 ring-background w-20 h-20 sm:w-24 sm:h-24 shadow-lg"
+                    />
+                    {isOwnStore && (
+                      <>
+                        <input
+                          ref={avatarInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleFileSelect(e, 'avatar')}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => avatarInputRef.current?.click()}
+                          disabled={avatarUploading}
+                          className="absolute -bottom-1 -right-1 z-10 w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-background cursor-pointer"
+                        >
+                          {avatarUploading ? (
+                            <span className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent" />
+                          ) : (
+                            <Camera className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 信息区域 */}
+                  <div className="flex-1 min-w-0 pt-1">
+                    {/* 名称和操作按钮 */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                            {store.name || peerId.slice(0, 8)}
+                          </h1>
+                          {/* 隐私店铺徽标 */}
+                          {store.private && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
+                              title={t('storeAccess.privateStore')}
+                            >
+                              <Lock className="h-3 w-3" />
+                              {t('storeAccess.privateStoreBadge') || t('common.private')}
+                            </span>
+                          )}
+                        </div>
+                        {/* 位置 + 评分（桌面端） */}
+                        <div className="flex items-center gap-3 mt-0.5">
+                          {store.location && (
+                            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <span>📍</span>
+                              <span>{store.location}</span>
+                            </p>
+                          )}
+                          {/* 评分 - 点击进入评价 Tab */}
+                          <button
+                            onClick={() => setActiveTab('reviews')}
+                            className="text-xs sm:text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
+                          >
+                            <span className="text-warning">★</span>
+                            <span className="font-medium text-foreground">
+                              {stats.averageRating.toFixed(1)}
+                            </span>
+                            <span className="text-muted-foreground">({stats.ratingCount})</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Actions — wrap on mobile for better touch targets */}
+                      <div className="flex flex-wrap gap-2 flex-shrink-0">
+                        {isOwnStore ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                router.push(
+                                  hasSections ? '/admin/storefront' : '/settings/page-profile'
+                                )
+                              }
+                              size="sm"
+                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                            >
+                              <Settings className="h-4 w-4" />
+                              <span className="hidden sm:inline">
+                                {t('settingsModal.customize')}
+                              </span>
+                            </Button>
+                            <Link href="/listing/new">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                              >
+                                <Plus className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                  {t('userPage.createListing')}
+                                </span>
+                              </Button>
+                            </Link>
+                            <Link href="/listing/import">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                              >
+                                <Upload className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                  {t('userPage.importListings')}
+                                </span>
+                              </Button>
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant={isFollowing ? 'outline' : 'default'}
+                              onClick={handleFollowToggle}
+                              disabled={followLoading || !isAuthenticated}
+                              size="sm"
+                              className="touch-feedback min-h-[44px] sm:min-h-0"
+                            >
+                              {followLoading ? (
+                                <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                              ) : isFollowing ? (
+                                t('profile.unfollow')
+                              ) : (
+                                t('profile.follow')
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="touch-feedback min-h-[44px] sm:min-h-0"
+                              onClick={handleMessage}
+                            >
+                              {t('profile.message')}
+                            </Button>
+                            <Button
+                              variant={isBlockedUser ? 'destructive' : 'outline'}
+                              onClick={handleBlockToggle}
+                              disabled={blockLoading || !isAuthenticated}
+                              size="sm"
+                              className="touch-feedback min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
+                              title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
+                            >
+                              {blockLoading ? (
+                                <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                              ) : (
+                                <Ban className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <ShareButton
+                              url={
+                                typeof window !== 'undefined'
+                                  ? window.location.href
+                                  : `/store/${peerId}`
+                              }
+                              title={store.name || peerId.slice(0, 8)}
+                              description={
+                                store.shortDescription
+                                  ? stripHtmlTags(store.shortDescription)
+                                  : undefined
+                              }
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 简介 */}
+                    {store.shortDescription && (
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                        {stripHtmlTags(store.shortDescription)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 统计数据：关注中 / 粉丝 - 点击可查看列表 */}
+                <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
+                  <button
+                    onClick={() => setActiveTab('following')}
+                    className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
+                  >
+                    <span className="font-semibold text-foreground">{stats.followingCount}</span>
+                    <span className="text-muted-foreground hover:text-primary">
+                      {t('profile.following')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('followers')}
+                    className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
+                  >
+                    <span className="font-semibold text-foreground">{stats.followerCount}</span>
+                    <span className="text-muted-foreground hover:text-primary">
+                      {t('profile.followers')}
+                    </span>
+                  </button>
+                </div>
+
+                {/* 私密店铺完整访问权限提示 */}
+                {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
+                  <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
+                    <ShieldCheck className="h-4 w-4 shrink-0" />
+                    <span>{t('storeAccess.fullAccessGranted')}</span>
+                  </div>
+                )}
+              </div>
+            </Container>
+          </div>
+        )}
 
         {hasSections && (
           <StoreSections
             peerId={peerId}
             profile={store ?? undefined}
-            ownerConfig={storefrontConfig}
+            ownerConfig={filteredSections}
           />
         )}
 
-        {!hasSections && (
-          <>
-            {/* Tabs */}
-            <div className="sticky top-16 z-30 bg-background border-b border-border">
-              <Container size="xl">
-                <div className="relative">
-                  <div className="flex items-center px-4 sm:px-6 overflow-x-auto scrollbar-hide">
-                    <HStack gap="md" className="flex-nowrap">
-                      {/* 简介 Tab */}
-                      <button
-                        onClick={() => setActiveTab('about')}
-                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                          activeTab === 'about'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {t('profile.about')}
-                      </button>
+        {/* Tabs — always visible (branded sections + tabs coexist) */}
+        <>
+          {/* Tabs */}
+          <div className="sticky top-16 z-30 bg-background border-b border-border">
+            <Container size="xl">
+              <div className="relative">
+                <div className="flex items-center px-4 sm:px-6 overflow-x-auto scrollbar-hide">
+                  <HStack gap="md" className="flex-nowrap">
+                    {/* 简介 Tab */}
+                    <button
+                      onClick={() => setActiveTab('about')}
+                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'about'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.about')}
+                    </button>
 
-                      {/* 商品 Tab */}
-                      <button
-                        onClick={() => setActiveTab('products')}
-                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                          activeTab === 'products'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {t('profile.listings')}
-                        {storeListingCount > 0 && (
-                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                            {storeListingCount}
-                          </span>
-                        )}
-                      </button>
+                    {/* 商品 Tab */}
+                    <button
+                      onClick={() => setActiveTab('products')}
+                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'products'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.listings')}
+                      {storeListingCount > 0 && (
+                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                          {storeListingCount}
+                        </span>
+                      )}
+                    </button>
 
-                      {/* RWA 数字资产 Tab */}
-                      <button
-                        onClick={() => setActiveTab('rwa')}
-                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                          activeTab === 'rwa'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {t('profile.rwa')}
-                        {rwaListingCount > 0 && (
-                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                            {rwaListingCount}
-                          </span>
-                        )}
-                      </button>
+                    {/* RWA 数字资产 Tab */}
+                    <button
+                      onClick={() => setActiveTab('rwa')}
+                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'rwa'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.rwa')}
+                      {rwaListingCount > 0 && (
+                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                          {rwaListingCount}
+                        </span>
+                      )}
+                    </button>
 
-                      {/* 评价 Tab */}
-                      <button
-                        onClick={() => setActiveTab('reviews')}
-                        className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                          activeTab === 'reviews'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {t('profile.reviews')}
-                        {stats.ratingCount > 0 && (
-                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                            {stats.ratingCount}
-                          </span>
-                        )}
-                      </button>
-                    </HStack>
-                  </div>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
+                    {/* 评价 Tab */}
+                    <button
+                      onClick={() => setActiveTab('reviews')}
+                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                        activeTab === 'reviews'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('profile.reviews')}
+                      {stats.ratingCount > 0 && (
+                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                          {stats.ratingCount}
+                        </span>
+                      )}
+                    </button>
+                  </HStack>
                 </div>
-              </Container>
-            </div>
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
+              </div>
+            </Container>
+          </div>
 
-            {/* Tab Content */}
-            <div className="py-2 sm:py-4">
-              {activeTab === 'products' && (
-                <Container size="xl">
-                  {/* 桌面端：左侧边栏 + 右侧内容 */}
-                  <div className="flex gap-6">
-                    {/* 左侧筛选边栏 - 仅桌面端显示 */}
+          {/* Tab Content */}
+          <div className="py-2 sm:py-4">
+            {activeTab === 'products' && (
+              <Container size="xl">
+                {/* 桌面端：左侧边栏 + 右侧内容 */}
+                <div className="flex gap-6">
+                  {/* 左侧筛选边栏 - 仅桌面端显示 */}
+                  {!productsLoading && storeListingCount > 0 && (
+                    <FilterSidebar
+                      filter={filter}
+                      onFilterChange={setFilter}
+                      categories={categories}
+                      className="hidden lg:block"
+                    />
+                  )}
+
+                  {/* 右侧主内容区 */}
+                  <div className="flex-1 min-w-0 space-y-4">
+                    {/* 顶部工具栏：搜索 + 数量 + 排序 */}
                     {!productsLoading && storeListingCount > 0 && (
-                      <FilterSidebar
+                      <StoreListingsToolbar
                         filter={filter}
                         onFilterChange={setFilter}
+                        totalCount={storeListingCount}
+                        filteredCount={filteredProducts.length}
                         categories={categories}
-                        className="hidden lg:block"
+                        onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
+                        productTitles={productTitles}
+                        compact
                       />
                     )}
 
-                    {/* 右侧主内容区 */}
-                    <div className="flex-1 min-w-0 space-y-4">
-                      {/* 顶部工具栏：搜索 + 数量 + 排序 */}
-                      {!productsLoading && storeListingCount > 0 && (
-                        <StoreListingsToolbar
-                          filter={filter}
-                          onFilterChange={setFilter}
-                          totalCount={storeListingCount}
-                          filteredCount={filteredProducts.length}
-                          categories={categories}
-                          onOpenMobileFilter={() => setIsFilterSheetOpen(true)}
-                          productTitles={productTitles}
-                          compact
-                        />
-                      )}
-
-                      {/* Collections Section */}
-                      {storeCollections.length > 0 && (
-                        <div className="space-y-2 mb-4">
-                          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                            <Layers className="w-4 h-4" />
-                            {t('admin.nav.collections')}
-                          </h3>
-                          <div className="relative">
-                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                              {storeCollections.map(col => (
-                                <Link
-                                  key={col.id}
-                                  href={`/store/${peerId}/collection/${col.id}`}
-                                  className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
-                                >
-                                  {col.image ? (
-                                    <img
-                                      src={getImageUrl(col.image)}
-                                      alt={col.title}
-                                      className="w-full h-20 object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-20 bg-muted flex items-center justify-center">
-                                      <Layers className="w-6 h-6 text-muted-foreground/30" />
-                                    </div>
-                                  )}
-                                  <div className="p-2">
-                                    <p className="text-xs font-medium truncate">{col.title}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {col.products?.length || 0}{' '}
-                                      {t('listing.tabs.productType').toLowerCase()}
-                                    </p>
-                                  </div>
-                                </Link>
-                              ))}
-                            </div>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Products Grid */}
-                      {productsLoading ? (
-                        <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-                          {Array.from({ length: 6 }).map((_, i) => (
-                            <ProductCardSkeleton key={i} />
-                          ))}
-                        </Grid>
-                      ) : filteredProducts.length > 0 ? (
-                        <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-                          {filteredProducts.map((product, index) => (
-                            <Link
-                              key={`${product.slug}-${index}`}
-                              href={`/product/${product.slug}?peerID=${peerId}`}
-                              onClick={e => {
-                                // 桌面端使用弹框
-                                if (!isMobile) {
-                                  e.preventDefault();
-                                  openProduct(product.slug, peerId);
-                                }
-                              }}
-                            >
-                              <ProductCard
-                                title={product.title}
-                                imageUrl={getImageUrl(product.thumbnail?.medium)}
-                                price={Number(product.price?.amount || 0)}
-                                currency={product.price?.currency?.code || 'USD'}
-                                divisibility={product.price?.currency?.divisibility}
-                                // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
-                                vendorPeerID={peerId}
-                                rating={product.averageRating}
-                                reviewCount={product.ratingCount}
-                                freeShipping={
-                                  product.freeShipping && product.freeShipping.length > 0
-                                }
-                                contractType={product.contractType as ProductContractType}
-                                tokenStandard={product.tokenStandard}
-                                rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                                hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                                isOwnListing={isOwnStore}
-                                onReport={() => {
-                                  /* TODO: 打开举报对话框 */
-                                }}
-                                onBlock={() => {
-                                  /* TODO: 实现屏蔽卖家功能 */
-                                }}
-                                // 自己商品的快捷操作
-                                onEdit={
-                                  isOwnStore ? () => handleEditListing(product.slug) : undefined
-                                }
-                                onClone={
-                                  isOwnStore ? () => handleCloneListing(product.slug) : undefined
-                                }
-                                onDelete={
-                                  isOwnStore
-                                    ? () => handleOpenDeleteDialog(product.slug, product.title)
-                                    : undefined
-                                }
-                              />
-                            </Link>
-                          ))}
-                        </Grid>
-                      ) : storeListingCount > 0 ? (
-                        // 有商品但筛选后为空
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                            <Package className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                          <h3 className="text-base font-medium text-foreground mb-2">
-                            {t('empty.noProductsFound')}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {t('empty.tryAdjustingFilters')}
-                          </p>
-                        </div>
-                      ) : (
-                        // 店铺本身没有普通商品（但可能有 RWA 商品）
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                            <Package className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                          <h3 className="text-base font-medium text-foreground mb-2">
-                            {t('empty.noProductsFound')}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Container>
-              )}
-
-              {activeTab === 'rwa' && (
-                <Container size="xl">
-                  <RwaTab peerId={peerId} isOwnStore={isOwnStore} products={products} />
-                </Container>
-              )}
-
-              {activeTab === 'about' && (
-                <Container size="xl">
-                  <Grid cols={3} colsMobile={1} gap="md">
-                    <div className="lg:col-span-2">
-                      <Card className="p-4 sm:p-6">
-                        <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
-                          {t('profile.about')}
-                        </h2>
-                        <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
-                          {store.about ? (
-                            <div
-                              className="text-sm sm:text-base text-muted-foreground [&>p]:mb-3 [&>p:last-child]:mb-0"
-                              dangerouslySetInnerHTML={{ __html: sanitizeHtml(store.about) }}
-                            />
-                          ) : (
-                            <p className="text-sm sm:text-base text-muted-foreground">
-                              {t('common.noData')}
-                            </p>
-                          )}
-                        </div>
-                      </Card>
-                    </div>
-
-                    <div>
-                      <Card className="p-4 sm:p-6">
-                        <h3 className="font-semibold text-foreground mb-3 text-base">
-                          {t('profile.contactInformation')}
+                    {/* Collections Section */}
+                    {storeCollections.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                          <Layers className="w-4 h-4" />
+                          {t('admin.nav.collections')}
                         </h3>
-                        <VStack gap="sm" align="stretch">
-                          {store.contactInfo?.email && (
-                            <div>
-                              <span className="text-xs sm:text-sm text-muted-foreground">
-                                {t('profile.email')}
-                              </span>
-                              <a
-                                href={`mailto:${store.contactInfo.email}`}
-                                className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                        <div className="relative">
+                          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                            {storeCollections.map(col => (
+                              <Link
+                                key={col.id}
+                                href={`/store/${peerId}/collection/${col.id}`}
+                                className="flex-none w-36 rounded-lg border border-border hover:border-primary/50 transition-colors overflow-hidden"
                               >
-                                {store.contactInfo.email}
-                              </a>
-                            </div>
+                                {col.image ? (
+                                  <img
+                                    src={getImageUrl(col.image)}
+                                    alt={col.title}
+                                    className="w-full h-20 object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-20 bg-muted flex items-center justify-center">
+                                    <Layers className="w-6 h-6 text-muted-foreground/30" />
+                                  </div>
+                                )}
+                                <div className="p-2">
+                                  <p className="text-xs font-medium truncate">{col.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {col.products?.length || 0}{' '}
+                                    {t('listing.tabs.productType').toLowerCase()}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Products Grid */}
+                    {productsLoading ? (
+                      <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <ProductCardSkeleton key={i} />
+                        ))}
+                      </Grid>
+                    ) : filteredProducts.length > 0 ? (
+                      <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
+                        {filteredProducts.map((product, index) => (
+                          <Link
+                            key={`${product.slug}-${index}`}
+                            href={`/product/${product.slug}?peerID=${peerId}`}
+                            onClick={e => {
+                              // 桌面端使用弹框
+                              if (!isMobile) {
+                                e.preventDefault();
+                                openProduct(product.slug, peerId);
+                              }
+                            }}
+                          >
+                            <ProductCard
+                              title={product.title}
+                              imageUrl={getImageUrl(product.thumbnail?.medium)}
+                              price={Number(product.price?.amount || 0)}
+                              currency={product.price?.currency?.code || 'USD'}
+                              divisibility={product.price?.currency?.divisibility}
+                              // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                              vendorPeerID={peerId}
+                              rating={product.averageRating}
+                              reviewCount={product.ratingCount}
+                              freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                              contractType={product.contractType as ProductContractType}
+                              tokenStandard={product.tokenStandard}
+                              rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                              hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                              isOwnListing={isOwnStore}
+                              onReport={() => {
+                                /* TODO: 打开举报对话框 */
+                              }}
+                              onBlock={() => {
+                                /* TODO: 实现屏蔽卖家功能 */
+                              }}
+                              // 自己商品的快捷操作
+                              onEdit={
+                                isOwnStore ? () => handleEditListing(product.slug) : undefined
+                              }
+                              onClone={
+                                isOwnStore ? () => handleCloneListing(product.slug) : undefined
+                              }
+                              onDelete={
+                                isOwnStore
+                                  ? () => handleOpenDeleteDialog(product.slug, product.title)
+                                  : undefined
+                              }
+                            />
+                          </Link>
+                        ))}
+                      </Grid>
+                    ) : storeListingCount > 0 ? (
+                      // 有商品但筛选后为空
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <Package className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-base font-medium text-foreground mb-2">
+                          {t('empty.noProductsFound')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {t('empty.tryAdjustingFilters')}
+                        </p>
+                      </div>
+                    ) : (
+                      // 店铺本身没有普通商品（但可能有 RWA 商品）
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <Package className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-base font-medium text-foreground mb-2">
+                          {t('empty.noProductsFound')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Container>
+            )}
+
+            {activeTab === 'rwa' && (
+              <Container size="xl">
+                <RwaTab peerId={peerId} isOwnStore={isOwnStore} products={products} />
+              </Container>
+            )}
+
+            {activeTab === 'about' && (
+              <Container size="xl">
+                <Grid cols={3} colsMobile={1} gap="md">
+                  <div className="lg:col-span-2">
+                    <Card className="p-4 sm:p-6">
+                      <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
+                        {t('profile.about')}
+                      </h2>
+                      <div className="prose prose-sm sm:prose prose-slate dark:prose-invert max-w-none">
+                        {store.about ? (
+                          <div
+                            className="text-sm sm:text-base text-muted-foreground [&>p]:mb-3 [&>p:last-child]:mb-0"
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(store.about) }}
+                          />
+                        ) : (
+                          <p className="text-sm sm:text-base text-muted-foreground">
+                            {t('common.noData')}
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  </div>
+
+                  <div>
+                    <Card className="p-4 sm:p-6">
+                      <h3 className="font-semibold text-foreground mb-3 text-base">
+                        {t('profile.contactInformation')}
+                      </h3>
+                      <VStack gap="sm" align="stretch">
+                        {store.contactInfo?.email && (
+                          <div>
+                            <span className="text-xs sm:text-sm text-muted-foreground">
+                              {t('profile.email')}
+                            </span>
+                            <a
+                              href={`mailto:${store.contactInfo.email}`}
+                              className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                            >
+                              {store.contactInfo.email}
+                            </a>
+                          </div>
+                        )}
+                        {store.contactInfo?.phoneNumber && (
+                          <div>
+                            <span className="text-xs sm:text-sm text-muted-foreground">
+                              {t('profile.phone')}
+                            </span>
+                            <a
+                              href={`tel:${store.contactInfo.phoneNumber}`}
+                              className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
+                            >
+                              {store.contactInfo.phoneNumber}
+                            </a>
+                          </div>
+                        )}
+                        {store.contactInfo?.website && (
+                          <div>
+                            <span className="text-xs sm:text-sm text-muted-foreground">
+                              {t('profile.website')}
+                            </span>
+                            <a
+                              href={store.contactInfo.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block font-medium text-primary hover:underline text-sm"
+                            >
+                              {store.contactInfo.website}
+                            </a>
+                          </div>
+                        )}
+                        {!store.contactInfo?.email &&
+                          !store.contactInfo?.phoneNumber &&
+                          !store.contactInfo?.website && (
+                            <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
                           )}
-                          {store.contactInfo?.phoneNumber && (
-                            <div>
-                              <span className="text-xs sm:text-sm text-muted-foreground">
-                                {t('profile.phone')}
-                              </span>
-                              <a
-                                href={`tel:${store.contactInfo.phoneNumber}`}
-                                className="block font-medium text-primary hover:underline text-sm min-h-[44px] sm:min-h-0 flex items-center"
-                              >
-                                {store.contactInfo.phoneNumber}
-                              </a>
-                            </div>
-                          )}
-                          {store.contactInfo?.website && (
-                            <div>
-                              <span className="text-xs sm:text-sm text-muted-foreground">
-                                {t('profile.website')}
-                              </span>
-                              <a
-                                href={store.contactInfo.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block font-medium text-primary hover:underline text-sm"
-                              >
-                                {store.contactInfo.website}
-                              </a>
-                            </div>
-                          )}
-                          {!store.contactInfo?.email &&
-                            !store.contactInfo?.phoneNumber &&
-                            !store.contactInfo?.website && (
-                              <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
-                            )}
-                        </VStack>
-                      </Card>
+                      </VStack>
+                    </Card>
 
-                      <Card className="p-4 sm:p-6 mt-4">
-                        <Link
-                          href={`/store/${peerId}/policies`}
-                          className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                        >
-                          <FileText className="h-4 w-4" />
-                          {t('settings.storePolicies')}
-                        </Link>
-                      </Card>
-                    </div>
-                  </Grid>
-                </Container>
-              )}
+                    <Card className="p-4 sm:p-6 mt-4">
+                      <Link
+                        href={`/store/${peerId}/policies`}
+                        className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                      >
+                        <FileText className="h-4 w-4" />
+                        {t('settings.storePolicies')}
+                      </Link>
+                    </Card>
+                  </div>
+                </Grid>
+              </Container>
+            )}
 
-              {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
+            {activeTab === 'reviews' && <StoreReviewsTab peerID={peerId} />}
 
-              {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
+            {activeTab === 'following' && <FollowTab peerID={peerId} type="following" />}
 
-              {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
-            </div>
-          </>
-        )}
+            {activeTab === 'followers' && <FollowTab peerID={peerId} type="followers" />}
+          </div>
+        </>
       </main>
 
       <Footer />

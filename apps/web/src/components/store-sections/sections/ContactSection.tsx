@@ -1,5 +1,7 @@
+'use client';
+
 /**
- * ContactSection — PG-201 (Server Component)
+ * ContactSection — PG-201
  *
  * Contact information card with optional fields.
  * Actual contact data comes from the seller's profile (passed via context);
@@ -7,6 +9,7 @@
  */
 
 import type { ContactSectionProps } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
 import { Mail, Phone, Globe, Share2 } from 'lucide-react';
 
 export function ContactSection({
@@ -17,11 +20,28 @@ export function ContactSection({
   showSocial,
   customMessage,
 }: ContactSectionProps) {
+  const { t } = useI18n();
   const fields = [
-    showEmail && { icon: Mail, label: 'Email', placeholder: 'Contact via store chat' },
-    showPhone && { icon: Phone, label: 'Phone', placeholder: 'Available upon request' },
-    showWebsite && { icon: Globe, label: 'Website', placeholder: 'Visit our store page' },
-    showSocial && { icon: Share2, label: 'Social', placeholder: 'Follow us for updates' },
+    showEmail && {
+      icon: Mail,
+      label: t('admin.storeBranding.contactEmail'),
+      placeholder: t('admin.storeBranding.contactEmailPlaceholder'),
+    },
+    showPhone && {
+      icon: Phone,
+      label: t('admin.storeBranding.contactPhone'),
+      placeholder: t('admin.storeBranding.contactPhonePlaceholder'),
+    },
+    showWebsite && {
+      icon: Globe,
+      label: t('admin.storeBranding.contactWebsite'),
+      placeholder: t('admin.storeBranding.contactWebsitePlaceholder'),
+    },
+    showSocial && {
+      icon: Share2,
+      label: t('admin.storeBranding.contactSocial'),
+      placeholder: t('admin.storeBranding.contactSocialPlaceholder'),
+    },
   ].filter(Boolean) as Array<{ icon: typeof Mail; label: string; placeholder: string }>;
 
   if (!fields.length && !customMessage) return null;

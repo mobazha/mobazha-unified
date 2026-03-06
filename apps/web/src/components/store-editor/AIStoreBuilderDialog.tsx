@@ -29,7 +29,7 @@ interface AIStoreBuilderDialogProps {
 }
 
 export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderDialogProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const [brandName, setBrandName] = useState('');
   const [brandDescription, setBrandDescription] = useState('');
@@ -51,6 +51,7 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
       const config = await aiService.generateStoreConfig({
         brandName: brandName.trim(),
         brandDescription: brandDescription.trim(),
+        language: locale,
       });
       setGeneratedConfig(config);
       setPhase('preview');
@@ -60,7 +61,7 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
       setErrorInfo({ message, isNotConfigured });
       setPhase('error');
     }
-  }, [canGenerate, brandName, brandDescription]);
+  }, [canGenerate, brandName, brandDescription, locale]);
 
   const handleApply = useCallback(() => {
     if (generatedConfig) {

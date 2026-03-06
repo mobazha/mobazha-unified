@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { GallerySectionProps } from '@mobazha/core';
-import { getImageUrl } from '@mobazha/core';
+import { getImageUrl, useI18n } from '@mobazha/core';
 import { X } from 'lucide-react';
 
 const COLS_CLASS = {
@@ -30,6 +30,7 @@ export function GallerySection({
   aspectRatio,
   enableLightbox,
 }: GallerySectionProps) {
+  const { t } = useI18n();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
@@ -74,7 +75,7 @@ export function GallerySection({
             >
               <img
                 src={src}
-                alt={img.alt || `Gallery image ${i + 1}`}
+                alt={img.alt || t('admin.storeBranding.galleryImage', { index: i + 1 })}
                 className={`w-full h-full object-cover ${enableLightbox ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
                 onClick={() => openLightbox(i)}
               />
@@ -107,7 +108,7 @@ export function GallerySection({
             type="button"
             className="absolute top-4 right-4 text-white/80 hover:text-white"
             onClick={() => setLightboxIndex(null)}
-            aria-label="Close"
+            aria-label={t('common.dismiss')}
           >
             <X className="w-8 h-8" />
           </button>
@@ -128,7 +129,7 @@ export function GallerySection({
                 }}
                 disabled={lightboxIndex === 0}
               >
-                ‹ Prev
+                ← {t('admin.storeBranding.galleryPrev')}
               </button>
               <span className="text-sm text-white/60 flex items-center">
                 {lightboxIndex + 1} / {images.length}
@@ -142,7 +143,7 @@ export function GallerySection({
                 }}
                 disabled={lightboxIndex === images.length - 1}
               >
-                Next ›
+                {t('admin.storeBranding.galleryNext')} →
               </button>
             </div>
           )}

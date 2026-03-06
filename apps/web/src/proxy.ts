@@ -72,6 +72,8 @@ const PUBLIC_ROUTES = [
   '/product/',
   '/marketplace',
   '/moderators',
+  '/collections',
+  '/collections/',
 ];
 
 /**

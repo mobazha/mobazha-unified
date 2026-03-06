@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import type { AnnouncementBarProps } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
 
 interface Props extends AnnouncementBarProps {
   sectionId?: string;
@@ -21,6 +22,7 @@ export function AnnouncementBarSection({
   backgroundColor,
   sectionId,
 }: Props) {
+  const { t } = useI18n();
   const storageKey = sectionId ? `announcement-dismissed-${sectionId}` : null;
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined' || !storageKey) return false;
@@ -60,7 +62,7 @@ export function AnnouncementBarSection({
         <button
           onClick={handleDismiss}
           className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100"
-          aria-label="Dismiss"
+          aria-label={t('common.dismiss')}
         >
           ✕
         </button>

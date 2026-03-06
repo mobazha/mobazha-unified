@@ -44,6 +44,11 @@ apps/web/standalone-smoke-*.png
 # Demo journey screenshots (generated, not baselines)
 apps/web/e2e/demo-output/
 
+# Diagnostic scripts and output (temporary)
+apps/web/e2e-diagnostic-output/
+apps/web/e2e/diagnose-*.spec.ts
+apps/web/scripts/diagnose-*.mjs
+
 # Reports (keep structure, ignore content)
 reports/*.md
 reports/history/

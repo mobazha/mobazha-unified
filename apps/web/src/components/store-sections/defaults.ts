@@ -2,7 +2,7 @@
  * Default Store Config & Presets — PG-201
  *
  * Provides DEFAULT_STORE_CONFIG for stores without custom branding,
- * and 5 ready-made presets for quick setup.
+ * and 8 ready-made presets for quick setup (one per palette).
  */
 
 import type { StoreConfig, StoreTheme, StoreSection } from '@mobazha/core';
@@ -41,7 +41,7 @@ const defaultSections: StoreSection[] = [
     type: 'trust-badges',
     props: {
       badges: [...WEB3_TRUST_KIT],
-      layout: 'horizontal',
+      layout: 'grid',
       style: 'card',
     },
     visible: true,
@@ -78,7 +78,11 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
 export interface StorePreset {
   id: string;
   name: string;
+  /** i18n key for preset name (e.g. 'admin.storeBranding.presetMinimal') */
+  nameKey: string;
   description: string;
+  /** i18n key for preset description */
+  descriptionKey: string;
   thumbnail?: string;
   config: StoreConfig;
 }
@@ -87,13 +91,17 @@ export const STORE_PRESETS: StorePreset[] = [
   {
     id: 'minimal',
     name: 'Minimal',
+    nameKey: 'admin.storeBranding.presetMinimal',
     description: 'Clean and simple — let your products speak',
+    descriptionKey: 'admin.storeBranding.presetMinimalDesc',
     config: DEFAULT_STORE_CONFIG,
   },
   {
     id: 'ocean',
     name: 'Ocean Blue',
+    nameKey: 'admin.storeBranding.presetOcean',
     description: 'Professional blue tones with serif headings',
+    descriptionKey: 'admin.storeBranding.presetOceanDesc',
     config: {
       version: 1,
       status: 'published',
@@ -139,7 +147,7 @@ export const STORE_PRESETS: StorePreset[] = [
         {
           id: 'ocean-trust',
           type: 'trust-badges',
-          props: { badges: [...WEB3_TRUST_KIT], layout: 'horizontal', style: 'illustrated' },
+          props: { badges: [...WEB3_TRUST_KIT], layout: 'grid', style: 'illustrated' },
           visible: true,
         },
         {
@@ -154,7 +162,9 @@ export const STORE_PRESETS: StorePreset[] = [
   {
     id: 'forest',
     name: 'Forest Green',
+    nameKey: 'admin.storeBranding.presetForest',
     description: 'Natural earthy tones, great for organic or handmade goods',
+    descriptionKey: 'admin.storeBranding.presetForestDesc',
     config: {
       version: 1,
       status: 'published',
@@ -213,7 +223,9 @@ export const STORE_PRESETS: StorePreset[] = [
   {
     id: 'sunset',
     name: 'Sunset Warm',
+    nameKey: 'admin.storeBranding.presetSunset',
     description: 'Warm, inviting colors — perfect for lifestyle brands',
+    descriptionKey: 'admin.storeBranding.presetSunsetDesc',
     config: {
       version: 1,
       status: 'published',
@@ -268,7 +280,9 @@ export const STORE_PRESETS: StorePreset[] = [
   {
     id: 'midnight',
     name: 'Midnight Purple',
+    nameKey: 'admin.storeBranding.presetMidnight',
     description: 'Dark, luxurious aesthetic for premium or digital goods',
+    descriptionKey: 'admin.storeBranding.presetMidnightDesc',
     config: {
       version: 1,
       status: 'published',
@@ -320,6 +334,211 @@ export const STORE_PRESETS: StorePreset[] = [
         },
         {
           id: 'midnight-tabs',
+          type: 'store-tabs',
+          props: { tabs: ['reviews', 'following', 'followers'] },
+          visible: true,
+        },
+      ],
+    },
+  },
+  {
+    id: 'earth',
+    name: 'Earth Tone',
+    nameKey: 'admin.storeBranding.presetEarth',
+    description: 'Warm earthy tones — ideal for handmade, organic, or artisan goods',
+    descriptionKey: 'admin.storeBranding.presetEarthDesc',
+    config: {
+      version: 1,
+      status: 'published',
+      theme: {
+        palette: 'earth',
+        primaryColor: '#8b4513',
+        secondaryColor: '#c2956a',
+        accentColor: '#deb887',
+        fontFamily: 'merriweather',
+        borderRadius: 'md',
+        headerStyle: 'classic',
+      },
+      sections: [
+        {
+          id: 'earth-hero',
+          type: 'hero',
+          props: {
+            title: 'Crafted by Nature',
+            subtitle: 'Authentic products from artisan makers',
+            height: 'md',
+            textAlign: 'left',
+            overlayOpacity: 0.35,
+          },
+          visible: true,
+        },
+        {
+          id: 'earth-gallery',
+          type: 'gallery',
+          props: { images: [], columns: 3, aspectRatio: '4:3', enableLightbox: true },
+          visible: true,
+        },
+        {
+          id: 'earth-about',
+          type: 'about',
+          props: {
+            title: 'Our Story',
+            text: 'Share the journey behind your craft...',
+            imagePosition: 'left',
+            showContactInfo: true,
+          },
+          visible: true,
+        },
+        {
+          id: 'earth-contact',
+          type: 'contact',
+          props: {
+            title: 'Get in Touch',
+            showEmail: true,
+            showPhone: false,
+            showWebsite: true,
+            showSocial: true,
+          },
+          visible: true,
+        },
+        {
+          id: 'earth-tabs',
+          type: 'store-tabs',
+          props: { tabs: ['reviews', 'following', 'followers'] },
+          visible: true,
+        },
+      ],
+    },
+  },
+  {
+    id: 'lavender',
+    name: 'Lavender Dream',
+    nameKey: 'admin.storeBranding.presetLavender',
+    description: 'Soft purple tones — perfect for beauty, wellness, or lifestyle brands',
+    descriptionKey: 'admin.storeBranding.presetLavenderDesc',
+    config: {
+      version: 1,
+      status: 'published',
+      theme: {
+        palette: 'lavender',
+        primaryColor: '#6b5b95',
+        secondaryColor: '#9b8dc7',
+        accentColor: '#c3b7e0',
+        fontFamily: 'dm-sans',
+        borderRadius: 'lg',
+        headerStyle: 'hero',
+      },
+      sections: [
+        {
+          id: 'lavender-hero',
+          type: 'hero',
+          props: {
+            title: 'Glow with Confidence',
+            subtitle: 'Premium beauty & wellness essentials',
+            height: 'lg',
+            textAlign: 'center',
+            overlayOpacity: 0.4,
+          },
+          visible: true,
+        },
+        {
+          id: 'lavender-featured',
+          type: 'featured-products',
+          props: { title: 'Best Sellers', mode: 'popular', count: 3, columns: 3 },
+          visible: true,
+        },
+        {
+          id: 'lavender-testimonials',
+          type: 'testimonials',
+          props: { title: 'Loved by Our Customers', mode: 'latest', count: 4 },
+          visible: true,
+        },
+        {
+          id: 'lavender-faq',
+          type: 'faq',
+          props: {
+            title: 'Common Questions',
+            items: [
+              {
+                question: 'Are your products cruelty-free?',
+                answer: 'Yes, all our products are ethically sourced and cruelty-free.',
+              },
+              {
+                question: 'Do you offer international shipping?',
+                answer: 'Shipping details are arranged during checkout.',
+              },
+            ],
+          },
+          visible: true,
+        },
+        {
+          id: 'lavender-tabs',
+          type: 'store-tabs',
+          props: { tabs: ['reviews', 'following', 'followers'] },
+          visible: true,
+        },
+      ],
+    },
+  },
+  {
+    id: 'rose',
+    name: 'Rose Blush',
+    nameKey: 'admin.storeBranding.presetRose',
+    description: 'Elegant pink tones — great for fashion, gifts, or boutique stores',
+    descriptionKey: 'admin.storeBranding.presetRoseDesc',
+    config: {
+      version: 1,
+      status: 'published',
+      theme: {
+        palette: 'rose',
+        primaryColor: '#b5495b',
+        secondaryColor: '#d4838f',
+        accentColor: '#ebbdc4',
+        fontFamily: 'josefin-sans',
+        borderRadius: 'md',
+        headerStyle: 'hero',
+      },
+      sections: [
+        {
+          id: 'rose-announce',
+          type: 'announcement-bar',
+          props: {
+            text: '✨ New arrivals are here — shop the latest collection!',
+            dismissible: true,
+          },
+          visible: true,
+        },
+        {
+          id: 'rose-hero',
+          type: 'hero',
+          props: {
+            title: 'Curated with Love',
+            subtitle: 'Discover unique finds for every occasion',
+            height: 'md',
+            textAlign: 'center',
+            overlayOpacity: 0.35,
+          },
+          visible: true,
+        },
+        {
+          id: 'rose-grid',
+          type: 'product-grid',
+          props: {
+            showFilters: true,
+            showSearch: true,
+            columns: 3,
+            sortDefault: 'newest' as const,
+          },
+          visible: true,
+        },
+        {
+          id: 'rose-collections',
+          type: 'collections',
+          props: { title: 'Shop by Style', mode: 'all', layout: 'grid' },
+          visible: true,
+        },
+        {
+          id: 'rose-tabs',
           type: 'store-tabs',
           props: { tabs: ['reviews', 'following', 'followers'] },
           visible: true,

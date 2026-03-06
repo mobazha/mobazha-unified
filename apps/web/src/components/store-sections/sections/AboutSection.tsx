@@ -1,11 +1,13 @@
+'use client';
+
 /**
- * AboutSection — PG-201 (Server Component)
+ * AboutSection — PG-201
  *
  * Text + image two-column layout. Image position toggles left/right.
  */
 
 import type { AboutSectionProps } from '@mobazha/core';
-import { getImageUrl } from '@mobazha/core';
+import { getImageUrl, useI18n } from '@mobazha/core';
 
 export function AboutSection({
   title,
@@ -14,6 +16,7 @@ export function AboutSection({
   imagePosition,
   showContactInfo,
 }: AboutSectionProps) {
+  const { t } = useI18n();
   const imgSrc = image ? getImageUrl(image) : null;
   const isLeft = imagePosition === 'left';
 
@@ -45,7 +48,7 @@ export function AboutSection({
           </p>
           {showContactInfo && (
             <p className="mt-4 text-sm text-muted-foreground italic">
-              Contact us for more information.
+              {t('admin.storeBranding.contactUsInfo')}
             </p>
           )}
         </div>

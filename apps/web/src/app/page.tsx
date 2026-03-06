@@ -1,12 +1,25 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
 import { StoreHero } from '@/components/StoreHero';
-import { useI18n, productDataService, isMockMode, getImageUrl, isStandalone } from '@mobazha/core';
+import { StoreSections } from '@/components/store-sections';
+import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
+import {
+  useI18n,
+  useUserStore,
+  useStorefrontConfigPublic,
+  productDataService,
+  isMockMode,
+  getImageUrl,
+  isStandalone,
+} from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { getListingsWithDedup } from '@/utils/requestDedup';
+
+const HOMEPAGE_EXCLUDE_TYPES = new Set(['hero', 'testimonials', 'store-tabs']);
+const noopFn = () => {};
 
 // ProductSection 需要的展示格式
 interface DisplayProduct {
@@ -200,6 +213,21 @@ export default function HomePage() {
   ];
 
   const standalone = isStandalone();
+  const { profile } = useUserStore();
+  const standalonePeerId = standalone ? profile?.peerID : null;
+  const { config: storefrontConfig } = useStorefrontConfigPublic(standalonePeerId ?? null);
+  const hasSections = standalone && !!storefrontConfig?.sections?.length;
+  const hasHeroSection = !!storefrontConfig?.sections?.some(
+    s => s.type === 'hero' && s.visible !== false
+  );
+
+  const sectionsForHomepage = useMemo(() => {
+    if (!storefrontConfig) return storefrontConfig;
+    return {
+      ...storefrontConfig,
+      sections: storefrontConfig.sections.filter(s => !HOMEPAGE_EXCLUDE_TYPES.has(s.type)),
+    };
+  }, [storefrontConfig]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,7 +236,53 @@ export default function HomePage() {
       <Header />
 
       <main>
-        {standalone ? <StoreHero /> : <Hero />}
+        {standalone ? (
+          hasSections && hasHeroSection && profile ? (
+            <>
+              <BrandedHeroHeader
+                store={profile}
+                peerId={standalonePeerId!}
+                stats={
+                  profile.stats ?? {
+                    followerCount: 0,
+                    followingCount: 0,
+                    listingCount: trendingProducts.length,
+                    ratingCount: 0,
+                    averageRating: 0,
+                  }
+                }
+                isOwnStore
+                isAuthenticated
+                storefrontConfig={storefrontConfig}
+                isFollowing={false}
+                followLoading={false}
+                onFollowToggle={noopFn}
+                isBlocked={false}
+                blockLoading={false}
+                onBlockToggle={noopFn}
+                onMessage={noopFn}
+                onTabChange={noopFn}
+              />
+              {sectionsForHomepage?.sections?.length ? (
+                <StoreSections
+                  peerId={standalonePeerId!}
+                  profile={profile ?? undefined}
+                  ownerConfig={sectionsForHomepage}
+                />
+              ) : null}
+            </>
+          ) : hasSections ? (
+            <StoreSections
+              peerId={standalonePeerId!}
+              profile={profile ?? undefined}
+              ownerConfig={storefrontConfig}
+            />
+          ) : (
+            <StoreHero />
+          )
+        ) : (
+          <Hero />
+        )}
 
         {/* 数据来源指示器（开发模式） */}
         {process.env.NODE_ENV === 'development' && (
@@ -224,22 +298,29 @@ export default function HomePage() {
           </div>
         )}
 
-        <ProductSection
-          title={
-            standalone
-              ? t('standalone.allProducts', { defaultValue: 'All Products' })
-              : t('homeExtended.trendingNow')
-          }
-          subtitle={
-            standalone
-              ? t('standalone.browseOurCollection', { defaultValue: 'Browse our collection' })
-              : t('homeExtended.trendingSubtitle')
-          }
-          products={trendingProducts}
-          isLoading={isLoading}
-          showViewAll={!standalone}
-          viewAllHref="/marketplace?sort=trending"
-        />
+        <div id="products">
+          {standalone ? (
+            <ProductSection
+              title={t('standalone.allProducts', { defaultValue: 'All Products' })}
+              subtitle={t('standalone.browseOurCollection', {
+                defaultValue: 'Browse our collection',
+              })}
+              products={trendingProducts.slice(0, 8)}
+              isLoading={isLoading}
+              showViewAll
+              viewAllHref={standalonePeerId ? `/store/${standalonePeerId}` : '/'}
+            />
+          ) : (
+            <ProductSection
+              title={t('homeExtended.trendingNow')}
+              subtitle={t('homeExtended.trendingSubtitle')}
+              products={trendingProducts}
+              isLoading={isLoading}
+              showViewAll
+              viewAllHref="/marketplace?sort=trending"
+            />
+          )}
+        </div>
 
         {!standalone && (
           <div className="bg-card">

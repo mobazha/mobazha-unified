@@ -181,7 +181,7 @@ const DEFAULT_PROPS: DefaultPropsMap = {
   hero: {
     title: 'Welcome to our store',
     subtitle: 'Discover unique products',
-    height: 'md',
+    height: 'sm',
     textAlign: 'center',
     overlayOpacity: 0.4,
   },
