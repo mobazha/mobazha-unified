@@ -1548,16 +1548,67 @@ export const zh: TranslationResource = {
   },
 
   hero: {
-    badge: '去中心化 & 点对点',
-    titleLine1: '自由交易。',
-    titleLine2: '安全交易。',
-    subtitle:
-      '一个真正去中心化的综合交易市场，支持商品、服务和数字资产。无中介，无审查。只有您和您的客户。',
+    badge: 'Web3 建站平台',
+    titleLine1: '创建你的',
+    titleLine2: 'Web3 店铺',
+    subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
     exploreMarket: '探索市场',
     startSelling: '开始销售',
     activeStores: '活跃店铺',
     productsListed: '上架商品',
     privacyFirst: '隐私保护',
+  },
+
+  saasHome: {
+    hero: {
+      title: '创建你的 Web3 店铺',
+      subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
+      ctaCreate: '创建店铺',
+      ctaExplore: '发现店铺',
+      welcomeBack: '欢迎回来，{{storeName}}',
+      ctaDashboard: '进入管理后台',
+      ctaViewStore: '查看我的店铺',
+      ctaStartSelling: '开始销售',
+      ctaBrowse: '浏览店铺',
+    },
+    valueProps: {
+      buyerProtection: {
+        title: '买家保障',
+        description: '每笔交易由智能合约托管保障',
+      },
+      selfHosted: {
+        title: '数据自主',
+        description: '在自己的服务器上运行店铺，或使用我们的托管服务',
+      },
+      lowFees: {
+        title: '零平台费用',
+        description: '无月费，无交易佣金',
+      },
+      cryptoNative: {
+        title: '加密货币原生',
+        description: '支持 BNB、ETH、SOL 等多链即时结算',
+      },
+    },
+    featuredStores: {
+      title: '精选店铺',
+      subtitle: '看看卖家们在 Mobazha 上建立的品牌店铺',
+      visitStore: '访问店铺',
+      products: '{{count}} 件商品',
+      viewAll: '查看全部店铺',
+      emptyTitle: '成为第一个',
+      emptySubtitle: '创建你的 Web3 店铺，加入网络',
+      growingCta: '加入不断壮大的网络',
+    },
+    networkActivity: {
+      title: '网络动态',
+      subtitle: '来自全网店铺的最新上架商品',
+      fromStore: '来自 {{storeName}}',
+    },
+    stats: {
+      activeStores: '活跃店铺',
+      productsListed: '上架商品',
+      chainsSupported: '支持的链',
+    },
   },
 
   footer: {

@@ -1503,16 +1503,67 @@ export const en: TranslationResource = {
   },
 
   hero: {
-    badge: 'Decentralized & Peer-to-Peer',
-    titleLine1: 'Trade Freely.',
-    titleLine2: 'Trade Securely.',
-    subtitle:
-      'A truly decentralized marketplace for goods, services, and digital assets. No intermediaries. No censorship. Just you and your customers.',
+    badge: 'Web3 Store Builder',
+    titleLine1: 'Launch Your',
+    titleLine2: 'Web3 Store',
+    subtitle: 'Zero platform fees. Own your data. Accept crypto payments with buyer protection.',
     exploreMarket: 'Explore Market',
     startSelling: 'Start Selling',
     activeStores: 'Active Stores',
     productsListed: 'Products Listed',
     privacyFirst: 'Privacy First',
+  },
+
+  saasHome: {
+    hero: {
+      title: 'Launch Your Web3 Store',
+      subtitle: 'Zero platform fees. Own your data. Accept crypto payments with buyer protection.',
+      ctaCreate: 'Create Your Store',
+      ctaExplore: 'Explore Stores',
+      welcomeBack: 'Welcome back, {{storeName}}',
+      ctaDashboard: 'Go to Dashboard',
+      ctaViewStore: 'View Your Store',
+      ctaStartSelling: 'Start Selling',
+      ctaBrowse: 'Browse Stores',
+    },
+    valueProps: {
+      buyerProtection: {
+        title: 'Buyer Protection',
+        description: 'Every transaction is secured by smart contract escrow',
+      },
+      selfHosted: {
+        title: 'Own Your Data',
+        description: 'Run your store on your own hardware or use our hosted service',
+      },
+      lowFees: {
+        title: 'Zero Platform Fees',
+        description: 'No monthly subscriptions, no transaction commissions',
+      },
+      cryptoNative: {
+        title: 'Crypto Native',
+        description: 'Accept BNB, ETH, SOL and more with instant settlement',
+      },
+    },
+    featuredStores: {
+      title: 'Featured Stores',
+      subtitle: 'See what sellers are building on the Mobazha network',
+      visitStore: 'Visit Store',
+      products: '{{count}} products',
+      viewAll: 'View All Stores',
+      emptyTitle: 'Be the First',
+      emptySubtitle: 'Create your Web3 store and join the network',
+      growingCta: 'Join the growing network',
+    },
+    networkActivity: {
+      title: 'Network Activity',
+      subtitle: 'Recently listed products from stores across the network',
+      fromStore: 'from {{storeName}}',
+    },
+    stats: {
+      activeStores: 'Active Stores',
+      productsListed: 'Products Listed',
+      chainsSupported: 'Chains Supported',
+    },
   },
 
   footer: {
