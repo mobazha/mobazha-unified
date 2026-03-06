@@ -1,5 +1,7 @@
+'use client';
+
 /**
- * TestimonialsSection — PG-201 (Server Component)
+ * TestimonialsSection — PG-201
  *
  * Customer testimonials in a card grid.
  * mode=manual renders provided items; mode=latest is a placeholder
@@ -7,27 +9,14 @@
  */
 
 import type { TestimonialsProps } from '@mobazha/core';
-import { getImageUrl } from '@mobazha/core';
+import { getImageUrl, useI18n } from '@mobazha/core';
 
 export function TestimonialsSection({ title, mode, items, count }: TestimonialsProps) {
+  const { t } = useI18n();
   const displayItems = mode === 'manual' ? (items ?? []) : [];
   const displayCount = count ?? 3;
 
-  if (mode === 'latest' && displayItems.length === 0) {
-    return (
-      <div className="py-4">
-        <h2
-          className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6"
-          style={{ fontFamily: 'var(--store-font, inherit)' }}
-        >
-          {title}
-        </h2>
-        <p className="text-sm text-muted-foreground text-center py-8">
-          Customer reviews will appear here automatically.
-        </p>
-      </div>
-    );
-  }
+  if (mode === 'latest' && displayItems.length === 0) return null;
 
   if (!displayItems.length) return null;
 

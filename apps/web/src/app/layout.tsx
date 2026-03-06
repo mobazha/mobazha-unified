@@ -15,6 +15,7 @@ import {
   TGMiniAppProvider,
   ThemeProvider,
 } from '@/components';
+import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
 import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
@@ -131,21 +132,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         <AuthProvider>
                           <ProductModalProvider>
                             <PaymentSelectorProvider>
-                              <MainContent>{children}</MainContent>
+                              <StandaloneThemeWrapper>
+                                <MainContent>{children}</MainContent>
 
-                              <MobileNav />
+                                <MobileNav />
 
-                              {/* Chat floating button and drawer */}
-                              <ChatSystem />
+                                {/* Chat floating button and drawer */}
+                                <ChatSystem />
 
-                              {/* PWA install prompt */}
-                              <PWAInstall />
+                                {/* PWA install prompt */}
+                                <PWAInstall />
 
-                              {/* Session expired dialog (global 401 handler) */}
-                              <SessionExpiredDialog />
+                                {/* Session expired dialog (global 401 handler) */}
+                                <SessionExpiredDialog />
 
-                              {/* Toast notifications */}
-                              <Toaster />
+                                {/* Toast notifications */}
+                                <Toaster />
+                              </StandaloneThemeWrapper>
                             </PaymentSelectorProvider>
                           </ProductModalProvider>
                         </AuthProvider>

@@ -78,6 +78,10 @@ const routes: RouteObject[] = [
   { path: '/moderators', element: lazyPage(() => import('./app/moderators/page')) },
   { path: '/moderators/:id', element: lazyPage(() => import('./app/moderators/[id]/page')) },
 
+  // Collections（公开浏览 — standalone 独立站）
+  { path: '/collections', element: lazyPage(() => import('./app/collections/page')) },
+  { path: '/collections/:id', element: lazyPage(() => import('./app/collections/[id]/page')) },
+
   // 政策页面（公开浏览）
   {
     path: '/policies',

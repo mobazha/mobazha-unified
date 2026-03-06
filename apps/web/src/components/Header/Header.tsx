@@ -79,8 +79,21 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <MobazhaLogo size={36} className="text-primary" />
-            <span className="font-bold text-xl text-foreground">Mobazha</span>
+            {standaloneMode && profile ? (
+              <>
+                <Avatar
+                  src={getImageUrl(profile.avatarHashes?.small)}
+                  name={profile.name || ''}
+                  size="sm"
+                />
+                <span className="font-bold text-xl text-foreground">{profile.name}</span>
+              </>
+            ) : (
+              <>
+                <MobazhaLogo size={36} className="text-primary" />
+                <span className="font-bold text-xl text-foreground">Mobazha</span>
+              </>
+            )}
           </Link>
 
           {/* Search Bar - Desktop (hidden in standalone mode) */}

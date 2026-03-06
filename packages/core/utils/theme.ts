@@ -96,6 +96,31 @@ export function getContrastText(hex: string): string {
 }
 
 /**
+ * Blends a hex colour toward white (amount 0–1).
+ */
+export function lightenHex(hex: string, amount: number): string {
+  const c = normalizeHex(hex).replace('#', '');
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  const lr = Math.round(r + (255 - r) * amount);
+  const lg = Math.round(g + (255 - g) * amount);
+  const lb = Math.round(b + (255 - b) * amount);
+  return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+}
+
+/**
+ * Blends a hex colour toward black (amount 0–1).
+ */
+export function darkenHex(hex: string, amount: number): string {
+  const c = normalizeHex(hex).replace('#', '');
+  const r = Math.round(parseInt(c.slice(0, 2), 16) * (1 - amount));
+  const g = Math.round(parseInt(c.slice(2, 4), 16) * (1 - amount));
+  const b = Math.round(parseInt(c.slice(4, 6), 16) * (1 - amount));
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+/**
  * Validates a hex color string (#rrggbb or #rgb).
  */
 export function isValidHexColor(color: string): boolean {

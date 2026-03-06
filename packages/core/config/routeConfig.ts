@@ -31,6 +31,10 @@ export const PUBLIC_ROUTES = [
   // 仲裁员列表
   '/moderators',
   '/moderators/:id',
+
+  // Collections（standalone 独立站公开浏览）
+  '/collections',
+  '/collections/:id',
 ] as const;
 
 /**

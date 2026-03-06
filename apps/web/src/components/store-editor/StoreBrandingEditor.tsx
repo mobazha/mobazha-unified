@@ -11,9 +11,29 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useI18n, useStorefrontConfig } from '@mobazha/core';
 import type { StoreConfig, StoreTheme, StoreSection, SectionType } from '@mobazha/core';
-import { ChevronLeft, Loader2, Undo2, Monitor, Tablet, Smartphone, Sparkles } from 'lucide-react';
+import {
+  ChevronLeft,
+  Loader2,
+  Undo2,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Sparkles,
+  RotateCcw,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -42,6 +62,37 @@ function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
+type TFn = ReturnType<typeof useI18n>['t'];
+
+const SECTION_TITLE_KEYS: Record<string, string> = {
+  hero: 'admin.storeBranding.defaultHeroTitle',
+  'featured-products': 'admin.storeBranding.defaultFeaturedTitle',
+  'product-grid': 'admin.storeBranding.defaultProductGridTitle',
+  about: 'admin.storeBranding.defaultAboutTitle',
+  testimonials: 'admin.storeBranding.defaultTestimonialsTitle',
+  faq: 'admin.storeBranding.defaultFaqTitle',
+  collections: 'admin.storeBranding.defaultCollectionsTitle',
+  contact: 'admin.storeBranding.defaultContactTitle',
+};
+
+/**
+ * Replaces generic section titles/subtitles with locale-aware defaults.
+ * Mutates `config.sections` in place — callers must pass a deep-cloned config.
+ */
+function localizePresetConfig(config: StoreConfig, t: TFn): StoreConfig {
+  for (const section of config.sections) {
+    const props = section.props as unknown as Record<string, unknown>;
+    const titleKey = SECTION_TITLE_KEYS[section.type];
+    if (titleKey && typeof props.title === 'string') {
+      props.title = t(titleKey as Parameters<TFn>[0]);
+    }
+    if (section.type === 'hero' && typeof props.subtitle === 'string') {
+      props.subtitle = t('admin.storeBranding.defaultHeroSubtitle');
+    }
+  }
+  return config;
+}
+
 interface StoreBrandingEditorProps {
   backHref?: string;
 }
@@ -63,16 +114,17 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const config = useMemo(() => {
     if (draft) return draft;
     if (savedConfig) return savedConfig;
-    return DEFAULT_STORE_CONFIG;
-  }, [draft, savedConfig]);
+    return localizePresetConfig(deepClone(DEFAULT_STORE_CONFIG), t);
+  }, [draft, savedConfig, t]);
 
   const isDirty = draft !== null;
 
   const initDraft = useCallback(() => {
     if (!draft) {
-      setDraft(deepClone(savedConfig || DEFAULT_STORE_CONFIG));
+      const base = deepClone(savedConfig || DEFAULT_STORE_CONFIG);
+      setDraft(savedConfig ? base : localizePresetConfig(base, t));
     }
-  }, [draft, savedConfig]);
+  }, [draft, savedConfig, t]);
 
   const updateTheme = useCallback(
     (updates: Partial<StoreTheme>) => {
@@ -144,13 +196,16 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
     [config.sections, updateSections]
   );
 
-  const applyPreset = useCallback((presetId: string) => {
-    const preset = STORE_PRESETS.find(p => p.id === presetId);
-    if (preset) {
-      setDraft(deepClone(preset.config));
-      setShowPresets(false);
-    }
-  }, []);
+  const applyPreset = useCallback(
+    (presetId: string) => {
+      const preset = STORE_PRESETS.find(p => p.id === presetId);
+      if (preset) {
+        setDraft(localizePresetConfig(deepClone(preset.config), t));
+        setShowPresets(false);
+      }
+    },
+    [t]
+  );
 
   const handleAIApply = useCallback(
     (config: StoreConfig) => {
@@ -181,6 +236,24 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const handleDiscard = useCallback(() => {
     setDraft(null);
   }, []);
+
+  const handleResetClassic = useCallback(async () => {
+    try {
+      await save({
+        ...DEFAULT_STORE_CONFIG,
+        sections: [],
+      });
+      setDraft(null);
+      toast({ title: t('admin.storeBranding.resetClassicLayout') });
+    } catch {
+      toast({
+        title: t('admin.storeBranding.saveFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [save, toast, t]);
+
+  const hasSavedConfig = !!savedConfig?.sections?.length;
 
   if (isLoading && !savedConfig) {
     return (
@@ -225,6 +298,32 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
           >
             {t('admin.storeBranding.useTemplate')}
           </Button>
+          {hasSavedConfig && !isDirty && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <RotateCcw className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">
+                    {t('admin.storeBranding.resetClassicLayout')}
+                  </span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('admin.storeBranding.resetClassicTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('admin.storeBranding.resetClassicMessage')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleResetClassic}>
+                    {t('admin.storeBranding.resetClassicConfirm')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           {isDirty && (
             <Button variant="ghost" size="sm" onClick={handleDiscard}>
               <Undo2 className="w-4 h-4 sm:mr-1" />
@@ -366,6 +465,7 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
 
       <PresetPicker
         open={showPresets}
+        currentSections={config.sections}
         onSelect={applyPreset}
         onClose={() => setShowPresets(false)}
       />

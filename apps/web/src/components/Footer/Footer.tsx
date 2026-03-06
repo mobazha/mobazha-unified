@@ -4,7 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { Container, Grid, HStack, VStack } from '@/components/layouts';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
-import { useI18n } from '@mobazha/core';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { useI18n, useUserStore, getImageUrl, isStandalone, stripHtmlTags } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 const socialLinks = [
@@ -43,6 +44,8 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
+  const { profile } = useUserStore();
+  const standaloneMode = isStandalone();
 
   const footerLinks = {
     marketplace: [
@@ -82,6 +85,16 @@ export const Footer: React.FC = () => {
       { label: t('policies.privacyPolicy'), href: '/policies/privacy' },
       { label: t('policies.termsOfService'), href: '/policies/terms' },
     ],
+    shop: [
+      { label: t('footer.allProducts'), href: '/#products' },
+      { label: t('footer.collections'), href: '/collections' },
+    ],
+    policies: [
+      { label: t('policies.privacyPolicy'), href: '/policies/privacy' },
+      { label: t('policies.termsOfService'), href: '/policies/terms' },
+      { label: t('policies.shipping'), href: '/policies/shipping' },
+      { label: t('policies.returns'), href: '/policies/returns' },
+    ],
   };
 
   return (
@@ -89,74 +102,147 @@ export const Footer: React.FC = () => {
       {/* Desktop Footer — MobileNav replaces footer on mobile */}
       <div className="pt-16 pb-8">
         <Container size="xl">
-          <Grid cols={5} colsMobile={2} colsTablet={4} gap="lg" className="mb-12">
+          <Grid
+            cols={standaloneMode ? 4 : 5}
+            colsMobile={2}
+            colsTablet={standaloneMode ? 4 : 4}
+            gap="lg"
+            className="mb-12"
+          >
             {/* Brand */}
-            <div className="col-span-2 sm:col-span-1">
-              <Link href="/" className="flex items-center gap-2 mb-3">
-                <MobazhaLogo size={36} className="text-primary" />
-                <span className="font-bold text-xl text-foreground">Mobazha</span>
-              </Link>
-              <p className="text-sm text-muted-foreground mb-1 italic">{t('footer.slogan')}</p>
-              <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
-              <HStack gap="sm">
-                {socialLinks.map(social => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-lg hover:bg-background transition-colors text-muted-foreground hover:text-primary"
-                    aria-label={social.label}
-                  >
-                    {social.icon}
-                  </a>
-                ))}
-              </HStack>
+            <div className="col-span-2">
+              {standaloneMode && profile ? (
+                <>
+                  <Link href="/" className="flex items-center gap-2 mb-3">
+                    <Avatar
+                      src={getImageUrl(profile.avatarHashes?.small)}
+                      name={profile.name || ''}
+                      size="sm"
+                    />
+                    <span className="font-bold text-xl text-foreground">{profile.name}</span>
+                  </Link>
+                  {profile.shortDescription && (
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                      {stripHtmlTags(profile.shortDescription)}
+                    </p>
+                  )}
+                  <HStack gap="sm">
+                    {socialLinks.map(social => (
+                      <a
+                        key={social.label}
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg hover:bg-background transition-colors text-muted-foreground hover:text-primary"
+                        aria-label={social.label}
+                      >
+                        {social.icon}
+                      </a>
+                    ))}
+                  </HStack>
+                </>
+              ) : (
+                <>
+                  <Link href="/" className="flex items-center gap-2 mb-3">
+                    <MobazhaLogo size={36} className="text-primary" />
+                    <span className="font-bold text-xl text-foreground">Mobazha</span>
+                  </Link>
+                  <p className="text-sm text-muted-foreground mb-1 italic">{t('footer.slogan')}</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
+                  <HStack gap="sm">
+                    {socialLinks.map(social => (
+                      <a
+                        key={social.label}
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg hover:bg-background transition-colors text-muted-foreground hover:text-primary"
+                        aria-label={social.label}
+                      >
+                        {social.icon}
+                      </a>
+                    ))}
+                  </HStack>
+                </>
+              )}
             </div>
 
-            {/* Links */}
-            <VStack gap="sm" align="start">
-              <h4 className="font-semibold text-foreground mb-2">{t('footer.marketplace')}</h4>
-              {footerLinks.marketplace.map(link => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </VStack>
+            {standaloneMode ? (
+              <>
+                {/* Shop column */}
+                <VStack gap="sm" align="start">
+                  <h4 className="font-semibold text-foreground mb-2">{t('footer.shop')}</h4>
+                  {footerLinks.shop.map(link => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </VStack>
 
-            <VStack gap="sm" align="start">
-              <h4 className="font-semibold text-foreground mb-2">{t('footer.resources')}</h4>
-              {footerLinks.resources.map(link => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </VStack>
+                {/* Policies column */}
+                <VStack gap="sm" align="start">
+                  <h4 className="font-semibold text-foreground mb-2">{t('footer.storePolicy')}</h4>
+                  {footerLinks.policies.map(link => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </VStack>
+              </>
+            ) : (
+              <>
+                <VStack gap="sm" align="start">
+                  <h4 className="font-semibold text-foreground mb-2">{t('footer.marketplace')}</h4>
+                  {footerLinks.marketplace.map(link => (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </VStack>
 
-            <VStack gap="sm" align="start">
-              <h4 className="font-semibold text-foreground mb-2">{t('footer.community')}</h4>
-              {footerLinks.community.map(link => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </VStack>
+                <VStack gap="sm" align="start">
+                  <h4 className="font-semibold text-foreground mb-2">{t('footer.resources')}</h4>
+                  {footerLinks.resources.map(link => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </VStack>
+
+                <VStack gap="sm" align="start">
+                  <h4 className="font-semibold text-foreground mb-2">{t('footer.community')}</h4>
+                  {footerLinks.community.map(link => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </VStack>
+              </>
+            )}
           </Grid>
 
           {/* Payment Methods */}
@@ -174,31 +260,49 @@ export const Footer: React.FC = () => {
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Mobazha. {t('footer.allRightsReserved')}
+              {standaloneMode && profile ? (
+                <>
+                  © {new Date().getFullYear()} {profile.name}.{' '}
+                  <a
+                    href="https://mobazha.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Powered by Mobazha
+                  </a>
+                </>
+              ) : (
+                <>
+                  © {new Date().getFullYear()} Mobazha. {t('footer.allRightsReserved')}
+                </>
+              )}
             </p>
-            <HStack gap="md">
-              {footerLinks.legal.map(link => (
+            {!standaloneMode && (
+              <HStack gap="md">
+                {footerLinks.legal.map(link => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
                 <Link
-                  key={link.label}
-                  href={link.href}
+                  href="/policies/shipping"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {link.label}
+                  {t('policies.shipping')}
                 </Link>
-              ))}
-              <Link
-                href="/policies/shipping"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {t('policies.shipping')}
-              </Link>
-              <Link
-                href="/policies/returns"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {t('policies.returns')}
-              </Link>
-            </HStack>
+                <Link
+                  href="/policies/returns"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t('policies.returns')}
+                </Link>
+              </HStack>
+            )}
           </div>
         </Container>
       </div>

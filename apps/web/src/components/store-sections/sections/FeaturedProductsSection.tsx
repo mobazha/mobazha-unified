@@ -75,15 +75,30 @@ export function FeaturedProductsSection({
           {title}
         </h2>
       )}
-      {isPreview || isLoading ? (
+      {isPreview ? (
         <div className={`grid gap-4 ${colClass}`}>
           {Array.from({ length: count || 4 }).map((_, i) => (
-            <div key={i} className="h-64 rounded-lg bg-muted/50" />
+            <div
+              key={i}
+              className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/30"
+            >
+              <span className="text-xs text-muted-foreground">
+                {t('admin.storeBranding.sectionFeatured')}
+              </span>
+            </div>
           ))}
         </div>
-      ) : products.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground">{t('empty.noProductsFound')}</p>
-      ) : (
+      ) : isLoading ? (
+        <div className={`grid gap-4 ${colClass}`}>
+          {Array.from({ length: count || 4 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <div className="aspect-square rounded-lg bg-muted animate-pulse" />
+              <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
+              <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : products.length === 0 ? null : (
         <div className={`grid gap-4 ${colClass}`}>
           {products.map(product => (
             <a
@@ -113,7 +128,7 @@ export function FeaturedProductsSection({
                     {formatLocalPrice(
                       Number(product.price.amount || 0),
                       product.price.currency?.code || 'USD',
-                      product.price.currency?.divisibility
+                      { divisibility: product.price.currency?.divisibility }
                     )}
                   </p>
                 )}
