@@ -119,6 +119,18 @@ export function searchSafeGet<T>(path: string, fallback: T): Promise<T> {
   return safeRequest<T>(`${getSearchUrl()}${path}`, { headers: getHeadersWithContext() }, fallback);
 }
 
+/**
+ * Search GET that preserves the full response envelope (data + meta).
+ * Use for endpoints returning `{ "data": [...], "meta": { "total": N } }`.
+ */
+export function searchRawGet<T>(path: string, fallback: T): Promise<T> {
+  return safeRequest<T>(
+    `${getSearchUrl()}${path}`,
+    { headers: getHeadersWithContext(), raw: true },
+    fallback
+  );
+}
+
 export function searchPost<T>(path: string, body?: unknown): Promise<T> {
   return post<T>(`${getSearchUrl()}${path}`, body, getHeadersWithContext());
 }
