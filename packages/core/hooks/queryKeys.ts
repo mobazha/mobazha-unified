@@ -61,4 +61,9 @@ export const queryKeys = {
     all: ['receivingAccounts'] as const,
     list: () => [...queryKeys.receivingAccounts.all, 'list'] as const,
   },
+
+  stores: {
+    all: ['stores'] as const,
+    metadata: (peerID: string) => [...queryKeys.stores.all, 'metadata', peerID] as const,
+  },
 } as const;

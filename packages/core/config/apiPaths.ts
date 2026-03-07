@@ -363,4 +363,8 @@ export const SEARCH_API = {
   PROFILE_LISTINGS: (peerID: string) => `/search/v1/profiles/${peerID}/listings`,
   PROFILE_RAW: (peerID: string) => `/search/v1/profiles/${peerID}/raw`,
   REPORTS: '/search/v1/reports',
+  STORE_METADATA: (peerID: string, types?: string[]) => {
+    const base = `/search/v1/stores/${peerID}/metadata`;
+    return types?.length ? `${base}?types=${types.join(',')}` : base;
+  },
 } as const;

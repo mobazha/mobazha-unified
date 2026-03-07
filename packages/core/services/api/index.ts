@@ -143,6 +143,10 @@ export * as fiatApi from './fiat';
 // Storefront Config API (PG-201)
 export * as storefrontApi from './storefront';
 
+// Store Metadata API (cross-store routing offline fallback)
+export * as storeMetadataApi from './storeMetadata';
+export type { StoreMetadataType, StoreMetadataEntry, StoreMetadataResponse } from './storeMetadata';
+
 // Webhooks API
 export * as webhooksApi from './webhooks';
 export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from './webhooks';
