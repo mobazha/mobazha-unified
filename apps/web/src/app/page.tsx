@@ -58,8 +58,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     slug: item.slug,
     title: item.title,
     imageUrl:
-      item.thumbnail?.medium ||
-      item.thumbnail?.small ||
+      getImageUrl(item.thumbnail?.medium) ||
+      getImageUrl(item.thumbnail?.small) ||
       'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
     price: item.price?.amount || 0,
     currency: item.price?.currency?.code || 'USD',
