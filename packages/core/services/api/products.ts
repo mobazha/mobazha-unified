@@ -356,7 +356,7 @@ export async function fetchLatestListings(limit = 12): Promise<ProductListItem[]
  */
 export async function fetchFeaturedStores(limit = 6): Promise<SearchedUser[]> {
   try {
-    const result = await searchProfiles({ query: '*', pageSize: 20 });
+    const result = await searchProfiles({ query: '*', pageSize: 20, vendor: true });
     return result.users
       .map(user => ({ ...user, _score: computeStoreScore(user) }))
       .sort((a, b) => b._score - a._score)
@@ -377,7 +377,7 @@ export async function fetchPlatformStats(): Promise<{
 }> {
   try {
     const [profilesResult, listingsResult] = await Promise.all([
-      searchProfiles({ query: '*', pageSize: 1 }),
+      searchProfiles({ query: '*', pageSize: 1, vendor: true }),
       searchListings({ query: '*', pageSize: 1 }),
     ]);
     return {
@@ -502,8 +502,9 @@ export async function searchProfiles(params: {
   query: string;
   page?: number;
   pageSize?: number;
+  vendor?: boolean;
 }): Promise<SearchProfilesResponse> {
-  const { query, page = 0, pageSize = 20 } = params;
+  const { query, page = 0, pageSize = 20, vendor } = params;
 
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
@@ -511,6 +512,9 @@ export async function searchProfiles(params: {
     p: String(page),
     pageSize: String(pageSize),
   });
+  if (vendor !== undefined) {
+    queryParams.append('vendor', String(vendor));
+  }
 
   try {
     interface RawProfileResponse {
