@@ -77,6 +77,7 @@ import {
   FilterSidebar,
   StoreReviewsTab,
   FollowTab,
+  OfflineBanner,
 } from '@/components/store';
 import { StoreSections } from '@/components/store-sections';
 import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
@@ -151,12 +152,15 @@ export default function StorePage() {
   const [blockLoading, setBlockLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<UserProfile | null>(null);
-  const { listings: storeListings, isLoading: storeListingsLoading } = useStoreListings(
-    isOwnStore ? null : peerId
-  );
+  const {
+    listings: storeListings,
+    isLoading: storeListingsLoading,
+    isOffline: storeIsOffline,
+  } = useStoreListings(isOwnStore ? null : peerId);
   const { listings: myListings, isLoading: myListingsLoading } = useMyListings();
   const products = isOwnStore ? myListings : storeListings;
   const productsLoading = isOwnStore ? myListingsLoading : storeListingsLoading;
+  const isOffline = !isOwnStore && storeIsOffline;
   const prefetchProduct = usePrefetchProduct();
   const queryClient = useQueryClient();
   const [storeCollections, setStoreCollections] = useState<Collection[]>([]);
@@ -788,6 +792,7 @@ export default function StorePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {isOffline && <OfflineBanner />}
 
       <main>
         {heroMode === 'fused' ? (

@@ -3220,6 +3220,10 @@ export interface TranslationResource {
     manageDashboard?: string;
     dashboardLoginHint?: string;
   };
+  store?: TranslationSection & {
+    offlineBanner?: string;
+    offlinePriceDisclaimer?: string;
+  };
 }
 
 // i18n 上下文类型

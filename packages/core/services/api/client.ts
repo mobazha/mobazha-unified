@@ -180,6 +180,17 @@ export async function safeRequest<T>(
   }
 }
 
+/**
+ * Check if an error indicates the target store is unavailable (offline or unreachable).
+ * The backend cross-store proxy returns 503 with code STORE_UNAVAILABLE / SERVICE_UNAVAILABLE.
+ */
+export function isStoreUnavailableError(err: unknown): boolean {
+  if (err instanceof ApiError && err.status === 503) {
+    return err.code === 'STORE_UNAVAILABLE' || err.code === 'SERVICE_UNAVAILABLE';
+  }
+  return false;
+}
+
 export const apiClient = {
   request,
   get,

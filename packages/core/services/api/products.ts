@@ -6,6 +6,7 @@ import type { Product, ProductListItem, RatingIndex, RatingDetail } from '../../
 import { getImageUrl } from './config';
 import type { Image } from '../../types';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
+import { isStoreUnavailableError } from './client';
 import {
   authPost,
   authPut,
@@ -212,6 +213,40 @@ export async function getStoreListingIndex(peerID: string): Promise<ProductListI
     return [];
   }
   return data as ProductListItem[];
+}
+
+export interface StoreListingsResult {
+  listings: ProductListItem[];
+  isOffline: boolean;
+}
+
+/**
+ * Fetch store listings with automatic fallback.
+ *
+ * 1. Try the Node API (routes through cross-store proxy for standalone stores).
+ * 2. On 503 STORE_UNAVAILABLE, fall back to the Search API cached index.
+ * 3. Returns an `isOffline` flag so the UI can display an offline banner.
+ */
+export async function getStoreListingsWithFallback(
+  peerID: string,
+  pageSize = 12
+): Promise<StoreListingsResult> {
+  try {
+    const data = await publicGet<ProductListItem[] | { success: false }>(
+      NODE_API.LISTINGS_INDEX_PEER(peerID)
+    );
+    if (!data || (data as { success: false }).success === false) {
+      return { listings: [], isOffline: false };
+    }
+    return { listings: data as ProductListItem[], isOffline: false };
+  } catch (err) {
+    if (isStoreUnavailableError(err)) {
+      const fallback = await fetchStoreListings(peerID, pageSize);
+      return { listings: fallback, isOffline: true };
+    }
+    const fallback = await fetchStoreListings(peerID, pageSize);
+    return { listings: fallback, isOffline: fallback.length > 0 };
+  }
 }
 
 /**
