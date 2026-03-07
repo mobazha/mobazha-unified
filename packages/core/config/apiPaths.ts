@@ -356,7 +356,7 @@ export const HOSTING_API = {
 // ============================================================
 export const SEARCH_API = {
   SEARCH_LISTINGS: '/search/v1/listings',
-  SEARCH_PROFILES: '/search/v1/profiles?format=mobile',
+  SEARCH_PROFILES: '/search/v1/profiles',
   LISTINGS_FRESH: (limit: number) => `/search/v1/listings/fresh?limit=${limit}`,
   LISTINGS_HOT: (hours: number, limit: number) =>
     `/search/v1/listings/hot?hours=${hours}&limit=${limit}`,

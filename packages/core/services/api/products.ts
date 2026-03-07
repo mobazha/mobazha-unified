@@ -14,6 +14,7 @@ import {
   publicSafeGet,
   publicPost,
   searchSafeGet,
+  searchRawGet,
   searchPost,
 } from './helpers';
 
@@ -72,41 +73,7 @@ export interface SearchListingsResponse {
   hasMore: boolean;
 }
 
-// 用户/店铺搜索结果项
-interface ProfileSearchResultItem {
-  data: {
-    peerID: string;
-    name: string;
-    handle?: string;
-    avatarHashes?: {
-      tiny?: string;
-      small?: string;
-      medium?: string;
-      large?: string;
-      original?: string;
-    };
-    shortDescription?: string;
-    location?: string;
-    stats?: {
-      listingCount?: number;
-      followerCount?: number;
-      followingCount?: number;
-      ratingCount?: number;
-      averageRating?: number;
-    };
-  };
-}
-
-// 用户搜索 API 响应
-interface ProfileSearchApiResponse {
-  results?: {
-    results?: ProfileSearchResultItem[];
-    total?: number;
-    morePages?: boolean;
-  };
-  total?: number;
-  morePages?: boolean;
-}
+// Profile search types are defined inline in searchProfiles()
 
 // 搜索用户的响应
 export interface SearchProfilesResponse {
@@ -123,6 +90,7 @@ export interface SearchedUser {
   name: string;
   handle?: string;
   avatar?: string;
+  headerImage?: string;
   shortDescription?: string;
   location?: string;
   listingCount: number;
@@ -148,8 +116,10 @@ function transformImageUrls(image: Image | undefined | null): Image | undefined 
 /**
  * 转换搜索 API 返回的数据为 ProductListItem 数组
  */
-function parseSearchResults(response: SearchApiResponse): ProductListItem[] {
-  const items = response?.results?.results ?? [];
+function parseSearchResults(response: SearchApiResponse | SearchResultItem[]): ProductListItem[] {
+  const items: SearchResultItem[] = Array.isArray(response)
+    ? response
+    : (response?.results?.results ?? []);
   return items.map(item => {
     const thumbnail = transformImageUrls(item.data.thumbnail);
     const vendor = item.relationships?.vendor?.data;
@@ -487,14 +457,23 @@ export async function searchListings(
   }
 
   try {
-    const response = await searchSafeGet<SearchApiResponse>(
-      `${SEARCH_API.SEARCH_LISTINGS}?${queryParams.toString()}`,
-      {}
-    );
+    const raw = await searchRawGet<{
+      data?: SearchResultItem[] | SearchApiResponse;
+      meta?: { total?: number };
+      results?: { total?: number; morePages?: boolean; results?: SearchResultItem[] };
+      total?: number;
+      morePages?: boolean;
+    }>(`${SEARCH_API.SEARCH_LISTINGS}?${queryParams.toString()}`, {});
 
-    const products = parseSearchResults(response);
-    const total = response?.results?.total ?? response?.total ?? products.length;
-    const hasMore = response?.results?.morePages ?? response?.morePages ?? false;
+    const innerData = raw?.data ?? raw;
+    const products = parseSearchResults(innerData);
+
+    const total =
+      raw?.meta?.total ??
+      (innerData as SearchApiResponse)?.results?.total ??
+      raw?.total ??
+      products.length;
+    const hasMore = (innerData as SearchApiResponse)?.results?.morePages ?? raw?.morePages ?? false;
 
     return {
       products,
@@ -526,7 +505,6 @@ export async function searchProfiles(params: {
 }): Promise<SearchProfilesResponse> {
   const { query, page = 0, pageSize = 20 } = params;
 
-  // 构建查询参数
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
     q: searchQuery,
@@ -535,28 +513,40 @@ export async function searchProfiles(params: {
   });
 
   try {
-    const response = await searchSafeGet<ProfileSearchApiResponse>(
-      `${SEARCH_API.SEARCH_PROFILES}&${queryParams.toString()}`,
+    interface RawProfileResponse {
+      data?: Array<{
+        peerId?: string;
+        name?: string;
+        handle?: string;
+        avatar?: string;
+        header?: string;
+        shortDescription?: string;
+        location?: string;
+      }>;
+      meta?: { total?: number };
+    }
+
+    const raw = await searchRawGet<RawProfileResponse>(
+      `${SEARCH_API.SEARCH_PROFILES}?${queryParams.toString()}`,
       {}
     );
 
-    const items = response?.results?.results ?? [];
+    const items = raw?.data ?? [];
     const users: SearchedUser[] = items.map(item => ({
-      peerID: item.data.peerID,
-      name: item.data.name || item.data.handle || 'Unknown',
-      handle: item.data.handle,
-      avatar: item.data.avatarHashes?.medium
-        ? getImageUrl(item.data.avatarHashes.medium)
-        : undefined,
-      shortDescription: item.data.shortDescription,
-      location: item.data.location,
-      listingCount: item.data.stats?.listingCount ?? 0,
-      rating: item.data.stats?.averageRating ?? 0,
-      reviewCount: item.data.stats?.ratingCount ?? 0,
+      peerID: item.peerId ?? '',
+      name: item.name || item.handle || 'Unknown',
+      handle: item.handle,
+      avatar: item.avatar?.trim() ? getImageUrl(item.avatar.trim()) : undefined,
+      headerImage: item.header?.trim() ? getImageUrl(item.header.trim()) : undefined,
+      shortDescription: item.shortDescription,
+      location: item.location,
+      listingCount: 0,
+      rating: 0,
+      reviewCount: 0,
     }));
 
-    const total = response?.results?.total ?? response?.total ?? users.length;
-    const hasMore = response?.results?.morePages ?? response?.morePages ?? false;
+    const total = raw?.meta?.total ?? users.length;
+    const hasMore = (page + 1) * pageSize < total;
 
     return {
       users,

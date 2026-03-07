@@ -19,9 +19,19 @@ export const StoreCard: React.FC<StoreCardProps> = React.memo(({ store }) => {
       href={storeUrl}
       className="group block rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5"
     >
-      {/* Header area — brand color gradient or placeholder */}
-      <div className="h-24 sm:h-28 bg-gradient-to-br from-primary/30 via-primary/10 to-primary/5 relative">
-        {store.avatar && (
+      {/* Header area — store banner or gradient fallback */}
+      <div className="h-24 sm:h-28 relative overflow-hidden">
+        {store.headerImage ? (
+          <img
+            src={store.headerImage}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-primary/5" />
+        )}
+        {store.avatar ? (
           <div className="absolute -bottom-6 left-4">
             <img
               src={store.avatar}
@@ -30,8 +40,7 @@ export const StoreCard: React.FC<StoreCardProps> = React.memo(({ store }) => {
               loading="lazy"
             />
           </div>
-        )}
-        {!store.avatar && (
+        ) : (
           <div className="absolute -bottom-6 left-4">
             <div className="w-12 h-12 rounded-full border-2 border-card bg-primary/20 flex items-center justify-center text-lg font-bold text-primary">
               {store.name.charAt(0).toUpperCase()}
