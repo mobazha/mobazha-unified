@@ -4429,6 +4429,10 @@ export const en: TranslationResource = {
     manageDashboard: '{{provider}} Dashboard',
     dashboardLoginHint: 'Sign in to {{provider}} with {{email}}',
   },
+  store: {
+    offlineBanner: 'This store is currently offline. Showing cached data.',
+    offlinePriceDisclaimer: 'Prices may have changed',
+  },
 };
 
 export default en;

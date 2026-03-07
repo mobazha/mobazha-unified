@@ -36,3 +36,6 @@ export { StoreReviewsTab } from './StoreReviewsTab';
 // 用户卡片和关注组件
 export { UserCard } from './UserCard';
 export { FollowTab } from './FollowTab';
+
+// 离线指示 Banner（跨店铺路由 CS3）
+export { OfflineBanner } from './OfflineBanner';

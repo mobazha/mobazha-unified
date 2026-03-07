@@ -3,7 +3,7 @@
  */
 
 import type { UserProfile, UserSettings } from '../../types';
-import { get, post, ApiError } from './client';
+import { get, post, ApiError, isStoreUnavailableError } from './client';
 import { getGatewayUrl, getBuyerGatewayUrl, getSearchUrl, getAuthHeaders } from './config';
 import { isStandaloneMode } from '../../config/env';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
@@ -29,7 +29,15 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
       const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}?${timestamp}`;
       return await get<UserProfile>(url, getAuthHeaders());
     } catch {
-      return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
+      try {
+        return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
+      } catch (nodeErr) {
+        if (isStoreUnavailableError(nodeErr)) {
+          const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}`;
+          return await get<UserProfile>(url, getAuthHeaders()).catch(() => null);
+        }
+        throw nodeErr;
+      }
     }
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {

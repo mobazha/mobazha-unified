@@ -48,14 +48,16 @@ export function useFeaturedListings() {
 export function useStoreListings(peerID: string | null, _pageSize = 12) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.products.store(peerID!),
-    queryFn: () => productsApi.getStoreListingIndex(peerID!),
+    queryFn: () => productsApi.getStoreListingsWithFallback(peerID!, _pageSize),
     enabled: !!peerID,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 
   return {
-    listings: data ?? [],
+    listings: data?.listings ?? [],
     isLoading,
+    isOffline: data?.isOffline ?? false,
     error: formatQueryError(error),
     refetch,
   };

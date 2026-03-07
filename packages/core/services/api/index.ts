@@ -30,7 +30,16 @@ export {
 } from './mode';
 
 // API 客户端
-export { ApiError, request, get, post, put, del, safeRequest } from './client';
+export {
+  ApiError,
+  isStoreUnavailableError,
+  request,
+  get,
+  post,
+  put,
+  del,
+  safeRequest,
+} from './client';
 
 // 三层 API helpers（推荐使用，自动处理路由和认证）
 export {
@@ -58,6 +67,7 @@ export {
 
 // 商品 API
 export * as productsApi from './products';
+export type { StoreListingsResult } from './products';
 
 // 订单 API
 export * as ordersApi from './orders';
