@@ -93,6 +93,9 @@ export { createEmptyProfile } from './useShippingProfiles';
 // Collection 相关
 export * from './useCollections';
 
+// Store Metadata (cross-store routing offline fallback)
+export * from './useStoreMetadata';
+
 // 法币支付相关
 export * from './useFiatProviders';
 export * from './useFiatPayment';
