@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
-import dynamic from 'next/dynamic';
 import './globals.css';
 import {
   AppKitProvider,
@@ -15,15 +14,12 @@ import {
   TGMiniAppProvider,
   ThemeProvider,
 } from '@/components';
+import { ChatSystemLazy } from '@/components/ChatSystem';
 import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
 import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
-
-const ChatSystem = dynamic(() => import('@/components/ChatSystem').then(m => m.ChatSystem), {
-  ssr: false,
-});
 
 /**
  * AuthProvider 加载状态
@@ -138,7 +134,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                                 <MobileNav />
 
                                 {/* Chat floating button and drawer */}
-                                <ChatSystem />
+                                <ChatSystemLazy />
 
                                 {/* PWA install prompt */}
                                 <PWAInstall />
