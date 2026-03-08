@@ -324,7 +324,7 @@ export default function AccountSettingsPage() {
           {!isLoadingStores && standaloneStore && (
             <div>
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                {t('settings.accountBinding.standaloneStore', 'My Standalone Store')}
+                {t('settings.accountBinding.standaloneStore')}
               </h4>
               <div className="rounded-lg border border-border overflow-hidden">
                 <div className="flex items-center justify-between p-3">
