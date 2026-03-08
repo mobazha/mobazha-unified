@@ -31,6 +31,9 @@ export * from './notification';
 // 群组上下文服务
 export * from './groupContext';
 
+// 独立站店铺上下文服务
+export * from './storeContext';
+
 // RWA 服务
 export * from './rwa';
 

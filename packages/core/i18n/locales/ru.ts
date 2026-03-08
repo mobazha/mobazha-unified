@@ -1340,6 +1340,7 @@ export const ru: TranslationResource = {
       notLinked: 'Не связан',
       keepOne: 'Сохраните хотя бы один способ входа',
       keepOneDesc: 'Для безопасности аккаунта необходим хотя бы один способ входа.',
+      standaloneStore: 'Мой автономный магазин',
     },
     accessControl: {
       privacyDesc: 'Управляйте тем, кто может видеть ваш магазин',

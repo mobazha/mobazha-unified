@@ -175,8 +175,11 @@ export default defineConfig(({ mode }) => {
           rewrite: (path: string) => path.replace(/^\/buyer-api/, ''),
         },
         '/info': withStripWwwAuth({
-          target: apiBase,
+          target: env.NEXT_PUBLIC_INFO_API_URL || apiBase,
           changeOrigin: true,
+          rewrite: env.NEXT_PUBLIC_INFO_API_URL
+            ? (p: string) => p.replace(/^\/info/, '')
+            : undefined,
         }),
         '/platform': withStripWwwAuth({
           target: apiBase,

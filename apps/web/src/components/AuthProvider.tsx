@@ -11,6 +11,8 @@ import {
   attemptSilentAuth,
   completeTelegramBind,
   parseBindSessionFromStartParam,
+  storeContextService,
+  standaloneStoresApi,
 } from '@mobazha/core';
 import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
 
@@ -101,6 +103,29 @@ export function AuthProvider({
   // Mini App authentication flow
   const handleMiniAppAuth = useCallback(async () => {
     if (!isMiniApp) return false;
+
+    // Detect standalone store context from deep link (e.g. startapp=store_QmPeerID).
+    // setStoreContext persists to localStorage; getHeadersWithContext() reads it dynamically.
+    let hasDeepLinkStore = false;
+    if (isTGMiniApp && tg.initDataUnsafe?.start_param) {
+      const storePeerID = storeContextService.parseStoreFromStartParam(
+        tg.initDataUnsafe.start_param
+      );
+      if (storePeerID) {
+        storeContextService.setStoreContext(storePeerID);
+        hasDeepLinkStore = true;
+      }
+    }
+
+    // No deep link but stale localStorage context — validate asynchronously.
+    // We intentionally don't await: auth flow should not be blocked by
+    // store validation. If the stored peerID turns out stale, subsequent
+    // proxy requests will get a 404 and the context will be cleared then.
+    if (!hasDeepLinkStore && storeContextService.getStorePeerID()) {
+      void storeContextService.validateStoreContext(() =>
+        standaloneStoresApi.getMyStandaloneStore()
+      );
+    }
 
     const platform = isTGMiniApp ? 'telegram' : 'discord';
     let credential: string | null = null;

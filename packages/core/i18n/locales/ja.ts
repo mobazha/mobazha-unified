@@ -1329,6 +1329,7 @@ export const ja: TranslationResource = {
       notLinked: '未連携',
       keepOne: '少なくとも1つのログイン方法を維持してください',
       keepOneDesc: 'アカウントのセキュリティのため、少なくとも1つのログイン方法が必要です。',
+      standaloneStore: '独立ストア',
     },
     accessControl: {
       privacyDesc: 'ストアを閲覧できる人を管理',

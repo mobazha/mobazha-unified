@@ -5,6 +5,7 @@
 import { getEnvConfig, isStandaloneMode } from '../../config/env';
 import { NODE_API } from '../../config/apiPaths';
 import { getStoredToken } from '../auth/token';
+import { getStoreHeaders } from '../storeContext';
 
 // API 端点配置
 export interface ApiConfig {
@@ -235,12 +236,22 @@ export function setGroupContext(context: Record<string, string>): void {
 }
 
 /**
- * 获取包含群组上下文的 Headers
+ * 设置独立站店铺上下文 Headers（向后兼容的显式设置，
+ * 通常不需要调用——getHeadersWithContext 会自动读取 storeContext）。
+ */
+export function setStoreContextHeaders(_context: Record<string, string>): void {
+  // No-op: getHeadersWithContext() dynamically reads from storeContext.getStoreHeaders()
+  // which is backed by localStorage. This function is kept for API compatibility.
+}
+
+/**
+ * 获取包含群组上下文和店铺上下文的 Headers
  */
 export function getHeadersWithContext(): Record<string, string> {
   return {
     ...getAuthHeaders(),
     ...groupContext,
+    ...getStoreHeaders(),
   };
 }
 

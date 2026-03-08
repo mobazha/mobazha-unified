@@ -25,10 +25,20 @@ import {
   handleLinkCallback,
   clearLinkCallbackParams,
   SUPPORTED_PROVIDERS,
+  standaloneStoresApi,
 } from '@mobazha/core';
-import type { LinkedAccount, OAuthProvider, ProviderInfo } from '@mobazha/core';
+import type { LinkedAccount, OAuthProvider, ProviderInfo, StandaloneStore } from '@mobazha/core';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
-import { Link2, Unlink, AlertCircle, Check } from 'lucide-react';
+import {
+  Link2,
+  Unlink,
+  AlertCircle,
+  Check,
+  Server,
+  ExternalLink,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
 
 export default function AccountSettingsPage() {
@@ -43,6 +53,10 @@ export default function AccountSettingsPage() {
   const [linkingProvider, setLinkingProvider] = useState<OAuthProvider | null>(null);
   const [showUnlinkDialog, setShowUnlinkDialog] = useState(false);
   const [providerToUnlink, setProviderToUnlink] = useState<LinkedAccount | null>(null);
+
+  // Standalone store state (V1: one store per user)
+  const [standaloneStore, setStandaloneStore] = useState<StandaloneStore | null>(null);
+  const [isLoadingStores, setIsLoadingStores] = useState(true);
 
   // 加载已绑定账号
   const loadLinkedAccounts = useCallback(async () => {
@@ -101,6 +115,21 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     loadLinkedAccounts();
   }, [loadLinkedAccounts]);
+
+  // Load standalone store
+  useEffect(() => {
+    async function loadStore() {
+      try {
+        const store = await standaloneStoresApi.getMyStandaloneStore();
+        setStandaloneStore(store);
+      } catch {
+        // Not critical — user may not have any standalone store
+      } finally {
+        setIsLoadingStores(false);
+      }
+    }
+    loadStore();
+  }, []);
 
   // 获取未绑定的 Provider
   const getAvailableProviders = () => {
@@ -287,6 +316,68 @@ export default function AccountSettingsPage() {
               </h4>
               <div className="rounded-lg border border-border overflow-hidden">
                 {availableProviders.map(renderAvailableProviderCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Standalone Store Section (V1: single store per user) */}
+          {!isLoadingStores && standaloneStore && (
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                {t('settings.accountBinding.standaloneStore', 'My Standalone Store')}
+              </h4>
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="flex items-center justify-between p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <Server className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">
+                          {standaloneStore.domain ||
+                            `${standaloneStore.peer_id.slice(0, 8)}...${standaloneStore.peer_id.slice(-6)}`}
+                        </p>
+                        {standaloneStore.last_heartbeat &&
+                        Date.now() - new Date(standaloneStore.last_heartbeat).getTime() <
+                          5 * 60 * 1000 ? (
+                          <Wifi className="w-3.5 h-3.5 text-green-500" />
+                        ) : (
+                          <WifiOff className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {standaloneStore.connectivity === 'public'
+                          ? 'Public'
+                          : standaloneStore.connectivity === 'tunnel'
+                            ? 'Tunnel'
+                            : 'NAT'}
+                        {standaloneStore.endpoint_url &&
+                          (() => {
+                            try {
+                              const hostname = new URL(standaloneStore.endpoint_url).hostname;
+                              return (
+                                <>
+                                  {' · '}
+                                  <a
+                                    href={standaloneStore.endpoint_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline inline-flex items-center gap-0.5"
+                                  >
+                                    {hostname}
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </>
+                              );
+                            } catch {
+                              return null;
+                            }
+                          })()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

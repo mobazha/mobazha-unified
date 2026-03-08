@@ -1298,6 +1298,7 @@ export const zh: TranslationResource = {
       keepOne: '至少保留一种登录方式',
       keepOneDesc:
         '绑定多个账号后，您可以使用任意一个登录。为确保账号安全，至少需要保留一种登录方式。',
+      standaloneStore: '我的独立站',
     },
     // 访问控制
     accessControl: {

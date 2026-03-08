@@ -1315,6 +1315,7 @@ export const de: TranslationResource = {
       notLinked: 'Nicht verknüpft',
       keepOne: 'Mindestens eine Anmeldemethode beibehalten',
       keepOneDesc: 'Für die Kontosicherheit muss mindestens eine Anmeldemethode aktiv bleiben.',
+      standaloneStore: 'Mein eigenständiger Shop',
     },
     accessControl: {
       privacyDesc: 'Kontrollieren Sie, wer Ihren Shop sehen kann',
