@@ -167,6 +167,33 @@ const request = {
 };
 ```
 
+## Standalone Store API (Phase CS)
+
+### Hosting Endpoints
+
+| Method | Path                                         | Auth                     | Description        |
+| ------ | -------------------------------------------- | ------------------------ | ------------------ |
+| POST   | `/platform/v1/stores/register`               | `X-Standalone-Store-Key` | 独立站注册         |
+| POST   | `/platform/v1/stores/heartbeat`              | `X-Standalone-Store-Key` | 心跳续期           |
+| GET    | `/platform/v1/stores/my-stores`              | JWT                      | 获取我的独立站列表 |
+| GET    | `/platform/v1/stores/bind/start?peerID=xxx`  | JWT                      | 启动 OAuth 绑定    |
+| GET    | `/platform/v1/stores/bind/status?peerID=xxx` | JWT                      | 查询绑定状态       |
+| GET    | `/platform/v1/auth/certificate`              | Public                   | Casdoor 公钥证书   |
+
+### Frontend Service Files
+
+| File                                             | Description                                                 |
+| ------------------------------------------------ | ----------------------------------------------------------- |
+| `packages/core/services/storeContext.ts`         | X-Store-PeerID 注入 + localStorage 持久化                   |
+| `packages/core/services/api/standaloneStores.ts` | Standalone store API 封装                                   |
+| `packages/core/services/api/config.ts`           | `getHeadersWithContext()` 自动注入 store headers            |
+| `packages/core/config/apiPaths.ts`               | `HOSTING_API.STORES_MY_STORES`, `BIND_START`, `BIND_STATUS` |
+
+### X-Store-PeerID Header
+
+Mini App 管理独立站时，自动注入 `X-Store-PeerID: {peerID}` header。
+SaaS 收到后通过 cross-store proxy middleware 路由到目标独立站。
+
 ## Debugging Tips
 
 1. **Check backend expected structure**: Look at `mobazha3.0/pkg/models/*.go` type definitions
