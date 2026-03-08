@@ -171,16 +171,59 @@ export async function fetchFeaturedListings(): Promise<ProductListItem[]> {
 }
 
 /**
+ * Search API profile-listings 返回的原始项格式
+ */
+interface ProfileListingItem {
+  slug: string;
+  title: string;
+  image?: string;
+  thumbnail?: Image;
+  price?: string | number;
+  peerID?: string;
+  vendorPeerID?: string;
+  cid?: string;
+  hash?: string;
+  contractType?: string;
+  description?: string;
+  available?: boolean;
+  nsfw?: { status: boolean };
+  [key: string]: unknown;
+}
+
+function imageFromCid(cid: string | undefined): Image | undefined {
+  if (!cid) return undefined;
+  const trimmed = cid.trim();
+  if (!trimmed) return undefined;
+  return { tiny: trimmed, small: trimmed, medium: trimmed, large: trimmed, original: trimmed };
+}
+
+/**
  * 获取店铺商品列表
  */
 export async function fetchStoreListings(
   storePeerID: string,
   pageSize = 9
 ): Promise<ProductListItem[]> {
-  return searchSafeGet<ProductListItem[]>(
+  const raw = await searchSafeGet<ProfileListingItem[]>(
     `${SEARCH_API.PROFILE_LISTINGS(storePeerID)}?pageSize=${pageSize}`,
     []
   );
+  return raw.map(item => ({
+    slug: item.slug,
+    title: item.title,
+    thumbnail: item.thumbnail ?? imageFromCid(item.image) ?? ({} as Image),
+    price:
+      typeof item.price === 'object'
+        ? (item.price as unknown as ProductListItem['price'])
+        : {
+            amount: Number(item.price) || 0,
+            currency: { code: 'USD', divisibility: 2 },
+          },
+    vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
+    cid: item.cid ?? item.hash,
+    contractType: item.contractType as ProductListItem['contractType'],
+    nsfw: item.nsfw?.status,
+  }));
 }
 
 /**
