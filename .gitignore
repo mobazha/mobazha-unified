@@ -62,3 +62,5 @@ pnpm-debug.log*
 # OS
 Thumbs.db
 
+
+apps/web/e2e/e2e-artifacts/*
