@@ -224,7 +224,7 @@ export default function ModeratorSettingsPage() {
 
   return (
     <div className="pb-20">
-      <SettingsPageHeader title={t('settings.sidebar.moderator')} />
+      <SettingsPageHeader title={t('settings.sidebar.moderation')} />
 
       {toast && (
         <div

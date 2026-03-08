@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { profileDataService, useI18n, getImageUrl } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { Store, MapPin, Star, Package, Search } from 'lucide-react';
 
 export function StoreHero() {
+  const router = useRouter();
   const { t } = useI18n();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,7 +129,12 @@ export function StoreHero() {
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
                     const q = (e.target as HTMLInputElement).value.trim();
-                    if (q) window.location.href = `/marketplace?q=${encodeURIComponent(q)}`;
+                    if (q) {
+                      const dest = profile?.peerID
+                        ? `/store/${profile.peerID}?q=${encodeURIComponent(q)}`
+                        : `/search?q=${encodeURIComponent(q)}`;
+                      router.push(dest);
+                    }
                   }
                 }}
               />

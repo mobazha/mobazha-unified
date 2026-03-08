@@ -128,6 +128,22 @@ export function ProductDetailMobile({
 
   return (
     <div data-testid="product-detail-mobile">
+      {/* Cart success toast */}
+      {cartSuccess && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg text-sm font-medium">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            {t('product.addedToCart')}
+          </div>
+        </div>
+      )}
       {/* --- Image Swiper --- */}
       <div className="relative w-full aspect-square bg-muted">
         {imageUrls.length > 0 ? (

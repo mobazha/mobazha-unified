@@ -178,6 +178,7 @@ export const zh: TranslationResource = {
     login: '登录',
     loginRegister: '登录 / 注册',
     // 错误消息
+    invalidCredentials: '用户名或密码错误',
     loginFailed: '登录失败，请重试',
     usernamePasswordRequired: '请输入用户名和密码',
     // 托管模式信息

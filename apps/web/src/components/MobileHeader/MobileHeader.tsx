@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation';
 import { Container } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n, useUserStore, getImageUrl, isStandalone } from '@mobazha/core';
-import { Search, ScanLine } from 'lucide-react';
+import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
 
 export const MobileHeader: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
-  const { profile } = useUserStore();
+  const { profile, isAuthenticated, authMode } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
   const standaloneMode = isStandalone();
+  const isSeller = standaloneMode && authMode === 'basic';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +32,37 @@ export const MobileHeader: React.FC = () => {
     <header className="md:hidden sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
       <Container size="xl">
         <div className="flex items-center gap-2 h-14 py-2">
-          {standaloneMode && profile ? (
-            <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
-              <Avatar
-                src={getImageUrl(profile.avatarHashes?.small)}
-                name={profile.name || ''}
-                size="sm"
-              />
-              <span className="font-bold text-base text-foreground truncate">{profile.name}</span>
-            </Link>
+          {standaloneMode ? (
+            <>
+              <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+                {profile ? (
+                  <>
+                    <Avatar
+                      src={getImageUrl(profile.avatarHashes?.small)}
+                      name={profile.name || ''}
+                      size="sm"
+                    />
+                    <span className="font-bold text-base text-foreground truncate">
+                      {profile.name}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                    <div className="w-24 h-4 rounded bg-muted animate-pulse" />
+                  </>
+                )}
+              </Link>
+              {isAuthenticated && isSeller && (
+                <Link
+                  href="/admin"
+                  className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors"
+                  aria-label={t('admin.title')}
+                >
+                  <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+                </Link>
+              )}
+            </>
           ) : (
             <>
               <form onSubmit={handleSearch} className="flex-1 min-w-0">
