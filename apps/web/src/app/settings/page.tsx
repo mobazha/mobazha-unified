@@ -107,7 +107,7 @@ export default function SettingsPage() {
       <div className="bg-card rounded-lg border overflow-hidden mb-4">
         <SettingsCategory
           icon={<Scale className="w-5 h-5" />}
-          title={t('settings.sidebar.moderator')}
+          title={t('settings.sidebar.moderation')}
           description={t('moderatorSettings.description')}
           onClick={() => router.push('/settings/moderation')}
         />

@@ -48,7 +48,16 @@ export function AdminHeader({ title }: AdminHeaderProps) {
       data-testid="admin-header"
     >
       <div className="flex items-center gap-3">
-        {!standaloneMode && (
+        {standaloneMode ? (
+          <button
+            onClick={handleViewStore}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+            data-testid="admin-back-to-store"
+          >
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('userMenu.viewStore')}</span>
+          </button>
+        ) : (
           <Link
             href="/"
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"

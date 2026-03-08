@@ -178,6 +178,7 @@ export const en: TranslationResource = {
     login: 'Login',
     loginRegister: 'Login / Register',
     // Error messages
+    invalidCredentials: 'Invalid username or password',
     loginFailed: 'Login failed, please try again',
     usernamePasswordRequired: 'Please enter username and password',
     // Hosted mode info

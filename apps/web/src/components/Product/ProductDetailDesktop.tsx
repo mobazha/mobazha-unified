@@ -136,6 +136,22 @@ export function ProductDetailDesktop({
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
+      {/* Cart success toast */}
+      {cartSuccess && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg text-sm font-medium">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            {t('product.addedToCart')}
+          </div>
+        </div>
+      )}
       {/* 弹框模式顶部商家栏 - 不使用 sticky，避免遮挡图片 */}
       {isModal && vendor && (
         <div className="bg-background border-b border-border px-4 py-3 pr-14">

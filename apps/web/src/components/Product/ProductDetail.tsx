@@ -367,7 +367,10 @@ export function ProductDetail({
   const addCartItem = useCartStore(state => state.addItem);
 
   const handleAddToCart = useCallback(() => {
-    if (!product || !product.vendorID?.peerID) return;
+    if (!product) return;
+
+    const vendorPeerID = product.vendorID?.peerID || peerID || currentUserProfile?.peerID;
+    if (!vendorPeerID) return;
 
     const thumbnail = product.item?.images?.[0] ?? {
       tiny: '',
@@ -386,15 +389,15 @@ export function ProductDetail({
         title: product.item?.title || product.slug,
         thumbnail,
         price: { amount: price, currency: { code: currency, divisibility } },
-        vendorPeerID: product.vendorID.peerID,
-        vendorHandle: product.vendorID.handle,
+        vendorPeerID,
+        vendorHandle: product.vendorID?.handle,
       },
       quantity,
     });
 
     setCartSuccess(true);
     setTimeout(() => setCartSuccess(false), 3000);
-  }, [product, quantity, addCartItem]);
+  }, [product, quantity, addCartItem, peerID, currentUserProfile?.peerID]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {

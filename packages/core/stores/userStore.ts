@@ -12,6 +12,7 @@ import { persist, devtools } from 'zustand/middleware';
 import type { UserProfile, UserSettings, AuthCredentials } from '../types';
 import { profileApi, authGet, ApiError } from '../services/api';
 import { NODE_API } from '../config/apiPaths';
+import { getTranslation } from '../i18n/i18n';
 import {
   handleOAuthCallback,
   saveToken,
@@ -148,10 +149,10 @@ export const useUserStore = create<UserState>()(
           } catch (err) {
             const msg =
               err instanceof ApiError && err.status === 401
-                ? '用户名或密码错误'
+                ? getTranslation('login.invalidCredentials')
                 : err instanceof Error
                   ? err.message
-                  : '登录失败';
+                  : getTranslation('login.loginFailed');
             set({
               error: msg,
               isLoading: false,
@@ -171,7 +172,7 @@ export const useUserStore = create<UserState>()(
 
             if (!result.success || !result.token) {
               set({
-                error: result.error || '登录失败',
+                error: result.error || getTranslation('login.loginFailed'),
                 isLoading: false,
               });
               return false;
@@ -232,7 +233,7 @@ export const useUserStore = create<UserState>()(
             return true;
           } catch (err) {
             set({
-              error: err instanceof Error ? err.message : '登录失败',
+              error: err instanceof Error ? err.message : getTranslation('login.loginFailed'),
               isLoading: false,
               isSessionRestored: true,
             });
@@ -393,7 +394,7 @@ export const useUserStore = create<UserState>()(
 
             if (!result.success || !result.token) {
               set({
-                error: result.error || '登录失败',
+                error: result.error || getTranslation('login.loginFailed'),
                 isLoading: false,
               });
               return false;
@@ -460,7 +461,7 @@ export const useUserStore = create<UserState>()(
             return true;
           } catch (err) {
             set({
-              error: err instanceof Error ? err.message : '登录失败',
+              error: err instanceof Error ? err.message : getTranslation('login.loginFailed'),
               isLoading: false,
               isSessionRestored: true,
             });
@@ -513,7 +514,7 @@ export const useUserStore = create<UserState>()(
             return true;
           } catch (err) {
             set({
-              error: err instanceof Error ? err.message : '登录失败',
+              error: err instanceof Error ? err.message : getTranslation('login.loginFailed'),
               isLoading: false,
               isSessionRestored: true,
             });

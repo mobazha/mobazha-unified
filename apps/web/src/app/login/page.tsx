@@ -175,7 +175,8 @@ function LoginPageContent() {
 
     const success = await login({ username, password });
     if (success) {
-      const redirectPath = getRedirectFromParams(searchParams);
+      const explicit = searchParams.get('redirect');
+      const redirectPath = explicit ? getRedirectFromParams(searchParams) : '/admin';
       router.push(redirectPath);
     }
   };
