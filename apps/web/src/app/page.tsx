@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { MobileHeader } from '@/components/MobileHeader';
 import { StoreHero } from '@/components/StoreHero';
@@ -69,14 +69,13 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     vendorPeerID: item.vendorPeerID,
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,
-    freeShipping: item.freeShipping?.length ? true : false,
+    freeShipping: !!item.freeShipping?.length,
     isDigital: item.contractType === 'SERVICE' || item.contractType === 'DIGITAL_GOOD',
     moderators: item.moderators,
   };
 }
 
 export default function HomePage() {
-  const { t } = useI18n();
   const standalone = isStandalone();
 
   if (standalone) {
@@ -98,56 +97,44 @@ function SaaSHomePage() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  const loadedRef = useRef(false);
-
   useEffect(() => {
-    if (loadedRef.current) return;
     let cancelled = false;
 
-    async function fetchSaaSData() {
-      loadedRef.current = true;
+    productDataService
+      .getFeaturedStores(6)
+      .then(stores => {
+        if (!cancelled) {
+          setFeaturedStores(stores);
+          setIsLoadingStores(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoadingStores(false);
+      });
 
-      // Fetch stores
-      productDataService
-        .getFeaturedStores(6)
-        .then(stores => {
-          if (!cancelled) {
-            setFeaturedStores(stores);
-            setIsLoadingStores(false);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setIsLoadingStores(false);
-        });
+    productDataService
+      .getLatestProducts(12)
+      .then(products => {
+        if (!cancelled) {
+          setLatestProducts(products.map(convertToDisplayProduct));
+          setIsLoadingProducts(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoadingProducts(false);
+      });
 
-      // Fetch latest products
-      productDataService
-        .getLatestProducts(12)
-        .then(products => {
-          if (!cancelled) {
-            setLatestProducts(products.map(convertToDisplayProduct));
-            setIsLoadingProducts(false);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setIsLoadingProducts(false);
-        });
-
-      // Fetch platform stats
-      productDataService
-        .getPlatformStats()
-        .then(stats => {
-          if (!cancelled) {
-            setPlatformStats(stats);
-            setIsLoadingStats(false);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setIsLoadingStats(false);
-        });
-    }
-
-    fetchSaaSData();
+    productDataService
+      .getPlatformStats()
+      .then(stats => {
+        if (!cancelled) {
+          setPlatformStats(stats);
+          setIsLoadingStats(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoadingStats(false);
+      });
 
     return () => {
       cancelled = true;
@@ -201,7 +188,6 @@ function StandaloneHomePage() {
   const [trendingProducts, setTrendingProducts] = useState<DisplayProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadedRef = useRef(false);
   const { profile } = useUserStore();
   const standalonePeerId = profile?.peerID ?? null;
   const { config: storefrontConfig } = useStorefrontConfigPublic(standalonePeerId);
@@ -219,18 +205,15 @@ function StandaloneHomePage() {
   }, [storefrontConfig]);
 
   useEffect(() => {
-    if (loadedRef.current) return;
     let cancelled = false;
 
     async function fetchProducts() {
-      setIsLoading(true);
       try {
         const localListings = (await getListingsWithDedup('local-store', () =>
           productDataService.getMyListings()
         )) as ProductListItem[];
 
         if (!cancelled) {
-          loadedRef.current = true;
           setTrendingProducts(localListings.map(convertToDisplayProduct));
         }
       } catch (error) {

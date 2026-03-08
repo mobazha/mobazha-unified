@@ -347,6 +347,11 @@ export const HOSTING_API = {
   // --- Fiat Payment Onboarding (SaaS) ---
   FIAT_ONBOARDING_START: (provider: string) => `/platform/v1/fiat/providers/${provider}/onboarding`,
   FIAT_ONBOARDING_STATUS: (provider: string) => `/platform/v1/fiat/providers/${provider}/status`,
+
+  // --- Standalone Store Registry ---
+  STORES_MY_STORES: '/platform/v1/stores/my-stores',
+  STORES_BIND_START: '/platform/v1/stores/bind/start',
+  STORES_BIND_STATUS: '/platform/v1/stores/bind/status',
 } as const;
 
 // ============================================================
@@ -365,6 +370,6 @@ export const SEARCH_API = {
   REPORTS: '/search/v1/reports',
   STORE_METADATA: (peerID: string, types?: string[]) => {
     const base = `/search/v1/stores/${peerID}/metadata`;
-    return types?.length ? `${base}?types=${types.join(',')}` : base;
+    return types?.length ? `${base}?type=${types.join(',')}` : base;
   },
 } as const;

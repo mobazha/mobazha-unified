@@ -656,6 +656,7 @@ export interface TranslationResource {
       notLinked: string;
       keepOne: string;
       keepOneDesc: string;
+      standaloneStore: string;
     };
   };
 

@@ -1348,6 +1348,7 @@ export const fr: TranslationResource = {
       keepOne: 'Conserver au moins une méthode de connexion',
       keepOneDesc:
         'Pour la sécurité de votre compte, au moins une méthode de connexion doit rester active.',
+      standaloneStore: 'Ma boutique indépendante',
     },
     accessControl: {
       privacyDesc: 'Contrôlez qui peut voir votre boutique',

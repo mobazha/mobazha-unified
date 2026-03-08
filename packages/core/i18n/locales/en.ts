@@ -1326,6 +1326,7 @@ export const en: TranslationResource = {
       keepOne: 'Keep at least one login method',
       keepOneDesc:
         'After linking multiple accounts, you can log in with any of them. For account security, at least one login method must be kept.',
+      standaloneStore: 'My Standalone Store',
     },
     // Access Control
     accessControl: {

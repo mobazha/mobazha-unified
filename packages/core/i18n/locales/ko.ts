@@ -1292,6 +1292,7 @@ export const ko: TranslationResource = {
       notLinked: '미연결',
       keepOne: '최소 하나의 로그인 방법을 유지하세요',
       keepOneDesc: '계정 보안을 위해 최소 하나의 로그인 방법이 필요합니다.',
+      standaloneStore: '독립 스토어',
     },
     accessControl: {
       privacyDesc: '스토어를 볼 수 있는 사람 관리',

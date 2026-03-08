@@ -11,6 +11,7 @@ export {
   getSearchUrl,
   getMbzGatewayUrl,
   setGroupContext,
+  setStoreContextHeaders,
   getHeadersWithContext,
   getImageUrl,
   setStandaloneBuyerAuth,
@@ -146,6 +147,10 @@ export * as storefrontApi from './storefront';
 // Store Metadata API (cross-store routing offline fallback)
 export * as storeMetadataApi from './storeMetadata';
 export type { StoreMetadataType, StoreMetadataEntry, StoreMetadataResponse } from './storeMetadata';
+
+// Standalone Stores API
+export * as standaloneStoresApi from './standaloneStores';
+export type { StandaloneStore } from './standaloneStores';
 
 // Webhooks API
 export * as webhooksApi from './webhooks';

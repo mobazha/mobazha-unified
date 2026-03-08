@@ -1316,6 +1316,7 @@ export const es: TranslationResource = {
       keepOne: 'Mantener al menos un método de inicio de sesión',
       keepOneDesc:
         'Para la seguridad de tu cuenta, debes mantener al menos un método de inicio de sesión.',
+      standaloneStore: 'Mi tienda independiente',
     },
     accessControl: {
       privacyDesc: 'Controla quién puede ver tu tienda',

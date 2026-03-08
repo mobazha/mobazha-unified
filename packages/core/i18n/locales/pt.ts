@@ -1302,6 +1302,7 @@ export const pt: TranslationResource = {
       notLinked: 'Não vinculado',
       keepOne: 'Mantenha pelo menos um método de login',
       keepOneDesc: 'Para a segurança da sua conta, pelo menos um método de login deve ser mantido.',
+      standaloneStore: 'Minha loja independente',
     },
     accessControl: {
       privacyDesc: 'Controle quem pode ver sua loja',
