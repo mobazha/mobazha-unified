@@ -9,6 +9,7 @@ import {
   POPULAR_COUNTRIES,
   FIAT_CURRENCIES,
   getPopularCurrencies,
+  getLoginRedirectPath,
 } from '@mobazha/core';
 import { parseJwtToken, getStoredToken } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
@@ -201,7 +202,8 @@ export default function OnboardingPage() {
         await Promise.all(sideEffects);
       }
 
-      router.replace('/');
+      const savedRedirect = getLoginRedirectPath();
+      router.replace(savedRedirect && savedRedirect !== '/' ? savedRedirect : '/');
     } catch {
       toast({
         title: t('common.error'),

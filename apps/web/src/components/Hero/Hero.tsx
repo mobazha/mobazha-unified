@@ -29,6 +29,8 @@ export const Hero: React.FC = () => {
 function AnonymousHero({ isAnonymous }: { isAnonymous: boolean }) {
   const { t } = useI18n();
 
+  const ctaHref = isAnonymous ? '/login?redirect=%2Fadmin' : '/admin';
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)] py-10 sm:py-16 lg:py-24">
       {/* Background Pattern */}
@@ -64,7 +66,7 @@ function AnonymousHero({ isAnonymous }: { isAnonymous: boolean }) {
           </p>
 
           <HStack gap="md" justify="center" wrap>
-            <Link href="/login">
+            <Link href={ctaHref}>
               <Button size="lg" className="shadow-lg shadow-[var(--hero-glow)]/25">
                 {isAnonymous ? t('saasHome.hero.ctaCreate') : t('saasHome.hero.ctaStartSelling')}
               </Button>
