@@ -152,6 +152,8 @@ jobs:
       github.event_name == 'push' ||
       github.event.inputs.target == 'saas' ||
       github.event.inputs.target == 'all'
+    permissions:
+      packages: read
     environment: test-saas
     steps:
       - name: Deploy to SaaS server
@@ -160,13 +162,14 @@ jobs:
           host: ${{ secrets.SAAS_HOST }}
           username: root
           key: ${{ secrets.SAAS_SSH_KEY }}
+          envs: GHCR_TOKEN
           script: |
             set -e
-            GHCR_IMAGE="${{ env.REGISTRY }}/${{ github.repository }}/web-saas:latest"
+            GHCR_IMAGE="ghcr.io/${{ github.repository }}/web-saas:latest"
             LOCAL_IMAGE="mobazha-web-saas:test"
 
             echo "Pulling image from GHCR..."
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull "$GHCR_IMAGE"
 
             echo "Retagging..."
@@ -182,6 +185,8 @@ jobs:
 
             echo "Cleaning up old images..."
             docker image prune -f
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ============================================================
   # Deploy: Standalone
@@ -194,6 +199,8 @@ jobs:
       github.event_name == 'push' ||
       github.event.inputs.target == 'standalone' ||
       github.event.inputs.target == 'all'
+    permissions:
+      packages: read
     environment: test-standalone
     steps:
       - name: Deploy to Standalone server
@@ -202,13 +209,14 @@ jobs:
           host: ${{ secrets.STANDALONE_HOST }}
           username: root
           key: ${{ secrets.STANDALONE_SSH_KEY }}
+          envs: GHCR_TOKEN
           script: |
             set -e
-            GHCR_IMAGE="${{ env.REGISTRY }}/${{ github.repository }}/web-standalone:latest"
+            GHCR_IMAGE="ghcr.io/${{ github.repository }}/web-standalone:latest"
             LOCAL_IMAGE="mobazha-web-standalone:test"
 
             echo "Pulling image from GHCR..."
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull "$GHCR_IMAGE"
 
             echo "Retagging..."
@@ -224,3 +232,5 @@ jobs:
 
             echo "Cleaning up old images..."
             docker image prune -f
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
