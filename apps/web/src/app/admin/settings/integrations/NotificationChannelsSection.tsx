@@ -54,6 +54,33 @@ const CHANNEL_FIELD_META: Record<string, Record<string, FieldMeta>> = {
       help: 'admin.integrations.telegramChatIdHelp',
     },
   },
+  email: {
+    recipient_email: {
+      placeholder: 'you@example.com',
+      help: 'admin.integrations.emailRecipientHelp',
+    },
+    sender_email: {
+      placeholder: 'Mobazha <notifications@mobazha.com>',
+      help: 'admin.integrations.emailSenderHelp',
+    },
+    api_key: {
+      placeholder: 're_xxxxxxxx',
+      help: 'admin.integrations.emailApiKeyHelp',
+    },
+    smtp_server: {
+      placeholder: 'smtp.gmail.com',
+      help: 'admin.integrations.emailSmtpServerHelp',
+    },
+    smtp_port: {
+      placeholder: '587',
+    },
+    smtp_username: {
+      placeholder: 'you@example.com',
+    },
+    smtp_password: {
+      placeholder: '••••••••',
+    },
+  },
 };
 
 const FALLBACK_CHANNEL_TYPES: ChannelTypeInfo[] = [
@@ -63,6 +90,19 @@ const FALLBACK_CHANNEL_TYPES: ChannelTypeInfo[] = [
     fields: [
       { key: 'bot_token', label: 'Bot Token', type: 'password', required: true },
       { key: 'chat_id', label: 'Chat ID', type: 'text', required: true },
+    ],
+  },
+  {
+    type: 'email',
+    label: 'Email',
+    fields: [
+      { key: 'recipient_email', label: 'Recipient Email', type: 'text', required: true },
+      { key: 'sender_email', label: 'Sender Email / Name', type: 'text', required: false },
+      { key: 'api_key', label: 'Resend API Key', type: 'password', required: false },
+      { key: 'smtp_server', label: 'SMTP Server', type: 'text', required: false },
+      { key: 'smtp_port', label: 'SMTP Port', type: 'text', required: false },
+      { key: 'smtp_username', label: 'SMTP Username', type: 'text', required: false },
+      { key: 'smtp_password', label: 'SMTP Password', type: 'password', required: false },
     ],
   },
 ];

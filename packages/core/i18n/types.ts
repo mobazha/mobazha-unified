@@ -2769,6 +2769,10 @@ export interface TranslationResource {
       telegramDocsLink?: string;
       telegramBotTokenHelp?: string;
       telegramChatIdHelp?: string;
+      emailRecipientHelp?: string;
+      emailSenderHelp?: string;
+      emailApiKeyHelp?: string;
+      emailSmtpServerHelp?: string;
       detectChat?: string;
       detectChatDesc?: string;
       detecting?: string;

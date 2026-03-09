@@ -4007,6 +4007,11 @@ export const en: TranslationResource = {
       telegramDocsLink: 'Telegram Bot documentation',
       telegramBotTokenHelp: 'The token from @BotFather (format: 123456:ABC-DEF...)',
       telegramChatIdHelp: 'Group/channel ID (starts with -100) or your personal chat ID',
+      emailRecipientHelp: 'The email address where you want to receive notifications',
+      emailSenderHelp:
+        'Optional. Format: "Store Name <email@domain.com>". Leave empty for default.',
+      emailApiKeyHelp: 'Resend API key for cloud email delivery. Leave empty if using SMTP.',
+      emailSmtpServerHelp: 'SMTP server hostname. Use this for self-hosted email delivery.',
       detectChat: 'Detect',
       detectChatDesc: 'Auto-detect chats that have interacted with your bot',
       detecting: 'Detecting...',
