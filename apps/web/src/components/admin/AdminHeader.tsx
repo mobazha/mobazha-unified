@@ -31,7 +31,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
 
   const handleLogout = () => {
     logout();
-    router.push('/');
+    window.location.href = '/';
   };
 
   const handleViewStore = () => {

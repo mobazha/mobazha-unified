@@ -41,11 +41,12 @@ class HostedAuthService implements IAuthService {
       return;
     }
 
-    // 保存当前页面路径，登录后返回
-    const currentPath = window.location.pathname + window.location.search;
-    // 排除 OAuth 回调参数
-    const cleanPath = currentPath.replace(/[?&](code|state)=[^&]*/g, '').replace(/\?$/, '');
-    sessionStorage.setItem('login_redirect', cleanPath || '/');
+    // Only save redirect path if login page hasn't already set an explicit one
+    if (!sessionStorage.getItem('login_redirect')) {
+      const currentPath = window.location.pathname + window.location.search;
+      const cleanPath = currentPath.replace(/[?&](code|state)=[^&]*/g, '').replace(/\?$/, '');
+      sessionStorage.setItem('login_redirect', cleanPath || '/');
+    }
 
     console.log('🔐 Redirecting to Casdoor login...');
     const signinUrl = getSigninUrl();

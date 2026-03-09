@@ -66,7 +66,7 @@ export const Header: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    router.push('/');
+    window.location.href = '/';
   };
 
   // 移动端隐藏顶部 Header，使用底部 MobileNav 导航

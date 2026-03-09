@@ -44,15 +44,21 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
-  const { profile } = useUserStore();
+  const { profile, isAuthenticated } = useUserStore();
   const standaloneMode = isStandalone();
+
+  const startSellingHref = standaloneMode
+    ? '/listing/new'
+    : isAuthenticated
+      ? '/admin'
+      : '/login?redirect=%2Fadmin';
 
   const footerLinks = {
     marketplace: [
       { label: t('footer.browseProducts'), href: '/marketplace' },
       { label: t('footer.categories'), href: '/search' },
       { label: t('footer.findModerators'), href: '/moderators' },
-      { label: t('footer.startSelling'), href: '/listing/new' },
+      { label: t('footer.startSelling'), href: startSellingHref },
     ],
     resources: [
       {
