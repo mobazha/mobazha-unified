@@ -1,0 +1,85 @@
+# Mobazha Web Frontend — Next.js standalone build
+# Build context: mobazha-unified root
+#
+# SaaS vs Standalone share deps + core/ui build (cached).
+# Only the final `next build` differs via NEXT_PUBLIC_* build args.
+#
+# Usage:
+#   docker buildx build --build-arg NEXT_PUBLIC_AUTH_MODE=standalone \
+#     --build-arg NEXT_PUBLIC_API_BASE_URL=http://1.2.3.4 ...
+
+# ============ Base Stage ============
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+# ============ Dependencies Stage ============
+FROM base AS deps
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/core/package.json ./packages/core/
+COPY packages/ui/package.json ./packages/ui/
+
+RUN pnpm install --frozen-lockfile
+
+# ============ Builder Base (shared, cached across SaaS/Standalone) ============
+FROM base AS builder-base
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
+COPY --from=deps /app/packages/ui/node_modules ./packages/ui/node_modules
+
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+RUN cd packages/core && pnpm build 2>/dev/null || true
+RUN cd packages/ui && pnpm build 2>/dev/null || true
+
+# ============ Builder (env-specific next build) ============
+FROM builder-base AS builder
+
+ARG NEXT_PUBLIC_ENV_MODE=test
+ARG NEXT_PUBLIC_USE_MOCK_DATA=false
+ARG NEXT_PUBLIC_AUTH_MODE=hosted
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_CASDOOR_URL
+ARG NEXT_PUBLIC_CASDOOR_CLIENT_ID
+ARG NEXT_PUBLIC_SAAS_URL=
+
+ENV NEXT_PUBLIC_ENV_MODE=$NEXT_PUBLIC_ENV_MODE
+ENV NEXT_PUBLIC_USE_MOCK_DATA=$NEXT_PUBLIC_USE_MOCK_DATA
+ENV NEXT_PUBLIC_AUTH_MODE=$NEXT_PUBLIC_AUTH_MODE
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_CASDOOR_URL=$NEXT_PUBLIC_CASDOOR_URL
+ENV NEXT_PUBLIC_CASDOOR_CLIENT_ID=$NEXT_PUBLIC_CASDOOR_CLIENT_ID
+ENV NEXT_PUBLIC_SAAS_URL=$NEXT_PUBLIC_SAAS_URL
+
+RUN cd apps/web && npx next build
+
+# ============ Runner Stage ============
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "apps/web/server.js"]

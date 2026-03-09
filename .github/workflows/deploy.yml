@@ -1,138 +1,51 @@
-name: Deploy
+name: Deploy Web Frontend
 
 on:
-  # 等待 CI workflow 完成后触发
-  workflow_run:
-    workflows: ['CI']
-    types: [completed]
+  push:
     branches: [main]
-  # 手动触发
+    paths:
+      - 'apps/web/**'
+      - 'packages/core/**'
+      - 'packages/ui/**'
+      - 'deploy/Dockerfile.web'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Deployment environment'
+      target:
+        description: 'Deploy target'
         required: true
-        default: 'staging'
+        default: 'all'
         type: choice
         options:
-          - staging
-          - production
+          - saas
+          - standalone
+          - all
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
+  REGISTRY: ghcr.io
   PNPM_VERSION: 9.0.0
   NODE_VERSION: 20
 
 jobs:
-  # ============ 部署到 Vercel (Staging) ============
-  deploy-staging:
-    name: Deploy to Staging
+  # ============================================================
+  # Build: SaaS image
+  # ============================================================
+  build-saas:
+    name: Build SaaS Image
     runs-on: ubuntu-latest
-    # 只在 CI 成功或手动触发时运行
-    if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Set environment variables
-        run: |
-          echo "NEXT_PUBLIC_API_URL=${{ vars.API_URL || 'http://localhost:5000' }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_MATRIX_HOMESERVER=${{ vars.MATRIX_HOMESERVER || 'https://matrix.org' }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_USE_MOCK_DATA=false" >> $GITHUB_ENV
-
-      - name: Build
-        run: pnpm build
-
-      - name: Deploy to Vercel (Staging)
-        id: deploy
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./apps/web
-        continue-on-error: true
-
-      - name: Deploy result
-        run: |
-          if [ "${{ steps.deploy.outcome }}" == "success" ]; then
-            echo "✅ Deployed to: ${{ steps.deploy.outputs.url }}"
-          else
-            echo "⚠️ Vercel deployment skipped (missing secrets or configuration)"
-            echo "To enable Vercel deployment, add the following secrets:"
-            echo "  - VERCEL_TOKEN"
-            echo "  - VERCEL_ORG_ID"
-            echo "  - VERCEL_PROJECT_ID"
-          fi
-
-  # ============ 部署到 Vercel (Production) ============
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Set environment variables
-        run: |
-          echo "NEXT_PUBLIC_API_URL=${{ vars.API_URL || 'https://api.mobazha.com' }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_MATRIX_HOMESERVER=${{ vars.MATRIX_HOMESERVER || 'https://matrix.mobazha.com' }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_USE_MOCK_DATA=false" >> $GITHUB_ENV
-
-      - name: Build
-        run: pnpm build
-
-      - name: Deploy to Vercel (Production)
-        id: deploy
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./apps/web
-
-  # ============ 部署到 Docker (可选) ============
-  deploy-docker:
-    name: Build & Push Docker Image
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'saas' ||
+      github.event.inputs.target == 'all'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -140,21 +53,174 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/web-saas
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push SaaS image
+        uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/web/Dockerfile
+          file: ./deploy/Dockerfile.web
           push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=web-saas
+          cache-to: type=gha,mode=max,scope=web-saas
+          build-args: |
+            NEXT_PUBLIC_ENV_MODE=test
+            NEXT_PUBLIC_USE_MOCK_DATA=false
+            NEXT_PUBLIC_AUTH_MODE=hosted
+            NEXT_PUBLIC_API_BASE_URL=${{ vars.SAAS_API_BASE_URL }}
+            NEXT_PUBLIC_CASDOOR_URL=${{ vars.SAAS_CASDOOR_URL }}
+            NEXT_PUBLIC_CASDOOR_CLIENT_ID=${{ vars.SAAS_CASDOOR_CLIENT_ID }}
+
+  # ============================================================
+  # Build: Standalone image
+  # ============================================================
+  build-standalone:
+    name: Build Standalone Image
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'standalone' ||
+      github.event.inputs.target == 'all'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/web-standalone
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push Standalone image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./deploy/Dockerfile.web
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=web-standalone
+          cache-to: type=gha,mode=max,scope=web-standalone
+          build-args: |
+            NEXT_PUBLIC_ENV_MODE=test
+            NEXT_PUBLIC_USE_MOCK_DATA=false
+            NEXT_PUBLIC_AUTH_MODE=standalone
+            NEXT_PUBLIC_CASDOOR_URL=${{ vars.SAAS_CASDOOR_URL }}
+            NEXT_PUBLIC_CASDOOR_CLIENT_ID=${{ vars.SAAS_CASDOOR_CLIENT_ID }}
+            NEXT_PUBLIC_SAAS_URL=${{ vars.STANDALONE_SAAS_URL }}
+
+  # ============================================================
+  # Deploy: SaaS
+  # ============================================================
+  deploy-saas:
+    name: Deploy SaaS
+    needs: build-saas
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'saas' ||
+      github.event.inputs.target == 'all'
+    environment: test-saas
+    steps:
+      - name: Deploy to SaaS server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SAAS_HOST }}
+          username: root
+          key: ${{ secrets.SAAS_SSH_KEY }}
+          script: |
+            set -e
+            GHCR_IMAGE="${{ env.REGISTRY }}/${{ github.repository }}/web-saas:latest"
+            LOCAL_IMAGE="mobazha-web-saas:test"
+
+            echo "Pulling image from GHCR..."
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull "$GHCR_IMAGE"
+
+            echo "Retagging..."
+            docker tag "$GHCR_IMAGE" "$LOCAL_IMAGE"
+
+            echo "Restarting container..."
+            cd /opt/mobazha/saas
+            docker compose up -d --force-recreate --no-deps web
+
+            echo "Waiting for container..."
+            sleep 5
+            docker logs --since 10s "$(docker compose ps -q web)" 2>&1 | tail -10
+
+            echo "Cleaning up old images..."
+            docker image prune -f
+
+  # ============================================================
+  # Deploy: Standalone
+  # ============================================================
+  deploy-standalone:
+    name: Deploy Standalone
+    needs: build-standalone
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'standalone' ||
+      github.event.inputs.target == 'all'
+    environment: test-standalone
+    steps:
+      - name: Deploy to Standalone server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STANDALONE_HOST }}
+          username: root
+          key: ${{ secrets.STANDALONE_SSH_KEY }}
+          script: |
+            set -e
+            GHCR_IMAGE="${{ env.REGISTRY }}/${{ github.repository }}/web-standalone:latest"
+            LOCAL_IMAGE="mobazha-web-standalone:test"
+
+            echo "Pulling image from GHCR..."
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull "$GHCR_IMAGE"
+
+            echo "Retagging..."
+            docker tag "$GHCR_IMAGE" "$LOCAL_IMAGE"
+
+            echo "Restarting container..."
+            cd /opt/mobazha/standalone
+            docker compose up -d --force-recreate --no-deps web
+
+            echo "Waiting for container..."
+            sleep 5
+            docker logs --since 10s "$(docker compose ps -q web)" 2>&1 | tail -10
+
+            echo "Cleaning up old images..."
+            docker image prune -f
