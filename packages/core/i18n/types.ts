@@ -2428,8 +2428,11 @@ export interface TranslationResource {
       emptyDescription?: string;
       createFirstProduct?: string;
       setupStore?: string;
+      quickCreate?: string;
+      quickCreateDesc?: string;
       addProduct?: string;
       addProductDesc?: string;
+      fullEditor?: string;
       manageOrders?: string;
       manageOrdersDesc?: string;
       viewStore?: string;

@@ -16,6 +16,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Star,
+  Zap,
   Plus,
   Eye,
   Palette,
@@ -297,22 +298,30 @@ export default function AdminDashboardPage() {
 
       {/* Quick Actions — Mobile: 2x2 icon grid, Desktop: 4 cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Link
-          href="/listing/new?from=admin"
-          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-        >
-          <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-            <Plus className="w-5 h-5" />
-          </div>
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-base font-medium text-foreground">
-              {t('admin.dashboard.addProduct')}
-            </p>
-            <p className="hidden sm:block text-sm text-muted-foreground">
-              {t('admin.dashboard.addProductDesc')}
-            </p>
-          </div>
-        </Link>
+        <div className="relative">
+          <Link
+            href="/listing/quick"
+            className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+          >
+            <div className="p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 text-purple-600 dark:text-purple-400 group-hover:from-purple-500 group-hover:to-blue-500 group-hover:text-white transition-all">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-base font-medium text-foreground">
+                {t('admin.dashboard.quickCreate')}
+              </p>
+              <p className="hidden sm:block text-sm text-muted-foreground">
+                {t('admin.dashboard.quickCreateDesc')}
+              </p>
+            </div>
+          </Link>
+          <Link
+            href="/listing/new?from=admin"
+            className="absolute bottom-1.5 right-2 text-[10px] text-muted-foreground hover:text-primary transition-colors hidden sm:inline"
+          >
+            {t('admin.dashboard.fullEditor')}
+          </Link>
+        </div>
 
         <Link
           href="/admin/orders"

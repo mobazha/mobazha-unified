@@ -2704,6 +2704,41 @@ export const en: TranslationResource = {
       chooseFromLibrary: 'From Library',
     },
 
+    // Quick Create
+    quickCreate: {
+      title: 'Quick Create',
+      subtitle: 'Upload photos, let AI do the rest',
+      stepPhotos: 'Photos',
+      stepReview: 'Review',
+      stepPublish: 'Publish',
+      uploadPhotos: 'Upload Product Photos',
+      uploadPhotosDesc:
+        'Drag & drop or click to upload. AI will generate details from your photos.',
+      selectType: 'Product Type',
+      analyzing: 'Analyzing images...',
+      aiGenerated: 'AI Generated',
+      regenerate: 'Regenerate',
+      editFields: 'Review & Edit',
+      editFieldsDesc: 'AI filled these fields. Edit anything before publishing.',
+      priceRequired: 'Set your price',
+      pricePlaceholder: '0.00',
+      previewTitle: 'Ready to Publish',
+      previewDesc: 'Review your listing before going live.',
+      checklist: 'Checklist',
+      checkImages: 'Product images',
+      checkTitle: 'Title',
+      checkPrice: 'Price',
+      publish: 'Publish Now',
+      saveDraft: 'Save as Draft',
+      publishing: 'Publishing...',
+      publishSuccess: 'Product published successfully!',
+      draftSuccess: 'Draft saved successfully!',
+      publishError: 'Failed to publish. Please try again.',
+      openFullEditor: 'Full Editor',
+      noImages: 'Add at least one photo to continue',
+      manualMode: 'Fill in manually',
+    },
+
     // Wizard
     wizard: {
       steps: {
@@ -3675,8 +3710,11 @@ export const en: TranslationResource = {
         'Get started by creating your first product or setting up your store profile.',
       createFirstProduct: 'Create First Product',
       setupStore: 'Set Up Store',
+      quickCreate: 'Quick Create',
+      quickCreateDesc: 'Photo + AI in 60 seconds',
       addProduct: 'Add New Product',
       addProductDesc: 'Create a listing with AI assistance',
+      fullEditor: 'Full Editor',
       manageOrders: 'Manage Orders',
       manageOrdersDesc: 'View and process customer orders',
       designStore: 'Design Store',

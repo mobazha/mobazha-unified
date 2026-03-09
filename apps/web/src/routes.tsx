@@ -117,6 +117,7 @@ const routes: RouteObject[] = [
   },
 
   // 商品管理
+  { path: '/listing/quick', element: protectedPage(() => import('./app/listing/quick/page')) },
   { path: '/listing/new', element: protectedPage(() => import('./app/listing/new/page')) },
   {
     path: '/listing/edit/:slug',
