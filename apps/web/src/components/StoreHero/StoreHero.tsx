@@ -119,27 +119,30 @@ export function StoreHero() {
           )}
 
           {/* Search Box */}
-          <div className="w-full max-w-lg">
+          <form
+            className="w-full max-w-lg"
+            onSubmit={e => {
+              e.preventDefault();
+              const input = e.currentTarget.querySelector('input');
+              const q = input?.value.trim();
+              if (q) {
+                const dest = profile?.peerID
+                  ? `/store/${profile.peerID}?q=${encodeURIComponent(q)}`
+                  : `/search?q=${encodeURIComponent(q)}`;
+                router.push(dest);
+              }
+            }}
+          >
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
               <input
-                type="text"
+                type="search"
+                enterKeyHint="search"
                 placeholder={t('standalone.searchProducts', { defaultValue: 'Search products...' })}
                 className="w-full pl-10 pr-4 py-3 bg-white/15 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    const q = (e.target as HTMLInputElement).value.trim();
-                    if (q) {
-                      const dest = profile?.peerID
-                        ? `/store/${profile.peerID}?q=${encodeURIComponent(q)}`
-                        : `/search?q=${encodeURIComponent(q)}`;
-                      router.push(dest);
-                    }
-                  }
-                }}
               />
             </div>
-          </div>
+          </form>
 
           {/* Powered by */}
           <div className="mt-6 flex items-center gap-2 text-white/40">

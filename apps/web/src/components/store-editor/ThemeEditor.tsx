@@ -117,19 +117,22 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
               >
                 <div className="flex gap-0.5 shrink-0">
                   <div
-                    className="w-5 h-5 rounded-full"
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     style={{ backgroundColor: colors.primary }}
                   />
                   <div
-                    className="w-5 h-5 rounded-full"
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     style={{ backgroundColor: colors.secondary }}
                   />
                   <div
-                    className="w-5 h-5 rounded-full"
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     style={{ backgroundColor: colors.accent }}
                   />
                 </div>
-                <span className="text-xs truncate">
+                <span
+                  className="text-xs truncate"
+                  title={`${PALETTE_ICONS[palette] || ''} ${t(`admin.storeBranding.${PALETTE_I18N_KEYS[palette]}` as Parameters<typeof t>[0])}`}
+                >
                   {PALETTE_ICONS[palette] || ''}{' '}
                   {t(
                     `admin.storeBranding.${PALETTE_I18N_KEYS[palette]}` as Parameters<typeof t>[0]
