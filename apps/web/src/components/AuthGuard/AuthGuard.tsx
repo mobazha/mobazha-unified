@@ -29,9 +29,9 @@ export function AuthGuard({ children, redirectTo = '/login', fallback }: AuthGua
     if (isLoading) return;
 
     if (!isAuthenticated && !hasRedirected.current) {
-      // 保存当前路径，登录后重定向回来
       hasRedirected.current = true;
-      const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(pathname)}`;
+      const fullPath = window.location.pathname + window.location.search;
+      const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(fullPath)}`;
       router.replace(redirectUrl);
     }
   }, [isLoading, isAuthenticated, router, pathname, redirectTo]);
