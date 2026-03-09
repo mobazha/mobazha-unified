@@ -60,7 +60,7 @@ export async function performCasdoorLogin(
     url => {
       const urlStr = url.toString();
       return (
-        urlStr.includes('localhost:3000') &&
+        urlStr.includes('localhost:') &&
         !urlStr.includes('login/oauth') &&
         !urlStr.includes('code=') &&
         !urlStr.includes('/login')
