@@ -13,7 +13,7 @@ import {
   Clock,
   User,
 } from 'lucide-react';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, getImageUrl as coreGetImageUrl } from '@mobazha/core';
 import type { Notification as ApiNotification } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -28,12 +28,9 @@ interface NotificationCardProps {
 
 // ============ 辅助函数 ============
 
-/**
- * 获取网关图片 URL
- */
 function getImageUrl(hash?: string): string | null {
   if (!hash) return null;
-  return `/v1/media/images/${hash}`;
+  return coreGetImageUrl(hash) ?? null;
 }
 
 /**

@@ -14,6 +14,7 @@ export {
   setStoreContextHeaders,
   getHeadersWithContext,
   getImageUrl,
+  getMediaBaseURL,
   setStandaloneBuyerAuth,
   isStandaloneBuyerAuth,
 } from './config';

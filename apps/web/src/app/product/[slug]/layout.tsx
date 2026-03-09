@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import React from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
+const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
 
 interface ProductData {
@@ -21,6 +22,7 @@ interface ProductData {
 
 function getImageUrl(hash?: string): string | undefined {
   if (!hash) return undefined;
+  if (MEDIA_CDN) return `${MEDIA_CDN}/${hash}`;
   return `${API_BASE}/v1/media/images/${hash}`;
 }
 

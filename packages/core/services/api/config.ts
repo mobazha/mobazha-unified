@@ -12,6 +12,7 @@ export interface ApiConfig {
   gatewayUrl: string;
   searchUrl: string;
   mbzGatewayUrl: string;
+  mediaBaseUrl?: string;
 }
 
 // 覆盖配置（可选）
@@ -256,18 +257,38 @@ export function getHeadersWithContext(): Record<string, string> {
 }
 
 /**
- * 将 IPFS hash 转换为完整的图片 URL
- * 参考移动端实现: mobazha-mobile/utils/files.js
- * 图片通过 /v1/media/images/ 路径获取，不是 /info/v1/image/
+ * 获取 CDN 媒体基础 URL（如 https://media.mobazha.org）。
+ * 配置后，getImageUrl 直接构造 CDN URL 绕过 gateway，降低延迟。
+ * 未配置时返回 undefined，fallback 到 gateway 路径。
+ *
+ * 优先级：configOverrides > env.api.mediaBaseUrl
+ */
+export function getMediaBaseURL(): string | undefined {
+  if (configOverrides.mediaBaseUrl) {
+    return configOverrides.mediaBaseUrl;
+  }
+  const env = getEnvConfig();
+  return env.api.mediaBaseUrl || undefined;
+}
+
+/**
+ * 将 CID hash 转换为完整的图片 URL。
+ *
+ * 优先级：
+ *  1. 已是完整 URL → 直接返回
+ *  2. CDN base URL 已配置 → 构造 CDN 直达 URL（绕过 gateway）
+ *  3. Fallback → 通过 gateway 的 /v1/media/images/{hash} 路径
  */
 export function getImageUrl(hash: string | undefined | null): string | undefined {
   if (!hash || typeof hash !== 'string' || hash === '') {
     return undefined;
   }
-  // 如果已经是完整 URL，直接返回
   if (hash.startsWith('http://') || hash.startsWith('https://') || hash.startsWith('/')) {
     return hash;
   }
-  // 将 IPFS hash 转换为 gateway URL（使用 /v1/media/images/ 路径）
+  const cdnBase = getMediaBaseURL();
+  if (cdnBase) {
+    return `${cdnBase}/${hash}`;
+  }
   return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`;
 }

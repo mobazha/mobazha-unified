@@ -49,6 +49,8 @@ export interface ApiEndpoints {
   mbzGateway: string;
   /** WebSocket URL */
   websocket: string;
+  /** CDN 媒体基础 URL（如 https://media.mobazha.org），未配置时走 gateway 降级 */
+  mediaBaseUrl?: string;
 }
 
 export interface DiscordConfig {
@@ -256,6 +258,18 @@ export function initEnvFromProcess(): void {
         baseUrl: apiUrl,
         gateway: `${apiUrl}/v1`,
         websocket: `${wsProtocol}://${wsHost}/ws`,
+      },
+    };
+  }
+
+  // CDN 媒体基础 URL（R2 公网 URL，配置后前端直达 CDN 绕过 gateway）
+  const mediaBaseUrl = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+  if (mediaBaseUrl) {
+    currentEnv = {
+      ...currentEnv,
+      api: {
+        ...currentEnv.api,
+        mediaBaseUrl,
       },
     };
   }
