@@ -2512,6 +2512,26 @@ export interface TranslationResource {
       subtitle?: string;
       comingSoon?: string;
       comingSoonDesc?: string;
+      period7d?: string;
+      period30d?: string;
+      period90d?: string;
+      periodAll?: string;
+      periodLabel?: string;
+      totalRevenue?: string;
+      totalOrders?: string;
+      avgOrderValue?: string;
+      activeProducts?: string;
+      published?: string;
+      revenueOrders?: string;
+      revenueTrend?: string;
+      ordersTrend?: string;
+      orderStatus?: string;
+      topProducts?: string;
+      revenue?: string;
+      orders?: string;
+      product?: string;
+      unitsSold?: string;
+      noData?: string;
     };
     discounts?: {
       title?: string;

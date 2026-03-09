@@ -3929,6 +3929,29 @@ export const en: TranslationResource = {
       comingSoon: 'Analytics Coming Soon',
       comingSoonDesc:
         'Detailed sales analytics, customer insights, and performance metrics will be available in a future update.',
+      // Period selector
+      period7d: '7 Days',
+      period30d: '30 Days',
+      period90d: '90 Days',
+      periodAll: 'All Time',
+      periodLabel: 'In selected period',
+      // Summary cards
+      totalRevenue: 'Total Revenue',
+      totalOrders: 'Total Orders',
+      avgOrderValue: 'Avg. Order Value',
+      activeProducts: 'Active Products',
+      published: 'Published',
+      revenueOrders: '{{count}} completed orders',
+      // Charts & tables
+      revenueTrend: 'Revenue Trend',
+      ordersTrend: 'Orders Over Time',
+      orderStatus: 'Order Status',
+      topProducts: 'Top Products by Revenue',
+      revenue: 'Revenue',
+      orders: 'Orders',
+      product: 'Product',
+      unitsSold: 'Units Sold',
+      noData: 'No data for this period',
     },
     onboarding: {
       title: 'Set Up Your Store',
