@@ -214,8 +214,10 @@ export function NotificationChannelsSection() {
 
   function openAddDialog() {
     const defaultType = channelTypes[0]?.type ?? '';
+    const autoName =
+      !standalone && defaultType === 'email' ? t('admin.integrations.emailDefaultName') : '';
     setEditingId(null);
-    setForm({ ...emptyForm, type: defaultType });
+    setForm({ ...emptyForm, type: defaultType, name: autoName });
     setEmailMode('resend');
     setDialogStep(1);
     initFilterState('');
@@ -247,7 +249,6 @@ export function NotificationChannelsSection() {
     return categoriesToEventFilter(selectedCategories);
   }
 
-  const EMAIL_COMMON_KEYS = new Set(['recipient_email', 'sender_email']);
   const EMAIL_RESEND_KEYS = new Set(['api_key']);
   const EMAIL_SMTP_KEYS = new Set(['smtp_server', 'smtp_port', 'smtp_username', 'smtp_password']);
 
@@ -392,7 +393,6 @@ export function NotificationChannelsSection() {
     );
   }
 
-
   function renderEmailStep1(fields: ChannelFieldSchema[]) {
     const recipientField = fields.find(f => f.key === 'recipient_email');
     return recipientField ? renderFieldWithHelp(recipientField) : null;
@@ -444,18 +444,18 @@ export function NotificationChannelsSection() {
           </div>
         </div>
 
-        {emailMode === 'resend'
-          ? resend.map(field => renderFieldWithHelp(field))
-          : (
-            <>
-              <div className="grid grid-cols-[1fr_100px] gap-2">
-                {smtpServer && renderCompactField(smtpServer)}
-                {smtpPort && renderCompactField(smtpPort)}
-              </div>
-              {smtpUser && renderFieldWithHelp(smtpUser)}
-              {smtpPass && renderFieldWithHelp(smtpPass)}
-            </>
-          )}
+        {emailMode === 'resend' ? (
+          resend.map(field => renderFieldWithHelp(field))
+        ) : (
+          <>
+            <div className="grid grid-cols-[1fr_100px] gap-2">
+              {smtpServer && renderCompactField(smtpServer)}
+              {smtpPort && renderCompactField(smtpPort)}
+            </div>
+            {smtpUser && renderFieldWithHelp(smtpUser)}
+            {smtpPass && renderFieldWithHelp(smtpPass)}
+          </>
+        )}
       </>
     );
   }
@@ -596,12 +596,16 @@ export function NotificationChannelsSection() {
             </DialogTitle>
             {isEmailStepper && (
               <div className="flex items-center gap-1.5 pt-1">
-                <div className={`h-1 flex-1 rounded-full transition-colors ${
-                  dialogStep >= 1 ? 'bg-primary' : 'bg-muted'
-                }`} />
-                <div className={`h-1 flex-1 rounded-full transition-colors ${
-                  dialogStep >= 2 ? 'bg-primary' : 'bg-muted'
-                }`} />
+                <div
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    dialogStep >= 1 ? 'bg-primary' : 'bg-muted'
+                  }`}
+                />
+                <div
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    dialogStep >= 2 ? 'bg-primary' : 'bg-muted'
+                  }`}
+                />
               </div>
             )}
           </DialogHeader>
@@ -664,9 +668,10 @@ export function NotificationChannelsSection() {
             )}
 
             {/* Step 2: Email delivery config */}
-            {isEmailStepper && dialogStep === 2 && selectedTypeInfo && (
-              renderEmailStep2(selectedTypeInfo.fields)
-            )}
+            {isEmailStepper &&
+              dialogStep === 2 &&
+              selectedTypeInfo &&
+              renderEmailStep2(selectedTypeInfo.fields)}
 
             {/* Event filter + Enable: show on step 2 for email, always for others */}
             {(!isEmailStepper || dialogStep === 2) && (
