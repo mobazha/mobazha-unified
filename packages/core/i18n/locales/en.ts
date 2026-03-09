@@ -177,6 +177,7 @@ export const en: TranslationResource = {
     // Buttons
     login: 'Login',
     loginRegister: 'Login / Register',
+    signInToContinue: 'Please sign in to continue',
     // Error messages
     invalidCredentials: 'Invalid username or password',
     loginFailed: 'Login failed, please try again',

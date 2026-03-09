@@ -719,8 +719,8 @@ export const CryptoReceivingSection: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold text-foreground">{t('receivingAccounts.title')}</h2>
           <p className="text-sm text-muted-foreground mt-1">{t('receivingAccounts.subtitle')}</p>
         </div>
@@ -729,13 +729,14 @@ export const CryptoReceivingSection: React.FC = () => {
             type="button"
             onClick={handleAdd}
             className={cn(
-              'flex items-center gap-1.5 h-9 px-4 rounded-lg',
+              'flex items-center gap-1.5 h-9 px-3 sm:px-4 rounded-lg shrink-0',
               'bg-primary text-primary-foreground text-sm font-medium',
               'active:scale-[0.98] transition-all'
             )}
           >
-            <Plus className="w-4 h-4" />
-            {t('receivingAccounts.addAccount')}
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">{t('receivingAccounts.addAccount')}</span>
+            <span className="sm:hidden">{t('common.add', { defaultValue: 'Add' })}</span>
           </button>
         )}
       </div>

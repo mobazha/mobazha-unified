@@ -74,6 +74,7 @@ function LoginPageContent() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [localError, setLocalError] = useState('');
+  const hasRedirectParam = searchParams.get('redirect') !== null;
 
   // 托管模式下 OAuth 失败标记：仅当 OAuth 回调失败时才显示登录表单
   const [oauthFailed, setOauthFailed] = useState(false);
@@ -227,6 +228,12 @@ function LoginPageContent() {
             <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
           </div>
 
+          {hasRedirectParam && !error && !localError && (
+            <div className="mb-6 p-3 bg-white/10 border border-white/20 rounded-lg">
+              <p className="text-sm text-white/80">{t('login.signInToContinue')}</p>
+            </div>
+          )}
+
           {(error || localError) && (
             <div className="mb-6 p-3 bg-error/20 border border-error/30 rounded-lg">
               <p className="text-sm text-error">{error || localError}</p>
@@ -327,6 +334,12 @@ function LoginPageContent() {
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
             <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
           </div>
+
+          {hasRedirectParam && !error && !localError && (
+            <div className="mb-6 p-3 bg-white/10 border border-white/20 rounded-lg">
+              <p className="text-sm text-white/80">{t('login.signInToContinue')}</p>
+            </div>
+          )}
 
           {/* Error Message */}
           {(error || localError) && (

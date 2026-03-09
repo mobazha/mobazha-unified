@@ -350,7 +350,7 @@ export default function AdminProductsPage() {
 
       {/* Mobile compact card list */}
       {isMobile && filtered.length > 0 && (
-        <div className="space-y-2 md:hidden">
+        <div className="space-y-2 md:hidden pb-16">
           {filtered.map(product => (
             <div
               key={product.slug}

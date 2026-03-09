@@ -10,5 +10,5 @@ import { usePlatform } from '@mobazha/ui/hooks';
 export function MainContent({ children }: { children: React.ReactNode }) {
   const { isEmbeddedApp } = usePlatform();
 
-  return <div className={isEmbeddedApp ? '' : 'pb-20 md:pb-0'}>{children}</div>;
+  return <div className={isEmbeddedApp ? '' : 'pb-24 md:pb-0'}>{children}</div>;
 }
