@@ -146,6 +146,7 @@ function VendorSection({
   renderPrice,
   t,
   renderPairedPrice,
+  checkoutLabel,
 }: {
   group: VendorGroup;
   onCheckout: (g: VendorGroup) => void;
@@ -155,6 +156,7 @@ function VendorSection({
   renderPrice: (amount: number, currency: string) => string;
   t: TranslateFunction;
   renderPairedPrice: (amount: number, currency: string) => string;
+  checkoutLabel: string;
 }) {
   return (
     <div className="bg-card rounded-xl overflow-hidden border border-border">
@@ -198,7 +200,7 @@ function VendorSection({
           className="touch-feedback h-9 px-4 text-sm"
           onClick={() => onCheckout(group)}
         >
-          {t('cart.checkout')}
+          {checkoutLabel}
         </Button>
       </div>
     </div>
@@ -216,6 +218,7 @@ export function CartMobile() {
     clearCart,
     handleCheckout,
     getThumbUrl,
+    checkoutLabel,
     t,
     renderPairedPrice,
   } = useCart();
@@ -287,6 +290,7 @@ export function CartMobile() {
               renderPrice={renderPairedPrice}
               t={t}
               renderPairedPrice={renderPairedPrice}
+              checkoutLabel={checkoutLabel}
             />
           ))}
         </div>
@@ -316,7 +320,7 @@ export function CartMobile() {
                 className="touch-feedback h-12 px-8 text-base"
                 onClick={() => handleCheckout(groups[0])}
               >
-                {t('cart.checkout')}
+                {checkoutLabel}
               </Button>
             )}
           </div>

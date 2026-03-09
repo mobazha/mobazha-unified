@@ -88,6 +88,8 @@ export function useCart() {
     []
   );
 
+  const checkoutLabel = isAuthenticated ? t('cart.checkout') : t('cart.loginToCheckout');
+
   return {
     items,
     groups,
@@ -98,6 +100,7 @@ export function useCart() {
     clearCart,
     handleCheckout,
     getThumbUrl,
+    checkoutLabel,
     t,
     renderPairedPrice,
   };

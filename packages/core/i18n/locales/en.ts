@@ -380,6 +380,7 @@ export const en: TranslationResource = {
     shipping: 'Shipping',
     total: 'Total',
     checkout: 'Checkout',
+    loginToCheckout: 'Login to Checkout',
     remove: 'Remove',
     decreaseQuantity: 'Decrease quantity',
     increaseQuantity: 'Increase quantity',

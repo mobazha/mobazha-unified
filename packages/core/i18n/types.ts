@@ -289,6 +289,7 @@ export interface TranslationResource {
     shipping: string;
     total: string;
     checkout: string;
+    loginToCheckout?: string;
     remove: string;
     quantity: string;
     items: string;
