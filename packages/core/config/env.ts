@@ -51,6 +51,10 @@ export interface ApiEndpoints {
   websocket: string;
 }
 
+export interface DiscordConfig {
+  clientId: string;
+}
+
 export interface EnvConfig {
   isDevelopment: boolean;
   isTestEnv: boolean;
@@ -59,6 +63,8 @@ export interface EnvConfig {
   /** Casdoor 配置（仅 hosted 模式使用） */
   casdoor: CasdoorConfig;
   api: ApiEndpoints;
+  /** Discord Activity / Mini App 配置 */
+  discord?: DiscordConfig;
 }
 
 /**
@@ -306,6 +312,15 @@ export function initEnvFromProcess(): void {
           saasUrl,
         },
       },
+    };
+  }
+
+  // Discord Activity / Mini App 配置
+  const discordClientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+  if (discordClientId) {
+    currentEnv = {
+      ...currentEnv,
+      discord: { clientId: discordClientId },
     };
   }
 }
