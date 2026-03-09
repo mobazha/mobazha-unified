@@ -10,6 +10,7 @@ import { useCartStore, useUserStore, useI18n, useCurrency, getImageUrl } from '@
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { ClearCartAlert } from '@/components/Cart/ClearCartAlert';
+import { buildCheckoutUrl } from '@/hooks/useCart';
 
 interface CartDrawerProps {
   open: boolean;
@@ -40,20 +41,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
       return;
     }
 
-    let checkoutUrl: string;
-    if (items.length === 1) {
-      const item = items[0];
-      const params = new URLSearchParams({
-        slug: item.listing.slug,
-        peerID: item.listing.vendorPeerID,
-        quantity: item.quantity.toString(),
-      });
-      checkoutUrl = `/checkout?${params.toString()}`;
-    } else {
-      const vendorPeerID = items[0].listing.vendorPeerID;
-      const slugs = items.map(i => i.listing.slug).join(',');
-      checkoutUrl = `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
-    }
+    const checkoutUrl = buildCheckoutUrl(items, items[0].listing.vendorPeerID);
 
     if (!isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`);

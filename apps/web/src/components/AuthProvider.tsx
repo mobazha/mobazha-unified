@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useUserStore, useMatrixInit } from '@mobazha/core';
+import { useUserStore, useCartStore, useMatrixInit } from '@mobazha/core';
 import {
   hasOAuthCallback,
   getOAuthParams,
@@ -90,6 +90,15 @@ export function AuthProvider({
     enabled: true,
     autoConnect: true,
   });
+
+  // Sync local cart to backend when user logs in (anonymous → authenticated)
+  const wasAuthRef = useRef(isAuthenticated);
+  useEffect(() => {
+    if (isAuthenticated && !wasAuthRef.current) {
+      useCartStore.getState().syncAllItems();
+    }
+    wasAuthRef.current = isAuthenticated;
+  }, [isAuthenticated]);
 
   // Detect Mini App platform (non-reactive, determined at mount)
   const isTGMiniApp = tg.isAvailable;

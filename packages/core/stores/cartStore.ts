@@ -28,6 +28,7 @@ interface CartState {
   updateShipping: (slug: string, vendorPeerID: string, shippingOption: OrderShippingOption) => void;
   clearCart: () => void;
   clearVendorItems: (vendorPeerID: string) => void;
+  syncAllItems: () => void;
 
   getItemCount: () => number;
   getVendorItems: (vendorPeerID: string) => CartItem[];
@@ -161,6 +162,21 @@ export const useCartStore = create<CartState>()(
           });
           for (const item of vendorItems) {
             syncToApi(() => cartApi.removeFromCart(vendorPeerID, item.listing.slug));
+          }
+        },
+
+        syncAllItems: () => {
+          const { items } = get();
+          if (items.length === 0) return;
+          for (const item of items) {
+            syncToApi(() =>
+              cartApi.addToCart(item.listing.vendorPeerID, {
+                slug: item.listing.slug,
+                quantity: item.quantity,
+                options: item.options?.map(o => ({ name: o.name, value: o.value })),
+                memo: item.memo,
+              })
+            );
           }
         },
 

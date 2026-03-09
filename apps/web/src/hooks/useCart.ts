@@ -13,6 +13,24 @@ export interface VendorGroup {
   currency: string;
 }
 
+/**
+ * Build a checkout URL for a set of items from a single vendor.
+ * Shared by useCart hook and CartDrawer to avoid duplication.
+ */
+export function buildCheckoutUrl(cartItems: CartItem[], vendorPeerID: string): string {
+  if (cartItems.length === 1) {
+    const item = cartItems[0];
+    const params = new URLSearchParams({
+      slug: item.listing.slug,
+      peerID: item.listing.vendorPeerID,
+      quantity: item.quantity.toString(),
+    });
+    return `/checkout?${params.toString()}`;
+  }
+  const slugs = cartItems.map(i => i.listing.slug).join(',');
+  return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
+}
+
 export function useCart() {
   const router = useRouter();
   const { t } = useI18n();
@@ -50,24 +68,9 @@ export function useCart() {
 
   const defaultCurrency = items[0]?.listing.price.currency.code ?? 'USD';
 
-  const buildCheckoutUrl = useCallback((group: VendorGroup): string => {
-    if (group.items.length === 1) {
-      const item = group.items[0];
-      const params = new URLSearchParams({
-        slug: item.listing.slug,
-        peerID: item.listing.vendorPeerID,
-        quantity: item.quantity.toString(),
-      });
-      return `/checkout?${params.toString()}`;
-    }
-    const vendorPeerID = group.vendorPeerID;
-    const slugs = group.items.map(i => i.listing.slug).join(',');
-    return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
-  }, []);
-
   const handleCheckout = useCallback(
     (group: VendorGroup) => {
-      const checkoutUrl = buildCheckoutUrl(group);
+      const checkoutUrl = buildCheckoutUrl(group.items, group.vendorPeerID);
 
       if (!isAuthenticated) {
         router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`);
@@ -76,7 +79,7 @@ export function useCart() {
 
       router.push(checkoutUrl);
     },
-    [isAuthenticated, buildCheckoutUrl, router]
+    [isAuthenticated, router]
   );
 
   const getThumbUrl = useCallback(
