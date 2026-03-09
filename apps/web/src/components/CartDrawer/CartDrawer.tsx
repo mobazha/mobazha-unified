@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { HStack, VStack } from '@/components/layouts';
-import { useCartStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import { useCartStore, useUserStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { ClearCartAlert } from '@/components/Cart/ClearCartAlert';
@@ -21,6 +21,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const { renderPairedPrice } = useCurrency();
   const router = useRouter();
 
+  const isAuthenticated = useUserStore(state => state.isAuthenticated);
   const items = useCartStore(state => state.items);
   const updateQuantity = useCartStore(state => state.updateQuantity);
   const removeItem = useCartStore(state => state.removeItem);
@@ -39,6 +40,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
       return;
     }
 
+    let checkoutUrl: string;
     if (items.length === 1) {
       const item = items[0];
       const params = new URLSearchParams({
@@ -46,15 +48,20 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         peerID: item.listing.vendorPeerID,
         quantity: item.quantity.toString(),
       });
-      router.push(`/checkout?${params.toString()}`);
+      checkoutUrl = `/checkout?${params.toString()}`;
     } else {
       const vendorPeerID = items[0].listing.vendorPeerID;
       const slugs = items.map(i => i.listing.slug).join(',');
-      router.push(
-        `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`
-      );
+      checkoutUrl = `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
     }
-  }, [items, router, onOpenChange]);
+
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`);
+      return;
+    }
+
+    router.push(checkoutUrl);
+  }, [items, isAuthenticated, router, onOpenChange]);
 
   const handleContinueShopping = useCallback(() => {
     onOpenChange(false);
