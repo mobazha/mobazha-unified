@@ -21,7 +21,7 @@ import {
  * 关注用户
  */
 export async function followUser(peerID: string): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.FOLLOW(peerID), {});
+  return authPut(NODE_API.FOLLOW(peerID), {});
 }
 
 /**
