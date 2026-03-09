@@ -2,10 +2,10 @@
 
 import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
-import { getBlockExplorerUrl } from './utils';
+import { getBlockExplorerUrl, copyToClipboard } from './utils';
 import { Card } from '@/components/ui/card';
-import { Check, Package, CheckCircle } from 'lucide-react';
-import { useI18n, useCurrency, getChainFromCoin, getChainByEVMId } from '@mobazha/core';
+import { Check, Package, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import { useI18n, useCurrency, getChainFromCoin, getChainByEVMId, getTrackingUrl } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 export interface OrderStageCardProps {
@@ -343,17 +343,28 @@ export const FulfillmentCard = memo(function FulfillmentCard({
   showDivider = true,
 }: FulfillmentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
-  // 根据商品类型确定显示内容
+  const [copied, setCopied] = React.useState(false);
+
   const isPhysicalGood = !contractType || contractType === 'PHYSICAL_GOOD';
   const isService = contractType === 'SERVICE';
 
-  // 标题和内容
   const title = isPhysicalGood ? t('order.stages.fulfilled') : t('order.stages.delivered');
   const statusText = isPhysicalGood
     ? t('order.fulfillment.packageShipped')
     : isService
       ? t('order.fulfillment.serviceDelivered')
       : t('order.fulfillment.digitalDelivered');
+
+  const trackingUrl = isPhysicalGood ? getTrackingUrl(shipper, trackingNumber) : undefined;
+
+  const handleCopyTracking = React.useCallback(async () => {
+    if (!trackingNumber) return;
+    const ok = await copyToClipboard(trackingNumber);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [trackingNumber]);
 
   return (
     <OrderStageCard
@@ -374,17 +385,42 @@ export const FulfillmentCard = memo(function FulfillmentCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">{statusText}</p>
-            {/* 物流信息仅对实物商品显示 */}
             {isPhysicalGood && shipper && (
               <p className="text-xs text-muted-foreground">
                 {t('order.fulfillment.carrier')}: {shipper}
               </p>
             )}
             {isPhysicalGood && trackingNumber && (
-              <p className="text-xs text-muted-foreground">
-                {t('order.fulfillment.trackingNumber')}:{' '}
-                <span className="font-mono text-primary">{trackingNumber}</span>
-              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-xs text-muted-foreground">
+                  {t('order.fulfillment.trackingNumber')}:
+                </span>
+                {trackingUrl ? (
+                  <a
+                    href={trackingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
+                  >
+                    {trackingNumber}
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                  </a>
+                ) : (
+                  <span className="font-mono text-xs text-primary">{trackingNumber}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleCopyTracking}
+                  className="p-0.5 rounded hover:bg-muted transition-colors flex-shrink-0"
+                  aria-label={t('common.copy')}
+                >
+                  {copied ? (
+                    <Check className="w-3 h-3 text-success" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
             )}
             {note && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{note}</p>}
           </div>

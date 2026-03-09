@@ -1,9 +1,11 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, Package, CheckCircle, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Check, Package, CheckCircle, AlertCircle, RefreshCcw, Copy, ExternalLink } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { getTrackingUrl, useI18n } from '@mobazha/core';
+import { copyToClipboard } from './utils';
 
 /**
  * 时间线项目类型
@@ -83,6 +85,36 @@ function StarRating({ rating, maxRating = 5 }: { rating: number; maxRating?: num
 }
 
 /**
+ * Inline copy button for tracking numbers
+ */
+const CopyTrackingButton = memo(function CopyTrackingButton({ trackingNumber }: { trackingNumber: string }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(async () => {
+    const ok = await copyToClipboard(trackingNumber);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [trackingNumber]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="p-0.5 rounded hover:bg-muted transition-colors flex-shrink-0"
+      aria-label={t('order.fulfillment.copyTracking')}
+    >
+      {copied ? (
+        <Check className="w-3 h-3 text-success" />
+      ) : (
+        <Copy className="w-3 h-3 text-muted-foreground" />
+      )}
+    </button>
+  );
+});
+
+/**
  * 时间线单项组件
  */
 const TimelineItemRow = memo(function TimelineItemRow({
@@ -92,6 +124,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
   item: TimelineItem;
   isLast: boolean;
 }) {
+  const { t } = useI18n();
   const { type, timestamp, data, actions } = item;
 
   // 根据类型获取图标和标题
@@ -187,7 +220,8 @@ const TimelineItemRow = memo(function TimelineItemRow({
           </Card>
         );
 
-      case 'fulfilled':
+      case 'fulfilled': {
+        const tUrl = getTrackingUrl(data?.shipper, data?.trackingNumber);
         return (
           <Card className="p-2.5 bg-muted/30 mt-1.5">
             <div className="flex items-center gap-2">
@@ -200,21 +234,41 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 {icon}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Package shipped</p>
-                {data?.trackingNumber && (
+                <p className="text-sm font-medium">{t('order.fulfillment.packageShipped')}</p>
+                {data?.shipper && (
                   <p className="text-xs text-muted-foreground">
-                    Tracking: <span className="font-mono text-primary">{data.trackingNumber}</span>
+                    {t('order.fulfillment.carrier')}: {data.shipper}
                   </p>
+                )}
+                {data?.trackingNumber && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-xs text-muted-foreground">{t('order.fulfillment.trackingNumber')}:</span>
+                    {tUrl ? (
+                      <a
+                        href={tUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
+                      >
+                        {data.trackingNumber}
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="font-mono text-xs text-primary">{data.trackingNumber}</span>
+                    )}
+                    <CopyTrackingButton trackingNumber={data.trackingNumber} />
+                  </div>
                 )}
                 {data?.note && (
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                    Note: {data.note}
+                    {t('order.fulfill.note')}: {data.note}
                   </p>
                 )}
               </div>
             </div>
           </Card>
         );
+      }
 
       case 'accepted':
         return (
