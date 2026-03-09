@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCartStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import { useCartStore, useUserStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
 import type { CartItem } from '@mobazha/core';
 
 export interface VendorGroup {
@@ -17,6 +17,7 @@ export function useCart() {
   const router = useRouter();
   const { t } = useI18n();
   const { renderPairedPrice } = useCurrency();
+  const isAuthenticated = useUserStore(state => state.isAuthenticated);
 
   const items = useCartStore(state => state.items);
   const updateQuantity = useCartStore(state => state.updateQuantity);
@@ -49,25 +50,33 @@ export function useCart() {
 
   const defaultCurrency = items[0]?.listing.price.currency.code ?? 'USD';
 
+  const buildCheckoutUrl = useCallback((group: VendorGroup): string => {
+    if (group.items.length === 1) {
+      const item = group.items[0];
+      const params = new URLSearchParams({
+        slug: item.listing.slug,
+        peerID: item.listing.vendorPeerID,
+        quantity: item.quantity.toString(),
+      });
+      return `/checkout?${params.toString()}`;
+    }
+    const vendorPeerID = group.vendorPeerID;
+    const slugs = group.items.map(i => i.listing.slug).join(',');
+    return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
+  }, []);
+
   const handleCheckout = useCallback(
     (group: VendorGroup) => {
-      if (group.items.length === 1) {
-        const item = group.items[0];
-        const params = new URLSearchParams({
-          slug: item.listing.slug,
-          peerID: item.listing.vendorPeerID,
-          quantity: item.quantity.toString(),
-        });
-        router.push(`/checkout?${params.toString()}`);
-      } else {
-        const vendorPeerID = group.vendorPeerID;
-        const slugs = group.items.map(i => i.listing.slug).join(',');
-        router.push(
-          `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`
-        );
+      const checkoutUrl = buildCheckoutUrl(group);
+
+      if (!isAuthenticated) {
+        router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`);
+        return;
       }
+
+      router.push(checkoutUrl);
     },
-    [router]
+    [isAuthenticated, buildCheckoutUrl, router]
   );
 
   const getThumbUrl = useCallback(
