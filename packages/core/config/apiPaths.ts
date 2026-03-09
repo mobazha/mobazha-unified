@@ -108,7 +108,7 @@ export const NODE_API = {
   AI_CHAT_SESSION: (sessionId: string) => `/ai/chat/${sessionId}`,
 
   // --- Social / Follow ---
-  FOLLOW: (peerID: string) => `/follow/${peerID}`,
+  FOLLOW: (peerID: string) => `/following/${peerID}`,
   FOLLOWING: '/following',
   FOLLOWING_PEER: (peerID: string) => `/following/${peerID}`,
   FOLLOWERS: '/followers',
