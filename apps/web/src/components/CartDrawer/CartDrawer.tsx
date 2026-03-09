@@ -215,7 +215,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 </span>
               </HStack>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
-                {t('cart.checkout')}
+                {isAuthenticated ? t('cart.checkout') : t('cart.loginToCheckout')}
               </Button>
             </VStack>
           </SheetFooter>

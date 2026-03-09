@@ -21,6 +21,7 @@ export function CartDesktop() {
     clearCart,
     handleCheckout,
     getThumbUrl,
+    checkoutLabel,
     t,
     renderPairedPrice,
   } = useCart();
@@ -248,7 +249,7 @@ export function CartDesktop() {
                       className="touch-feedback h-10 px-5 text-sm"
                       onClick={() => handleCheckout(group)}
                     >
-                      {t('cart.checkout')}
+                      {checkoutLabel}
                     </Button>
                   </HStack>
                 </div>

@@ -134,6 +134,19 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
+            {/* 匿名用户：开店入口 (SaaS only) */}
+            {!isAuthenticated && !isLoading && !standaloneMode && (
+              <Link href="/login?redirect=%2Fadmin" data-testid="header-start-selling-link">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  {t('footer.startSelling')}
+                </Button>
+              </Link>
+            )}
+
             {/* 卖家：店铺管理入口 */}
             {isAuthenticated && !isBuyer && (
               <Link href="/admin" data-testid="header-admin-link">

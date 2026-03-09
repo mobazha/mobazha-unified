@@ -43,7 +43,7 @@ export const FeaturedStoresSection: React.FC<FeaturedStoresSectionProps> = React
               <p className="text-muted-foreground mb-6">
                 {t('saasHome.featuredStores.emptySubtitle')}
               </p>
-              <Link href="/login">
+              <Link href="/login?redirect=%2Fadmin">
                 <Button size="lg">{t('saasHome.hero.ctaCreate')}</Button>
               </Link>
             </div>

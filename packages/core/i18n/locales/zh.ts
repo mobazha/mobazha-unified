@@ -376,6 +376,7 @@ export const zh: TranslationResource = {
     shipping: '运费',
     total: '合计',
     checkout: '结算',
+    loginToCheckout: '登录后结算',
     remove: '删除',
     quantity: '数量',
     items: '件',
