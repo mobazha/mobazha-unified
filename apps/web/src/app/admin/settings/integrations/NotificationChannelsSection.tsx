@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useI18n, notificationChannelsApi } from '@mobazha/core';
+import { useI18n, notificationChannelsApi, isStandaloneMode } from '@mobazha/core';
 import type { ChannelConfig, ChannelTypeInfo, ChannelFieldSchema } from '@mobazha/core';
 import { Plus, Trash2, Send, Pencil, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -107,6 +107,25 @@ const FALLBACK_CHANNEL_TYPES: ChannelTypeInfo[] = [
   },
 ];
 
+/**
+ * Merge API-returned channel types with fallback definitions.
+ * API types take priority; fallback types are appended for any missing type keys.
+ */
+function mergeChannelTypes(
+  apiTypes: ChannelTypeInfo[],
+  fallback: ChannelTypeInfo[]
+): ChannelTypeInfo[] {
+  if (apiTypes.length === 0) return fallback;
+  const seen = new Set(apiTypes.map(t => t.type));
+  const merged = [...apiTypes];
+  for (const fb of fallback) {
+    if (!seen.has(fb.type)) {
+      merged.push(fb);
+    }
+  }
+  return merged;
+}
+
 interface ChannelFormData {
   type: string;
   name: string;
@@ -140,6 +159,10 @@ export function NotificationChannelsSection() {
 
   const [deleteTarget, setDeleteTarget] = useState<ChannelConfig | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
+  const [emailMode, setEmailMode] = useState<'resend' | 'smtp'>('resend');
+  const [dialogStep, setDialogStep] = useState(1);
+  const standalone = isStandaloneMode();
+  const isEmailStepper = form.type === 'email' && standalone;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -156,8 +179,8 @@ export function NotificationChannelsSection() {
         })),
       ]);
       loadedChannels = ch ?? [];
-      const types = typesResp.channel_types ?? [];
-      loadedTypes = types.length > 0 ? types : FALLBACK_CHANNEL_TYPES;
+      const apiTypes = typesResp.channel_types ?? [];
+      loadedTypes = mergeChannelTypes(apiTypes, FALLBACK_CHANNEL_TYPES);
       loadedCategories = typesResp.event_categories ?? [];
     } catch {
       loadedTypes = FALLBACK_CHANNEL_TYPES;
@@ -193,6 +216,8 @@ export function NotificationChannelsSection() {
     const defaultType = channelTypes[0]?.type ?? '';
     setEditingId(null);
     setForm({ ...emptyForm, type: defaultType });
+    setEmailMode('resend');
+    setDialogStep(1);
     initFilterState('');
     setDialogOpen(true);
   }
@@ -209,6 +234,10 @@ export function NotificationChannelsSection() {
       enabled: ch.enabled,
       settings,
     });
+    if (ch.type === 'email') {
+      setEmailMode(settings['smtp_server'] ? 'smtp' : 'resend');
+    }
+    setDialogStep(1);
     initFilterState(ch.event_filter ?? '');
     setDialogOpen(true);
   }
@@ -218,13 +247,23 @@ export function NotificationChannelsSection() {
     return categoriesToEventFilter(selectedCategories);
   }
 
+  const EMAIL_COMMON_KEYS = new Set(['recipient_email', 'sender_email']);
+  const EMAIL_RESEND_KEYS = new Set(['api_key']);
+  const EMAIL_SMTP_KEYS = new Set(['smtp_server', 'smtp_port', 'smtp_username', 'smtp_password']);
+
   async function handleSave() {
     if (!form.name.trim() || !form.type) return;
     setSaving(true);
     try {
       const settings: Record<string, string> = {};
+      const skipKeys =
+        form.type === 'email'
+          ? emailMode === 'resend'
+            ? EMAIL_SMTP_KEYS
+            : EMAIL_RESEND_KEYS
+          : undefined;
       for (const [k, v] of Object.entries(form.settings)) {
-        if (v) settings[k] = v;
+        if (v && !skipKeys?.has(k)) settings[k] = v;
       }
 
       const eventFilter = buildEventFilter();
@@ -353,6 +392,98 @@ export function NotificationChannelsSection() {
     );
   }
 
+
+  function renderEmailStep1(fields: ChannelFieldSchema[]) {
+    const recipientField = fields.find(f => f.key === 'recipient_email');
+    return recipientField ? renderFieldWithHelp(recipientField) : null;
+  }
+
+  function renderEmailStep2(fields: ChannelFieldSchema[]) {
+    const senderField = fields.find(f => f.key === 'sender_email');
+    const resend = fields.filter(f => EMAIL_RESEND_KEYS.has(f.key));
+    const smtpServer = fields.find(f => f.key === 'smtp_server');
+    const smtpPort = fields.find(f => f.key === 'smtp_port');
+    const smtpUser = fields.find(f => f.key === 'smtp_username');
+    const smtpPass = fields.find(f => f.key === 'smtp_password');
+
+    return (
+      <>
+        {senderField && renderFieldWithHelp(senderField)}
+
+        <div className="space-y-2 pt-1">
+          <Label>{t('admin.integrations.emailDeliveryMethod')}</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setEmailMode('resend')}
+              className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                emailMode === 'resend'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Resend API
+              <span className="block text-xs font-normal mt-0.5 opacity-70">
+                {t('admin.integrations.emailResendHint')}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEmailMode('smtp')}
+              className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                emailMode === 'smtp'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              SMTP
+              <span className="block text-xs font-normal mt-0.5 opacity-70">
+                {t('admin.integrations.emailSmtpHint')}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {emailMode === 'resend'
+          ? resend.map(field => renderFieldWithHelp(field))
+          : (
+            <>
+              <div className="grid grid-cols-[1fr_100px] gap-2">
+                {smtpServer && renderCompactField(smtpServer)}
+                {smtpPort && renderCompactField(smtpPort)}
+              </div>
+              {smtpUser && renderFieldWithHelp(smtpUser)}
+              {smtpPass && renderFieldWithHelp(smtpPass)}
+            </>
+          )}
+      </>
+    );
+  }
+
+  function renderCompactField(field: ChannelFieldSchema) {
+    const meta = getFieldMeta(form.type, field.key);
+    const isEditing = !!editingId;
+    const isPassword = field.type === 'password';
+    return (
+      <div key={field.key} className="space-y-1.5">
+        <Label className="text-xs">
+          {field.label}
+          {field.required && <span className="text-destructive ml-0.5">*</span>}
+        </Label>
+        <Input
+          type={isPassword ? 'password' : 'text'}
+          value={form.settings[field.key] ?? ''}
+          onChange={e => updateSetting(field.key, e.target.value)}
+          placeholder={
+            isEditing && isPassword
+              ? t('admin.integrations.passwordUnchanged')
+              : (meta.placeholder ?? '')
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       {!loading && channels.length > 0 && (
@@ -454,80 +585,144 @@ export function NotificationChannelsSection() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingId ? t('admin.integrations.editChannel') : t('admin.integrations.addChannel')}
+              {editingId
+                ? t('admin.integrations.editChannel')
+                : isEmailStepper && dialogStep === 2
+                  ? t('admin.integrations.emailStepDelivery')
+                  : t('admin.integrations.addChannel')}
             </DialogTitle>
+            {isEmailStepper && (
+              <div className="flex items-center gap-1.5 pt-1">
+                <div className={`h-1 flex-1 rounded-full transition-colors ${
+                  dialogStep >= 1 ? 'bg-primary' : 'bg-muted'
+                }`} />
+                <div className={`h-1 flex-1 rounded-full transition-colors ${
+                  dialogStep >= 2 ? 'bg-primary' : 'bg-muted'
+                }`} />
+              </div>
+            )}
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
-            {!editingId && (
-              <div className="space-y-1.5">
-                <Label>{t('admin.integrations.type')}</Label>
-                {channelTypes.length === 1 ? (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md text-sm">
-                    <span className="font-medium">{channelTypes[0].label}</span>
+            {/* Step 1: Basic info (all types) or Email step 1 */}
+            {(!isEmailStepper || dialogStep === 1) && (
+              <>
+                {!editingId && (
+                  <div className="space-y-1.5">
+                    <Label>{t('admin.integrations.type')}</Label>
+                    {channelTypes.length === 1 ? (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md text-sm">
+                        <span className="font-medium">{channelTypes[0].label}</span>
+                      </div>
+                    ) : (
+                      <Select
+                        value={form.type}
+                        onValueChange={v => {
+                          const autoName =
+                            !standalone && v === 'email' && !form.name.trim()
+                              ? t('admin.integrations.emailDefaultName')
+                              : form.name;
+                          setForm(prev => ({ ...prev, type: v, name: autoName, settings: {} }));
+                          setDialogStep(1);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {channelTypes.map(ct => (
+                            <SelectItem key={ct.type} value={ct.type}>
+                              {ct.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
-                ) : (
-                  <Select
-                    value={form.type}
-                    onValueChange={v => setForm(prev => ({ ...prev, type: v, settings: {} }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {channelTypes.map(ct => (
-                        <SelectItem key={ct.type} value={ct.type}>
-                          {ct.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 )}
-              </div>
+
+                {form.type === 'telegram' && !editingId && <TelegramSetupGuide />}
+
+                <div className="space-y-1.5">
+                  <Label>
+                    {t('admin.integrations.name')} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    value={form.name}
+                    onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder={t('admin.integrations.namePlaceholder')}
+                  />
+                </div>
+
+                {form.type === 'email' && selectedTypeInfo
+                  ? renderEmailStep1(selectedTypeInfo.fields)
+                  : selectedTypeInfo?.fields.map(field => renderFieldWithHelp(field))}
+              </>
             )}
 
-            {form.type === 'telegram' && !editingId && <TelegramSetupGuide />}
+            {/* Step 2: Email delivery config */}
+            {isEmailStepper && dialogStep === 2 && selectedTypeInfo && (
+              renderEmailStep2(selectedTypeInfo.fields)
+            )}
 
-            <div className="space-y-1.5">
-              <Label>
-                {t('admin.integrations.name')} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                value={form.name}
-                onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder={t('admin.integrations.namePlaceholder')}
-              />
-            </div>
+            {/* Event filter + Enable: show on step 2 for email, always for others */}
+            {(!isEmailStepper || dialogStep === 2) && (
+              <>
+                <EventFilterSection
+                  filterMode={filterMode}
+                  selectedCategories={selectedCategories}
+                  availableCategories={eventCategories}
+                  onFilterModeChange={setFilterMode}
+                  onToggleCategory={toggleCategory}
+                />
 
-            {selectedTypeInfo?.fields.map(field => renderFieldWithHelp(field))}
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="channel-enabled">{t('admin.integrations.enabled')}</Label>
+                  <Switch
+                    id="channel-enabled"
+                    checked={form.enabled}
+                    onCheckedChange={v => setForm(prev => ({ ...prev, enabled: v }))}
+                  />
+                </div>
+              </>
+            )}
 
-            <EventFilterSection
-              filterMode={filterMode}
-              selectedCategories={selectedCategories}
-              availableCategories={eventCategories}
-              onFilterModeChange={setFilterMode}
-              onToggleCategory={toggleCategory}
-            />
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="channel-enabled">{t('admin.integrations.enabled')}</Label>
-              <Switch
-                id="channel-enabled"
-                checked={form.enabled}
-                onCheckedChange={v => setForm(prev => ({ ...prev, enabled: v }))}
-              />
-            </div>
-
+            {/* Footer buttons */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                {t('admin.integrations.cancel')}
-              </Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
-                {saving ? t('admin.integrations.saving') : t('admin.integrations.save')}
-              </Button>
+              {isEmailStepper && dialogStep === 2 ? (
+                <>
+                  <Button variant="outline" onClick={() => setDialogStep(1)}>
+                    {t('admin.integrations.back')}
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
+                    {saving ? t('admin.integrations.saving') : t('admin.integrations.save')}
+                  </Button>
+                </>
+              ) : isEmailStepper && dialogStep === 1 ? (
+                <>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    {t('admin.integrations.cancel')}
+                  </Button>
+                  <Button
+                    onClick={() => setDialogStep(2)}
+                    disabled={!form.name.trim() || !form.settings['recipient_email']?.trim()}
+                  >
+                    {t('admin.integrations.next')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    {t('admin.integrations.cancel')}
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
+                    {saving ? t('admin.integrations.saving') : t('admin.integrations.save')}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </DialogContent>

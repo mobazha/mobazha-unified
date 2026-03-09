@@ -1,8 +1,15 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useI18n, useUserStore, isStandalone, getImageUrl } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  isStandalone,
+  getImageUrl,
+  useReceivingAccounts,
+} from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
 import {
@@ -20,6 +27,8 @@ import {
   Wand2,
   Palette,
   Coins,
+  Wallet,
+  CircleCheck,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { AvatarCompat } from '@/components/ui/avatar-compat';
@@ -136,9 +145,24 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const searchParams = useSearchParams();
   const { profile, updateProfile } = useUserStore();
 
+  const { data: receivingAccounts } = useReceivingAccounts();
+  const hasPayment = useMemo(
+    () =>
+      Array.isArray(receivingAccounts) &&
+      receivingAccounts.some(a => a.isActive !== false),
+    [receivingAccounts]
+  );
+
+  const TOTAL_STEPS = 4;
   const profileAlreadyComplete = useMemo(() => isProfileComplete(profile), [profile]);
   const cameFromOnboarding = searchParams.get('onboarding') === 'complete';
-  const [step, setStep] = useState(cameFromOnboarding ? 3 : profileAlreadyComplete ? 2 : 1);
+
+  const initialStep = useMemo(() => {
+    if (cameFromOnboarding) return hasPayment ? 4 : 3;
+    if (profileAlreadyComplete) return 2;
+    return 1;
+  }, [cameFromOnboarding, hasPayment, profileAlreadyComplete]);
+  const [step, setStep] = useState(initialStep);
 
   useEffect(() => {
     if (cameFromOnboarding) {
@@ -159,7 +183,8 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const stepLabels = [
     t('admin.onboarding.step1Label') || 'Store',
     t('admin.onboarding.step2Label') || 'Product',
-    t('admin.onboarding.step3Label') || 'Launch',
+    t('admin.onboarding.step3Label') || 'Payments',
+    t('admin.onboarding.step4Label') || 'Launch',
   ];
 
   const handleAvatarSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,7 +255,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
         </p>
       </div>
 
-      <StepIndicator currentStep={step} totalSteps={3} labels={stepLabels} />
+      <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} labels={stepLabels} />
 
       {step === 1 && (
         <div className="bg-card rounded-xl border p-4 sm:p-6 space-y-5 sm:space-y-6">
@@ -438,6 +463,71 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       )}
 
       {step === 3 && (
+        <div className="bg-card rounded-xl border p-4 sm:p-6 space-y-5 sm:space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">
+                {t('admin.onboarding.step3Title') || 'Set Up Payments'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('admin.onboarding.step3Desc') || 'Choose how you want to get paid'}
+              </p>
+            </div>
+          </div>
+
+          {hasPayment && (
+            <div className="flex items-center gap-2 rounded-lg bg-success/10 px-4 py-3">
+              <CircleCheck className="w-5 h-5 text-success shrink-0" />
+              <span className="text-sm text-success font-medium">
+                {t('admin.onboarding.paymentConfigured') || 'Payment method configured'}
+              </span>
+            </div>
+          )}
+
+          <Link
+            href="/admin/settings/payments"
+            className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent/50 transition-colors group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+              <Coins className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">
+                {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('admin.onboarding.setupPaymentsDesc') ||
+                  'Add crypto wallets, connect Stripe or PayPal'}
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+          </Link>
+
+          <div className="flex items-center justify-between pt-2">
+            <button
+              onClick={() => setStep(2)}
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {t('admin.onboarding.back') || 'Back'}
+            </button>
+            <button
+              onClick={() => setStep(4)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 sm:px-5 sm:py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors min-h-[44px] sm:min-h-0"
+            >
+              {hasPayment
+                ? t('admin.onboarding.next') || 'Next'
+                : t('admin.onboarding.skipStep') || 'Skip this step'}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
         <div className="bg-card rounded-xl border p-5 sm:p-8 text-center space-y-5 sm:space-y-6">
           <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto">
             <Rocket className="w-8 h-8 text-success" />

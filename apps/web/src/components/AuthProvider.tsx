@@ -15,6 +15,7 @@ import {
   standaloneStoresApi,
 } from '@mobazha/core';
 import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
+import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -74,6 +75,7 @@ export function AuthProvider({
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
   const tg = useTGMiniApp();
+  const discord = useDiscordActivity();
 
   // HMR 保护：使用 ref 避免热更新导致的重复执行
   const hasRestoredSession = useRef(false);
@@ -104,11 +106,7 @@ export function AuthProvider({
 
   // Detect Mini App platform (non-reactive, determined at mount)
   const isTGMiniApp = tg.isAvailable;
-  const isDiscordActivity =
-    typeof window !== 'undefined' &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ((window as any).__DISCORD_EMBEDDED__ ||
-      new URLSearchParams(window.location.search).has('frame_id'));
+  const isDiscordActivity = discord.isAvailable;
   const isMiniApp = isTGMiniApp || isDiscordActivity;
 
   // Mini App authentication flow
@@ -143,11 +141,11 @@ export function AuthProvider({
     if (isTGMiniApp) {
       credential = tg.initData;
     } else {
-      credential = new URLSearchParams(window.location.search).get('access_token');
-      if (credential) {
-        // Persist Discord access_token for 401 re-auth (URL is lost after navigation)
-        sessionStorage.setItem('discord_access_token', credential);
-      }
+      // SDK flow stores token in context + sessionStorage; URL fallback for legacy
+      credential =
+        discord.accessToken ??
+        sessionStorage.getItem('discord_access_token') ??
+        new URLSearchParams(window.location.search).get('access_token');
     }
 
     if (!credential) {
@@ -189,7 +187,7 @@ export function AuthProvider({
       enterAnonymousMode(platform as 'telegram' | 'discord');
       return true;
     }
-  }, [isMiniApp, isTGMiniApp, tg.initData, tg.initDataUnsafe, loginMiniApp, enterAnonymousMode]);
+  }, [isMiniApp, isTGMiniApp, tg.initData, tg.initDataUnsafe, discord.accessToken, loginMiniApp, enterAnonymousMode]);
 
   // 处理 OAuth 回调（在任何页面都可能发生）
   useEffect(() => {
@@ -222,8 +220,13 @@ export function AuthProvider({
     handleOAuthCallback();
   }, [loginWithOAuth, router, isProcessingOAuth, searchParams]);
 
+  // Delay auth initialization until Discord SDK is ready (avoids premature anonymous mode)
+  const discordPending = isDiscordActivity && !discord.isReady;
+
   // 恢复会话（仅在没有 OAuth 回调时）
   useEffect(() => {
+    if (discordPending) return;
+
     const initAuth = async () => {
       if (hasRestoredSession.current) {
         setIsInitialized(true);
@@ -245,7 +248,7 @@ export function AuthProvider({
     };
 
     initAuth();
-  }, [restoreSession, isProcessingOAuth, isMiniApp, handleMiniAppAuth]);
+  }, [restoreSession, isProcessingOAuth, isMiniApp, handleMiniAppAuth, discordPending]);
 
   useEffect(() => {
     if (!isInitialized || isProcessingOAuth) return;

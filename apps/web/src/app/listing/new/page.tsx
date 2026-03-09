@@ -333,9 +333,9 @@ function CreateListingContent() {
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
-      router.push('/settings/store');
+      router.push(fromOnboarding ? '/admin?onboarding=complete' : '/settings/store');
     }
-  }, [submitDraft, toast, t, router]);
+  }, [submitDraft, toast, t, router, fromOnboarding]);
 
   // 获取图片URL用于预览
   const getPreviewImageUrl = useCallback((image: Image) => {
