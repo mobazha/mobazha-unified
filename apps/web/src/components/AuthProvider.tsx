@@ -91,14 +91,16 @@ export function AuthProvider({
     autoConnect: true,
   });
 
-  // Sync local cart to backend when user logs in (anonymous → authenticated)
-  const wasAuthRef = useRef(isAuthenticated);
+  // Sync local cart to backend when user logs in (anonymous → authenticated).
+  // Uses undefined sentinel to skip the initial auth transition (session restore).
+  const prevAuthRef = useRef<boolean | undefined>(undefined);
   useEffect(() => {
-    if (isAuthenticated && !wasAuthRef.current) {
+    if (!isInitialized) return;
+    if (prevAuthRef.current !== undefined && isAuthenticated && !prevAuthRef.current) {
       useCartStore.getState().syncAllItems();
     }
-    wasAuthRef.current = isAuthenticated;
-  }, [isAuthenticated]);
+    prevAuthRef.current = isAuthenticated;
+  }, [isAuthenticated, isInitialized]);
 
   // Detect Mini App platform (non-reactive, determined at mount)
   const isTGMiniApp = tg.isAvailable;
