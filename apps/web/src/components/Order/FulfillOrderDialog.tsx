@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,34 +11,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n, ordersApi, CONTRACT_TYPES, type ContractType } from '@mobazha/core';
+import {
+  useI18n,
+  ordersApi,
+  CONTRACT_TYPES,
+  CARRIERS,
+  filterCarriersGrouped,
+  detectCarrier,
+  type CarrierConfig,
+} from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 import { ReceivingAccountSelector } from './ReceivingAccountSelector';
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface FulfillOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orderId: string;
-  /** 合约类型，用于判断是否显示收款账户选择器 */
   contractType?: string;
-  /** 区块链类型，用于筛选收款账户 */
   blockchain?: string;
   onSuccess?: () => void;
 }
 
-/**
- * 判断是否需要显示收款账户选择器
- * 参考桌面端逻辑：只有 RWA_TOKEN 类型订单需要选择收款账户
- */
 const shouldShowReceivingAccountSelector = (contractType?: string): boolean => {
   return contractType === CONTRACT_TYPES.RWA_TOKEN;
 };
 
-/**
- * 发货对话框组件
- * 用于卖家填写物流信息并确认发货
- */
 export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   open,
   onOpenChange,
@@ -50,23 +50,111 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   const { t } = useI18n();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  const lastCarrier = useMemo(() => {
+    try { return localStorage.getItem('mbz_last_carrier') ?? ''; } catch { return ''; }
+  }, []);
+
   const [trackingInfo, setTrackingInfo] = useState({
-    shipper: '',
+    shipper: lastCarrier,
     trackingNumber: '',
     note: '',
   });
 
-  // 收款账户相关
+  // Carrier dropdown state
+  const [carrierDropdownOpen, setCarrierDropdownOpen] = useState(false);
+  const [carrierQuery, setCarrierQuery] = useState(() => {
+    if (!lastCarrier) return '';
+    const found = CARRIERS.find(c => c.id === lastCarrier);
+    return found ? found.name : lastCarrier;
+  });
+  const [highlightedIdx, setHighlightedIdx] = useState(-1);
+  const carrierInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const carrierGroups = useMemo(
+    () => filterCarriersGrouped(carrierQuery),
+    [carrierQuery]
+  );
+
+  const filteredCarriers = useMemo(
+    () => carrierGroups.flatMap(g => g.carriers),
+    [carrierGroups]
+  );
+
   const selectedAccountRef = useRef<ReceivingAccount | null>(null);
   const showReceivingAccountSelector = shouldShowReceivingAccountSelector(contractType);
 
-  // 处理收款账户选择变化
   const handleAccountChange = useCallback((account: ReceivingAccount | null) => {
     selectedAccountRef.current = account;
   }, []);
 
+  const handleCarrierSelect = useCallback((carrier: CarrierConfig) => {
+    setTrackingInfo(prev => ({ ...prev, shipper: carrier.id }));
+    setCarrierQuery(carrier.name);
+    setCarrierDropdownOpen(false);
+    setHighlightedIdx(-1);
+  }, []);
+
+  const handleCarrierInputChange = useCallback((value: string) => {
+    setCarrierQuery(value);
+    setTrackingInfo(prev => ({ ...prev, shipper: value }));
+    setCarrierDropdownOpen(true);
+    setHighlightedIdx(-1);
+  }, []);
+
+  const handleCarrierBlur = useCallback(() => {
+    clearTimeout(blurTimeoutRef.current);
+    blurTimeoutRef.current = setTimeout(() => {
+      setCarrierDropdownOpen(false);
+      setHighlightedIdx(-1);
+    }, 150);
+  }, []);
+
+  const hasCustomOption = useMemo(
+    () => carrierQuery.trim() !== '' && !filteredCarriers.some(c => c.name.toLowerCase() === carrierQuery.toLowerCase()),
+    [carrierQuery, filteredCarriers]
+  );
+
+  const totalOptions = filteredCarriers.length + (hasCustomOption ? 1 : 0);
+
+  const handleCarrierKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!carrierDropdownOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        setCarrierDropdownOpen(true);
+        setHighlightedIdx(0);
+        e.preventDefault();
+      }
+      return;
+    }
+    if (totalOptions === 0) return;
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIdx(prev => (prev + 1) % totalOptions);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIdx(prev => (prev <= 0 ? totalOptions - 1 : prev - 1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIdx >= 0 && highlightedIdx < filteredCarriers.length) {
+          handleCarrierSelect(filteredCarriers[highlightedIdx]);
+        } else {
+          setCarrierDropdownOpen(false);
+          setHighlightedIdx(-1);
+        }
+        break;
+      case 'Escape':
+        setCarrierDropdownOpen(false);
+        setHighlightedIdx(-1);
+        break;
+    }
+  }, [carrierDropdownOpen, filteredCarriers, totalOptions, highlightedIdx, handleCarrierSelect]);
+
   const handleSubmit = useCallback(async () => {
-    // 普通物流订单需要验证快递单号
     if (contractType !== CONTRACT_TYPES.RWA_TOKEN && !trackingInfo.trackingNumber.trim()) {
       toast({
         title: t('order.actions.error'),
@@ -76,7 +164,6 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
       return;
     }
 
-    // RWA_TOKEN 订单需要验证收款账户
     if (showReceivingAccountSelector && !selectedAccountRef.current) {
       toast({
         title: t('order.actions.error'),
@@ -93,7 +180,6 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         note: trackingInfo.note || '',
       };
 
-      // 根据合约类型设置不同的发货信息
       if (contractType !== CONTRACT_TYPES.RWA_TOKEN) {
         payload.physicalDelivery = {
           shipper: trackingInfo.shipper || '',
@@ -101,7 +187,6 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         };
       }
 
-      // 如果需要收款账户，添加到请求中
       if (showReceivingAccountSelector && selectedAccountRef.current) {
         payload.receivingAccountID = selectedAccountRef.current.id;
       }
@@ -109,14 +194,17 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
       const result = await ordersApi.fulfillOrder(payload);
 
       if (result.success) {
+        if (trackingInfo.shipper) {
+          try { localStorage.setItem('mbz_last_carrier', trackingInfo.shipper); } catch { /* noop */ }
+        }
         toast({
           title: t('order.actions.fulfillSuccess'),
           description: t('order.actions.fulfillSuccessDesc'),
         });
         setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
+        setCarrierQuery('');
         selectedAccountRef.current = null;
         onOpenChange(false);
-        // 延迟刷新以确保后端状态已更新
         setTimeout(() => {
           onSuccess?.();
         }, 500);
@@ -146,8 +234,8 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
       if (!newOpen) {
-        // 关闭时重置表单
         setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
+        setCarrierQuery('');
         selectedAccountRef.current = null;
       }
       onOpenChange(newOpen);
@@ -166,7 +254,6 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         </AlertDialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* 收款账户选择器 - 只在 RWA_TOKEN 类型订单显示 */}
           {showReceivingAccountSelector && (
             <ReceivingAccountSelector
               blockchain={blockchain}
@@ -176,21 +263,103 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
             />
           )}
 
-          {/* 普通订单的物流信息表单 */}
           {contractType !== CONTRACT_TYPES.RWA_TOKEN && (
             <>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
+              {/* Carrier selector with autocomplete */}
+              <div className="relative" ref={dropdownRef}>
+                <label className="text-sm font-medium text-foreground mb-1.5 block" id="carrier-label">
                   {t('order.fulfill.carrier')}
                 </label>
-                <input
-                  type="text"
-                  value={trackingInfo.shipper}
-                  onChange={e => setTrackingInfo(prev => ({ ...prev, shipper: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  placeholder={t('order.fulfill.carrierPlaceholder')}
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <input
+                    ref={carrierInputRef}
+                    type="text"
+                    role="combobox"
+                    aria-expanded={carrierDropdownOpen}
+                    aria-controls="carrier-listbox"
+                    aria-labelledby="carrier-label"
+                    aria-activedescendant={highlightedIdx >= 0 ? `carrier-option-${highlightedIdx}` : undefined}
+                    value={carrierQuery}
+                    onChange={e => handleCarrierInputChange(e.target.value)}
+                    onFocus={() => setCarrierDropdownOpen(true)}
+                    onBlur={handleCarrierBlur}
+                    onKeyDown={handleCarrierKeyDown}
+                    className="w-full px-3 py-2 pr-8 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                    placeholder={t('order.fulfill.carrierPlaceholder')}
+                    disabled={isLoading}
+                    autoComplete="off"
+                  />
+                  <ChevronDown
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                  />
+                </div>
+
+                {carrierDropdownOpen && (filteredCarriers.length > 0 || carrierQuery.trim()) && (
+                  <div
+                    id="carrier-listbox"
+                    role="listbox"
+                    aria-labelledby="carrier-label"
+                    className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {(() => {
+                      let flatIdx = 0;
+                      return carrierGroups.map((group, gi) => (
+                        <div key={group.region}>
+                          {carrierGroups.length > 1 && (
+                            <div className={cn(
+                              'px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50 sticky top-0',
+                              gi > 0 && 'border-t border-border'
+                            )}>
+                              {group.label}
+                            </div>
+                          )}
+                          {group.carriers.map(carrier => {
+                            const idx = flatIdx++;
+                            return (
+                              <button
+                                key={carrier.id}
+                                id={`carrier-option-${idx}`}
+                                role="option"
+                                aria-selected={highlightedIdx === idx}
+                                type="button"
+                                className={cn(
+                                  'w-full px-3 py-1.5 text-left text-sm transition-colors',
+                                  highlightedIdx === idx ? 'bg-muted' : 'hover:bg-muted'
+                                )}
+                                onMouseDown={e => {
+                                  e.preventDefault();
+                                  handleCarrierSelect(carrier);
+                                }}
+                                onMouseEnter={() => setHighlightedIdx(idx)}
+                              >
+                                {carrier.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ));
+                    })()}
+                    {hasCustomOption && (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={highlightedIdx === filteredCarriers.length}
+                        className={cn(
+                          'w-full px-3 py-1.5 text-left text-sm transition-colors border-t border-border italic text-muted-foreground',
+                          highlightedIdx === filteredCarriers.length ? 'bg-muted' : 'hover:bg-muted',
+                          filteredCarriers.length === 0 && 'border-t-0'
+                        )}
+                        onMouseDown={e => {
+                          e.preventDefault();
+                          setCarrierDropdownOpen(false);
+                          setHighlightedIdx(-1);
+                        }}
+                      >
+                        {t('common.use')}: &ldquo;{carrierQuery.trim()}&rdquo;
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -200,13 +369,26 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                 <input
                   type="text"
                   value={trackingInfo.trackingNumber}
-                  onChange={e =>
-                    setTrackingInfo(prev => ({ ...prev, trackingNumber: e.target.value }))
-                  }
+                  onChange={e => {
+                    const val = e.target.value;
+                    setTrackingInfo(prev => ({ ...prev, trackingNumber: val }));
+                    if (!trackingInfo.shipper.trim() && val.trim().length >= 8) {
+                      const detected = detectCarrier(val);
+                      if (detected) {
+                        setTrackingInfo(prev => ({ ...prev, shipper: detected.id, trackingNumber: val }));
+                        setCarrierQuery(detected.name);
+                      }
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   placeholder={t('order.fulfill.trackingPlaceholder')}
                   disabled={isLoading}
                 />
+                {trackingInfo.trackingNumber.trim() && !trackingInfo.shipper.trim() && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('order.fulfill.carrierHint')}
+                  </p>
+                )}
               </div>
             </>
           )}

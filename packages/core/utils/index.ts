@@ -44,6 +44,9 @@ export * from './theme';
 // AI StoreConfig 验证 (PG-202)
 export * from './storeConfigValidator';
 
+// 物流商配置与追踪 URL 工具
+export * from './shipping';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';
