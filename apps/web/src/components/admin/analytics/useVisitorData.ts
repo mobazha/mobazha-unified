@@ -39,21 +39,18 @@ export interface VisitorSummary {
   uniqueVisitors: number;
 }
 
-interface VisitorStatsResponse {
-  data: {
-    summary: VisitorSummary;
-    trend: VisitorTrendPoint[];
-    topPages: PageStat[];
-    topReferrers: ReferrerStat[];
-    funnel: ConversionFunnel;
-  };
+interface VisitorStats {
+  summary: VisitorSummary;
+  trend: VisitorTrendPoint[];
+  topPages: PageStat[];
+  topReferrers: ReferrerStat[];
+  funnel: ConversionFunnel;
 }
 
 export type VisitorPeriod = 7 | 30 | 90;
 
-async function fetchVisitorStats(days: number): Promise<VisitorStatsResponse['data']> {
-  const res = await authGet<VisitorStatsResponse>(`${NODE_API.ANALYTICS_STATS}?days=${days}`);
-  return res.data;
+async function fetchVisitorStats(days: number): Promise<VisitorStats> {
+  return authGet<VisitorStats>(`${NODE_API.ANALYTICS_STATS}?days=${days}`);
 }
 
 export function useVisitorData(days: VisitorPeriod = 30) {
