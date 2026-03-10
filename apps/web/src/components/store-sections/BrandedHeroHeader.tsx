@@ -239,6 +239,8 @@ export function BrandedHeroHeader({
                 description={
                   store.shortDescription ? stripHtmlTags(store.shortDescription) : undefined
                 }
+                embedType="store"
+                embedIdentifier={peerId}
               />
             </div>
           </div>

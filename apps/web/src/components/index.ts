@@ -1,5 +1,6 @@
 export { Header } from './Header';
 export { MainContent } from './MainContent';
+export { NonEmbedUI } from './NonEmbedUI';
 export { Hero } from './Hero';
 export { ProductSection } from './ProductSection';
 export { Footer } from './Footer';

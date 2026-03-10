@@ -122,6 +122,15 @@ export const en: TranslationResource = {
     shareProduct: 'Share product',
   },
 
+  embed: {
+    title: 'Embed Code',
+    embedCode: 'Embed',
+    size: 'Size',
+    code: 'HTML Code',
+    preview: 'Preview',
+    codeCopied: 'Embed code copied!',
+  },
+
   review: {
     summary: 'Rating summary',
     noReviews: 'No reviews yet',
@@ -4515,6 +4524,14 @@ export const en: TranslationResource = {
     pendingRequirements: 'Action needed',
     manageDashboard: '{{provider}} Dashboard',
     dashboardLoginHint: 'Sign in to {{provider}} with {{email}}',
+    payoutInfoTitle: 'How do I get paid?',
+    payoutInfoStripe:
+      'Stripe deposits funds to your bank account on a rolling basis (typically 2 business days). You can view and adjust your payout schedule in the Stripe Dashboard.',
+    payoutInfoPaypal:
+      'PayPal payments arrive in your PayPal balance. You can transfer to your bank from the PayPal app or set up automatic withdrawals.',
+    payoutInfoCrypto:
+      'Cryptocurrency payments go directly to your wallet address. No intermediary — you have full control of your funds.',
+    payoutInfoLearnMore: 'Learn more',
   },
   store: {
     offlineBanner: 'This store is currently offline. Showing cached data.',

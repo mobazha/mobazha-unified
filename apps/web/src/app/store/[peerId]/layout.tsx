@@ -147,9 +147,18 @@ export default async function StoreLayout({
   const { peerId } = await params;
   const profile = await fetchProfile(peerId);
   const orgLd = buildOrganizationLd(profile, peerId);
+  const canonicalUrl = `${SITE_URL}/store/${peerId}`;
+  const oembedUrl = `${SITE_URL}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
+  const storeName = profile?.name || profile?.handle || peerId.slice(0, 12);
 
   return (
     <>
+      <link
+        rel="alternate"
+        type="application/json+oembed"
+        href={oembedUrl}
+        title={`${storeName}'s Store`}
+      />
       {orgLd && (
         <script
           type="application/ld+json"

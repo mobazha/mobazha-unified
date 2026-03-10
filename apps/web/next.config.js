@@ -69,34 +69,31 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // 静态资源缓存
+        source: '/embed/:path*',
+        headers: [
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'no-referrer-when-downgrade' },
+        ],
+      },
+      {
+        source: '/((?!embed|_next/static|icons).*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+      {
         source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif|woff|woff2)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
-        // JS/CSS 缓存
         source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
-        // API 响应不缓存
         source: '/api/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, must-revalidate',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
     ];
   },
