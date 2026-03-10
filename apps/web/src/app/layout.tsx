@@ -7,6 +7,7 @@ import {
   CurrencyProvider,
   MainContent,
   MobileNav,
+  NonEmbedUI,
   PWAInstall,
   QueryProvider,
   ServiceWorkerProvider,
@@ -131,16 +132,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                               <StandaloneThemeWrapper>
                                 <MainContent>{children}</MainContent>
 
-                                <MobileNav />
-
-                                {/* Chat floating button and drawer */}
-                                <ChatSystemLazy />
-
-                                {/* PWA install prompt */}
-                                <PWAInstall />
-
-                                {/* Session expired dialog (global 401 handler) */}
-                                <SessionExpiredDialog />
+                                <NonEmbedUI>
+                                  <MobileNav />
+                                  <ChatSystemLazy />
+                                  <PWAInstall />
+                                  <SessionExpiredDialog />
+                                </NonEmbedUI>
 
                                 {/* Toast notifications */}
                                 <Toaster />

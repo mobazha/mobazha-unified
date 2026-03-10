@@ -1060,6 +1060,8 @@ export default function StorePage() {
                                   ? stripHtmlTags(store.shortDescription)
                                   : undefined
                               }
+                              embedType="store"
+                              embedIdentifier={peerId}
                             />
                           </>
                         )}

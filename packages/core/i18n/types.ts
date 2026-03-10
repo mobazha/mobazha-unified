@@ -1931,6 +1931,15 @@ export interface TranslationResource {
     shareProduct: string;
   };
 
+  embed?: {
+    title?: string;
+    embedCode?: string;
+    size?: string;
+    code?: string;
+    preview?: string;
+    codeCopied?: string;
+  };
+
   // Review (product reviews / ratings)
   review?: {
     summary: string;
@@ -3261,6 +3270,11 @@ export interface TranslationResource {
     pendingRequirements?: string;
     manageDashboard?: string;
     dashboardLoginHint?: string;
+    payoutInfoTitle?: string;
+    payoutInfoStripe?: string;
+    payoutInfoPaypal?: string;
+    payoutInfoCrypto?: string;
+    payoutInfoLearnMore?: string;
   };
   store?: TranslationSection & {
     offlineBanner?: string;

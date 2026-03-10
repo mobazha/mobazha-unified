@@ -2,34 +2,55 @@
 
 import React, { useCallback, useState } from 'react';
 import { useI18n } from '@mobazha/core';
-import { Share2, Copy, Check, ExternalLink } from 'lucide-react';
+import { Share2, Copy, Check, ExternalLink, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/layouts';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
 import { useShare } from '@/hooks/useShare';
 import { cn } from '@/lib/utils';
+import { EmbedDialog } from './EmbedDialog';
+
+type EmbedType = 'product' | 'store';
 
 export interface ShareButtonProps {
   url: string;
   title: string;
   description?: string;
   className?: string;
+  /** Enable embed option — pass 'product' or 'store' */
+  embedType?: EmbedType;
+  /** Product slug or store peerID for embed */
+  embedIdentifier?: string;
+  /** peerID for product embeds */
+  embedPeerID?: string;
 }
 
 const TWITTER_SHARE_BASE = 'https://twitter.com/intent/tweet';
 const TELEGRAM_SHARE_BASE = 'https://t.me/share/url';
 
-export function ShareButton({ url, title, description, className }: ShareButtonProps) {
+export function ShareButton({
+  url,
+  title,
+  description,
+  className,
+  embedType,
+  embedIdentifier,
+  embedPeerID,
+}: ShareButtonProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { share: platformShare, isTG } = useShare();
   const [copied, setCopied] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(false);
+
+  const showEmbed = !!embedType && !!embedIdentifier;
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -126,7 +147,31 @@ export function ShareButton({ url, title, description, className }: ShareButtonP
             <span>{t('share.shareToTelegram')}</span>
           </HStack>
         </DropdownMenuItem>
+        {showEmbed && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setEmbedOpen(true)}
+              className="text-foreground focus:bg-primary/10 focus:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <HStack gap="sm" align="center">
+                <Code2 className="h-4 w-4 text-muted-foreground" aria-hidden />
+                <span>{t('embed.embedCode')}</span>
+              </HStack>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
+
+      {showEmbed && (
+        <EmbedDialog
+          open={embedOpen}
+          onOpenChange={setEmbedOpen}
+          type={embedType!}
+          identifier={embedIdentifier!}
+          peerID={embedPeerID}
+        />
+      )}
     </DropdownMenu>
   );
 }

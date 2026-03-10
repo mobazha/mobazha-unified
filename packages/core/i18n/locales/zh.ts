@@ -128,6 +128,15 @@ export const zh: TranslationResource = {
     shareProduct: '分享商品',
   },
 
+  embed: {
+    title: '嵌入代码',
+    embedCode: '嵌入',
+    size: '尺寸',
+    code: 'HTML 代码',
+    preview: '预览',
+    codeCopied: '嵌入代码已复制！',
+  },
+
   review: {
     summary: '评分概览',
     noReviews: '暂无评价',
@@ -4408,6 +4417,13 @@ export const zh: TranslationResource = {
     pendingRequirements: '需要操作',
     manageDashboard: '{{provider}} 控制台',
     dashboardLoginHint: '使用 {{email}} 登录 {{provider}}',
+    payoutInfoTitle: '我如何收款？',
+    payoutInfoStripe:
+      'Stripe 会按滚动周期将资金存入您的银行账户（通常 2 个工作日）。您可以在 Stripe 控制台中查看和调整打款计划。',
+    payoutInfoPaypal:
+      'PayPal 付款会进入您的 PayPal 余额。您可以从 PayPal 应用转账到银行，或设置自动提现。',
+    payoutInfoCrypto: '加密货币付款直接到达您的钱包地址。无中间商——您完全控制自己的资金。',
+    payoutInfoLearnMore: '了解更多',
   },
 };
 

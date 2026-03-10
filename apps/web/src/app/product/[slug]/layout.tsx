@@ -156,9 +156,17 @@ export default async function ProductLayout({
   const product = await fetchProduct(slug);
   const jsonLd = buildJsonLd(product);
   const breadcrumbLd = buildBreadcrumbLd(product);
+  const canonicalUrl = `${SITE_URL}/product/${slug}`;
+  const oembedUrl = `${SITE_URL}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
 
   return (
     <>
+      <link
+        rel="alternate"
+        type="application/json+oembed"
+        href={oembedUrl}
+        title={product?.item?.title || slug}
+      />
       {jsonLd && (
         <script
           type="application/ld+json"

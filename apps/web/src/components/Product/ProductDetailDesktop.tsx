@@ -327,6 +327,9 @@ export function ProductDetailDesktop({
                     url={typeof window !== 'undefined' ? window.location.href : ''}
                     title={product.item.title}
                     description={product.item.description?.substring(0, 100)}
+                    embedType="product"
+                    embedIdentifier={slug}
+                    embedPeerID={peerID}
                   />
                 )}
               </HStack>
