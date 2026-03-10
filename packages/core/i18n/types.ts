@@ -2541,6 +2541,20 @@ export interface TranslationResource {
       product?: string;
       unitsSold?: string;
       noData?: string;
+      visitorTitle?: string;
+      visitorSubtitle?: string;
+      visitorTrend?: string;
+      pageViews?: string;
+      productViews?: string;
+      uniqueVisitors?: string;
+      addToCartCount?: string;
+      checkoutCount?: string;
+      conversionFunnel?: string;
+      trafficSources?: string;
+      topPages?: string;
+      page?: string;
+      views?: string;
+      visitors?: string;
     };
     discounts?: {
       title?: string;
