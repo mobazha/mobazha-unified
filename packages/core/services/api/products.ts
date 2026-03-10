@@ -100,16 +100,20 @@ export interface SearchedUser {
 }
 
 /**
- * 将 Image 对象中的 IPFS hash 转换为完整 URL
+ * 将 Image 对象中的 CID hash 转换为完整 URL。
+ * @param storeHint - 跨店铺路由：传入 vendor peerID，让 gateway 能按需从独立站拉取
  */
-function transformImageUrls(image: Image | undefined | null): Image | undefined {
+function transformImageUrls(
+  image: Image | undefined | null,
+  storeHint?: string
+): Image | undefined {
   if (!image) return undefined;
   return {
-    tiny: getImageUrl(image.tiny) ?? '',
-    small: getImageUrl(image.small) ?? '',
-    medium: getImageUrl(image.medium) ?? '',
-    large: getImageUrl(image.large) ?? '',
-    original: getImageUrl(image.original) ?? '',
+    tiny: getImageUrl(image.tiny, storeHint) ?? '',
+    small: getImageUrl(image.small, storeHint) ?? '',
+    medium: getImageUrl(image.medium, storeHint) ?? '',
+    large: getImageUrl(image.large, storeHint) ?? '',
+    original: getImageUrl(image.original, storeHint) ?? '',
     filename: image.filename,
   };
 }
@@ -122,10 +126,11 @@ function parseSearchResults(response: SearchApiResponse | SearchResultItem[]): P
     ? response
     : (response?.results?.results ?? []);
   return items.map(item => {
-    const thumbnail = transformImageUrls(item.data.thumbnail);
     const vendor = item.relationships?.vendor?.data;
+    const vendorPeerID = vendor?.peerID ?? item.data.vendorPeerID;
+    const thumbnail = transformImageUrls(item.data.thumbnail, vendorPeerID);
     const vendorAvatarHashes = vendor?.avatarHashes
-      ? transformImageUrls(vendor.avatarHashes as Image)
+      ? transformImageUrls(vendor.avatarHashes as Image, vendorPeerID)
       : undefined;
 
     // 从 relationships 中获取 moderators
@@ -133,7 +138,7 @@ function parseSearchResults(response: SearchApiResponse | SearchResultItem[]): P
 
     return {
       ...item.data,
-      vendorPeerID: vendor?.peerID ?? item.data.vendorPeerID,
+      vendorPeerID,
       vendorName: vendor?.name,
       vendorAvatarHashes,
       // 转换缩略图 IPFS hash 为完整 URL，保持原始值作为后备

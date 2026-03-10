@@ -274,17 +274,30 @@ export function getMediaBaseURL(): string | undefined {
 /**
  * 将 CID hash 转换为完整的图片 URL。
  *
+ * @param hash - CID hash, full URL, or undefined
+ * @param storeHint - Optional peerID of the store that owns this image.
+ *   When provided, the URL routes through the gateway with ?store={peerID}
+ *   so the gateway can on-demand fetch from the standalone store (E'+D).
+ *   After R2 backfill, subsequent requests use CDN directly.
+ *
  * 优先级：
  *  1. 已是完整 URL → 直接返回
- *  2. CDN base URL 已配置 → 构造 CDN 直达 URL（绕过 gateway）
- *  3. Fallback → 通过 gateway 的 /v1/media/images/{hash} 路径
+ *  2. storeHint 存在 → gateway URL + ?store= (跨店铺路由，跳过 CDN)
+ *  3. CDN base URL 已配置 → 构造 CDN 直达 URL（绕过 gateway）
+ *  4. Fallback → 通过 gateway 的 /v1/media/images/{hash} 路径
  */
-export function getImageUrl(hash: string | undefined | null): string | undefined {
+export function getImageUrl(
+  hash: string | undefined | null,
+  storeHint?: string
+): string | undefined {
   if (!hash || typeof hash !== 'string' || hash === '') {
     return undefined;
   }
   if (hash.startsWith('http://') || hash.startsWith('https://') || hash.startsWith('/')) {
     return hash;
+  }
+  if (storeHint) {
+    return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}?store=${encodeURIComponent(storeHint)}`;
   }
   const cdnBase = getMediaBaseURL();
   if (cdnBase) {
