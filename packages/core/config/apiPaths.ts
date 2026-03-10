@@ -103,6 +103,9 @@ export const NODE_API = {
   AI_CONFIG: '/settings/ai',
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',
+  AI_CHAT: '/ai/chat',
+  AI_CHAT_SESSIONS: '/ai/chat/sessions',
+  AI_CHAT_SESSION: (sessionId: string) => `/ai/chat/${sessionId}`,
 
   // --- Social / Follow ---
   FOLLOW: (peerID: string) => `/follow/${peerID}`,

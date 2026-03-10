@@ -73,6 +73,8 @@
     "eslint-config-next": "^16.1.1",
     "jsdom": "^26.0.0",
     "postcss": "^8.4.49",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
     "vite": "^7.3.1",
