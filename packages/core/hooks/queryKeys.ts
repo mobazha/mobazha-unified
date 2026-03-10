@@ -66,4 +66,9 @@ export const queryKeys = {
     all: ['stores'] as const,
     metadata: (peerID: string) => [...queryKeys.stores.all, 'metadata', peerID] as const,
   },
+
+  analytics: {
+    all: ['analytics'] as const,
+    visitors: (days: number) => [...queryKeys.analytics.all, 'visitors', days] as const,
+  },
 } as const;

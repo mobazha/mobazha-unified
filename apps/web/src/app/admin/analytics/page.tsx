@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import {
   useAnalyticsData,
+  VisitorAnalytics,
   type Period,
   type TrendPoint,
   type ProductStat,
@@ -428,6 +429,12 @@ export default function AdminAnalyticsPage() {
           loading={data.isLoading}
         />
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-border my-8" />
+
+      {/* Visitor Analytics Section */}
+      <VisitorAnalytics />
     </div>
   );
 }

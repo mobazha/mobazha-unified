@@ -113,6 +113,9 @@ export * from './useStorefrontConfig';
 // 渐进渲染 (M4-4)
 export * from './useProgressiveList';
 
+// 访客分析相关
+export * from './useVisitorTracker';
+
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
 export { formatQueryError } from './queryUtils';
