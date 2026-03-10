@@ -22,8 +22,8 @@
 export const NODE_API = {
   // --- Profiles ---
   PROFILES: '/profiles',
-  PROFILE_AVATAR: (peerID: string) => `/profiles/${peerID}/avatar`,
-  PROFILE_HEADER: (peerID: string) => `/profiles/${peerID}/header`,
+  PROFILE_AVATAR: (peerID: string, size: string = 'medium') => `/profiles/${peerID}/avatar/${size}`,
+  PROFILE_HEADER: (peerID: string, size: string = 'large') => `/profiles/${peerID}/header/${size}`,
   PROFILES_BATCH: '/profiles/batch',
   PEER_ID: '/peerid',
 
