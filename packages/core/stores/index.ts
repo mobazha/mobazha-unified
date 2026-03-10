@@ -26,6 +26,9 @@ export * from './notificationStore';
 // 收藏/愿望单状态
 export * from './wishlistStore';
 
+// AI 聊天状态
+export * from './aiChatStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';

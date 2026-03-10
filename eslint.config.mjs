@@ -74,6 +74,8 @@ export default [
         PerformanceResourceTiming: 'readonly',
         // Web APIs
         AbortController: 'readonly',
+        AbortSignal: 'readonly',
+        DOMException: 'readonly',
         TextEncoder: 'readonly',
         TextDecoder: 'readonly',
         Blob: 'readonly',

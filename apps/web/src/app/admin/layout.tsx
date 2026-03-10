@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { AuthGuard } from '@/components';
 import { AdminSidebar, AdminHeader } from '@/components/admin';
 import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs';
+import { AIChatPanel } from '@/components/AIChatPanel';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -34,6 +35,9 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
 
       {/* Mobile bottom tab bar */}
       <AdminMobileBottomTabs />
+
+      {/* AI Assistant floating panel */}
+      <AIChatPanel />
     </div>
   );
 }
