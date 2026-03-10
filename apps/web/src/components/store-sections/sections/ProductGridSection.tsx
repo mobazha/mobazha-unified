@@ -96,7 +96,7 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
               <div className="aspect-square bg-muted">
                 {product.thumbnail && (
                   <img
-                    src={getImageUrl(product.thumbnail?.medium)}
+                    src={getImageUrl(product.thumbnail?.medium, peerId)}
                     alt={product.title}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />

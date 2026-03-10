@@ -57,7 +57,9 @@ export function BrandedHeroHeader({
   const heroSection = storefrontConfig?.sections?.find(s => s.type === 'hero');
   const heroProps = heroSection?.props as Record<string, unknown> | undefined;
 
-  const bgUrl = (heroProps?.backgroundImage as string) || getImageUrl(store.headerHashes?.large);
+  const storeHint = isOwnStore ? undefined : peerId;
+  const bgUrl =
+    (heroProps?.backgroundImage as string) || getImageUrl(store.headerHashes?.large, storeHint);
   const heroTitle = store.name || peerId.slice(0, 8);
   const heroConfigTitle = heroProps?.title as string | undefined;
   const heroConfigSubtitle = heroProps?.subtitle as string | undefined;
@@ -71,7 +73,7 @@ export function BrandedHeroHeader({
   const ctaLink = heroProps?.ctaLink as string | undefined;
   const overlayOpacity = (heroProps?.overlayOpacity as number) ?? 0.5;
 
-  const avatarUrl = getImageUrl(store.avatarHashes?.medium);
+  const avatarUrl = getImageUrl(store.avatarHashes?.medium, storeHint);
 
   return (
     <div className="relative overflow-hidden">

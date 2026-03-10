@@ -293,15 +293,17 @@ export function getImageUrl(
   if (!hash || typeof hash !== 'string' || hash === '') {
     return undefined;
   }
-  if (hash.startsWith('http://') || hash.startsWith('https://') || hash.startsWith('/')) {
-    return hash;
+  const h = hash.trim();
+  if (!h) return undefined;
+  if (h.startsWith('http://') || h.startsWith('https://') || h.startsWith('/')) {
+    return h;
   }
   if (storeHint) {
-    return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}?store=${encodeURIComponent(storeHint)}`;
+    return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(h)}?store=${encodeURIComponent(storeHint)}`;
   }
   const cdnBase = getMediaBaseURL();
   if (cdnBase) {
-    return `${cdnBase}/${hash}`;
+    return `${cdnBase}/${h}`;
   }
-  return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`;
+  return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(h)}`;
 }

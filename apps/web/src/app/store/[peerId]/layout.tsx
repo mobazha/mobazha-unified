@@ -24,10 +24,11 @@ interface StorefrontData {
   }>;
 }
 
-function getImageUrl(hash?: string): string | undefined {
+function getImageUrl(hash?: string, storeHint?: string): string | undefined {
   if (!hash) return undefined;
-  if (MEDIA_CDN) return `${MEDIA_CDN}/${hash}`;
-  return `${API_BASE}/v1/media/images/${hash}`;
+  if (MEDIA_CDN && !storeHint) return `${MEDIA_CDN}/${hash}`;
+  const base = `${API_BASE}/v1/media/images/${hash}`;
+  return storeHint ? `${base}?store=${encodeURIComponent(storeHint)}` : base;
 }
 
 function unwrapEnvelope<T>(json: unknown): T {
@@ -127,7 +128,10 @@ export async function generateMetadata({
 function buildOrganizationLd(profile: ProfileData | null, peerId: string) {
   if (!profile) return null;
   const name = profile.name || profile.handle || peerId.slice(0, 12);
-  const avatarUrl = getImageUrl(profile.avatarHashes?.medium || profile.avatarHashes?.small);
+  const avatarUrl = getImageUrl(
+    profile.avatarHashes?.medium || profile.avatarHashes?.small,
+    peerId
+  );
 
   return {
     '@context': 'https://schema.org',

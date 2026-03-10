@@ -15,9 +15,10 @@ export function AboutSection({
   image,
   imagePosition,
   showContactInfo,
-}: AboutSectionProps) {
+  storeHint,
+}: AboutSectionProps & { storeHint?: string }) {
   const { t } = useI18n();
-  const imgSrc = image ? getImageUrl(image) : null;
+  const imgSrc = image ? getImageUrl(image, storeHint) : null;
   const isLeft = imagePosition === 'left';
 
   return (

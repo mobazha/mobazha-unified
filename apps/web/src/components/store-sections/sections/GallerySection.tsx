@@ -29,7 +29,8 @@ export function GallerySection({
   columns,
   aspectRatio,
   enableLightbox,
-}: GallerySectionProps) {
+  storeHint,
+}: GallerySectionProps & { storeHint?: string }) {
   const { t } = useI18n();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -66,7 +67,7 @@ export function GallerySection({
       )}
       <div className={`grid gap-3 ${COLS_CLASS[columns] ?? COLS_CLASS[3]}`}>
         {images.map((img, i) => {
-          const src = getImageUrl(img.src);
+          const src = getImageUrl(img.src, storeHint);
           const aspectClass = ASPECT_CLASS[aspectRatio] ?? '';
           const inner = (
             <div
@@ -113,7 +114,7 @@ export function GallerySection({
             <X className="w-8 h-8" />
           </button>
           <img
-            src={getImageUrl(images[lightboxIndex].src)}
+            src={getImageUrl(images[lightboxIndex].src, storeHint)}
             alt={images[lightboxIndex].alt || ''}
             className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
             onClick={e => e.stopPropagation()}

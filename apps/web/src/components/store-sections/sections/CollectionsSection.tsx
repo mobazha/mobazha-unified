@@ -114,7 +114,7 @@ function CollectionCard({
   standalone: boolean;
   className?: string;
 }) {
-  const imgSrc = collection.image ? getImageUrl(collection.image) : null;
+  const imgSrc = collection.image ? getImageUrl(collection.image, peerId) : null;
   const href = standalone
     ? `/collections/${collection.id}`
     : `/store/${peerId}/collection/${collection.id}`;

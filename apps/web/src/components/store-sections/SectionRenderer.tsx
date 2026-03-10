@@ -68,15 +68,15 @@ function SectionSwitch({
     case 'store-tabs':
       return <StoreTabsSection {...section.props} peerId={peerId} />;
     case 'about':
-      return <AboutSection {...section.props} />;
+      return <AboutSection {...section.props} storeHint={peerId} />;
     case 'testimonials':
-      return <TestimonialsSection {...section.props} />;
+      return <TestimonialsSection {...section.props} storeHint={peerId} />;
     case 'faq':
       return <FaqSection {...section.props} />;
     case 'collections':
       return <CollectionsSection {...section.props} peerId={peerId} />;
     case 'gallery':
-      return <GallerySection {...section.props} />;
+      return <GallerySection {...section.props} storeHint={peerId} />;
     case 'rich-text':
       return <RichTextSection {...section.props} />;
     case 'contact':
