@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useAIChatStore } from '@mobazha/core/stores';
+import { useI18n } from '@mobazha/core';
 import {
   MessageSquare,
   X,
@@ -27,7 +28,7 @@ function ToolCallBadge({ tool }: { tool: ToolCallInfo }) {
     ) : tool.status === 'error' ? (
       <span className="text-destructive">!</span>
     ) : (
-      <span className="text-green-500">✓</span>
+      <span className="text-primary">✓</span>
     );
 
   return (
@@ -35,6 +36,8 @@ function ToolCallBadge({ tool }: { tool: ToolCallInfo }) {
       <button
         className="flex items-center gap-1.5 px-2 py-1 w-full text-left"
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        aria-label={tool.name}
       >
         <Wrench className="w-3 h-3 text-muted-foreground" />
         <span className="font-medium">{tool.name}</span>
@@ -111,6 +114,7 @@ function SessionList({
   onSelect: (id: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const { sessions, loadSessions, deleteSession, newChat } = useAIChatStore();
 
   useEffect(() => {
@@ -120,8 +124,12 @@ function SessionList({
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-        <span className="text-sm font-medium">History</span>
-        <button onClick={onClose} className="p-1 hover:bg-muted rounded">
+        <span className="text-sm font-medium">{t('ai.history')}</span>
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-muted rounded"
+          aria-label={t('common.close')}
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -133,7 +141,7 @@ function SessionList({
         className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted border-b border-border"
       >
         <Plus className="w-4 h-4" />
-        New Chat
+        {t('ai.newChat')}
       </button>
       <div className="flex-1 overflow-y-auto">
         {sessions.map(s => (
@@ -148,10 +156,11 @@ function SessionList({
                 onClose();
               }}
             >
-              {s.title || 'Untitled'}
+              {s.title || t('ai.untitled')}
             </button>
             <button
               className="p-1 opacity-0 group-hover:opacity-100 hover:text-destructive"
+              aria-label={t('common.delete')}
               onClick={e => {
                 e.stopPropagation();
                 deleteSession(s.id);
@@ -162,7 +171,9 @@ function SessionList({
           </div>
         ))}
         {sessions.length === 0 && (
-          <div className="text-center text-muted-foreground text-xs py-4">No conversations yet</div>
+          <div className="text-center text-muted-foreground text-xs py-4">
+            {t('ai.noConversations')}
+          </div>
         )}
       </div>
     </div>
@@ -182,10 +193,17 @@ export function AIChatPanel() {
     clearError,
   } = useAIChatStore();
 
+  const { t } = useI18n();
   const [input, setInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    return () => {
+      cancelStream();
+    };
+  }, [cancelStream]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -213,7 +231,7 @@ export function AIChatPanel() {
       <button
         onClick={toggle}
         className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
-        aria-label="Open AI Assistant"
+        aria-label={t('ai.openAssistant')}
       >
         <MessageSquare className="w-5 h-5" />
       </button>
@@ -226,17 +244,21 @@ export function AIChatPanel() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />
-          <span className="font-medium text-sm">AI Assistant</span>
+          <span className="font-medium text-sm">{t('ai.title')}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="p-1.5 hover:bg-muted rounded-md"
-            title="Chat History"
+            aria-label={t('ai.history')}
           >
             <MessageSquare className="w-4 h-4" />
           </button>
-          <button onClick={toggle} className="p-1.5 hover:bg-muted rounded-md">
+          <button
+            onClick={toggle}
+            className="p-1.5 hover:bg-muted rounded-md"
+            aria-label={t('common.close')}
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -254,8 +276,8 @@ export function AIChatPanel() {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Bot className="w-10 h-10 mb-3 opacity-50" />
-            <p className="text-sm">Ask me anything about your store</p>
-            <p className="text-xs mt-1">Products, orders, analytics...</p>
+            <p className="text-sm">{t('ai.welcomeMessage')}</p>
+            <p className="text-xs mt-1">{t('ai.welcomeHint')}</p>
           </div>
         )}
         {messages.map(msg => (
@@ -278,7 +300,7 @@ export function AIChatPanel() {
       {error && (
         <div className="px-3 py-2 bg-destructive/10 text-destructive text-xs flex items-center justify-between">
           <span className="truncate">{error}</span>
-          <button onClick={clearError} className="ml-2 shrink-0">
+          <button onClick={clearError} className="ml-2 shrink-0" aria-label={t('common.close')}>
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -292,7 +314,8 @@ export function AIChatPanel() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder={t('ai.inputPlaceholder')}
+            aria-label={t('ai.inputPlaceholder')}
             rows={1}
             className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24"
             disabled={isStreaming}
@@ -301,7 +324,7 @@ export function AIChatPanel() {
             <button
               onClick={cancelStream}
               className="p-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
-              title="Stop generating"
+              aria-label={t('ai.stopGenerating')}
             >
               <Square className="w-4 h-4" />
             </button>
@@ -310,6 +333,7 @@ export function AIChatPanel() {
               onClick={handleSend}
               disabled={!input.trim()}
               className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
+              aria-label={t('ai.send')}
             >
               <Send className="w-4 h-4" />
             </button>

@@ -3561,6 +3561,17 @@ export const zh: TranslationResource = {
     setupPrompt: '配置 AI 助手，自动优化商品标题和描述。',
     goToSettings: '前往设置',
     error: '生成失败，请重试。',
+    title: 'AI 助手',
+    openAssistant: '打开 AI 助手',
+    history: '历史记录',
+    newChat: '新对话',
+    untitled: '未命名',
+    noConversations: '暂无对话记录',
+    welcomeMessage: '有关店铺的任何问题，尽管问我',
+    welcomeHint: '商品、订单、数据分析……',
+    inputPlaceholder: '输入消息……',
+    stopGenerating: '停止生成',
+    send: '发送消息',
   },
 
   standalone: {

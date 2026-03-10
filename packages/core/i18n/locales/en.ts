@@ -3657,6 +3657,17 @@ export const en: TranslationResource = {
     setupPrompt: 'Set up AI to auto-optimize product titles and descriptions.',
     goToSettings: 'Go to Settings',
     error: 'Failed to generate. Please try again.',
+    title: 'AI Assistant',
+    openAssistant: 'Open AI Assistant',
+    history: 'History',
+    newChat: 'New Chat',
+    untitled: 'Untitled',
+    noConversations: 'No conversations yet',
+    welcomeMessage: 'Ask me anything about your store',
+    welcomeHint: 'Products, orders, analytics...',
+    inputPlaceholder: 'Type a message...',
+    stopGenerating: 'Stop generating',
+    send: 'Send message',
   },
 
   moderation: {
