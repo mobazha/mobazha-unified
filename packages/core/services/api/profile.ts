@@ -182,7 +182,7 @@ export function getAvatarUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'medium'
 ): string {
-  return `${getGatewayUrl()}${NODE_API.PROFILE_AVATAR(peerID)}?size=${size}`;
+  return `${getGatewayUrl()}${NODE_API.PROFILE_AVATAR(peerID, size)}`;
 }
 
 /**
@@ -192,5 +192,5 @@ export function getHeaderUrl(
   peerID: string,
   size: 'tiny' | 'small' | 'medium' | 'large' = 'large'
 ): string {
-  return `${getGatewayUrl()}${NODE_API.PROFILE_HEADER(peerID)}?size=${size}`;
+  return `${getGatewayUrl()}${NODE_API.PROFILE_HEADER(peerID, size)}`;
 }
