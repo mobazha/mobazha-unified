@@ -521,7 +521,7 @@ export function ProductDetailMobile({
         <Link href={`/store/${vendorPeerID}`} className="block touch-feedback">
           <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
             <Avatar
-              src={getImageUrl(vendor?.avatarHashes?.medium)}
+              src={getImageUrl(vendor?.avatarHashes?.medium, vendorPeerID)}
               name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
               size="md"
               className="w-10 h-10"

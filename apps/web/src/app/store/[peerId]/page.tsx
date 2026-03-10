@@ -783,11 +783,17 @@ export default function StorePage() {
     );
   }
 
+  // Cross-store image hint: for other stores, pass peerID so the gateway can
+  // on-demand fetch from standalone stores (E'+D Level 2.5).
+  const storeImageHint = isOwnStore ? undefined : peerId;
+
   // 获取显示用的头像和封面图（优先本地预览，其次 IPFS hash）
   const displayAvatarUrl =
-    previewAvatarUrl || getImageUrl(pendingAvatarHashes?.medium || store.avatarHashes?.medium);
+    previewAvatarUrl ||
+    getImageUrl(pendingAvatarHashes?.medium || store.avatarHashes?.medium, storeImageHint);
   const displayHeaderUrl =
-    previewHeaderUrl || getImageUrl(pendingHeaderHashes?.large || store.headerHashes?.large);
+    previewHeaderUrl ||
+    getImageUrl(pendingHeaderHashes?.large || store.headerHashes?.large, storeImageHint);
 
   return (
     <div className="min-h-screen bg-background">
@@ -1245,7 +1251,7 @@ export default function StorePage() {
                               >
                                 {col.image ? (
                                   <img
-                                    src={getImageUrl(col.image)}
+                                    src={getImageUrl(col.image, storeImageHint)}
                                     alt={col.title}
                                     className="w-full h-20 object-cover"
                                   />
@@ -1292,7 +1298,7 @@ export default function StorePage() {
                           >
                             <ProductCard
                               title={product.title}
-                              imageUrl={getImageUrl(product.thumbnail?.medium)}
+                              imageUrl={getImageUrl(product.thumbnail?.medium, storeImageHint)}
                               price={Number(product.price?.amount || 0)}
                               currency={product.price?.currency?.code || 'USD'}
                               divisibility={product.price?.currency?.divisibility}

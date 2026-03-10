@@ -216,7 +216,8 @@ export async function fetchStoreListings(
   return raw.map(item => ({
     slug: item.slug,
     title: item.title,
-    thumbnail: item.thumbnail ?? imageFromCid(item.image) ?? ({} as Image),
+    thumbnail:
+      transformImageUrls(item.thumbnail ?? imageFromCid(item.image), storePeerID) ?? ({} as Image),
     price:
       typeof item.price === 'object'
         ? (item.price as unknown as ProductListItem['price'])
@@ -623,8 +624,8 @@ export async function searchProfiles(params: {
       peerID: item.peerId ?? '',
       name: item.name || item.handle || 'Unknown',
       handle: item.handle,
-      avatar: item.avatar?.trim() ? getImageUrl(item.avatar.trim()) : undefined,
-      headerImage: item.header?.trim() ? getImageUrl(item.header.trim()) : undefined,
+      avatar: item.avatar?.trim() ? getImageUrl(item.avatar.trim(), item.peerId) : undefined,
+      headerImage: item.header?.trim() ? getImageUrl(item.header.trim(), item.peerId) : undefined,
       shortDescription: item.shortDescription,
       location: item.location,
       listingCount: 0,

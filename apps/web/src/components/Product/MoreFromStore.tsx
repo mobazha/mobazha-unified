@@ -171,28 +171,42 @@ export const MoreFromStore = memo(function MoreFromStore({
               : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 sm:gap-4'
           )}
         >
-          {products.map(product => (
-            <ProductCard
-              key={product.slug}
-              title={product.title}
-              imageUrl={
-                getImageUrl(product.thumbnail?.medium) || getImageUrl(product.thumbnail?.small)
-              }
-              price={product.price?.amount || 0}
-              currency={product.price?.currency?.code || 'USD'}
-              rating={product.averageRating}
-              reviewCount={product.ratingCount}
-              freeShipping={product.freeShipping && product.freeShipping.length > 0}
-              contractType={product.contractType as ProductContractType}
-              tokenStandard={product.tokenStandard}
-              rwaTradeMode={product.rwaTradeMode}
-              vendorName={product.vendorName}
-              vendorPeerID={product.vendorPeerID}
-              onClick={() => onProductClick?.(product)}
-              compact
-              className="hover-lift transition-all"
-            />
-          ))}
+          {products.map(product => {
+            const card = (
+              <ProductCard
+                key={product.slug}
+                title={product.title}
+                imageUrl={
+                  getImageUrl(product.thumbnail?.medium, vendorPeerID) ||
+                  getImageUrl(product.thumbnail?.small, vendorPeerID)
+                }
+                price={product.price?.amount || 0}
+                currency={product.price?.currency?.code || 'USD'}
+                rating={product.averageRating}
+                reviewCount={product.ratingCount}
+                freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                contractType={product.contractType as ProductContractType}
+                tokenStandard={product.tokenStandard}
+                rwaTradeMode={product.rwaTradeMode}
+                vendorName={product.vendorName}
+                vendorPeerID={product.vendorPeerID}
+                onClick={onProductClick ? () => onProductClick(product) : undefined}
+                compact
+                className="hover-lift transition-all"
+              />
+            );
+
+            if (onProductClick) {
+              return <React.Fragment key={product.slug}>{card}</React.Fragment>;
+            }
+
+            const href = `/product/${product.slug}${vendorPeerID ? `?peerID=${vendorPeerID}` : ''}`;
+            return (
+              <Link key={product.slug} href={href} className="block">
+                {card}
+              </Link>
+            );
+          })}
         </div>
       )}
 

@@ -161,7 +161,7 @@ export function ProductDetailDesktop({
               className="flex items-center gap-3 min-w-0 flex-1"
             >
               <Avatar
-                src={getImageUrl(vendor?.avatarHashes?.small)}
+                src={getImageUrl(vendor?.avatarHashes?.small, vendorPeerID)}
                 name={vendor?.name || vendorPeerID || ''}
                 size="sm"
                 className="w-9 h-9 flex-shrink-0"
@@ -816,7 +816,7 @@ export function ProductDetailDesktop({
                 <Link href={`/store/${vendorPeerID}`} className="touch-feedback block">
                   <HStack gap="sm" align="center">
                     <Avatar
-                      src={getImageUrl(vendor?.avatarHashes?.medium)}
+                      src={getImageUrl(vendor?.avatarHashes?.medium, vendorPeerID)}
                       name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
                       size="md"
                       className="w-10 h-10 sm:w-12 sm:h-12"

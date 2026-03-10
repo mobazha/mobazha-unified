@@ -11,7 +11,13 @@
 import type { TestimonialsProps } from '@mobazha/core';
 import { getImageUrl, useI18n } from '@mobazha/core';
 
-export function TestimonialsSection({ title, mode, items, count }: TestimonialsProps) {
+export function TestimonialsSection({
+  title,
+  mode,
+  items,
+  count,
+  storeHint,
+}: TestimonialsProps & { storeHint?: string }) {
   const { t } = useI18n();
   const displayItems = mode === 'manual' ? (items ?? []) : [];
   const displayCount = count ?? 3;
@@ -42,7 +48,7 @@ export function TestimonialsSection({ title, mode, items, count }: TestimonialsP
               <div className="flex items-center gap-3 mb-3">
                 {item.avatar ? (
                   <img
-                    src={getImageUrl(item.avatar)}
+                    src={getImageUrl(item.avatar, storeHint)}
                     alt={item.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
