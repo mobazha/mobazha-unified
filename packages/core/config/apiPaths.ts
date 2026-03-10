@@ -201,6 +201,10 @@ export const NODE_API = {
   SETTINGS_STOREFRONT: '/settings/storefront',
   SETTINGS_STOREFRONT_PEER: (peerID: string) => `/settings/storefront/${peerID}`,
 
+  // --- Analytics (visitor tracking) ---
+  ANALYTICS_EVENTS: (peerID: string) => `/analytics/${peerID}/events`,
+  ANALYTICS_STATS: '/analytics/stats',
+
   // --- Misc ---
   RESEND_ORDER_MESSAGE: '/resendordermessage',
   MARK_ORDER_AS_READ: '/markorderasread',

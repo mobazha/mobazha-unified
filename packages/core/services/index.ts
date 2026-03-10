@@ -45,3 +45,6 @@ export * from './profileCache';
 
 // AI 服务
 export * from './ai';
+
+// 访客分析追踪
+export * from './analyticsTracker';
