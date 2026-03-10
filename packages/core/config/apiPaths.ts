@@ -50,7 +50,8 @@ export const NODE_API = {
   SALES: '/sales',
   ORDERS: '/orders',
   ORDER: (orderId: string) => `/orders/${orderId}`,
-  PURCHASE: '/purchase',
+  /** @deprecated Use ORDERS (POST /v1/orders) instead. '/purchase' does not exist in backend. */
+  PURCHASE: '/orders',
   ORDERS_ESTIMATE: '/orders/estimate',
   ORDERS_CHECKOUT_BREAKDOWN: '/orders/checkout-breakdown',
   ORDER_CONFIRM: (orderId: string) => `/orders/${orderId}/confirm`,
@@ -143,9 +144,12 @@ export const NODE_API = {
   WALLET_VALIDATE: (coin: string) => `/wallet/validate/${coin}`,
   WALLET_RECEIVING_ACCOUNTS: '/wallet/receiving-accounts',
   EXCHANGE_RATES: '/exchange-rates',
-  RECEIVE_ADDRESSES: '/receiveaddresses',
-  RECEIVE_ADDRESS: '/receiveaddress',
-  RECEIVE_ADDRESS_COIN: (coin: string) => `/receiveaddress/${coin}`,
+  /** @deprecated Use WALLET_RECEIVING_ACCOUNTS instead. Old paths don't exist in backend. */
+  RECEIVE_ADDRESSES: '/wallet/receiving-accounts',
+  /** @deprecated Use WALLET_RECEIVING_ACCOUNTS with POST instead. */
+  RECEIVE_ADDRESS: '/wallet/receiving-accounts',
+  /** @deprecated Backend uses id-based DELETE /wallet/receiving-accounts/{id}, not coin-based. */
+  RECEIVE_ADDRESS_COIN: (coin: string) => `/wallet/receiving-accounts/${coin}`,
 
   // --- Matrix (node-level, 节点本地存储) ---
   MATRIX_CREDENTIALS: '/matrix/credentials',
@@ -208,8 +212,10 @@ export const NODE_API = {
   ANALYTICS_EVENTS: (peerID: string) => `/analytics/${peerID}/events`,
   ANALYTICS_STATS: '/analytics/stats',
 
-  // --- Misc ---
+  // --- Misc (deprecated — no backend routes exist) ---
+  /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',
+  /** @deprecated Backend has no /markorderasread route. Feature removed. */
   MARK_ORDER_AS_READ: '/markorderasread',
 } as const;
 
