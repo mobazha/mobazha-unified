@@ -2362,6 +2362,17 @@ export interface TranslationResource {
     setupPrompt?: string;
     goToSettings?: string;
     error?: string;
+    title?: string;
+    openAssistant?: string;
+    history?: string;
+    newChat?: string;
+    untitled?: string;
+    noConversations?: string;
+    welcomeMessage?: string;
+    welcomeHint?: string;
+    inputPlaceholder?: string;
+    stopGenerating?: string;
+    send?: string;
   };
 
   standalone?: {
