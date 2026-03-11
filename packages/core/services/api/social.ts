@@ -7,15 +7,7 @@
 import { withMockFallback } from './mode';
 import { mockUsers } from '../mock/data';
 import { NODE_API } from '../../config/apiPaths';
-import {
-  authGet,
-  authPost,
-  authPut,
-  authDel,
-  authSafeGet,
-  publicSafeGet,
-  publicPost,
-} from './helpers';
+import { authGet, authPut, authDel, authSafeGet, publicSafeGet, publicPost } from './helpers';
 
 /**
  * 关注用户
