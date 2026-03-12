@@ -1908,6 +1908,10 @@ export const en: TranslationResource = {
     redirecting: 'Redirecting to order confirmation...',
     cancelled: 'Payment Cancelled',
     userCancelledTransaction: 'Transaction was cancelled by user',
+    paymentWindowRemaining: 'Time remaining to pay',
+    paymentWindowExpired: 'Payment window expired',
+    leaveWarning:
+      'Your payment is being processed. Leaving this page may result in a failed transaction.',
     // Moderator selector
     searchModerators: 'Search moderators...',
     loadingModerators: 'Loading moderators...',

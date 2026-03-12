@@ -153,6 +153,48 @@ export default function PaymentPage() {
     setVendorPeerID,
   } = usePaymentSelector();
 
+  // beforeunload: warn user when payment is in progress
+  useEffect(() => {
+    if (!isProcessing) return;
+    const handler = (e: Event) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isProcessing]);
+
+  // Payment window countdown (45 min from order creation)
+  const [paymentTimeRemaining, setPaymentTimeRemaining] = useState<string | null>(null);
+  const [paymentExpired, setPaymentExpired] = useState(false);
+
+  useEffect(() => {
+    if (!rawOrder) return;
+    const orderTimestamp = rawOrder.contract?.orderOpen?.timestamp;
+    if (!orderTimestamp) return;
+
+    const PAYMENT_WINDOW_MS = 45 * 60 * 1000;
+    const orderCreatedAt = new Date(orderTimestamp).getTime();
+    if (isNaN(orderCreatedAt)) return;
+    const expiresAt = orderCreatedAt + PAYMENT_WINDOW_MS;
+
+    const updateTimer = () => {
+      const diff = expiresAt - Date.now();
+      if (diff <= 0) {
+        setPaymentTimeRemaining(null);
+        setPaymentExpired(true);
+        return;
+      }
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setPaymentTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      setPaymentExpired(false);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [rawOrder]);
+
   // 页面聚焦时恢复 sessionStorage 状态
   useEffect(() => {
     restoreFromSession();
@@ -685,6 +727,28 @@ export default function PaymentPage() {
 
           <CheckoutProgressBar currentStep="payment" className="mb-6 sm:mb-8" />
 
+          {/* Payment window countdown */}
+          {(paymentTimeRemaining || paymentExpired) && (
+            <div
+              className={`mb-4 sm:mb-6 p-3 rounded-lg border text-center ${
+                paymentExpired
+                  ? 'bg-destructive/10 border-destructive/30'
+                  : 'bg-warning/8 border-warning/20'
+              }`}
+            >
+              <p
+                className={`text-xs ${paymentExpired ? 'text-destructive' : 'text-muted-foreground'} mb-0.5`}
+              >
+                {paymentExpired
+                  ? t('payment.paymentWindowExpired')
+                  : t('payment.paymentWindowRemaining')}
+              </p>
+              {paymentTimeRemaining && (
+                <p className="text-xl font-mono font-bold text-warning">{paymentTimeRemaining}</p>
+              )}
+            </div>
+          )}
+
           {/* Loading State */}
           {isLoadingOrder ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -880,6 +944,7 @@ export default function PaymentPage() {
                           disabled={
                             isProcessing ||
                             isConnecting ||
+                            paymentExpired ||
                             (isConnected &&
                               (!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)))
                           }
@@ -987,7 +1052,9 @@ export default function PaymentPage() {
           isLoading={isProcessing}
           isConnected={isConnected}
           isConnecting={isConnecting}
-          disabled={!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)}
+          disabled={
+            paymentExpired || !selectedTokenId || (paymentProtectionEnabled && !paymentModerator)
+          }
         />
       )}
 
