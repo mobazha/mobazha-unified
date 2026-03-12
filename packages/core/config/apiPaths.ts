@@ -365,6 +365,7 @@ export const HOSTING_API = {
   STORES_MY_STORES: '/platform/v1/stores/my-stores',
   STORES_BIND_START: '/platform/v1/stores/bind/start',
   STORES_BIND_STATUS: '/platform/v1/stores/bind/status',
+  STORES_STATUS: (peerID: string) => `/platform/v1/stores/${peerID}/status`,
 } as const;
 
 // ============================================================

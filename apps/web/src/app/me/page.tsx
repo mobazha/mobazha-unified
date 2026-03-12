@@ -12,11 +12,14 @@ import {
   useI18n,
   useUserStore,
   useTheme,
+  useMiniAppRole,
   getImageUrl,
   isHosted,
   isStandalone,
   startCasdoorLogin,
 } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
+import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import {
   Settings,
   Package,
@@ -31,9 +34,12 @@ import {
   LogIn,
   PieChart,
   LayoutDashboard,
+  MessageCircle,
+  Store,
+  ListOrdered,
+  ShieldQuestion,
 } from 'lucide-react';
 
-// 功能列表项组件
 interface FeatureItemProps {
   icon: React.ReactNode;
   title: string;
@@ -71,11 +77,22 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   return <div onClick={onClick}>{content}</div>;
 };
 
+// --- Section label ---
+const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <h3 className="text-xs font-medium mb-1 px-1 text-muted-foreground uppercase tracking-wider">
+    {children}
+  </h3>
+);
+
 export default function MePage() {
   const router = useRouter();
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout, authMode } = useUserStore();
   const { isDark, toggleDarkMode } = useTheme();
+  const { isTGMiniApp, isEmbeddedApp } = usePlatform();
+  const { role, isLoading: roleLoading, storeClaimed } = useMiniAppRole(isEmbeddedApp);
+  const { promptRegister } = useMiniAppRegister();
+
   const standaloneMode = isStandalone();
   const isBuyer = standaloneMode && authMode === 'standalone';
 
@@ -96,17 +113,226 @@ export default function MePage() {
     }
   };
 
-  // Desktop: redirect to settings (this page is mobile-optimized)
-  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+  const handleContinueWithTelegram = async () => {
+    const action = await promptRegister();
+    if (action === 'register') {
+      router.refresh();
+    }
+  };
+
+  // Desktop: redirect to settings/store
+  if (typeof window !== 'undefined' && window.innerWidth >= 768 && !isEmbeddedApp) {
     router.replace(isAuthenticated && profile?.peerID ? `/store/${profile.peerID}` : '/settings');
     return null;
   }
 
+  // --- Mini App: Anonymous mode (MA-1.4) ---
+  if (role === 'anonymous') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="flex items-center justify-center h-11">
+            <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
+          </div>
+        </div>
+
+        <Container size="sm" className="py-3">
+          <VStack gap="sm">
+            <div className="bg-card rounded-xl p-6 border flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                <LogIn className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold">{t('me.signInPrompt')}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t('me.loginPrompt')}</p>
+              </div>
+              {isTGMiniApp ? (
+                <Button className="w-full" onClick={handleContinueWithTelegram}>
+                  {t('me.continueWithTelegram')}
+                </Button>
+              ) : (
+                <Button className="w-full" onClick={handleLogin}>
+                  {t('nav.login')}
+                </Button>
+              )}
+            </div>
+
+            {/* Settings (always visible) */}
+            <div className="bg-card rounded-xl border overflow-hidden">
+              <FeatureItem
+                icon={<Settings className="w-5 h-5" />}
+                title={t('me.settings')}
+                description={t('me.settingsDesc')}
+                href="/settings"
+              />
+              <div className="flex items-center gap-3 p-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Moon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{t('me.appearance')}</p>
+                  <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
+                </div>
+                <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
+              </div>
+              <FeatureItem
+                icon={<HelpCircle className="w-5 h-5" />}
+                title={t('me.support')}
+                description={t('me.supportDesc')}
+                href="/support"
+              />
+            </div>
+
+            <div className="h-20 md:hidden" />
+          </VStack>
+        </Container>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // --- Mini App: Owner mode (MA-1.2) ---
+  if (role === 'owner') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="flex items-center justify-center h-11">
+            <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
+          </div>
+        </div>
+
+        <Container size="sm" className="py-3">
+          <VStack gap="sm">
+            {/* User card with owner badge */}
+            <div className="bg-card rounded-xl p-3 border">
+              {profile ? (
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    src={getImageUrl(profile.avatarHashes?.small)}
+                    name={profile.name || 'User'}
+                    size="lg"
+                    className="w-14 h-14"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-base font-semibold truncate">
+                      {profile.name || t('me.anonymous')}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5 mt-0.5">
+                      <Store className="w-3 h-3" />
+                      {t('me.storeOwner')}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-full bg-muted animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded animate-pulse w-24" />
+                    <div className="h-3 bg-muted rounded animate-pulse w-32" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* My Store section */}
+            <div>
+              <SectionLabel>{t('me.myStore')}</SectionLabel>
+              <div className="bg-card rounded-xl border overflow-hidden">
+                <FeatureItem
+                  icon={<LayoutDashboard className="w-5 h-5" />}
+                  title={t('me.dashboard')}
+                  description={t('me.dashboardDesc')}
+                  href="/admin"
+                />
+                <FeatureItem
+                  icon={<Package className="w-5 h-5" />}
+                  title={t('me.ordersReceived')}
+                  description={t('me.ordersReceivedDesc')}
+                  href="/orders?tab=sales"
+                />
+                <FeatureItem
+                  icon={<ListOrdered className="w-5 h-5" />}
+                  title={t('me.manageListings')}
+                  description={t('me.manageListingsDesc')}
+                  href="/admin/listings"
+                />
+                <FeatureItem
+                  icon={<Settings className="w-5 h-5" />}
+                  title={t('me.storeSettings')}
+                  description={t('me.storeSettingsDesc')}
+                  href="/settings"
+                />
+              </div>
+            </div>
+
+            {/* My Shopping section */}
+            <div>
+              <SectionLabel>{t('me.myShopping')}</SectionLabel>
+              <div className="bg-card rounded-xl border overflow-hidden">
+                <FeatureItem
+                  icon={<ShoppingBag className="w-5 h-5" />}
+                  title={t('me.myPurchases')}
+                  description={t('me.myPurchasesDesc')}
+                  href="/orders?tab=purchases"
+                />
+                <FeatureItem
+                  icon={<MessageCircle className="w-5 h-5" />}
+                  title={t('me.myChats')}
+                  description={t('me.myChatsDesc')}
+                  href="/chat"
+                />
+              </div>
+            </div>
+
+            {/* Settings */}
+            <div className="bg-card rounded-xl border overflow-hidden">
+              <div className="flex items-center gap-3 p-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Moon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{t('me.appearance')}</p>
+                  <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
+                </div>
+                <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
+              </div>
+              <FeatureItem
+                icon={<HelpCircle className="w-5 h-5" />}
+                title={t('me.support')}
+                description={t('me.supportDesc')}
+                href="/support"
+              />
+            </div>
+
+            {/* Logout */}
+            <Button
+              variant="outline"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {t('me.logout')}
+            </Button>
+
+            <div className="h-20 md:hidden" />
+          </VStack>
+        </Container>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // --- Mini App: Buyer mode (MA-1.1) / Default (non-Mini-App) ---
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* 移动端顶部标题栏 */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-center h-11">
           <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
@@ -115,9 +341,9 @@ export default function MePage() {
 
       <Container size="sm" className="py-3">
         <VStack gap="sm">
-          {/* 用户信息卡片 */}
+          {/* User info card */}
           <div className="bg-card rounded-xl p-3 border">
-            {isLoading ? (
+            {isLoading || roleLoading ? (
               <div className="flex items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-muted animate-pulse" />
                 <div className="flex-1 space-y-2">
@@ -159,7 +385,7 @@ export default function MePage() {
             )}
           </div>
 
-          {/* 订单区域 */}
+          {/* Orders */}
           {isAuthenticated && (
             <div className="bg-card rounded-xl p-3 border">
               <h3 className="text-xs font-medium mb-2 text-muted-foreground">{t('me.myOrders')}</h3>
@@ -173,21 +399,23 @@ export default function MePage() {
                   </div>
                   <span className="text-xs">{t('me.purchases')}</span>
                 </Link>
-                <Link
-                  href="/orders?tab=sales"
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
-                >
-                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-success" />
-                  </div>
-                  <span className="text-xs">{t('me.sales')}</span>
-                </Link>
+                {!isBuyer && (
+                  <Link
+                    href="/orders?tab=sales"
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                      <Package className="w-5 h-5 text-success" />
+                    </div>
+                    <span className="text-xs">{t('me.sales')}</span>
+                  </Link>
+                )}
               </div>
             </div>
           )}
 
-          {/* 店铺管理入口（仅卖家） */}
-          {isAuthenticated && !isBuyer && (
+          {/* Store admin (non-Mini-App sellers only) */}
+          {isAuthenticated && !isBuyer && !isEmbeddedApp && (
             <Link href="/admin" className="block">
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/15 transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
@@ -202,27 +430,39 @@ export default function MePage() {
             </Link>
           )}
 
-          {/* 功能列表 */}
+          {/* Feature list */}
           {isAuthenticated && (
             <div className="bg-card rounded-xl border overflow-hidden">
-              <FeatureItem
-                icon={<Wallet className="w-5 h-5" />}
-                title={t('me.receivingAccounts')}
-                description={t('me.receivingAccountsDesc')}
-                href="/wallet"
-              />
-              <FeatureItem
-                icon={<PieChart className="w-5 h-5" />}
-                title={t('userMenu.rwaAssets')}
-                description={t('me.rwaAssetsDescription')}
-                href="/rwa-dashboard"
-              />
+              {!isEmbeddedApp && (
+                <FeatureItem
+                  icon={<Wallet className="w-5 h-5" />}
+                  title={t('me.receivingAccounts')}
+                  description={t('me.receivingAccountsDesc')}
+                  href="/wallet"
+                />
+              )}
+              {!isEmbeddedApp && (
+                <FeatureItem
+                  icon={<PieChart className="w-5 h-5" />}
+                  title={t('userMenu.rwaAssets')}
+                  description={t('me.rwaAssetsDescription')}
+                  href="/rwa-dashboard"
+                />
+              )}
               <FeatureItem
                 icon={<Heart className="w-5 h-5" />}
                 title={t('me.wishlist')}
                 description={t('me.wishlistDesc')}
                 href="/wishlist"
               />
+              {isEmbeddedApp && (
+                <FeatureItem
+                  icon={<MessageCircle className="w-5 h-5" />}
+                  title={t('me.myChats')}
+                  description={t('me.myChatsDesc')}
+                  href="/chat"
+                />
+              )}
               <FeatureItem
                 icon={<Bell className="w-5 h-5" />}
                 title={t('me.notifications')}
@@ -232,7 +472,7 @@ export default function MePage() {
             </div>
           )}
 
-          {/* 设置区域 */}
+          {/* Settings */}
           <div className="bg-card rounded-xl border overflow-hidden">
             <FeatureItem
               icon={<Settings className="w-5 h-5" />}
@@ -258,7 +498,24 @@ export default function MePage() {
             />
           </div>
 
-          {/* 退出登录 */}
+          {/* Unclaimed store prompt (MA-1.5) — claim flow will be wired in a future sprint */}
+          {isAuthenticated && isEmbeddedApp && storeClaimed === false && (
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                <ShieldQuestion className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                  {t('me.unclaimedStorePrompt')}
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                  {t('me.unclaimedStoreDesc')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Logout */}
           {isAuthenticated && (
             <Button
               variant="outline"
@@ -270,7 +527,6 @@ export default function MePage() {
             </Button>
           )}
 
-          {/* Bottom safe area for MobileNav */}
           <div className="h-20 md:hidden" />
         </VStack>
       </Container>

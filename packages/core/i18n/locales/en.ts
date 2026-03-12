@@ -261,6 +261,32 @@ export const en: TranslationResource = {
     accessControl: 'Access Control',
     accessRequests: 'Access Requests',
     accessRequestsDesc: 'Review pending access requests',
+
+    // Mini App role-based sections
+    storeOwner: 'Store Owner',
+    myStore: 'My Store',
+    dashboard: 'Dashboard',
+    dashboardDesc: 'Sales overview and analytics',
+    ordersReceived: 'Orders Received',
+    ordersReceivedDesc: 'Manage incoming orders',
+    manageListings: 'Manage Listings',
+    manageListingsDesc: 'Add and edit products',
+    storeSettings: 'Store Settings',
+    storeSettingsDesc: 'Configure your store',
+    myShopping: 'My Shopping',
+    myPurchases: 'My Purchases',
+    myPurchasesDesc: 'Track your orders',
+    myChats: 'Messages',
+    myChatsDesc: 'Chat with sellers and buyers',
+
+    // Anonymous mode
+    signInPrompt: 'Sign in to manage your orders',
+    continueWithTelegram: 'Continue with Telegram',
+
+    // Unclaimed store
+    unclaimedStorePrompt: 'Are you the store owner?',
+    unclaimedStoreDesc: 'Claim this store to manage products and orders',
+    claimStore: 'Claim Store',
   },
 
   product: {
