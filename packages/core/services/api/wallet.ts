@@ -11,7 +11,7 @@ import type {
   CryptoType,
 } from '../../types';
 import { NODE_API } from '../../config/apiPaths';
-import { authGet, authPost, authSafeGet, authRequest } from './helpers';
+import { authGet, authPost, authSafeGet, authRequest, publicSafeGet } from './helpers';
 
 /**
  * 获取钱包余额
@@ -79,11 +79,10 @@ export async function sendTransaction(
 }
 
 /**
- * 获取汇率
- * 注意：此 API 需要认证，未认证时会返回 401
+ * 获取汇率（公开 API，无需认证）
  */
 export async function getExchangeRates(): Promise<Record<string, Record<string, number>>> {
-  return authSafeGet<Record<string, Record<string, number>>>(NODE_API.EXCHANGE_RATES, {});
+  return publicSafeGet<Record<string, Record<string, number>>>(NODE_API.EXCHANGE_RATES, {});
 }
 
 /**
