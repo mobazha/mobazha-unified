@@ -21,6 +21,7 @@ import {
   NODE_API,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
+import { ApiError } from '@mobazha/core/services/api';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import {
@@ -108,10 +109,13 @@ const StoreClaimBanner: React.FC<{ onClaimed: () => void }> = ({ onClaimed }) =>
       setTimeout(() => onClaimed(), 1200);
     } catch (err: unknown) {
       setStatus('error');
+      const status = err instanceof ApiError ? err.status : undefined;
       const message = err instanceof Error ? err.message : String(err);
-      if (message.includes('401') || message.toLowerCase().includes('password')) {
+      const msgLower = message.toLowerCase();
+
+      if (msgLower.includes('password') || msgLower.includes('incorrect') || status === 401) {
         setErrorMsg(t('me.claimErrorWrongPassword'));
-      } else if (message.includes('403') || message.toLowerCase().includes('claimed')) {
+      } else if (msgLower.includes('claimed') || status === 403) {
         setErrorMsg(t('me.claimErrorAlreadyClaimed'));
       } else {
         setErrorMsg(t('me.claimErrorGeneric'));
