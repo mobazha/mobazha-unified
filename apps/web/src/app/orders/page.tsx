@@ -188,13 +188,13 @@ function OrdersPageContent() {
           getInstructions: initiatorAddress =>
             ordersApi.getConfirmInstructions({
               orderID: orderId,
-              reject: false,
+              decline: false,
               initiatorAddress,
             }),
           executeAction: txID =>
             ordersApi.confirmOrder({
               orderID: orderId,
-              reject: false,
+              decline: false,
               transactionID: txID,
             }),
           onSuccess: async () => {
@@ -238,13 +238,13 @@ function OrdersPageContent() {
           getInstructions: initiatorAddress =>
             ordersApi.getConfirmInstructions({
               orderID: orderId,
-              reject: true,
+              decline: true,
               initiatorAddress,
             }),
           executeAction: txID =>
             ordersApi.confirmOrder({
               orderID: orderId,
-              reject: true,
+              decline: true,
               transactionID: txID,
             }),
           onSuccess: async () => {

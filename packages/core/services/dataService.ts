@@ -219,11 +219,11 @@ export const orderDataService = {
   /**
    * 确认订单（卖家）
    */
-  async confirmOrder(orderID: string, reject = false) {
+  async confirmOrder(orderID: string, decline = false) {
     if (isMockMode()) {
       return mockServices.orders.confirmOrder(orderID);
     }
-    return await ordersApi.confirmOrder({ orderID, reject });
+    return await ordersApi.confirmOrder({ orderID, decline });
   },
 
   /**

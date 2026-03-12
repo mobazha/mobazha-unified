@@ -77,7 +77,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
         getInstructions: initiatorAddress =>
           ordersApi.getConfirmInstructions({
             orderID: orderId,
-            reject: false,
+            decline: false,
             initiatorAddress,
             payoutAddress,
           }),
@@ -85,7 +85,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
         executeAction: txID =>
           ordersApi.confirmOrder({
             orderID: orderId,
-            reject: false,
+            decline: false,
             payoutAddress,
             transactionID: txID,
           }),

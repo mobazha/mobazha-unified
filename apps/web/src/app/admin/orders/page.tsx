@@ -202,9 +202,9 @@ export default function AdminOrdersPage() {
         await executeOrderAction({
           paymentCoin,
           getInstructions: initiatorAddress =>
-            ordersApi.getConfirmInstructions({ orderID: id, reject: false, initiatorAddress }),
+            ordersApi.getConfirmInstructions({ orderID: id, decline: false, initiatorAddress }),
           executeAction: txID =>
-            ordersApi.confirmOrder({ orderID: id, reject: false, transactionID: txID }),
+            ordersApi.confirmOrder({ orderID: id, decline: false, transactionID: txID }),
           onSuccess: () => {
             successCount++;
           },
@@ -261,11 +261,11 @@ export default function AdminOrdersPage() {
           getInstructions: addr =>
             ordersApi.getConfirmInstructions({
               orderID: orderId,
-              reject: false,
+              decline: false,
               initiatorAddress: addr,
             }),
           executeAction: txID =>
-            ordersApi.confirmOrder({ orderID: orderId, reject: false, transactionID: txID }),
+            ordersApi.confirmOrder({ orderID: orderId, decline: false, transactionID: txID }),
           onSuccess: async () => {
             toast({
               title: t('order.dialogs.acceptOrder.title'),
@@ -301,11 +301,11 @@ export default function AdminOrdersPage() {
           getInstructions: addr =>
             ordersApi.getConfirmInstructions({
               orderID: orderId,
-              reject: true,
+              decline: true,
               initiatorAddress: addr,
             }),
           executeAction: txID =>
-            ordersApi.confirmOrder({ orderID: orderId, reject: true, transactionID: txID }),
+            ordersApi.confirmOrder({ orderID: orderId, decline: true, transactionID: txID }),
           onSuccess: async () => {
             toast({
               title: t('order.dialogs.declineOrder.title'),

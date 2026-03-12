@@ -267,11 +267,11 @@ export function useOrderDetailPage(
               getInstructions: addr =>
                 ordersApi.getConfirmInstructions({
                   orderID: orderId,
-                  reject: true,
+                  decline: true,
                   initiatorAddress: addr,
                 }),
               executeAction: txID =>
-                ordersApi.confirmOrder({ orderID: orderId, reject: true, transactionID: txID }),
+                ordersApi.confirmOrder({ orderID: orderId, decline: true, transactionID: txID }),
               onSuccess: () =>
                 onSuccess(t('order.actions.declineSuccess'), t('order.actions.declineSuccessDesc')),
               onError,

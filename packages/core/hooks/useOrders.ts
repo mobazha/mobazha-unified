@@ -379,7 +379,7 @@ export function useOrderActions() {
   }, [queryClient]);
 
   const confirm = useMutationAction(
-    (p: { orderID: string; reject?: boolean }) => ordersApi.confirmOrder(p),
+    (p: { orderID: string; decline?: boolean }) => ordersApi.confirmOrder(p),
     invalidateOrders
   );
   const fulfill = useMutationAction(
@@ -429,7 +429,7 @@ export function useOrderActions() {
   );
 
   const confirmOrder = useCallback(
-    (orderID: string, reject = false) => confirm.execute({ orderID, reject }),
+    (orderID: string, decline = false) => confirm.execute({ orderID, decline }),
     [confirm]
   );
   const fulfillOrder = useCallback(

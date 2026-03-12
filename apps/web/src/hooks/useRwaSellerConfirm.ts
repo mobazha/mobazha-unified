@@ -193,7 +193,7 @@ export function useRwaSellerConfirm({
       try {
         await ordersApi.confirmOrder({
           orderID: orderId,
-          reject: false,
+          decline: false,
         });
         console.warn('✅ 后端状态同步成功');
       } catch (syncErr) {
@@ -235,7 +235,7 @@ export function useRwaSellerConfirm({
       // 调用后端拒绝订单
       await ordersApi.confirmOrder({
         orderID: orderId,
-        reject: true,
+        decline: true,
       });
 
       setState(prev => ({
