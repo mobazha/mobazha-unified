@@ -258,6 +258,32 @@ export const zh: TranslationResource = {
     accessControl: '访问控制',
     accessRequests: '访问申请',
     accessRequestsDesc: '审核待处理的访问申请',
+
+    // Mini App 角色相关
+    storeOwner: '店铺管理员',
+    myStore: '我的店铺',
+    dashboard: '仪表盘',
+    dashboardDesc: '销售概览与分析',
+    ordersReceived: '收到的订单',
+    ordersReceivedDesc: '管理收到的订单',
+    manageListings: '商品管理',
+    manageListingsDesc: '添加和编辑商品',
+    storeSettings: '店铺设置',
+    storeSettingsDesc: '配置您的店铺',
+    myShopping: '我的购物',
+    myPurchases: '我的订单',
+    myPurchasesDesc: '追踪您的订单',
+    myChats: '消息',
+    myChatsDesc: '与卖家和买家聊天',
+
+    // 匿名模式
+    signInPrompt: '登录以管理您的订单',
+    continueWithTelegram: '使用 Telegram 继续',
+
+    // 未认领店铺
+    unclaimedStorePrompt: '你是这家店的店主吗？',
+    unclaimedStoreDesc: '认领店铺以管理商品和订单',
+    claimStore: '认领店铺',
   },
 
   product: {

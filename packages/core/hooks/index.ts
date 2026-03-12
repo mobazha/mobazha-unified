@@ -116,6 +116,9 @@ export * from './useProgressiveList';
 // 访客分析相关
 export * from './useVisitorTracker';
 
+// Mini App 角色相关
+export * from './useMiniAppRole';
+
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
 export { formatQueryError } from './queryUtils';
