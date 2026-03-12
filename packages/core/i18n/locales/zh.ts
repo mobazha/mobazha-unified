@@ -280,10 +280,18 @@ export const zh: TranslationResource = {
     signInPrompt: '登录以管理您的订单',
     continueWithTelegram: '使用 Telegram 继续',
 
-    // 未认领店铺
+    // 未认领店铺 / 认领流程
     unclaimedStorePrompt: '你是这家店的店主吗？',
     unclaimedStoreDesc: '认领店铺以管理商品和订单',
     claimStore: '认领店铺',
+    claimStoreExpand: '是的，认领这家店',
+    adminPasswordLabel: '管理员密码',
+    adminPasswordPlaceholder: '输入店铺管理员密码',
+    claiming: '认领中...',
+    claimSuccess: '店铺认领成功！',
+    claimErrorWrongPassword: '管理员密码错误',
+    claimErrorAlreadyClaimed: '该店铺已被认领',
+    claimErrorGeneric: '认领失败，请重试',
   },
 
   product: {

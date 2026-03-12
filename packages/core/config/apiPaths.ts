@@ -212,6 +212,9 @@ export const NODE_API = {
   ANALYTICS_EVENTS: (peerID: string) => `/analytics/${peerID}/events`,
   ANALYTICS_STATS: '/analytics/stats',
 
+  // --- System ---
+  SYSTEM_CLAIM_STORE: '/system/claim-store',
+
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',
