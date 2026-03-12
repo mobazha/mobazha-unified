@@ -116,13 +116,13 @@ const WALLET_POLL_INTERVAL = 500; // 轮询间隔 500ms
  *   paymentCoin: order.paymentCoin,
  *   getInstructions: (address) => ordersApi.getConfirmInstructions({
  *     orderID: orderId,
- *     reject: false,
+ *     decline: false,
  *     initiatorAddress: address,
  *     payoutAddress: receivingAddress,
  *   }),
  *   executeAction: (txID) => ordersApi.confirmOrder({
  *     orderID: orderId,
- *     reject: false,
+ *     decline: false,
  *     payoutAddress: receivingAddress,
  *     transactionID: txID,
  *   }),

@@ -532,7 +532,7 @@ export async function getCheckoutBreakdown(data: PurchaseData): Promise<OrderEst
  */
 export async function confirmOrder(payload: {
   orderID: string;
-  reject?: boolean;
+  decline?: boolean;
   transactionID?: string;
   payoutAddress?: string;
 }): Promise<{ success: boolean; error?: string }> {
@@ -545,7 +545,7 @@ export async function confirmOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
-      order.state = payload.reject ? 'DECLINED' : 'AWAITING_FULFILLMENT';
+      order.state = payload.decline ? 'DECLINED' : 'AWAITING_FULFILLMENT';
     }
     return { success: true };
   };
@@ -681,14 +681,14 @@ export async function getCompleteInstructions(params: {
  * 用于 EVM/Solana 等需要钱包签名的支付方式
  *
  * @param params.orderID - 订单 ID
- * @param params.reject - 是否拒绝订单（false=接受，true=拒绝）
+ * @param params.decline - 是否拒绝订单（false=接受，true=拒绝）
  * @param params.initiatorAddress - 发起者钱包地址
  * @param params.payoutAddress - 卖家收款地址（接受订单时使用）
  * @returns 指令响应，包含是否需要链上交易以及交易指令
  */
 export async function getConfirmInstructions(params: {
   orderID: string;
-  reject: boolean;
+  decline: boolean;
   initiatorAddress: string;
   payoutAddress?: string;
 }): Promise<OrderInstructionsResponse> {
