@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container, VStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui';
 import {
   useI18n,
@@ -17,7 +18,9 @@ import {
   isHosted,
   isStandalone,
   startCasdoorLogin,
+  NODE_API,
 } from '@mobazha/core';
+import { publicPost } from '@mobazha/core/services/api/helpers';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import {
@@ -38,6 +41,8 @@ import {
   Store,
   ListOrdered,
   ShieldQuestion,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 
 interface FeatureItemProps {
@@ -84,13 +89,129 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   </h3>
 );
 
+// --- Store Claim Banner (MA-2.4) ---
+const StoreClaimBanner: React.FC<{ onClaimed: () => void }> = ({ onClaimed }) => {
+  const { t } = useI18n();
+  const [expanded, setExpanded] = useState(false);
+  const [password, setPassword] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleClaim = async () => {
+    if (!password.trim()) return;
+    setStatus('loading');
+    setErrorMsg('');
+
+    try {
+      await publicPost(NODE_API.SYSTEM_CLAIM_STORE, { admin_password: password });
+      setStatus('success');
+      setTimeout(() => onClaimed(), 1200);
+    } catch (err: unknown) {
+      setStatus('error');
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('401') || message.toLowerCase().includes('password')) {
+        setErrorMsg(t('me.claimErrorWrongPassword'));
+      } else if (message.includes('403') || message.toLowerCase().includes('claimed')) {
+        setErrorMsg(t('me.claimErrorAlreadyClaimed'));
+      } else {
+        setErrorMsg(t('me.claimErrorGeneric'));
+      }
+    }
+  };
+
+  if (status === 'success') {
+    return (
+      <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
+          {t('me.claimSuccess')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+          <ShieldQuestion className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+            {t('me.unclaimedStorePrompt')}
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+            {t('me.unclaimedStoreDesc')}
+          </p>
+        </div>
+      </div>
+
+      {!expanded ? (
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full mt-3 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+          onClick={() => setExpanded(true)}
+        >
+          {t('me.claimStoreExpand')}
+        </Button>
+      ) : (
+        <div className="mt-3 space-y-2">
+          <div>
+            <label
+              htmlFor="admin-password"
+              className="text-xs font-medium text-amber-800 dark:text-amber-300"
+            >
+              {t('me.adminPasswordLabel')}
+            </label>
+            <Input
+              id="admin-password"
+              type="password"
+              placeholder={t('me.adminPasswordPlaceholder')}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleClaim()}
+              className="mt-1 bg-white dark:bg-background"
+              disabled={status === 'loading'}
+              autoFocus
+            />
+          </div>
+          {errorMsg && <p className="text-xs text-destructive">{errorMsg}</p>}
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={handleClaim}
+            disabled={status === 'loading' || !password.trim()}
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {t('me.claiming')}
+              </>
+            ) : (
+              t('me.claimStore')
+            )}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function MePage() {
   const router = useRouter();
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout, authMode } = useUserStore();
   const { isDark, toggleDarkMode } = useTheme();
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
-  const { role, isLoading: roleLoading, storeClaimed } = useMiniAppRole(isEmbeddedApp);
+  const {
+    role,
+    isLoading: roleLoading,
+    storeClaimed,
+    refetch: refetchRole,
+  } = useMiniAppRole(isEmbeddedApp);
   const { promptRegister } = useMiniAppRegister();
 
   const standaloneMode = isStandalone();
@@ -498,21 +619,9 @@ export default function MePage() {
             />
           </div>
 
-          {/* Unclaimed store prompt (MA-1.5) — claim flow will be wired in a future sprint */}
+          {/* Unclaimed store — interactive claim flow (MA-2.4) */}
           {isAuthenticated && isEmbeddedApp && storeClaimed === false && (
-            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
-                <ShieldQuestion className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
-                  {t('me.unclaimedStorePrompt')}
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                  {t('me.unclaimedStoreDesc')}
-                </p>
-              </div>
-            </div>
+            <StoreClaimBanner onClaimed={refetchRole} />
           )}
 
           {/* Logout */}

@@ -283,10 +283,18 @@ export const en: TranslationResource = {
     signInPrompt: 'Sign in to manage your orders',
     continueWithTelegram: 'Continue with Telegram',
 
-    // Unclaimed store
+    // Unclaimed store / claim flow
     unclaimedStorePrompt: 'Are you the store owner?',
     unclaimedStoreDesc: 'Claim this store to manage products and orders',
     claimStore: 'Claim Store',
+    claimStoreExpand: 'Yes, claim this store',
+    adminPasswordLabel: 'Admin Password',
+    adminPasswordPlaceholder: 'Enter the store admin password',
+    claiming: 'Claiming...',
+    claimSuccess: 'Store claimed successfully!',
+    claimErrorWrongPassword: 'Incorrect admin password',
+    claimErrorAlreadyClaimed: 'This store has already been claimed',
+    claimErrorGeneric: 'Failed to claim store. Please try again.',
   },
 
   product: {

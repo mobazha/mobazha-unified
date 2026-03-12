@@ -13,7 +13,7 @@
  * the JWT sub (Casdoor user ID) against store_registry.owner_user_id.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { HOSTING_API } from '../config/apiPaths';
 import { hostingGet } from '../services/api/helpers';
 import { getStorePeerID } from '../services/storeContext';
@@ -33,6 +33,8 @@ interface UseMiniAppRoleResult {
   role: MiniAppRole | null;
   isLoading: boolean;
   storeClaimed: boolean | null;
+  /** Re-fetch store status and update role (e.g. after claiming). */
+  refetch: () => void;
 }
 
 export function useMiniAppRole(isMiniApp: boolean): UseMiniAppRoleResult {
@@ -40,6 +42,11 @@ export function useMiniAppRole(isMiniApp: boolean): UseMiniAppRoleResult {
   const [role, setRole] = useState<MiniAppRole | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [storeClaimed, setStoreClaimed] = useState<boolean | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
+
+  const refetch = useCallback(() => {
+    setFetchKey(k => k + 1);
+  }, []);
 
   useEffect(() => {
     if (!isMiniApp) {
@@ -90,7 +97,7 @@ export function useMiniAppRole(isMiniApp: boolean): UseMiniAppRoleResult {
     return () => {
       cancelled = true;
     };
-  }, [isMiniApp, isAuthenticated, isAnonymousMiniAppUser]);
+  }, [isMiniApp, isAuthenticated, isAnonymousMiniAppUser, fetchKey]);
 
-  return { role, isLoading, storeClaimed };
+  return { role, isLoading, storeClaimed, refetch };
 }
