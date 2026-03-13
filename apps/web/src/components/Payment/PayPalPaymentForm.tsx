@@ -54,10 +54,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         );
       }
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : t('fiat.genericError', { defaultValue: 'Payment failed' });
+      const msg = err instanceof Error ? err.message : t('fiat.genericError');
       onError(msg);
     } finally {
       setIsCapturing(false);
@@ -66,10 +63,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   const handleError = useCallback(
     (err: Record<string, unknown>) => {
-      const message =
-        typeof err?.message === 'string'
-          ? err.message
-          : t('fiat.genericError', { defaultValue: 'Payment failed' });
+      const message = typeof err?.message === 'string' ? err.message : t('fiat.genericError');
       onError(message);
     },
     [onError, t]
@@ -84,9 +78,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       <div className={cn('flex flex-col items-center justify-center py-8 gap-2', className)}>
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         {isCapturing && (
-          <span className="text-sm text-muted-foreground">
-            {t('fiat.processing', { defaultValue: 'Processing...' })}
-          </span>
+          <span className="text-sm text-muted-foreground">{t('fiat.processing')}</span>
         )}
       </div>
     );

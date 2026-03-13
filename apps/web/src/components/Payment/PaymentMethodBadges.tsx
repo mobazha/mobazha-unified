@@ -57,7 +57,7 @@ export const PaymentMethodBadges: React.FC<PaymentMethodBadgesProps> = ({
             textSize
           )}
         >
-          <span className="font-medium">{t('fiat.cryptoBadge', { defaultValue: 'Crypto' })}</span>
+          <span className="font-medium">{t('fiat.cryptoBadge')}</span>
         </span>
       )}
     </div>

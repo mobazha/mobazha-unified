@@ -641,7 +641,9 @@ export const en: TranslationResource = {
       packageShippedWithTracking: 'Package shipped - {{shipper}}: {{trackingNumber}}',
       orderCompleted: 'Order completed - Funds released to seller',
       disputeOpened: 'Dispute opened',
+      fiatDisputeOpened: 'Payment disputed by buyer via payment provider',
       disputeClosed: 'Dispute closed: {{verdict}}',
+      refunded: 'Order refunded',
     },
     // Order detail labels
     shipTo: 'Ship to',
@@ -902,6 +904,21 @@ export const en: TranslationResource = {
           'Are you sure you want to confirm receipt of this order? This will release the funds to the seller and mark the order as complete.',
       },
     },
+    // Fiat refund dialog
+    fiatRefund: {
+      title: 'Refund Payment',
+      description:
+        'Choose the refund amount and reason. The refund will be processed through the payment provider.',
+      fullRefund: 'Full refund',
+      partialRefund: 'Partial refund',
+      amount: 'Refund amount',
+      reason: 'Reason',
+      reasons: {
+        requestedByCustomer: 'Requested by customer',
+        duplicate: 'Duplicate payment',
+        fraudulent: 'Fraudulent',
+      },
+    },
     // Write review
     review: {
       title: 'Leave a Review',
@@ -972,6 +989,7 @@ export const en: TranslationResource = {
       confirmText:
         'Are you sure you want to open a dispute? The moderator will be notified and will step in to help resolve the issue.',
       confirm: 'Open Dispute',
+      viewInProviderDashboard: 'Respond in payment provider dashboard',
     },
     // Refund modal
     refund: {
@@ -1117,6 +1135,17 @@ export const en: TranslationResource = {
         insufficientBalance: 'Insufficient token balance.',
         userRejected: 'Transaction was rejected by user.',
       },
+    },
+    // Fiat Payment Card
+    fiatPayment: {
+      title: 'Payment',
+      provider: 'Provider',
+      method: 'Payment Method',
+      amount: 'Amount',
+      paidAt: 'Paid At',
+      paid: 'Paid',
+      refunded: 'Refunded',
+      disputed: 'Disputed',
     },
     // RWA Payment Locked
     paymentLocked: {

@@ -202,6 +202,8 @@ export const NODE_API = {
   FIAT_CREATE_PAYMENT: (peerID: string, provider: string) => `/fiat/${peerID}/${provider}/payments`,
   FIAT_CAPTURE_PAYMENT: (peerID: string, provider: string, sessionID: string) =>
     `/fiat/${peerID}/${provider}/payments/${sessionID}/capture`,
+  FIAT_REFUND_PAYMENT: (provider: string, paymentID: string) =>
+    `/fiat/${provider}/payments/${paymentID}/refund`,
   FIAT_PROVIDER_CONFIG: (provider: string) => `/fiat/${provider}/config`,
 
   // --- Storefront (PG-201) ---

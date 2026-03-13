@@ -61,7 +61,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
 
       if (error) {
         const isUserFixable = error.type === 'card_error' || error.type === 'validation_error';
-        const msg = error.message || t('fiat.genericError', { defaultValue: 'Payment failed' });
+        const msg = error.message || t('fiat.genericError');
         if (isUserFixable) {
           setSubmitError(msg);
         } else {
@@ -117,9 +117,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         )}
       >
         {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
-        {isProcessing
-          ? t('fiat.processing', { defaultValue: 'Processing...' })
-          : t('fiat.payNow', { defaultValue: 'Pay Now' })}
+        {isProcessing ? t('fiat.processing') : t('fiat.payNow')}
       </button>
     </form>
   );
@@ -157,11 +155,11 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
         if (instance) {
           setStripeReady(true);
         } else {
-          setLoadError(t('fiat.stripeLoadFailed', { defaultValue: 'Failed to load payment form' }));
+          setLoadError(t('fiat.stripeLoadFailed'));
         }
       })
       .catch(() => {
-        setLoadError(t('fiat.stripeLoadFailed', { defaultValue: 'Failed to load payment form' }));
+        setLoadError(t('fiat.stripeLoadFailed'));
       });
   }, [stripePromise, t]);
 

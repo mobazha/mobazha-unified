@@ -20,6 +20,8 @@ import type {
   FiatProviderConfigView,
   FiatProviderConfigInput,
   CreateFiatPaymentParams,
+  FiatRefundParams,
+  FiatRefundResult,
 } from '../../types/fiat';
 
 // ========== Buyer-facing ==========
@@ -55,6 +57,17 @@ export async function capturePayment(
 ): Promise<FiatPaymentResult> {
   return authPost<FiatPaymentResult>(
     NODE_API.FIAT_CAPTURE_PAYMENT(vendorPeerID, provider, sessionID)
+  );
+}
+
+export async function refundPayment(
+  provider: string,
+  paymentID: string,
+  params?: FiatRefundParams
+): Promise<FiatRefundResult> {
+  return authPost<FiatRefundResult>(
+    NODE_API.FIAT_REFUND_PAYMENT(provider, paymentID),
+    params ?? {}
   );
 }
 

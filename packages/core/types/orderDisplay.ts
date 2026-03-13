@@ -187,6 +187,24 @@ export interface DisplayOrder {
   paymentLocked?: DisplayPaymentLocked;
   /** 争议信息 */
   dispute?: DisplayDispute;
+
+  /** 法币支付信息（仅当 paymentMethod === FIAT 时存在） */
+  fiatPayment?: DisplayFiatPayment;
+}
+
+/**
+ * 法币支付信息
+ */
+export interface DisplayFiatPayment {
+  provider: 'stripe' | 'paypal';
+  /** Stripe PaymentIntent ID 或 PayPal Capture ID */
+  paymentID: string;
+  /** 支付方式描述（如 "Visa •••• 4242"） */
+  methodLabel: string;
+  /** 卡品牌或支付方式类型 */
+  brand?: string;
+  /** 卡尾号 */
+  last4?: string;
 }
 
 /**

@@ -25,6 +25,7 @@ import {
   WriteReviewDialog,
   type OrderConfirmType,
 } from '@/components/Order';
+import { FiatRefundDialog } from './FiatRefundDialog';
 import {
   OrderProductCard,
   OrderSummaryCard,
@@ -72,6 +73,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
 
   // --- UI-only state ---
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
+  const [showFiatRefundDialog, setShowFiatRefundDialog] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
@@ -115,7 +117,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setShowFulfillDialog(true);
           break;
         case 'Refund':
-          setConfirmDialog('refund');
+          if (displayOrder?.fiatPayment) {
+            setShowFiatRefundDialog(true);
+          } else {
+            setConfirmDialog('refund');
+          }
           break;
         case 'Claim':
           setConfirmDialog('claim');
@@ -129,7 +135,15 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           break;
       }
     },
-    [router, orderId, executeConfirmAction]
+    [router, orderId, executeConfirmAction, displayOrder]
+  );
+
+  const handleFiatRefund = useCallback(
+    async (params: { amount?: number; currency?: string; reason?: string }) => {
+      setShowFiatRefundDialog(false);
+      await executeConfirmAction('refund', params);
+    },
+    [executeConfirmAction]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -380,6 +394,17 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           type={confirmDialog}
           onConfirm={handleConfirmAction}
           isLoading={isActionLoading}
+        />
+      )}
+
+      {displayOrder?.fiatPayment && (
+        <FiatRefundDialog
+          open={showFiatRefundDialog}
+          onOpenChange={setShowFiatRefundDialog}
+          onConfirm={handleFiatRefund}
+          isLoading={isActionLoading}
+          totalAmount={displayOrder.pricingAmount}
+          currency={displayOrder.pricingCurrency}
         />
       )}
 

@@ -633,7 +633,9 @@ export const zh: TranslationResource = {
       packageShippedWithTracking: '包裹已发出 - {{shipper}}: {{trackingNumber}}',
       orderCompleted: '订单完成 - 款项已释放给卖家',
       disputeOpened: '纠纷已发起',
+      fiatDisputeOpened: '买家通过支付服务商发起了支付争议',
       disputeClosed: '纠纷已关闭: {{verdict}}',
+      refunded: '订单已退款',
     },
     // 订单详情标签
     shipTo: '收货地址',
@@ -881,6 +883,20 @@ export const zh: TranslationResource = {
         description: '确定要确认收货吗？确认后资金将释放给卖家，订单将标记为完成。',
       },
     },
+    // 法币退款对话框
+    fiatRefund: {
+      title: '退款',
+      description: '选择退款金额和原因，退款将通过支付服务商处理。',
+      fullRefund: '全额退款',
+      partialRefund: '部分退款',
+      amount: '退款金额',
+      reason: '退款原因',
+      reasons: {
+        requestedByCustomer: '买家请求退款',
+        duplicate: '重复付款',
+        fraudulent: '欺诈交易',
+      },
+    },
     // 接受订单模态框
     accept: {
       title: '接受订单',
@@ -934,6 +950,7 @@ export const zh: TranslationResource = {
       confirmTitle: '确认申诉',
       confirmText: '确定要发起申诉吗？仲裁员将收到通知并介入帮助解决问题。',
       confirm: '发起申诉',
+      viewInProviderDashboard: '在支付服务商面板中回应',
     },
     // 写评价弹框
     review: {
@@ -1092,6 +1109,17 @@ export const zh: TranslationResource = {
         insufficientBalance: '代币余额不足。',
         userRejected: '用户拒绝了交易。',
       },
+    },
+    // 法币支付卡片
+    fiatPayment: {
+      title: '支付信息',
+      provider: '支付服务商',
+      method: '支付方式',
+      amount: '金额',
+      paidAt: '支付时间',
+      paid: '已支付',
+      refunded: '已退款',
+      disputed: '争议中',
     },
     // RWA 资金锁定
     paymentLocked: {

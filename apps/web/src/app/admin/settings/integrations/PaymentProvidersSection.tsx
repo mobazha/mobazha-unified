@@ -162,11 +162,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       setIsEditing(false);
       setFormData({});
     } catch (err) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : t('fiat.saveFailed', { defaultValue: 'Failed to save configuration' })
-      );
+      setErrorMsg(err instanceof Error ? err.message : t('fiat.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -179,11 +175,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       await onDelete(provider.id);
       onRefresh();
     } catch (err) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : t('fiat.deleteFailed', { defaultValue: 'Failed to disconnect' })
-      );
+      setErrorMsg(err instanceof Error ? err.message : t('fiat.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -210,12 +202,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           {isConnected ? (
             <span className="inline-flex items-center gap-1 text-xs text-success">
               <CheckCircle className="w-3.5 h-3.5" />
-              {t('fiat.connected', { defaultValue: 'Connected' })}
+              {t('fiat.connected')}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <AlertCircle className="w-3.5 h-3.5" />
-              {t('fiat.notConnected', { defaultValue: 'Not connected' })}
+              {t('fiat.notConnected')}
             </span>
           )}
         </div>
@@ -233,10 +225,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           )}
         >
           <ExternalLink className="w-4 h-4" />
-          {t('fiat.connectProvider', {
-            defaultValue: `Connect ${provider.name}`,
-            provider: provider.name,
-          })}
+          {t('fiat.connectProvider', { provider: provider.name })}
         </button>
       )}
 
@@ -251,7 +240,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             'hover:bg-muted/50 active:scale-[0.98] transition-all'
           )}
         >
-          {t('fiat.configureApiKeys', { defaultValue: 'Configure API Keys' })}
+          {t('fiat.configureApiKeys')}
         </button>
       )}
 
@@ -322,54 +311,40 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           <div className="rounded-lg bg-muted/40 p-3 space-y-2.5">
             {accountStatus.email && (
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  {t('fiat.email', { defaultValue: 'Email' })}
-                </span>
+                <span className="text-xs text-muted-foreground">{t('fiat.email')}</span>
                 <span className="text-xs text-foreground">{accountStatus.email}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {t('fiat.accountId', { defaultValue: 'Account' })}
-              </span>
+              <span className="text-xs text-muted-foreground">{t('fiat.accountId')}</span>
               <span className="text-xs font-mono text-foreground">
                 {truncateAccountID(accountStatus.accountID)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {t('fiat.accountStatus', { defaultValue: 'Status' })}
-              </span>
+              <span className="text-xs text-muted-foreground">{t('fiat.accountStatus')}</span>
               <StatusBadge status={accountStatus.status} />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {t('fiat.charges', { defaultValue: 'Charges' })}
-              </span>
+              <span className="text-xs text-muted-foreground">{t('fiat.charges')}</span>
               <span
                 className={cn(
                   'text-xs font-medium',
                   accountStatus.chargesEnabled ? 'text-success' : 'text-muted-foreground'
                 )}
               >
-                {accountStatus.chargesEnabled
-                  ? t('fiat.enabled', { defaultValue: 'Enabled' })
-                  : t('fiat.disabled', { defaultValue: 'Disabled' })}
+                {accountStatus.chargesEnabled ? t('fiat.enabled') : t('fiat.disabled')}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {t('fiat.payouts', { defaultValue: 'Payouts' })}
-              </span>
+              <span className="text-xs text-muted-foreground">{t('fiat.payouts')}</span>
               <span
                 className={cn(
                   'text-xs font-medium',
                   accountStatus.payoutsEnabled ? 'text-success' : 'text-muted-foreground'
                 )}
               >
-                {accountStatus.payoutsEnabled
-                  ? t('fiat.enabled', { defaultValue: 'Enabled' })
-                  : t('fiat.disabled', { defaultValue: 'Disabled' })}
+                {accountStatus.payoutsEnabled ? t('fiat.enabled') : t('fiat.disabled')}
               </span>
             </div>
           </div>
@@ -377,7 +352,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           {accountStatus.requirements && accountStatus.requirements.length > 0 && (
             <div className="rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 p-3">
               <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1.5">
-                {t('fiat.pendingRequirements', { defaultValue: 'Action needed' })}
+                {t('fiat.pendingRequirements')}
               </p>
               <ul className="space-y-1">
                 {accountStatus.requirements.map((req, i) => (
@@ -404,7 +379,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                   'hover:bg-muted/50 transition-colors'
                 )}
               >
-                {t('fiat.manageDashboard', { defaultValue: `${provider.name} Dashboard` })}
+                {t('fiat.manageDashboard', { provider: provider.name })}
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
               <button
@@ -422,13 +397,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                 ) : (
                   <Trash2 className="w-3.5 h-3.5" />
                 )}
-                {t('fiat.disconnect', { defaultValue: 'Disconnect' })}
+                {t('fiat.disconnect')}
               </button>
             </div>
             {accountStatus.email && (
               <p className="text-[11px] text-muted-foreground text-center">
                 {t('fiat.dashboardLoginHint', {
-                  defaultValue: `Sign in to ${provider.name} with ${accountStatus.email}`,
                   provider: provider.name,
                   email: accountStatus.email,
                 })}
@@ -455,7 +429,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             ) : (
               <Trash2 className="w-3 h-3" />
             )}
-            {t('fiat.disconnect', { defaultValue: 'Disconnect' })}
+            {t('fiat.disconnect')}
           </button>
         </div>
       )}
@@ -477,7 +451,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             ) : (
               <Trash2 className="w-3 h-3" />
             )}
-            {t('fiat.disconnect', { defaultValue: 'Disconnect' })}
+            {t('fiat.disconnect')}
           </button>
         </div>
       )}

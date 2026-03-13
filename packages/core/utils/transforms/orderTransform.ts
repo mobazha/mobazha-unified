@@ -8,6 +8,7 @@ import type {
   DisplayOrder,
   DisplayOrderItem,
   DisplayModerator,
+  DisplayFiatPayment,
   DisplayTimelineEvent,
   DisplayOrderStatus,
   DisplayUserRole,
@@ -81,6 +82,7 @@ interface RealOrderData {
       pricingCoin?: string;
       amount?: number;
       alternateContactInfo?: string;
+      fiatProvider?: string;
     };
     paymentSent?: {
       moderator?: string;
@@ -91,6 +93,7 @@ interface RealOrderData {
       transactionID?: string;
       timestamp?: string;
       buyerReceiveAddress?: string;
+      paymentMethod?: { type?: string; brand?: string; last4?: string };
     };
     orderConfirmation?: {
       timestamp?: string;
@@ -301,6 +304,17 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     });
   }
 
+  // Fiat dispute (no crypto disputeOpen but order is DISPUTED)
+  if (!contract.disputeOpen && data.state === 'DISPUTED') {
+    timeline.push({
+      status: 'disputed',
+      timestamp: new Date().toISOString(),
+      description: 'Payment disputed by buyer',
+      descriptionKey: 'order.timeline.fiatDisputeOpened',
+      actor: 'buyer',
+    });
+  }
+
   // 争议关闭
   if (contract.disputeClose) {
     timeline.push({
@@ -312,6 +326,17 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
         verdict: contract.disputeClose.verdict || 'N/A',
       },
       actor: 'moderator',
+    });
+  }
+
+  // Refund (order state is REFUNDED)
+  if (data.state === 'REFUNDED') {
+    timeline.push({
+      status: 'refunded',
+      timestamp: new Date().toISOString(),
+      description: 'Order refunded',
+      descriptionKey: 'order.timeline.refunded',
+      actor: 'seller',
     });
   }
 
@@ -571,6 +596,44 @@ export function transformCoreOrder(
       ? formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
       : formattedOrderAmount;
 
+  // Fiat payment detection: method === 5 or "FIAT"
+  const isFiatPayment =
+    paymentSent?.method === 5 || paymentSent?.method === 'FIAT' || !!orderOpen?.fiatProvider;
+  let fiatPayment: DisplayFiatPayment | undefined;
+  if (isFiatPayment) {
+    const provider = (orderOpen?.fiatProvider || 'stripe') as 'stripe' | 'paypal';
+    const pm = paymentSent?.paymentMethod;
+    const brand = pm?.brand || pm?.type || '';
+    const last4 = pm?.last4 || '';
+    const methodLabel = last4 ? `${brand} •••• ${last4}` : brand || provider;
+    fiatPayment = {
+      provider,
+      paymentID: paymentSent?.transactionID || '',
+      methodLabel,
+      brand: brand || undefined,
+      last4: last4 || undefined,
+    };
+  }
+
+  // Fiat dispute: order is DISPUTED with no crypto disputeOpen, synthesize DisplayDispute
+  const isFiatDispute = data.state === 'DISPUTED' && !contract.disputeOpen && isFiatPayment;
+  const dispute: DisplayOrder['dispute'] = contract.disputeOpen
+    ? {
+        id: fullOrderId,
+        claim: '',
+        status: contract.disputeClose ? 'resolved' : 'open',
+        initiator: 'buyer',
+        resolution: contract.disputeClose?.verdict as 'buyer' | 'seller' | 'split' | undefined,
+      }
+    : isFiatDispute
+      ? {
+          id: fullOrderId,
+          claim: `${(orderOpen?.fiatProvider || 'stripe').toUpperCase()} dispute`,
+          status: 'open',
+          initiator: 'buyer',
+        }
+      : undefined;
+
   const result: DisplayOrder = {
     id: fullOrderId,
     orderId: fullOrderId,
@@ -627,6 +690,8 @@ export function transformCoreOrder(
     contractType: contractType,
     timeline: generateTimelineFromRealData(data),
     userRole,
+    fiatPayment,
+    dispute,
   };
 
   return result;

@@ -94,12 +94,8 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     return (
       <div className={cn('flex flex-col items-center justify-center py-8 gap-3', className)}>
         <CheckCircle className="w-12 h-12 text-success" />
-        <span className="text-base font-medium text-foreground">
-          {t('fiat.paymentSuccessful', { defaultValue: 'Payment successful!' })}
-        </span>
-        <span className="text-sm text-muted-foreground">
-          {t('fiat.orderBeingProcessed', { defaultValue: 'Your order is being processed.' })}
-        </span>
+        <span className="text-base font-medium text-foreground">{t('fiat.success')}</span>
+        <span className="text-sm text-muted-foreground">{t('fiat.paymentBeingConfirmed')}</span>
       </div>
     );
   }
@@ -110,8 +106,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
       <div className={cn('flex flex-col items-center justify-center py-6 gap-3', className)}>
         <AlertCircle className="w-10 h-10 text-destructive" />
         <span className="text-sm text-destructive text-center px-4">
-          {displayError ||
-            t('fiat.sessionCreateFailed', { defaultValue: 'Failed to create payment session' })}
+          {displayError || t('fiat.failed')}
         </span>
         <button
           type="button"
@@ -122,7 +117,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
             'active:scale-[0.98] transition-all'
           )}
         >
-          {t('fiat.tryAgain', { defaultValue: 'Try Again' })}
+          {t('fiat.retry')}
         </button>
       </div>
     );
@@ -157,9 +152,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   return (
     <div className={cn('flex flex-col items-center justify-center py-8 gap-3', className)}>
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      <span className="text-sm text-muted-foreground">
-        {t('fiat.preparingPayment', { defaultValue: 'Preparing payment...' })}
-      </span>
+      <span className="text-sm text-muted-foreground">{t('fiat.processing')}</span>
     </div>
   );
 };
