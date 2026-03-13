@@ -752,7 +752,7 @@ export const en: TranslationResource = {
     trackingNumber: 'Tracking Number',
     paymentDetails: 'Payment Details',
     paymentTransaction: 'Payment Transaction',
-    escrowAddress: 'Escrow Address',
+    escrowAddress: 'Payment Address',
     orderNotes: 'Order Notes',
     // Payment card
     paid: 'Paid',
@@ -939,6 +939,7 @@ export const en: TranslationResource = {
       fullRefund: 'Full refund',
       partialRefund: 'Partial refund',
       amount: 'Refund amount',
+      amountPlaceholder: '0.00',
       reason: 'Reason',
       reasons: {
         requestedByCustomer: 'Requested by customer',
@@ -1103,7 +1104,7 @@ export const en: TranslationResource = {
       escrowPeriod: 'Protection Period',
       escrowExpired: 'Protection period has expired. Funds can now be claimed.',
       escrowNote: 'Funds are held securely until the order is completed or disputed.',
-      escrowAddress: 'Escrow Address',
+      escrowAddress: 'Payment Address',
       paymentAddress: 'Payment Address',
       transactions: 'Transactions',
       confirmed: 'Confirmed',
@@ -1636,7 +1637,7 @@ export const en: TranslationResource = {
     valueProps: {
       buyerProtection: {
         title: 'Buyer Protection',
-        description: 'Every transaction is secured by smart contract escrow',
+        description: 'Every transaction is secured by buyer protection',
       },
       selfHosted: {
         title: 'Own Your Data',
@@ -1738,7 +1739,7 @@ export const en: TranslationResource = {
       'To initiate a return, contact the seller through the order messaging system. The seller will provide return instructions.',
     returnsRefunds: 'Refunds',
     returnsRefundsDesc:
-      'Refunds are processed through the escrow system. Once the return is confirmed, funds are released back to the buyer.',
+      'Refunds are processed through the buyer protection system. Once the return is confirmed, funds are released back to the buyer.',
     returnsDisputes: 'Disputes',
     returnsDisputesDesc:
       'If you and the seller cannot reach an agreement, you can open a dispute. A moderator will review the case and make a decision.',
@@ -1749,7 +1750,7 @@ export const en: TranslationResource = {
       'Your privacy is important to us. This policy explains how we handle your information.',
     privacyCollection: 'Information We Collect',
     privacyCollectionDesc:
-      'Mobazha is a decentralized platform. We minimize data collection by design. Transaction data is stored on the blockchain and IPFS network.',
+      'Mobazha is a decentralized platform. We minimize data collection by design. Transaction data is stored on the blockchain and distributed storage.',
     privacyUsage: 'How We Use Information',
     privacyUsageDesc:
       'Information is used solely for order fulfillment, communication between buyers and sellers, and platform functionality.',
@@ -1907,7 +1908,7 @@ export const en: TranslationResource = {
 
   moderator: {
     title: 'Moderators',
-    subtitle: 'Choose a trusted moderator to protect your transactions with escrow',
+    subtitle: 'Choose a trusted moderator to protect your transactions with buyer protection',
     searchPlaceholder: 'Search moderators...',
     language: 'Language',
     allLanguages: 'All Languages',
@@ -1944,7 +1945,7 @@ export const en: TranslationResource = {
     moderatorRoleExplain:
       'If there is a dispute, the moderator will fairly resolve it for you. You can optionally skip and proceed without one.',
     noModeratorNeeded: 'No moderator needed',
-    selectModeratorWarning: 'Please select a moderator for escrow protection',
+    selectModeratorWarning: 'Please select a moderator for buyer protection',
     selectPaymentMethodWarning: 'Please select a payment method',
     noPaymentMethods: 'No payment methods available',
     noPaymentMethodsDesc:
@@ -1978,7 +1979,7 @@ export const en: TranslationResource = {
     processing: 'Processing...',
     success: 'Payment successful!',
     failed: 'Payment failed',
-    securityNote: 'Secure payment with multi-sig escrow protection',
+    securityNote: 'Secure payment protection',
     // Transaction related
     connectWalletFirst: 'Please connect your wallet first',
     noPaymentAddress: 'No payment address available',
@@ -3121,9 +3122,9 @@ export const en: TranslationResource = {
     instantTradeDesc:
       'Buyer gets RWA shares immediately after payment, no manual confirmation needed',
     confirmTrade: 'Confirm Trade',
-    confirmTradeDesc: 'Payment is escrowed, you confirm to complete the trade',
+    confirmTradeDesc: 'Payment is held securely, you confirm to complete the trade',
     recommended: 'Recommended',
-    escrowTimeout: 'Escrow Timeout',
+    escrowTimeout: 'Protection Timeout',
     min: 'min',
     hour: 'hour',
     hours: 'hours',
@@ -3196,10 +3197,10 @@ export const en: TranslationResource = {
       instantTrade: 'Instant Trade',
       confirmTrade: 'Confirm Trade',
       instantTradeHint: "Payment completes instantly, you'll receive RWA shares immediately",
-      confirmTradeHint: 'Payment is escrowed, seller must confirm within timeout to complete',
+      confirmTradeHint: 'Payment is held securely, seller must confirm within timeout to complete',
       escrowProtection:
-        "Smart contract protection: funds are returned automatically if seller doesn't confirm",
-      escrowTimeout: 'Escrow Timeout',
+        "Buyer protection: funds are returned automatically if seller doesn't confirm",
+      escrowTimeout: 'Protection Timeout',
       acceptedPayments: 'Accepted Payments',
       atomicSwap: 'Atomic Swap',
       atomicSwapShort: 'Asset and payment completed simultaneously, safe and secure',
@@ -3277,13 +3278,13 @@ export const en: TranslationResource = {
       placeholder: 'Select a terms template',
       standardLabel: 'Standard transaction terms',
       standard:
-        'By placing an order, you agree to the following terms:\n\n1. Payment: All payments are made via cryptocurrency through escrow. Funds are released to the seller upon buyer confirmation of delivery or after the dispute window expires.\n\n2. Disputes: If you are unsatisfied with your order, you may open a dispute within the escrow protection period. A mutually agreed moderator will review the case and make a binding decision.\n\n3. Shipping: The seller is responsible for shipping the item as described. Tracking information should be provided when available.\n\n4. Liability: The seller makes no warranties beyond what is explicitly stated in the listing description. All items are sold as described.\n\n5. Privacy: Transaction details are stored on a peer-to-peer network. No personal data is shared with third parties beyond what is necessary to complete the transaction.',
+        'By placing an order, you agree to the following terms:\n\n1. Payment: All payments are made via cryptocurrency with buyer protection. Funds are released to the seller upon buyer confirmation of delivery or after the dispute window expires.\n\n2. Disputes: If you are unsatisfied with your order, you may open a dispute within the buyer protection period. A mutually agreed moderator will review the case and make a binding decision.\n\n3. Shipping: The seller is responsible for shipping the item as described. Tracking information should be provided when available.\n\n4. Liability: The seller makes no warranties beyond what is explicitly stated in the listing description. All items are sold as described.\n\n5. Privacy: Transaction details are stored on a peer-to-peer network. No personal data is shared with third parties beyond what is necessary to complete the transaction.',
       digitalLabel: 'Digital goods terms',
       digital:
-        'By purchasing digital goods from this store, you agree to the following:\n\n1. Delivery: Digital items will be delivered via encrypted message or download link after payment confirmation. Delivery is typically within 24 hours.\n\n2. No Returns: Due to the nature of digital goods, all sales are final once the digital content has been delivered and accessed.\n\n3. License: Unless otherwise stated, you receive a personal, non-transferable license to use the digital content. Redistribution or resale is prohibited.\n\n4. Disputes: If the delivered content does not match the listing description, you may open a dispute within the escrow protection period.\n\n5. Support: The seller will provide reasonable support for issues related to accessing or using the purchased digital content.',
+        'By purchasing digital goods from this store, you agree to the following:\n\n1. Delivery: Digital items will be delivered via encrypted message or download link after payment confirmation. Delivery is typically within 24 hours.\n\n2. No Returns: Due to the nature of digital goods, all sales are final once the digital content has been delivered and accessed.\n\n3. License: Unless otherwise stated, you receive a personal, non-transferable license to use the digital content. Redistribution or resale is prohibited.\n\n4. Disputes: If the delivered content does not match the listing description, you may open a dispute within the buyer protection period.\n\n5. Support: The seller will provide reasonable support for issues related to accessing or using the purchased digital content.',
       handmadeLabel: 'Handmade / custom items terms',
       handmade:
-        'By ordering handmade or custom items, you agree to the following:\n\n1. Production Time: Handmade and custom items require additional production time as stated in the listing. Please allow the specified timeframe before expecting shipment.\n\n2. Variations: Handmade items may have slight variations in color, size, or appearance. These are inherent to handcrafted goods and are not considered defects.\n\n3. Customization: Custom orders are made to your specifications. Please review all details carefully before confirming. Changes after production begins may not be possible.\n\n4. Returns: Due to the personalized nature of custom items, returns are only accepted if the item is significantly different from what was agreed upon.\n\n5. Disputes: If the received item does not match the agreed specifications, you may open a dispute within the escrow protection period.',
+        'By ordering handmade or custom items, you agree to the following:\n\n1. Production Time: Handmade and custom items require additional production time as stated in the listing. Please allow the specified timeframe before expecting shipment.\n\n2. Variations: Handmade items may have slight variations in color, size, or appearance. These are inherent to handcrafted goods and are not considered defects.\n\n3. Customization: Custom orders are made to your specifications. Please review all details carefully before confirming. Changes after production begins may not be possible.\n\n4. Returns: Due to the personalized nature of custom items, returns are only accepted if the item is significantly different from what was agreed upon.\n\n5. Disputes: If the received item does not match the agreed specifications, you may open a dispute within the buyer protection period.',
       custom: 'Custom terms',
     },
 
@@ -3354,6 +3355,7 @@ export const en: TranslationResource = {
       description: 'Your product is now live and visible to buyers.',
       viewProduct: 'View',
       createAnother: 'Create Another',
+      backToDashboard: 'Back to Dashboard',
     },
     updateSuccess: 'Listing updated successfully!',
     deleteSuccess: 'Listing deleted successfully!',
@@ -3964,8 +3966,10 @@ export const en: TranslationResource = {
       noResults: 'No products found',
       noResultsDesc: 'Try adjusting your search terms.',
       colProduct: 'Product',
+      colStock: 'Stock',
       colType: 'Type',
       colPrice: 'Price',
+      outOfStock: 'Out of stock',
       preview: 'Preview',
       edit: 'Edit',
       duplicate: 'Duplicate',

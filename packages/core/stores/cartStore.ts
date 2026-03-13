@@ -11,6 +11,17 @@ import { persist, devtools } from 'zustand/middleware';
 import type { CartItem, OrderItemOption, OrderShippingOption } from '../types';
 import { cartApi } from '../services/api/cart';
 
+const optionsMatch = (a?: OrderItemOption[], b?: OrderItemOption[]): boolean => {
+  if (!a?.length && !b?.length) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  const sorted = (opts: OrderItemOption[]) =>
+    [...opts].sort((x, y) => x.name.localeCompare(y.name));
+  return sorted(a).every((opt, i) => {
+    const other = sorted(b)[i];
+    return opt.name === other.name && opt.value === other.value;
+  });
+};
+
 function syncToApi(fn: () => Promise<unknown>) {
   fn().catch(() => {
     /* best-effort background sync */
@@ -22,8 +33,13 @@ interface CartState {
   isLoading: boolean;
 
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
-  removeItem: (slug: string, vendorPeerID: string) => void;
-  updateQuantity: (slug: string, vendorPeerID: string, quantity: number) => void;
+  removeItem: (slug: string, vendorPeerID: string, options?: OrderItemOption[]) => void;
+  updateQuantity: (
+    slug: string,
+    vendorPeerID: string,
+    quantity: number,
+    options?: OrderItemOption[]
+  ) => void;
   updateOptions: (slug: string, vendorPeerID: string, options: OrderItemOption[]) => void;
   updateShipping: (slug: string, vendorPeerID: string, shippingOption: OrderShippingOption) => void;
   clearCart: () => void;
@@ -32,7 +48,11 @@ interface CartState {
 
   getItemCount: () => number;
   getVendorItems: (vendorPeerID: string) => CartItem[];
-  getItemBySlug: (slug: string, vendorPeerID: string) => CartItem | undefined;
+  getItemBySlug: (
+    slug: string,
+    vendorPeerID: string,
+    options?: OrderItemOption[]
+  ) => CartItem | undefined;
 }
 
 export const useCartStore = create<CartState>()(
@@ -47,7 +67,8 @@ export const useCartStore = create<CartState>()(
           const existingIndex = items.findIndex(
             item =>
               item.listing.slug === newItem.listing.slug &&
-              item.listing.vendorPeerID === newItem.listing.vendorPeerID
+              item.listing.vendorPeerID === newItem.listing.vendorPeerID &&
+              optionsMatch(item.options, newItem.options)
           );
 
           const qty = newItem.quantity ?? 1;
@@ -82,30 +103,30 @@ export const useCartStore = create<CartState>()(
           }
         },
 
-        removeItem: (slug, vendorPeerID) => {
+        removeItem: (slug, vendorPeerID, options) => {
+          const match = (item: CartItem) =>
+            item.listing.slug === slug &&
+            item.listing.vendorPeerID === vendorPeerID &&
+            optionsMatch(item.options, options);
           set({
-            items: get().items.filter(
-              item => !(item.listing.slug === slug && item.listing.vendorPeerID === vendorPeerID)
-            ),
+            items: get().items.filter(item => !match(item)),
           });
           syncToApi(() => cartApi.removeFromCart(vendorPeerID, slug));
         },
 
-        updateQuantity: (slug, vendorPeerID, quantity) => {
+        updateQuantity: (slug, vendorPeerID, quantity, options) => {
+          const match = (item: CartItem) =>
+            item.listing.slug === slug &&
+            item.listing.vendorPeerID === vendorPeerID &&
+            optionsMatch(item.options, options);
           if (quantity <= 0) {
-            get().removeItem(slug, vendorPeerID);
+            get().removeItem(slug, vendorPeerID, options);
             return;
           }
 
-          const item = get().items.find(
-            i => i.listing.slug === slug && i.listing.vendorPeerID === vendorPeerID
-          );
+          const item = get().items.find(match);
           set({
-            items: get().items.map(i =>
-              i.listing.slug === slug && i.listing.vendorPeerID === vendorPeerID
-                ? { ...i, quantity }
-                : i
-            ),
+            items: get().items.map(i => (match(i) ? { ...i, quantity } : i)),
           });
           syncToApi(() =>
             cartApi.updateCartItem(vendorPeerID, {
@@ -188,9 +209,12 @@ export const useCartStore = create<CartState>()(
           return get().items.filter(item => item.listing.vendorPeerID === vendorPeerID);
         },
 
-        getItemBySlug: (slug, vendorPeerID) => {
+        getItemBySlug: (slug, vendorPeerID, options?) => {
           return get().items.find(
-            item => item.listing.slug === slug && item.listing.vendorPeerID === vendorPeerID
+            item =>
+              item.listing.slug === slug &&
+              item.listing.vendorPeerID === vendorPeerID &&
+              optionsMatch(item.options, options)
           );
         },
       }),

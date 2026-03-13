@@ -86,6 +86,9 @@ export function MnemonicBackupBanner() {
       } catch {
         /* noop */
       }
+      setWords([]);
+      setBlanks([]);
+      setAnswers({});
       setStep('done');
     } else {
       setVerifyError(true);

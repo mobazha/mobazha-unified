@@ -229,6 +229,7 @@ export default function AdminDashboardPage() {
     return (
       <div data-testid="admin-dashboard">
         <DashboardHeader name={displayName} />
+        <SetupChecklist hasProducts={false} productsLoading={false} />
         <EmptyState />
       </div>
     );

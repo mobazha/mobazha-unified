@@ -1919,6 +1919,7 @@ export interface TranslationResource {
       description: string;
       viewProduct: string;
       createAnother: string;
+      backToDashboard: string;
     };
     updateSuccess: string;
     deleteSuccess: string;
@@ -2521,8 +2522,10 @@ export interface TranslationResource {
       noResults?: string;
       noResultsDesc?: string;
       colProduct?: string;
+      colStock?: string;
       colType?: string;
       colPrice?: string;
+      outOfStock?: string;
       preview?: string;
       edit?: string;
       duplicate?: string;

@@ -336,7 +336,7 @@ export function ShippingZoneForm({
                               updateRateCondition(
                                 index,
                                 rate.condition.type,
-                                parseInt(e.target.value) || 0,
+                                parseFloat(e.target.value) || 0,
                                 rate.condition.maxValue
                               );
                             }
@@ -361,7 +361,7 @@ export function ShippingZoneForm({
                                 index,
                                 rate.condition.type,
                                 rate.condition.minValue,
-                                parseInt(e.target.value) || 0
+                                parseFloat(e.target.value) || 0
                               );
                             }
                           }}
@@ -407,14 +407,14 @@ export function ShippingZoneForm({
                     <SelectValue placeholder={t('shipping.previewCountry')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {regions.filter(r => r !== 'ALL').map(c => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                    {regions.includes('ALL') && (
-                      <SelectItem value="ALL">ALL</SelectItem>
-                    )}
+                    {regions
+                      .filter(r => r !== 'ALL')
+                      .map(c => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    {regions.includes('ALL') && <SelectItem value="ALL">ALL</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>

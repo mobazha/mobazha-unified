@@ -41,6 +41,8 @@ export interface ProductListItem {
   productType?: string;
   /** 商品发布状态 */
   status?: ListingStatus;
+  /** 库存数量（列表 API 可能不返回，编辑页从 item.skus 汇总） */
+  quantity?: number;
 }
 
 /**

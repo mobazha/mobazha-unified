@@ -10,7 +10,7 @@ import { useTGMainButton } from '@/hooks/useTGMainButton';
 import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
-import type { CartItem } from '@mobazha/core';
+import type { CartItem, OrderItemOption } from '@mobazha/core';
 import { useI18n, type TranslateFunction } from '@mobazha/core';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
@@ -150,8 +150,13 @@ function VendorSection({
 }: {
   group: VendorGroup;
   onCheckout: (g: VendorGroup) => void;
-  onRemove: (slug: string, vendorPeerID: string) => void;
-  onUpdateQuantity: (slug: string, vendorPeerID: string, qty: number) => void;
+  onRemove: (slug: string, vendorPeerID: string, options?: OrderItemOption[]) => void;
+  onUpdateQuantity: (
+    slug: string,
+    vendorPeerID: string,
+    qty: number,
+    options?: OrderItemOption[]
+  ) => void;
   getThumbUrl: (item: CartItem) => string | undefined;
   renderPrice: (amount: number, currency: string) => string;
   t: TranslateFunction;
@@ -173,18 +178,26 @@ function VendorSection({
 
       {/* Items */}
       <div className="divide-y divide-border">
-        {group.items.map(item => (
-          <SwipeableCartItem
-            key={`${item.listing.vendorPeerID}-${item.listing.slug}`}
-            item={item}
-            thumbUrl={getThumbUrl(item)}
-            onRemove={() => onRemove(item.listing.slug, item.listing.vendorPeerID)}
-            onUpdateQuantity={qty =>
-              onUpdateQuantity(item.listing.slug, item.listing.vendorPeerID, qty)
-            }
-            renderPrice={renderPrice}
-          />
-        ))}
+        {group.items.map(item => {
+          const itemKey = item.options?.length
+            ? `${item.listing.vendorPeerID}-${item.listing.slug}-${item.options
+                .map(o => `${o.name}:${o.value}`)
+                .sort()
+                .join('|')}`
+            : `${item.listing.vendorPeerID}-${item.listing.slug}`;
+          return (
+            <SwipeableCartItem
+              key={itemKey}
+              item={item}
+              thumbUrl={getThumbUrl(item)}
+              onRemove={() => onRemove(item.listing.slug, item.listing.vendorPeerID, item.options)}
+              onUpdateQuantity={qty =>
+                onUpdateQuantity(item.listing.slug, item.listing.vendorPeerID, qty, item.options)
+              }
+              renderPrice={renderPrice}
+            />
+          );
+        })}
       </div>
 
       {/* Vendor checkout */}

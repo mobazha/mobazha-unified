@@ -63,10 +63,13 @@ export function getConfig(): AppConfig {
   return {
     ...defaultConfig,
     ...runtimeConfig,
-    // Environment variables take precedence
+    // Environment variables take precedence; production always disables mock
     useMockData:
-      process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ||
-      (process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false' && runtimeConfig.useMockData !== false),
+      process.env.NODE_ENV === 'production'
+        ? false
+        : process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ||
+          (process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false' &&
+            runtimeConfig.useMockData !== false),
     matrixEnabled,
   };
 }
