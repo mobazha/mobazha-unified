@@ -3930,6 +3930,9 @@ export const en: TranslationResource = {
       completedOrders: 'Completed orders',
       reviewCount: '{{count}} reviews',
       noReviews: 'No reviews yet',
+      actionPendingReview: 'Orders to review',
+      actionToFulfill: 'Orders to fulfill',
+      actionDisputed: 'Disputes need response',
     },
     checklist: {
       title: 'Setup Checklist',

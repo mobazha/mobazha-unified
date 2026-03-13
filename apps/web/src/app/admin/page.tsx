@@ -33,6 +33,7 @@ import {
   ListSkeleton,
   SetupChecklist,
   MnemonicBackupBanner,
+  ActionItems,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
 import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
@@ -262,6 +263,9 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Action Items — seller to-dos */}
+      <ActionItems orders={salesOrders} loading={salesLoading} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
