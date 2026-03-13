@@ -191,7 +191,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             <ChevronDown className="w-4 h-4 opacity-50" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{t('shipping.selectRegions')}</DialogTitle>
           </DialogHeader>
@@ -207,7 +207,7 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({
             />
           </div>
 
-          <ScrollArea className="h-[350px] pr-4">
+          <ScrollArea className="min-h-[200px] h-[50dvh] sm:h-[350px] flex-1 pr-4">
             {/* 全球选项 */}
             <div
               role="button"
