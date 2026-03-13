@@ -40,6 +40,7 @@ export function CheckoutMobile({ checkout }: Props) {
     selectedCountryCode,
     subtotal,
     shippingTotal,
+    taxTotal,
     total,
     currency,
     updateQuantity,
@@ -403,6 +404,14 @@ export function CheckoutMobile({ checkout }: Props) {
                       </span>
                       <span className="font-medium text-success text-sm">
                         -{renderPairedPrice(discountTotal, currency)}
+                      </span>
+                    </HStack>
+                  )}
+                  {taxTotal > 0 && (
+                    <HStack justify="between">
+                      <span className="text-sm text-muted-foreground">{t('checkout.tax')}</span>
+                      <span className="font-medium text-foreground text-sm">
+                        {renderPairedPrice(taxTotal, currency)}
                       </span>
                     </HStack>
                   )}

@@ -8,6 +8,9 @@ export * from './userStore';
 // 购物车状态
 export * from './cartStore';
 
+// 购物车 Drawer 状态（全局控制 CartDrawer 开闭）
+export * from './cartDrawerStore';
+
 // 钱包状态
 export * from './walletStore';
 

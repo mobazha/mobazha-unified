@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useProductDetail } from '@/hooks/useProductDetail';
+import { VariantSelector } from './VariantSelector';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -54,6 +55,7 @@ export function ProductDetailMobile({
     error,
     imageUrls,
     priceInfo,
+    compareAtPrice,
     stock,
     freeShipping,
     estimatedDelivery,
@@ -67,6 +69,10 @@ export function ProductDetailMobile({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    hasVariants,
+    selectedOptions,
+    unavailableVariants,
+    handleSelectOption,
     quantity,
     setQuantity,
     selectedImage,
@@ -80,6 +86,7 @@ export function ProductDetailMobile({
     handleCopyLink,
     openChatDrawer,
     ratingIndex,
+    renderPairedPrice,
     t,
     router,
   } = useProductDetail({ slug, peerID, onProductLoaded });
@@ -215,8 +222,13 @@ export function ProductDetailMobile({
       {/* --- Content --- */}
       <div className="px-4 pt-3 pb-28 space-y-4">
         {/* Price + Trust */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-2xl font-bold text-primary">{priceInfo.pairedPrice}</span>
+          {compareAtPrice !== null && (
+            <span className="text-base line-through text-muted-foreground">
+              {renderPairedPrice(compareAtPrice, priceInfo.currency)}
+            </span>
+          )}
           <BuyerProtectionBadge variant="inline" />
         </div>
 
@@ -296,6 +308,17 @@ export function ProductDetailMobile({
               </>
             )}
           </div>
+        )}
+
+        {/* Variant Selection */}
+        {hasVariants && product.item.options && (
+          <VariantSelector
+            options={product.item.options}
+            selectedOptions={selectedOptions}
+            onSelectOption={handleSelectOption}
+            unavailableVariants={unavailableVariants}
+            compact
+          />
         )}
 
         {/* Product Attributes */}

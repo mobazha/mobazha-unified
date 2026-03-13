@@ -225,6 +225,15 @@ export const en: TranslationResource = {
     viewAll: 'View All',
   },
 
+  categories: {
+    electronics: 'Electronics',
+    clothing: 'Clothing',
+    art: 'Art',
+    collectibles: 'Collectibles',
+    home: 'Home & Garden',
+    sports: 'Sports',
+  },
+
   me: {
     title: 'Me',
     anonymous: 'Anonymous',
@@ -446,6 +455,7 @@ export const en: TranslationResource = {
     clearConfirmTitle: 'Clear Cart',
     clearConfirmMessage:
       'Are you sure you want to remove all items from your cart? This cannot be undone.',
+    viewCart: 'View Cart',
   },
 
   checkout: {
@@ -487,6 +497,7 @@ export const en: TranslationResource = {
     quantity: 'Qty',
     subtotal: 'Subtotal',
     shipping: 'Shipping',
+    tax: 'Tax',
     shippingMethod: 'Shipping Method',
     free: 'Free',
     cheapest: 'Cheapest',
@@ -1633,6 +1644,10 @@ export const en: TranslationResource = {
       emptyTitle: 'Be the First',
       emptySubtitle: 'Create your Web3 store and join the network',
       growingCta: 'Join the growing network',
+    },
+    popularProducts: {
+      title: 'Popular Products',
+      subtitle: 'Trending on the network',
     },
     networkActivity: {
       title: 'Network Activity',

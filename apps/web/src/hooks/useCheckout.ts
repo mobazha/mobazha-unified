@@ -292,7 +292,11 @@ export function useCheckout(): UseCheckoutReturn {
     [appliedDiscounts]
   );
 
-  const total = Math.max(0, subtotal + shippingTotal - discountTotal);
+  const taxTotal = useMemo(() => {
+    return checkoutItems.reduce((sum, item) => sum + (item.taxAmount || 0), 0);
+  }, [checkoutItems]);
+
+  const total = Math.max(0, subtotal + shippingTotal + taxTotal - discountTotal);
   const currency = checkoutItems[0]?.currency || 'USD';
 
   const isRwaToken = useMemo(
@@ -625,6 +629,7 @@ export function useCheckout(): UseCheckoutReturn {
 
     subtotal,
     shippingTotal,
+    taxTotal,
     total,
     currency,
 

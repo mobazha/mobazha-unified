@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -13,14 +14,27 @@ interface CheckoutProgressBarProps {
 
 const STEPS: CheckoutStep[] = ['checkout', 'payment', 'confirmation'];
 
+const STEP_ROUTES: Record<CheckoutStep, string> = {
+  checkout: '/checkout',
+  payment: '/checkout/payment-method',
+  confirmation: '/checkout/confirmation',
+};
+
 export function CheckoutProgressBar({ currentStep, className }: CheckoutProgressBarProps) {
   const { t } = useI18n();
+  const router = useRouter();
   const currentIndex = STEPS.indexOf(currentStep);
 
   const labels: Record<CheckoutStep, string> = {
     checkout: t('checkout.stepCheckout'),
     payment: t('checkout.stepPayment'),
     confirmation: t('checkout.stepConfirmation'),
+  };
+
+  const handleStepClick = (step: CheckoutStep, idx: number) => {
+    if (idx < currentIndex) {
+      router.push(STEP_ROUTES[step]);
+    }
   };
 
   return (
@@ -39,12 +53,22 @@ export function CheckoutProgressBar({ currentStep, className }: CheckoutProgress
                   )}
                 />
               )}
-              <div className="flex flex-col items-center gap-1">
+              <button
+                type="button"
+                className={cn(
+                  'flex flex-col items-center gap-1 group',
+                  isCompleted && 'cursor-pointer',
+                  !isCompleted && !isActive && 'cursor-default'
+                )}
+                onClick={() => handleStepClick(step, idx)}
+                disabled={!isCompleted}
+              >
                 <div
                   className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors',
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
                     isActive && 'bg-primary text-primary-foreground',
-                    isCompleted && 'bg-primary text-primary-foreground',
+                    isCompleted &&
+                      'bg-primary text-primary-foreground group-hover:ring-2 group-hover:ring-primary/30 group-hover:scale-110',
                     !isActive && !isCompleted && 'bg-muted text-muted-foreground'
                   )}
                 >
@@ -68,13 +92,14 @@ export function CheckoutProgressBar({ currentStep, className }: CheckoutProgress
                 </div>
                 <span
                   className={cn(
-                    'text-xs whitespace-nowrap',
-                    isActive ? 'text-primary font-medium' : 'text-muted-foreground'
+                    'text-xs whitespace-nowrap transition-colors',
+                    isActive ? 'text-primary font-medium' : 'text-muted-foreground',
+                    isCompleted && 'group-hover:text-primary'
                   )}
                 >
                   {labels[step]}
                 </span>
-              </div>
+              </button>
             </React.Fragment>
           );
         })}

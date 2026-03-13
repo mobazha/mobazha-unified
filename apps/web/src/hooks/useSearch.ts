@@ -252,6 +252,21 @@ export function useSearch() {
   }, [queryParam, categoryParam, searchProducts, searchUsersApi]);
 
   useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed === queryParam) return;
+
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams({ q: trimmed });
+      if (category && category !== 'all') {
+        params.set('category', category);
+      }
+      router.push(`/search?${params.toString()}`, { scroll: false });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, queryParam, category, router]);
+
+  useEffect(() => {
     if (queryParam) {
       searchProducts(queryParam, 0, false);
     }
