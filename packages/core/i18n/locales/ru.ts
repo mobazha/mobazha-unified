@@ -322,6 +322,7 @@ export const ru: TranslationResource = {
     shippingFee: 'Стоимость',
     additionalItemFee: 'Доп. товар',
     noShippingOptions: 'Нет доступных вариантов доставки',
+    contactSellerForShipping: 'Свяжитесь с продавцом для уточнения вариантов доставки',
     localPickup: 'Самовывоз',
     priceToBeCalculated: 'Рассчитывается',
     worldwide: 'По всему миру',

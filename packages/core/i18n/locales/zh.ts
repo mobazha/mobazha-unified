@@ -394,6 +394,7 @@ export const zh: TranslationResource = {
     shippingFee: '运费',
     additionalItemFee: '续件费',
     noShippingOptions: '暂无配送选项',
+    contactSellerForShipping: '联系卖家了解配送方式',
     localPickup: '到店自提',
     priceToBeCalculated: '待计算',
     worldwide: '全球',
@@ -1608,6 +1609,19 @@ export const zh: TranslationResource = {
       delivered: '已送达',
       released: '已释放',
     },
+    panel: {
+      title: '买家保障',
+      intro: '您的付款受到全程保护：',
+      bullet1: '资金在您确认收货前不会释放给卖家',
+      bullet2: '商品有问题可以申请退款',
+      bullet3: '有争议时可以申请仲裁',
+      howItWorks: '如何运作？',
+      step1: '您下单后，资金进入安全账户',
+      step2: '卖家发货，您确认收货',
+      step3: '您满意后，资金释放给卖家',
+      step4: '如有问题，可申请退款或仲裁',
+    },
+    checkoutFundsProtected: '您的资金受到买家保障保护',
   },
 
   errors: {
