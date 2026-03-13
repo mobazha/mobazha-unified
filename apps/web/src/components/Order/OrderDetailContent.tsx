@@ -376,28 +376,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     }
     setIsActionLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const updated = {
-        ...order,
-        status: 'disputed' as const,
-        dispute: {
-          id: 'dispute-' + Date.now(),
-          claim: disputeReason,
-          status: 'open' as const,
-          initiator: 'buyer' as const,
-        },
-        timeline: [
-          ...order.timeline,
-          {
-            status: 'disputed',
-            timestamp: new Date().toISOString(),
-            description: t('order.timeline.disputeOpened'),
-            actor: 'buyer' as const,
-          },
-        ],
-      };
-      setLocalOrder(updated);
-      onOrderUpdate?.(updated);
+      await ordersApi.openDispute(order.id, disputeReason.trim());
       setShowDisputeModal(false);
       setDisputeReason('');
       toast({
@@ -415,28 +394,13 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     } finally {
       setIsActionLoading(false);
     }
-  }, [disputeReason, order, refetch, onOrderUpdate, t, toast]);
+  }, [disputeReason, order.id, refetch, t, toast]);
 
   const handleRefundConfirm = useCallback(async () => {
     setShowRefundDialog(false);
     setIsActionLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const updated = {
-        ...order,
-        status: 'refunded' as const,
-        timeline: [
-          ...order.timeline,
-          {
-            status: 'refunded',
-            timestamp: new Date().toISOString(),
-            description: t('order.refundSuccess'),
-            actor: 'seller' as const,
-          },
-        ],
-      };
-      setLocalOrder(updated);
-      onOrderUpdate?.(updated);
+      await ordersApi.refundOrder({ orderID: order.id });
       toast({
         title: t('order.actions.refundSuccess'),
         description: t('order.refundSuccess'),
@@ -452,7 +416,7 @@ export const OrderDetailContent = memo(function OrderDetailContent({
     } finally {
       setIsActionLoading(false);
     }
-  }, [order, refetch, onOrderUpdate, t, toast]);
+  }, [order.id, refetch, t, toast]);
 
   const handleResolveDisputeConfirm = useCallback(async () => {
     if (!showResolveDialog) return;

@@ -103,6 +103,7 @@ function SwipeableOrderRow({
   onContact?: () => void;
   onConfirmDelivery?: () => void;
 }) {
+  const { t } = useI18n();
   const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
@@ -155,9 +156,12 @@ function SwipeableOrderRow({
               setOffsetX(0);
             }}
             className="w-[60px] bg-primary flex flex-col items-center justify-center gap-1"
+            aria-label={t('order.actions.chat')}
           >
             <MessageCircle className="w-4 h-4 text-primary-foreground" />
-            <span className="text-[10px] text-primary-foreground font-medium">Chat</span>
+            <span className="text-xs text-primary-foreground font-medium">
+              {t('order.actions.chat')}
+            </span>
           </button>
         )}
         {onConfirmDelivery && (
@@ -167,10 +171,13 @@ function SwipeableOrderRow({
               onConfirmDelivery();
               setOffsetX(0);
             }}
-            className="w-[60px] bg-emerald-500 flex flex-col items-center justify-center gap-1"
+            className="w-[60px] bg-success flex flex-col items-center justify-center gap-1"
+            aria-label={t('order.actions.confirmDelivery')}
           >
             <CheckCircle2 className="w-4 h-4 text-white" />
-            <span className="text-[10px] text-white font-medium">Confirm</span>
+            <span className="text-xs text-white font-medium">
+              {t('order.actions.confirmDelivery')}
+            </span>
           </button>
         )}
       </div>
@@ -340,7 +347,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8 px-3 text-xs flex-1 min-w-0"
+                      className="min-h-[44px] px-3 text-sm flex-1 min-w-0"
                       onClick={e =>
                         handleButtonClick(e, () => onReject(order.id, order.paymentCoin))
                       }
@@ -351,7 +358,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                   {onAccept && (
                     <Button
                       size="sm"
-                      className="h-8 px-3 text-xs flex-1 min-w-0 bg-primary hover:bg-primary/90"
+                      className="min-h-[44px] px-3 text-sm flex-1 min-w-0 bg-primary hover:bg-primary/90"
                       onClick={e =>
                         handleButtonClick(e, () => onAccept(order.id, order.paymentCoin))
                       }

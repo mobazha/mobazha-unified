@@ -642,6 +642,7 @@ export const en: TranslationResource = {
     // Modal sidebar
     menu: 'Menu',
     tabs: {
+      label: 'Order details',
       summary: 'Summary',
       discussion: 'Discussion',
       contract: 'Contract (JSON)',
@@ -801,6 +802,15 @@ export const en: TranslationResource = {
     refundFailed: 'Failed to process refund: ',
     disputeResolvedSuccess: 'Dispute has been resolved!',
     resolveDisputeFailed: 'Failed to resolve dispute: ',
+    // Packing slip
+    packingSlip: {
+      title: 'Packing Slip',
+      print: 'Print',
+      orderNumber: 'Order #',
+      item: 'Item',
+      price: 'Price',
+      thankYou: 'Thank you for your order!',
+    },
     // Order actions
     actions: {
       pay: 'Pay Now',
@@ -814,6 +824,8 @@ export const en: TranslationResource = {
       refund: 'Refund',
       claim: 'Claim Payment',
       acceptPayout: 'Accept Payout',
+      chat: 'Chat',
+      confirmDelivery: 'Confirm',
       // Success messages
       acceptSuccess: 'Order Accepted',
       acceptSuccessDesc: 'You have accepted the order. Please fulfill it as soon as possible.',
