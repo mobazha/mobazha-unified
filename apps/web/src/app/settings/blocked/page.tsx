@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,45 +19,68 @@ import {
   AlertDialogTitle,
   useToast,
 } from '@/components/ui';
-import { useI18n } from '@mobazha/core';
+import { socialApi, useI18n } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
-import { Plus, Ban, UserX } from 'lucide-react';
+import { Plus, Ban, UserX, Loader2 } from 'lucide-react';
 
 interface BlockedUser {
-  id: string;
   peerId: string;
   name: string;
-  avatar?: string;
-  blockedAt: string;
 }
-
-// TODO: 集成真实 API - 替换 mock 数据，使用后端黑名单管理 API
-const mockBlockedUsers: BlockedUser[] = [
-  {
-    id: '1',
-    peerId: 'QmYjL9N8X...',
-    name: 'Spammer123',
-    blockedAt: '2025-01-05',
-  },
-  {
-    id: '2',
-    peerId: 'QmZkM7P9Y...',
-    name: 'BadActor',
-    blockedAt: '2025-01-03',
-  },
-];
 
 export default function BlockedSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>(mockBlockedUsers);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [unblockTarget, setUnblockTarget] = useState<BlockedUser | null>(null);
   const [newPeerId, setNewPeerId] = useState('');
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [isUnblocking, setIsUnblocking] = useState(false);
 
-  const handleBlockUser = () => {
-    if (!newPeerId.trim()) {
+  const fetchBlockedUsers = useCallback(async () => {
+    try {
+      const peerIds = await socialApi.getBlockedNodes();
+      let users: BlockedUser[] = peerIds.map(id => ({ peerId: id, name: '' }));
+
+      if (peerIds.length > 0) {
+        try {
+          const profiles = await socialApi.fetchProfiles(peerIds);
+          users = peerIds.map(id => {
+            const profile = profiles.find(p => p.peerID === id);
+            return {
+              peerId: id,
+              name: profile?.name || '',
+            };
+          });
+        } catch {
+          /* profiles are best-effort */
+        }
+      }
+
+      setBlockedUsers(users);
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('settingsModal.loadBlockedFailed', {
+          defaultValue: 'Failed to load blocked users',
+        }),
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [t, toast]);
+
+  useEffect(() => {
+    fetchBlockedUsers();
+  }, [fetchBlockedUsers]);
+
+  const handleBlockUser = async () => {
+    const trimmed = newPeerId.trim();
+    if (!trimmed) {
       toast({
         title: t('common.error'),
         description: t('settingsModal.peerIdRequired'),
@@ -66,26 +89,77 @@ export default function BlockedSettingsPage() {
       return;
     }
 
-    const newBlockedUser: BlockedUser = {
-      id: Date.now().toString(),
-      peerId: newPeerId.trim(),
-      name: 'Unknown User',
-      blockedAt: new Date().toISOString().split('T')[0],
-    };
+    if (blockedUsers.some(u => u.peerId === trimmed)) {
+      toast({
+        title: t('common.error'),
+        description: t('settingsModal.alreadyBlocked', {
+          defaultValue: 'This user is already blocked',
+        }),
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    setBlockedUsers([...blockedUsers, newBlockedUser]);
-    setShowAddModal(false);
-    setNewPeerId('');
-    toast({ title: t('common.success'), description: t('settingsModal.userBlocked') });
+    setIsBlocking(true);
+    try {
+      const result = await socialApi.blockUser(trimmed);
+      if (result.success) {
+        setBlockedUsers(prev => [...prev, { peerId: trimmed, name: '' }]);
+        setShowAddModal(false);
+        setNewPeerId('');
+        toast({ title: t('common.success'), description: t('settingsModal.userBlocked') });
+      } else {
+        toast({
+          title: t('common.error'),
+          description:
+            result.error ||
+            t('settingsModal.blockFailed', { defaultValue: 'Failed to block user' }),
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('settingsModal.blockFailed', { defaultValue: 'Failed to block user' }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBlocking(false);
+    }
   };
 
-  const handleUnblock = () => {
-    if (unblockTarget) {
-      setBlockedUsers(blockedUsers.filter(u => u.id !== unblockTarget.id));
-      toast({ title: t('common.success'), description: t('settingsModal.userUnblocked') });
+  const handleUnblock = async () => {
+    if (!unblockTarget) return;
+
+    setIsUnblocking(true);
+    try {
+      const result = await socialApi.unblockUser(unblockTarget.peerId);
+      if (result.success) {
+        setBlockedUsers(prev => prev.filter(u => u.peerId !== unblockTarget.peerId));
+        toast({ title: t('common.success'), description: t('settingsModal.userUnblocked') });
+      } else {
+        toast({
+          title: t('common.error'),
+          description:
+            result.error ||
+            t('settingsModal.unblockFailed', { defaultValue: 'Failed to unblock user' }),
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('settingsModal.unblockFailed', { defaultValue: 'Failed to unblock user' }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUnblocking(false);
       setUnblockTarget(null);
     }
   };
+
+  const truncatePeerId = (id: string) =>
+    id.length > 16 ? `${id.slice(0, 8)}...${id.slice(-6)}` : id;
 
   return (
     <div>
@@ -101,7 +175,11 @@ export default function BlockedSettingsPage() {
       />
 
       <Card className="p-4 md:p-6">
-        {blockedUsers.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : blockedUsers.length === 0 ? (
           <div className="text-center py-4">
             <Ban className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">{t('settingsModal.noBlockedUsers')}</p>
@@ -110,16 +188,15 @@ export default function BlockedSettingsPage() {
           <div className="space-y-3">
             {blockedUsers.map(user => (
               <div
-                key={user.id}
+                key={user.peerId}
                 className="flex items-center justify-between py-3 first:pt-0 last:pb-0 [&:not(:last-child)]:border-b border-border"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar name={user.name} size="md" />
+                  <Avatar name={user.name || user.peerId} size="md" />
                   <div>
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{user.peerId}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('settingsModal.blockedOn')}: {user.blockedAt}
+                    {user.name && <p className="font-medium">{user.name}</p>}
+                    <p className="text-xs text-muted-foreground font-mono" title={user.peerId}>
+                      {truncatePeerId(user.peerId)}
                     </p>
                   </div>
                 </div>
@@ -138,7 +215,6 @@ export default function BlockedSettingsPage() {
         )}
       </Card>
 
-      {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -155,25 +231,28 @@ export default function BlockedSettingsPage() {
                 placeholder={t('settingsModal.enterPeerId')}
               />
             </div>
-            <Button className="w-full" onClick={handleBlockUser}>
+            <Button className="w-full" onClick={handleBlockUser} disabled={isBlocking}>
+              {isBlocking && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t('settingsModal.block')}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Unblock Confirmation */}
       <AlertDialog open={!!unblockTarget} onOpenChange={() => setUnblockTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('settingsModal.unblockConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('settingsModal.unblockConfirmDesc', { name: unblockTarget?.name || '' })}
+              {t('settingsModal.unblockConfirmDesc', {
+                name: unblockTarget?.name || truncatePeerId(unblockTarget?.peerId || ''),
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnblock}>
+            <AlertDialogAction onClick={handleUnblock} disabled={isUnblocking}>
+              {isUnblocking && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t('settingsModal.unblock')}
             </AlertDialogAction>
           </AlertDialogFooter>
