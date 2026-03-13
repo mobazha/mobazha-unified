@@ -31,6 +31,8 @@ import {
   TopProductRow,
   EmptyState,
   ListSkeleton,
+  SetupChecklist,
+  MnemonicBackupBanner,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
 import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
@@ -235,6 +237,10 @@ export default function AdminDashboardPage() {
   return (
     <div data-testid="admin-dashboard">
       <DashboardHeader name={displayName} />
+
+      <SetupChecklist hasProducts={hasProducts} productsLoading={productsLoading} />
+
+      <MnemonicBackupBanner />
 
       {productsError && <ErrorBanner message={productsError} />}
       {salesError && <ErrorBanner message={salesError} />}
