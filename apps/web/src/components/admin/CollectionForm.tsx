@@ -295,7 +295,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
             <Button
               variant="destructive"
               size="icon"
-              className="absolute top-2 right-2 w-7 h-7"
+              className="absolute top-2 right-2 min-w-[36px] min-h-[36px] w-9 h-9"
               onClick={() => setImage('')}
               aria-label={t('admin.collections.imageRemove')}
             >
@@ -386,7 +386,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="w-5 h-5"
+                      className="min-w-[28px] min-h-[28px] sm:min-w-[20px] sm:min-h-[20px] w-7 h-7 sm:w-5 sm:h-5"
                       disabled={index === 0}
                       onClick={() => handleMoveProduct(index, 'up')}
                       aria-label={t('common.moveUp')}
@@ -396,7 +396,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="w-5 h-5"
+                      className="min-w-[28px] min-h-[28px] sm:min-w-[20px] sm:min-h-[20px] w-7 h-7 sm:w-5 sm:h-5"
                       disabled={index === displaySlugs.length - 1}
                       onClick={() => handleMoveProduct(index, 'down')}
                       aria-label={t('common.moveDown')}
@@ -423,7 +423,7 @@ export function CollectionForm({ initial, onSaved }: CollectionFormProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-7 h-7 shrink-0"
+                    className="min-w-[36px] min-h-[36px] w-9 h-9 shrink-0"
                     onClick={() => handleRemoveProduct(slug)}
                     aria-label={t('admin.collections.removeProduct')}
                   >

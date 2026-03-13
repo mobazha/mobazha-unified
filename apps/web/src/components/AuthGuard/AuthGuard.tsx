@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUserStore, useI18n } from '@mobazha/core';
+import { useUserStore, useI18n, isMockMode } from '@mobazha/core';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -16,6 +16,9 @@ interface AuthGuardProps {
  * 认证守卫组件
  * 保护需要登录才能访问的页面
  * 未登录用户将被重定向到登录页面
+ *
+ * Mock 模式（NEXT_PUBLIC_USE_MOCK_DATA=true）下跳过认证，
+ * 允许在无后端的情况下开发和视觉验证 admin 页面。
  */
 export function AuthGuard({ children, redirectTo = '/login', fallback }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useUserStore();
@@ -23,9 +26,10 @@ export function AuthGuard({ children, redirectTo = '/login', fallback }: AuthGua
   const pathname = usePathname();
   const { t } = useI18n();
   const hasRedirected = useRef(false);
+  const mockMode = isMockMode();
 
   useEffect(() => {
-    // 等待认证状态加载完成
+    if (mockMode) return;
     if (isLoading) return;
 
     if (!isAuthenticated && !hasRedirected.current) {
@@ -34,9 +38,12 @@ export function AuthGuard({ children, redirectTo = '/login', fallback }: AuthGua
       const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(fullPath)}`;
       router.replace(redirectUrl);
     }
-  }, [isLoading, isAuthenticated, router, pathname, redirectTo]);
+  }, [isLoading, isAuthenticated, router, pathname, redirectTo, mockMode]);
 
-  // 加载中或未认证状态
+  if (mockMode) {
+    return <>{children}</>;
+  }
+
   if (isLoading || !isAuthenticated) {
     if (fallback) {
       return <>{fallback}</>;

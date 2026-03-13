@@ -78,6 +78,7 @@ const toListItem = (p: MockProduct): ProductListItem => ({
   vendorPeerID: p.vendor?.peerID || '',
   averageRating: p.rating || 0,
   ratingCount: p.reviewCount || 0,
+  status: 'published',
 });
 
 // ============ Product Services ============

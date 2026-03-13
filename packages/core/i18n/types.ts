@@ -1914,6 +1914,12 @@ export interface TranslationResource {
     validationFailed: string;
     createSuccess: string;
     createFailed?: string;
+    publishSuccess?: {
+      title: string;
+      description: string;
+      viewProduct: string;
+      createAnother: string;
+    };
     updateSuccess: string;
     deleteSuccess: string;
     deleteFailed: string;
@@ -2528,6 +2534,10 @@ export interface TranslationResource {
       typeDigital?: string;
       typeService?: string;
       typeCrypto?: string;
+      colStatus?: string;
+      statusActive?: string;
+      statusDraft?: string;
+      statusPrivate?: string;
       viewTable?: string;
       viewGrid?: string;
       selectAll?: string;

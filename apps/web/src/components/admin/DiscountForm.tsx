@@ -234,7 +234,7 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
           ))}
         </div>
         {valueType !== 'free_shipping' && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label htmlFor="value">{t('admin.discounts.valueLabel')}</Label>
               <Input
@@ -362,7 +362,7 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
       {/* Usage limits */}
       <Card className="p-4 space-y-3">
         <Label className="text-sm font-semibold">{t('admin.discounts.usageLimits')}</Label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label>{t('admin.discounts.totalUsageLimit')}</Label>
             <Input
@@ -417,7 +417,7 @@ export function DiscountForm({ initial, onSave, onCancel, saving }: DiscountForm
       {/* Active dates */}
       <Card className="p-4 space-y-3">
         <Label className="text-sm font-semibold">{t('admin.discounts.activeDates')}</Label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label>{t('admin.discounts.startsAt')}</Label>
             <Input

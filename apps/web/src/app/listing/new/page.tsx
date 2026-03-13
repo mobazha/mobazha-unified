@@ -17,6 +17,10 @@ import {
   Settings2,
   Truck,
   Download,
+  CheckCircle2,
+  ExternalLink,
+  PlusCircle,
+  LayoutList,
 } from 'lucide-react';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
@@ -24,6 +28,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   useListingForm,
   useI18n,
@@ -128,6 +139,9 @@ function CreateListingContent() {
   const [cloneData, setCloneData] = useState<Partial<ListingFormData> | null>(null);
   const [isLoadingClone, setIsLoadingClone] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // 发布成功状态
+  const [publishSuccessSlug, setPublishSuccessSlug] = useState<string | null>(null);
 
   // 加载克隆商品数据
   const loadCloneData = useCallback(
@@ -311,11 +325,15 @@ function CreateListingContent() {
           variant: 'destructive',
         });
       } else {
-        toast({
-          title: t('common.success'),
-          description: t('listing.createSuccess'),
-        });
-        router.push(returnToDashboard ? '/admin' : `/listing/edit/${result.slug}`);
+        if (fromOnboarding) {
+          toast({
+            title: t('common.success'),
+            description: t('listing.createSuccess'),
+          });
+          router.push('/admin?onboarding=complete');
+        } else {
+          setPublishSuccessSlug(result.slug);
+        }
       }
     },
     [validate, submit, toast, t, router, returnToDashboard]
@@ -389,28 +407,74 @@ function CreateListingContent() {
 
   if (isMobile) {
     return (
-      <MobileListingWizard
-        formData={formData}
-        errors={errors}
-        isSubmitting={isSubmitting}
-        updateField={updateField}
-        changeContractType={changeContractType}
-        addTag={addTag}
-        removeTag={removeTag}
-        updateVariantOptions={updateVariantOptions}
-        updateSkus={updateSkus}
-        validate={validate}
-        onSubmit={handleSubmit}
-        onSaveDraft={handleSaveDraft}
-        onCancel={() => (returnToDashboard ? router.push('/admin') : router.back())}
-        aiLoadingAction={aiLoadingAction}
-        onAiImproveTitle={handleAiImproveTitle}
-        onAiPolishDescription={handleAiPolishDescription}
-        onAiSuggestTags={handleAiSuggestTags}
-        aiImageUrls={aiImageUrls}
-        aiNotConfigured={aiNotConfigured}
-        onAiApplyAll={handleAiApplyAll}
-      />
+      <>
+        <MobileListingWizard
+          formData={formData}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          updateField={updateField}
+          changeContractType={changeContractType}
+          addTag={addTag}
+          removeTag={removeTag}
+          updateVariantOptions={updateVariantOptions}
+          updateSkus={updateSkus}
+          validate={validate}
+          onSubmit={handleSubmit}
+          onSaveDraft={handleSaveDraft}
+          onCancel={() => (returnToDashboard ? router.push('/admin') : router.back())}
+          aiLoadingAction={aiLoadingAction}
+          onAiImproveTitle={handleAiImproveTitle}
+          onAiPolishDescription={handleAiPolishDescription}
+          onAiSuggestTags={handleAiSuggestTags}
+          aiImageUrls={aiImageUrls}
+          aiNotConfigured={aiNotConfigured}
+          onAiApplyAll={handleAiApplyAll}
+        />
+        <Dialog open={!!publishSuccessSlug} onOpenChange={() => setPublishSuccessSlug(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader className="text-center items-center">
+              <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+              <DialogTitle>{t('listing.publishSuccess.title')}</DialogTitle>
+              <DialogDescription>{t('listing.publishSuccess.description')}</DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 mt-4">
+              <Button
+                onClick={() => {
+                  router.push(`/product/${publishSuccessSlug}`);
+                  setPublishSuccessSlug(null);
+                }}
+                className="w-full"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {t('listing.publishSuccess.viewProduct')}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPublishSuccessSlug(null);
+                  reset();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full"
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                {t('listing.publishSuccess.createAnother')}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  router.push('/admin/products');
+                  setPublishSuccessSlug(null);
+                }}
+                className="w-full"
+              >
+                <LayoutList className="w-4 h-4 mr-2" />
+                {t('admin.products.title')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -881,6 +945,52 @@ function CreateListingContent() {
         </Container>
       </main>
       <Footer />
+
+      {/* Publish Success Dialog */}
+      <Dialog open={!!publishSuccessSlug} onOpenChange={() => setPublishSuccessSlug(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center items-center">
+            <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+            <DialogTitle>{t('listing.publishSuccess.title')}</DialogTitle>
+            <DialogDescription>{t('listing.publishSuccess.description')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <Button
+              onClick={() => {
+                router.push(`/product/${publishSuccessSlug}`);
+                setPublishSuccessSlug(null);
+              }}
+              className="w-full"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              {t('listing.publishSuccess.viewProduct')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPublishSuccessSlug(null);
+                reset();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full"
+            >
+              <PlusCircle className="w-4 h-4 mr-2" />
+              {t('listing.publishSuccess.createAnother')}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                router.push('/admin/products');
+                setPublishSuccessSlug(null);
+              }}
+              className="w-full"
+            >
+              <LayoutList className="w-4 h-4 mr-2" />
+              {t('admin.products.title')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
