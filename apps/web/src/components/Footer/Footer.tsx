@@ -98,15 +98,17 @@ export const Footer: React.FC = () => {
     policies: [
       { label: t('policies.privacyPolicy'), href: '/policies/privacy' },
       { label: t('policies.termsOfService'), href: '/policies/terms' },
-      { label: t('policies.shipping'), href: '/policies/shipping' },
+      { label: t('policies.refundPolicy'), href: '/policies/refund' },
       { label: t('policies.returns'), href: '/policies/returns' },
+      { label: t('policies.shipping'), href: '/policies/shipping' },
+      { label: t('policies.buyerProtection'), href: '/policies/buyer-protection' },
     ],
   };
 
   return (
-    <footer className="hidden md:block bg-muted border-t border-border">
-      {/* Desktop Footer — MobileNav replaces footer on mobile */}
-      <div className="pt-16 pb-8">
+    <footer className="bg-muted border-t border-border">
+      {/* Desktop: full grid; Mobile: compact single column */}
+      <div className="pt-8 md:pt-16 pb-6 md:pb-8">
         <Container size="xl">
           <Grid
             cols={standaloneMode ? 4 : 5}
@@ -285,7 +287,13 @@ export const Footer: React.FC = () => {
               )}
             </p>
             {!standaloneMode && (
-              <HStack gap="md">
+              <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-4">
+                <Link
+                  href="/about"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t('footer.about')}
+                </Link>
                 {footerLinks.legal.map(link => (
                   <Link
                     key={link.label}
@@ -295,6 +303,12 @@ export const Footer: React.FC = () => {
                     {link.label}
                   </Link>
                 ))}
+                <Link
+                  href="/policies/refund"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t('policies.refundPolicy')}
+                </Link>
                 <Link
                   href="/policies/shipping"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -307,7 +321,13 @@ export const Footer: React.FC = () => {
                 >
                   {t('policies.returns')}
                 </Link>
-              </HStack>
+                <Link
+                  href="/policies/buyer-protection"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t('policies.buyerProtection')}
+                </Link>
+              </div>
             )}
           </div>
         </Container>
