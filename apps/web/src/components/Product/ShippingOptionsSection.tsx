@@ -539,8 +539,15 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
     );
   }
 
-  // 都没有时不渲染
-  return null;
+  // 未配置配送时提示联系卖家（T4 体验要求）
+  return (
+    <Card className={cn('p-4 sm:p-6', className)} data-testid="shipping-options-section">
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <Truck className="w-5 h-5 shrink-0" aria-hidden />
+        <p className="text-sm">{t('product.contactSellerForShipping')}</p>
+      </div>
+    </Card>
+  );
 });
 
 export default ShippingOptionsSection;

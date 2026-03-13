@@ -319,6 +319,7 @@ export const ko: TranslationResource = {
     shippingFee: '배송비',
     additionalItemFee: '추가 상품',
     noShippingOptions: '사용 가능한 배송 옵션이 없습니다',
+    contactSellerForShipping: '배송 옵션은 판매자에게 문의하세요',
     localPickup: '직접 수령',
     priceToBeCalculated: '결제 시 계산',
     worldwide: '전 세계',

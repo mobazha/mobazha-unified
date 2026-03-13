@@ -398,6 +398,7 @@ export const en: TranslationResource = {
     shippingFee: 'Fee',
     additionalItemFee: 'Additional Item',
     noShippingOptions: 'No shipping options available',
+    contactSellerForShipping: 'Contact seller for shipping options',
     localPickup: 'Local Pickup',
     priceToBeCalculated: 'To be calculated',
     worldwide: 'Worldwide',
@@ -1779,6 +1780,19 @@ export const en: TranslationResource = {
       title: 'Buyer Protection',
       description: 'Your payment is held securely until you confirm delivery',
     },
+    panel: {
+      title: 'Buyer Protection',
+      intro: 'Your payment is protected throughout:',
+      bullet1: 'Funds are not released to the seller until you confirm receipt',
+      bullet2: 'You can request a refund if there is an issue with the item',
+      bullet3: 'You can request dispute resolution if needed',
+      howItWorks: 'How it works?',
+      step1: 'After you place an order, funds go to a secure account',
+      step2: 'The seller ships; you confirm receipt',
+      step3: 'Once you are satisfied, funds are released to the seller',
+      step4: 'If there is an issue, you can request a refund or dispute resolution',
+    },
+    checkoutFundsProtected: 'Your payment is protected by buyer protection',
   },
 
   marketplace: {
