@@ -36,7 +36,7 @@ function getExplorerUrl(txHash: string, tokenId?: string): string {
   return `${DEFAULT_EXPLORER}${txHash}`;
 }
 
-function classifyError(rawMessage: string): string {
+export function classifyError(rawMessage: string): string {
   const msg = rawMessage.toLowerCase();
   if (msg.includes('insufficient') || msg.includes('not enough') || msg.includes('exceeds balance'))
     return 'errorInsufficientFunds';

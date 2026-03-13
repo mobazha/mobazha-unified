@@ -169,13 +169,22 @@ export default function PaymentPage() {
 
   useEffect(() => {
     if (!rawOrder) return;
-    const orderTimestamp = rawOrder.contract?.orderOpen?.timestamp;
-    if (!orderTimestamp) return;
 
-    const PAYMENT_WINDOW_MS = 45 * 60 * 1000;
-    const orderCreatedAt = new Date(orderTimestamp).getTime();
-    if (isNaN(orderCreatedAt)) return;
-    const expiresAt = orderCreatedAt + PAYMENT_WINDOW_MS;
+    const rawContract = rawOrder.contract as any;
+    const backendExpiresAt = rawContract?.ExpiresAt || rawContract?.expiresAt;
+    let expiresAt: number;
+
+    if (backendExpiresAt) {
+      expiresAt = new Date(backendExpiresAt).getTime();
+      if (isNaN(expiresAt)) return;
+    } else {
+      const orderTimestamp = rawOrder.contract?.orderOpen?.timestamp;
+      if (!orderTimestamp) return;
+      const FALLBACK_PAYMENT_WINDOW_MS = 60 * 60 * 1000;
+      const orderCreatedAt = new Date(orderTimestamp).getTime();
+      if (isNaN(orderCreatedAt)) return;
+      expiresAt = orderCreatedAt + FALLBACK_PAYMENT_WINDOW_MS;
+    }
 
     const updateTimer = () => {
       const diff = expiresAt - Date.now();
