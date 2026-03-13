@@ -95,10 +95,16 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   item.listing.thumbnail?.medium || item.listing.thumbnail?.small
                 );
                 const lineTotal = item.listing.price.amount * item.quantity;
+                const itemKey = item.options?.length
+                  ? `${item.listing.vendorPeerID}-${item.listing.slug}-${item.options
+                      .map(o => `${o.name}:${o.value}`)
+                      .sort()
+                      .join('|')}`
+                  : `${item.listing.vendorPeerID}-${item.listing.slug}`;
 
                 return (
                   <div
-                    key={`${item.listing.vendorPeerID}-${item.listing.slug}`}
+                    key={itemKey}
                     className="flex gap-3 p-3 rounded-lg border border-border bg-card"
                   >
                     {/* Thumbnail */}
@@ -126,7 +132,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </Link>
                         <button
                           className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          onClick={() => removeItem(item.listing.slug, item.listing.vendorPeerID)}
+                          onClick={() =>
+                            removeItem(item.listing.slug, item.listing.vendorPeerID, item.options)
+                          }
                           data-testid="cart-item-remove"
                           aria-label={t('cart.remove')}
                         >
@@ -164,7 +172,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                               updateQuantity(
                                 item.listing.slug,
                                 item.listing.vendorPeerID,
-                                item.quantity - 1
+                                item.quantity - 1,
+                                item.options
                               )
                             }
                             aria-label={t('cart.decreaseQuantity')}
@@ -183,7 +192,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                               updateQuantity(
                                 item.listing.slug,
                                 item.listing.vendorPeerID,
-                                item.quantity + 1
+                                item.quantity + 1,
+                                item.options
                               )
                             }
                             aria-label={t('cart.increaseQuantity')}

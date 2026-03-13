@@ -118,7 +118,7 @@ export const FiatRefundDialog: React.FC<FiatRefundDialogProps> = ({
                 max={maxAmount > 0 ? maxAmount : undefined}
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                placeholder="0.00"
+                placeholder={t('order.fiatRefund.amountPlaceholder', { defaultValue: '0.00' })}
                 className={`w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 ${isAmountOverMax ? 'border-error' : 'border-input'}`}
               />
               {isAmountOverMax && (
@@ -152,7 +152,11 @@ export const FiatRefundDialog: React.FC<FiatRefundDialogProps> = ({
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            disabled={isLoading || (isPartial && !amount) || isAmountOverMax}
+            disabled={
+              isLoading ||
+              (isPartial && (enteredAmount <= 0 || isNaN(enteredAmount))) ||
+              isAmountOverMax
+            }
           >
             {isLoading ? t('common.processing') : t('order.actions.refund')}
           </AlertDialogAction>

@@ -79,6 +79,7 @@ const toListItem = (p: MockProduct): ProductListItem => ({
   averageRating: p.rating || 0,
   ratingCount: p.reviewCount || 0,
   status: 'published',
+  quantity: p.stock,
 });
 
 // ============ Product Services ============

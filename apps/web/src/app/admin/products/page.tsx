@@ -448,11 +448,25 @@ export default function AdminProductsPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-sm font-semibold text-primary">
                       {renderPrice(product.price)}
                     </span>
                     {statusBadge(product.status)}
+                    {product.quantity !== undefined && product.quantity !== null && (
+                      <span
+                        className={cn(
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                          product.quantity === 0
+                            ? 'bg-destructive/15 text-destructive'
+                            : product.quantity <= 5
+                              ? 'bg-warning/15 text-warning'
+                              : 'bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {product.quantity === 0 ? t('admin.products.outOfStock') : product.quantity}
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>
@@ -509,6 +523,9 @@ export default function AdminProductsPage() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                     {t('admin.products.colType')}
                   </th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground w-20">
+                    {t('admin.products.colStock')}
+                  </th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t('admin.products.colPrice')}
                   </th>
@@ -549,6 +566,21 @@ export default function AdminProductsPage() {
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
                         {contractTypeLabel(product.contractType)}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {(() => {
+                        const q = product.quantity;
+                        if (q === undefined || q === null)
+                          return <span className="text-muted-foreground">—</span>;
+                        if (q === 0)
+                          return (
+                            <span className="text-destructive font-medium">
+                              {t('admin.products.outOfStock')}
+                            </span>
+                          );
+                        if (q <= 5) return <span className="text-warning font-medium">{q}</span>;
+                        return <span className="text-foreground">{q}</span>;
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-foreground">
                       {renderPrice(product.price)}
@@ -596,11 +628,25 @@ export default function AdminProductsPage() {
               </div>
               <div className="p-3">
                 <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                   <span className="text-sm font-semibold text-primary">
                     {renderPrice(product.price)}
                   </span>
                   {statusBadge(product.status)}
+                  {product.quantity !== undefined && product.quantity !== null && (
+                    <span
+                      className={cn(
+                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                        product.quantity === 0
+                          ? 'bg-destructive/15 text-destructive'
+                          : product.quantity <= 5
+                            ? 'bg-warning/15 text-warning'
+                            : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {product.quantity === 0 ? t('admin.products.outOfStock') : product.quantity}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

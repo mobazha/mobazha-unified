@@ -433,7 +433,7 @@ function CreateListingContent() {
         <Dialog open={!!publishSuccessSlug} onOpenChange={() => setPublishSuccessSlug(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader className="text-center items-center">
-              <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+              <CheckCircle2 className="w-12 h-12 text-success mb-2" />
               <DialogTitle>{t('listing.publishSuccess.title')}</DialogTitle>
               <DialogDescription>{t('listing.publishSuccess.description')}</DialogDescription>
             </DialogHeader>
@@ -463,13 +463,15 @@ function CreateListingContent() {
               <Button
                 variant="ghost"
                 onClick={() => {
-                  router.push('/admin/products');
+                  router.push(returnToDashboard ? '/admin' : '/admin/products');
                   setPublishSuccessSlug(null);
                 }}
                 className="w-full"
               >
                 <LayoutList className="w-4 h-4 mr-2" />
-                {t('admin.products.title')}
+                {returnToDashboard
+                  ? t('listing.publishSuccess.backToDashboard')
+                  : t('admin.products.title')}
               </Button>
             </div>
           </DialogContent>
@@ -950,7 +952,7 @@ function CreateListingContent() {
       <Dialog open={!!publishSuccessSlug} onOpenChange={() => setPublishSuccessSlug(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-center items-center">
-            <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+            <CheckCircle2 className="w-12 h-12 text-success mb-2" />
             <DialogTitle>{t('listing.publishSuccess.title')}</DialogTitle>
             <DialogDescription>{t('listing.publishSuccess.description')}</DialogDescription>
           </DialogHeader>
@@ -980,13 +982,15 @@ function CreateListingContent() {
             <Button
               variant="ghost"
               onClick={() => {
-                router.push('/admin/products');
+                router.push(returnToDashboard ? '/admin' : '/admin/products');
                 setPublishSuccessSlug(null);
               }}
               className="w-full"
             >
               <LayoutList className="w-4 h-4 mr-2" />
-              {t('admin.products.title')}
+              {returnToDashboard
+                ? t('listing.publishSuccess.backToDashboard')
+                : t('admin.products.title')}
             </Button>
           </div>
         </DialogContent>

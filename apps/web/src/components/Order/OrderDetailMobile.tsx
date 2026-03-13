@@ -396,8 +396,12 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
       {/* Tab bar */}
       <div className="sticky top-0 z-20 bg-background border-b border-border">
-        <div className="flex">
+        <div className="flex" role="tablist" aria-label={t('order.tabs.label')}>
           <button
+            role="tab"
+            aria-selected={activeTab === 'details'}
+            aria-controls="tabpanel-details"
+            id="tab-details"
             onClick={() => setActiveTab('details')}
             className={cn(
               'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative',
@@ -412,6 +416,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
             )}
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'discussion'}
+            aria-controls="tabpanel-discussion"
+            id="tab-discussion"
             onClick={() => setActiveTab('discussion')}
             className={cn(
               'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative flex items-center justify-center gap-1.5',
@@ -431,10 +439,15 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
       {/* Content */}
       {activeTab === 'details' ? (
-        <div className="px-4 pt-3">
+        <div
+          role="tabpanel"
+          id="tabpanel-details"
+          aria-labelledby="tab-details"
+          className="px-4 pt-3"
+        >
           {/* Escrow status bar */}
           <div className="mb-3">
-            <EscrowStatusBar status={displayOrder.status} />
+            <EscrowStatusBar status={displayOrder.status} variant="vertical" />
           </div>
 
           {/* Counterparty (compact) */}
@@ -506,7 +519,12 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           </Accordion>
         </div>
       ) : (
-        <div className="px-4 pt-3">
+        <div
+          role="tabpanel"
+          id="tabpanel-discussion"
+          aria-labelledby="tab-discussion"
+          className="px-4 pt-3"
+        >
           <Card className="border border-border/60 shadow-sm overflow-hidden">
             <OrderChat
               orderId={orderId}

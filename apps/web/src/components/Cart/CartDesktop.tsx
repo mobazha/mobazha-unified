@@ -136,11 +136,14 @@ export function CartDesktop() {
                 <div className="divide-y divide-border">
                   {group.items.map(item => {
                     const thumbUrl = getThumbUrl(item);
+                    const itemKey = item.options?.length
+                      ? `${item.listing.vendorPeerID}-${item.listing.slug}-${item.options
+                          .map(o => `${o.name}:${o.value}`)
+                          .sort()
+                          .join('|')}`
+                      : `${item.listing.vendorPeerID}-${item.listing.slug}`;
                     return (
-                      <div
-                        key={`${item.listing.vendorPeerID}-${item.listing.slug}`}
-                        className="p-3 sm:p-4"
-                      >
+                      <div key={itemKey} className="p-3 sm:p-4">
                         <div className="flex gap-2.5 sm:gap-3">
                           <Link
                             href={`/product/${item.listing.slug}`}
@@ -190,7 +193,8 @@ export function CartDesktop() {
                                       updateQuantity(
                                         item.listing.slug,
                                         item.listing.vendorPeerID,
-                                        item.quantity - 1
+                                        item.quantity - 1,
+                                        item.options
                                       )
                                     }
                                     disabled={item.quantity <= 1}
@@ -207,7 +211,8 @@ export function CartDesktop() {
                                       updateQuantity(
                                         item.listing.slug,
                                         item.listing.vendorPeerID,
-                                        item.quantity + 1
+                                        item.quantity + 1,
+                                        item.options
                                       )
                                     }
                                     className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-muted touch-feedback rounded-r"
@@ -219,7 +224,11 @@ export function CartDesktop() {
 
                                 <button
                                   onClick={() =>
-                                    removeItem(item.listing.slug, item.listing.vendorPeerID)
+                                    removeItem(
+                                      item.listing.slug,
+                                      item.listing.vendorPeerID,
+                                      item.options
+                                    )
                                   }
                                   className="text-muted-foreground hover:text-destructive touch-feedback p-2.5"
                                   aria-label={t('cart.remove')}
