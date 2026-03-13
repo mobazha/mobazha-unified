@@ -222,6 +222,15 @@ export const zh: TranslationResource = {
     viewAll: '查看全部',
   },
 
+  categories: {
+    electronics: '电子产品',
+    clothing: '服装',
+    art: '艺术',
+    collectibles: '收藏品',
+    home: '家居',
+    sports: '运动',
+  },
+
   me: {
     title: '我',
     anonymous: '匿名用户',
@@ -439,6 +448,7 @@ export const zh: TranslationResource = {
     p2pNotice: '每次只能结算一个商户的商品，不同商户需分开结算',
     clearConfirmTitle: '清空购物车',
     clearConfirmMessage: '确定要移除购物车中的所有商品吗？此操作无法撤销。',
+    viewCart: '查看购物车',
     decreaseQuantity: '减少数量',
     increaseQuantity: '增加数量',
   },
@@ -482,6 +492,7 @@ export const zh: TranslationResource = {
     quantity: '数量',
     subtotal: '小计',
     shipping: '运费',
+    tax: '税费',
     shippingMethod: '配送方式',
     free: '免费',
     cheapest: '最便宜',
@@ -1676,6 +1687,10 @@ export const zh: TranslationResource = {
       emptyTitle: '成为第一个',
       emptySubtitle: '创建你的 Web3 店铺，加入网络',
       growingCta: '加入不断壮大的网络',
+    },
+    popularProducts: {
+      title: '热门商品',
+      subtitle: '全网热门趋势商品',
     },
     networkActivity: {
       title: '网络动态',

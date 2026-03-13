@@ -40,6 +40,7 @@ export interface CheckoutItem {
   rwaEscrowTimeoutSeconds?: number;
   cryptoListingCurrencyCode?: string;
   shippingZones?: CheckoutShippingZone[];
+  taxAmount?: number;
 }
 
 /** Per-item shipping selection */
@@ -86,6 +87,7 @@ export interface UseCheckoutReturn {
 
   subtotal: number;
   shippingTotal: number;
+  taxTotal: number;
   total: number;
   currency: string;
 

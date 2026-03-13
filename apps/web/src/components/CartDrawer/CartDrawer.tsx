@@ -134,6 +134,19 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </button>
                       </div>
 
+                      {item.options && item.options.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {item.options.map((opt, i) => (
+                            <span
+                              key={i}
+                              className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
+                            >
+                              {opt.name}: {opt.value}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       {item.listing.vendorHandle && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">
                           @{item.listing.vendorHandle}
@@ -216,6 +229,17 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
               </HStack>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
                 {isAuthenticated ? t('cart.checkout') : t('cart.loginToCheckout')}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  router.push('/cart');
+                }}
+              >
+                {t('cart.viewCart')}
               </Button>
             </VStack>
           </SheetFooter>

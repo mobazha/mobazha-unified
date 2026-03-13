@@ -3273,6 +3273,10 @@ export interface TranslationResource {
       emptySubtitle: string;
       growingCta: string;
     };
+    popularProducts: {
+      title: string;
+      subtitle: string;
+    };
     networkActivity: {
       title: string;
       subtitle: string;
@@ -3339,6 +3343,15 @@ export interface TranslationResource {
   store?: TranslationSection & {
     offlineBanner?: string;
     offlinePriceDisclaimer?: string;
+  };
+
+  categories?: {
+    electronics?: string;
+    clothing?: string;
+    art?: string;
+    collectibles?: string;
+    home?: string;
+    sports?: string;
   };
 }
 

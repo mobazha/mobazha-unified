@@ -10,6 +10,7 @@ import {
   useCurrency,
   useUserStore,
   useCartStore,
+  useCartDrawerStore,
   universalSwapService,
   productsApi,
   discountsApi,
@@ -22,6 +23,8 @@ import type {
   RatingIndex,
   UserProfile,
   ApplicableDiscount,
+  ProductSku,
+  OrderItemOption,
 } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
 import {
@@ -88,6 +91,7 @@ export interface UseProductDetailReturn {
   // Derived
   imageUrls: string[];
   priceInfo: { price: number; currency: string; formattedPrice: string; pairedPrice: string };
+  compareAtPrice: number | null;
   stock: number;
   freeShipping: boolean;
   estimatedDelivery: string | null;
@@ -102,6 +106,13 @@ export interface UseProductDetailReturn {
   rwaTradeMode: string | undefined;
   rwaEscrowTimeoutSeconds: number;
   paymentAvailable: boolean;
+
+  // Variant selection
+  hasVariants: boolean;
+  selectedOptions: Record<string, string>;
+  selectedSku: ProductSku | null;
+  unavailableVariants: Record<string, Set<string>>;
+  handleSelectOption: (optionName: string, variantName: string) => void;
 
   // UI state
   quantity: number;
@@ -367,22 +378,144 @@ export function useProductDetail({
     product?.metadata?.escrowTimeoutSeconds ||
     86400;
 
+  // --- Variant selection ---
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+
+  const hasVariants = !!(product?.item?.options && product.item.options.length > 0);
+
+  const selectedSku = useMemo(() => {
+    if (!product?.item?.skus || !product.item.options || product.item.options.length === 0)
+      return null;
+    if (Object.keys(selectedOptions).length !== product.item.options.length) return null;
+
+    return (
+      product.item.skus.find(sku => {
+        if (!sku.selections) return false;
+        return sku.selections.every(sel => selectedOptions[sel.option] === sel.variant);
+      }) ?? null
+    );
+  }, [product, selectedOptions]);
+
+  const handleSelectOption = useCallback(
+    (optionName: string, variantName: string) => {
+      setSelectedOptions(prev => ({ ...prev, [optionName]: variantName }));
+
+      if (!product?.item?.options) return;
+      const option = product.item.options.find(o => o.name === optionName);
+      const variant = option?.variants.find(v => v.name === variantName);
+      if (variant?.image) {
+        const variantImgUrl =
+          getImageUrl(variant.image.medium) ||
+          getImageUrl(variant.image.large) ||
+          getImageUrl(variant.image.original);
+        if (variantImgUrl) {
+          const idx = imageUrls.indexOf(variantImgUrl);
+          if (idx >= 0) {
+            setSelectedImage(idx);
+          }
+        }
+      }
+    },
+    [product, imageUrls, setSelectedImage]
+  );
+
+  // Auto-select the first variant for each option on product load
+  useEffect(() => {
+    if (!product?.item?.options || product.item.options.length === 0) return;
+    const initial: Record<string, string> = {};
+    for (const option of product.item.options) {
+      if (option.variants.length > 0) {
+        initial[option.name] = option.variants[0].name;
+      }
+    }
+    setSelectedOptions(initial);
+  }, [product]);
+
+  // Per-variant availability: a variant is unavailable if ALL SKUs containing it have quantity=0
+  const unavailableVariants = useMemo(() => {
+    const result: Record<string, Set<string>> = {};
+    if (!product?.item?.skus || !product.item.options) return result;
+
+    for (const option of product.item.options) {
+      const unavailable = new Set<string>();
+      for (const variant of option.variants) {
+        const matchingSkus = product.item.skus.filter(sku =>
+          sku.selections?.some(s => s.option === option.name && s.variant === variant.name)
+        );
+        if (
+          matchingSkus.length > 0 &&
+          matchingSkus.every(sku => (Number(sku.quantity) || 0) === 0)
+        ) {
+          unavailable.add(variant.name);
+        }
+      }
+      if (unavailable.size > 0) {
+        result[option.name] = unavailable;
+      }
+    }
+    return result;
+  }, [product]);
+
+  // Override price/stock based on selected SKU
+  const effectivePrice = useMemo(() => {
+    if (selectedSku?.price != null && selectedSku.price !== '') {
+      return Number(selectedSku.price) || 0;
+    }
+    return priceInfo.price;
+  }, [selectedSku, priceInfo.price]);
+
+  const compareAtPrice = useMemo((): number | null => {
+    if (selectedSku?.compareAtPrice != null && selectedSku.compareAtPrice !== '') {
+      const cap = Number(selectedSku.compareAtPrice);
+      if (cap > effectivePrice) return cap;
+    }
+    const itemRegular = product?.item?.regularPrice;
+    if (itemRegular != null && itemRegular !== '') {
+      const rp = Number(itemRegular);
+      if (rp > effectivePrice) return rp;
+    }
+    return null;
+  }, [selectedSku, effectivePrice, product]);
+
+  const effectivePriceInfo = useMemo(() => {
+    const currency = product?.metadata?.pricingCurrency?.code || 'USD';
+    return {
+      price: effectivePrice,
+      currency,
+      formattedPrice: formatPrice(effectivePrice, currency),
+      pairedPrice: renderPairedPrice(effectivePrice, currency),
+    };
+  }, [effectivePrice, product, formatPrice, renderPairedPrice]);
+
+  const effectiveStock = useMemo(() => {
+    if (selectedSku?.quantity != null) {
+      return Number(selectedSku.quantity) || 0;
+    }
+    return stock;
+  }, [selectedSku, stock]);
+
   // Actions
   const addCartItem = useCartStore(state => state.addItem);
+  const openCartDrawer = useCartDrawerStore(state => state.open);
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
 
-    const thumbnail = product.item?.images?.[0] ?? {
-      tiny: '',
-      small: '',
-      medium: '',
-      large: '',
-      original: '',
-    };
-    const price = Number(product.item?.price) || 0;
+    const thumbnail = selectedSku?.images?.[0] ??
+      product.item?.images?.[0] ?? {
+        tiny: '',
+        small: '',
+        medium: '',
+        large: '',
+        original: '',
+      };
+    const price = effectivePrice;
     const currency = product.metadata?.pricingCurrency?.code || 'USD';
     const divisibility = product.metadata?.pricingCurrency?.divisibility ?? 2;
+
+    const options: OrderItemOption[] | undefined = hasVariants
+      ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
+      : undefined;
 
     addCartItem({
       listing: {
@@ -394,11 +527,22 @@ export function useProductDetail({
         vendorHandle: product.vendorID.handle,
       },
       quantity,
+      options,
     });
 
     setCartSuccess(true);
+    openCartDrawer();
     setTimeout(() => setCartSuccess(false), 3000);
-  }, [product, quantity, addCartItem]);
+  }, [
+    product,
+    quantity,
+    addCartItem,
+    effectivePrice,
+    selectedSku,
+    hasVariants,
+    selectedOptions,
+    openCartDrawer,
+  ]);
 
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
@@ -409,9 +553,18 @@ export function useProductDetail({
       quantity: quantity.toString(),
     });
 
+    if (hasVariants && Object.keys(selectedOptions).length > 0) {
+      checkoutParams.set(
+        'options',
+        Object.entries(selectedOptions)
+          .map(([k, v]) => `${k}:${v}`)
+          .join(',')
+      );
+    }
+
     if (isModal && onClose) onClose();
     router.push(`/checkout?${checkoutParams.toString()}`);
-  }, [product, quantity, isModal, onClose, router]);
+  }, [product, quantity, hasVariants, selectedOptions, isModal, onClose, router]);
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
@@ -443,8 +596,9 @@ export function useProductDetail({
     ratingsLoading,
     error,
     imageUrls,
-    priceInfo,
-    stock,
+    priceInfo: effectivePriceInfo,
+    compareAtPrice,
+    stock: effectiveStock,
     freeShipping,
     estimatedDelivery,
     averageRating,
@@ -458,6 +612,11 @@ export function useProductDetail({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    hasVariants,
+    selectedOptions,
+    selectedSku,
+    unavailableVariants,
+    handleSelectOption,
     quantity,
     setQuantity,
     selectedImage,

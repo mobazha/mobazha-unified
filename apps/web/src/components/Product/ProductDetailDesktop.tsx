@@ -21,6 +21,7 @@ import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
 import { StarRating } from '@/components/ui/star-rating';
 import { useProductDetail } from '@/hooks/useProductDetail';
+import { VariantSelector } from './VariantSelector';
 
 export interface ProductDetailProps {
   slug: string;
@@ -54,6 +55,7 @@ export function ProductDetailDesktop({
     error,
     imageUrls,
     priceInfo,
+    compareAtPrice,
     stock,
     freeShipping,
     estimatedDelivery,
@@ -68,6 +70,10 @@ export function ProductDetailDesktop({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    hasVariants,
+    selectedOptions,
+    unavailableVariants,
+    handleSelectOption,
     quantity,
     setQuantity,
     selectedImage,
@@ -81,6 +87,7 @@ export function ProductDetailDesktop({
     handleCopyLink,
     openChatDrawer,
     t,
+    renderPairedPrice,
     router,
   } = useProductDetail({ slug, peerID, isModal, onClose, onProductLoaded });
 
@@ -342,7 +349,7 @@ export function ProductDetailDesktop({
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2 flex-wrap">
               <span
                 className={cn(
                   'font-bold text-primary',
@@ -351,6 +358,16 @@ export function ProductDetailDesktop({
               >
                 {priceInfo.pairedPrice}
               </span>
+              {compareAtPrice !== null && (
+                <span
+                  className={cn(
+                    'line-through text-muted-foreground',
+                    isModal ? 'text-sm' : 'text-base sm:text-lg'
+                  )}
+                >
+                  {renderPairedPrice(compareAtPrice, priceInfo.currency)}
+                </span>
+              )}
             </div>
 
             <BuyerProtectionBadge variant="inline" className="mt-1" />
@@ -432,6 +449,17 @@ export function ProductDetailDesktop({
                   </>
                 )}
               </div>
+            )}
+
+            {/* Variant Selection */}
+            {hasVariants && product.item.options && (
+              <VariantSelector
+                options={product.item.options}
+                selectedOptions={selectedOptions}
+                onSelectOption={handleSelectOption}
+                unavailableVariants={unavailableVariants}
+                compact={isModal}
+              />
             )}
 
             {/* Product Attributes Panel */}

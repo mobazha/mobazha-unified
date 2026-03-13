@@ -22,6 +22,7 @@ import {
   useI18n,
   useUserStore,
   useCartStore,
+  useCartDrawerStore,
   useChatStore,
   selectTotalUnreadCount,
   getImageUrl,
@@ -50,7 +51,8 @@ export const Header: React.FC = () => {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartOpen, setCartOpen] = useState(false);
+  const cartOpen = useCartDrawerStore(state => state.isOpen);
+  const setCartOpen = useCartDrawerStore(state => state.setOpen);
   const cartItemCount = useCartStore(state => state.getItemCount());
 
   const standaloneMode = isStandalone();

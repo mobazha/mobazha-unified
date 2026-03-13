@@ -122,6 +122,16 @@ export const productDataService = {
   },
 
   /**
+   * 获取热门商品列表（SaaS 首页）
+   */
+  async getPopularProducts(): Promise<ProductListItem[]> {
+    if (isMockMode()) {
+      return mockServices.products.getTrendingProducts();
+    }
+    return await productsApi.fetchFeaturedListings();
+  },
+
+  /**
    * 获取精选店铺（SaaS 首页）
    */
   async getFeaturedStores(limit = 6) {
