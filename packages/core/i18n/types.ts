@@ -2473,6 +2473,9 @@ export interface TranslationResource {
       setUpPayments?: string;
       setUpPaymentsDesc?: string;
       failedToLoadProducts?: string;
+      actionPendingReview?: string;
+      actionToFulfill?: string;
+      actionDisputed?: string;
     };
     checklist?: {
       title?: string;
