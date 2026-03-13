@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useI18n, useCurrency } from '@mobazha/core';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
-import { MessageCircle, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, CheckCircle2, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 import type { Order } from './OrderCard';
 
 // ============ Types ============
@@ -366,6 +367,22 @@ export const OrderListCompact = memo(function OrderListCompact({
                       {t('order.actions.accept')}
                     </Button>
                   )}
+                </div>
+              )}
+
+              {type === 'purchase' && order.rawState === 'AWAITING_PAYMENT' && (
+                <div onClick={e => e.stopPropagation()}>
+                  <Link href={`/payment?orderID=${order.orderId}`} className="block">
+                    <Button
+                      size="sm"
+                      className="w-full min-h-[44px] text-sm pointer-events-none"
+                      tabIndex={-1}
+                      data-testid="order-compact-continue-payment"
+                    >
+                      <CreditCard className="w-4 h-4 mr-1.5" />
+                      {t('payment.continuePayment')}
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>

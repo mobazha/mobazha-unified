@@ -955,9 +955,14 @@ export const en: TranslationResource = {
       reviewPlaceholder: 'Share your experience with this product...',
       anonymous: 'Post anonymously',
       submit: 'Submit Review',
-      skip: 'Skip for Now',
+      skip: 'Rate Later',
       confirmTitle: 'Confirm Receipt & Review',
       confirmDesc: 'Would you like to leave a review before completing this order?',
+      star1: 'Terrible',
+      star2: 'Poor',
+      star3: 'Average',
+      star4: 'Good',
+      star5: 'Excellent',
     },
     // Accept modal
     accept: {
@@ -2005,11 +2010,21 @@ export const en: TranslationResource = {
     transactionFailed: 'Transaction failed',
     paymentComplete: 'Your payment has been processed successfully',
     waitingForConfirmation: 'Waiting for blockchain confirmation...',
+    estimatedTime: 'Usually takes 1–3 minutes',
     completing: 'Completing Payment',
     finalizingOrder: 'Finalizing your order...',
     redirecting: 'Redirecting to order confirmation...',
     cancelled: 'Payment Cancelled',
     userCancelledTransaction: 'Transaction was cancelled by user',
+    errorInsufficientFunds: 'Insufficient balance. Please add funds to your wallet and try again.',
+    errorNetworkCongestion:
+      'The network is congested. Please try again in a few minutes or increase the gas fee.',
+    errorContractReverted:
+      'The transaction was rejected by the contract. Please check your payment amount and try again.',
+    errorUserRejected: 'You cancelled the transaction. You can retry when ready.',
+    errorGeneric:
+      'Something went wrong with your payment. Please check your wallet connection and try again.',
+    continuePayment: 'Continue Payment',
     paymentWindowRemaining: 'Time remaining to pay',
     paymentWindowExpired: 'Payment window expired',
     leaveWarning:
