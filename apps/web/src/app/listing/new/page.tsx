@@ -119,7 +119,10 @@ function CreateListingContent() {
 
   // URL 参数
   const cloneSlug = searchParams.get('clone');
-  const fromOnboarding = searchParams.get('from') === 'onboarding';
+  const fromParam = searchParams.get('from');
+  const fromOnboarding = fromParam === 'onboarding';
+  const fromAdmin = fromParam === 'admin';
+  const returnToDashboard = fromOnboarding || fromAdmin;
 
   // 克隆数据加载状态
   const [cloneData, setCloneData] = useState<Partial<ListingFormData> | null>(null);
@@ -312,10 +315,10 @@ function CreateListingContent() {
           title: t('common.success'),
           description: t('listing.createSuccess'),
         });
-        router.push(fromOnboarding ? '/admin?onboarding=complete' : `/listing/edit/${result.slug}`);
+        router.push(returnToDashboard ? '/admin' : `/listing/edit/${result.slug}`);
       }
     },
-    [validate, submit, toast, t, router, fromOnboarding]
+    [validate, submit, toast, t, router, returnToDashboard]
   );
 
   // 保存草稿
@@ -333,9 +336,9 @@ function CreateListingContent() {
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
-      router.push(fromOnboarding ? '/admin?onboarding=complete' : '/settings/store');
+      router.push(returnToDashboard ? '/admin' : '/settings/store');
     }
-  }, [submitDraft, toast, t, router, fromOnboarding]);
+  }, [submitDraft, toast, t, router, returnToDashboard]);
 
   // 获取图片URL用于预览
   const getPreviewImageUrl = useCallback((image: Image) => {
@@ -399,7 +402,7 @@ function CreateListingContent() {
         validate={validate}
         onSubmit={handleSubmit}
         onSaveDraft={handleSaveDraft}
-        onCancel={() => (fromOnboarding ? router.push('/admin') : router.back())}
+        onCancel={() => (returnToDashboard ? router.push('/admin') : router.back())}
         aiLoadingAction={aiLoadingAction}
         onAiImproveTitle={handleAiImproveTitle}
         onAiPolishDescription={handleAiPolishDescription}
@@ -422,7 +425,7 @@ function CreateListingContent() {
           <div className="flex items-center justify-between mb-4 lg:mb-6">
             <div className="flex items-center gap-2 lg:gap-3">
               <Link
-                href={fromOnboarding ? '/admin' : '/settings/store'}
+                href={returnToDashboard ? '/admin' : '/settings/store'}
                 className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <ArrowLeft className="w-5 h-5" />

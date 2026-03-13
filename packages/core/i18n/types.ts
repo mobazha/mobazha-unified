@@ -2467,6 +2467,39 @@ export interface TranslationResource {
       setUpPaymentsDesc?: string;
       failedToLoadProducts?: string;
     };
+    checklist?: {
+      title?: string;
+      progress?: string;
+      addProduct?: string;
+      addProductDesc?: string;
+      setupPayment?: string;
+      setupPaymentDesc?: string;
+      setupShipping?: string;
+      setupShippingDesc?: string;
+      customizeStore?: string;
+      customizeStoreDesc?: string;
+      goSetup?: string;
+      allDoneTitle?: string;
+      allDoneDesc?: string;
+      dismiss?: string;
+    };
+    backup?: {
+      bannerTitle?: string;
+      bannerDesc?: string;
+      startBackup?: string;
+      fetchError?: string;
+      revealTitle?: string;
+      securityWarning?: string;
+      reveal?: string;
+      hide?: string;
+      continueToVerify?: string;
+      verifyTitle?: string;
+      verifyDesc?: string;
+      wordPlaceholder?: string;
+      verifyBtn?: string;
+      verifyFailed?: string;
+      doneTitle?: string;
+    };
     products?: {
       title?: string;
       subtitle?: string;
@@ -3254,6 +3287,8 @@ export interface TranslationResource {
 
   fiat?: {
     connectProvider?: string;
+    connecting?: string;
+    onboardingFailed?: string;
     cryptoBadge?: string;
     creditDebitCard?: string;
     paypal?: string;

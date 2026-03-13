@@ -124,6 +124,8 @@ interface ProviderCardProps {
   config?: FiatProviderConfigView;
   accountStatus?: FiatAccountStatus;
   isStandalone: boolean;
+  isOnboarding: boolean;
+  onboardingError?: string | null;
   onSave: (providerID: string, input: FiatProviderConfigInput) => Promise<void>;
   onDelete: (providerID: string) => Promise<void>;
   onStartOnboarding: (providerID: string) => Promise<void>;
@@ -135,6 +137,8 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   config,
   accountStatus,
   isStandalone,
+  isOnboarding,
+  onboardingError,
   onSave,
   onDelete,
   onStartOnboarding,
@@ -215,18 +219,46 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 
       {/* SaaS mode: OAuth connect */}
       {!isStandalone && !isConnected && (
-        <button
-          type="button"
-          onClick={() => onStartOnboarding(provider.id)}
-          className={cn(
-            'mt-4 w-full flex items-center justify-center gap-2 h-10 rounded-lg',
-            'bg-primary text-primary-foreground text-sm font-medium',
-            'active:scale-[0.98] transition-all'
+        <div className="mt-4 space-y-2">
+          <button
+            type="button"
+            onClick={() => onStartOnboarding(provider.id)}
+            disabled={isOnboarding}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 h-10 rounded-lg',
+              'bg-primary text-primary-foreground text-sm font-medium',
+              'active:scale-[0.98] transition-all',
+              isOnboarding && 'opacity-70 cursor-wait'
+            )}
+          >
+            {isOnboarding ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t('fiat.connecting')}
+              </>
+            ) : (
+              <>
+                <ExternalLink className="w-4 h-4" />
+                {t('fiat.connectProvider', { provider: provider.name })}
+              </>
+            )}
+          </button>
+          {onboardingError && (
+            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs">
+              <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <div>
+                <p>{onboardingError}</p>
+                <button
+                  type="button"
+                  onClick={() => onStartOnboarding(provider.id)}
+                  className="mt-1 font-medium underline hover:no-underline"
+                >
+                  {t('common.retry', { defaultValue: 'Retry' })}
+                </button>
+              </div>
+            </div>
           )}
-        >
-          <ExternalLink className="w-4 h-4" />
-          {t('fiat.connectProvider', { provider: provider.name })}
-        </button>
+        </div>
       )}
 
       {/* Standalone mode: API key form */}
@@ -471,6 +503,9 @@ export const PaymentProvidersSection: React.FC = () => {
   const [configs, setConfigs] = useState<FiatProviderConfigView[]>([]);
   const [statuses, setStatuses] = useState<Record<string, FiatAccountStatus>>({});
   const [loading, setLoading] = useState(true);
+  const [onboardingProvider, setOnboardingProvider] = useState<string | null>(null);
+  const [onboardingError, setOnboardingError] = useState<string | null>(null);
+  const [errorProvider, setErrorProvider] = useState<string | null>(null);
 
   const loadConfigs = useCallback(async () => {
     setLoading(true);
@@ -517,6 +552,16 @@ export const PaymentProvidersSection: React.FC = () => {
     loadConfigs();
   }, [loadConfigs]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !standalone) {
+        loadConfigs();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [loadConfigs, standalone]);
+
   const handleSave = useCallback(
     async (providerID: string, input: FiatProviderConfigInput) => {
       await fiatApi.saveConfig(providerID, input);
@@ -533,20 +578,30 @@ export const PaymentProvidersSection: React.FC = () => {
     [loadConfigs]
   );
 
-  const handleStartOnboarding = useCallback(async (providerID: string) => {
-    const currentUrl = window.location.href;
-    try {
-      const result = await fiatApi.startOnboarding(providerID, {
-        returnURL: currentUrl,
-        refreshURL: currentUrl,
-      });
-      if (result?.url) {
-        window.location.href = result.url;
+  const handleStartOnboarding = useCallback(
+    async (providerID: string) => {
+      const currentUrl = window.location.href;
+      setOnboardingProvider(providerID);
+      setOnboardingError(null);
+      setErrorProvider(null);
+      try {
+        const result = await fiatApi.startOnboarding(providerID, {
+          returnURL: currentUrl,
+          refreshURL: currentUrl,
+        });
+        if (result?.url) {
+          window.location.href = result.url;
+        } else {
+          setOnboardingProvider(null);
+        }
+      } catch (err) {
+        setOnboardingProvider(null);
+        setErrorProvider(providerID);
+        setOnboardingError(err instanceof Error ? err.message : t('fiat.onboardingFailed'));
       }
-    } catch {
-      // Onboarding start failed
-    }
-  }, []);
+    },
+    [t]
+  );
 
   if (loading) {
     return (
@@ -577,6 +632,8 @@ export const PaymentProvidersSection: React.FC = () => {
             config={configs.find(c => c.providerID === provider.id)}
             accountStatus={statuses[provider.id]}
             isStandalone={standalone}
+            isOnboarding={onboardingProvider === provider.id}
+            onboardingError={errorProvider === provider.id ? onboardingError : null}
             onSave={handleSave}
             onDelete={handleDelete}
             onStartOnboarding={handleStartOnboarding}
