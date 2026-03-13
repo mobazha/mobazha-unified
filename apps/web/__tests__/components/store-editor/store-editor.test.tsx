@@ -92,22 +92,26 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('lucide-react', () => ({
-  ChevronLeft: () => <span data-testid="icon-chevron-left" />,
-  ChevronRight: () => <span data-testid="icon-chevron-right" />,
-  Loader2: () => <span data-testid="icon-loader" />,
-  Undo2: () => <span data-testid="icon-undo" />,
-  Eye: () => <span data-testid="icon-eye" />,
-  EyeOff: () => <span data-testid="icon-eye-off" />,
-  Trash2: () => <span data-testid="icon-trash" />,
-  Plus: () => <span data-testid="icon-plus" />,
-  Check: () => <span data-testid="icon-check" />,
-  GripVertical: () => <span data-testid="icon-grip-vertical" />,
-  Monitor: () => <span data-testid="icon-monitor" />,
-  Tablet: () => <span data-testid="icon-tablet" />,
-  Smartphone: () => <span data-testid="icon-smartphone" />,
-  Sparkles: () => <span data-testid="icon-sparkles" />,
-}));
+vi.mock('lucide-react', async importOriginal => {
+  const actual = await importOriginal<typeof import('lucide-react')>();
+  return {
+    ...actual,
+    ChevronLeft: () => <span data-testid="icon-chevron-left" />,
+    ChevronRight: () => <span data-testid="icon-chevron-right" />,
+    Loader2: () => <span data-testid="icon-loader" />,
+    Undo2: () => <span data-testid="icon-undo" />,
+    Eye: () => <span data-testid="icon-eye" />,
+    EyeOff: () => <span data-testid="icon-eye-off" />,
+    Trash2: () => <span data-testid="icon-trash" />,
+    Plus: () => <span data-testid="icon-plus" />,
+    Check: () => <span data-testid="icon-check" />,
+    GripVertical: () => <span data-testid="icon-grip-vertical" />,
+    Monitor: () => <span data-testid="icon-monitor" />,
+    Tablet: () => <span data-testid="icon-tablet" />,
+    Smartphone: () => <span data-testid="icon-smartphone" />,
+    Sparkles: () => <span data-testid="icon-sparkles" />,
+  };
+});
 
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
