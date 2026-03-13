@@ -33,6 +33,7 @@ import {
   WriteReviewDialog,
   type OrderConfirmType,
 } from '@/components/Order';
+import { FiatRefundDialog } from './FiatRefundDialog';
 import { OrderActionSheet } from './OrderActionSheet';
 import { EscrowStatusBar } from '@/components/Trust';
 import {
@@ -85,6 +86,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
   // --- UI-only state ---
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
+  const [showFiatRefundDialog, setShowFiatRefundDialog] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
@@ -128,7 +130,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setShowFulfillDialog(true);
           break;
         case 'Refund':
-          setConfirmDialog('refund');
+          if (displayOrder?.fiatPayment) {
+            setShowFiatRefundDialog(true);
+          } else {
+            setConfirmDialog('refund');
+          }
           break;
         case 'Claim':
           setConfirmDialog('claim');
@@ -142,7 +148,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           break;
       }
     },
-    [router, orderId, executeConfirmAction]
+    [router, orderId, executeConfirmAction, displayOrder]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -152,6 +158,15 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     const ok = await executeConfirmAction(actionType);
     haptic?.notificationOccurred(ok ? 'success' : 'error');
   }, [confirmDialog, executeConfirmAction, haptic]);
+
+  const handleFiatRefund = useCallback(
+    async (params: { amount?: number; currency?: string; reason?: string }) => {
+      setShowFiatRefundDialog(false);
+      const ok = await executeConfirmAction('refund', params);
+      haptic?.notificationOccurred(ok ? 'success' : 'error');
+    },
+    [executeConfirmAction, haptic]
+  );
 
   // --- TG BackButton ---
   useEffect(() => {
@@ -418,7 +433,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
             </AccordionItem>
 
             {/* Payment */}
-            {(displayOrder.paymentTx || displayOrder.paymentLocked) && (
+            {(displayOrder.paymentTx || displayOrder.paymentLocked || displayOrder.fiatPayment) && (
               <AccordionItem value="payment">
                 <AccordionTrigger className="text-sm font-semibold">
                   {t('order.payment.title')}
@@ -492,6 +507,17 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           type={confirmDialog}
           onConfirm={handleConfirmAction}
           isLoading={isActionLoading}
+        />
+      )}
+
+      {displayOrder?.fiatPayment && (
+        <FiatRefundDialog
+          open={showFiatRefundDialog}
+          onOpenChange={setShowFiatRefundDialog}
+          onConfirm={handleFiatRefund}
+          isLoading={isActionLoading}
+          totalAmount={displayOrder.pricingAmount}
+          currency={displayOrder.pricingCurrency}
         />
       )}
 

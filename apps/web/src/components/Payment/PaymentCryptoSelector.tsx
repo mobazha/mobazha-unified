@@ -129,7 +129,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
       {activeFiatMethods.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            {t('fiat.sectionTitle', { defaultValue: 'Pay with card or wallet' })}
+            {t('fiat.sectionTitle')}
           </span>
           <div className="flex flex-col gap-2">
             {activeFiatMethods.map(method => {
@@ -176,7 +176,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
           {activeFiatMethods.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                {t('fiat.cryptoSection', { defaultValue: 'Pay with cryptocurrency' })}
+                {t('fiat.cryptoSection')}
               </span>
               {isEmbedded && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">

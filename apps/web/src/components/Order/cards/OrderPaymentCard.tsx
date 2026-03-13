@@ -45,12 +45,15 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
         }
       : null;
 
-  if (!order.paymentTx && !order.paymentLocked) return null;
+  if (!order.paymentTx && !order.paymentLocked && !order.fiatPayment) return null;
 
   return (
     <div className={className}>
+      {/* Fiat Payment */}
+      {order.fiatPayment && <FiatPaymentCard order={order} />}
+
       {/* Traditional Payment */}
-      {order.paymentTx && !order.paymentLocked && (
+      {order.paymentTx && !order.paymentLocked && !order.fiatPayment && (
         <>
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -283,6 +286,71 @@ function RwaPaymentLockedCard({
           <p className="text-sm text-success">{t('order.paymentLocked.waitingToConfirm')}</p>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Internal: Fiat payment info card */
+function FiatPaymentCard({ order }: { order: DisplayOrder }) {
+  const { t } = useI18n();
+  const fiat = order.fiatPayment!;
+  const providerLabel = fiat.provider === 'stripe' ? 'Stripe' : 'PayPal';
+
+  const paidTimestamp = order.timeline.find(e => e.status === 'paid')?.timestamp;
+  const statusColor =
+    order.status === 'refunded'
+      ? 'text-warning'
+      : order.status === 'disputed'
+        ? 'text-error'
+        : 'text-success';
+  const statusBadgeColor =
+    order.status === 'refunded'
+      ? 'bg-warning'
+      : order.status === 'disputed'
+        ? 'bg-error'
+        : 'bg-success';
+  const statusText =
+    order.status === 'refunded'
+      ? t('order.fiatPayment.refunded')
+      : order.status === 'disputed'
+        ? t('order.fiatPayment.disputed')
+        : t('order.fiatPayment.paid');
+
+  return (
+    <div className="bg-gradient-to-r from-primary/5 to-primary/5 border border-primary/15 rounded-lg p-4 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold text-foreground">{t('order.fiatPayment.title')}</h4>
+        <span
+          className={`${statusBadgeColor} text-white text-xs font-semibold px-3 py-1 rounded-full`}
+        >
+          {statusText}
+        </span>
+      </div>
+
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between items-center py-1 border-b border-primary/10">
+          <span className="text-muted-foreground">{t('order.fiatPayment.provider')}</span>
+          <span className="font-medium text-foreground">{providerLabel}</span>
+        </div>
+        <div className="flex justify-between items-center py-1 border-b border-primary/10">
+          <span className="text-muted-foreground">{t('order.fiatPayment.method')}</span>
+          <span className="font-medium text-foreground">{fiat.methodLabel}</span>
+        </div>
+        <div className="flex justify-between items-center py-1 border-b border-primary/10">
+          <span className="text-muted-foreground">{t('order.fiatPayment.amount')}</span>
+          <span className={`font-medium ${statusColor}`}>
+            {order.pricingAmount} {order.pricingCurrency}
+          </span>
+        </div>
+        {paidTimestamp && (
+          <div className="flex justify-between items-center py-1">
+            <span className="text-muted-foreground">{t('order.fiatPayment.paidAt')}</span>
+            <span className="font-medium text-foreground">
+              {new Date(paidTimestamp).toLocaleString()}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

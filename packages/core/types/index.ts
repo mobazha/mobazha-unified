@@ -116,6 +116,7 @@ export type {
   DisplayModerator,
   DisplayTimelineEvent,
   DisplayDispute,
+  DisplayFiatPayment,
   DisplayPaymentLocked,
   DisplayOrderStatus,
   DisplayUserRole,
@@ -344,6 +345,8 @@ export type {
   CreateFiatPaymentParams,
   FiatProviderID,
   FiatPaymentStatus,
+  FiatRefundParams,
+  FiatRefundResult,
 } from './fiat';
 
 // Store branding types (PG-201)

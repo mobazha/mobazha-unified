@@ -7,6 +7,7 @@ import {
   useUserStore,
   useI18n,
   ordersApi,
+  fiatApi,
   onWebSocketMessage,
   useOrderAction,
   type WebSocketMessage,
@@ -242,7 +243,10 @@ export function useOrderDetailPage(
   }, []);
 
   const executeConfirmAction = useCallback(
-    async (actionType: OrderConfirmType): Promise<boolean> => {
+    async (
+      actionType: OrderConfirmType,
+      refundParams?: { amount?: number; currency?: string; reason?: string }
+    ): Promise<boolean> => {
       setIsActionLoading(true);
       let succeeded = false;
 
@@ -290,16 +294,26 @@ export function useOrderDetailPage(
             });
             break;
           case 'refund':
-            await executeOrderAction({
-              paymentCoin,
-              getInstructions: addr =>
-                ordersApi.getRefundInstructions({ orderID: orderId, initiatorAddress: addr }),
-              executeAction: txID =>
-                ordersApi.refundOrder({ orderID: orderId, transactionID: txID }),
-              onSuccess: () =>
-                onSuccess(t('order.actions.refundSuccess'), t('order.actions.refundSuccessDesc')),
-              onError,
-            });
+            if (displayOrder?.fiatPayment) {
+              try {
+                const fiat = displayOrder.fiatPayment;
+                await fiatApi.refundPayment(fiat.provider, fiat.paymentID, refundParams);
+                onSuccess(t('order.actions.refundSuccess'), t('order.actions.refundSuccessDesc'));
+              } catch (err) {
+                onError(err instanceof Error ? err : new Error(String(err)));
+              }
+            } else {
+              await executeOrderAction({
+                paymentCoin,
+                getInstructions: addr =>
+                  ordersApi.getRefundInstructions({ orderID: orderId, initiatorAddress: addr }),
+                executeAction: txID =>
+                  ordersApi.refundOrder({ orderID: orderId, transactionID: txID }),
+                onSuccess: () =>
+                  onSuccess(t('order.actions.refundSuccess'), t('order.actions.refundSuccessDesc')),
+                onError,
+              });
+            }
             break;
           case 'claim':
             await executeOrderAction({
@@ -333,7 +347,7 @@ export function useOrderDetailPage(
       }
       return succeeded;
     },
-    [coreOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
+    [coreOrder, displayOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
   );
 
   // --- Clipboard helpers ---

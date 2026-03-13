@@ -98,6 +98,19 @@ export interface CreateFiatPaymentParams {
   cancelURL?: string;
 }
 
+export interface FiatRefundParams {
+  amount?: number;
+  currency?: string;
+  reason?: string;
+}
+
+export interface FiatRefundResult {
+  refundID: string;
+  status: 'succeeded' | 'pending' | 'failed';
+  amount: number;
+  currency: string;
+}
+
 export type FiatProviderID = 'stripe' | 'paypal';
 
 export type FiatPaymentStatus =
