@@ -3363,6 +3363,10 @@ export interface TranslationResource {
     home?: string;
     sports?: string;
   };
+
+  about?: {
+    intro?: string;
+  };
 }
 
 // i18n 上下文类型

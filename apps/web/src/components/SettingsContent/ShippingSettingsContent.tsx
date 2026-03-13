@@ -124,18 +124,12 @@ function EmptyState({
 }) {
   const { t } = useI18n();
 
-  const handleKeyDown = useCallback(
-    (
-      e: React.KeyboardEvent,
-      action: () => void
-    ) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        action();
-      }
-    },
-    []
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+    }
+  }, []);
 
   return (
     <Card className="p-4 md:p-6">
@@ -152,7 +146,9 @@ function EmptyState({
           <p className="text-sm font-medium text-foreground mb-2">
             {t('shippingTemplates.quickStart')}
           </p>
-          <p className="text-xs text-muted-foreground mb-3">{t('shippingTemplates.quickStartDesc')}</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            {t('shippingTemplates.quickStartDesc')}
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <Card
               role="button"
@@ -177,7 +173,8 @@ function EmptyState({
                       currency
                     )
                   )
-                }
+                )
+              }
             >
               <CardContent className="p-3">
                 <p className="text-sm font-medium text-foreground">
@@ -211,7 +208,8 @@ function EmptyState({
                       currency
                     )
                   )
-                }
+                )
+              }
             >
               <CardContent className="p-3">
                 <p className="text-sm font-medium text-foreground">
