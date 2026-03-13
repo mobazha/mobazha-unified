@@ -44,6 +44,12 @@ export default function ModeratorPage() {
     router.back();
   }, [router]);
 
+  // 跳过：不选仲裁人并返回
+  const handleSkip = useCallback(() => {
+    sessionStorage.removeItem('checkout_selected_moderator');
+    router.push(returnUrl);
+  }, [returnUrl, router]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* 头部 */}
@@ -61,8 +67,16 @@ export default function ModeratorPage() {
         </div>
       </header>
 
-      {/* 内容区域 - 使用紧凑间距 */}
+      {/* 内容区域 - 说明 + 跳过 + 列表 */}
       <main className="flex-1 p-3">
+        <p className="text-sm text-muted-foreground mb-4">{t('payment.moderatorRoleExplain')}</p>
+        <button
+          type="button"
+          onClick={handleSkip}
+          className="w-full mb-4 py-2.5 rounded-lg border border-border bg-muted/50 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          {t('payment.noModeratorNeeded')}
+        </button>
         <ModeratorSelector
           selectedModerator={currentModerator}
           onSelect={handleSelect}
