@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 type ViewMode = 'table' | 'grid';
+type StatusFilter = 'all' | 'active' | 'draft';
 
 interface ProductActionsProps {
   slug: string;
@@ -94,6 +95,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
@@ -122,13 +124,29 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, [fetchProducts]);
 
+  const getEffectiveStatus = useCallback((p: ProductListItem) => p.status ?? 'published', []);
+
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-    const q = searchQuery.toLowerCase();
-    return products.filter(
-      p => p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
-    );
-  }, [products, searchQuery]);
+    let result = products;
+    if (statusFilter === 'active') {
+      result = result.filter(p => getEffectiveStatus(p) === 'published');
+    } else if (statusFilter === 'draft') {
+      result = result.filter(p => getEffectiveStatus(p) === 'draft');
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        p => p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [products, searchQuery, statusFilter, getEffectiveStatus]);
+
+  const statusCounts = useMemo(() => {
+    const active = products.filter(p => getEffectiveStatus(p) === 'published').length;
+    const draft = products.filter(p => getEffectiveStatus(p) === 'draft').length;
+    return { all: products.length, active, draft };
+  }, [products, getEffectiveStatus]);
 
   const executeDelete = useCallback(
     async (slug: string) => {
@@ -241,6 +259,35 @@ export default function AdminProductsPage() {
     }
   }
 
+  function statusBadge(status?: string) {
+    switch (status) {
+      case 'published':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            {t('admin.products.statusActive')}
+          </span>
+        );
+      case 'draft':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+            {t('admin.products.statusDraft')}
+          </span>
+        );
+      case 'private':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+            {t('admin.products.statusPrivate')}
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            {t('admin.products.statusActive')}
+          </span>
+        );
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -295,6 +342,32 @@ export default function AdminProductsPage() {
             {t('admin.products.addProduct')}
           </Button>
         </Link>
+      </div>
+
+      {/* Status filter tabs */}
+      <div className="flex gap-1 mb-4 border-b border-border">
+        {(['all', 'active', 'draft'] as StatusFilter[]).map(filter => {
+          const labels: Record<StatusFilter, string> = {
+            all: t('admin.products.filterAll'),
+            active: t('admin.products.filterActive'),
+            draft: t('admin.products.filterDraft'),
+          };
+          const count = statusCounts[filter];
+          return (
+            <button
+              key={filter}
+              onClick={() => setStatusFilter(filter)}
+              className={cn(
+                'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+                statusFilter === filter
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+              )}
+            >
+              {labels[filter]} <span className="text-xs text-muted-foreground ml-1">({count})</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Toolbar */}
@@ -379,9 +452,7 @@ export default function AdminProductsPage() {
                     <span className="text-sm font-semibold text-primary">
                       {renderPrice(product.price)}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {contractTypeLabel(product.contractType)}
-                    </span>
+                    {statusBadge(product.status)}
                   </div>
                 </div>
               </Link>
@@ -433,6 +504,9 @@ export default function AdminProductsPage() {
                     {t('admin.products.colProduct')}
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                    {t('admin.products.colStatus')}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                     {t('admin.products.colType')}
                   </th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">
@@ -467,6 +541,9 @@ export default function AdminProductsPage() {
                           <p className="text-xs text-muted-foreground">{product.slug}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {statusBadge(product.status)}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -523,9 +600,7 @@ export default function AdminProductsPage() {
                   <span className="text-sm font-semibold text-primary">
                     {renderPrice(product.price)}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {contractTypeLabel(product.contractType)}
-                  </span>
+                  {statusBadge(product.status)}
                 </div>
               </div>
             </div>
