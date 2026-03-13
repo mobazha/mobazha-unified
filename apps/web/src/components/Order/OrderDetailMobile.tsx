@@ -568,8 +568,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           onOpenChange={setShowFiatRefundDialog}
           onConfirm={handleFiatRefund}
           isLoading={isActionLoading}
-          totalAmount={displayOrder.pricingAmount}
-          currency={displayOrder.pricingCurrency}
+          totalAmount={displayOrder.pricingAmount ?? ''}
+          currency={displayOrder.pricingCurrency ?? ''}
         />
       )}
 

@@ -52,7 +52,10 @@ export interface UseOrderDetailPageReturn {
   chatParticipants: OrderChatParticipant[];
 
   isActionLoading: boolean;
-  executeConfirmAction: (actionType: OrderConfirmType) => Promise<boolean>;
+  executeConfirmAction: (
+    actionType: OrderConfirmType,
+    refundParams?: { amount?: number; currency?: string; reason?: string }
+  ) => Promise<boolean>;
 
   showReviewDialog: boolean;
   reviewProductTitle: string;
