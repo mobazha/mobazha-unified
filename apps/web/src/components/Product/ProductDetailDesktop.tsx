@@ -13,7 +13,7 @@ import type { Product } from '@mobazha/core';
 import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
-import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
+import { BuyerProtectionBadge, SellerInfoCard } from '@/components/Trust';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
@@ -838,42 +838,20 @@ export function ProductDetailDesktop({
               </Card>
             )}
 
-            {/* Vendor Info - 非弹框模式显示（弹框模式已在顶部显示） */}
-            {!isModal && (
-              <Card className="p-4 sm:p-6">
-                <Link href={`/store/${vendorPeerID}`} className="touch-feedback block">
-                  <HStack gap="sm" align="center">
-                    <Avatar
-                      src={getImageUrl(vendor?.avatarHashes?.medium, vendorPeerID)}
-                      name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
-                      size="md"
-                      className="w-10 h-10 sm:w-12 sm:h-12"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground text-sm sm:text-base">
-                        {vendor?.name || vendorPeerID?.slice(0, 8)}
-                      </h3>
-                      {vendor?.location && (
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {vendor.location}
-                        </p>
-                      )}
-                      {vendor?.stats && (
-                        <HStack gap="xs" align="center" className="mt-0.5">
-                          <span className="text-warning text-sm">★</span>
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {vendor.stats.averageRating?.toFixed(1) || '0'} (
-                            {vendor.stats.ratingCount || 0} {t('product.reviews')})
-                          </span>
-                        </HStack>
-                      )}
-                    </div>
-                    <Button variant="outline" size="sm" className="flex-shrink-0 text-xs">
-                      {t('product.viewStore')}
-                    </Button>
-                  </HStack>
-                </Link>
-              </Card>
+            {/* Seller info card - 头像 + 名称 + 评分/完成率/新店铺 + 进入店铺 */}
+            {!isModal && vendorPeerID && (
+              <SellerInfoCard
+                peerID={vendorPeerID}
+                name={vendor?.name ?? ''}
+                avatarHashes={vendor?.avatarHashes}
+                rating={vendor?.stats?.averageRating ?? 0}
+                reviewCount={vendor?.stats?.ratingCount ?? 0}
+                salesCount={vendor?.stats?.listingCount}
+                memberSince={vendor?.lastModified}
+                isNewStore={(vendor?.stats?.ratingCount ?? 0) === 0}
+                location={vendor?.location}
+                viewStoreLabel={t('product.viewStore')}
+              />
             )}
           </div>
         </div>
