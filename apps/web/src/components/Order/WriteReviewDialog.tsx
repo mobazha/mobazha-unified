@@ -64,6 +64,11 @@ function ReviewForm({
           {t('order.review.rateExperience')}
         </span>
         <StarRating value={overall} onChange={setOverall} size="lg" />
+        {overall > 0 && (
+          <span className="text-sm font-medium text-primary animate-in fade-in duration-200">
+            {t(`order.review.star${overall}`)}
+          </span>
+        )}
       </VStack>
 
       <div>

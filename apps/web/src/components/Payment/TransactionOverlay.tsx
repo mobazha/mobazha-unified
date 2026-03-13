@@ -4,7 +4,7 @@ import React from 'react';
 import { useI18n } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { VStack } from '@/components/layouts';
-import { Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, ExternalLink, Clock } from 'lucide-react';
 
 export type PaymentStep = 'idle' | 'confirming' | 'submitted' | 'completing' | 'success' | 'failed';
 
@@ -36,6 +36,28 @@ function getExplorerUrl(txHash: string, tokenId?: string): string {
   return `${DEFAULT_EXPLORER}${txHash}`;
 }
 
+function classifyError(rawMessage: string): string {
+  const msg = rawMessage.toLowerCase();
+  if (msg.includes('insufficient') || msg.includes('not enough') || msg.includes('exceeds balance'))
+    return 'errorInsufficientFunds';
+  if (
+    msg.includes('rejected') ||
+    msg.includes('denied') ||
+    msg.includes('cancelled') ||
+    msg.includes('user refused')
+  )
+    return 'errorUserRejected';
+  if (
+    msg.includes('revert') ||
+    msg.includes('execution reverted') ||
+    msg.includes('call exception')
+  )
+    return 'errorContractReverted';
+  if (msg.includes('timeout') || msg.includes('congestion') || msg.includes('replacement fee'))
+    return 'errorNetworkCongestion';
+  return '';
+}
+
 export function TransactionOverlay({
   step,
   txHash,
@@ -47,6 +69,11 @@ export function TransactionOverlay({
   const { t } = useI18n();
 
   if (step === 'idle') return null;
+
+  const errorKey = errorMessage ? classifyError(errorMessage) : '';
+  const friendlyError = errorKey
+    ? t(`payment.${errorKey}`)
+    : errorMessage || t('payment.errorGeneric');
 
   return (
     <div
@@ -97,6 +124,10 @@ export function TransactionOverlay({
                 {t('payment.waitingForConfirmation')}
               </p>
             </div>
+            <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 rounded-full px-3 py-1">
+              <Clock className="w-3 h-3" />
+              <span>{t('payment.estimatedTime')}</span>
+            </div>
             {txHash && (
               <a
                 href={getExplorerUrl(txHash, tokenId)}
@@ -143,7 +174,7 @@ export function TransactionOverlay({
             <div>
               <h2 className="text-lg font-semibold text-foreground">{t('payment.failed')}</h2>
               <p className="text-sm text-muted-foreground mt-1 break-words max-w-[280px]">
-                {errorMessage || t('payment.transactionFailed')}
+                {friendlyError}
               </p>
             </div>
             <div className="flex gap-3 w-full">

@@ -2,12 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { ProductImage } from '@/components/ui/product-image';
-import { useCurrency } from '@mobazha/core';
+import { useCurrency, useI18n } from '@mobazha/core';
+import { CreditCard } from 'lucide-react';
 
 export interface OrderItem {
   id: string;
@@ -151,7 +153,10 @@ const statusConfig = {
 
 export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails, onContact }) => {
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { t } = useI18n();
+  const router = useRouter();
   const status = statusConfig[order.status];
+  const isAwaitingPayment = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -251,6 +256,21 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             <p className="font-mono font-medium text-sm sm:text-base text-foreground">
               {order.trackingNumber}
             </p>
+          </div>
+        )}
+
+        {/* Continue Payment Banner */}
+        {isAwaitingPayment && (
+          <div className="mb-3 sm:mb-4">
+            <Button
+              className="w-full"
+              size="sm"
+              onClick={() => router.push(`/payment?orderID=${order.orderId}`)}
+              data-testid="order-card-continue-payment"
+            >
+              <CreditCard className="w-4 h-4 mr-1.5" />
+              {t('payment.continuePayment')}
+            </Button>
           </div>
         )}
 
