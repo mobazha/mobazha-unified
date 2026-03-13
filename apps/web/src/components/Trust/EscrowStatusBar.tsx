@@ -2,145 +2,164 @@
 
 import React from 'react';
 import { useI18n } from '@mobazha/core';
+import { Lock, Truck, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ESCROW_STEPS = ['paid', 'confirmed', 'shipped', 'delivered', 'released'] as const;
-type EscrowStepKey = (typeof ESCROW_STEPS)[number];
-
-/**
- * Map DisplayOrderStatus values to escrow step index.
- * DisplayOrderStatus from mapOrderState(): paid, awaiting_payment, processing,
- * shipped, delivered, completed, disputed, refunded, cancelled, split_resolved.
- * -1 = special/ended state.
- */
-function statusToStep(status: string): { step: number; isDisputed: boolean; isEnded: boolean } {
+/** 3 stages: 1=Funds protected, 2=In transit, 3=Complete. -1 = ended (cancelled/refunded), show last reached. */
+function statusToStage(status: string): { stage: number; isDisputed: boolean } {
   const s = status.toLowerCase();
   if (s === 'canceled' || s === 'cancelled' || s === 'refunded') {
-    return { step: -1, isDisputed: false, isEnded: true };
+    return { stage: -1, isDisputed: false };
   }
-  if (s === 'disputed' || s === 'decided' || s === 'split_resolved') {
-    if (s === 'split_resolved') return { step: 4, isDisputed: true, isEnded: false };
-    return { step: 1, isDisputed: true, isEnded: false };
+  if (s === 'disputed' || s === 'decided') {
+    // Dispute can occur during any stage; we keep stage so bar shows progress
+    if (s === 'disputed') return { stage: 1, isDisputed: true };
+    return { stage: 2, isDisputed: true };
   }
-  if (s === 'completed') return { step: 4, isDisputed: false, isEnded: false };
-  if (s === 'delivered') return { step: 3, isDisputed: false, isEnded: false };
-  if (s === 'shipped' || s === 'fulfilled') return { step: 2, isDisputed: false, isEnded: false };
-  if (s === 'processing' || s === 'confirmed')
-    return { step: 1, isDisputed: false, isEnded: false };
-  if (s === 'paid' || s === 'pending') return { step: 0, isDisputed: false, isEnded: false };
-  if (s === 'awaiting_payment') return { step: -1, isDisputed: false, isEnded: false };
-  return { step: 0, isDisputed: false, isEnded: false };
+  if (s === 'split_resolved') return { stage: 2, isDisputed: true };
+  if (s === 'completed') return { stage: 2, isDisputed: false };
+  if (s === 'delivered') return { stage: 2, isDisputed: false };
+  if (s === 'shipped' || s === 'fulfilled') return { stage: 1, isDisputed: false };
+  if (s === 'processing' || s === 'confirmed' || s === 'paid' || s === 'pending') {
+    return { stage: 0, isDisputed: false };
+  }
+  if (s === 'awaiting_payment') return { stage: -1, isDisputed: false };
+  return { stage: 0, isDisputed: false };
 }
 
 export interface EscrowStatusBarProps {
-  /** Order status */
+  /** Order status (DisplayOrderStatus) */
   status: string;
-  /** Additional class name */
+  /** Optional: vertical layout on small screens (e.g. mobile) */
+  variant?: 'horizontal' | 'vertical';
   className?: string;
 }
 
-/**
- * Horizontal progress bar showing order escrow lifecycle.
- * Steps: Paid → Confirmed → Shipped → Delivered → Released
- */
-export function EscrowStatusBar({ status, className }: EscrowStatusBarProps) {
-  const { t } = useI18n();
-  const { step: currentStep, isDisputed, isEnded } = statusToStep(status);
+const STAGE_ICONS = [Lock, Truck, Check] as const;
 
-  const labels: Record<EscrowStepKey, string> = {
-    paid: t('trust.escrow.paid'),
-    confirmed: t('trust.escrow.confirmed'),
-    shipped: t('trust.escrow.shipped'),
-    delivered: t('trust.escrow.delivered'),
-    released: t('trust.escrow.released'),
-  };
+/**
+ * 3-stage order status bar: Funds protected → Item in transit → Transaction complete.
+ * Current stage highlighted (blue), completed (green), future (gray). Dispute = red.
+ */
+export function EscrowStatusBar({
+  status,
+  variant = 'horizontal',
+  className,
+}: EscrowStatusBarProps) {
+  const { t } = useI18n();
+  const { stage: currentStage, isDisputed } = statusToStage(status);
+
+  const titles = [
+    t('trust.statusBar.stage1Title'),
+    t('trust.statusBar.stage2Title'),
+    t('trust.statusBar.stage3Title'),
+  ] as const;
+  const descs = [
+    t('trust.statusBar.stage1Desc'),
+    t('trust.statusBar.stage2Desc'),
+    t('trust.statusBar.stage3Desc'),
+  ] as const;
+
+  // When ended (cancelled/refunded/awaiting_payment), show short message instead of progress to avoid confusion
+  const isEnded = currentStage < 0;
+  const effectiveStage = currentStage < 0 ? 0 : currentStage;
+
+  if (isEnded) {
+    return (
+      <div
+        className={cn('w-full', className)}
+        data-testid="escrow-status-bar"
+        role="status"
+        aria-label={t('trust.statusBar.orderClosed')}
+      >
+        <p className="text-sm text-muted-foreground">{t('trust.statusBar.orderClosed')}</p>
+      </div>
+    );
+  }
 
   return (
     <div
       className={cn('w-full', className)}
       data-testid="escrow-status-bar"
       role="progressbar"
-      aria-valuenow={currentStep >= 0 ? currentStep : 0}
+      aria-valuenow={effectiveStage}
       aria-valuemin={0}
-      aria-valuemax={4}
-      aria-label={
-        currentStep >= 0 && currentStep < ESCROW_STEPS.length
-          ? labels[ESCROW_STEPS[currentStep]]
-          : status
-      }
+      aria-valuemax={2}
+      aria-label={isDisputed ? t('trust.statusBar.disputeLabel') : titles[effectiveStage]}
     >
-      <div className="flex items-start">
-        {ESCROW_STEPS.map((key, idx) => {
-          const isCompleted = currentStep >= 0 && idx < currentStep;
-          const isCurrent = currentStep >= 0 && idx === currentStep && !isEnded;
-          const isFuture = currentStep < 0 || idx > currentStep;
-          const showDestructive = isCurrent && isDisputed;
+      {isDisputed && (
+        <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md bg-destructive/10 border border-destructive/30">
+          <AlertCircle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
+          <span className="text-sm font-medium text-destructive">
+            {t('trust.statusBar.disputeLabel')}
+          </span>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          'flex gap-0',
+          variant === 'vertical' && 'flex-col gap-4'
+        )}
+      >
+        {[0, 1, 2].map((idx) => {
+          const isCompleted = effectiveStage > idx;
+          const isCurrent = effectiveStage === idx && !isDisputed;
+          const isCurrentDisputed = effectiveStage === idx && isDisputed;
+          const isFuture = effectiveStage < idx;
+
+          const Icon = STAGE_ICONS[idx];
+
+          const wrapCn = cn(
+            'flex flex-1 min-w-0 items-start gap-3',
+            variant === 'vertical' && 'flex-row'
+          );
+          const connectorCn = cn(
+            'shrink-0 w-4 sm:w-6 h-0.5 mt-5 -mb-1 self-center transition-colors',
+            variant === 'vertical' && 'w-0.5 h-4 mt-1 ml-5 self-start',
+            isCompleted ? 'bg-primary' : 'bg-muted'
+          );
+          const nodeCn = cn(
+            'relative flex shrink-0 w-10 h-10 rounded-full items-center justify-center transition-colors',
+            isCompleted && 'bg-primary text-primary-foreground',
+            isCurrent && 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background',
+            isCurrentDisputed && 'bg-destructive text-destructive-foreground ring-2 ring-destructive ring-offset-2 ring-offset-background',
+            isFuture && 'bg-muted text-muted-foreground'
+          );
+          const titleCn = cn(
+            'text-sm font-medium',
+            (isCompleted || isCurrent) && !isCurrentDisputed && 'text-foreground',
+            isCurrentDisputed && 'text-destructive',
+            isFuture && 'text-muted-foreground'
+          );
+          const descCn = cn(
+            'text-xs mt-0.5',
+            (isCompleted || isCurrent) && !isCurrentDisputed && 'text-muted-foreground',
+            isCurrentDisputed && 'text-destructive/90',
+            isFuture && 'text-muted-foreground/80'
+          );
 
           return (
-            <React.Fragment key={key}>
-              {idx > 0 && (
-                <div
-                  className={cn(
-                    'flex-1 h-0.5 mx-1 sm:mx-2 mt-5 sm:mt-6 transition-colors min-w-2',
-                    isCompleted ? 'bg-primary' : 'bg-muted'
-                  )}
-                />
+            <React.Fragment key={idx}>
+              {variant === 'horizontal' && idx > 0 && (
+                <div className={connectorCn} aria-hidden />
               )}
-              <div className="flex flex-col items-center min-w-0 flex-1">
-                <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0">
-                  {isCurrent && !isEnded && (
-                    <span
-                      className={cn(
-                        'absolute inset-0 rounded-full border-2 animate-ping opacity-75',
-                        showDestructive ? 'border-destructive' : 'border-primary',
-                        'motion-reduce:animate-none'
-                      )}
-                      aria-hidden
-                    />
+              <div className={wrapCn}>
+                <div className={nodeCn}>
+                  {isCompleted ? (
+                    <Check className="h-5 w-5" aria-hidden />
+                  ) : (
+                    <Icon className="h-5 w-5" aria-hidden />
                   )}
-                  <div
-                    className={cn(
-                      'relative w-full h-full rounded-full flex items-center justify-center transition-colors',
-                      isCompleted && 'bg-primary text-primary-foreground',
-                      isCurrent && !showDestructive && 'bg-primary text-primary-foreground',
-                      showDestructive && 'bg-destructive text-destructive-foreground',
-                      isFuture && 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    <span className="text-xs font-medium">
-                      {isCompleted ? (
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      ) : (
-                        idx + 1
-                      )}
-                    </span>
-                  </div>
                 </div>
-                <span
-                  className={cn(
-                    'mt-2 text-xs text-center max-w-full truncate',
-                    'hidden sm:block',
-                    (isCompleted || isCurrent) && !showDestructive && 'text-foreground font-medium',
-                    showDestructive && 'text-destructive font-medium',
-                    isFuture && 'text-muted-foreground'
-                  )}
-                >
-                  {labels[key]}
-                </span>
+                <div className="min-w-0 flex-1 pt-1">
+                  <p className={titleCn}>{titles[idx]}</p>
+                  <p className={descCn}>{descs[idx]}</p>
+                </div>
               </div>
+              {variant === 'vertical' && idx < 2 && (
+                <div className={connectorCn} aria-hidden />
+              )}
             </React.Fragment>
           );
         })}

@@ -866,13 +866,13 @@ export const OrderDetailContent = memo(function OrderDetailContent({
           )}
         </div>
 
-        {/* 移动端：EscrowStatusBar */}
-        <div className="sm:hidden mt-3 mb-4 px-2">
+        {/* 3-stage status bar（资金已保护 → 商品运输中 → 交易完成） */}
+        <div className="mt-3 sm:mt-4 mb-4 sm:mb-6 px-2 sm:px-8">
           <EscrowStatusBar status={displayOrder.status} />
         </div>
 
-        {/* 桌面端：保留进度条 */}
-        <div className="hidden sm:block mt-2 sm:mt-4 mb-4 sm:mb-6 px-2 sm:px-8">
+        {/* 桌面端：保留原有进度条 */}
+        <div className="hidden sm:block mt-0 mb-4 sm:mb-6 px-2 sm:px-8">
           <OrderProgressBar
             states={progressState.states}
             currentState={progressState.currentState}
