@@ -91,8 +91,18 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     if (orderState === 'DISPUTED') {
       const remaining = getTimeRemaining(timestamp);
       return (
-        <div className="flex items-center gap-1.5 text-warning">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div
+          className="flex items-center gap-1.5 text-warning"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

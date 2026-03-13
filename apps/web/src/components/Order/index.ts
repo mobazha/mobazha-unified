@@ -87,6 +87,9 @@ export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDi
 // Review
 export { WriteReviewDialog } from './WriteReviewDialog';
 
+// Packing Slip
+export { PackingSlipDialog } from './PackingSlipDialog';
+
 // Desktop / Mobile views
 export { OrderDetailDesktop } from './OrderDetailDesktop';
 export type { OrderDetailDesktopProps } from './OrderDetailDesktop';

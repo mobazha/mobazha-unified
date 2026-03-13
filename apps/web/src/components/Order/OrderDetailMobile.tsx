@@ -13,6 +13,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { MessageCircle } from 'lucide-react';
+import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
 import {
   useI18n,
@@ -20,10 +21,12 @@ import {
   getOrderActions,
   getPrimaryAction,
   getActionButtonConfig,
+  ordersApi,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useToast } from '@/components/ui/use-toast';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider/TGMiniAppProvider';
 import {
   OrderChat,
@@ -83,6 +86,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   } = useOrderDetailPage(orderId, viewingContext);
 
   const { isAvailable: isTG, backButton, mainButton, haptic } = useTGMiniApp();
+  const { toast } = useToast();
 
   // --- UI-only state ---
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
@@ -91,6 +95,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
 
   // --- Computed ---
@@ -143,8 +149,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setConfirmDialog('acceptPayout');
           break;
         case 'Dispute':
+          setShowDisputeModal(true);
           break;
         case 'WriteReview':
+          executeConfirmAction('complete');
           break;
       }
     },
@@ -166,6 +174,32 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       haptic?.notificationOccurred(ok ? 'success' : 'error');
     },
     [executeConfirmAction, haptic]
+  );
+
+  const handleDisputeSubmit = useCallback(
+    async (claim: string) => {
+      setIsDisputeLoading(true);
+      try {
+        await ordersApi.openDispute(orderId, claim);
+        setShowDisputeModal(false);
+        haptic?.notificationOccurred('success');
+        toast({
+          title: t('order.disputeOpened'),
+          description: t('order.disputeOpenedSuccess'),
+        });
+        setTimeout(() => refetch(), 500);
+      } catch (error) {
+        haptic?.notificationOccurred('error');
+        toast({
+          title: t('order.actions.error'),
+          description: (error as Error).message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsDisputeLoading(false);
+      }
+    },
+    [orderId, refetch, t, toast, haptic]
   );
 
   // --- TG BackButton ---
@@ -560,6 +594,13 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
         isMobile
+      />
+
+      <DisputeModal
+        isOpen={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        onSubmit={handleDisputeSubmit}
+        isLoading={isDisputeLoading}
       />
     </div>
   );

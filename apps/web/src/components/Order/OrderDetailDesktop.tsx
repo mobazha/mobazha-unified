@@ -7,14 +7,16 @@ import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { Copy } from 'lucide-react';
+import { Copy, Printer } from 'lucide-react';
 import {
   useI18n,
   isOrderFulfilled,
+  ordersApi,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useToast } from '@/components/ui/use-toast';
 import {
   OrderFooter,
   OrderProgressBar,
@@ -26,6 +28,8 @@ import {
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
+import { DisputeModal } from '@/components/Order/modals/DisputeModal';
+import { PackingSlipDialog } from '@/components/Order/PackingSlipDialog';
 import {
   OrderProductCard,
   OrderSummaryCard,
@@ -47,6 +51,7 @@ export interface OrderDetailDesktopProps {
 export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDesktopProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const { toast } = useToast();
 
   const {
     displayOrder,
@@ -76,6 +81,9 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const [showFiatRefundDialog, setShowFiatRefundDialog] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [isDisputeLoading, setIsDisputeLoading] = useState(false);
+  const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
 
   // --- Computed ---
@@ -130,8 +138,10 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setConfirmDialog('acceptPayout');
           break;
         case 'Dispute':
+          setShowDisputeModal(true);
           break;
         case 'WriteReview':
+          executeConfirmAction('complete');
           break;
       }
     },
@@ -152,6 +162,30 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     setConfirmDialog(null);
     await executeConfirmAction(actionType);
   }, [confirmDialog, executeConfirmAction]);
+
+  const handleDisputeSubmit = useCallback(
+    async (claim: string) => {
+      setIsDisputeLoading(true);
+      try {
+        await ordersApi.openDispute(orderId, claim);
+        setShowDisputeModal(false);
+        toast({
+          title: t('order.disputeOpened'),
+          description: t('order.disputeOpenedSuccess'),
+        });
+        setTimeout(() => refetch(), 500);
+      } catch (error) {
+        toast({
+          title: t('order.actions.error'),
+          description: (error as Error).message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsDisputeLoading(false);
+      }
+    },
+    [orderId, refetch, t, toast]
+  );
 
   // --- Loading state ---
   if (isLoading) {
@@ -242,6 +276,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           {/* Back button */}
           <button
             onClick={() => router.back()}
+            aria-label={t('order.backToOrders')}
             className="group flex items-center gap-2 text-muted-foreground hover:text-primary mb-4 text-sm transition-colors"
           >
             <div className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -277,14 +312,27 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 <Copy className="w-3 h-3" />
                 <span>{t('common.copy')}</span>
               </button>
+              {displayOrder.userRole === 'seller' && (
+                <button
+                  onClick={() => setShowPackingSlip(true)}
+                  className="text-muted-foreground hover:text-foreground text-xs font-medium flex items-center gap-1 flex-shrink-0 ml-2"
+                >
+                  <Printer className="w-3 h-3" />
+                  <span>{t('order.packingSlip.title')}</span>
+                </button>
+              )}
             </div>
 
             {/* Tab navigation */}
             <div className="border-b border-border mb-4">
-              <div className="flex gap-6">
+              <div className="flex gap-6" role="tablist" aria-label={t('order.tabs.label')}>
                 {(['summary', 'discussion', 'contract'] as const).map(tab => (
                   <button
                     key={tab}
+                    role="tab"
+                    aria-selected={activeTab === tab}
+                    aria-controls={`tabpanel-${tab}`}
+                    id={`tab-${tab}`}
                     onClick={() => setActiveTab(tab)}
                     className={`pb-2.5 text-sm font-medium transition-colors relative ${
                       activeTab === tab
@@ -303,7 +351,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
 
             {/* Tab content */}
             {activeTab === 'summary' && (
-              <div>
+              <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
                 <OrderSummaryCard
                   displayOrder={displayOrder}
@@ -341,18 +389,20 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
             )}
 
             {activeTab === 'discussion' && (
-              <OrderChat
-                orderId={orderId}
-                participants={chatParticipants}
-                messages={chatMessages}
-                currentUserId={currentUserPeerID || ''}
-                onSendMessage={sendMessage}
-                className="h-[calc(100vh-400px)] min-h-[400px]"
-              />
+              <div role="tabpanel" id="tabpanel-discussion" aria-labelledby="tab-discussion">
+                <OrderChat
+                  orderId={orderId}
+                  participants={chatParticipants}
+                  messages={chatMessages}
+                  currentUserId={currentUserPeerID || ''}
+                  onSendMessage={sendMessage}
+                  className="h-[calc(100vh-400px)] min-h-[400px]"
+                />
+              </div>
             )}
 
             {activeTab === 'contract' && (
-              <div>
+              <div role="tabpanel" id="tabpanel-contract" aria-labelledby="tab-contract">
                 <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all p-4 bg-muted/20 rounded-lg">
                   {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
                 </pre>
@@ -434,6 +484,21 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
       />
+
+      <DisputeModal
+        isOpen={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        onSubmit={handleDisputeSubmit}
+        isLoading={isDisputeLoading}
+      />
+
+      {displayOrder && (
+        <PackingSlipDialog
+          open={showPackingSlip}
+          onOpenChange={setShowPackingSlip}
+          order={displayOrder}
+        />
+      )}
 
       <Footer />
     </div>

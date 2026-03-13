@@ -152,7 +152,16 @@ export const OrderTable = memo(function OrderTable({
               <TableRow
                 key={order.id}
                 className="cursor-pointer"
+                tabIndex={0}
+                role="link"
+                aria-label={`${t('order.table.orderId')} ${truncateId(order.orderId)}`}
                 onClick={() => handleRowClick(order.id)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleRowClick(order.id);
+                  }
+                }}
               >
                 {/* ORDER ID */}
                 <TableCell className="font-mono text-sm">
@@ -161,7 +170,7 @@ export const OrderTable = memo(function OrderTable({
                     <button
                       className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                       onClick={e => handleButtonClick(e, () => copyToClipboard(order.orderId))}
-                      title={t('order.actions.copyOrderId')}
+                      aria-label={t('order.actions.copyOrderId')}
                     >
                       <Copy className="w-3 h-3" />
                     </button>
