@@ -85,10 +85,14 @@ vi.mock('next/image', () => ({
   default: ({ alt, src }: { alt: string; src: string }) => <img alt={alt} src={src} />,
 }));
 
-vi.mock('lucide-react', () => ({
-  ChevronDown: () => <span data-testid="chevron-down" />,
-  X: () => <span data-testid="x-icon" />,
-}));
+vi.mock('lucide-react', async importOriginal => {
+  const actual = await importOriginal<typeof import('lucide-react')>();
+  return {
+    ...actual,
+    ChevronDown: () => <span data-testid="chevron-down" />,
+    X: () => <span data-testid="x-icon" />,
+  };
+});
 
 vi.mock('@/lib/fonts', () => ({
   FONT_CSS_VAR_MAP: {
