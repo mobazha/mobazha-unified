@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -154,7 +153,6 @@ const statusConfig = {
 export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails, onContact }) => {
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { t } = useI18n();
-  const router = useRouter();
   const status = statusConfig[order.status];
   const isAwaitingPayment = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
 
@@ -262,15 +260,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
         {/* Continue Payment Banner */}
         {isAwaitingPayment && (
           <div className="mb-3 sm:mb-4">
-            <Button
-              className="w-full"
-              size="sm"
-              onClick={() => router.push(`/payment?orderID=${order.orderId}`)}
-              data-testid="order-card-continue-payment"
-            >
-              <CreditCard className="w-4 h-4 mr-1.5" />
-              {t('payment.continuePayment')}
-            </Button>
+            <Link href={`/payment?orderID=${order.orderId}`} className="block">
+              <Button
+                className="w-full pointer-events-none"
+                size="sm"
+                tabIndex={-1}
+                data-testid="order-card-continue-payment"
+              >
+                <CreditCard className="w-4 h-4 mr-1.5" />
+                {t('payment.continuePayment')}
+              </Button>
+            </Link>
           </div>
         )}
 
