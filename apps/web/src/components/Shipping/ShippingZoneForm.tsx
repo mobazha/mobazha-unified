@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { useI18n, generateId, fromMinimalUnit, toMinimalUnit } from '@mobazha/core';
 import type { ShippingZone, ShippingRate, RateCondition, RateConditionType } from '@mobazha/core';
-import { Plus, Trash2, ChevronDown, ChevronUp, Calculator } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
 import { RegionSelector } from './RegionSelector';
 
@@ -62,10 +62,6 @@ export function ShippingZoneForm({
   const [rates, setRates] = useState<ShippingRate[]>(initialRates);
   // 跟踪展开的条件编辑区域
   const [expandedConditions, setExpandedConditions] = useState<Set<number>>(new Set());
-  // 运费试算
-  const [previewCountry, setPreviewCountry] = useState('');
-  const [previewWeightKg, setPreviewWeightKg] = useState('');
-  const [previewOrderAmount, setPreviewOrderAmount] = useState('');
 
   // 切换条件编辑区域展开状态
   const toggleCondition = useCallback((index: number) => {
@@ -163,30 +159,6 @@ export function ShippingZoneForm({
     regions.length > 0 &&
     rates.length > 0 &&
     rates.every(r => r.price !== undefined && r.price !== '');
-
-  // 试算：当前 zone 是否覆盖该国，以及匹配的费率和价格（价格用表单里的展示单位）
-  const previewMatch = (() => {
-    if (regions.length === 0 || !previewCountry) return null;
-    const country = previewCountry.toUpperCase();
-    const inZone = regions.some(r => r.toUpperCase() === country || r.toUpperCase() === 'ALL');
-    if (!inZone) return { zoneName: name, rate: null };
-    const weightG = parseFloat(previewWeightKg) * 1000 || 0;
-    const orderMinimal = Number(previewOrderAmount)
-      ? toMinimalUnit(Number(previewOrderAmount), currency)
-      : 0;
-    for (const rate of rates) {
-      if (!rate.condition) return { zoneName: name, rate };
-      const { type, minValue, maxValue } = rate.condition;
-      if (type === 'weight') {
-        const ok = weightG >= minValue && (maxValue === 0 || weightG <= maxValue);
-        if (ok) return { zoneName: name, rate };
-      } else {
-        const ok = orderMinimal >= minValue && (maxValue === 0 || orderMinimal <= maxValue);
-        if (ok) return { zoneName: name, rate };
-      }
-    }
-    return { zoneName: name, rate: null };
-  })();
 
   return (
     <VStack gap="lg" className={hideHeader ? '' : 'p-4'} data-testid="shipping-zone-form">
@@ -384,77 +356,6 @@ export function ShippingZoneForm({
           <Plus className="w-3.5 h-3.5 mr-1" />
           {t('shipping.addRate')}
         </Button>
-      </div>
-
-      {/* 运费试算 */}
-      <div className="space-y-3 pt-4 border-t" data-testid="shipping-preview">
-        <div className="flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-muted-foreground" />
-          <Label className="text-sm font-medium">{t('shipping.previewTitle')}</Label>
-        </div>
-        {regions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('shipping.previewAddRegionsFirst')}</p>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">{t('shipping.previewCountry')}</Label>
-                <Select value={previewCountry} onValueChange={setPreviewCountry}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('shipping.previewCountry')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {regions
-                      .filter(r => r !== 'ALL')
-                      .map(c => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    {regions.includes('ALL') && <SelectItem value="ALL">ALL</SelectItem>}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">{t('shipping.previewWeightKg')}</Label>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="0"
-                  min="0"
-                  step="0.1"
-                  value={previewWeightKg}
-                  onChange={e => setPreviewWeightKg(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">{t('shipping.previewOrderAmount')}</Label>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
-                  value={previewOrderAmount}
-                  onChange={e => setPreviewOrderAmount(e.target.value)}
-                />
-              </div>
-            </div>
-            {previewMatch && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">{t('shipping.previewResult')}: </span>
-                {previewMatch.rate ? (
-                  <span className="font-medium">
-                    {previewMatch.zoneName} → {previewMatch.rate.name} ={' '}
-                    {Number(previewMatch.rate.price) || 0} {currency}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">{t('shipping.previewNoMatch')}</span>
-                )}
-              </div>
-            )}
-          </>
-        )}
       </div>
 
       {/* 操作按钮 */}
