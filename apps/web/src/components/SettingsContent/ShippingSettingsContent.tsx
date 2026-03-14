@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,13 +15,7 @@ import {
   useToast,
   Skeleton,
 } from '@/components/ui';
-import {
-  useI18n,
-  useShippingProfiles,
-  createEmptyProfile,
-  getAllZones,
-  generateId,
-} from '@mobazha/core';
+import { useI18n, useShippingProfiles, createEmptyProfile, getAllZones } from '@mobazha/core';
 import type { ShippingProfile, ShippingZone, ShippingLocation } from '@mobazha/core';
 import { Plus, Truck, FolderOpen, MapPin, AlertTriangle, RefreshCw } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
@@ -34,90 +28,12 @@ import {
   ShippingLocationForm,
 } from '@/components/Shipping';
 
-/** Build a full profile from S5 quick-start template (domestic_free | worldwide_standard). Price in minimal units (cents). */
-function buildProfileFromQuickStart(
-  templateId: 'domestic_free' | 'worldwide_standard',
-  profileName: string,
-  currency: string
-): ShippingProfile {
-  const profile = createEmptyProfile(true);
-  profile.name = profileName;
-
-  if (templateId === 'domestic_free') {
-    profile.locationGroups[0].zones = [
-      {
-        id: generateId(),
-        name: 'Mainland China',
-        regions: ['CN'],
-        rates: [
-          {
-            id: generateId(),
-            name: 'Free',
-            price: '0',
-            currency,
-            estimatedDelivery: '3-5 days',
-          },
-        ],
-      },
-      {
-        id: generateId(),
-        name: 'HK / MO / TW',
-        regions: ['HK', 'MO', 'TW'],
-        rates: [
-          {
-            id: generateId(),
-            name: 'Standard',
-            price: currency === 'CNY' ? '1000' : '1000',
-            currency,
-            estimatedDelivery: '5-7 days',
-          },
-        ],
-      },
-    ];
-  } else {
-    const asiaCodes = ['CN', 'JP', 'KR', 'HK', 'MO', 'TW', 'SG', 'TH', 'MY', 'ID', 'PH', 'VN'];
-    profile.locationGroups[0].zones = [
-      {
-        id: generateId(),
-        name: 'Asia',
-        regions: asiaCodes,
-        rates: [
-          {
-            id: generateId(),
-            name: 'Standard',
-            price: currency === 'CNY' ? '500' : '500',
-            currency,
-            estimatedDelivery: '5-7 days',
-          },
-        ],
-      },
-      {
-        id: generateId(),
-        name: 'Rest of World',
-        regions: ['ALL'],
-        rates: [
-          {
-            id: generateId(),
-            name: 'International',
-            price: currency === 'CNY' ? '1000' : '1000',
-            currency,
-            estimatedDelivery: '7-14 days',
-          },
-        ],
-      },
-    ];
-  }
-  return profile;
-}
-
 function EmptyState({
-  onSelectProfileTemplate,
+  onSelectTemplate,
   onCreateProfile,
-  onSelectZoneTemplate,
 }: {
-  onSelectProfileTemplate: (profile: ShippingProfile) => void;
+  onSelectTemplate: (zone: ShippingZone) => void;
   onCreateProfile: () => void;
-  onSelectZoneTemplate: (zone: ShippingZone) => void;
 }) {
   const { t } = useI18n();
 
@@ -132,77 +48,16 @@ function EmptyState({
           <p className="text-sm text-muted-foreground">{t('shippingConfig.noOptionsDesc')}</p>
         </VStack>
 
-        <div className="w-full">
-          <p className="text-sm font-medium text-foreground mb-2">
-            {t('shippingTemplates.quickStart')}
-          </p>
-          <p className="text-xs text-muted-foreground mb-3">
-            {t('shippingTemplates.quickStartDesc')}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-            <Card
-              className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() =>
-                onSelectProfileTemplate(
-                  buildProfileFromQuickStart(
-                    'domestic_free',
-                    t('shippingTemplates.profileDomesticFree'),
-                    'USD'
-                  )
-                )
-              }
-            >
-              <CardContent className="p-3">
-                <p className="text-sm font-medium text-foreground">
-                  {t('shippingTemplates.profileDomesticFree')}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                  {t('shippingTemplates.profileDomesticFreeDesc')}
-                </p>
-              </CardContent>
-            </Card>
-            <Card
-              className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() =>
-                onSelectProfileTemplate(
-                  buildProfileFromQuickStart(
-                    'worldwide_standard',
-                    t('shippingTemplates.profileWorldwideStandard'),
-                    'USD'
-                  )
-                )
-              }
-            >
-              <CardContent className="p-3">
-                <p className="text-sm font-medium text-foreground">
-                  {t('shippingTemplates.profileWorldwideStandard')}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                  {t('shippingTemplates.profileWorldwideStandardDesc')}
-                </p>
-              </CardContent>
-            </Card>
-            <Card
-              className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={onCreateProfile}
-            >
-              <CardContent className="p-3">
-                <p className="text-sm font-medium text-foreground">
-                  {t('shippingTemplates.profileCustom')}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                  {t('shippingTemplates.profileCustomDesc')}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <Button onClick={onCreateProfile} className="w-full">
+          <FolderOpen className="w-4 h-4 mr-2" />
+          {t('shipping.createProfile')}
+        </Button>
 
-        <div className="w-full pt-3 border-t">
+        <div className="w-full">
           <p className="text-xs text-muted-foreground text-center mb-3">
-            {t('shippingTemplates.createCustom')}
+            {t('shipping.orUseTemplate')}
           </p>
-          <ShippingTemplateSelector currency="USD" onSelect={onSelectZoneTemplate} />
+          <ShippingTemplateSelector currency="USD" onSelect={onSelectTemplate} />
         </div>
       </VStack>
     </Card>
@@ -548,22 +403,6 @@ export function ShippingSettingsContent() {
     }
   }, [refreshStaleSnapshots, toast, t]);
 
-  const handleSelectProfileTemplate = useCallback(
-    async (profile: ShippingProfile) => {
-      const success = await addProfile(profile);
-      if (success) {
-        toast({ title: t('common.success'), description: t('shipping.profileCreated') });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: t('common.createFailed'),
-          variant: 'destructive',
-        });
-      }
-    },
-    [addProfile, toast, t]
-  );
-
   const handleSelectTemplate = useCallback(
     async (zone: ShippingZone, profileId?: string) => {
       if (!hasProfiles) {
@@ -826,9 +665,8 @@ export function ShippingSettingsContent() {
             </VStack>
           ) : (
             <EmptyState
-              onSelectProfileTemplate={handleSelectProfileTemplate}
+              onSelectTemplate={handleSelectTemplate}
               onCreateProfile={handleCreateProfile}
-              onSelectZoneTemplate={zone => handleSelectTemplate(zone)}
             />
           )}
         </div>
