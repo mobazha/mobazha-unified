@@ -7,4 +7,5 @@ export { OrderCounterpartyCard, type OrderCounterpartyCardProps } from './OrderC
 export { OrderContractView, type OrderContractViewProps } from './OrderContractView';
 export { OrderDisputeBanner, type OrderDisputeBannerProps } from './OrderDisputeBanner';
 export { OrderMemoCard, type OrderMemoCardProps } from './OrderMemoCard';
+export { OrderStatusCard, type OrderStatusCardProps } from './OrderStatusCard';
 export { getProgressBarState, getStatusLabel } from './orderProgressUtils';

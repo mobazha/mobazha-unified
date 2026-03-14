@@ -23,6 +23,7 @@ export interface Order {
   id: string;
   orderId: string;
   status:
+    | 'awaiting_payment'
     | 'pending'
     | 'processing'
     | 'shipped'
@@ -54,10 +55,24 @@ export interface OrderCardProps {
   onContact?: () => void;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  awaiting_payment: {
+    label: 'Awaiting Payment',
+    color: 'bg-warning/15 text-warning',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+  },
   pending: {
     label: 'Pending',
-    color: 'bg-warning/20 text-warning',
+    color: 'bg-warning/15 text-warning',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -71,7 +86,7 @@ const statusConfig = {
   },
   processing: {
     label: 'Processing',
-    color: 'bg-info/20 text-info',
+    color: 'bg-info/15 text-info',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -85,7 +100,7 @@ const statusConfig = {
   },
   shipped: {
     label: 'Shipped',
-    color: 'bg-primary/20 text-primary',
+    color: 'bg-primary/15 text-primary',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -99,7 +114,7 @@ const statusConfig = {
   },
   delivered: {
     label: 'Delivered',
-    color: 'bg-primary/20 text-primary',
+    color: 'bg-success/15 text-success',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -113,7 +128,7 @@ const statusConfig = {
   },
   disputed: {
     label: 'Disputed',
-    color: 'bg-error/20 text-error',
+    color: 'bg-error/15 text-error',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -127,7 +142,7 @@ const statusConfig = {
   },
   completed: {
     label: 'Completed',
-    color: 'bg-primary/20 text-primary',
+    color: 'bg-success/15 text-success',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -268,7 +283,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
                 data-testid="order-card-continue-payment"
               >
                 <CreditCard className="w-4 h-4 mr-1.5" />
-                {t('payment.continuePayment')}
+                {t('payment.payNow')}
               </Button>
             </Link>
           </div>

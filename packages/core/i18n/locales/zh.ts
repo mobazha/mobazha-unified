@@ -599,6 +599,11 @@ export const zh: TranslationResource = {
     // 摘要
     summary: '概要',
     orderHistory: '订单历史',
+    trackingSection: {
+      title: '物流跟踪',
+      noTrackingNumber: '暂无物流单号',
+      track: '查看物流',
+    },
     // 进度条阶段
     stages: {
       paid: '已付款',
@@ -652,6 +657,31 @@ export const zh: TranslationResource = {
       disputeClosed: '纠纷已关闭: {{verdict}}',
       refunded: '订单已退款',
     },
+    // 订单状态卡片
+    statusCard: {
+      awaitingPaymentBuyer: '请完成付款以处理此订单',
+      awaitingPaymentSeller: '等待买家完成付款',
+      awaitingPaymentHint: '点击下方"立即付款"继续',
+      pendingBuyer: '等待卖家接受您的订单',
+      pendingSeller: '收到新订单 — 请确认并接受',
+      processingBuyer: '卖家正在准备您的订单',
+      processingSeller: '订单已接受 — 准备发货',
+      shippedBuyer: '您的包裹正在运送中',
+      shippedSeller: '已发货 — 等待买家确认收货',
+      shippedHint: '收到包裹后请确认收货',
+      deliveredBuyer: '您的订单已送达',
+      deliveredSeller: '买家已确认收货',
+      completed: '交易完成 — 资金已释放',
+      disputed: '此订单正在争议中',
+      disputedHint: '仲裁者正在审核此案件',
+      cancelled: '此订单已取消',
+      refunded: '此订单已退款',
+      reason: '原因',
+      stepPaid: '已付款',
+      stepAccepted: '已接单',
+      stepShipped: '已发货',
+      stepComplete: '已完成',
+    },
     // 订单详情标签
     shipTo: '收货地址',
     viewOnMap: '在地图上查看',
@@ -670,6 +700,7 @@ export const zh: TranslationResource = {
       quantity: '数量',
       service: '服务',
       digital: '数字',
+      soldBy: '卖家',
     },
     countries: {
       UNITED_STATES: '美国',
@@ -967,6 +998,7 @@ export const zh: TranslationResource = {
       confirmText: '确定要发起申诉吗？仲裁员将收到通知并介入帮助解决问题。',
       confirm: '发起申诉',
       viewInProviderDashboard: '在支付服务商面板中回应',
+      haveProblem: '订单遇到问题？',
     },
     // 写评价弹框
     review: {

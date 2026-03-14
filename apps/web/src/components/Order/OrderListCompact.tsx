@@ -33,21 +33,48 @@ export interface OrderListCompactProps {
 
 // ============ Status Config ============
 
-// 状态对应的 i18n key 和样式
-const statusConfig: Record<
-  string,
-  { labelKey: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  pending: { labelKey: 'order.pending', variant: 'outline' },
-  awaiting_payment: { labelKey: 'order.pending', variant: 'outline' },
-  paid: { labelKey: 'order.confirmed', variant: 'default' },
-  processing: { labelKey: 'order.processing', variant: 'default' },
-  shipped: { labelKey: 'order.shipped', variant: 'default' },
-  delivered: { labelKey: 'order.delivered', variant: 'default' },
-  completed: { labelKey: 'order.completed', variant: 'secondary' },
-  disputed: { labelKey: 'order.disputed', variant: 'destructive' },
-  refunded: { labelKey: 'order.refunded', variant: 'secondary' },
-  cancelled: { labelKey: 'order.cancelled', variant: 'secondary' },
+// Semantic color mapping using theme tokens (works across all 6 themes × light/dark)
+const statusConfig: Record<string, { labelKey: string; className: string }> = {
+  awaiting_payment: {
+    labelKey: 'order.statusLabels.awaitingPayment',
+    className: 'bg-warning/15 text-warning border-warning/30',
+  },
+  pending: {
+    labelKey: 'order.pending',
+    className: 'bg-warning/15 text-warning border-warning/30',
+  },
+  paid: {
+    labelKey: 'order.confirmed',
+    className: 'bg-info/15 text-info border-info/30',
+  },
+  processing: {
+    labelKey: 'order.processing',
+    className: 'bg-info/15 text-info border-info/30',
+  },
+  shipped: {
+    labelKey: 'order.shipped',
+    className: 'bg-primary/15 text-primary border-primary/30',
+  },
+  delivered: {
+    labelKey: 'order.delivered',
+    className: 'bg-success/15 text-success border-success/30',
+  },
+  completed: {
+    labelKey: 'order.completed',
+    className: 'bg-success/15 text-success border-success/30',
+  },
+  disputed: {
+    labelKey: 'order.disputed',
+    className: 'bg-error/15 text-error border-error/30',
+  },
+  refunded: {
+    labelKey: 'order.refunded',
+    className: 'bg-muted text-muted-foreground border-transparent',
+  },
+  cancelled: {
+    labelKey: 'order.cancelled',
+    className: 'bg-muted text-muted-foreground border-transparent',
+  },
 };
 
 // ============ Utility Functions ============
@@ -59,12 +86,6 @@ function formatDate(dateString: string): string {
     day: '2-digit',
     year: 'numeric',
   });
-}
-
-function truncateId(id: string, length: number = 8): string {
-  if (!id) return '';
-  if (id.length <= length) return id;
-  return '#' + id.slice(0, length) + '...';
 }
 
 // 从货币代码中提取链信息
@@ -259,7 +280,7 @@ export const OrderListCompact = memo(function OrderListCompact({
       {orders.map(order => {
         const status = statusConfig[order.status] || {
           labelKey: 'order.status.unknown',
-          variant: 'secondary' as const,
+          className: 'bg-muted text-muted-foreground border-transparent',
         };
         const item = order.items[0];
         const showActions = shouldShowActions(order.rawState);
@@ -326,18 +347,18 @@ export const OrderListCompact = memo(function OrderListCompact({
                         />
                       );
                     })()}
-                    <span className="text-sm font-semibold text-primary">
+                    <span className="text-sm font-semibold text-foreground">
                       {formatCurrencyPrice(order.total, order.currency || 'USD')}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between mt-0.5">
-                    <Badge variant={status.variant} className="text-xs px-2 py-0.5 h-5">
+                  <div className="flex items-center mt-0.5">
+                    <Badge
+                      variant="outline"
+                      className={cn('text-xs px-2 py-0.5 h-5', status.className)}
+                    >
                       {t(status.labelKey)}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {truncateId(order.orderId)}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -380,7 +401,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                       data-testid="order-compact-continue-payment"
                     >
                       <CreditCard className="w-4 h-4 mr-1.5" />
-                      {t('payment.continuePayment')}
+                      {t('payment.payNow')}
                     </Button>
                   </Link>
                 </div>
