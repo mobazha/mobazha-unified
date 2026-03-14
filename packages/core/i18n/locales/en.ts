@@ -512,9 +512,6 @@ export const en: TranslationResource = {
     creating: 'Creating...',
     createOrderFailed: 'Failed to create order: ',
     paymentNextStep: 'You will select payment method in the next step',
-    agreeToPoliciesBeforeLinks: 'By placing your order you agree to our ',
-    agreeToPoliciesConnector: ' and ',
-    agreeToPoliciesAfterLinks: '.',
     // RWA 相关
     rwaTransaction: 'RWA Token Transaction',
     rwaInstantHint:
@@ -1729,11 +1726,6 @@ export const en: TranslationResource = {
     },
   },
 
-  about: {
-    intro:
-      'Mobazha is a decentralized marketplace where buyers and sellers transact with cryptocurrency. Every transaction is protected by buyer protection until you confirm delivery. No platform fees, no lock-in—run your store on your own node or use our hosted service.',
-  },
-
   footer: {
     slogan: 'Shop and grow with cryptos',
     tagline: 'The decentralized marketplace for the future of commerce.',
@@ -1826,13 +1818,6 @@ export const en: TranslationResource = {
     termsLiabilityDesc:
       'Mobazha is a decentralized platform and does not control transactions between buyers and sellers. Use the platform at your own risk.',
     lastUpdated: 'Last updated',
-    refundPolicy: 'Refund Policy',
-    refundPolicyTitle: 'Refund Policy',
-    refundPolicyIntro:
-      'Platform-wide refund rules. Your payment is protected until you confirm receipt or a dispute is resolved.',
-    refundPolicyListingNote:
-      'Individual listings may have additional return or refund terms. Check the product page before purchase.',
-    buyerProtection: 'Buyer Protection',
   },
 
   trust: {
@@ -1848,9 +1833,6 @@ export const en: TranslationResource = {
     reviews: '{{count}} reviews',
     sales: '{{count}} sales',
     memberSince: 'Member since',
-    completionRate: '{{percent}}% completion rate',
-    newStore: 'New store',
-    storeOpenDuration: 'Store open {{duration}}',
     escrow: {
       paid: 'Paid',
       confirmed: 'Confirmed',
@@ -1970,10 +1952,7 @@ export const en: TranslationResource = {
     protectFor: 'Protect my payment for up to {{days}} days',
     selectModerator: 'Select Moderator',
     selectModeratorDesc: 'Choose a moderator for payment protection',
-    moderatorRoleExplain:
-      'If there is a dispute, the moderator will fairly resolve it for you. You can optionally skip and proceed without one.',
-    noModeratorNeeded: 'No moderator needed',
-    selectModeratorWarning: 'Please select a moderator for buyer protection',
+    selectModeratorWarning: 'Please select a moderator for escrow protection',
     selectPaymentMethodWarning: 'Please select a payment method',
     noPaymentMethods: 'No payment methods available',
     noPaymentMethodsDesc:

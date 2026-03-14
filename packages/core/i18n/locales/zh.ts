@@ -507,9 +507,6 @@ export const zh: TranslationResource = {
     creating: '创建中...',
     createOrderFailed: '创建订单失败：',
     paymentNextStep: '您将在下一步选择支付方式',
-    agreeToPoliciesBeforeLinks: '下单即表示您同意我们的 ',
-    agreeToPoliciesConnector: ' 和 ',
-    agreeToPoliciesAfterLinks: '。',
     // RWA 相关
     rwaTransaction: 'RWA 代币交易',
     rwaInstantHint: '这是即时 RWA 交换。确认后，您的付款将立即兑换为代币份额。',
@@ -1618,11 +1615,6 @@ export const zh: TranslationResource = {
       'Mobazha 是去中心化平台，不控制买卖双方之间的交易。请自行承担使用平台的风险。',
     lastUpdated: '最后更新',
     backToStore: '返回店铺',
-    refundPolicy: '退款政策',
-    refundPolicyTitle: '退款政策',
-    refundPolicyIntro: '平台通用退款规则。您的付款在您确认收货或争议解决前均受保护。',
-    refundPolicyListingNote: '各商品可能有额外的退货或退款条款，下单前请在商品页查看。',
-    buyerProtection: '买家保障说明',
   },
 
   trust: {
@@ -1642,9 +1634,6 @@ export const zh: TranslationResource = {
     reviews: '{{count}} 条评价',
     sales: '{{count}} 笔交易',
     memberSince: '加入时间',
-    completionRate: '{{percent}}% 完成率',
-    newStore: '新店铺',
-    storeOpenDuration: '开店 {{duration}}',
     escrow: {
       paid: '已付款',
       confirmed: '已确认',
@@ -1746,11 +1735,6 @@ export const zh: TranslationResource = {
       productsListed: '上架商品',
       chainsSupported: '支持的链',
     },
-  },
-
-  about: {
-    intro:
-      'Mobazha 是去中心化市场，买家和卖家使用加密货币交易。每笔交易在您确认收货前均受买家保障保护。零平台费用、无绑定——可在自己的节点上运行店铺或使用我们的托管服务。',
   },
 
   footer: {
@@ -1882,9 +1866,7 @@ export const zh: TranslationResource = {
     protectFor: '通过托管保护您的支付，最长 {{days}} 天',
     selectModerator: '选择调解员',
     selectModeratorDesc: '选择一位调解员来保护您的支付',
-    moderatorRoleExplain: '若发生争议，调解员将为您公正裁决。您也可以选择不需要调解员，直接继续。',
-    noModeratorNeeded: '不需要调解员',
-    selectModeratorWarning: '请选择一位调解员以启用买家保障',
+    selectModeratorWarning: '请选择一位调解员以启用托管保护',
     selectPaymentMethodWarning: '请选择支付方式',
     noPaymentMethods: '暂无可用支付方式',
     noPaymentMethodsDesc: '卖家尚未配置支付方式，请联系卖家或稍后再试。',
