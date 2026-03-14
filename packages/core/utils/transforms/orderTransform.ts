@@ -120,6 +120,14 @@ interface RealOrderData {
       timestamp?: string;
       verdict?: string;
     };
+    orderCancel?: {
+      timestamp?: string;
+      reason?: string;
+    };
+    refund?: {
+      timestamp?: string;
+      memo?: string;
+    };
   };
 }
 
@@ -140,6 +148,7 @@ export function mapOrderState(state: OrderState): DisplayOrderStatus {
     FULFILLED: 'shipped',
     COMPLETED: 'completed',
     CANCELED: 'cancelled',
+    CANCELLED: 'cancelled',
     DECLINED: 'cancelled',
     REFUNDED: 'refunded',
     DISPUTED: 'disputed',
@@ -641,6 +650,8 @@ export function transformCoreOrder(
         }
       : undefined;
 
+  const cancelReason = contract.orderCancel?.reason || contract.refund?.memo || undefined;
+
   const result: DisplayOrder = {
     id: fullOrderId,
     orderId: fullOrderId,
@@ -697,6 +708,7 @@ export function transformCoreOrder(
     contractType: contractType,
     timeline: generateTimelineFromRealData(data),
     userRole,
+    cancelReason,
     fiatPayment,
     dispute,
   };

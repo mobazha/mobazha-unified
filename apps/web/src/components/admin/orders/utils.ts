@@ -7,7 +7,7 @@ type OrderType = 'purchases' | 'sales';
 export function mapOrderState(state: string): Order['status'] {
   const stateMap: Record<string, Order['status']> = {
     PENDING: 'pending',
-    AWAITING_PAYMENT: 'pending',
+    AWAITING_PAYMENT: 'awaiting_payment',
     AWAITING_PICKUP: 'processing',
     AWAITING_FULFILLMENT: 'processing',
     PARTIALLY_FULFILLED: 'processing',

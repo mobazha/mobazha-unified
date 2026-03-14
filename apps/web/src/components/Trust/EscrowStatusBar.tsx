@@ -5,14 +5,14 @@ import { useI18n } from '@mobazha/core';
 import { Lock, Truck, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-/** 3 stages: 1=Funds protected, 2=In transit, 3=Complete. -1 = ended (cancelled/refunded), show last reached. */
+/** 3 stages: 1=Funds protected, 2=In transit, 3=Complete. -1 = ended (cancelled/refunded). -2 = pre-escrow (awaiting payment). */
 function statusToStage(status: string): { stage: number; isDisputed: boolean } {
   const s = status.toLowerCase();
   if (s === 'canceled' || s === 'cancelled' || s === 'refunded') {
     return { stage: -1, isDisputed: false };
   }
+  if (s === 'awaiting_payment') return { stage: -2, isDisputed: false };
   if (s === 'disputed' || s === 'decided') {
-    // Dispute can occur during any stage; we keep stage so bar shows progress
     if (s === 'disputed') return { stage: 1, isDisputed: true };
     return { stage: 2, isDisputed: true };
   }
@@ -23,7 +23,6 @@ function statusToStage(status: string): { stage: number; isDisputed: boolean } {
   if (s === 'processing' || s === 'confirmed' || s === 'paid' || s === 'pending') {
     return { stage: 0, isDisputed: false };
   }
-  if (s === 'awaiting_payment') return { stage: -1, isDisputed: false };
   return { stage: 0, isDisputed: false };
 }
 
@@ -60,9 +59,11 @@ export function EscrowStatusBar({
     t('trust.statusBar.stage3Desc'),
   ] as const;
 
-  // When ended (cancelled/refunded/awaiting_payment), show short message instead of progress to avoid confusion
-  const isEnded = currentStage < 0;
+  const isEnded = currentStage === -1;
+  const isPreEscrow = currentStage === -2;
   const effectiveStage = currentStage < 0 ? 0 : currentStage;
+
+  if (isPreEscrow) return null;
 
   if (isEnded) {
     return (
@@ -96,13 +97,8 @@ export function EscrowStatusBar({
         </div>
       )}
 
-      <div
-        className={cn(
-          'flex gap-0',
-          variant === 'vertical' && 'flex-col gap-4'
-        )}
-      >
-        {[0, 1, 2].map((idx) => {
+      <div className={cn('flex gap-0', variant === 'vertical' && 'flex-col gap-4')}>
+        {[0, 1, 2].map(idx => {
           const isCompleted = effectiveStage > idx;
           const isCurrent = effectiveStage === idx && !isDisputed;
           const isCurrentDisputed = effectiveStage === idx && isDisputed;
@@ -122,8 +118,10 @@ export function EscrowStatusBar({
           const nodeCn = cn(
             'relative flex shrink-0 w-10 h-10 rounded-full items-center justify-center transition-colors',
             isCompleted && 'bg-primary text-primary-foreground',
-            isCurrent && 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background',
-            isCurrentDisputed && 'bg-destructive text-destructive-foreground ring-2 ring-destructive ring-offset-2 ring-offset-background',
+            isCurrent &&
+              'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background',
+            isCurrentDisputed &&
+              'bg-destructive text-destructive-foreground ring-2 ring-destructive ring-offset-2 ring-offset-background',
             isFuture && 'bg-muted text-muted-foreground'
           );
           const titleCn = cn(
@@ -141,9 +139,7 @@ export function EscrowStatusBar({
 
           return (
             <React.Fragment key={idx}>
-              {variant === 'horizontal' && idx > 0 && (
-                <div className={connectorCn} aria-hidden />
-              )}
+              {variant === 'horizontal' && idx > 0 && <div className={connectorCn} aria-hidden />}
               <div className={wrapCn}>
                 <div className={nodeCn}>
                   {isCompleted ? (
@@ -157,9 +153,7 @@ export function EscrowStatusBar({
                   <p className={descCn}>{descs[idx]}</p>
                 </div>
               </div>
-              {variant === 'vertical' && idx < 2 && (
-                <div className={connectorCn} aria-hidden />
-              )}
+              {variant === 'vertical' && idx < 2 && <div className={connectorCn} aria-hidden />}
             </React.Fragment>
           );
         })}

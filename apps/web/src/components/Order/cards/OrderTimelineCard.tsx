@@ -29,9 +29,6 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-foreground">{t('order.orderHistory')}</span>
-      </div>
       <div className="space-y-2">
         {order.status === 'completed' && (
           <div className="bg-muted/10 rounded-lg p-2">

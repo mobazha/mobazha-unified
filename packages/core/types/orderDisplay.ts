@@ -189,6 +189,8 @@ export interface DisplayOrder {
   /** 争议信息 */
   dispute?: DisplayDispute;
 
+  /** 取消/退款原因（来自 orderCancel.reason 或 refund.memo） */
+  cancelReason?: string;
   /** 法币支付信息（仅当 paymentMethod === FIAT 时存在） */
   fiatPayment?: DisplayFiatPayment;
 }

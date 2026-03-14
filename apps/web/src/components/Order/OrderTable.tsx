@@ -37,29 +37,48 @@ export interface OrderTableProps {
 
 // ============ Status Config ============
 
-// 状态对应的 i18n key 和样式
-const statusConfig: Record<
-  string,
-  { labelKey: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; color?: string }
-> = {
-  pending: {
-    labelKey: 'order.pending',
-    variant: 'outline',
-    color: 'text-warning border-warning/20 bg-warning/15',
-  },
+// Semantic color mapping using theme tokens (consistent across all 6 themes × light/dark)
+const statusConfig: Record<string, { labelKey: string; className: string }> = {
   awaiting_payment: {
     labelKey: 'order.statusLabels.awaitingPayment',
-    variant: 'outline',
-    color: 'text-warning border-warning/20 bg-warning/15',
+    className: 'bg-warning/15 text-warning border-warning/30',
   },
-  paid: { labelKey: 'order.paid', variant: 'default', color: 'bg-info' },
-  processing: { labelKey: 'order.processing', variant: 'default', color: 'bg-info' },
-  shipped: { labelKey: 'order.shipped', variant: 'default', color: 'bg-primary' },
-  delivered: { labelKey: 'order.delivered', variant: 'default', color: 'bg-primary' },
-  completed: { labelKey: 'order.completed', variant: 'default', color: 'bg-primary' },
-  disputed: { labelKey: 'order.disputed', variant: 'destructive' },
-  refunded: { labelKey: 'order.refunded', variant: 'secondary' },
-  cancelled: { labelKey: 'order.cancelled', variant: 'secondary' },
+  pending: {
+    labelKey: 'order.pending',
+    className: 'bg-warning/15 text-warning border-warning/30',
+  },
+  paid: {
+    labelKey: 'order.paid',
+    className: 'bg-info/15 text-info border-info/30',
+  },
+  processing: {
+    labelKey: 'order.processing',
+    className: 'bg-info/15 text-info border-info/30',
+  },
+  shipped: {
+    labelKey: 'order.shipped',
+    className: 'bg-primary/15 text-primary border-primary/30',
+  },
+  delivered: {
+    labelKey: 'order.delivered',
+    className: 'bg-success/15 text-success border-success/30',
+  },
+  completed: {
+    labelKey: 'order.completed',
+    className: 'bg-success/15 text-success border-success/30',
+  },
+  disputed: {
+    labelKey: 'order.disputed',
+    className: 'bg-error/15 text-error border-error/30',
+  },
+  refunded: {
+    labelKey: 'order.refunded',
+    className: 'bg-muted text-muted-foreground border-transparent',
+  },
+  cancelled: {
+    labelKey: 'order.cancelled',
+    className: 'bg-muted text-muted-foreground border-transparent',
+  },
 };
 
 // ============ Utility Functions ============
@@ -144,7 +163,7 @@ export const OrderTable = memo(function OrderTable({
           {orders.map(order => {
             const status = statusConfig[order.status] || {
               labelKey: 'order.statusLabels.unknown',
-              variant: 'secondary' as const,
+              className: 'bg-muted text-muted-foreground border-transparent',
             };
             const showActions = shouldShowActions(order.rawState);
 
@@ -260,7 +279,7 @@ export const OrderTable = memo(function OrderTable({
                         </Button>
                       </>
                     ) : (
-                      <Badge variant={status.variant} className={cn('text-xs', status.color)}>
+                      <Badge variant="outline" className={cn('text-xs', status.className)}>
                         {t(status.labelKey)}
                       </Badge>
                     )}

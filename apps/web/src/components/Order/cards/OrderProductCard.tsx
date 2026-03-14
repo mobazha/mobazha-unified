@@ -73,37 +73,32 @@ export const OrderProductCard = memo(function OrderProductCard({
 
   return (
     <div className={className}>
-      {/* Vendor row */}
-      {order.vendor?.peerID && (
-        <Link
-          href={`/store/${order.vendor.peerID}`}
-          className="flex items-center gap-2.5 p-2.5 mb-2 bg-muted/20 rounded-lg border border-border/40"
-        >
-          <Avatar
-            src={order.vendor.avatar}
-            name={order.vendor.name}
-            size="md"
-            className="w-9 h-9 ring-1 ring-border/50"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{order.vendor.name}</p>
-            {order.vendor.peerID && (
-              <p className="text-xs text-muted-foreground truncate font-mono">
-                {order.vendor.peerID.length > 16
-                  ? `${order.vendor.peerID.slice(0, 6)}…${order.vendor.peerID.slice(-4)}`
-                  : order.vendor.peerID}
-              </p>
-            )}
-          </div>
-        </Link>
-      )}
-
       {hasSlug ? (
         <Link href={productHref} className="block">
           {cardContent}
         </Link>
       ) : (
         cardContent
+      )}
+
+      {order.vendor?.peerID && (
+        <Link
+          href={`/store/${order.vendor.peerID}`}
+          className="flex items-center gap-2 mt-2 px-1 group/vendor"
+        >
+          <Avatar
+            src={order.vendor.avatar}
+            name={order.vendor.name}
+            size="sm"
+            className="w-5 h-5 ring-1 ring-border/40"
+          />
+          <span className="text-xs text-muted-foreground group-hover/vendor:text-primary transition-colors">
+            {t('order.product.soldBy')}{' '}
+            <span className="font-medium text-foreground group-hover/vendor:text-primary">
+              {order.vendor.name}
+            </span>
+          </span>
+        </Link>
       )}
     </div>
   );

@@ -607,6 +607,11 @@ export const en: TranslationResource = {
     // Summary section
     summary: 'Summary',
     orderHistory: 'Order History',
+    trackingSection: {
+      title: 'Tracking',
+      noTrackingNumber: 'No tracking number provided',
+      track: 'Track',
+    },
     // Progress bar stages
     stages: {
       paid: 'Paid',
@@ -661,6 +666,31 @@ export const en: TranslationResource = {
       disputeClosed: 'Dispute closed: {{verdict}}',
       refunded: 'Order refunded',
     },
+    // Order status card (mobile redesign)
+    statusCard: {
+      awaitingPaymentBuyer: 'Payment required to complete this order',
+      awaitingPaymentSeller: 'Waiting for buyer to complete payment',
+      awaitingPaymentHint: 'Tap "Pay Now" below to proceed',
+      pendingBuyer: 'Waiting for the seller to accept your order',
+      pendingSeller: 'New order received — review and accept to proceed',
+      processingBuyer: 'The seller is preparing your order',
+      processingSeller: 'Order accepted — prepare and ship when ready',
+      shippedBuyer: 'Your order is on the way',
+      shippedSeller: 'Order shipped — waiting for buyer to confirm receipt',
+      shippedHint: 'Confirm receipt once your package arrives',
+      deliveredBuyer: 'Your order has been delivered',
+      deliveredSeller: 'Buyer confirmed delivery',
+      completed: 'Transaction complete — funds released',
+      disputed: 'This order is under dispute',
+      disputedHint: 'A moderator is reviewing this case',
+      cancelled: 'This order has been cancelled',
+      refunded: 'This order has been refunded',
+      reason: 'Reason',
+      stepPaid: 'Paid',
+      stepAccepted: 'Accepted',
+      stepShipped: 'Shipped',
+      stepComplete: 'Complete',
+    },
     // Order detail labels
     shipTo: 'Ship to',
     viewOnMap: 'View on Map',
@@ -677,6 +707,7 @@ export const en: TranslationResource = {
       quantity: 'Qty',
       service: 'Service',
       digital: 'Digital',
+      soldBy: 'Sold by',
     },
     countries: {
       UNITED_STATES: 'United States',
@@ -1023,6 +1054,7 @@ export const en: TranslationResource = {
         'Are you sure you want to open a dispute? The moderator will be notified and will step in to help resolve the issue.',
       confirm: 'Open Dispute',
       viewInProviderDashboard: 'Respond in payment provider dashboard',
+      haveProblem: 'Having a problem with this order?',
     },
     // Refund modal
     refund: {
@@ -2025,6 +2057,7 @@ export const en: TranslationResource = {
     errorGeneric:
       'Something went wrong with your payment. Please check your wallet connection and try again.',
     continuePayment: 'Continue Payment',
+    payNow: 'Pay Now',
     paymentWindowRemaining: 'Time remaining to pay',
     paymentWindowExpired: 'Payment window expired',
     leaveWarning:

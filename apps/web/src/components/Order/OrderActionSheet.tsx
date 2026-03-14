@@ -49,7 +49,10 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   );
 
   const primaryAction = useMemo(() => getPrimaryAction(actions), [actions]);
-  const secondaryActions = useMemo(() => getSecondaryActions(actions), [actions]);
+  const secondaryActions = useMemo(
+    () => getSecondaryActions(actions).filter(a => a !== 'Dispute'),
+    [actions]
+  );
   const primaryConfig = useMemo(
     () => (primaryAction ? getActionButtonConfig(primaryAction, userRole) : null),
     [primaryAction, userRole]

@@ -6,13 +6,8 @@ import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Package, MapPin, ExternalLink } from 'lucide-react';
+import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
 import {
@@ -38,7 +33,6 @@ import {
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
 import { OrderActionSheet } from './OrderActionSheet';
-import { EscrowStatusBar } from '@/components/Trust';
 import {
   OrderProductCard,
   OrderSummaryCard,
@@ -49,8 +43,56 @@ import {
   OrderContractView,
   OrderDisputeBanner,
   OrderMemoCard,
+  OrderStatusCard,
   getStatusLabel,
 } from '@/components/Order/cards';
+
+function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <h3
+      className={cn(
+        'text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2',
+        className
+      )}
+    >
+      {children}
+    </h3>
+  );
+}
+
+function ModeratorBadge({
+  moderator,
+  className,
+}: {
+  moderator: { id?: string; name?: string; avatar?: string; fee?: number | string };
+  className?: string;
+}) {
+  const { t } = useI18n();
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-2.5 p-2.5 bg-muted/20 rounded-lg border border-border/40',
+        className
+      )}
+    >
+      <Avatar
+        src={moderator.avatar}
+        name={moderator.name || t('order.moderator')}
+        size="md"
+        className="w-9 h-9 ring-1 ring-border/50"
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate">
+          {moderator.name || t('order.moderator')}
+        </p>
+        <p className="text-xs text-muted-foreground">{t('order.moderator')}</p>
+      </div>
+      {moderator.fee && (
+        <span className="text-xs text-primary font-medium shrink-0">{moderator.fee}%</span>
+      )}
+    </div>
+  );
+}
 
 export interface OrderDetailMobileProps {
   orderId: string;
@@ -105,12 +147,12 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     return getStatusLabel(displayOrder.status, t);
   }, [displayOrder, t]);
 
-  // Dynamic accordion: auto-expand payment section when awaiting_payment
-  const defaultAccordion = useMemo(() => {
-    if (!displayOrder) return [];
-    if (displayOrder.status === 'awaiting_payment') return ['payment'];
-    if (['shipped', 'delivered'].includes(displayOrder.status)) return ['shipping'];
-    return [];
+  const hasTracking = useMemo(() => {
+    if (!displayOrder) return false;
+    return (
+      !!displayOrder.trackingNumber ||
+      ['shipped', 'delivered', 'completed'].includes(displayOrder.status)
+    );
   }, [displayOrder]);
 
   // --- Action handler ---
@@ -329,9 +371,9 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Header with order number + more menu */}
+      {/* Header — clean title, no hash */}
       <MobilePageHeader
-        title={`Order #${displayOrder.orderId.slice(0, 8)}...`}
+        title={t('order.details')}
         rightAction={
           <button
             onClick={() => setShowMoreMenu(true)}
@@ -443,80 +485,124 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           role="tabpanel"
           id="tabpanel-details"
           aria-labelledby="tab-details"
-          className="px-4 pt-3"
+          className="px-4 pt-3 space-y-4"
         >
-          {/* Escrow status bar */}
-          <div className="mb-3">
-            <EscrowStatusBar status={displayOrder.status} variant="vertical" />
+          {/* 1. Status + progress bar */}
+          <OrderStatusCard displayOrder={displayOrder} />
+
+          {/* 2. Product card (vendor merged inline) */}
+          <OrderProductCard displayOrder={displayOrder} />
+
+          {/* 3. Order summary — total, shipping, status badge */}
+          <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+
+          {/* 4. Dispute banner (only when active) */}
+          {displayOrder.dispute && (
+            <OrderDisputeBanner
+              displayOrder={displayOrder}
+              onOpenDispute={() => handleOrderAction('Dispute')}
+            />
+          )}
+
+          {/* 5. Tracking card — shown for shipped/delivered/completed */}
+          {hasTracking && (
+            <div>
+              <SectionTitle>{t('order.trackingSection.title')}</SectionTitle>
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Package className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {displayOrder.shipper && (
+                      <p className="text-sm font-medium text-foreground">{displayOrder.shipper}</p>
+                    )}
+                    {displayOrder.trackingNumber ? (
+                      <p className="text-xs text-muted-foreground font-mono truncate">
+                        {displayOrder.trackingNumber}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {t('order.trackingSection.noTrackingNumber')}
+                      </p>
+                    )}
+                  </div>
+                  {displayOrder.trackingNumber && (
+                    <button
+                      onClick={() => {
+                        const query = encodeURIComponent(displayOrder.trackingNumber || '');
+                        window.open(`https://track24.net/?code=${query}`, '_blank');
+                      }}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      {t('order.trackingSection.track')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 6. Payment info */}
+          {(displayOrder.paymentTx || displayOrder.paymentLocked || displayOrder.fiatPayment) && (
+            <div>
+              <SectionTitle>{t('order.payment.title')}</SectionTitle>
+              <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+            </div>
+          )}
+
+          {/* 7. Shipping address — physical goods only */}
+          {displayOrder.contractType === 'PHYSICAL_GOOD' &&
+            (displayOrder.shippingRecipient || displayOrder.shippingAddressLine1) && (
+              <div>
+                <SectionTitle>{t('order.shippingDetails')}</SectionTitle>
+                <OrderShippingCard displayOrder={displayOrder} />
+              </div>
+            )}
+
+          {/* 8. Parties — buyer (seller view) + moderator */}
+          {((displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID) ||
+            displayOrder.moderator ||
+            displayOrder.notes ||
+            displayOrder.alternateContactInfo) && (
+            <div>
+              <SectionTitle>{t('order.additionalInfo')}</SectionTitle>
+              <div className="space-y-2">
+                {displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID && (
+                  <OrderCounterpartyCard displayOrder={displayOrder} variant="compact" />
+                )}
+                {displayOrder.moderator && <ModeratorBadge moderator={displayOrder.moderator} />}
+                {(displayOrder.notes || displayOrder.alternateContactInfo) && (
+                  <OrderMemoCard displayOrder={displayOrder} />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 9. Order history timeline */}
+          <div>
+            <SectionTitle>{t('order.orderHistory')}</SectionTitle>
+            <OrderTimelineCard displayOrder={displayOrder} coreOrder={coreOrder} />
           </div>
 
-          {/* Counterparty (compact) */}
-          <OrderCounterpartyCard displayOrder={displayOrder} variant="compact" className="mb-3" />
-
-          {/* Product + Summary always expanded */}
-          <OrderProductCard displayOrder={displayOrder} className="mb-3" />
-          <OrderSummaryCard
-            displayOrder={displayOrder}
-            statusLabel={statusLabel}
-            className="mb-3"
-          />
-
-          {/* Dispute banner */}
-          <OrderDisputeBanner
-            displayOrder={displayOrder}
-            onOpenDispute={() => handleOrderAction('Dispute')}
-          />
-
-          {/* Collapsible sections */}
-          <Accordion type="multiple" defaultValue={defaultAccordion} className="mb-4">
-            {/* Timeline */}
-            <AccordionItem value="timeline">
-              <AccordionTrigger className="text-sm font-semibold">
-                {t('order.orderHistory')}
-              </AccordionTrigger>
-              <AccordionContent>
-                <OrderTimelineCard displayOrder={displayOrder} coreOrder={coreOrder} />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Payment */}
-            {(displayOrder.paymentTx || displayOrder.paymentLocked || displayOrder.fiatPayment) && (
-              <AccordionItem value="payment">
-                <AccordionTrigger className="text-sm font-semibold">
-                  {t('order.payment.title')}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
-                </AccordionContent>
-              </AccordionItem>
+          {/* 10. Subtle dispute entry — moderated orders only */}
+          {!displayOrder.dispute &&
+            !!displayOrder.moderator &&
+            ((displayOrder.userRole === 'buyer' &&
+              ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+              (displayOrder.userRole === 'seller' &&
+                ['shipped', 'delivered'].includes(displayOrder.status))) && (
+              <div className="text-center pb-2">
+                <button
+                  onClick={() => handleOrderAction('Dispute')}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                  data-testid="order-detail-open-dispute"
+                >
+                  {t('order.dispute.haveProblem')}
+                </button>
+              </div>
             )}
-
-            {/* Shipping */}
-            {displayOrder.contractType === 'PHYSICAL_GOOD' && (
-              <AccordionItem value="shipping">
-                <AccordionTrigger className="text-sm font-semibold">
-                  {t('order.shippingDetails')}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <OrderShippingCard displayOrder={displayOrder} />
-                </AccordionContent>
-              </AccordionItem>
-            )}
-
-            {/* Memo & Moderator */}
-            {(displayOrder.notes ||
-              displayOrder.alternateContactInfo ||
-              displayOrder.moderator) && (
-              <AccordionItem value="memo">
-                <AccordionTrigger className="text-sm font-semibold">
-                  {t('order.additionalInfo')}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <OrderMemoCard displayOrder={displayOrder} />
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
         </div>
       ) : (
         <div
