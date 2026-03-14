@@ -87,7 +87,7 @@ export function transformOrderListItem(
     items: [
       {
         id: orderId,
-        title: item.title || 'Unknown Item',
+        title: item.title || '',
         image: imageUrl,
         quantity: item.quantity || 1,
         price: formattedPrice,

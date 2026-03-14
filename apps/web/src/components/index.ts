@@ -82,7 +82,7 @@ export type { ShareButtonProps } from './Share';
 export { ReviewList } from './Review';
 
 // Trust Components
-export { SellerTrustBadge, EscrowStatusBar } from './Trust';
+export { SellerTrustBadge } from './Trust';
 
 // RWA Token Components
 export {

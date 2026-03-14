@@ -27,7 +27,7 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Packing Slip - ${order.orderId}</title>
+        <title>${t('order.packingSlip.title')} - ${order.orderId}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #1a1a1a; font-size: 13px; line-height: 1.5; }
@@ -44,6 +44,8 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
           td { padding: 10px 0; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
           .item-title { font-weight: 500; }
           .item-variant { font-size: 12px; color: #666; margin-top: 2px; }
+          .item-cell { display: flex; gap: 10px; align-items: flex-start; }
+          .item-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; flex-shrink: 0; }
           .total-row td { border-top: 2px solid #111; border-bottom: none; font-weight: 600; font-size: 14px; padding-top: 12px; }
           .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 11px; color: #999; text-align: center; }
           @media print { body { padding: 0; } @page { margin: 1.5cm; } }
@@ -60,7 +62,7 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
       printWindow.print();
       printWindow.close();
     }, 250);
-  }, [order.orderId]);
+  }, [order.orderId, t]);
 
   const orderDate = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString(undefined, {
@@ -229,7 +231,32 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
                         verticalAlign: 'top',
                       }}
                     >
-                      <div style={{ fontWeight: 500 }}>{item.title}</div>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        {item.image && (
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            style={{
+                              width: 40,
+                              height: 40,
+                              objectFit: 'cover',
+                              borderRadius: 4,
+                              flexShrink: 0,
+                              border: '1px solid #eee',
+                            }}
+                          />
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 500 }}>
+                            {item.title || t('order.unknownItem')}
+                          </div>
+                          {item.options && item.options.length > 0 && (
+                            <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                              {item.options.map(o => `${o.name}: ${o.value}`).join(' · ')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td
                       style={{

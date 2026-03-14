@@ -5,7 +5,6 @@
  *   - ShareButton (copy link, Twitter, Telegram)
  *   - ReviewList (rating summary, distribution, individual reviews)
  *   - SellerTrustBadge (compact/full modes)
- *   - EscrowStatusBar (status mapping, mobile display)
  *   - WriteReviewDialog (star rating, text, anonymous)
  *   - SEO metadata (canonical URLs, OG tags)
  *   - Site URL correctness (store.mobazha.org)
@@ -113,41 +112,7 @@ base.describe('ReviewList', () => {
   });
 });
 
-// ── 3. EscrowStatusBar ───────────────────────────────────────────────────────
-
-base.describe('EscrowStatusBar — Mobile', () => {
-  base.use({
-    baseURL: 'http://localhost:3002',
-    viewport: { width: 390, height: 844 },
-    isMobile: true,
-    hasTouch: true,
-  });
-
-  base('escrow bar renders on mobile order detail', async ({ page }) => {
-    // Navigate to orders page (may require auth)
-    await page.goto('/orders');
-    await page.waitForLoadState('domcontentloaded');
-
-    // If there are orders, click the first one
-    const orderCard = page.locator('[data-testid="order-card"], a[href*="/orders/"]').first();
-    if (await orderCard.isVisible().catch(() => false)) {
-      await orderCard.click();
-      await page.waitForLoadState('domcontentloaded');
-
-      const escrowBar = page.getByTestId('escrow-status-bar');
-      if (await escrowBar.isVisible().catch(() => false)) {
-        await expect(escrowBar).toBeVisible();
-
-        // Verify it has progressbar role
-        await expect(escrowBar).toHaveAttribute('role', 'progressbar');
-
-        await page.screenshot({ path: 'test-results/pg-escrow-bar-mobile.png', fullPage: true });
-      }
-    }
-  });
-});
-
-// ── 4. WriteReviewDialog ─────────────────────────────────────────────────────
+// ── 3. WriteReviewDialog ─────────────────────────────────────────────────────
 
 standaloneTest.describe('WriteReviewDialog', () => {
   standaloneTest.skip(

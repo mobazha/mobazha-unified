@@ -6,7 +6,7 @@ import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { MessageCircle, Package, MapPin, ExternalLink } from 'lucide-react';
+import { MessageCircle, Package, MapPin, ExternalLink, Printer } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,7 @@ import {
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
+import { PackingSlipDialog } from './PackingSlipDialog';
 import { OrderActionSheet } from './OrderActionSheet';
 import {
   OrderProductCard,
@@ -139,6 +140,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
+  const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
 
   // --- Computed ---
@@ -423,6 +425,18 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
               >
                 {t('order.actions.viewContract')}
               </button>
+              {displayOrder.userRole === 'seller' && displayOrder.status !== 'awaiting_payment' && (
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    setShowPackingSlip(true);
+                  }}
+                  className="w-full py-4 text-center text-[15px] font-medium hover:bg-muted/20 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Printer className="w-4 h-4" />
+                  {t('order.packingSlip.title')}
+                </button>
+              )}
             </div>
             <div className="mt-2 pt-2 border-t border-border/60">
               <button
@@ -705,6 +719,12 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         onClose={() => setShowDisputeModal(false)}
         onSubmit={handleDisputeSubmit}
         isLoading={isDisputeLoading}
+      />
+
+      <PackingSlipDialog
+        open={showPackingSlip}
+        onOpenChange={setShowPackingSlip}
+        order={displayOrder}
       />
     </div>
   );
