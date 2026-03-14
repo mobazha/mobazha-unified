@@ -15,7 +15,6 @@ import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
-import { ShieldCheck } from 'lucide-react';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
 import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
@@ -418,26 +417,10 @@ export function CheckoutMobile({ checkout }: Props) {
                   )}
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-sm text-foreground">
-                  <ShieldCheck className="w-4 h-4 text-success flex-shrink-0" aria-hidden />
-                  <span>{t('trust.checkoutFundsProtected')}</span>
-                </div>
                 <BuyerProtectionBadge
                   variant="inline"
-                  className="mt-2"
-                  static
+                  className="mt-3 pt-3 border-t border-border"
                 />
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {t('checkout.agreeToPoliciesBeforeLinks')}
-                  <Link href="/policies/terms" className="text-primary hover:underline font-medium">
-                    {t('policies.termsOfService')}
-                  </Link>
-                  {t('checkout.agreeToPoliciesConnector')}
-                  <Link href="/policies/refund" className="text-primary hover:underline font-medium">
-                    {t('policies.refundPolicy')}
-                  </Link>
-                  {t('checkout.agreeToPoliciesAfterLinks')}
-                </p>
               </CardContent>
             </Card>
           </div>
