@@ -515,7 +515,6 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
   pricingCurrency = 'USD',
   className,
 }: ShippingOptionsSectionProps) {
-  const { t } = useI18n();
   // 优先使用新版 ShippingProfile（支持直接 zones 和 LocationGroups 两种模式）
   const hasProfile = shippingProfile && getAllZones(shippingProfile).length > 0;
 

@@ -109,13 +109,13 @@ export function useShippingProfiles() {
   // ============== Profile 操作 ==============
 
   const addProfile = useCallback(
-    async (profile: ShippingProfile): Promise<ShippingProfile | false> => {
+    async (profile: ShippingProfile) => {
       setIsSaving(true);
       setError(null);
       try {
-        const created = await shippingApi.createProfile(profile);
+        await shippingApi.createProfile(profile);
         await fetchData();
-        return created;
+        return true;
       } catch (err) {
         console.error('Failed to create shipping profile:', err);
         setError((err as Error).message);
