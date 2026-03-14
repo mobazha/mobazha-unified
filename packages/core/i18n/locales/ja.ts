@@ -327,7 +327,6 @@ export const ja: TranslationResource = {
     shippingFee: '料金',
     additionalItemFee: '追加商品',
     noShippingOptions: '利用可能な配送オプションがありません',
-    contactSellerForShipping: '配送については出品者にお問い合わせください',
     localPickup: '店頭受取',
     priceToBeCalculated: '後で計算',
     worldwide: '世界中',
