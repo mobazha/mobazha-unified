@@ -19,7 +19,6 @@ import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
 import { useToast } from '@/components/ui/use-toast';
 import {
   OrderFooter,
-  OrderProgressBar,
   OrderChat,
   AcceptOrderDialog,
   FulfillOrderDialog,
@@ -39,7 +38,7 @@ import {
   OrderCounterpartyCard,
   OrderDisputeBanner,
   OrderMemoCard,
-  getProgressBarState,
+  OrderStatusCard,
   getStatusLabel,
 } from '@/components/Order/cards';
 
@@ -87,20 +86,12 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
 
   // --- Computed ---
-  const progressState = useMemo(() => {
-    if (!displayOrder) return { states: [], currentState: 0, disputeState: 0 };
-    return getProgressBarState(
-      displayOrder.status,
-      t,
-      !!displayOrder.dispute,
-      displayOrder.dispute?.status === 'resolved'
-    );
-  }, [displayOrder, t]);
-
   const statusLabel = useMemo(() => {
     if (!displayOrder) return '';
     return getStatusLabel(displayOrder.status, t);
   }, [displayOrder, t]);
+
+  const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
 
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
@@ -312,7 +303,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 <Copy className="w-3 h-3" />
                 <span>{t('common.copy')}</span>
               </button>
-              {displayOrder.userRole === 'seller' && (
+              {displayOrder.userRole === 'seller' && !isPrePayment && (
                 <button
                   onClick={() => setShowPackingSlip(true)}
                   className="text-muted-foreground hover:text-foreground text-xs font-medium flex items-center gap-1 flex-shrink-0 ml-2"
@@ -352,6 +343,9 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
             {/* Tab content */}
             {activeTab === 'summary' && (
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
+                {/* Status context card — gives users clear next-step guidance */}
+                <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
                 <OrderSummaryCard
                   displayOrder={displayOrder}
@@ -359,19 +353,15 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   className="mb-4"
                 />
 
-                {/* Progress bar */}
-                <div className="mt-4 mb-6 px-8">
-                  <OrderProgressBar
-                    states={progressState.states}
-                    currentState={progressState.currentState}
-                    disputeState={progressState.disputeState}
-                  />
-                </div>
+                {/* OrderStatusCard above already provides integrated progress — no separate bar needed */}
 
-                <OrderDisputeBanner
-                  displayOrder={displayOrder}
-                  onOpenDispute={() => handleOrderAction('Dispute')}
-                />
+                {/* Active dispute banner (only when dispute exists) */}
+                {displayOrder.dispute && (
+                  <OrderDisputeBanner
+                    displayOrder={displayOrder}
+                    onOpenDispute={() => handleOrderAction('Dispute')}
+                  />
+                )}
 
                 <OrderTimelineCard
                   displayOrder={displayOrder}
@@ -385,6 +375,31 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 />
                 <OrderMemoCard displayOrder={displayOrder} className="mb-4" />
                 <OrderShippingCard displayOrder={displayOrder} />
+
+                {/* Participants — inline within the card for cohesive layout */}
+                <OrderCounterpartyCard
+                  displayOrder={displayOrder}
+                  variant="full"
+                  className="mt-4"
+                />
+
+                {/* Subtle dispute entry — replaces the aggressive full-width button */}
+                {!displayOrder.dispute &&
+                  !!displayOrder.moderator &&
+                  ((displayOrder.userRole === 'buyer' &&
+                    ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+                    (displayOrder.userRole === 'seller' &&
+                      ['shipped', 'delivered'].includes(displayOrder.status))) && (
+                    <div className="text-center mt-6 mb-2">
+                      <button
+                        onClick={() => handleOrderAction('Dispute')}
+                        className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                        data-testid="order-detail-open-dispute"
+                      >
+                        {t('order.dispute.haveProblem')}
+                      </button>
+                    </div>
+                  )}
               </div>
             )}
 
@@ -413,9 +428,6 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               </div>
             )}
           </Card>
-
-          {/* Participants grid */}
-          <OrderCounterpartyCard displayOrder={displayOrder} variant="full" />
 
           {/* Spacer for fixed footer */}
           <div className="h-16" />
