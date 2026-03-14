@@ -23,7 +23,7 @@ import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
-import { BuyerProtectionBadge, SellerInfoCard } from '@/components/Trust';
+import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { RwaAssetDetail } from '@/components/RwaToken';
@@ -540,21 +540,34 @@ export function ProductDetailMobile({
           </details>
         </div>
 
-        {/* Seller info card - 头像 + 名称 + 评分/新店铺 + 进入店铺 */}
-        {vendorPeerID && (
-          <SellerInfoCard
-            peerID={vendorPeerID}
-            name={vendor?.name ?? ''}
-            avatarHashes={vendor?.avatarHashes}
-            rating={vendor?.stats?.averageRating ?? 0}
-            reviewCount={vendor?.stats?.ratingCount ?? 0}
-            salesCount={vendor?.stats?.listingCount}
-            memberSince={vendor?.lastModified}
-            isNewStore={(vendor?.stats?.ratingCount ?? 0) === 0}
-            location={vendor?.location}
-            viewStoreLabel={t('product.viewStore')}
-          />
-        )}
+        {/* Vendor card */}
+        <Link href={`/store/${vendorPeerID}`} className="block touch-feedback">
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+            <Avatar
+              src={getImageUrl(vendor?.avatarHashes?.medium, vendorPeerID)}
+              name={vendor?.name || vendorPeerID?.slice(0, 8) || 'Vendor'}
+              size="md"
+              className="w-10 h-10"
+            />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground text-sm truncate">
+                {vendor?.name || vendorPeerID?.slice(0, 8)}
+              </h3>
+              {vendor?.stats && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-warning text-xs">★</span>
+                  <span className="text-xs text-muted-foreground">
+                    {vendor.stats.averageRating?.toFixed(1) || '0'} ({vendor.stats.ratingCount || 0}
+                    )
+                  </span>
+                </div>
+              )}
+            </div>
+            <Button variant="outline" size="sm" className="flex-shrink-0 text-xs h-8">
+              {t('product.viewStore')}
+            </Button>
+          </div>
+        </Link>
 
         {/* More from store */}
         {vendorPeerID && (

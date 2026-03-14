@@ -81,7 +81,6 @@ import {
 } from '@/components/store';
 import { StoreSections } from '@/components/store-sections';
 import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
-import { SellerTrustBadge } from '@/components/Trust';
 
 const STORE_PAGE_EXCLUDE_TYPES = new Set(['testimonials', 'store-tabs']);
 
@@ -1221,16 +1220,6 @@ export default function StorePage() {
 
                   {/* 右侧主内容区 */}
                   <div className="flex-1 min-w-0 space-y-4">
-                    {/* 卖家信任档案 - 评分/完成率/新店铺/加入时间 */}
-                    {store && (
-                      <SellerTrustBadge
-                        rating={stats.averageRating}
-                        reviewCount={stats.ratingCount}
-                        salesCount={stats.listingCount}
-                        memberSince={store.lastModified}
-                        isNewStore={stats.ratingCount === 0}
-                      />
-                    )}
                     {/* 顶部工具栏：搜索 + 数量 + 排序 */}
                     {!productsLoading && storeListingCount > 0 && (
                       <StoreListingsToolbar
