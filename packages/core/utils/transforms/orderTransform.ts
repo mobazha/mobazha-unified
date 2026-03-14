@@ -64,6 +64,7 @@ interface RealOrderData {
       items?: Array<{
         quantity?: number;
         memo?: string;
+        options?: Array<{ name?: string; value?: string }>;
         shippingOption?: { name?: string; service?: string };
       }>;
       shipping?: {
@@ -205,7 +206,7 @@ function formatShippingAddress(shipping?: {
   postalCode?: string;
   country?: string;
 }): string {
-  if (!shipping) return 'No shipping address';
+  if (!shipping) return '';
   const line1 = shipping.address || shipping.addressLineOne;
   const parts = [
     shipping.shipTo || shipping.name,
@@ -215,7 +216,7 @@ function formatShippingAddress(shipping?: {
     [shipping.city, shipping.state, shipping.postalCode].filter(Boolean).join(', '),
     shipping.country,
   ].filter(Boolean);
-  return parts.join('\n') || 'No shipping address';
+  return parts.join('\n');
 }
 
 /**
@@ -513,7 +514,7 @@ export function transformCoreOrder(
   // 从 contract.OrderID 获取完整订单 ID，而非商品 slug
   const fullOrderId = contract.OrderID || '';
   const listingSlug = listingData?.slug || '';
-  const itemTitle = listingData?.item?.title || 'Unknown Item';
+  const itemTitle = listingData?.item?.title || '';
   const itemPrice = listingData?.item?.price || 0;
 
   // 原始定价信息（从 orderOpen 获取，pricingCoin 已在上方定义）
@@ -527,14 +528,20 @@ export function transformCoreOrder(
   const formattedItemPrice = formatPriceAmount(itemPrice, listingDivisibility);
   const orderItems: DisplayOrderItem[] =
     orderOpenItems.length > 0
-      ? orderOpenItems.map((item, index) => ({
-          id: `item-${index}`,
-          title: itemTitle,
-          image: itemImageUrl,
-          quantity: item.quantity || 1,
-          price: formattedItemPrice,
-          currency: listingCurrencyCode,
-        }))
+      ? orderOpenItems.map((item, index) => {
+          const options = (item.options || []).filter(
+            (o): o is { name: string; value: string } => !!o.name && !!o.value
+          );
+          return {
+            id: `item-${index}`,
+            title: itemTitle,
+            image: itemImageUrl,
+            quantity: item.quantity || 1,
+            price: formattedItemPrice,
+            currency: listingCurrencyCode,
+            ...(options.length > 0 ? { options } : {}),
+          };
+        })
       : [
           {
             id: 'item-0',

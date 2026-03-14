@@ -56,7 +56,7 @@ export const OrderShippingCard = memo(function OrderShippingCard({
             )}
             {order.shippingCountryCode && <p>{formatCountryCode(order.shippingCountryCode)}</p>}
           </div>
-          {order.shippingAddress && order.shippingAddress !== 'No shipping address' && (
+          {order.shippingAddress && (
             <div className="flex items-center gap-3 mt-2">
               <button
                 type="button"

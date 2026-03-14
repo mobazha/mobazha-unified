@@ -504,13 +504,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         isLoading={isDisputeLoading}
       />
 
-      {displayOrder && (
-        <PackingSlipDialog
-          open={showPackingSlip}
-          onOpenChange={setShowPackingSlip}
-          order={displayOrder}
-        />
-      )}
+      <PackingSlipDialog
+        open={showPackingSlip}
+        onOpenChange={setShowPackingSlip}
+        order={displayOrder}
+      />
 
       <Footer />
     </div>

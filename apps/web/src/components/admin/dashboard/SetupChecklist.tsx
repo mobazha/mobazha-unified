@@ -107,9 +107,15 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
     [hasProducts, hasPayment, hasShipping, hasStorefrontCustomized]
   );
 
+  const anyLoading = productsLoading || fiatLoading || shippingLoading || storefrontLoading;
+  const stepLoadingMap: Record<string, boolean> = {
+    product: productsLoading,
+    payment: fiatLoading,
+    shipping: shippingLoading,
+    branding: storefrontLoading,
+  };
   const completedCount = useMemo(() => steps.filter(s => s.completed).length, [steps]);
-  const allCompleted = completedCount === steps.length;
-  const isLoading = productsLoading || fiatLoading || shippingLoading || storefrontLoading;
+  const allCompleted = !anyLoading && completedCount === steps.length;
 
   const handleDismiss = useCallback(() => {
     try {
@@ -121,20 +127,6 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
   }, []);
 
   if (dismissed) return null;
-
-  if (isLoading) {
-    return (
-      <div className="mb-6 rounded-xl border bg-card p-4 sm:p-5 animate-pulse">
-        <div className="h-5 w-48 bg-muted rounded mb-3" />
-        <div className="h-2 w-full bg-muted rounded mb-4" />
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-12 bg-muted rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   if (allCompleted) {
     return (
@@ -186,7 +178,7 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
 
       <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
         <div
-          className="h-full rounded-full bg-primary transition-all duration-500"
+          className={`h-full rounded-full bg-primary transition-all duration-500 ${anyLoading ? 'opacity-60' : ''}`}
           style={{ width: `${(completedCount / steps.length) * 100}%` }}
         />
       </div>
@@ -195,20 +187,31 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
         <div className="space-y-2">
           {steps.map(step => {
             const Icon = step.icon;
+            const isStepLoading = stepLoadingMap[step.id];
             return (
               <Link
                 key={step.id}
-                href={step.completed ? '#' : step.href}
+                href={step.completed || isStepLoading ? '#' : step.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group ${
-                  step.completed ? 'bg-muted/50 cursor-default' : 'hover:bg-muted/50'
+                  step.completed
+                    ? 'bg-muted/50 cursor-default'
+                    : isStepLoading
+                      ? 'cursor-default opacity-70'
+                      : 'hover:bg-muted/50'
                 }`}
-                onClick={step.completed ? (e: React.MouseEvent) => e.preventDefault() : undefined}
+                onClick={
+                  step.completed || isStepLoading
+                    ? (e: React.MouseEvent) => e.preventDefault()
+                    : undefined
+                }
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                     step.completed
                       ? 'bg-success/10 text-success'
-                      : 'bg-primary/10 text-primary group-hover:bg-primary/20'
+                      : isStepLoading
+                        ? 'bg-muted text-muted-foreground animate-pulse'
+                        : 'bg-primary/10 text-primary group-hover:bg-primary/20'
                   }`}
                 >
                   {step.completed ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
@@ -225,7 +228,7 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
                     <p className="text-xs text-muted-foreground">{t(step.descKey)}</p>
                   )}
                 </div>
-                {!step.completed && (
+                {!step.completed && !isStepLoading && (
                   <span className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     {t('admin.checklist.goSetup')}
                   </span>

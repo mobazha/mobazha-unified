@@ -67,7 +67,7 @@ const FAKE_SETTINGS = {
 
 // ─── Mock Order Data ─────────────────────────────────────────────────
 
-function makeOrder(id, slug, title, price, imgId, state, timestamp, overrides) {
+function makeOrder(id, slug, title, price, imgId, state, timestamp, overrides, itemOptions) {
   return {
     contract: {
       OrderID: id,
@@ -83,7 +83,7 @@ function makeOrder(id, slug, title, price, imgId, state, timestamp, overrides) {
         payment: { coin: 'ETH', chaincode: '', amount: price, method: 'MODERATED' },
         pricingCoin: 'USD', amount: price,
         shipping: { shipTo: 'John Smith', address: '123 Blockchain Ave', city: 'San Francisco', state: 'CA', postalCode: '94105', country: 'US' },
-        items: [{ listingHash: '', quantity: 1, memo: '', shippingOption: { name: 'Standard', service: 'Standard' } }],
+        items: [{ listingHash: '', quantity: 1, memo: '', options: itemOptions || [], shippingOption: { name: 'Standard', service: 'Standard' } }],
         timestamp, buyerID: { peerID: MOCK_BUYER_PEER_ID, handle: 'CryptoBuyer' },
       },
       vendorListings: [{ slug, metadata: { contractType: 'PHYSICAL_GOOD', pricingCurrency: { code: 'USD', divisibility: 2 } }, item: { title, images: [img(imgId)] } }],
@@ -99,7 +99,8 @@ const ORDERS = {
   AWAITING_PAYMENT: makeOrder('QmAwaitPay001', 'gaming-mouse', 'Gaming Mouse RGB Pro', 5999, 96, 'AWAITING_PAYMENT', HOUR_AGO),
   PENDING: makeOrder('QmPending001', 'wireless-headphones', 'Wireless Noise-Cancelling Headphones', 8999, 3, 'PENDING', HOUR_AGO),
   AWAITING_FULFILLMENT: makeOrder('QmAwaitFul001', 'leather-backpack', 'Handcrafted Leather Backpack', 17500, 119, 'AWAITING_FULFILLMENT', DAY_AGO,
-    { orderConfirmation: { timestamp: HOUR_AGO } }),
+    { orderConfirmation: { timestamp: HOUR_AGO } },
+    [{ name: 'Color', value: 'Vintage Brown' }, { name: 'Size', value: 'Large' }]),
   FULFILLED: makeOrder('QmFulfill001', 'organic-coffee', 'Organic Coffee Beans — Ethiopia', 2200, 63, 'FULFILLED', THREE_DAYS_AGO,
     { orderConfirmation: { timestamp: THREE_DAYS_AGO },
       orderFulfillments: [{ timestamp: DAY_AGO, physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX9876543210' }] }] }),
@@ -387,6 +388,151 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
   }
 
   console.log('\nUX-10: Dispute evidence (see demo-output/dispute-evidence/)');
+
+  // ━━━ 6. Seller view + Moderated order scenarios ━━━━━━━━━━━━━━━━━━━
+  console.log('\nSeller view scenarios (Packing Slip, seller StatusCard)');
+
+  // Helper: open order as seller (swap current user peerID to vendor)
+  async function mockOrderAsSellerAndOpen(browser, viewport, order) {
+    const ctx = await browser.newContext({ viewport });
+    const page = await ctx.newPage();
+    // Auth with vendor peerID so userRole = seller
+    const sellerProfile = { ...FAKE_PROFILE, peerID: MOCK_VENDOR_PEER_ID, name: 'TechStore' };
+    const sellerZustand = JSON.stringify({
+      state: { profile: sellerProfile, isAuthenticated: true, authMode: 'basic', token: FAKE_TOKEN, authSource: 'basic' },
+      version: 0,
+    });
+    await page.addInitScript(`
+      localStorage.setItem('mobazha_auth_token', ${JSON.stringify(FAKE_TOKEN)});
+      localStorage.setItem('mobazha_auth_user', ${JSON.stringify(JSON.stringify({ id: 'seller1', name: 'TechStore', displayName: 'TechStore', avatar: '', role: 'seller', casdoorId: 'seller1' }))});
+      localStorage.setItem('mobazha-user-storage', ${JSON.stringify(sellerZustand)});
+    `);
+    await mockCommonAPIs(page);
+    // Override profile to return vendor peerID
+    await page.route('**/v1/profiles/me', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(sellerProfile) }));
+    await page.route('**/v1/profiles', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(sellerProfile) }));
+    await page.route('**/platform/v1/accounts/me', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ id: 'seller1', name: 'TechStore', properties: { peerID: MOCK_VENDOR_PEER_ID } }) }));
+    await page.route('**/v1/orders/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(order) }));
+    await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?type=sale`);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(4000);
+    return { ctx, page };
+  }
+
+  // Seller: AWAITING_FULFILLMENT → should show Packing Slip button
+  {
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_FULFILLMENT);
+    results.push(await screenshot(page, 'seller-awaiting_fulfillment-desktop'));
+    await ctx.close();
+  }
+
+  // Seller: AWAITING_PAYMENT → Packing Slip should be HIDDEN
+  {
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_PAYMENT);
+    results.push(await screenshot(page, 'seller-awaiting_payment-desktop'));
+    await ctx.close();
+  }
+
+  // Seller: AWAITING_FULFILLMENT → open Packing Slip dialog
+  console.log('\nPacking Slip dialog (with variant options)');
+  {
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_FULFILLMENT);
+    const slipBtn = page.locator('text=Packing Slip').first();
+    if (await slipBtn.isVisible()) {
+      await slipBtn.click();
+      await page.waitForTimeout(1000);
+      results.push(await screenshot(page, 'packing-slip-dialog-desktop'));
+    }
+    await ctx.close();
+  }
+
+  // Seller: AWAITING_FULFILLMENT — Mobile + More Menu open (Packing Slip button)
+  console.log('\nSeller mobile — more menu with Packing Slip');
+  {
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 390, height: 844 }, ORDERS.AWAITING_FULFILLMENT);
+    results.push(await screenshot(page, 'seller-awaiting_fulfillment-mobile'));
+    const moreBtn = page.locator('header button:last-child, button[aria-label*="more"], button:has(svg.lucide-more-vertical), button:has(svg.lucide-ellipsis-vertical)').first();
+    const moreVisible = await moreBtn.isVisible().catch(() => false);
+    if (moreVisible) {
+      await moreBtn.click();
+      await page.waitForTimeout(1000);
+      await page.screenshot({ path: path.join(OUTPUT_DIR, 'seller-mobile-more-menu.png'), fullPage: false });
+      console.log('  ✓ seller-mobile-more-menu.png');
+      results.push(path.join(OUTPUT_DIR, 'seller-mobile-more-menu.png'));
+    } else {
+      console.log('  ⚠ More button not found — trying generic last button');
+      const allBtns = await page.locator('button').all();
+      for (let i = 0; i < Math.min(5, allBtns.length); i++) {
+        const btn = allBtns[i];
+        const text = await btn.innerText().catch(() => '');
+        if (!text || text.trim() === '') {
+          await btn.click();
+          await page.waitForTimeout(1000);
+          const menuVisible = await page.locator('text=Packing Slip').isVisible().catch(() => false);
+          if (menuVisible) {
+            await page.screenshot({ path: path.join(OUTPUT_DIR, 'seller-mobile-more-menu.png'), fullPage: false });
+            console.log('  ✓ seller-mobile-more-menu.png (via generic)');
+            results.push(path.join(OUTPUT_DIR, 'seller-mobile-more-menu.png'));
+            break;
+          }
+        }
+      }
+    }
+    await ctx.close();
+  }
+
+  // Seller: AWAITING_FULFILLMENT — Mobile Packing Slip dialog open
+  console.log('\nSeller mobile — Packing Slip dialog');
+  {
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 390, height: 844 }, ORDERS.AWAITING_FULFILLMENT);
+    // Open more menu then click Packing Slip
+    const moreBtn = page.locator('header button:last-child, button[aria-label*="more"], button:has(svg.lucide-more-vertical), button:has(svg.lucide-ellipsis-vertical)').first();
+    let menuOpened = false;
+    if (await moreBtn.isVisible().catch(() => false)) {
+      await moreBtn.click();
+      await page.waitForTimeout(1000);
+      menuOpened = true;
+    } else {
+      const allBtns = await page.locator('button').all();
+      for (let i = 0; i < Math.min(5, allBtns.length); i++) {
+        const btn = allBtns[i];
+        const text = await btn.innerText().catch(() => '');
+        if (!text || text.trim() === '') {
+          await btn.click();
+          await page.waitForTimeout(1000);
+          if (await page.locator('text=Packing Slip').isVisible().catch(() => false)) { menuOpened = true; break; }
+        }
+      }
+    }
+    if (menuOpened) {
+      const slipBtn = page.locator('button:has-text("Packing Slip")').first();
+      if (await slipBtn.isVisible().catch(() => false)) {
+        await slipBtn.click();
+        await page.waitForTimeout(1500);
+        results.push(await screenshot(page, 'packing-slip-dialog-mobile'));
+        console.log('  ✓ packing-slip-dialog-mobile.png');
+      } else {
+        console.log('  ⚠ Packing Slip button not found in menu');
+      }
+    } else {
+      console.log('  ⚠ Could not open more menu');
+    }
+    await ctx.close();
+  }
+
+  // Buyer: FULFILLED with moderator → should show "Having a problem?"
+  console.log('\nModerated order — dispute text link');
+  {
+    const MOCK_MODERATOR_PEER_ID = 'QmModerator123456789abcdef';
+    const moderatedFulfilled = makeOrder('QmModFul001', 'organic-coffee', 'Organic Coffee Beans — Ethiopia', 2200, 63, 'FULFILLED', THREE_DAYS_AGO,
+      { orderConfirmation: { timestamp: THREE_DAYS_AGO },
+        orderFulfillments: [{ timestamp: DAY_AGO, physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX9876543210' }] }],
+        paymentSent: { moderator: MOCK_MODERATOR_PEER_ID, coin: 'ETH', amount: 2200, method: 'MODERATED' },
+      });
+    const { ctx, page } = await mockOrderAndOpen(browser, { width: 1280, height: 900 }, moderatedFulfilled);
+    results.push(await screenshot(page, 'moderated-fulfilled-buyer-desktop'));
+    await ctx.close();
+  }
 
   await browser.close();
   console.log(`\n━━━ Done! ${results.length} screenshots captured ━━━`);

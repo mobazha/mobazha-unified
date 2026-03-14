@@ -13,6 +13,8 @@ export interface DisplayOrderItem {
   quantity: number;
   price: string;
   currency: string;
+  /** Variant selections chosen by buyer (e.g. Color: Red, Size: L) */
+  options?: Array<{ name: string; value: string }>;
 }
 
 /**

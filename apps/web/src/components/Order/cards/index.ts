@@ -8,4 +8,4 @@ export { OrderContractView, type OrderContractViewProps } from './OrderContractV
 export { OrderDisputeBanner, type OrderDisputeBannerProps } from './OrderDisputeBanner';
 export { OrderMemoCard, type OrderMemoCardProps } from './OrderMemoCard';
 export { OrderStatusCard, type OrderStatusCardProps } from './OrderStatusCard';
-export { getProgressBarState, getStatusLabel } from './orderProgressUtils';
+export { getStatusLabel } from './orderProgressUtils';
