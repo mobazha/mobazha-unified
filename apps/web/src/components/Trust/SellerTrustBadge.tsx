@@ -14,10 +14,6 @@ export interface SellerTrustBadgeProps {
   salesCount?: number;
   /** Member since date (ISO string) */
   memberSince?: string;
-  /** Completion rate 0-100 (optional) */
-  completionRate?: number;
-  /** Show "New store" label when no/few reviews */
-  isNewStore?: boolean;
   /** Compact inline layout for cards */
   compact?: boolean;
   /** Additional class name */
@@ -34,8 +30,6 @@ export function SellerTrustBadge({
   reviewCount,
   salesCount,
   memberSince,
-  completionRate,
-  isNewStore = false,
   compact = false,
   className,
 }: SellerTrustBadgeProps) {
@@ -47,7 +41,7 @@ export function SellerTrustBadge({
   if (compact) {
     return (
       <div
-        className={cn('inline-flex flex-wrap items-center gap-2 min-h-[44px]', 'text-foreground', className)}
+        className={cn('inline-flex items-center gap-2 min-h-[44px]', 'text-foreground', className)}
         data-testid="seller-trust-badge"
       >
         <div className="flex items-center gap-0.5" aria-label={t('trust.sellerRating')}>
@@ -66,11 +60,6 @@ export function SellerTrustBadge({
         <span className="text-sm text-muted-foreground">
           ({t('trust.reviews', { count: reviewCount })})
         </span>
-        {isNewStore && (
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-            {t('trust.newStore')}
-          </span>
-        )}
       </div>
     );
   }
@@ -85,7 +74,7 @@ export function SellerTrustBadge({
       data-testid="seller-trust-badge"
     >
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2" aria-label={t('trust.sellerRating')}>
+        <div className="flex items-center gap-2" aria-label={t('trust.sellerRating')}>
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map(i => (
               <Star
@@ -104,19 +93,9 @@ export function SellerTrustBadge({
           <span className="text-sm text-muted-foreground">
             {t('trust.reviews', { count: reviewCount })}
           </span>
-          {isNewStore && (
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-              {t('trust.newStore')}
-            </span>
-          )}
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-          {completionRate != null && (
-            <span className="inline-flex items-center gap-1.5 min-h-[44px]">
-              {t('trust.completionRate', { percent: Math.round(completionRate) })}
-            </span>
-          )}
           {salesCount != null && (
             <span className="inline-flex items-center gap-1.5 min-h-[44px]">
               <ShoppingBag className="w-4 h-4 shrink-0" aria-hidden />

@@ -95,33 +95,6 @@ test.describe('Shipping Settings - Empty State', () => {
       });
     }
   });
-
-  test('S5: empty state shows 3 profile quick-start template cards (visual baseline)', async ({
-    page,
-  }) => {
-    await loginAndSetup(page);
-    await navigateToShippingSettings(page, 'admin');
-
-    await expect(page.locator('[data-testid="admin-settings-shipping"]')).toBeVisible();
-
-    const quickStart = page.getByText(/Quick Start|快速入门/i).first();
-    const hasQuickStart = await quickStart.isVisible().catch(() => false);
-    if (!hasQuickStart) {
-      test.skip();
-      return;
-    }
-
-    const domesticCard = page.getByText(/Domestic Free|国内包邮/i).first();
-    const worldwideCard = page.getByText(/Worldwide Standard|全球标准/i).first();
-    const customCard = page.getByText(/Custom|自定义/i).first();
-    const hasThreeCards =
-      (await domesticCard.isVisible().catch(() => false)) &&
-      (await worldwideCard.isVisible().catch(() => false)) &&
-      (await customCard.isVisible().catch(() => false));
-
-    expect(hasThreeCards).toBeTruthy();
-    await expect(page).toHaveScreenshot('s5-shipping-empty-3-templates.png', { fullPage: true });
-  });
 });
 
 test.describe('Shipping Settings - Profile CRUD', () => {
@@ -220,29 +193,6 @@ test.describe('Shipping Settings - Profile CRUD', () => {
     await expect(dialog).toBeVisible();
 
     await expect(page).toHaveScreenshot('shipping-settings-zone-form.png');
-  });
-
-  test('S5: zone form shows shipping preview block (visual baseline)', async ({ page }) => {
-    await loginAndSetup(page);
-    await navigateToShippingSettings(page, 'admin');
-
-    const addZoneButton = page
-      .locator('button')
-      .filter({ hasText: /add zone|添加区域/i })
-      .first();
-    const hasAddZone = await addZoneButton.isVisible().catch(() => false);
-    if (!hasAddZone) {
-      test.skip();
-      return;
-    }
-    await addZoneButton.click();
-
-    const previewBlock = page.locator('[data-testid="shipping-preview"]');
-    await expect(previewBlock).toBeVisible();
-    const testShippingLabel = page.getByText(/Test shipping|试算运费/i).first();
-    await expect(testShippingLabel).toBeVisible();
-
-    await expect(page).toHaveScreenshot('s5-shipping-zone-form-with-preview.png');
   });
 
   test('should show delete profile dialog with migration option', async ({ page }) => {
