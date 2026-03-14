@@ -109,6 +109,12 @@ interface RealOrderData {
     };
     disputeOpen?: {
       timestamp?: string;
+      evidenceHashes?: string[];
+    };
+    dispute?: {
+      timestamp?: string;
+      claim?: string;
+      payoutAddress?: string;
     };
     disputeClose?: {
       timestamp?: string;
@@ -620,10 +626,11 @@ export function transformCoreOrder(
   const dispute: DisplayOrder['dispute'] = contract.disputeOpen
     ? {
         id: fullOrderId,
-        claim: '',
+        claim: contract.dispute?.claim || '',
         status: contract.disputeClose ? 'resolved' : 'open',
         initiator: 'buyer',
         resolution: contract.disputeClose?.verdict as 'buyer' | 'seller' | 'split' | undefined,
+        evidenceHashes: contract.disputeOpen.evidenceHashes,
       }
     : isFiatDispute
       ? {

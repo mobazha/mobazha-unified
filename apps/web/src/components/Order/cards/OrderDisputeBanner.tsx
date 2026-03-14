@@ -2,7 +2,13 @@
 
 import React, { memo, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { useI18n, getDisputeTimeoutDetails, type DisplayOrder } from '@mobazha/core';
+import {
+  useI18n,
+  getDisputeTimeoutDetails,
+  getGatewayUrl,
+  NODE_API,
+  type DisplayOrder,
+} from '@mobazha/core';
 
 export interface OrderDisputeBannerProps {
   displayOrder: DisplayOrder;
@@ -49,6 +55,26 @@ export const OrderDisputeBanner = memo(function OrderDisputeBanner({
                 {t('order.initiatedBy', { party: order.dispute.initiator })} •{' '}
                 {t('order.disputeStatus', { status: order.dispute.status })}
               </p>
+              {order.dispute?.evidenceHashes && order.dispute.evidenceHashes.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {order.dispute.evidenceHashes.map((hash, idx) => (
+                    <a
+                      key={hash}
+                      href={`${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-12 h-12 rounded overflow-hidden border border-error/20 hover:border-error/50 transition-colors"
+                    >
+                      <img
+                        src={`${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`}
+                        alt={`Evidence ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
               {isFiatDispute && order.userRole === 'seller' && (
                 <a
                   href={fiatDisputeDashboardUrl}

@@ -208,6 +208,13 @@ export const LIFECYCLE_ORDERS = {
           physicalDelivery: [{ shipper: 'UPS', trackingNumber: 'UPS1234567890' }],
         },
       ],
+      disputeOpen: {
+        timestamp: THREE_DAYS_AGO,
+        evidenceHashes: [
+          'QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX',
+          'QmWATWQ7fVPP2EFGu71UkfnqhYXDYH566qy47CnJDgvs8u',
+        ],
+      },
       dispute: {
         timestamp: THREE_DAYS_AGO,
         claim: 'Item received damaged — screen has a crack on arrival.',

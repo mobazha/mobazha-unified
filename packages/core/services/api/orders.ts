@@ -1049,11 +1049,13 @@ export async function getPaymentRemaining(
  */
 export async function openDispute(
   orderId: string,
-  claim: string
+  claim: string,
+  evidenceHashes?: string[]
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_OPEN(orderId), {
       claim,
+      ...(evidenceHashes?.length ? { evidenceHashes } : {}),
     });
   };
 

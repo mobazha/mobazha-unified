@@ -177,10 +177,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   );
 
   const handleDisputeSubmit = useCallback(
-    async (claim: string) => {
+    async (claim: string, evidenceHashes?: string[]) => {
       setIsDisputeLoading(true);
       try {
-        await ordersApi.openDispute(orderId, claim);
+        await ordersApi.openDispute(orderId, claim, evidenceHashes);
         setShowDisputeModal(false);
         haptic?.notificationOccurred('success');
         toast({
