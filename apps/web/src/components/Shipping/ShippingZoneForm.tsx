@@ -249,7 +249,6 @@ export function ShippingZoneForm({
                 </Label>
                 <Input
                   type="number"
-                  inputMode="decimal"
                   value={rate.price}
                   onChange={e => updateRate(index, { price: e.target.value })}
                   placeholder="0.00"
@@ -329,7 +328,6 @@ export function ShippingZoneForm({
                         </Label>
                         <Input
                           type="number"
-                          inputMode="decimal"
                           value={rate.condition.minValue}
                           onChange={e => {
                             if (rate.condition) {
@@ -353,7 +351,6 @@ export function ShippingZoneForm({
                         </Label>
                         <Input
                           type="number"
-                          inputMode="decimal"
                           value={rate.condition.maxValue}
                           onChange={e => {
                             if (rate.condition) {

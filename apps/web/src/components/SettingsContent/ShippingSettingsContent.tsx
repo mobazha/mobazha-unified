@@ -18,7 +18,6 @@ import {
 import {
   useI18n,
   useShippingProfiles,
-  useCurrencySelection,
   createEmptyProfile,
   getAllZones,
   generateId,
@@ -68,7 +67,7 @@ function buildProfileFromQuickStart(
           {
             id: generateId(),
             name: 'Standard',
-            price: '1000',
+            price: currency === 'CNY' ? '1000' : '1000',
             currency,
             estimatedDelivery: '5-7 days',
           },
@@ -86,7 +85,7 @@ function buildProfileFromQuickStart(
           {
             id: generateId(),
             name: 'Standard',
-            price: '500',
+            price: currency === 'CNY' ? '500' : '500',
             currency,
             estimatedDelivery: '5-7 days',
           },
@@ -100,7 +99,7 @@ function buildProfileFromQuickStart(
           {
             id: generateId(),
             name: 'International',
-            price: '1000',
+            price: currency === 'CNY' ? '1000' : '1000',
             currency,
             estimatedDelivery: '7-14 days',
           },
@@ -112,24 +111,15 @@ function buildProfileFromQuickStart(
 }
 
 function EmptyState({
-  currency = 'USD',
   onSelectProfileTemplate,
   onCreateProfile,
   onSelectZoneTemplate,
 }: {
-  currency?: string;
   onSelectProfileTemplate: (profile: ShippingProfile) => void;
   onCreateProfile: () => void;
   onSelectZoneTemplate: (zone: ShippingZone) => void;
 }) {
   const { t } = useI18n();
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      action();
-    }
-  }, []);
 
   return (
     <Card className="p-4 md:p-6">
@@ -151,27 +141,13 @@ function EmptyState({
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <Card
-              role="button"
-              tabIndex={0}
-              aria-label={t('shippingTemplates.profileDomesticFree')}
               className="cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() =>
                 onSelectProfileTemplate(
                   buildProfileFromQuickStart(
                     'domestic_free',
                     t('shippingTemplates.profileDomesticFree'),
-                    currency
-                  )
-                )
-              }
-              onKeyDown={e =>
-                handleKeyDown(e, () =>
-                  onSelectProfileTemplate(
-                    buildProfileFromQuickStart(
-                      'domestic_free',
-                      t('shippingTemplates.profileDomesticFree'),
-                      currency
-                    )
+                    'USD'
                   )
                 )
               }
@@ -186,27 +162,13 @@ function EmptyState({
               </CardContent>
             </Card>
             <Card
-              role="button"
-              tabIndex={0}
-              aria-label={t('shippingTemplates.profileWorldwideStandard')}
               className="cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() =>
                 onSelectProfileTemplate(
                   buildProfileFromQuickStart(
                     'worldwide_standard',
                     t('shippingTemplates.profileWorldwideStandard'),
-                    currency
-                  )
-                )
-              }
-              onKeyDown={e =>
-                handleKeyDown(e, () =>
-                  onSelectProfileTemplate(
-                    buildProfileFromQuickStart(
-                      'worldwide_standard',
-                      t('shippingTemplates.profileWorldwideStandard'),
-                      currency
-                    )
+                    'USD'
                   )
                 )
               }
@@ -221,12 +183,8 @@ function EmptyState({
               </CardContent>
             </Card>
             <Card
-              role="button"
-              tabIndex={0}
-              aria-label={t('shippingTemplates.profileCustom')}
               className="cursor-pointer hover:border-primary/50 transition-colors"
               onClick={onCreateProfile}
-              onKeyDown={e => handleKeyDown(e, onCreateProfile)}
             >
               <CardContent className="p-3">
                 <p className="text-sm font-medium text-foreground">
@@ -244,7 +202,7 @@ function EmptyState({
           <p className="text-xs text-muted-foreground text-center mb-3">
             {t('shippingTemplates.createCustom')}
           </p>
-          <ShippingTemplateSelector currency={currency} onSelect={onSelectZoneTemplate} />
+          <ShippingTemplateSelector currency="USD" onSelect={onSelectZoneTemplate} />
         </div>
       </VStack>
     </Card>
@@ -480,8 +438,6 @@ export function ShippingSettingsContent() {
     updateLocation,
     deleteLocation,
   } = useShippingProfiles();
-  const { localCurrency } = useCurrencySelection();
-  const templateCurrency = localCurrency || 'USD';
 
   const hasProfiles = profiles.length > 0;
 
@@ -525,9 +481,7 @@ export function ShippingSettingsContent() {
 
   const handleSaveProfile = useCallback(
     async (profile: ShippingProfile): Promise<boolean> => {
-      const created = await addProfile(profile);
-      if (created) setExpandedProfiles(prev => new Set(prev).add(created.profileId));
-      return created !== false;
+      return await addProfile(profile);
     },
     [addProfile]
   );
@@ -596,9 +550,8 @@ export function ShippingSettingsContent() {
 
   const handleSelectProfileTemplate = useCallback(
     async (profile: ShippingProfile) => {
-      const created = await addProfile(profile);
-      if (created) {
-        setExpandedProfiles(prev => new Set(prev).add(created.profileId));
+      const success = await addProfile(profile);
+      if (success) {
         toast({ title: t('common.success'), description: t('shipping.profileCreated') });
       } else {
         toast({
@@ -617,10 +570,8 @@ export function ShippingSettingsContent() {
         const newProfile = createEmptyProfile(true);
         newProfile.name = t('shipping.defaultProfileName');
         newProfile.locationGroups[0].zones = [zone];
-        const created = await addProfile(newProfile);
-        if (created) {
-          setExpandedProfiles(prev => new Set(prev).add(created.profileId));
-        } else {
+        const success = await addProfile(newProfile);
+        if (!success) {
           toast({
             title: t('common.error'),
             description: t('common.createFailed'),
@@ -850,7 +801,7 @@ export function ShippingSettingsContent() {
                                 {t('shipping.orUseTemplate')}
                               </p>
                               <ShippingTemplateSelector
-                                currency={templateCurrency}
+                                currency="USD"
                                 onSelect={option => {
                                   handleSelectTemplate(option, profile.profileId);
                                 }}
@@ -875,7 +826,6 @@ export function ShippingSettingsContent() {
             </VStack>
           ) : (
             <EmptyState
-              currency={templateCurrency}
               onSelectProfileTemplate={handleSelectProfileTemplate}
               onCreateProfile={handleCreateProfile}
               onSelectZoneTemplate={zone => handleSelectTemplate(zone)}
@@ -948,7 +898,7 @@ export function ShippingSettingsContent() {
           </DialogHeader>
           <ShippingZoneForm
             zone={editingZone}
-            currency={templateCurrency}
+            currency="USD"
             onSave={handleSaveZone}
             onCancel={() => {
               setShowZoneForm(false);
