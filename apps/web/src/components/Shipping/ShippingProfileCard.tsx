@@ -226,11 +226,6 @@ export function ShippingProfileCard({
                 </span>
               </HStack>
 
-              {/* 关联商品数 */}
-              <HStack gap="xs" className="text-sm text-muted-foreground">
-                <span>{t('shipping.listingsCount', { count: profile.listingCount ?? 0 })}</span>
-              </HStack>
-
               {/* 地区覆盖 */}
               <HStack gap="xs" className="text-sm text-muted-foreground">
                 {regionsSummary.isWorldwide ? (
