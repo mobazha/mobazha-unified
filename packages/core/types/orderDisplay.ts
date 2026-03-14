@@ -62,6 +62,7 @@ export interface DisplayDispute {
   status: 'open' | 'in_progress' | 'resolved';
   initiator: 'buyer' | 'seller';
   resolution?: 'buyer' | 'seller' | 'split';
+  evidenceHashes?: string[];
 }
 
 /**

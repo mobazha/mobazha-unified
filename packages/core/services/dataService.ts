@@ -313,11 +313,11 @@ export const orderDataService = {
   /**
    * 开启争议
    */
-  async openDispute(orderId: string, claim: string) {
+  async openDispute(orderId: string, claim: string, evidenceHashes?: string[]) {
     if (isMockMode()) {
       return mockServices.orders.openDispute(orderId);
     }
-    return await ordersApi.openDispute(orderId, claim);
+    return await ordersApi.openDispute(orderId, claim, evidenceHashes);
   },
 
   /**

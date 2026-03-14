@@ -169,9 +169,13 @@ export async function getCaseDetails(orderId: string): Promise<DisputeCase | nul
  */
 export async function openDispute(
   orderId: string,
-  claim: string
+  claim: string,
+  evidenceHashes?: string[]
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_OPEN(orderId), { claim });
+  return authPost(NODE_API.DISPUTE_OPEN(orderId), {
+    claim,
+    ...(evidenceHashes?.length ? { evidenceHashes } : {}),
+  });
 }
 
 /**

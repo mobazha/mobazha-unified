@@ -3,7 +3,8 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { VStack, HStack } from '@/components/layouts';
-import { useI18n, getTimeRemaining } from '@mobazha/core';
+import { useI18n, getTimeRemaining, getGatewayUrl } from '@mobazha/core';
+import { NODE_API } from '@mobazha/core';
 import { formatOrderDate } from './utils';
 
 export interface DisputeInfo {
@@ -20,6 +21,7 @@ export interface DisputeInfo {
     currency?: string;
   };
   expiresAt?: string;
+  evidenceHashes?: string[];
 }
 
 export interface OrderDisputeProps {
@@ -133,6 +135,33 @@ export const OrderDispute: React.FC<OrderDisputeProps> = ({
           <p className="text-xs text-muted-foreground mb-1">{t('order.disputeDisplay.claim')}</p>
           <p className="text-sm text-foreground">{dispute.claim}</p>
         </div>
+
+        {/* Evidence Images */}
+        {dispute.evidenceHashes && dispute.evidenceHashes.length > 0 && (
+          <div className="bg-card rounded-lg p-3 border border-border">
+            <p className="text-xs text-muted-foreground mb-2">
+              {t('order.disputeDisplay.evidence', { fallback: 'Evidence' })}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {dispute.evidenceHashes.map((hash, idx) => (
+                <a
+                  key={hash}
+                  href={`${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-20 h-20 rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                >
+                  <img
+                    src={`${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`}
+                    alt={`Evidence ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Response */}
         {dispute.response && (

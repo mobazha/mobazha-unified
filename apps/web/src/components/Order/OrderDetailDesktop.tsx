@@ -164,10 +164,10 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   }, [confirmDialog, executeConfirmAction]);
 
   const handleDisputeSubmit = useCallback(
-    async (claim: string) => {
+    async (claim: string, evidenceHashes?: string[]) => {
       setIsDisputeLoading(true);
       try {
-        await ordersApi.openDispute(orderId, claim);
+        await ordersApi.openDispute(orderId, claim, evidenceHashes);
         setShowDisputeModal(false);
         toast({
           title: t('order.disputeOpened'),
