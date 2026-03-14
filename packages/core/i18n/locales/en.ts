@@ -3721,13 +3721,6 @@ export const en: TranslationResource = {
     weightConditionHint:
       'This rate will only apply when order weight is within the specified range.',
     priceConditionHint: 'This rate will only apply when order total is within the specified range.',
-    previewTitle: 'Test shipping',
-    previewCountry: 'Destination country',
-    previewWeightKg: 'Weight (kg)',
-    previewOrderAmount: 'Order total',
-    previewResult: 'Result',
-    previewNoMatch: 'No matching rate for this zone',
-    previewAddRegionsFirst: 'Add regions first to test',
     // Shipping Locations (Origin)
     shippingLocations: 'Shipping Locations',
     location: 'location',

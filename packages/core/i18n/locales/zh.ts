@@ -3583,13 +3583,6 @@ export const zh: TranslationResource = {
     maxOrderAmount: '最高订单金额',
     noLimit: '0 = 无上限',
     weightConditionHint: '此费率仅在订单重量在指定范围内时适用。',
-    previewTitle: '试算运费',
-    previewCountry: '目的地国家',
-    previewWeightKg: '重量 (kg)',
-    previewOrderAmount: '订单金额',
-    previewResult: '试算结果',
-    previewNoMatch: '该区域无匹配费率',
-    previewAddRegionsFirst: '请先添加配送区域再试算',
     priceConditionHint: '此费率仅在订单金额在指定范围内时适用。',
     // 发货地点
     shippingLocations: '发货地点',
