@@ -328,7 +328,6 @@ export const pt: TranslationResource = {
     shippingFee: 'Taxa',
     additionalItemFee: 'Item adicional',
     noShippingOptions: 'Nenhuma opção de envio disponível',
-    contactSellerForShipping: 'Entre em contato com o vendedor para opções de envio',
     localPickup: 'Retirada local',
     priceToBeCalculated: 'A ser calculado',
     worldwide: 'Mundial',

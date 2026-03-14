@@ -325,7 +325,6 @@ export const es: TranslationResource = {
     shippingFee: 'Tarifa',
     additionalItemFee: 'Artículo adicional',
     noShippingOptions: 'No hay opciones de envío disponibles',
-    contactSellerForShipping: 'Contacte al vendedor para opciones de envío',
     localPickup: 'Recogida local',
     priceToBeCalculated: 'Por calcular',
     worldwide: 'Todo el mundo',
