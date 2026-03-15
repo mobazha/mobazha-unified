@@ -1056,6 +1056,20 @@ export const en: TranslationResource = {
       viewInProviderDashboard: 'Respond in payment provider dashboard',
       haveProblem: 'Having a problem with this order?',
     },
+    fiatDispute: {
+      title: 'Payment Dispute Filed',
+      titleResolved: 'Payment Dispute Resolved',
+      description: 'A dispute has been filed with {{provider}} for this order.',
+      descriptionResolved: 'The payment dispute has been resolved.',
+      reason: 'Reason: {{reason}}',
+      outcomeWon: 'The dispute was resolved in your favor.',
+      outcomeLost: "The dispute was resolved in the buyer's favor. A refund has been issued.",
+      outcomeAccepted: 'The dispute was accepted and a refund has been issued.',
+      sellerHint:
+        'Please respond to this dispute in your payment provider dashboard to provide evidence.',
+      buyerHint: 'Your dispute is being reviewed by the payment provider.',
+      viewDashboard: 'Respond in {{provider}} Dashboard',
+    },
     // Refund modal
     refund: {
       title: 'Confirm Refund',

@@ -37,6 +37,7 @@ import {
   OrderTimelineCard,
   OrderCounterpartyCard,
   OrderDisputeBanner,
+  FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
   getStatusLabel,
@@ -355,7 +356,15 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
 
                 {/* OrderStatusCard above already provides integrated progress — no separate bar needed */}
 
-                {/* Active dispute banner (only when dispute exists) */}
+                {/* Fiat dispute banner (independent of order state) */}
+                {displayOrder.fiatDispute && (
+                  <FiatDisputeBanner
+                    fiatDispute={displayOrder.fiatDispute}
+                    userRole={displayOrder.userRole}
+                  />
+                )}
+
+                {/* Active crypto dispute banner (only when dispute exists) */}
                 {displayOrder.dispute && (
                   <OrderDisputeBanner
                     displayOrder={displayOrder}

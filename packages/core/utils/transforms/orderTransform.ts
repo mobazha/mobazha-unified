@@ -9,6 +9,7 @@ import type {
   DisplayOrderItem,
   DisplayModerator,
   DisplayFiatPayment,
+  DisplayFiatDispute,
   DisplayTimelineEvent,
   DisplayOrderStatus,
   DisplayUserRole,
@@ -130,6 +131,7 @@ interface RealOrderData {
       memo?: string;
     };
   };
+  fiatMetadata?: Record<string, string>;
 }
 
 // ============ Helper Functions ============
@@ -637,8 +639,25 @@ export function transformCoreOrder(
     };
   }
 
-  // Fiat dispute: order is DISPUTED with no crypto disputeOpen, synthesize DisplayDispute
-  const isFiatDispute = data.state === 'DISPUTED' && !contract.disputeOpen && isFiatPayment;
+  // Fiat dispute: from API fiatMetadata (independent of order state).
+  // Backend records dispute metadata without changing order FSM state.
+  let fiatDispute: DisplayFiatDispute | undefined;
+  if (data.fiatMetadata?.fiat_dispute_status) {
+    const meta = data.fiatMetadata;
+    fiatDispute = {
+      status: meta.fiat_dispute_status === 'resolved' ? 'resolved' : 'opened',
+      disputeId: meta.fiat_dispute_id || '',
+      reason: meta.fiat_dispute_reason || '',
+      provider: (meta.fiat_dispute_provider || fiatPayment?.provider || 'stripe') as
+        | 'stripe'
+        | 'paypal',
+      openedAt: meta.fiat_dispute_opened_at,
+      resolvedAt: meta.fiat_dispute_resolved_at,
+      outcome: meta.fiat_dispute_outcome,
+    };
+  }
+
+  // Crypto dispute (internal, moderator-mediated)
   const dispute: DisplayOrder['dispute'] = contract.disputeOpen
     ? {
         id: fullOrderId,
@@ -648,14 +667,7 @@ export function transformCoreOrder(
         resolution: contract.disputeClose?.verdict as 'buyer' | 'seller' | 'split' | undefined,
         evidenceHashes: contract.disputeOpen.evidenceHashes,
       }
-    : isFiatDispute
-      ? {
-          id: fullOrderId,
-          claim: `${(orderOpen?.fiatProvider || 'stripe').toUpperCase()} dispute`,
-          status: 'open',
-          initiator: 'buyer',
-        }
-      : undefined;
+    : undefined;
 
   const cancelReason = contract.orderCancel?.reason || contract.refund?.memo || undefined;
 
@@ -717,6 +729,7 @@ export function transformCoreOrder(
     userRole,
     cancelReason,
     fiatPayment,
+    fiatDispute,
     dispute,
   };
 
