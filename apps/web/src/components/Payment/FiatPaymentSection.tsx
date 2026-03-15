@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useI18n, useFiatPayment } from '@mobazha/core';
 import type { FiatProviderID, CreateFiatPaymentParams } from '@mobazha/core';
 import { StripePaymentForm } from './StripePaymentForm';
+import type { FiatPaymentSuccessResult } from './StripePaymentForm';
 import { PayPalPaymentForm } from './PayPalPaymentForm';
 
 export interface FiatPaymentSectionProps {
@@ -17,7 +18,7 @@ export interface FiatPaymentSectionProps {
   description?: string;
   returnUrl: string;
   cancelUrl?: string;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (result: FiatPaymentSuccessResult) => void;
   onPaymentError?: (message: string) => void;
   disabled?: boolean;
   className?: string;
@@ -69,10 +70,13 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     retryKey,
   ]);
 
-  const handleSuccess = useCallback(() => {
-    setPaymentDone(true);
-    onPaymentSuccess();
-  }, [onPaymentSuccess]);
+  const handleSuccess = useCallback(
+    (result: FiatPaymentSuccessResult) => {
+      setPaymentDone(true);
+      onPaymentSuccess(result);
+    },
+    [onPaymentSuccess]
+  );
 
   const handleError = useCallback(
     (msg: string) => {
@@ -139,6 +143,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
           <PayPalPaymentForm
             sessionData={session.paypal}
             vendorPeerID={vendorPeerID}
+            amount={amount}
             currency={currency}
             onSuccess={handleSuccess}
             onError={handleError}
