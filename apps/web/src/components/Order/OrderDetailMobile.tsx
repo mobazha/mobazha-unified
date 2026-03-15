@@ -43,6 +43,7 @@ import {
   OrderCounterpartyCard,
   OrderContractView,
   OrderDisputeBanner,
+  FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
   getStatusLabel,
@@ -510,7 +511,15 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           {/* 3. Order summary — total, shipping, status badge */}
           <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
 
-          {/* 4. Dispute banner (only when active) */}
+          {/* 4a. Fiat dispute banner (independent of order state) */}
+          {displayOrder.fiatDispute && (
+            <FiatDisputeBanner
+              fiatDispute={displayOrder.fiatDispute}
+              userRole={displayOrder.userRole}
+            />
+          )}
+
+          {/* 4b. Crypto dispute banner (only when active) */}
           {displayOrder.dispute && (
             <OrderDisputeBanner
               displayOrder={displayOrder}

@@ -6,6 +6,7 @@ export { OrderTimelineCard, type OrderTimelineCardProps } from './OrderTimelineC
 export { OrderCounterpartyCard, type OrderCounterpartyCardProps } from './OrderCounterpartyCard';
 export { OrderContractView, type OrderContractViewProps } from './OrderContractView';
 export { OrderDisputeBanner, type OrderDisputeBannerProps } from './OrderDisputeBanner';
+export { FiatDisputeBanner, type FiatDisputeBannerProps } from './FiatDisputeBanner';
 export { OrderMemoCard, type OrderMemoCardProps } from './OrderMemoCard';
 export { OrderStatusCard, type OrderStatusCardProps } from './OrderStatusCard';
 export { getStatusLabel } from './orderProgressUtils';

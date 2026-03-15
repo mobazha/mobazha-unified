@@ -116,6 +116,7 @@ export type {
   DisplayModerator,
   DisplayTimelineEvent,
   DisplayDispute,
+  DisplayFiatDispute,
   DisplayFiatPayment,
   DisplayPaymentLocked,
   DisplayOrderStatus,

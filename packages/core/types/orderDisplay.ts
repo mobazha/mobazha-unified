@@ -188,13 +188,30 @@ export interface DisplayOrder {
   isRwaEscrow?: boolean;
   /** RWA 支付锁定信息（仅用于托管模式） */
   paymentLocked?: DisplayPaymentLocked;
-  /** 争议信息 */
+  /** 争议信息（平台内部仲裁，由 Moderator 管理） */
   dispute?: DisplayDispute;
+  /** 法币争议信息（外部争议，由支付提供商管理，独立于订单状态） */
+  fiatDispute?: DisplayFiatDispute;
 
   /** 取消/退款原因（来自 orderCancel.reason 或 refund.memo） */
   cancelReason?: string;
   /** 法币支付信息（仅当 paymentMethod === FIAT 时存在） */
   fiatPayment?: DisplayFiatPayment;
+}
+
+/**
+ * 法币争议信息（外部争议，由支付提供商管理）
+ * 与 DisplayDispute（平台内部仲裁）相互独立
+ */
+export interface DisplayFiatDispute {
+  status: 'opened' | 'resolved';
+  disputeId: string;
+  reason: string;
+  provider: 'stripe' | 'paypal';
+  openedAt?: string;
+  resolvedAt?: string;
+  /** 争议结果：won = 卖家胜, lost = 买家胜（退款）, accepted = 卖家接受 */
+  outcome?: string;
 }
 
 /**
