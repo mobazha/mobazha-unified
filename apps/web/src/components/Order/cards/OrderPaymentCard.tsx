@@ -290,11 +290,19 @@ function RwaPaymentLockedCard({
   );
 }
 
+function getProviderPaymentUrl(provider: string, paymentID: string): string | null {
+  if (!paymentID) return null;
+  if (provider === 'stripe') return `https://dashboard.stripe.com/payments/${paymentID}`;
+  if (provider === 'paypal') return `https://www.paypal.com/activity/payment/${paymentID}`;
+  return null;
+}
+
 /** Internal: Fiat payment info card */
 function FiatPaymentCard({ order }: { order: DisplayOrder }) {
   const { t } = useI18n();
   const fiat = order.fiatPayment!;
   const providerLabel = fiat.provider === 'stripe' ? 'Stripe' : 'PayPal';
+  const paymentUrl = getProviderPaymentUrl(fiat.provider, fiat.paymentID);
 
   const paidTimestamp = order.timeline.find(e => e.status === 'paid')?.timestamp;
   const statusColor =
@@ -319,7 +327,19 @@ function FiatPaymentCard({ order }: { order: DisplayOrder }) {
   return (
     <div className="bg-gradient-to-r from-primary/5 to-primary/5 border border-primary/15 rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-foreground">{t('order.fiatPayment.title')}</h4>
+        <div className="flex items-center gap-2">
+          <h4 className="font-semibold text-foreground">{t('order.fiatPayment.title')}</h4>
+          {paymentUrl && (
+            <a
+              href={paymentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              {t('order.viewTransaction')}
+            </a>
+          )}
+        </div>
         <span
           className={`${statusBadgeColor} text-white text-xs font-semibold px-3 py-1 rounded-full`}
         >
@@ -342,6 +362,19 @@ function FiatPaymentCard({ order }: { order: DisplayOrder }) {
             {order.pricingAmount} {order.pricingCurrency}
           </span>
         </div>
+        {fiat.paymentID && (
+          <div className="flex justify-between items-center py-1 border-b border-primary/10">
+            <span className="text-muted-foreground">{t('order.fiatPayment.transactionId')}</span>
+            <span
+              className="font-medium font-mono text-xs text-foreground truncate max-w-[200px]"
+              title={fiat.paymentID}
+            >
+              {fiat.paymentID.length > 20
+                ? `${fiat.paymentID.slice(0, 10)}...${fiat.paymentID.slice(-6)}`
+                : fiat.paymentID}
+            </span>
+          </div>
+        )}
         {paidTimestamp && (
           <div className="flex justify-between items-center py-1">
             <span className="text-muted-foreground">{t('order.fiatPayment.paidAt')}</span>

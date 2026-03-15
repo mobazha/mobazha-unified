@@ -1225,6 +1225,7 @@ export const en: TranslationResource = {
       paid: 'Paid',
       refunded: 'Refunded',
       disputed: 'Disputed',
+      transactionId: 'Transaction ID',
     },
     // RWA Payment Locked
     paymentLocked: {
