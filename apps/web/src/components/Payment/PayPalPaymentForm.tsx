@@ -6,12 +6,14 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n, fiatApi } from '@mobazha/core';
 import type { PayPalSessionData, FiatProviderID } from '@mobazha/core';
+import type { FiatPaymentSuccessResult } from './StripePaymentForm';
 
 export interface PayPalPaymentFormProps {
   sessionData: PayPalSessionData;
   vendorPeerID: string;
+  amount: number;
   currency?: string;
-  onSuccess: () => void;
+  onSuccess: (result: FiatPaymentSuccessResult) => void;
   onError: (message: string) => void;
   onCancel?: () => void;
   disabled?: boolean;
@@ -21,6 +23,7 @@ export interface PayPalPaymentFormProps {
 export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   sessionData,
   vendorPeerID,
+  amount,
   currency = 'USD',
   onSuccess,
   onError,
@@ -45,7 +48,12 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         sessionData.orderID
       );
       if (result.status === 'succeeded') {
-        onSuccess();
+        onSuccess({
+          transactionID: result.paymentID,
+          providerID: 'paypal',
+          amount,
+          currency,
+        });
       } else {
         onError(
           t('fiat.captureFailed', {

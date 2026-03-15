@@ -24,9 +24,16 @@ function getStripePromise(
   return stripePromiseCache[cacheKey];
 }
 
+export interface FiatPaymentSuccessResult {
+  transactionID: string;
+  providerID: 'stripe' | 'paypal';
+  amount: number;
+  currency: string;
+}
+
 interface StripeCheckoutFormProps {
   returnUrl: string;
-  onSuccess: () => void;
+  onSuccess: (result: FiatPaymentSuccessResult) => void;
   onError: (message: string) => void;
   disabled?: boolean;
 }
@@ -69,7 +76,12 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         }
         setIsProcessing(false);
       } else if (paymentIntent?.status === 'succeeded') {
-        onSuccess();
+        onSuccess({
+          transactionID: paymentIntent.id,
+          providerID: 'stripe',
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+        });
       } else if (paymentIntent?.status === 'requires_action') {
         setIsProcessing(false);
       } else {
@@ -125,7 +137,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
 
 export interface StripePaymentFormProps {
   sessionData: StripeSessionData;
-  onSuccess: () => void;
+  onSuccess: (result: FiatPaymentSuccessResult) => void;
   onError: (message: string) => void;
   returnUrl: string;
   disabled?: boolean;

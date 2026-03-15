@@ -832,7 +832,7 @@ export interface SubmitPaymentData {
   coin: string;
   amount: number; // 必须是数字类型（后端期望 uint64）
   timestamp: string;
-  method: number; // 1: DIRECT, 2: MODERATED, 3: RWA_ATOMIC_SWAP, 4: RWA_INSTANT
+  method: number; // 0: DIRECT, 1: CANCELABLE, 2: MODERATED, 3: RWA_ESCROW, 4: RWA_INSTANT, 5: FIAT
   // 支付目标地址（托管合约地址）- 后端验证必需
   toAddress?: string;
   // 支付者地址

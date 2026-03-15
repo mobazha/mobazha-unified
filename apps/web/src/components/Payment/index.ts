@@ -18,6 +18,7 @@ export { PaymentDrawer } from './PaymentDrawer';
 export { TransactionOverlay } from './TransactionOverlay';
 export type { PaymentStep } from './TransactionOverlay';
 export { StripePaymentForm } from './StripePaymentForm';
+export type { FiatPaymentSuccessResult } from './StripePaymentForm';
 export { PayPalPaymentForm } from './PayPalPaymentForm';
 export { FiatPaymentSection } from './FiatPaymentSection';
 export { PaymentMethodBadges } from './PaymentMethodBadges';

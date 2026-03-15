@@ -10,7 +10,7 @@ import {
   TransactionOverlay,
   FiatPaymentSection,
 } from '@/components/Payment';
-import type { PaymentStep } from '@/components/Payment';
+import type { PaymentStep, FiatPaymentSuccessResult } from '@/components/Payment';
 import { OrderSummaryCard } from '@/components/Order';
 import { RwaPurchaseFlow } from '@/components/RwaToken';
 import { Container, HStack, VStack } from '@/components/layouts';
@@ -845,7 +845,17 @@ export default function PaymentPage() {
                             currency={orderDetails.currency}
                             description={orderDetails.items[0]?.title}
                             returnUrl={buildConfirmationUrl(orderDetails)}
-                            onPaymentSuccess={() => {
+                            onPaymentSuccess={(result: FiatPaymentSuccessResult) => {
+                              ordersApi
+                                .submitPayment({
+                                  orderID: orderDetails.orderID,
+                                  transactionID: result.transactionID,
+                                  coin: `FIAT_${result.providerID.toUpperCase()}`,
+                                  amount: result.amount,
+                                  timestamp: new Date().toISOString(),
+                                  method: 5, // FIAT
+                                })
+                                .catch(() => {});
                               router.push(buildConfirmationUrl(orderDetails));
                             }}
                             onPaymentError={msg => {
