@@ -4,8 +4,8 @@
  */
 
 export { RegionSelector } from './RegionSelector';
-export { ShippingTemplateSelector, SHIPPING_TEMPLATES } from './ShippingTemplateSelector';
-export type { ShippingTemplate, ShippingTemplateType } from './ShippingTemplateSelector';
+export { ShippingTemplateSelector } from './ShippingTemplateSelector';
+export type { ShippingTemplateType } from './ShippingTemplateSelector';
 export { ShippingProfileSelector } from './ShippingProfileSelector';
 export { ShippingProfileCard } from './ShippingProfileCard';
 export type { ShippingProfileCardProps } from './ShippingProfileCard';
@@ -15,6 +15,9 @@ export { ShippingZoneCard } from './ShippingZoneCard';
 export type { ShippingZoneCardProps } from './ShippingZoneCard';
 export { ShippingZoneForm } from './ShippingZoneForm';
 export type { ShippingZoneFormProps } from './ShippingZoneForm';
+
+// 方案级快速启动模板
+export { ShippingProfileTemplates } from './ShippingProfileTemplates';
 
 // 发货地点组件
 export { ShippingLocationCard } from './ShippingLocationCard';

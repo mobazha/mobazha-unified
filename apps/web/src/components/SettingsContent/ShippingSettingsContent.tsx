@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,13 @@ import {
   useToast,
   Skeleton,
 } from '@/components/ui';
-import { useI18n, useShippingProfiles, createEmptyProfile, getAllZones } from '@mobazha/core';
+import { useI18n, useShippingProfiles, createEmptyProfile, getAllZones, useCurrency, profileApi } from '@mobazha/core';
 import type { ShippingProfile, ShippingZone, ShippingLocation } from '@mobazha/core';
 import { Plus, Truck, FolderOpen, MapPin, AlertTriangle, RefreshCw } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
 import {
   ShippingTemplateSelector,
+  ShippingProfileTemplates,
   ShippingProfileCard,
   ShippingZoneCard,
   ShippingZoneForm,
@@ -29,11 +30,15 @@ import {
 } from '@/components/Shipping';
 
 function EmptyState({
-  onSelectTemplate,
+  onSelectProfileTemplate,
   onCreateProfile,
+  currency,
+  sellerCountry,
 }: {
-  onSelectTemplate: (zone: ShippingZone) => void;
+  onSelectProfileTemplate: (profile: ShippingProfile) => void;
   onCreateProfile: () => void;
+  currency: string;
+  sellerCountry?: string;
 }) {
   const { t } = useI18n();
 
@@ -48,16 +53,18 @@ function EmptyState({
           <p className="text-sm text-muted-foreground">{t('shippingConfig.noOptionsDesc')}</p>
         </VStack>
 
-        <Button onClick={onCreateProfile} className="w-full">
-          <FolderOpen className="w-4 h-4 mr-2" />
-          {t('shipping.createProfile')}
-        </Button>
+        <ShippingProfileTemplates
+          currency={currency}
+          sellerCountry={sellerCountry}
+          onSelect={onSelectProfileTemplate}
+          className="w-full"
+        />
 
-        <div className="w-full">
-          <p className="text-xs text-muted-foreground text-center mb-3">
-            {t('shipping.orUseTemplate')}
-          </p>
-          <ShippingTemplateSelector currency="USD" onSelect={onSelectTemplate} />
+        <div className="text-center">
+          <Button variant="outline" onClick={onCreateProfile}>
+            <FolderOpen className="w-4 h-4 mr-2" />
+            {t('shipping.createProfile')}
+          </Button>
         </div>
       </VStack>
     </Card>
@@ -277,6 +284,7 @@ function DeleteProfileDialog({
 export function ShippingSettingsContent() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const { localCurrency } = useCurrency();
 
   const {
     profiles,
@@ -295,6 +303,13 @@ export function ShippingSettingsContent() {
   } = useShippingProfiles();
 
   const hasProfiles = profiles.length > 0;
+
+  const [sellerCountry, setSellerCountry] = useState<string | undefined>();
+  useEffect(() => {
+    profileApi.getSettings().then(s => {
+      if (s?.country) setSellerCountry(s.country);
+    }).catch(() => {});
+  }, []);
 
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -424,6 +439,20 @@ export function ShippingSettingsContent() {
       }
     },
     [hasProfiles, addProfile, toast, t]
+  );
+
+  const handleSelectProfileTemplate = useCallback(
+    async (profile: ShippingProfile) => {
+      const success = await addProfile(profile);
+      if (!success) {
+        toast({
+          title: t('common.error'),
+          description: t('common.createFailed'),
+          variant: 'destructive',
+        });
+      }
+    },
+    [addProfile, toast, t]
   );
 
   const handleAddZone = useCallback((profileId: string) => {
@@ -640,7 +669,8 @@ export function ShippingSettingsContent() {
                                 {t('shipping.orUseTemplate')}
                               </p>
                               <ShippingTemplateSelector
-                                currency="USD"
+                                currency={localCurrency}
+                                sellerCountry={sellerCountry}
                                 onSelect={option => {
                                   handleSelectTemplate(option, profile.profileId);
                                 }}
@@ -665,8 +695,10 @@ export function ShippingSettingsContent() {
             </VStack>
           ) : (
             <EmptyState
-              onSelectTemplate={handleSelectTemplate}
+              onSelectProfileTemplate={handleSelectProfileTemplate}
               onCreateProfile={handleCreateProfile}
+              currency={localCurrency}
+              sellerCountry={sellerCountry}
             />
           )}
         </div>
@@ -736,7 +768,7 @@ export function ShippingSettingsContent() {
           </DialogHeader>
           <ShippingZoneForm
             zone={editingZone}
-            currency="USD"
+            currency={localCurrency}
             onSave={handleSaveZone}
             onCancel={() => {
               setShowZoneForm(false);

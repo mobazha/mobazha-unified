@@ -11,11 +11,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useI18n, generateId, fromMinimalUnit, toMinimalUnit } from '@mobazha/core';
+import { useI18n, generateId, fromMinimalUnit, toMinimalUnit, formatPrice } from '@mobazha/core';
 import type { ShippingZone, ShippingRate, RateCondition, RateConditionType } from '@mobazha/core';
-import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Calculator } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
 import { RegionSelector } from './RegionSelector';
+
+function RatePreview({ rates, currency }: { rates: ShippingRate[]; currency: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [weight, setWeight] = useState('');
+  const [orderAmount, setOrderAmount] = useState('');
+
+  const hasConditions = rates.some(r => r.condition);
+
+  const matchedRate = React.useMemo(() => {
+    if (!open) return null;
+    const w = parseFloat(weight) || 0;
+    const a = parseFloat(orderAmount) || 0;
+
+    for (const rate of rates) {
+      if (!rate.condition) continue;
+      const { type, minValue = 0, maxValue = 0 } = rate.condition;
+      if (type === 'weight') {
+        if (w >= minValue && (maxValue === 0 || w <= maxValue)) return rate;
+      } else if (type === 'price') {
+        if (a >= minValue && (maxValue === 0 || a <= maxValue)) return rate;
+      }
+    }
+    const unconditional = rates.find(r => !r.condition);
+    return unconditional || null;
+  }, [open, rates, weight, orderAmount]);
+
+  if (!hasConditions && rates.length <= 1) return null;
+
+  return (
+    <div className="border rounded-lg">
+      <button
+        type="button"
+        className="w-full flex items-center justify-between p-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="flex items-center gap-1.5">
+          <Calculator className="w-4 h-4" />
+          {t('shipping.ratePreview')}
+        </span>
+        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3 space-y-3">
+          <p className="text-xs text-muted-foreground">{t('shipping.ratePreviewDesc')}</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">{t('shipping.previewWeight')}</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={weight}
+                onChange={e => setWeight(e.target.value)}
+                placeholder="0"
+                min="0"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">
+                {t('shipping.previewOrderAmount')} ({currency})
+              </Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={orderAmount}
+                onChange={e => setOrderAmount(e.target.value)}
+                placeholder="0"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div className="p-2 rounded bg-muted/50 text-sm">
+            <span className="text-xs text-muted-foreground">{t('shipping.previewMatchedRate')}: </span>
+            {matchedRate ? (
+              <span className="font-medium">
+                {matchedRate.name || '—'} · {formatPrice(Number(matchedRate.price) || 0, matchedRate.currency || currency)}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">{t('shipping.previewNoMatch')}</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export interface ShippingZoneFormProps {
   zone?: ShippingZone | null;
@@ -221,6 +310,7 @@ export function ShippingZoneForm({
                 </Label>
                 <Input
                   type="number"
+                  inputMode="decimal"
                   value={rate.price}
                   onChange={e => updateRate(index, { price: e.target.value })}
                   placeholder="0.00"
@@ -300,6 +390,7 @@ export function ShippingZoneForm({
                         </Label>
                         <Input
                           type="number"
+                          inputMode="decimal"
                           value={rate.condition.minValue}
                           onChange={e => {
                             if (rate.condition) {
@@ -323,6 +414,7 @@ export function ShippingZoneForm({
                         </Label>
                         <Input
                           type="number"
+                          inputMode="decimal"
                           value={rate.condition.maxValue}
                           onChange={e => {
                             if (rate.condition) {
@@ -357,6 +449,9 @@ export function ShippingZoneForm({
           {t('shipping.addRate')}
         </Button>
       </div>
+
+      {/* 运费预览 */}
+      <RatePreview rates={rates} currency={currency} />
 
       {/* 操作按钮 */}
       <HStack justify="end" gap="sm" className="pt-4 border-t">

@@ -520,6 +520,54 @@ export function getAllCountries(locale: string = 'en'): Array<{ code: string; na
 }
 
 /**
+ * 货币代码 → 主要使用国家的启发式映射
+ *
+ * 仅作为配送模板等场景的默认值 fallback，不代表卖家实际所在国。
+ * 局限性：EUR 映射到 DE，但法国/意大利等欧元区卖家会得到错误默认。
+ * 长期应由卖家 profile.country 替代（见 TECH_DEBT.md）。
+ */
+export const CURRENCY_PRIMARY_COUNTRY: Record<string, string> = {
+  USD: 'US',
+  CNY: 'CN',
+  EUR: 'DE',
+  GBP: 'GB',
+  JPY: 'JP',
+  KRW: 'KR',
+  AUD: 'AU',
+  CAD: 'CA',
+  CHF: 'CH',
+  INR: 'IN',
+  BRL: 'BR',
+  RUB: 'RU',
+  MXN: 'MX',
+  SGD: 'SG',
+  HKD: 'HK',
+  TWD: 'TW',
+  SEK: 'SE',
+  NOK: 'NO',
+  DKK: 'DK',
+  NZD: 'NZ',
+  ZAR: 'ZA',
+  THB: 'TH',
+  TRY: 'TR',
+  PLN: 'PL',
+  PHP: 'PH',
+  MYR: 'MY',
+  IDR: 'ID',
+  VND: 'VN',
+};
+
+/**
+ * 根据货币代码推断卖家所在国家（启发式）
+ *
+ * @param currencyCode 货币代码（如 'USD', 'JPY'）
+ * @returns ISO 国家代码，未匹配时回退到 'US'
+ */
+export function inferCountryFromCurrency(currencyCode: string): string {
+  return CURRENCY_PRIMARY_COUNTRY[currencyCode.toUpperCase()] ?? 'US';
+}
+
+/**
  * 热门国家/地区配置
  * 常用的跨境电商目的地国家
  */

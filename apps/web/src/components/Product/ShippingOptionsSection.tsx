@@ -515,6 +515,8 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
   pricingCurrency = 'USD',
   className,
 }: ShippingOptionsSectionProps) {
+  const { t } = useI18n();
+
   // 优先使用新版 ShippingProfile（支持直接 zones 和 LocationGroups 两种模式）
   const hasProfile = shippingProfile && getAllZones(shippingProfile).length > 0;
 
@@ -539,8 +541,23 @@ export const ShippingOptionsSection = memo(function ShippingOptionsSection({
     );
   }
 
-  // 都没有时不渲染
-  return null;
+  return (
+    <Card className={cn('p-4 sm:p-6', className)} data-testid="shipping-contact-seller">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+          <Truck className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {t('product.contactSellerForShipping')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('product.contactSellerForShippingDesc')}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
 });
 
 export default ShippingOptionsSection;
