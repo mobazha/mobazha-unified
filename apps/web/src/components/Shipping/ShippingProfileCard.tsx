@@ -17,6 +17,7 @@ import {
   MapPin,
   Package,
   DollarSign,
+  ShoppingBag,
 } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
 import { cn } from '@/lib/utils';
@@ -243,6 +244,14 @@ export function ShippingProfileCard({
                 <HStack gap="xs" className="text-sm">
                   <DollarSign className="w-4 h-4 text-muted-foreground" />
                   <span className="font-medium text-primary">{priceRange}</span>
+                </HStack>
+              )}
+
+              {/* 关联商品数 */}
+              {typeof profile.listingCount === 'number' && profile.listingCount > 0 && (
+                <HStack gap="xs" className="text-sm text-muted-foreground">
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>{t('shipping.listingsCount', { count: profile.listingCount })}</span>
                 </HStack>
               )}
             </HStack>

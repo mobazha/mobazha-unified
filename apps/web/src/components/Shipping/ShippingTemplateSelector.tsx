@@ -5,124 +5,122 @@
  * 直接生成 ShippingZone 格式，用于新版配送档案系统
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Package, Globe, MapPin, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n, generateId, type ShippingZone } from '@mobazha/core';
+import { useI18n, generateId, inferCountryFromCurrency, type ShippingZone } from '@mobazha/core';
 
-// 预设模板类型
 export type ShippingTemplateType =
   | 'domestic_standard'
   | 'worldwide_flat'
   | 'express'
   | 'local_pickup';
 
-// 预设模板数据
-export interface ShippingTemplate {
-  id: ShippingTemplateType;
-  icon: React.ComponentType<{ className?: string }>;
-  labelKey: string;
-  descKey: string;
-  createZone: (currency: string) => ShippingZone;
-}
-
-// 预设模板配置 — 直接生成 ShippingZone
-export const SHIPPING_TEMPLATES: ShippingTemplate[] = [
-  {
-    id: 'domestic_standard',
-    icon: Package,
-    labelKey: 'shippingTemplates.domesticStandard',
-    descKey: 'shippingTemplates.domesticStandardDesc',
-    createZone: (currency: string): ShippingZone => ({
-      id: generateId(),
-      name: currency === 'CNY' ? '国内标准快递' : 'Domestic Standard',
-      regions: currency === 'CNY' ? ['CN'] : ['US'],
-      rates: [
-        {
-          id: generateId(),
-          name: currency === 'CNY' ? '普通快递' : 'Standard',
-          price: currency === 'CNY' ? '1000' : '500', // ¥10 or $5
-          currency,
-          estimatedDelivery: '3-5 days',
-        },
-      ],
-    }),
-  },
-  {
-    id: 'worldwide_flat',
-    icon: Globe,
-    labelKey: 'shippingTemplates.worldwideFlat',
-    descKey: 'shippingTemplates.worldwideFlatDesc',
-    createZone: (currency: string): ShippingZone => ({
-      id: generateId(),
-      name: currency === 'CNY' ? '全球统一运费' : 'Worldwide Flat Rate',
-      regions: ['ALL'],
-      rates: [
-        {
-          id: generateId(),
-          name: currency === 'CNY' ? '国际快递' : 'International',
-          price: currency === 'CNY' ? '9900' : '1500', // ¥99 or $15
-          currency,
-          estimatedDelivery: '7-14 days',
-        },
-      ],
-    }),
-  },
-  {
-    id: 'express',
-    icon: Truck,
-    labelKey: 'shippingTemplates.express',
-    descKey: 'shippingTemplates.expressDesc',
-    createZone: (currency: string): ShippingZone => ({
-      id: generateId(),
-      name: currency === 'CNY' ? '特快专递' : 'Express Shipping',
-      regions: currency === 'CNY' ? ['CN'] : ['US'],
-      rates: [
-        {
-          id: generateId(),
-          name: currency === 'CNY' ? '次日达' : 'Express',
-          price: currency === 'CNY' ? '2000' : '1500', // ¥20 or $15
-          currency,
-          estimatedDelivery: '1-2 days',
-        },
-      ],
-    }),
-  },
-  {
-    id: 'local_pickup',
-    icon: MapPin,
-    labelKey: 'shippingTemplates.localPickup',
-    descKey: 'shippingTemplates.localPickupDesc',
-    createZone: (currency: string): ShippingZone => ({
-      id: generateId(),
-      name: currency === 'CNY' ? '本地自提' : 'Local Pickup',
-      regions: ['ALL'],
-      rates: [
-        {
-          id: generateId(),
-          name: currency === 'CNY' ? '门店自提' : 'Store Pickup',
-          price: '0',
-          currency,
-          estimatedDelivery: currency === 'CNY' ? '即时可取' : 'Ready for pickup',
-        },
-      ],
-    }),
-  },
-];
-
 interface ShippingTemplateSelectorProps {
   currency: string;
+  sellerCountry?: string;
   onSelect: (zone: ShippingZone) => void;
   className?: string;
 }
 
 export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> = ({
   currency,
+  sellerCountry,
   onSelect,
   className,
 }) => {
   const { t } = useI18n();
+  const domesticCountry = useMemo(
+    () => sellerCountry || inferCountryFromCurrency(currency),
+    [sellerCountry, currency],
+  );
+
+  const templates = useMemo(
+    () => [
+      {
+        id: 'domestic_standard' as ShippingTemplateType,
+        icon: Package,
+        labelKey: 'shippingTemplates.domesticStandard' as const,
+        descKey: 'shippingTemplates.domesticStandardDesc' as const,
+        createZone: (): ShippingZone => ({
+          id: generateId(),
+          name: t('shippingTemplates.domesticStandard'),
+          regions: [domesticCountry],
+          rates: [
+            {
+              id: generateId(),
+              name: t('shippingTemplates.tplStandard'),
+              price: '500',
+              currency,
+              estimatedDelivery: t('shippingTemplates.tplDelivery3to5'),
+            },
+          ],
+        }),
+      },
+      {
+        id: 'worldwide_flat' as ShippingTemplateType,
+        icon: Globe,
+        labelKey: 'shippingTemplates.worldwideFlat' as const,
+        descKey: 'shippingTemplates.worldwideFlatDesc' as const,
+        createZone: (): ShippingZone => ({
+          id: generateId(),
+          name: t('shippingTemplates.worldwideFlat'),
+          regions: ['ALL'],
+          rates: [
+            {
+              id: generateId(),
+              name: t('shippingTemplates.tplInternationalRate'),
+              price: '1500',
+              currency,
+              estimatedDelivery: t('shippingTemplates.tplDelivery7to14'),
+            },
+          ],
+        }),
+      },
+      {
+        id: 'express' as ShippingTemplateType,
+        icon: Truck,
+        labelKey: 'shippingTemplates.express' as const,
+        descKey: 'shippingTemplates.expressDesc' as const,
+        createZone: (): ShippingZone => ({
+          id: generateId(),
+          name: t('shippingTemplates.express'),
+          regions: [domesticCountry],
+          rates: [
+            {
+              id: generateId(),
+              name: t('shippingTemplates.tplNextDay'),
+              currency,
+              price: '1500',
+              estimatedDelivery: t('shippingTemplates.tplDelivery1to2'),
+            },
+          ],
+        }),
+      },
+      {
+        id: 'local_pickup' as ShippingTemplateType,
+        icon: MapPin,
+        labelKey: 'shippingTemplates.localPickup' as const,
+        descKey: 'shippingTemplates.localPickupDesc' as const,
+        createZone: (): ShippingZone => ({
+          id: generateId(),
+          name: t('shippingTemplates.localPickup'),
+          regions: ['ALL'],
+          rates: [
+            {
+              id: generateId(),
+              name: t('shippingTemplates.tplStorePickup'),
+              price: '0',
+              currency,
+              estimatedDelivery: t('shippingTemplates.tplPickupReady'),
+            },
+          ],
+        }),
+      },
+    ],
+    [currency, domesticCountry, t]
+  );
 
   return (
     <div className={className}>
@@ -134,13 +132,13 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {SHIPPING_TEMPLATES.map(template => {
+        {templates.map(template => {
           const Icon = template.icon;
           return (
             <Card
               key={template.id}
               className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => onSelect(template.createZone(currency))}
+              onClick={() => onSelect(template.createZone())}
             >
               <CardContent className="p-3">
                 <div className="flex items-start gap-3">
@@ -168,7 +166,6 @@ export const ShippingTemplateSelector: React.FC<ShippingTemplateSelectorProps> =
           size="sm"
           className="text-xs text-muted-foreground"
           onClick={() => {
-            // 创建一个空 zone 让用户自定义
             onSelect({
               id: generateId(),
               name: '',
