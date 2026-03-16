@@ -645,7 +645,13 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           )}
 
           {showRatingInvite && (
-            <RatingInviteBanner onWriteReview={() => executeConfirmAction('complete')} />
+            <RatingInviteBanner
+              onWriteReview={() => executeConfirmAction('complete')}
+              onReportIssue={() => {
+                setIsAfterSaleDispute(true);
+                setShowDisputeModal(true);
+              }}
+            />
           )}
 
           {/* 6. Payment info */}
@@ -728,8 +734,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         </div>
       )}
 
-      {/* Fixed bottom action bar (hidden when TG MainButton handles primary action) */}
-      {activeTab === 'details' && coreOrder && !tgMainButtonActive && (
+      {/* Fixed bottom action bar — hidden when RatingInviteBanner takes over or TG MainButton active */}
+      {activeTab === 'details' && coreOrder && !tgMainButtonActive && !showRatingInvite && (
         <OrderActionSheet
           orderState={coreOrder.state || 'PENDING'}
           userRole={displayOrder.userRole as CoreUserRole}
