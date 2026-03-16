@@ -17,6 +17,7 @@ import {
   getPrimaryAction,
   getActionButtonConfig,
   ordersApi,
+  disputesApi,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
@@ -52,6 +53,7 @@ import {
   OrderProtectionStatus,
   type OrderProtectionStatusProps,
 } from '@/components/Order/cards/OrderProtectionStatus';
+import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -144,6 +146,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const [showContractModal, setShowContractModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
@@ -176,6 +179,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       toast({ variant: 'destructive', description: String(err) });
     }
   }, [orderId, refetch, t, toast]);
+
+  const showRatingInvite = useMemo(
+    () =>
+      displayOrder?.userRole === 'buyer' &&
+      displayOrder?.status === 'completed' &&
+      !displayOrder?.hasRated,
+    [displayOrder]
+  );
 
   // --- Action handler ---
   const handleOrderAction = useCallback(
@@ -213,6 +224,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setConfirmDialog('acceptPayout');
           break;
         case 'Dispute':
+          setIsAfterSaleDispute(false);
+          setShowDisputeModal(true);
+          break;
+        case 'AfterSaleDispute':
+          setIsAfterSaleDispute(true);
           setShowDisputeModal(true);
           break;
         case 'WriteReview':
@@ -250,6 +266,32 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         toast({
           title: t('order.disputeOpened'),
           description: t('order.disputeOpenedSuccess'),
+        });
+        setTimeout(() => refetch(), 500);
+      } catch (error) {
+        haptic?.notificationOccurred('error');
+        toast({
+          title: t('order.actions.error'),
+          description: (error as Error).message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsDisputeLoading(false);
+      }
+    },
+    [orderId, refetch, t, toast, haptic]
+  );
+
+  const handleAfterSaleDisputeSubmit = useCallback(
+    async (reason: string, description: string) => {
+      setIsDisputeLoading(true);
+      try {
+        await disputesApi.openAfterSaleDispute(orderId, reason, description);
+        setShowDisputeModal(false);
+        haptic?.notificationOccurred('success');
+        toast({
+          title: t('order.disputeOpened'),
+          description: t('order.afterSaleDisputeSuccess'),
         });
         setTimeout(() => refetch(), 500);
       } catch (error) {
@@ -602,6 +644,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
             />
           )}
 
+          {showRatingInvite && (
+            <RatingInviteBanner onWriteReview={() => executeConfirmAction('complete')} />
+          )}
+
           {/* 6. Payment info */}
           {(displayOrder.paymentTx || displayOrder.paymentLocked || displayOrder.fiatPayment) && (
             <div>
@@ -691,6 +737,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           isModerated={!!displayOrder.moderator}
           isFulfilled={isOrderFulfilled(coreOrder)}
           paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
+          inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
           onAction={handleOrderAction}
         />
       )}
@@ -762,6 +809,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isOpen={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
         onSubmit={handleDisputeSubmit}
+        onAfterSaleSubmit={handleAfterSaleDisputeSubmit}
+        isAfterSale={isAfterSaleDispute}
         isLoading={isDisputeLoading}
       />
 

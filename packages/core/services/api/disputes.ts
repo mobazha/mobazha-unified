@@ -180,6 +180,17 @@ export async function openDispute(
 }
 
 /**
+ * 售后争议（已完成订单在售后窗口内）
+ */
+export async function openAfterSaleDispute(
+  orderId: string,
+  reason: string,
+  description: string
+): Promise<void> {
+  await authPost(NODE_API.DISPUTE_AFTER_SALE(orderId), { reason, description });
+}
+
+/**
  * 关闭争议（撤回）
  */
 export async function closeDispute(orderId: string): Promise<{ success: boolean; error?: string }> {
@@ -247,6 +258,7 @@ export const disputesApi = {
   getCases,
   getCaseDetails,
   openDispute,
+  openAfterSaleDispute,
   closeDispute,
   resolveDispute,
   acceptDisputeResolution,

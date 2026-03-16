@@ -27,6 +27,7 @@ export interface OrderFooterProps {
   currency?: string;
   paymentCoin?: string;
   hasRated?: boolean;
+  inAfterSaleWindow?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -46,6 +47,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   currency,
   paymentCoin,
   hasRated,
+  inAfterSaleWindow = false,
   onAction,
   className = '',
 }) => {
@@ -61,6 +63,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     isExpired: expired,
     paymentMethod,
     hasRated,
+    inAfterSaleWindow,
   });
 
   // 没有可用操作时不显示
@@ -77,6 +80,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       Pay: t('order.actions.pay'),
       Cancel: t('order.actions.cancel'),
       Dispute: t('order.actions.dispute'),
+      AfterSaleDispute: t('order.actions.reportIssue'),
       Complete: t('order.actions.complete'),
       WriteReview: t('order.actions.writeReview'),
       Accept: t('order.actions.accept'),
