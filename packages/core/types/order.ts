@@ -43,8 +43,12 @@ export interface OrderListItem {
   read: boolean;
   vendorID: string;
   vendorHandle?: string;
+  vendorName?: string;
+  vendorAvatar?: string;
   buyerID: string;
   buyerHandle?: string;
+  buyerName?: string;
+  buyerAvatar?: string;
   paymentCoin: CryptoType;
   coinType: string;
   shippingName?: string;
