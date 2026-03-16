@@ -1073,6 +1073,20 @@ export const en: TranslationResource = {
         other: 'Other',
       },
     },
+    afterSaleDispute: {
+      buyerTitle: 'You reported an issue with this order',
+      sellerTitle: 'The buyer reported an issue with this order',
+      reasonLabel: 'Reason',
+      messageSeller: 'Message Seller',
+      contactBuyer: 'Contact Buyer',
+      issueReported: 'Issue reported',
+      reason: {
+        notReceived: 'Item not received',
+        qualityIssue: 'Quality issue',
+        notAsDescribed: 'Item not as described',
+        other: 'Other',
+      },
+    },
     fiatDispute: {
       title: 'Payment Dispute Filed',
       titleResolved: 'Payment Dispute Resolved',

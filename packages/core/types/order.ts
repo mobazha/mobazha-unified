@@ -74,6 +74,9 @@ export interface Order {
     extended: boolean;
     afterSaleWindowDays: number;
   };
+  afterSaleDisputeReason?: string;
+  afterSaleDisputeDesc?: string;
+  afterSaleDisputeAt?: string;
 }
 
 /**

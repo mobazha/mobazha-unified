@@ -210,6 +210,82 @@ function mockExtendedSellerOrder(page: import('@playwright/test').Page) {
   });
 }
 
+// T5: Buyer completed order WITH after-sale dispute filed
+function mockCompletedBuyerOrderWithDispute(page: import('@playwright/test').Page) {
+  return page.route('**/v1/orders/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          contract: {
+            ...BASE_ORDER_CONTRACT,
+            orderComplete: {
+              timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingSignatures: [],
+            },
+          },
+          state: 'COMPLETED',
+          read: true,
+          funded: true,
+          paymentTx: '0xabc123',
+          paymentLocked: false,
+          protection: {
+            stage: 'AFTER_SALE_WINDOW',
+            daysRemaining: 43,
+            autoCompleteAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            extendable: false,
+            extended: false,
+            afterSaleWindowDays: 45,
+          },
+          afterSaleDisputeReason: 'QUALITY_ISSUE',
+          afterSaleDisputeDesc:
+            'The left earpiece has a buzzing sound when Active Noise Cancellation is enabled. The issue persists across different audio sources.',
+          afterSaleDisputeAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      }),
+    });
+  });
+}
+
+// T5: Seller view of order with after-sale dispute
+function mockCompletedSellerOrderWithDispute(page: import('@playwright/test').Page) {
+  return page.route('**/v1/orders/**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          contract: {
+            ...BASE_ORDER_CONTRACT,
+            orderComplete: {
+              timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingSignatures: [],
+            },
+          },
+          state: 'COMPLETED',
+          read: true,
+          funded: true,
+          paymentTx: '0xabc123',
+          paymentLocked: false,
+          protection: {
+            stage: 'AFTER_SALE_WINDOW',
+            daysRemaining: 43,
+            autoCompleteAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            extendable: false,
+            extended: false,
+            afterSaleWindowDays: 45,
+          },
+          afterSaleDisputeReason: 'QUALITY_ISSUE',
+          afterSaleDisputeDesc:
+            'The left earpiece has a buzzing sound when Active Noise Cancellation is enabled. The issue persists across different audio sources.',
+          afterSaleDisputeAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      }),
+    });
+  });
+}
+
 test.describe('S6 Phase 3: T5/T8/T10 Screenshots', () => {
   test.beforeEach(async ({ page }) => {
     if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
@@ -290,6 +366,56 @@ test.describe('S6 Phase 3: T5/T8/T10 Screenshots', () => {
     await page.waitForTimeout(2500);
     await page.screenshot({
       path: path.join(OUT, 'p3-t10-seller-extended-mobile.png'),
+      fullPage: true,
+    });
+  });
+
+  // T5: Buyer completed order WITH after-sale dispute filed
+  test('desktop: buyer completed — after-sale dispute filed', async ({ page }) => {
+    await mockCompletedBuyerOrderWithDispute(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('http://localhost:3001/orders/QmOrder001?type=purchase');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2500);
+    await page.screenshot({
+      path: path.join(OUT, 'p3-t5-buyer-dispute-desktop.png'),
+      fullPage: true,
+    });
+  });
+
+  test('mobile: buyer completed — after-sale dispute filed', async ({ page }) => {
+    await mockCompletedBuyerOrderWithDispute(page);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('http://localhost:3001/orders/QmOrder001?type=purchase');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2500);
+    await page.screenshot({
+      path: path.join(OUT, 'p3-t5-buyer-dispute-mobile.png'),
+      fullPage: true,
+    });
+  });
+
+  // T5: Seller view of after-sale dispute
+  test('desktop: seller — after-sale dispute received', async ({ page }) => {
+    await mockCompletedSellerOrderWithDispute(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('http://localhost:3001/orders/QmOrder001?type=sale');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2500);
+    await page.screenshot({
+      path: path.join(OUT, 'p3-t5-seller-dispute-desktop.png'),
+      fullPage: true,
+    });
+  });
+
+  test('mobile: seller — after-sale dispute received', async ({ page }) => {
+    await mockCompletedSellerOrderWithDispute(page);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('http://localhost:3001/orders/QmOrder001?type=sale');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2500);
+    await page.screenshot({
+      path: path.join(OUT, 'p3-t5-seller-dispute-mobile.png'),
       fullPage: true,
     });
   });

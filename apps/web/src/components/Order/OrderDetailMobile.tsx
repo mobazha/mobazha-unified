@@ -54,6 +54,7 @@ import {
   type OrderProtectionStatusProps,
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
+import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -187,6 +188,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       !displayOrder?.hasRated,
     [displayOrder]
   );
+
+  const hasAfterSaleDispute = !!displayOrder?.afterSaleDispute;
 
   // --- Action handler ---
   const handleOrderAction = useCallback(
@@ -651,6 +654,16 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 setIsAfterSaleDispute(true);
                 setShowDisputeModal(true);
               }}
+              disputeFiled={hasAfterSaleDispute}
+            />
+          )}
+
+          {displayOrder.afterSaleDispute && (
+            <AfterSaleDisputeCard
+              dispute={displayOrder.afterSaleDispute}
+              userRole={displayOrder.userRole}
+              onMessageCounterparty={() => setActiveTab('discussion')}
+              className="mt-3"
             />
           )}
 

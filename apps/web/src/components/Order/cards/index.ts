@@ -11,4 +11,5 @@ export { OrderMemoCard, type OrderMemoCardProps } from './OrderMemoCard';
 export { OrderStatusCard, type OrderStatusCardProps } from './OrderStatusCard';
 export { OrderProtectionStatus, type OrderProtectionStatusProps } from './OrderProtectionStatus';
 export { RatingInviteBanner, type RatingInviteBannerProps } from './RatingInviteBanner';
+export { AfterSaleDisputeCard, type AfterSaleDisputeCardProps } from './AfterSaleDisputeCard';
 export { getStatusLabel } from './orderProgressUtils';

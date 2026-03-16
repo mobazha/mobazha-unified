@@ -201,6 +201,8 @@ export interface DisplayOrder {
   fiatPayment?: DisplayFiatPayment;
   /** 买家保障状态（后端 S6 派生字段） */
   protection?: DisplayOrderProtection;
+  /** 售后争议（应用层，资金已释放后的投诉） */
+  afterSaleDispute?: DisplayAfterSaleDispute;
 }
 
 /**
@@ -243,6 +245,15 @@ export interface DisplayOrderProtection {
   extendable: boolean;
   extended: boolean;
   afterSaleWindowDays: number;
+}
+
+/**
+ * 售后争议信息（应用层争议，资金已释放后）
+ */
+export interface DisplayAfterSaleDispute {
+  reason: string;
+  description: string;
+  reportedAt: string;
 }
 
 /**
