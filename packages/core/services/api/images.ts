@@ -11,6 +11,8 @@ interface ImageUploadData {
   image: string; // base64 encoded image data
 }
 
+const MAX_IMAGE_DIMENSION = 2048;
+
 /**
  * 上传商品图片
  * @param images - 图片数据数组
@@ -40,20 +42,91 @@ export async function uploadImage(imageData: ImageUploadData): Promise<Image | n
 }
 
 /**
- * 将 File 对象转换为 base64
+ * Conditionally resize an image file if either dimension exceeds MAX_IMAGE_DIMENSION.
+ * Uses canvas to scale down while preserving aspect ratio and original format.
+ * Skipped for GIF (animated frames) and SVG (vector). Non-image files pass through.
  */
-export function fileToBase64(file: File): Promise<string> {
+const SKIP_RESIZE_TYPES = new Set(['image/gif', 'image/svg+xml']);
+
+function resizeIfNeeded(file: File): Promise<Blob> {
+  if (!file.type.startsWith('image/') || SKIP_RESIZE_TYPES.has(file.type)) {
+    return Promise.resolve(file);
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      const { naturalWidth: w, naturalHeight: h } = img;
+      if (w <= MAX_IMAGE_DIMENSION && h <= MAX_IMAGE_DIMENSION) {
+        resolve(file);
+        return;
+      }
+
+      const scale = Math.min(MAX_IMAGE_DIMENSION / w, MAX_IMAGE_DIMENSION / h);
+      const newW = Math.round(w * scale);
+      const newH = Math.round(h * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = newW;
+      canvas.height = newH;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, newW, newH);
+
+      const hasAlpha = file.type === 'image/png' || file.type === 'image/webp';
+      const outputType = hasAlpha ? file.type : 'image/jpeg';
+      const quality = outputType === 'image/jpeg' ? 0.92 : 0.9;
+
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            resolve(file);
+          }
+        },
+        outputType,
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for resize'));
+    };
+
+    img.src = url;
+  });
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      // 移除 data:image/xxx;base64, 前缀
       const base64 = result.split(',')[1];
       resolve(base64);
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
+}
+
+/**
+ * 将 File 对象转换为 base64。
+ * 图片文件如果尺寸超过 2048px 会先等比缩放再编码，非图片文件直接编码。
+ */
+export async function fileToBase64(file: File): Promise<string> {
+  const blob = await resizeIfNeeded(file);
+  return blobToBase64(blob);
 }
 
 /**

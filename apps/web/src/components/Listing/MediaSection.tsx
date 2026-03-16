@@ -78,6 +78,7 @@ export function MediaSection({
       const newImages: Image[] = [];
       const filesToUpload = Array.from(files).slice(0, maxImages - images.length);
 
+      let failCount = 0;
       for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
 
@@ -89,12 +90,23 @@ export function MediaSection({
 
           if (result.length > 0) {
             newImages.push(...result);
+          } else {
+            failCount++;
           }
         } catch (err) {
+          failCount++;
           console.error('Failed to upload image:', err);
         }
 
         setUploadProgress(((i + 1) / filesToUpload.length) * 100);
+      }
+
+      if (failCount > 0) {
+        toast({
+          title: t('common.error'),
+          description: t('listing.uploadFailed'),
+          variant: 'destructive',
+        });
       }
 
       if (newImages.length > 0) {
@@ -104,7 +116,7 @@ export function MediaSection({
       setIsUploading(false);
       setUploadProgress(0);
     },
-    [images, maxImages, onImagesChange]
+    [images, maxImages, onImagesChange, t, toast]
   );
 
   // 移除图片
