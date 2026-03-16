@@ -145,10 +145,12 @@ function getOrderNotificationDisplay(
       break;
 
     case 'order.stale_warning':
+      name = isBuyer ? vendorName : buyerName;
       text = i18n.t('notifications.order.staleWarning');
       break;
 
     case 'order.expired':
+      name = isBuyer ? vendorName : buyerName;
       text = i18n.t('notifications.order.expired');
       break;
 
