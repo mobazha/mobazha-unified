@@ -19,6 +19,7 @@ export interface OrderActionSheetProps {
   isModerated?: boolean;
   isFulfilled?: boolean;
   paymentMethod?: string;
+  hasRated?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -35,6 +36,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   isModerated,
   isFulfilled,
   paymentMethod,
+  hasRated,
   onAction,
   className,
 }: OrderActionSheetProps) {
@@ -44,8 +46,9 @@ export const OrderActionSheet = memo(function OrderActionSheet({
         isModerated,
         isFulfilled,
         paymentMethod,
+        hasRated,
       }),
-    [orderState, userRole, isModerated, isFulfilled, paymentMethod]
+    [orderState, userRole, isModerated, isFulfilled, paymentMethod, hasRated]
   );
 
   const primaryAction = useMemo(() => getPrimaryAction(actions), [actions]);

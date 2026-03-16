@@ -257,7 +257,7 @@ export async function injectCartData(page: Page, data: SeededVisualData): Promis
         currency: { code: listing.priceCurrency, divisibility: 2 },
       },
       vendorPeerID: data.peerID,
-      vendorHandle: 'TestStore',
+      vendorName: 'TestStore',
     },
     quantity: listing.contractType === 'SERVICE' ? 1 : 2,
   }));

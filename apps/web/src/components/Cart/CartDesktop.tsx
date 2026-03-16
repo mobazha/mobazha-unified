@@ -114,7 +114,7 @@ export function CartDesktop() {
                     className="touch-feedback inline-flex items-center"
                   >
                     <span className="font-medium text-foreground text-sm sm:text-base">
-                      {group.vendorHandle ? `@${group.vendorHandle}` : t('cart.vendorStore')}
+                      {group.vendorName || t('cart.vendorStore')}
                     </span>
                     <svg
                       className="w-3.5 h-3.5 text-muted-foreground ml-1"

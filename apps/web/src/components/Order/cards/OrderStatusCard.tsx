@@ -35,6 +35,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
 }: OrderStatusCardProps) {
   const { t } = useI18n();
 
+  const isCryptoPayment = !order.fiatPayment;
+
   const config = useMemo((): StatusConfig => {
     const isBuyer = order.userRole === 'buyer';
 
@@ -57,6 +59,10 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           message: isBuyer
             ? t('order.statusCard.pendingBuyer')
             : t('order.statusCard.pendingSeller'),
+          hint:
+            isBuyer && isCryptoPayment
+              ? t('order.statusCard.pendingBuyerConfirmingHint')
+              : undefined,
           color: 'text-warning',
           bgColor: 'bg-warning/8 border-warning/20',
           progress: 1,
@@ -134,7 +140,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           progress: 0,
         };
     }
-  }, [order.status, order.userRole, t]);
+  }, [order.status, order.userRole, isCryptoPayment, t]);
 
   const stepLabels = useMemo(
     () => [

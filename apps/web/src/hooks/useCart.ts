@@ -7,7 +7,7 @@ import type { CartItem } from '@mobazha/core';
 
 export interface VendorGroup {
   vendorPeerID: string;
-  vendorHandle?: string;
+  vendorName?: string;
   items: CartItem[];
   subtotal: number;
   currency: string;
@@ -49,7 +49,7 @@ export function useCart() {
       if (!map[key]) {
         map[key] = {
           vendorPeerID: key,
-          vendorHandle: item.listing.vendorHandle,
+          vendorName: item.listing.vendorName,
           items: [],
           subtotal: 0,
           currency: item.listing.price.currency.code,

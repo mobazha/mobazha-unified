@@ -390,7 +390,7 @@ export function ProductDetail({
         thumbnail,
         price: { amount: price, currency: { code: currency, divisibility } },
         vendorPeerID,
-        vendorHandle: product.vendorID?.handle,
+        vendorName: product.vendorID?.name || product.vendorID?.handle,
       },
       quantity,
     });

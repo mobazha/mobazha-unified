@@ -171,7 +171,7 @@ function VendorSection({
         className="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-border touch-feedback"
       >
         <span className="font-medium text-foreground text-sm">
-          {group.vendorHandle ? `@${group.vendorHandle}` : t('cart.vendorStore')}
+          {group.vendorName || t('cart.vendorStore')}
         </span>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </Link>
