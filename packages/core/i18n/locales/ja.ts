@@ -2253,6 +2253,8 @@ export const ja: TranslationResource = {
       fulfilledYourOrder: 'あなたの注文を発送しました',
       youFulfilledOrder: '注文を発送しました',
       completedOrder: '注文を完了しました',
+      staleWarning: 'Order has been inactive for several days',
+      expired: 'Order auto-canceled due to timeout',
     },
     dispute: {
       startedDispute: '紛争を開始しました',

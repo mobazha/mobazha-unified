@@ -2499,6 +2499,8 @@ export const zh: TranslationResource = {
       fulfilledYourOrder: '发货了您的订单',
       youFulfilledOrder: '您发货了一个订单',
       completedOrder: '完成了订单',
+      staleWarning: '订单已数天无活动',
+      expired: '订单因超时已自动取消',
     },
     // 争议通知
     dispute: {

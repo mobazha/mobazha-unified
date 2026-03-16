@@ -1372,6 +1372,8 @@ export interface TranslationResource {
       fulfilledYourOrder: string;
       youFulfilledOrder: string;
       completedOrder: string;
+      staleWarning: string;
+      expired: string;
     };
     // 争议通知
     dispute: {

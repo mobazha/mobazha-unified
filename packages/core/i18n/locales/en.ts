@@ -670,6 +670,7 @@ export const en: TranslationResource = {
       awaitingPaymentSeller: 'Waiting for buyer to complete payment',
       awaitingPaymentHint: 'Tap "Pay Now" below to proceed',
       pendingBuyer: 'Waiting for the seller to accept your order',
+      pendingBuyerConfirmingHint: 'Confirming on-chain, usually takes 15–60 seconds',
       pendingSeller: 'New order received — review and accept to proceed',
       processingBuyer: 'The seller is preparing your order',
       processingSeller: 'Order accepted — prepare and ship when ready',
@@ -872,6 +873,8 @@ export const en: TranslationResource = {
       fulfillSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
       completeSuccess: 'Order Completed',
       completeSuccessDesc: 'The order has been completed. Funds have been released to the seller.',
+      rateSuccess: 'Review Submitted',
+      rateSuccessDesc: 'Your review has been submitted successfully.',
       walletRequired: 'Wallet Required',
       pleaseConnectWallet: 'Please connect your wallet to complete this order.',
       walletConnectionCancelled: 'Wallet connection was cancelled.',
@@ -2615,6 +2618,8 @@ export const en: TranslationResource = {
       fulfilledYourOrder: 'fulfilled your order',
       youFulfilledOrder: 'You fulfilled an order',
       completedOrder: 'completed the order',
+      staleWarning: 'Order has been inactive for several days',
+      expired: 'Order auto-canceled due to timeout',
     },
     // Dispute notifications
     dispute: {
@@ -2656,6 +2661,8 @@ export const en: TranslationResource = {
       unfollowed: 'Unfollowed',
       moderatorAdded: 'Moderator Added',
       moderatorRemoved: 'Moderator Removed',
+      orderExpired: 'Order Expired',
+      orderStaleWarning: 'Order Warning',
     },
     // Notification list messages (for API-fetched notifications)
     messages: {
@@ -2693,6 +2700,12 @@ export const en: TranslationResource = {
       moderatorAddedBySomeone: 'You were added as a moderator',
       moderatorRemovedBy: '{{name}} removed you as a moderator',
       moderatorRemovedBySomeone: 'You were removed as a moderator',
+      orderExpiredWithTitle: '"{{title}}" order #{{orderId}} has expired',
+      orderExpiredWithId: 'Order #{{orderId}} has expired',
+      orderExpiredNoId: 'An order has expired',
+      orderStaleWarningWithTitle: '"{{title}}" order #{{orderId}} may need attention',
+      orderStaleWarningWithId: 'Order #{{orderId}} may need attention',
+      orderStaleWarningNoId: 'An order may need attention',
       defaultNotification: 'Notification',
     },
     // TTS (Text-to-Speech) announcements

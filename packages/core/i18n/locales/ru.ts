@@ -2307,6 +2307,8 @@ export const ru: TranslationResource = {
       fulfilledYourOrder: 'отправил ваш заказ',
       youFulfilledOrder: 'Вы отправили заказ',
       completedOrder: 'завершил заказ',
+      staleWarning: 'Order has been inactive for several days',
+      expired: 'Order auto-canceled due to timeout',
     },
     dispute: {
       startedDispute: 'открыл спор',
