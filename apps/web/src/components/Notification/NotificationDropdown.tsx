@@ -61,6 +61,7 @@ function getNotificationIcon(type: string) {
     case 'dispute.case_update':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
     case 'social.follow':
+    case 'social.unfollow':
     case 'social.moderator_add':
     case 'social.moderator_remove':
       return <UserPlus className={cn(iconClass, 'text-primary')} />;

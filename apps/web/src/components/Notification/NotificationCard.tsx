@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Package,
@@ -87,6 +87,7 @@ function getNotificationIcon(type: string): React.ReactNode {
     case 'dispute.case_update':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
     case 'social.follow':
+    case 'social.unfollow':
     case 'social.moderator_add':
     case 'social.moderator_remove':
       return <UserPlus className={cn(iconClass, 'text-primary')} />;
@@ -104,6 +105,37 @@ function formatPeerDisplay(peerId?: string, handle?: string): string {
   if (!peerId) return '';
   if (peerId.length <= 12) return peerId;
   return `${peerId.slice(0, 8)}…${peerId.slice(-4)}`;
+}
+
+// ============ Avatar with fallback ============
+
+function OrderNotificationAvatar({
+  avatarHash,
+  name,
+  type,
+}: {
+  avatarHash?: string;
+  name?: string;
+  type: string;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const showImg = avatarHash && !imgFailed;
+
+  return (
+    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+      {showImg ? (
+        <img
+          src={getImageUrl(avatarHash) || ''}
+          alt={name || 'User'}
+          className="w-full h-full object-cover"
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        getNotificationIcon(type)
+      )}
+    </div>
+  );
 }
 
 // ============ 订单通知卡片 ============
@@ -150,23 +182,11 @@ export function OrderNotificationCard({
       onClick={handleClick}
     >
       {/* 头像或图标 */}
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-        {counterpartyAvatar ? (
-          <img
-            src={getImageUrl(counterpartyAvatar) || ''}
-            alt={counterpartyName || 'User'}
-            className="w-full h-full object-cover"
-            onError={e => {
-              const parent = (e.target as HTMLImageElement).parentElement;
-              if (parent) {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }
-            }}
-          />
-        ) : (
-          getNotificationIcon(type)
-        )}
-      </div>
+      <OrderNotificationAvatar
+        avatarHash={counterpartyAvatar}
+        name={counterpartyName}
+        type={type}
+      />
 
       {/* 内容 */}
       <div className="flex-1 min-w-0">
