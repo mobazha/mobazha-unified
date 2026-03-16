@@ -2392,6 +2392,8 @@ export const fr: TranslationResource = {
       fulfilledYourOrder: 'a expédié votre commande',
       youFulfilledOrder: 'Vous avez expédié une commande',
       completedOrder: 'a terminé la commande',
+      staleWarning: 'Order has been inactive for several days',
+      expired: 'Order auto-canceled due to timeout',
     },
     dispute: {
       startedDispute: 'a ouvert un litige',

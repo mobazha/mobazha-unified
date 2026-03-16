@@ -17,7 +17,9 @@ export type OrderNotificationType =
   | 'order.refunded'
   | 'order.fulfilled'
   | 'order.completed'
-  | 'order.vendor_finalized';
+  | 'order.vendor_finalized'
+  | 'order.stale_warning'
+  | 'order.expired';
 
 export type DisputeNotificationType =
   | 'dispute.opened'
@@ -231,6 +233,8 @@ export const ORDER_NOTIFICATION_TYPES: OrderNotificationType[] = [
   'order.fulfilled',
   'order.completed',
   'order.vendor_finalized',
+  'order.stale_warning',
+  'order.expired',
 ];
 
 export const DISPUTE_NOTIFICATION_TYPES: DisputeNotificationType[] = [

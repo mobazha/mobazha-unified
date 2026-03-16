@@ -2274,6 +2274,8 @@ export const ko: TranslationResource = {
       fulfilledYourOrder: '주문을 발송했습니다',
       youFulfilledOrder: '주문을 발송했습니다',
       completedOrder: '주문을 완료했습니다',
+      staleWarning: 'Order has been inactive for several days',
+      expired: 'Order auto-canceled due to timeout',
     },
     dispute: {
       startedDispute: '분쟁을 시작했습니다',
