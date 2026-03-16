@@ -435,12 +435,16 @@ const mockBuyerProfile = {
  * Set up route mocking for order detail page.
  * Includes order data + profile data for counterparty card rendering.
  */
-export async function mockOrderDetailAPI(page: Page): Promise<void> {
+export async function mockOrderDetailAPI(
+  page: Page,
+  overrides?: Record<string, unknown>
+): Promise<void> {
+  const detail = overrides ? { ...mockOrderDetail, ...overrides } : mockOrderDetail;
   await page.route('**/v1/orders/**', route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: wrapData(mockOrderDetail),
+      body: wrapData(detail),
     });
   });
 

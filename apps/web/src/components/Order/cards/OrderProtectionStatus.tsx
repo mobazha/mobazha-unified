@@ -3,7 +3,7 @@
 import React, { memo, useMemo, useState, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { cn } from '@/lib/utils';
-import { Lock, Truck, Timer, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export interface OrderProtectionStatusProps {
   stage:
@@ -23,30 +23,6 @@ export interface OrderProtectionStatusProps {
   className?: string;
 }
 
-const STAGES = [
-  { key: 'escrowed', icon: Lock },
-  { key: 'shipping', icon: Truck },
-  { key: 'protectionPeriod', icon: Timer },
-  { key: 'completed', icon: CheckCircle2 },
-] as const;
-
-function getActiveStepIndex(stage: OrderProtectionStatusProps['stage']): number {
-  switch (stage) {
-    case 'ESCROWED':
-      return 0;
-    case 'SHIPPING':
-      return 1;
-    case 'PROTECTION_PERIOD':
-    case 'DISPUTED':
-      return 2;
-    case 'COMPLETED':
-    case 'AFTER_SALE_WINDOW':
-      return 3;
-    default:
-      return 0;
-  }
-}
-
 export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   stage,
   daysRemaining = 0,
@@ -59,10 +35,7 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   className,
 }: OrderProtectionStatusProps) {
   const { t } = useI18n();
-  const activeStep = getActiveStepIndex(stage);
   const isDisputed = stage === 'DISPUTED';
-
-  const stageLabels = useMemo(() => STAGES.map(s => t(`trust.protection.${s.key}`)), [t]);
 
   const countdownText = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' && stage !== 'DISPUTED') return null;
@@ -108,15 +81,6 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     return null;
   }, [stage, extended, extendable, userRole, onExtendProtection, t]);
 
-  const actionHints = useMemo(() => {
-    if (stage !== 'PROTECTION_PERIOD' || userRole !== 'buyer') return null;
-    return (
-      <p className="text-xs text-muted-foreground mt-1">
-        {t('trust.protection.confirmEarly')} · {t('trust.protection.reportIssue')}
-      </p>
-    );
-  }, [stage, userRole, t]);
-
   const completedText = useMemo(() => {
     if (stage !== 'COMPLETED') return null;
     return userRole === 'seller'
@@ -130,172 +94,84 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     return t('trust.protection.afterSaleDesc', { days });
   }, [stage, afterSaleWindowDays, t]);
 
+  const hasContent =
+    countdownText || afterSaleText || completedText || autoCompleteText || extensionText;
+
+  if (!hasContent && !isDisputed) return null;
+
+  const Icon = isDisputed ? AlertTriangle : ShieldCheck;
+  const iconColor = isDisputed ? 'text-warning' : 'text-primary';
+  const bgStyle = isDisputed ? 'bg-warning/8 border-warning/20' : 'bg-primary/5 border-primary/15';
+
+  const hasActions =
+    stage === 'PROTECTION_PERIOD' &&
+    extendable &&
+    !extended &&
+    userRole === 'buyer' &&
+    onExtendProtection;
+
   return (
     <div
-      className={cn(
-        'rounded-xl border p-3',
-        isDisputed ? 'bg-warning/8 border-warning/20' : 'bg-card border-border',
-        className
-      )}
+      className={cn('rounded-xl border p-3', bgStyle, className)}
       data-testid="order-protection-status"
     >
-      {isDisputed && (
-        <div className="flex items-center gap-2 mb-3 text-warning">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span className="text-sm font-medium">{t('trust.protection.disputed')}</span>
+      <div className="flex items-start gap-2.5">
+        <div className={cn('mt-0.5 shrink-0', iconColor)}>
+          <Icon className="w-4 h-4" />
         </div>
-      )}
-
-      {/* Desktop: horizontal 4-step progress bar */}
-      <div className="hidden md:block">
-        <div className="flex items-center gap-1 px-0.5">
-          {[0, 1, 2, 3].map(i => (
-            <div
-              key={i}
-              className={cn(
-                'h-1.5 flex-1 rounded-full transition-colors',
-                i < activeStep || stage === 'COMPLETED' || stage === 'AFTER_SALE_WINDOW'
-                  ? 'bg-success'
-                  : i === activeStep && isDisputed
-                    ? 'bg-warning'
-                    : i === activeStep
-                      ? 'bg-primary'
-                      : 'bg-muted-foreground/15'
-              )}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between mt-1.5 gap-1">
-          {STAGES.map((s, i) => {
-            const Icon = s.icon;
-            const isCompleted =
-              i < activeStep || stage === 'COMPLETED' || stage === 'AFTER_SALE_WINDOW';
-            const isActive = i === activeStep && !isDisputed;
-            const isActiveDisputed = i === activeStep && isDisputed;
-
-            return (
-              <div
-                key={s.key}
+        <div
+          className={cn(
+            'flex-1 min-w-0',
+            hasActions && 'sm:flex sm:items-start sm:justify-between sm:gap-4'
+          )}
+        >
+          <div className="min-w-0">
+            {countdownText && (
+              <p
                 className={cn(
-                  'flex flex-col items-center flex-1 min-w-0',
-                  isCompleted && 'text-success',
-                  isActive && 'text-primary',
-                  isActiveDisputed && 'text-warning',
-                  !isCompleted && !isActive && !isActiveDisputed && 'text-muted-foreground/50'
+                  'text-sm font-medium',
+                  isDisputed ? 'text-warning' : 'text-foreground'
                 )}
               >
-                <Icon className="w-3.5 h-3.5 shrink-0 mb-0.5" />
-                <span
-                  className={cn(
-                    'text-[10px] leading-tight text-center truncate max-w-full',
-                    (isCompleted || isActive || isActiveDisputed) && 'font-medium'
-                  )}
-                >
-                  {stageLabels[i]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Mobile: compact vertical layout */}
-      <div className="md:hidden flex flex-col gap-2">
-        {STAGES.map((s, i) => {
-          const Icon = s.icon;
-          const isCompleted =
-            i < activeStep || stage === 'COMPLETED' || stage === 'AFTER_SALE_WINDOW';
-          const isActive = i === activeStep && !isDisputed;
-          const isActiveDisputed = i === activeStep && isDisputed;
-
-          return (
-            <div
-              key={s.key}
-              className={cn(
-                'flex items-center gap-2',
-                isCompleted && 'text-success',
-                isActive && 'text-primary',
-                isActiveDisputed && 'text-warning',
-                !isCompleted && !isActive && !isActiveDisputed && 'text-muted-foreground/50'
-              )}
-            >
-              <div
+                {countdownText}
+              </p>
+            )}
+            {autoCompleteText && (
+              <p className="text-xs text-muted-foreground mt-0.5">{autoCompleteText}</p>
+            )}
+            {extensionText && (
+              <p
                 className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center shrink-0',
-                  isCompleted && 'bg-success/15',
-                  isActive && 'bg-primary/15',
-                  isActiveDisputed && 'bg-warning/15',
-                  !isCompleted && !isActive && !isActiveDisputed && 'bg-muted/30'
+                  'text-xs mt-0.5',
+                  extended ? 'text-primary font-medium' : 'text-muted-foreground'
                 )}
               >
-                <Icon className="w-3 h-3" />
-              </div>
-              <span
-                className={cn(
-                  'text-xs',
-                  isCompleted && 'font-medium',
-                  isActive && 'font-medium',
-                  isActiveDisputed && 'font-medium'
-                )}
-              >
-                {stageLabels[i]}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Countdown / action hints / completion message */}
-      {(countdownText ||
-        actionHints ||
-        afterSaleText ||
-        completedText ||
-        autoCompleteText ||
-        extensionText) && (
-        <div className="mt-3 pt-2 border-t border-border">
-          {countdownText && (
-            <p
-              className={cn('text-sm font-medium', isDisputed ? 'text-warning' : 'text-foreground')}
-            >
-              {countdownText}
-            </p>
-          )}
-          {autoCompleteText && (
-            <p className="text-xs text-muted-foreground mt-1">{autoCompleteText}</p>
-          )}
-          {extensionText && (
-            <p
-              className={cn(
-                'text-xs mt-1',
-                extended ? 'text-primary font-medium' : 'text-muted-foreground'
-              )}
-            >
-              {extensionText}
-            </p>
-          )}
-          {stage === 'PROTECTION_PERIOD' &&
-            extendable &&
-            !extended &&
-            userRole === 'buyer' &&
-            onExtendProtection && (
+                {extensionText}
+              </p>
+            )}
+            {completedText && <p className="text-sm font-medium text-success">{completedText}</p>}
+            {afterSaleText && (
+              <p className="text-xs text-muted-foreground mt-0.5">{afterSaleText}</p>
+            )}
+          </div>
+          {hasActions && (
+            <div className="mt-2 sm:mt-0 shrink-0">
               <button
                 type="button"
                 onClick={handleExtend}
                 disabled={extending}
                 className={cn(
-                  'mt-2 text-xs font-medium px-3 py-1.5 rounded-md transition-colors',
+                  'text-xs font-medium px-3 py-1.5 rounded-md transition-colors',
                   'bg-primary/10 text-primary hover:bg-primary/20',
                   'disabled:opacity-50 disabled:cursor-not-allowed'
                 )}
               >
                 {extending ? t('common.loading') : t('trust.protection.extendButton')}
               </button>
-            )}
-          {completedText && <p className="text-sm font-medium text-success">{completedText}</p>}
-          {actionHints}
-          {afterSaleText && <p className="text-xs text-muted-foreground mt-1">{afterSaleText}</p>}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 });
