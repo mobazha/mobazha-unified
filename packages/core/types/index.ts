@@ -113,6 +113,7 @@ export type {
   DisplayOrder,
   DisplayOrderItem,
   DisplayOrderParticipant,
+  DisplayOrderProtection,
   DisplayModerator,
   DisplayTimelineEvent,
   DisplayDispute,
