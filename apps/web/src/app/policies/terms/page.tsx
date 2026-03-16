@@ -52,7 +52,7 @@ export default function TermsOfServicePage() {
       </div>
 
       <p className="text-xs text-muted-foreground pt-4 border-t border-border">
-        {t('policies.lastUpdated')}: February 2026
+        {t('policies.lastUpdated')}: March 2026
       </p>
     </VStack>
   );
