@@ -2918,6 +2918,7 @@ export const zh: TranslationResource = {
       productType: '产品类型',
       shipping: '物流',
       variants: '变体',
+      files: '文件',
       policies: '政策',
       other: '其他设置',
     },
@@ -3225,6 +3226,7 @@ export const zh: TranslationResource = {
     // 发布
     publish: '发布',
     saveDraft: '保存草稿',
+    unpublish: '下架',
 
     // NSFW
     nsfwLabel: '成人内容',

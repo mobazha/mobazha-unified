@@ -17,6 +17,7 @@ import type {
 } from '../types';
 import { productsApi } from '../services/api';
 import { mergeSkus } from '../utils/variantUtils';
+import { toMinimalUnit } from '../services/currencyService';
 
 /**
  * 表单数据结构
@@ -382,10 +383,11 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
    * 构建 API 请求数据
    */
   const buildRequestData = useCallback(() => {
+    const priceMinimal = toMinimalUnit(parseFloat(formData.price) || 0, formData.pricingCurrency);
     const itemData: Record<string, unknown> = {
       title: formData.title,
       description: formData.description,
-      price: String(parseFloat(formData.price) || 0),
+      price: String(priceMinimal),
       nsfw: formData.nsfw,
       tags: formData.tags,
       images: formData.images,
@@ -400,7 +402,11 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
 
     // Compare at price (maps to regularPrice in proto)
     if (formData.compareAtPrice) {
-      itemData.regularPrice = formData.compareAtPrice;
+      const compareAtMinimal = toMinimalUnit(
+        parseFloat(formData.compareAtPrice) || 0,
+        formData.pricingCurrency
+      );
+      itemData.regularPrice = String(compareAtMinimal);
     }
 
     const data: Record<string, unknown> = {
@@ -423,8 +429,12 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       formData.skus.map(sku => ({
         productID: sku.productID,
         selections: sku.selections,
-        price: sku.price || undefined,
-        compareAtPrice: sku.compareAtPrice || undefined,
+        price: sku.price
+          ? String(toMinimalUnit(parseFloat(sku.price) || 0, formData.pricingCurrency))
+          : undefined,
+        compareAtPrice: sku.compareAtPrice
+          ? String(toMinimalUnit(parseFloat(sku.compareAtPrice) || 0, formData.pricingCurrency))
+          : undefined,
         quantity: sku.quantity === -1 ? '-1' : String(sku.quantity),
         images: sku.images,
         barcode: sku.barcode || undefined,

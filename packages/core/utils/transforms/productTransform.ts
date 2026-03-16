@@ -14,6 +14,7 @@ import type {
 } from '../../types';
 import type { ListingFormData } from '../../hooks/useListingForm';
 import { DEFAULT_LOCAL_CURRENCY } from '../../types/currency';
+import { fromMinimalUnit } from '../../services/currencyService';
 
 /**
  * 将 API 返回的 Product 转换为 ListingFormData
@@ -37,13 +38,21 @@ export function convertProductToFormData(
       typeof c === 'string' ? c : c.code
     ) || [];
 
+  const pricingCurrency = metadata?.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY;
+
+  const priceInStandardUnit =
+    item.price != null ? fromMinimalUnit(item.price, pricingCurrency).toString() : '';
+  const compareAtPriceInStandardUnit = item.regularPrice
+    ? fromMinimalUnit(Number(item.regularPrice), pricingCurrency).toString()
+    : '';
+
   const result: Partial<ListingFormData> = {
     title: item.title || '',
     shortDescription: item.shortDescription || '',
     description: item.description || '',
-    price: item.price?.toString() || '',
-    compareAtPrice: item.regularPrice || '',
-    pricingCurrency: metadata?.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY,
+    price: priceInStandardUnit,
+    compareAtPrice: compareAtPriceInStandardUnit,
+    pricingCurrency,
     status: product.status || 'published',
     contractType: metadata?.contractType as ContractType,
     condition: (item.condition as ProductCondition) || 'NEW',
@@ -78,8 +87,10 @@ export function convertProductToFormData(
     skus: (item.skus || []).map(sku => ({
       productID: sku.productID || '',
       selections: (sku.selections || []).map(s => ({ option: s.option, variant: s.variant })),
-      price: sku.price || '',
-      compareAtPrice: sku.compareAtPrice || '',
+      price: sku.price ? fromMinimalUnit(Number(sku.price), pricingCurrency).toString() : '',
+      compareAtPrice: sku.compareAtPrice
+        ? fromMinimalUnit(Number(sku.compareAtPrice), pricingCurrency).toString()
+        : '',
       quantity: sku.quantity ? parseInt(sku.quantity, 10) : -1,
       images: sku.images || [],
       barcode: sku.barcode || '',

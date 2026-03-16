@@ -2520,6 +2520,7 @@ export const ja: TranslationResource = {
       productType: 'カテゴリー',
       shipping: '配送',
       variants: 'バリエーション',
+      files: 'ファイル',
       policies: 'ポリシー',
       other: 'その他の設定',
     },

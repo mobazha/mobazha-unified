@@ -1579,6 +1579,7 @@ export interface TranslationResource {
       productType: string;
       shipping: string;
       variants: string;
+      files: string;
       policies: string;
       other: string;
     };
@@ -1830,6 +1831,7 @@ export interface TranslationResource {
     // Publish
     publish: string;
     saveDraft?: string;
+    unpublish?: string;
 
     // Short Description
     shortDescription?: string;

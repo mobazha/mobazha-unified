@@ -2547,6 +2547,7 @@ export const ru: TranslationResource = {
       productType: 'Категория',
       shipping: 'Доставка',
       variants: 'Варианты',
+      files: 'Файлы',
       policies: 'Политики',
       other: 'Прочие настройки',
     },

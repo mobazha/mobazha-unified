@@ -454,7 +454,20 @@ export default function EditListingPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{t('listing.editListing')}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-foreground">{t('listing.editListing')}</h1>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      formData.status === 'published'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {formData.status === 'published'
+                      ? t('listing.statusPublished')
+                      : t('listing.statusDraft')}
+                  </span>
+                </div>
                 <p className="text-sm text-muted-foreground">{formData.title || slug}</p>
               </div>
             </div>
@@ -490,7 +503,7 @@ export default function EditListingPage() {
                 {t('common.cancel')}
               </Button>
               <Button variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
-                {t('listing.saveDraft')}
+                {formData.status === 'published' ? t('listing.unpublish') : t('listing.saveDraft')}
               </Button>
               <Button
                 onClick={handleSubmit}

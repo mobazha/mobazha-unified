@@ -2543,6 +2543,7 @@ export const pt: TranslationResource = {
       productType: 'Categoria',
       shipping: 'Envio',
       variants: 'Variantes',
+      files: 'Arquivos',
       policies: 'Políticas',
       other: 'Outras configurações',
     },
