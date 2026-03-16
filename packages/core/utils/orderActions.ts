@@ -13,6 +13,7 @@ export type OrderAction =
   | 'Pay' // 买家支付
   | 'Cancel' // 买家取消
   | 'Dispute' // 发起争议
+  | 'AfterSaleDispute' // 售后争议（已完成订单在售后窗口内）
   | 'Complete' // 买家确认收货
   | 'WriteReview' // 写评价
   | 'Accept' // 卖家接受订单
@@ -323,6 +324,7 @@ export function getOrderActions(
     isExpired?: boolean;
     paymentMethod?: string;
     hasRated?: boolean;
+    inAfterSaleWindow?: boolean;
   } = {}
 ): OrderAction[] {
   const {
@@ -331,6 +333,7 @@ export function getOrderActions(
     isExpired = false,
     paymentMethod,
     hasRated = false,
+    inAfterSaleWindow = false,
   } = options;
 
   const config = ORDER_STATUS_CONFIG[state];
@@ -381,6 +384,15 @@ export function getOrderActions(
     actions.push('WriteReview');
   }
 
+  // Buyer can open an after-sale dispute during the after-sale window
+  if (
+    role === 'buyer' &&
+    inAfterSaleWindow &&
+    (state === 'COMPLETED' || state === 'PAYMENT_FINALIZED')
+  ) {
+    actions.push('AfterSaleDispute');
+  }
+
   // 特殊情况：卖家在发货后超时可以领取资金
   if (role === 'seller' && state === 'FULFILLED' && isExpired && isFulfilled) {
     // 将 Dispute 替换为 Claim
@@ -399,8 +411,14 @@ export function getOrderActions(
  * 获取主要操作（用于突出显示）
  */
 export function getPrimaryAction(actions: OrderAction[]): OrderAction | null {
-  // 优先级：Pay > Complete > Accept > Fulfill > AcceptPayout
-  const priorityOrder: OrderAction[] = ['Pay', 'Complete', 'Accept', 'Fulfill', 'AcceptPayout'];
+  const priorityOrder: OrderAction[] = [
+    'Pay',
+    'Complete',
+    'Accept',
+    'Fulfill',
+    'AcceptPayout',
+    'WriteReview',
+  ];
 
   for (const action of priorityOrder) {
     if (actions.includes(action)) {
@@ -455,6 +473,11 @@ export function getActionButtonConfig(action: OrderAction, _role: UserRole): Act
       variant: 'outline',
       icon: 'alert-triangle',
     },
+    AfterSaleDispute: {
+      label: 'Report Issue',
+      variant: 'outline',
+      icon: 'alert-triangle',
+    },
     Complete: {
       label: 'Confirm Receipt',
       variant: 'primary',
@@ -462,7 +485,7 @@ export function getActionButtonConfig(action: OrderAction, _role: UserRole): Act
     },
     WriteReview: {
       label: 'Write Review',
-      variant: 'outline',
+      variant: 'primary',
       icon: 'star',
     },
     Accept: {

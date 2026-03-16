@@ -823,6 +823,7 @@ export const en: TranslationResource = {
     receiptConfirmed: 'Order completed successfully! Funds have been released to the seller.',
     receiptConfirmFailed: 'Failed to confirm receipt: ',
     disputeOpenedSuccess: 'Dispute has been opened. The moderator will review your case.',
+    afterSaleDisputeSuccess: 'Your issue has been reported. The seller will be notified.',
     disputeOpenFailed: 'Failed to open dispute: ',
     provideDisputeReason: 'Please provide a reason for the dispute',
     orderShipped: 'Order marked as shipped!',
@@ -846,6 +847,7 @@ export const en: TranslationResource = {
       pay: 'Pay Now',
       cancel: 'Cancel Order',
       dispute: 'Open Dispute',
+      reportIssue: 'Report Issue',
       complete: 'Confirm Receipt',
       writeReview: 'Write Review',
       accept: 'Accept Order',
@@ -995,6 +997,9 @@ export const en: TranslationResource = {
       star3: 'Average',
       star4: 'Good',
       star5: 'Excellent',
+      inviteTitle: 'How was your experience?',
+      inviteDesc: 'Share your feedback in 30 seconds — it helps other buyers and the seller.',
+      writeReview: 'Write a Review',
     },
     // Accept modal
     accept: {
@@ -1056,6 +1061,17 @@ export const en: TranslationResource = {
       confirm: 'Open Dispute',
       viewInProviderDashboard: 'Respond in payment provider dashboard',
       haveProblem: 'Having a problem with this order?',
+      afterSaleTitle: 'Report an Issue',
+      afterSaleDescription:
+        'Describe the issue with your completed order. The seller will be notified.',
+      selectReason: 'Please select a reason',
+      reasonLabel: 'Reason',
+      reason: {
+        notReceived: 'Item not received',
+        notAsDescribed: 'Item not as described',
+        qualityIssue: 'Quality issue',
+        other: 'Other',
+      },
     },
     fiatDispute: {
       title: 'Payment Dispute Filed',

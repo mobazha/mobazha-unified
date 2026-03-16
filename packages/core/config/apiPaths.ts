@@ -75,6 +75,7 @@ export const NODE_API = {
 
   // --- Disputes (orderID in URL) ---
   DISPUTE_OPEN: (orderId: string) => `/disputes/${orderId}/open`,
+  DISPUTE_AFTER_SALE: (orderId: string) => `/disputes/${orderId}/after-sale`,
   DISPUTE_CLOSE: (orderId: string) => `/disputes/${orderId}/close`,
   DISPUTE_RELEASE: (orderId: string) => `/disputes/${orderId}/release`,
   DISPUTE_RELEASE_AFTER_TIMEOUT: (orderId: string) => `/disputes/${orderId}/release-after-timeout`,

@@ -12,6 +12,7 @@ import {
   useI18n,
   isOrderFulfilled,
   ordersApi,
+  disputesApi,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
@@ -46,6 +47,7 @@ import {
   OrderProtectionStatus,
   type OrderProtectionStatusProps,
 } from '@/components/Order/cards/OrderProtectionStatus';
+import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
@@ -86,6 +88,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
@@ -112,6 +115,14 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
       toast({ variant: 'destructive', description: String(err) });
     }
   }, [orderId, refetch, t, toast]);
+
+  const showRatingInvite = useMemo(
+    () =>
+      displayOrder?.userRole === 'buyer' &&
+      displayOrder?.status === 'completed' &&
+      !displayOrder?.hasRated,
+    [displayOrder]
+  );
 
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
@@ -149,6 +160,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setConfirmDialog('acceptPayout');
           break;
         case 'Dispute':
+          setIsAfterSaleDispute(false);
+          setShowDisputeModal(true);
+          break;
+        case 'AfterSaleDispute':
+          setIsAfterSaleDispute(true);
           setShowDisputeModal(true);
           break;
         case 'WriteReview':
@@ -183,6 +199,30 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         toast({
           title: t('order.disputeOpened'),
           description: t('order.disputeOpenedSuccess'),
+        });
+        setTimeout(() => refetch(), 500);
+      } catch (error) {
+        toast({
+          title: t('order.actions.error'),
+          description: (error as Error).message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsDisputeLoading(false);
+      }
+    },
+    [orderId, refetch, t, toast]
+  );
+
+  const handleAfterSaleDisputeSubmit = useCallback(
+    async (reason: string, description: string) => {
+      setIsDisputeLoading(true);
+      try {
+        await disputesApi.openAfterSaleDispute(orderId, reason, description);
+        setShowDisputeModal(false);
+        toast({
+          title: t('order.disputeOpened'),
+          description: t('order.afterSaleDisputeSuccess'),
         });
         setTimeout(() => refetch(), 500);
       } catch (error) {
@@ -382,6 +422,13 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   />
                 )}
 
+                {showRatingInvite && (
+                  <RatingInviteBanner
+                    onWriteReview={() => executeConfirmAction('complete')}
+                    className="mb-4"
+                  />
+                )}
+
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
                 <OrderSummaryCard
                   displayOrder={displayOrder}
@@ -489,6 +536,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         currency={displayOrder.currency}
         paymentCoin={coreOrder?.contract?.paymentSent?.coin}
         hasRated={displayOrder.hasRated}
+        inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
         onAction={handleOrderAction}
       />
 
@@ -545,6 +593,8 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         isOpen={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
         onSubmit={handleDisputeSubmit}
+        onAfterSaleSubmit={handleAfterSaleDisputeSubmit}
+        isAfterSale={isAfterSaleDispute}
         isLoading={isDisputeLoading}
       />
 
