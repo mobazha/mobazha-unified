@@ -10,6 +10,7 @@ import type {
   DisplayModerator,
   DisplayFiatPayment,
   DisplayFiatDispute,
+  DisplayOrderProtection,
   DisplayTimelineEvent,
   DisplayOrderStatus,
   DisplayUserRole,
@@ -133,6 +134,14 @@ interface RealOrderData {
     };
   };
   fiatMetadata?: Record<string, string>;
+  protection?: {
+    stage: string;
+    daysRemaining: number;
+    autoCompleteAt?: string;
+    extendable: boolean;
+    extended: boolean;
+    afterSaleWindowDays: number;
+  };
 }
 
 // ============ Helper Functions ============
@@ -737,6 +746,16 @@ export function transformCoreOrder(
     hasRated:
       Array.isArray(contract.orderComplete?.ratingSignatures) &&
       contract.orderComplete.ratingSignatures.length > 0,
+    protection: data.protection
+      ? ({
+          stage: data.protection.stage,
+          daysRemaining: data.protection.daysRemaining,
+          autoCompleteAt: data.protection.autoCompleteAt,
+          extendable: data.protection.extendable,
+          extended: data.protection.extended,
+          afterSaleWindowDays: data.protection.afterSaleWindowDays,
+        } as DisplayOrderProtection)
+      : undefined,
   };
 
   return result;

@@ -199,6 +199,8 @@ export interface DisplayOrder {
   cancelReason?: string;
   /** 法币支付信息（仅当 paymentMethod === FIAT 时存在） */
   fiatPayment?: DisplayFiatPayment;
+  /** 买家保障状态（后端 S6 派生字段） */
+  protection?: DisplayOrderProtection;
 }
 
 /**
@@ -229,6 +231,18 @@ export interface DisplayFiatPayment {
   brand?: string;
   /** 卡尾号 */
   last4?: string;
+}
+
+/**
+ * 买家保障状态（从后端 protection 派生字段映射）
+ */
+export interface DisplayOrderProtection {
+  stage: 'ESCROWED' | 'PROTECTION_PERIOD' | 'COMPLETED' | 'DISPUTED' | 'AFTER_SALE_WINDOW';
+  daysRemaining: number;
+  autoCompleteAt?: string;
+  extendable: boolean;
+  extended: boolean;
+  afterSaleWindowDays: number;
 }
 
 /**

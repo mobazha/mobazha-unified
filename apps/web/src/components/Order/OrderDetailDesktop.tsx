@@ -99,22 +99,8 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
 
   const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
-    if (!displayOrder) return null;
-    switch (displayOrder.status) {
-      case 'paid':
-      case 'processing':
-        return 'ESCROWED';
-      case 'shipped':
-        return 'SHIPPING';
-      case 'delivered':
-        return 'PROTECTION_PERIOD';
-      case 'completed':
-        return 'COMPLETED';
-      case 'disputed':
-        return 'DISPUTED';
-      default:
-        return null;
-    }
+    if (!displayOrder?.protection) return null;
+    return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
   }, [displayOrder]);
 
   // --- OrderFooter action handler ---
@@ -370,10 +356,14 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {/* Status context card — gives users clear next-step guidance */}
                 <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
 
-                {protectionStage && (
+                {protectionStage && displayOrder.protection && (
                   <OrderProtectionStatus
                     stage={protectionStage}
-                    daysRemaining={14}
+                    daysRemaining={displayOrder.protection.daysRemaining}
+                    autoCompleteAt={displayOrder.protection.autoCompleteAt}
+                    extendable={displayOrder.protection.extendable}
+                    extended={displayOrder.protection.extended}
+                    afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
                     userRole={
                       displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole
                     }
