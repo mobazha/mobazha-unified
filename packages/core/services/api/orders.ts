@@ -297,6 +297,37 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       funded: orderItem.state !== 'PENDING' && orderItem.state !== 'AWAITING_PAYMENT',
       unreadChatMessages: orderItem.unreadChatMessages || 0,
       paymentAddressTransactions: [],
+      protection: (() => {
+        if (orderItem.state === 'FULFILLED') {
+          return {
+            stage: 'PROTECTION_PERIOD',
+            daysRemaining: 8,
+            autoCompleteAt: new Date(Date.now() + 8 * 86400000).toISOString(),
+            extendable: true,
+            extended: false,
+            afterSaleWindowDays: 7,
+          };
+        }
+        if (orderItem.state === 'AWAITING_FULFILLMENT') {
+          return {
+            stage: 'ESCROWED',
+            daysRemaining: 0,
+            extendable: false,
+            extended: false,
+            afterSaleWindowDays: 7,
+          };
+        }
+        if (orderItem.state === 'COMPLETED') {
+          return {
+            stage: 'COMPLETED',
+            daysRemaining: 0,
+            extendable: false,
+            extended: false,
+            afterSaleWindowDays: 7,
+          };
+        }
+        return undefined;
+      })(),
     };
 
     return mockOrder;
@@ -822,6 +853,26 @@ export async function cancelOrder(payload: {
 }
 
 /**
+ * Extend the buyer protection period (one-time, physical goods only).
+ * Returns updated protection info on success.
+ */
+export async function extendProtection(
+  orderID: string
+): Promise<{ success: boolean; error?: string }> {
+  const realFn = async () => {
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_EXTEND_PROTECTION(orderID), {});
+    return { success: true };
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    return { success: true };
+  };
+
+  return withMockFallback(realFn, mockFn, `/orders/${orderID}/extend-protection`);
+}
+
+/**
  * 退款订单
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
@@ -1216,6 +1267,7 @@ export const ordersApi = {
   fulfillOrder,
   completeOrder,
   cancelOrder,
+  extendProtection,
   refundOrder,
 
   // 操作指令（用于获取链上交易指令）

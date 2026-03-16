@@ -371,6 +371,14 @@ const mockOrderDetail = {
   paymentAddressTransactions: [
     { txid: '0x1234567890abcdef', value: 8999, confirmations: 12, timestamp: WEEK_AGO },
   ],
+  protection: {
+    stage: 'PROTECTION_PERIOD',
+    daysRemaining: 8,
+    autoCompleteAt: new Date(Date.now() + 8 * 86400000).toISOString(),
+    extendable: true,
+    extended: false,
+    afterSaleWindowDays: 7,
+  },
 };
 
 /**

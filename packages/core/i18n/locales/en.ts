@@ -1932,6 +1932,7 @@ export const en: TranslationResource = {
       daysRemaining: '{{days}} days left',
       autoCompleteAt: 'Auto-completes on {{date}}',
       extendable: 'You can extend the protection period if needed',
+      extendButton: 'Extend Protection (+14 days)',
       extended: 'Protection period extended',
       confirmEarly: 'Confirm Receipt',
       reportIssue: 'Report Issue',

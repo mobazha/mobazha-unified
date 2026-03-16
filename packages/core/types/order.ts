@@ -66,6 +66,14 @@ export interface Order {
   unreadChatMessages: number;
   paymentAddressTransactions: PaymentTransaction[];
   refundAddressTransaction?: PaymentTransaction;
+  protection?: {
+    stage: string;
+    daysRemaining: number;
+    autoCompleteAt?: string;
+    extendable: boolean;
+    extended: boolean;
+    afterSaleWindowDays: number;
+  };
 }
 
 /**

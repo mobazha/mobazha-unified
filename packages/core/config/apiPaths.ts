@@ -58,6 +58,7 @@ export const NODE_API = {
   ORDER_FULFILL: (orderId: string) => `/orders/${orderId}/fulfill`,
   ORDER_COMPLETE: (orderId: string) => `/orders/${orderId}/complete`,
   ORDER_CANCEL: (orderId: string) => `/orders/${orderId}/cancel`,
+  ORDER_EXTEND_PROTECTION: (orderId: string) => `/orders/${orderId}/extend-protection`,
   ORDER_REFUND: (orderId: string) => `/orders/${orderId}/refund`,
   ORDER_PAYMENT: (orderId: string) => `/orders/${orderId}/payment`,
   ORDER_RATE: (orderId: string) => `/orders/${orderId}/rate`,

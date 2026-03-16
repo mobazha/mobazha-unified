@@ -103,6 +103,16 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
   }, [displayOrder]);
 
+  const handleExtendProtection = useCallback(async () => {
+    try {
+      await ordersApi.extendProtection(orderId);
+      toast({ description: t('trust.protection.extended') });
+      refetch();
+    } catch (err) {
+      toast({ variant: 'destructive', description: String(err) });
+    }
+  }, [orderId, refetch, t, toast]);
+
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
     (action: OrderAction) => {
@@ -367,6 +377,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                     userRole={
                       displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole
                     }
+                    onExtendProtection={handleExtendProtection}
                     className="mb-4"
                   />
                 )}
