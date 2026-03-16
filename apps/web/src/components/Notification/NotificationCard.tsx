@@ -71,9 +71,12 @@ function getNotificationIcon(type: string): React.ReactNode {
       return <CheckCircle className={cn(iconClass, 'text-success')} />;
     case 'order.declined':
     case 'order.cancelled':
+    case 'order.expired':
     case 'payment.expired':
     case 'payment.cancelled':
       return <XCircle className={cn(iconClass, 'text-error')} />;
+    case 'order.stale_warning':
+      return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
     case 'order.fulfilled':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'order.completed':
@@ -125,6 +128,10 @@ export function OrderNotificationCard({
   const price = data?.price;
   const buyerName = data?.buyerName;
   const buyerId = data?.buyerId;
+  const vendorName = data?.vendorName;
+  const vendorId = data?.vendorId;
+  const counterpartyAvatar = data?.buyerAvatar || data?.vendorAvatar;
+  const counterpartyName = buyerName || vendorName || formatPeerDisplay(buyerId || vendorId);
 
   const handleClick = () => {
     if (!read && onMarkAsRead) {
@@ -142,23 +149,39 @@ export function OrderNotificationCard({
       )}
       onClick={handleClick}
     >
-      {/* 图标 */}
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-        {getNotificationIcon(type)}
+      {/* 头像或图标 */}
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+        {counterpartyAvatar ? (
+          <img
+            src={getImageUrl(counterpartyAvatar) || ''}
+            alt={counterpartyName || 'User'}
+            className="w-full h-full object-cover"
+            onError={e => {
+              const parent = (e.target as HTMLImageElement).parentElement;
+              if (parent) {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }
+            }}
+          />
+        ) : (
+          getNotificationIcon(type)
+        )}
       </div>
 
       {/* 内容 */}
       <div className="flex-1 min-w-0">
         {/* 标题行 */}
         <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              'font-medium text-sm',
-              read ? 'text-text-secondary' : 'text-text-primary'
-            )}
-          >
-            {buyerName || formatPeerDisplay(buyerId)}
-          </span>
+          {counterpartyName && (
+            <span
+              className={cn(
+                'font-medium text-sm flex-shrink-0',
+                read ? 'text-text-secondary' : 'text-text-primary'
+              )}
+            >
+              {counterpartyName}
+            </span>
+          )}
           <span className={cn('text-sm', read ? 'text-text-tertiary' : 'text-text-secondary')}>
             {notification.message}
           </span>
