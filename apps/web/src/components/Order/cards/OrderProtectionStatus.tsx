@@ -71,6 +71,29 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
       : t('trust.protection.sellerCountdown', { days });
   }, [stage, daysRemaining, userRole, isDisputed, t]);
 
+  const autoCompleteText = useMemo(() => {
+    if (stage !== 'PROTECTION_PERIOD' || !autoCompleteAt) return null;
+    const date = new Date(autoCompleteAt).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    return t('trust.protection.autoCompleteAt', { date });
+  }, [stage, autoCompleteAt, t]);
+
+  const extensionText = useMemo(() => {
+    if (stage !== 'PROTECTION_PERIOD') return null;
+    if (extended) {
+      return userRole === 'seller'
+        ? t('trust.protection.sellerExtended')
+        : t('trust.protection.extended');
+    }
+    if (extendable && userRole === 'buyer') {
+      return t('trust.protection.extendable');
+    }
+    return null;
+  }, [stage, extended, extendable, userRole, t]);
+
   const actionHints = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' || userRole !== 'buyer') return null;
     return (
@@ -209,13 +232,31 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
       </div>
 
       {/* Countdown / action hints / completion message */}
-      {(countdownText || actionHints || afterSaleText || completedText) && (
+      {(countdownText ||
+        actionHints ||
+        afterSaleText ||
+        completedText ||
+        autoCompleteText ||
+        extensionText) && (
         <div className="mt-3 pt-2 border-t border-border">
           {countdownText && (
             <p
               className={cn('text-sm font-medium', isDisputed ? 'text-warning' : 'text-foreground')}
             >
               {countdownText}
+            </p>
+          )}
+          {autoCompleteText && (
+            <p className="text-xs text-muted-foreground mt-1">{autoCompleteText}</p>
+          )}
+          {extensionText && (
+            <p
+              className={cn(
+                'text-xs mt-1',
+                extended ? 'text-primary font-medium' : 'text-muted-foreground'
+              )}
+            >
+              {extensionText}
             </p>
           )}
           {completedText && <p className="text-sm font-medium text-success">{completedText}</p>}

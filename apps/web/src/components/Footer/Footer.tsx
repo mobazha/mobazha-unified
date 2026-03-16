@@ -287,40 +287,16 @@ export const Footer: React.FC = () => {
               )}
             </p>
             {!standaloneMode && (
-              <HStack gap="md">
-                {footerLinks.legal.map(link => (
+              <HStack gap="md" wrap>
+                {footerLinks.policies.map(link => (
                   <Link
-                    key={link.label}
+                    key={link.href}
                     href={link.href}
                     className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
                 ))}
-                <Link
-                  href="/policies/shipping"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {t('policies.shipping')}
-                </Link>
-                <Link
-                  href="/policies/returns"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {t('policies.returns')}
-                </Link>
-                <Link
-                  href="/policies/buyer-protection"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {t('policies.buyerProtectionPolicy')}
-                </Link>
-                <Link
-                  href="/policies/refund"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {t('policies.refundTitle')}
-                </Link>
               </HStack>
             )}
           </div>

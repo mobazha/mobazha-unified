@@ -1875,9 +1875,9 @@ export const en: TranslationResource = {
 
   trust: {
     buyerProtection: 'Buyer Protection',
-    buyerProtectionDesc: 'Your payment is protected until you confirm receipt',
+    buyerProtectionDesc: 'Your payment is protected throughout the order lifecycle',
     escrowProtected: 'Payment Protected',
-    escrowDesc: 'Your funds are held securely until you confirm delivery',
+    escrowDesc: 'Your funds are held securely until the order is complete',
     disputeResolution: 'Dispute Resolution',
     disputeDesc: 'Fair dispute resolution if issues arise',
     cryptoPayment: 'Secure Payment',
@@ -1897,7 +1897,7 @@ export const en: TranslationResource = {
     },
     badge: {
       title: 'Buyer Protection',
-      description: 'Your payment is held securely until delivery is confirmed',
+      description: 'Your payment is protected from checkout to delivery',
       learnMore: 'Learn more',
     },
     panel: {
