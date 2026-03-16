@@ -42,6 +42,11 @@ export function ProductImage({
   const handleLoad = useCallback(() => setStatus('loaded'), []);
   const handleError = useCallback(() => setStatus('error'), []);
 
+  // Gateway-served images (relative /v1/ paths) must bypass Next.js image
+  // optimization: in production standalone mode the Node server cannot reach
+  // the gateway through the relative URL (Nginx sits outside the container).
+  const isGatewayImage = !!src && src.startsWith('/v1/');
+
   if (!src || status === 'error') {
     return (
       <div
@@ -65,6 +70,7 @@ export function ProductImage({
           fill
           sizes={sizes}
           priority={priority}
+          unoptimized={isGatewayImage}
           className={cn('object-cover', status === 'loading' && 'opacity-0', className)}
           onLoad={handleLoad}
           onError={handleError}

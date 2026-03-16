@@ -328,6 +328,7 @@ export default function MarketplaceProductsPage() {
                       src={product.images[0] || '/placeholder.jpg'}
                       alt={product.title}
                       fill
+                      unoptimized={product.images[0]?.startsWith('/v1/')}
                       className="object-cover"
                     />
                     <span
@@ -410,6 +411,7 @@ export default function MarketplaceProductsPage() {
                     src={selectedProduct.images[0] || '/placeholder.jpg'}
                     alt={selectedProduct.title}
                     fill
+                    unoptimized={selectedProduct.images[0]?.startsWith('/v1/')}
                     className="object-cover"
                   />
                 </div>
