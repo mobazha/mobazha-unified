@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 import { Lock, Truck, Timer, CheckCircle2, AlertTriangle } from 'lucide-react';
@@ -19,6 +19,7 @@ export interface OrderProtectionStatusProps {
   extended?: boolean;
   afterSaleWindowDays?: number;
   userRole: 'buyer' | 'seller';
+  onExtendProtection?: () => Promise<void>;
   className?: string;
 }
 
@@ -54,6 +55,7 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   extended,
   afterSaleWindowDays = 0,
   userRole,
+  onExtendProtection,
   className,
 }: OrderProtectionStatusProps) {
   const { t } = useI18n();
@@ -81,6 +83,18 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     return t('trust.protection.autoCompleteAt', { date });
   }, [stage, autoCompleteAt, t]);
 
+  const [extending, setExtending] = useState(false);
+
+  const handleExtend = useCallback(async () => {
+    if (!onExtendProtection || extending) return;
+    setExtending(true);
+    try {
+      await onExtendProtection();
+    } finally {
+      setExtending(false);
+    }
+  }, [onExtendProtection, extending]);
+
   const extensionText = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD') return null;
     if (extended) {
@@ -88,11 +102,11 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
         ? t('trust.protection.sellerExtended')
         : t('trust.protection.extended');
     }
-    if (extendable && userRole === 'buyer') {
+    if (extendable && userRole === 'buyer' && !onExtendProtection) {
       return t('trust.protection.extendable');
     }
     return null;
-  }, [stage, extended, extendable, userRole, t]);
+  }, [stage, extended, extendable, userRole, onExtendProtection, t]);
 
   const actionHints = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' || userRole !== 'buyer') return null;
@@ -259,6 +273,24 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
               {extensionText}
             </p>
           )}
+          {stage === 'PROTECTION_PERIOD' &&
+            extendable &&
+            !extended &&
+            userRole === 'buyer' &&
+            onExtendProtection && (
+              <button
+                type="button"
+                onClick={handleExtend}
+                disabled={extending}
+                className={cn(
+                  'mt-2 text-xs font-medium px-3 py-1.5 rounded-md transition-colors',
+                  'bg-primary/10 text-primary hover:bg-primary/20',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {extending ? t('common.loading') : t('trust.protection.extendButton')}
+              </button>
+            )}
           {completedText && <p className="text-sm font-medium text-success">{completedText}</p>}
           {actionHints}
           {afterSaleText && <p className="text-xs text-muted-foreground mt-1">{afterSaleText}</p>}
