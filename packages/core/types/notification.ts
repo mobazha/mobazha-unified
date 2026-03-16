@@ -81,9 +81,11 @@ export interface OrderNotificationData extends BaseNotificationData {
   type: OrderNotificationType;
   orderID: string;
   buyerID?: string;
-  buyerHandle?: string;
+  buyerName?: string;
+  buyerAvatar?: string;
   vendorID?: string;
-  vendorHandle?: string;
+  vendorName?: string;
+  vendorAvatar?: string;
   title?: string;
   slug?: string;
   thumbnail?: string;
@@ -95,13 +97,17 @@ export interface DisputeNotificationData extends BaseNotificationData {
   caseID?: string;
   buyer?: string;
   disputerID?: string;
-  disputerHandle?: string;
+  disputerName?: string;
+  disputerAvatar?: string;
   disputeeID?: string;
-  disputeeHandle?: string;
+  disputeeName?: string;
+  disputeeAvatar?: string;
   otherPartyID?: string;
-  otherPartyHandle?: string;
+  otherPartyName?: string;
+  otherPartyAvatar?: string;
   moderatorID?: string;
-  moderatorHandle?: string;
+  moderatorName?: string;
+  moderatorAvatar?: string;
   buyerAccepted?: boolean;
   expiresIn?: number;
 }

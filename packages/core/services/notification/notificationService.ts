@@ -43,9 +43,9 @@ function isChatMessage(
 
 // ============ 显示文本生成 ============
 
-function getDisplayName(handle?: string, peerId?: string): string {
-  if (handle) {
-    return `@${handle}`;
+function getDisplayName(name?: string, peerId?: string): string {
+  if (name) {
+    return name;
   }
   if (peerId) {
     return peerId.length > 12 ? `${peerId.slice(0, 6)}…${peerId.slice(-4)}` : peerId;
@@ -58,10 +58,18 @@ function getOrderNotificationDisplay(
   isBuyer: boolean
 ): NotificationDisplayData {
   const i18n = getI18n();
-  const { type, orderID, buyerHandle, buyerID, vendorHandle, vendorID, title } = notification;
+  const {
+    type,
+    orderID,
+    buyerName: buyerNameVal,
+    buyerID,
+    vendorName: vendorNameVal,
+    vendorID,
+    title,
+  } = notification;
 
-  const buyerName = getDisplayName(buyerHandle, buyerID);
-  const vendorName = getDisplayName(vendorHandle, vendorID);
+  const buyerName = getDisplayName(buyerNameVal, buyerID);
+  const vendorName = getDisplayName(vendorNameVal, vendorID);
   const route = isBuyer
     ? `/orders/purchases?orderID=${orderID}`
     : `/orders/sales?orderID=${orderID}`;
@@ -136,6 +144,14 @@ function getOrderNotificationDisplay(
       text = i18n.t('notifications.dispute.claimedPayment');
       break;
 
+    case 'order.stale_warning':
+      text = i18n.t('notifications.order.staleWarning');
+      break;
+
+    case 'order.expired':
+      text = i18n.t('notifications.order.expired');
+      break;
+
     default:
       text = type;
   }
@@ -152,21 +168,21 @@ function getDisputeNotificationDisplay(
     type,
     orderID,
     caseID,
-    disputerHandle,
+    disputerName: disputerNameVal,
     disputerID,
-    disputeeHandle,
+    disputeeName: disputeeNameVal,
     disputeeID,
-    otherPartyHandle,
+    otherPartyName: otherPartyNameVal,
     otherPartyID,
-    moderatorHandle,
+    moderatorName: moderatorNameVal,
     buyer,
     buyerAccepted,
   } = notification;
 
-  const disputerName = getDisplayName(disputerHandle, disputerID);
-  const disputeeName = getDisplayName(disputeeHandle, disputeeID);
-  const otherPartyName = getDisplayName(otherPartyHandle, otherPartyID);
-  const moderatorName = getDisplayName(moderatorHandle);
+  const disputerName = getDisplayName(disputerNameVal, disputerID);
+  const disputeeName = getDisplayName(disputeeNameVal, disputeeID);
+  const otherPartyName = getDisplayName(otherPartyNameVal, otherPartyID);
+  const moderatorName = getDisplayName(moderatorNameVal);
 
   let text = '';
   let route = '';

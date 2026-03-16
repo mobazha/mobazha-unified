@@ -35,9 +35,9 @@ interface RealOrderData {
     OrderID?: string;
     orderOpen?: {
       timestamp?: string;
-      buyerID?: { peerID?: string; handle?: string };
+      buyerID?: { peerID?: string; name?: string; handle?: string };
       listings?: Array<{
-        vendorID?: { peerID?: string };
+        vendorID?: { peerID?: string; name?: string; handle?: string };
         listing?: {
           slug?: string;
           metadata?: {
@@ -58,7 +58,7 @@ interface RealOrderData {
             price?: number;
             blockchain?: string;
           };
-          vendorID?: { peerID?: string; handle?: string };
+          vendorID?: { peerID?: string; name?: string; handle?: string };
           shippingOptions?: Array<{ regions?: string[] }>;
         };
       }>;
@@ -108,6 +108,7 @@ interface RealOrderData {
     }>;
     orderComplete?: {
       timestamp?: string;
+      ratingSignatures?: unknown[];
     };
     disputeOpen?: {
       timestamp?: string;
@@ -431,17 +432,19 @@ export function transformCoreOrder(
   >[0]['listing'];
   let listingData: ListingType | undefined;
   let vendorPeerID = '';
-  let vendorHandle = '';
+  let vendorName = '';
 
   if (orderOpen?.listings?.length) {
     const firstListing = orderOpen.listings[0];
     listingData = firstListing.listing;
     vendorPeerID = firstListing.listing?.vendorID?.peerID || firstListing.vendorID?.peerID || '';
-    vendorHandle = firstListing.listing?.vendorID?.handle || '';
+    const v = firstListing.listing?.vendorID || firstListing.vendorID;
+    vendorName = v?.name || v?.handle || '';
   }
 
   const buyerPeerID = orderOpen?.buyerID?.peerID || '';
-  const buyerHandle = orderOpen?.buyerID?.handle || '';
+  const b = orderOpen?.buyerID;
+  const buyerName = b?.name || b?.handle || '';
 
   // 支持 PaymentSent (统一消息)
   const paymentSent = contract.paymentSent;
@@ -689,13 +692,13 @@ export function transformCoreOrder(
     createdAt: timestamp,
     vendor: {
       id: vendorPeerID,
-      name: formatUserName({ name: vendorHandle, peerID: vendorPeerID }, { fallback: 'Seller' }),
+      name: formatUserName({ name: vendorName, peerID: vendorPeerID }, { fallback: 'Seller' }),
       avatar: '',
       peerID: vendorPeerID,
     },
     buyer: {
       id: buyerPeerID,
-      name: formatUserName({ name: buyerHandle, peerID: buyerPeerID }, { fallback: 'Buyer' }),
+      name: formatUserName({ name: buyerName, peerID: buyerPeerID }, { fallback: 'Buyer' }),
       avatar: '',
       peerID: buyerPeerID,
     },
@@ -731,6 +734,9 @@ export function transformCoreOrder(
     fiatPayment,
     fiatDispute,
     dispute,
+    hasRated:
+      Array.isArray(contract.orderComplete?.ratingSignatures) &&
+      contract.orderComplete.ratingSignatures.length > 0,
   };
 
   return result;

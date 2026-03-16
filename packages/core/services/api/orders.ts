@@ -104,7 +104,7 @@ const mockOrders: OrderListItem[] = [
     total: { amount: 29999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     vendorID: 'QmVendor123',
-    vendorHandle: 'TechGear Store',
+    vendorName: 'TechGear Store',
     buyerID: 'QmBuyer001',
     state: 'AWAITING_FULFILLMENT',
     read: true,
@@ -124,7 +124,7 @@ const mockOrders: OrderListItem[] = [
     total: { amount: 44999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     vendorID: 'QmVendor456',
-    vendorHandle: 'WearTech',
+    vendorName: 'WearTech',
     buyerID: 'QmBuyer001',
     state: 'FULFILLED',
     read: false,
@@ -144,7 +144,7 @@ const mockOrders: OrderListItem[] = [
     total: { amount: 18999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     vendorID: 'QmVendor789',
-    vendorHandle: 'Retro Finds',
+    vendorName: 'Retro Finds',
     buyerID: 'QmBuyer001',
     state: 'COMPLETED',
     read: true,
@@ -211,7 +211,7 @@ export async function getSales(limit = '', offsetId = ''): Promise<OrderListItem
     return mockOrders.map(order => ({
       ...order,
       buyerID: 'QmBuyer' + Math.random().toString(36).slice(2, 8),
-      buyerHandle: 'Buyer_' + Math.random().toString(36).slice(2, 6),
+      buyerName: 'Buyer_' + Math.random().toString(36).slice(2, 6),
     }));
   };
 
@@ -255,13 +255,13 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
             {
               vendorID: {
                 peerID: orderItem.vendorID,
-                handle: orderItem.vendorHandle,
+                name: orderItem.vendorName,
               },
               listing: {
                 slug: orderItem.slug,
                 vendorID: {
                   peerID: orderItem.vendorID,
-                  handle: orderItem.vendorHandle,
+                  name: orderItem.vendorName,
                 },
                 metadata: {
                   contractType: 'PHYSICAL_GOOD',
@@ -615,6 +615,35 @@ export async function completeOrder(payload: {
   };
 
   return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/complete`);
+}
+
+/**
+ * Standalone rating for already-completed orders (POST /v1/orders/{orderID}/rate)
+ */
+export async function rateOrder(payload: {
+  orderID: string;
+  ratings: Array<{
+    slug: string;
+    overall: number;
+    quality?: number;
+    description?: number;
+    deliverySpeed?: number;
+    customerService?: number;
+    review?: string;
+  }>;
+  anonymous?: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  const realFn = async () => {
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_RATE(payload.orderID), payload);
+    return { success: true };
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    return { success: true };
+  };
+
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/rate`);
 }
 
 /**

@@ -79,6 +79,7 @@ export interface Product {
  */
 export interface VendorID {
   peerID: string;
+  name?: string;
   handle?: string;
   pubkeys?: {
     identity: string;
