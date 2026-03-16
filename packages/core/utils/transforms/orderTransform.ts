@@ -11,6 +11,7 @@ import type {
   DisplayFiatPayment,
   DisplayFiatDispute,
   DisplayOrderProtection,
+  DisplayAfterSaleDispute,
   DisplayTimelineEvent,
   DisplayOrderStatus,
   DisplayUserRole,
@@ -142,6 +143,9 @@ interface RealOrderData {
     extended: boolean;
     afterSaleWindowDays: number;
   };
+  afterSaleDisputeReason?: string;
+  afterSaleDisputeDesc?: string;
+  afterSaleDisputeAt?: string;
 }
 
 // ============ Helper Functions ============
@@ -755,6 +759,13 @@ export function transformCoreOrder(
           extended: data.protection.extended,
           afterSaleWindowDays: data.protection.afterSaleWindowDays,
         } as DisplayOrderProtection)
+      : undefined,
+    afterSaleDispute: data.afterSaleDisputeAt
+      ? ({
+          reason: data.afterSaleDisputeReason || '',
+          description: data.afterSaleDisputeDesc || '',
+          reportedAt: data.afterSaleDisputeAt,
+        } as DisplayAfterSaleDispute)
       : undefined,
   };
 

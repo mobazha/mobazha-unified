@@ -114,6 +114,7 @@ export type {
   DisplayOrderItem,
   DisplayOrderParticipant,
   DisplayOrderProtection,
+  DisplayAfterSaleDispute,
   DisplayModerator,
   DisplayTimelineEvent,
   DisplayDispute,

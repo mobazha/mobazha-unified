@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 export interface RatingInviteBannerProps {
   onWriteReview: () => void;
   onReportIssue?: () => void;
+  disputeFiled?: boolean;
   className?: string;
 }
 
 export const RatingInviteBanner = memo(function RatingInviteBanner({
   onWriteReview,
   onReportIssue,
+  disputeFiled,
   className,
 }: RatingInviteBannerProps) {
   const { t } = useI18n();
@@ -43,7 +45,7 @@ export const RatingInviteBanner = memo(function RatingInviteBanner({
             >
               {t('order.review.writeReview')}
             </Button>
-            {onReportIssue && (
+            {onReportIssue && !disputeFiled && (
               <button
                 type="button"
                 onClick={onReportIssue}
@@ -51,6 +53,11 @@ export const RatingInviteBanner = memo(function RatingInviteBanner({
               >
                 {t('order.actions.reportIssue')}
               </button>
+            )}
+            {disputeFiled && (
+              <span className="text-xs text-muted-foreground/60">
+                {t('order.afterSaleDispute.issueReported')}
+              </span>
             )}
           </div>
         </div>

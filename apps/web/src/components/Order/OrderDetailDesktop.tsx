@@ -48,6 +48,7 @@ import {
   type OrderProtectionStatusProps,
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
+import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
@@ -123,6 +124,8 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
       !displayOrder?.hasRated,
     [displayOrder]
   );
+
+  const hasAfterSaleDispute = !!displayOrder?.afterSaleDispute;
 
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
@@ -428,6 +431,20 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                     onReportIssue={() => {
                       setIsAfterSaleDispute(true);
                       setShowDisputeModal(true);
+                    }}
+                    disputeFiled={hasAfterSaleDispute}
+                    className="mb-4"
+                  />
+                )}
+
+                {displayOrder.afterSaleDispute && (
+                  <AfterSaleDisputeCard
+                    dispute={displayOrder.afterSaleDispute}
+                    userRole={displayOrder.userRole}
+                    onMessageCounterparty={() => {
+                      document
+                        .querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')
+                        ?.focus();
                     }}
                     className="mb-4"
                   />
