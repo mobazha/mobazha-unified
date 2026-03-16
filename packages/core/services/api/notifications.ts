@@ -38,20 +38,30 @@ interface BackendNotificationRecord {
       large?: string;
       original?: string;
     };
-    vendorHandle?: string;
+    vendorName?: string;
+    vendorAvatar?: string;
     vendorId?: string;
     vendorID?: string;
     buyerId?: string;
     buyerID?: string;
-    buyerHandle?: string;
+    buyerName?: string;
+    buyerAvatar?: string;
     price?: {
       amount: number;
       currencyCode: string;
     };
     disputerID?: string;
-    disputerHandle?: string;
+    disputerName?: string;
+    disputerAvatar?: string;
     disputeeID?: string;
-    disputeeHandle?: string;
+    disputeeName?: string;
+    disputeeAvatar?: string;
+    otherPartyID?: string;
+    otherPartyName?: string;
+    otherPartyAvatar?: string;
+    moderatorID?: string;
+    moderatorName?: string;
+    moderatorAvatar?: string;
     buyer?: string;
     [key: string]: unknown;
   };
@@ -107,14 +117,22 @@ export interface Notification {
       amount: number;
       currencyCode: string;
     };
-    vendorHandle?: string;
+    vendorName?: string;
+    vendorAvatar?: string;
     vendorId?: string;
-    buyerHandle?: string;
+    buyerName?: string;
+    buyerAvatar?: string;
     buyerId?: string;
-    disputerHandle?: string;
+    disputerName?: string;
+    disputerAvatar?: string;
     disputerId?: string;
-    disputeeHandle?: string;
+    disputeeName?: string;
+    disputeeAvatar?: string;
     disputeeId?: string;
+    otherPartyName?: string;
+    otherPartyAvatar?: string;
+    moderatorName?: string;
+    moderatorAvatar?: string;
   };
 }
 
@@ -138,7 +156,7 @@ const mockNotifications: Notification[] = [
       orderId: 'QmOrder001',
       productTitle: 'Vintage T-Shirt',
       price: { amount: 2500, currencyCode: 'USD' },
-      buyerHandle: 'alice_buyer',
+      buyerName: 'alice_buyer',
       buyerId: 'QmBuyer001',
       thumbnail: { tiny: '', small: '' },
     },
@@ -154,7 +172,7 @@ const mockNotifications: Notification[] = [
       orderId: 'QmOrder002',
       productTitle: 'Handmade Bracelet',
       price: { amount: 1500, currencyCode: 'USD' },
-      buyerHandle: 'bob_shop',
+      buyerName: 'bob_shop',
       buyerId: 'QmBuyer002',
     },
   },
@@ -167,7 +185,7 @@ const mockNotifications: Notification[] = [
     timestamp: new Date(Date.now() - 86400000).toISOString(),
     data: {
       peerID: 'QmUser001',
-      buyerHandle: 'alice_chen',
+      buyerName: 'alice_chen',
       avatarHashes: { tiny: '', small: '' },
     },
   },
@@ -180,7 +198,7 @@ const mockNotifications: Notification[] = [
     timestamp: new Date(Date.now() - 172800000).toISOString(),
     data: {
       peerID: 'QmVendor123',
-      buyerHandle: 'techgear_store',
+      buyerName: 'techgear_store',
     },
   },
   {
@@ -193,7 +211,7 @@ const mockNotifications: Notification[] = [
     data: {
       orderId: 'QmOrder003',
       caseId: 'QmCase001',
-      disputerHandle: 'unhappy_buyer',
+      disputerName: 'unhappy_buyer',
       disputerId: 'QmDisputer001',
     },
   },
@@ -244,6 +262,10 @@ function generateNotificationTitle(
       return t('notifications.titles.moderatorRemoved');
     case 'payment.locked':
       return t('notifications.titles.paymentReceived');
+    case 'order.expired':
+      return t('notifications.titles.orderExpired', { defaultValue: 'Order Expired' });
+    case 'order.stale_warning':
+      return t('notifications.titles.orderStaleWarning', { defaultValue: 'Order Warning' });
     case 'payment.expired':
       return t('notifications.titles.paymentExpired', { defaultValue: 'Payment Expired' });
     case 'payment.cancelled':
@@ -259,8 +281,10 @@ function generateNotificationMessage(
 ): string {
   const { t } = getI18n();
   const orderId = notification.orderID || notification.orderId || '';
-  const buyerHandle = notification.buyerHandle || '';
+  const buyerName =
+    notification.buyerName ?? (notification as { buyerHandle?: string }).buyerHandle ?? '';
   const shortOrderId = orderId ? orderId.slice(0, 8) : '';
+  const productTitle = notification.title || '';
 
   switch (type) {
     case 'order.created':
@@ -318,21 +342,39 @@ function generateNotificationMessage(
         ? t('notifications.messages.caseUpdateWithId', { orderId: shortOrderId })
         : t('notifications.messages.caseUpdateNoId');
     case 'social.follow':
-      return buyerHandle
-        ? t('notifications.messages.followedBy', { name: buyerHandle })
+      return buyerName
+        ? t('notifications.messages.followedBy', { name: buyerName })
         : t('notifications.messages.followedBySomeone');
     case 'social.unfollow':
-      return buyerHandle
-        ? t('notifications.messages.unfollowedBy', { name: buyerHandle })
+      return buyerName
+        ? t('notifications.messages.unfollowedBy', { name: buyerName })
         : t('notifications.messages.unfollowedBySomeone');
     case 'social.moderator_add':
-      return buyerHandle
-        ? t('notifications.messages.moderatorAddedBy', { name: buyerHandle })
+      return buyerName
+        ? t('notifications.messages.moderatorAddedBy', { name: buyerName })
         : t('notifications.messages.moderatorAddedBySomeone');
     case 'social.moderator_remove':
-      return buyerHandle
-        ? t('notifications.messages.moderatorRemovedBy', { name: buyerHandle })
+      return buyerName
+        ? t('notifications.messages.moderatorRemovedBy', { name: buyerName })
         : t('notifications.messages.moderatorRemovedBySomeone');
+    case 'order.expired':
+      if (productTitle && orderId)
+        return t('notifications.messages.orderExpiredWithTitle', {
+          title: productTitle,
+          orderId: shortOrderId,
+        });
+      return orderId
+        ? t('notifications.messages.orderExpiredWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderExpiredNoId');
+    case 'order.stale_warning':
+      if (productTitle && orderId)
+        return t('notifications.messages.orderStaleWarningWithTitle', {
+          title: productTitle,
+          orderId: shortOrderId,
+        });
+      return orderId
+        ? t('notifications.messages.orderStaleWarningWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderStaleWarningNoId');
     case 'payment.locked':
       return orderId
         ? t('notifications.messages.paymentReceivedWithId', { orderId: shortOrderId })
@@ -344,7 +386,9 @@ function generateNotificationMessage(
         : t('notifications.messages.orderCancelledNoId');
     default:
       return (
-        notification.vendorHandle || buyerHandle || t('notifications.messages.defaultNotification')
+        (notification.vendorName ?? (notification as { vendorHandle?: string }).vendorHandle) ||
+        buyerName ||
+        t('notifications.messages.defaultNotification')
       );
   }
 }
@@ -399,14 +443,26 @@ export async function getNotifications(
             avatarHashes: notif.avatarHashes,
             productTitle: notif.title,
             price: notif.price,
-            vendorHandle: notif.vendorHandle,
+            vendorName: notif.vendorName ?? (notif as { vendorHandle?: string }).vendorHandle,
+            vendorAvatar: notif.vendorAvatar,
             vendorId: notif.vendorId || notif.vendorID,
-            buyerHandle: notif.buyerHandle,
+            buyerName: notif.buyerName ?? (notif as { buyerHandle?: string }).buyerHandle,
+            buyerAvatar: notif.buyerAvatar,
             buyerId: notif.buyerId || notif.buyerID,
-            disputerHandle: notif.disputerHandle,
+            disputerName:
+              notif.disputerName ?? (notif as { disputerHandle?: string }).disputerHandle,
+            disputerAvatar: notif.disputerAvatar,
             disputerId: notif.disputerID,
-            disputeeHandle: notif.disputeeHandle,
+            disputeeName:
+              notif.disputeeName ?? (notif as { disputeeHandle?: string }).disputeeHandle,
+            disputeeAvatar: notif.disputeeAvatar,
             disputeeId: notif.disputeeID,
+            otherPartyName:
+              notif.otherPartyName ?? (notif as { otherPartyHandle?: string }).otherPartyHandle,
+            otherPartyAvatar: notif.otherPartyAvatar,
+            moderatorName:
+              notif.moderatorName ?? (notif as { moderatorHandle?: string }).moderatorHandle,
+            moderatorAvatar: notif.moderatorAvatar,
           },
         };
       }

@@ -35,7 +35,7 @@ export interface DisputeCase {
         };
         vendorID: {
           peerID: string;
-          handle: string;
+          name: string;
         };
       }>;
     };
@@ -69,7 +69,8 @@ export interface CaseListItem {
   coin: string;
   title: string;
   thumbnail: string;
-  vendorHandle: string;
+  vendorName: string;
+  vendorAvatar?: string;
   vendorPeerID: string;
 }
 
@@ -86,7 +87,7 @@ const mockCases: CaseListItem[] = [
     coin: 'USDT',
     title: 'Vintage Film Camera',
     thumbnail: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop',
-    vendorHandle: 'Retro Finds',
+    vendorName: 'Retro Finds',
     vendorPeerID: 'QmVendor789',
   },
 ];
@@ -143,7 +144,7 @@ export async function getCaseDetails(orderId: string): Promise<DisputeCase | nul
               },
               vendorID: {
                 peerID: caseItem.vendorPeerID,
-                handle: caseItem.vendorHandle,
+                name: caseItem.vendorName,
               },
             },
           ],

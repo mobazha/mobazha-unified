@@ -192,6 +192,8 @@ export interface DisplayOrder {
   dispute?: DisplayDispute;
   /** 法币争议信息（外部争议，由支付提供商管理，独立于订单状态） */
   fiatDispute?: DisplayFiatDispute;
+  /** Whether the buyer has already submitted a rating for this order */
+  hasRated?: boolean;
 
   /** 取消/退款原因（来自 orderCancel.reason 或 refund.memo） */
   cancelReason?: string;

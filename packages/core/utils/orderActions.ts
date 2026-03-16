@@ -322,9 +322,16 @@ export function getOrderActions(
     isFulfilled?: boolean;
     isExpired?: boolean;
     paymentMethod?: string;
+    hasRated?: boolean;
   } = {}
 ): OrderAction[] {
-  const { isModerated = false, isFulfilled = false, isExpired = false, paymentMethod } = options;
+  const {
+    isModerated = false,
+    isFulfilled = false,
+    isExpired = false,
+    paymentMethod,
+    hasRated = true,
+  } = options;
 
   const config = ORDER_STATUS_CONFIG[state];
   if (!config) {
@@ -368,6 +375,11 @@ export function getOrderActions(
 
     return true;
   });
+
+  // Buyer can rate a completed order that hasn't been rated yet
+  if (role === 'buyer' && state === 'COMPLETED' && !hasRated) {
+    actions.push('WriteReview');
+  }
 
   // 特殊情况：卖家在发货后超时可以领取资金
   if (role === 'seller' && state === 'FULFILLED' && isExpired && isFulfilled) {

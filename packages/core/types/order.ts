@@ -42,11 +42,9 @@ export interface OrderListItem {
   state: OrderState;
   read: boolean;
   vendorID: string;
-  vendorHandle?: string;
   vendorName?: string;
   vendorAvatar?: string;
   buyerID: string;
-  buyerHandle?: string;
   buyerName?: string;
   buyerAvatar?: string;
   paymentCoin: CryptoType;
@@ -326,7 +324,7 @@ export interface OrderOpen {
   // 买家信息
   buyerID?: {
     peerID: string;
-    handle?: string;
+    name?: string;
     pubkeys?: {
       identity: string;
       bitcoin: string;
@@ -346,7 +344,7 @@ export interface OrderOpen {
   amount?: number;
   // 商品列表（包含签名）
   listings?: Array<{
-    vendorID?: { peerID?: string; handle?: string };
+    vendorID?: { peerID?: string; name?: string };
     listing?: ContractListing;
   }>;
 }
@@ -453,7 +451,7 @@ export interface CartItem {
     thumbnail: Image;
     price: Price;
     vendorPeerID: string;
-    vendorHandle?: string;
+    vendorName?: string;
   };
   quantity: number;
   options?: OrderItemOption[];
