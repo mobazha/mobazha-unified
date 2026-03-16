@@ -425,6 +425,10 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {showRatingInvite && (
                   <RatingInviteBanner
                     onWriteReview={() => executeConfirmAction('complete')}
+                    onReportIssue={() => {
+                      setIsAfterSaleDispute(true);
+                      setShowDisputeModal(true);
+                    }}
                     className="mb-4"
                   />
                 )}
@@ -524,21 +528,23 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         </Container>
       </main>
 
-      {/* Fixed action footer */}
-      <OrderFooter
-        orderState={coreOrder?.state || 'PENDING'}
-        userRole={displayOrder.userRole as CoreUserRole}
-        timestamp={displayOrder.createdAt}
-        isModerated={!!displayOrder.moderator}
-        isFulfilled={coreOrder ? isOrderFulfilled(coreOrder) : false}
-        paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
-        totalAmount={displayOrder.total}
-        currency={displayOrder.currency}
-        paymentCoin={coreOrder?.contract?.paymentSent?.coin}
-        hasRated={displayOrder.hasRated}
-        inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
-        onAction={handleOrderAction}
-      />
+      {/* Fixed action footer — hidden when RatingInviteBanner takes over */}
+      {!showRatingInvite && (
+        <OrderFooter
+          orderState={coreOrder?.state || 'PENDING'}
+          userRole={displayOrder.userRole as CoreUserRole}
+          timestamp={displayOrder.createdAt}
+          isModerated={!!displayOrder.moderator}
+          isFulfilled={coreOrder ? isOrderFulfilled(coreOrder) : false}
+          paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
+          totalAmount={displayOrder.total}
+          currency={displayOrder.currency}
+          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+          hasRated={displayOrder.hasRated}
+          inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          onAction={handleOrderAction}
+        />
+      )}
 
       {/* Dialogs */}
       {confirmDialog && (

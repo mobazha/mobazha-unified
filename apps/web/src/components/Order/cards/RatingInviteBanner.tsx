@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 
 export interface RatingInviteBannerProps {
   onWriteReview: () => void;
+  onReportIssue?: () => void;
   className?: string;
 }
 
 export const RatingInviteBanner = memo(function RatingInviteBanner({
   onWriteReview,
+  onReportIssue,
   className,
 }: RatingInviteBannerProps) {
   const { t } = useI18n();
@@ -32,14 +34,25 @@ export const RatingInviteBanner = memo(function RatingInviteBanner({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">{t('order.review.inviteTitle')}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{t('order.review.inviteDesc')}</p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="mt-2.5 text-xs h-7 px-3"
-            onClick={onWriteReview}
-          >
-            {t('order.review.writeReview')}
-          </Button>
+          <div className="flex items-center gap-4 mt-2.5">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs h-7 px-3"
+              onClick={onWriteReview}
+            >
+              {t('order.review.writeReview')}
+            </Button>
+            {onReportIssue && (
+              <button
+                type="button"
+                onClick={onReportIssue}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+              >
+                {t('order.actions.reportIssue')}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
