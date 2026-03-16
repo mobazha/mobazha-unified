@@ -330,7 +330,7 @@ export function getOrderActions(
     isFulfilled = false,
     isExpired = false,
     paymentMethod,
-    hasRated = true,
+    hasRated = false,
   } = options;
 
   const config = ORDER_STATUS_CONFIG[state];
