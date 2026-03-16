@@ -366,7 +366,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {/* Status context card — gives users clear next-step guidance */}
                 <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
 
-                {protectionStage && displayOrder.protection && (
+                {protectionStage && displayOrder.protection && !!displayOrder.moderator && (
                   <OrderProtectionStatus
                     stage={protectionStage}
                     daysRemaining={displayOrder.protection.daysRemaining}
@@ -389,8 +389,6 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   className="mb-4"
                 />
 
-                {/* OrderStatusCard above already provides integrated progress — no separate bar needed */}
-
                 {/* Fiat dispute banner (independent of order state) */}
                 {displayOrder.fiatDispute && (
                   <FiatDisputeBanner
@@ -412,6 +410,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   coreOrder={coreOrder}
                   className="mb-4"
                 />
+
                 <OrderPaymentCard
                   displayOrder={displayOrder}
                   coreOrder={coreOrder}

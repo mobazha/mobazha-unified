@@ -526,19 +526,6 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           {/* 1. Status + progress bar */}
           <OrderStatusCard displayOrder={displayOrder} />
 
-          {protectionStage && displayOrder.protection && (
-            <OrderProtectionStatus
-              stage={protectionStage}
-              daysRemaining={displayOrder.protection.daysRemaining}
-              autoCompleteAt={displayOrder.protection.autoCompleteAt}
-              extendable={displayOrder.protection.extendable}
-              extended={displayOrder.protection.extended}
-              afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
-              userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
-              onExtendProtection={handleExtendProtection}
-            />
-          )}
-
           {/* 2. Product card (vendor merged inline) */}
           <OrderProductCard displayOrder={displayOrder} />
 
@@ -599,6 +586,20 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 </div>
               </div>
             </div>
+          )}
+
+          {/* 5b. Buyer protection — after tracking context */}
+          {protectionStage && displayOrder.protection && !!displayOrder.moderator && (
+            <OrderProtectionStatus
+              stage={protectionStage}
+              daysRemaining={displayOrder.protection.daysRemaining}
+              autoCompleteAt={displayOrder.protection.autoCompleteAt}
+              extendable={displayOrder.protection.extendable}
+              extended={displayOrder.protection.extended}
+              afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
+              userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
+              onExtendProtection={handleExtendProtection}
+            />
           )}
 
           {/* 6. Payment info */}
