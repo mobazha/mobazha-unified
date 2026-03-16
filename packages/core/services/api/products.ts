@@ -195,6 +195,11 @@ interface ProfileListingItem {
   [key: string]: unknown;
 }
 
+function hasImageHash(thumb: Image | undefined | null): thumb is Image {
+  if (!thumb) return false;
+  return !!(thumb.tiny || thumb.small || thumb.medium || thumb.large || thumb.original);
+}
+
 function imageFromCid(cid: string | undefined): Image | undefined {
   if (!cid) return undefined;
   const trimmed = cid.trim();
@@ -217,7 +222,10 @@ export async function fetchStoreListings(
     slug: item.slug,
     title: item.title,
     thumbnail:
-      transformImageUrls(item.thumbnail ?? imageFromCid(item.image), storePeerID) ?? ({} as Image),
+      transformImageUrls(
+        hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
+        storePeerID
+      ) ?? ({} as Image),
     price:
       typeof item.price === 'object'
         ? (item.price as unknown as ProductListItem['price'])
