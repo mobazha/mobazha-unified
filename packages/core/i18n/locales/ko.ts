@@ -2513,6 +2513,7 @@ export const ko: TranslationResource = {
       productType: '카테고리',
       shipping: '배송',
       variants: '변형',
+      files: '파일',
       policies: '정책',
       other: '기타 설정',
     },

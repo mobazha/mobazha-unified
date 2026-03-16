@@ -3088,6 +3088,7 @@ export const en: TranslationResource = {
       productType: 'Product Type',
       shipping: 'Shipping',
       variants: 'Variants',
+      files: 'Files',
       policies: 'Policies',
       other: 'Other Settings',
     },
@@ -3404,6 +3405,7 @@ export const en: TranslationResource = {
     // Publish
     publish: 'Publish',
     saveDraft: 'Save as Draft',
+    unpublish: 'Unpublish',
 
     // NSFW
     nsfwLabel: 'Mature Content',

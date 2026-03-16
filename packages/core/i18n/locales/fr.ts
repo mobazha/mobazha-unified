@@ -2576,6 +2576,7 @@ export const fr: TranslationResource = {
       productType: 'Catégorie',
       shipping: 'Expédition',
       variants: 'Variantes',
+      files: 'Fichiers',
       policies: 'Politiques',
       other: 'Autres paramètres',
     },

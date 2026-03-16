@@ -2563,6 +2563,7 @@ export const es: TranslationResource = {
       productType: 'Categoría',
       shipping: 'Envío',
       variants: 'Variantes',
+      files: 'Archivos',
       policies: 'Políticas',
       other: 'Otros ajustes',
     },
