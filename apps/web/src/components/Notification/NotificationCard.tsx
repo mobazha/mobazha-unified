@@ -123,7 +123,7 @@ export function OrderNotificationCard({
   const thumbnail = data?.thumbnail?.small || data?.thumbnail?.tiny;
   const productTitle = data?.productTitle;
   const price = data?.price;
-  const buyerHandle = data?.buyerHandle;
+  const buyerName = data?.buyerName;
   const buyerId = data?.buyerId;
 
   const handleClick = () => {
@@ -157,7 +157,7 @@ export function OrderNotificationCard({
               read ? 'text-text-secondary' : 'text-text-primary'
             )}
           >
-            {buyerHandle || formatPeerDisplay(buyerId)}
+            {buyerName || formatPeerDisplay(buyerId)}
           </span>
           <span className={cn('text-sm', read ? 'text-text-tertiary' : 'text-text-secondary')}>
             {notification.message}
@@ -220,7 +220,7 @@ export function FollowNotificationCard({
   const { data, read, timestamp, type } = notification;
 
   const avatarHash = data?.avatarHashes?.small || data?.avatarHashes?.tiny;
-  const handle = data?.buyerHandle || data?.vendorHandle;
+  const handle = data?.buyerName || data?.vendorName;
   const peerId = data?.peerID;
 
   const handleClick = () => {
@@ -296,7 +296,7 @@ export function DisputeNotificationCard({
   const { t } = useI18n();
   const { data, read, timestamp } = notification;
 
-  const disputerHandle = data?.disputerHandle;
+  const disputerName = data?.disputerName;
   const disputerId = data?.disputerId;
   const orderId = data?.orderId;
 
@@ -328,9 +328,9 @@ export function DisputeNotificationCard({
         >
           {notification.message}
         </p>
-        {(disputerHandle || disputerId) && (
+        {(disputerName || disputerId) && (
           <p className="text-xs text-text-tertiary mt-1">
-            {t('common.by')} {disputerHandle || formatPeerDisplay(disputerId)}
+            {t('common.by')} {disputerName || formatPeerDisplay(disputerId)}
           </p>
         )}
         {orderId && <p className="text-xs text-text-tertiary">Order #{orderId.slice(0, 8)}</p>}

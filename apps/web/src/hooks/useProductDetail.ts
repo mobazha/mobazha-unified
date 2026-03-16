@@ -524,7 +524,7 @@ export function useProductDetail({
         thumbnail,
         price: { amount: price, currency: { code: currency, divisibility } },
         vendorPeerID: product.vendorID.peerID,
-        vendorHandle: product.vendorID.handle,
+        vendorName: product.vendorID?.name || product.vendorID?.handle,
       },
       quantity,
       options,

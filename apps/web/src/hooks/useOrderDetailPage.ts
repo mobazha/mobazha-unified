@@ -210,24 +210,31 @@ export function useOrderDetailPage(
           review: reviewText,
         }));
 
-        await executeOrderAction({
-          paymentCoin,
-          getInstructions: addr =>
-            ordersApi.getCompleteInstructions({ orderID: orderId, initiatorAddress: addr }),
-          executeAction: txID =>
-            ordersApi.completeOrder({ orderID: orderId, txID, ratings, anonymous }),
-          onSuccess: () =>
-            onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc')),
-          onError,
-        });
-      } catch {
-        // Unexpected error not handled by onError
+        const isAlreadyCompleted = displayOrder?.status === 'completed';
+
+        if (isAlreadyCompleted && reviewData) {
+          await ordersApi.rateOrder({ orderID: orderId, ratings, anonymous });
+          onSuccess(t('order.actions.rateSuccess'), t('order.actions.rateSuccessDesc'));
+        } else {
+          await executeOrderAction({
+            paymentCoin,
+            getInstructions: addr =>
+              ordersApi.getCompleteInstructions({ orderID: orderId, initiatorAddress: addr }),
+            executeAction: txID =>
+              ordersApi.completeOrder({ orderID: orderId, txID, ratings, anonymous }),
+            onSuccess: () =>
+              onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc')),
+            onError,
+          });
+        }
+      } catch (err) {
+        onError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsActionLoading(false);
         setShowReviewDialog(false);
       }
     },
-    [coreOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
+    [coreOrder, displayOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
   );
 
   const submitReviewAndComplete = useCallback(

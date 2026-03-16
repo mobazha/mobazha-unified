@@ -47,9 +47,12 @@ function getNotificationIcon(type: string) {
       return <CheckCircle className={cn(iconClass, 'text-success')} />;
     case 'order.declined':
     case 'order.cancelled':
+    case 'order.expired':
     case 'payment.expired':
     case 'payment.cancelled':
       return <XCircle className={cn(iconClass, 'text-error')} />;
+    case 'order.stale_warning':
+      return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
     case 'order.fulfilled':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'dispute.opened':
@@ -148,9 +151,9 @@ function NotificationItem({
             read ? 'text-text-secondary' : 'text-text-primary font-medium'
           )}
         >
-          {isFollowType && (data?.buyerHandle || data?.peerID) && (
+          {isFollowType && (data?.buyerName || data?.peerID) && (
             <span className="text-primary font-medium">
-              {data.buyerHandle || truncatePeerId(data.peerID)}{' '}
+              {data.buyerName || truncatePeerId(data.peerID)}{' '}
             </span>
           )}
           {message}

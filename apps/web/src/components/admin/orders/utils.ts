@@ -68,12 +68,12 @@ export function transformOrderListItem(
   const counterpartyId = orderType === 'purchases' ? vendorId : buyerId;
   const apiName = orderType === 'purchases' ? item.vendorName : item.buyerName;
   const apiAvatar = orderType === 'purchases' ? item.vendorAvatar : item.buyerAvatar;
-  const counterpartyHandle = orderType === 'purchases' ? item.vendorHandle : item.buyerHandle;
+  const counterpartyNameFromApi = orderType === 'purchases' ? item.vendorName : item.buyerName;
   const profileInfo = counterpartyId ? profileMap.get(counterpartyId) : undefined;
   const counterpartyName =
     apiName ||
     profileInfo?.name ||
-    counterpartyHandle ||
+    counterpartyNameFromApi ||
     (counterpartyId
       ? `${counterpartyId.slice(0, 6)}…${counterpartyId.slice(-4)}`
       : orderType === 'purchases'

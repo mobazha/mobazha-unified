@@ -454,6 +454,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         totalAmount={displayOrder.total}
         currency={displayOrder.currency}
         paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+        hasRated={displayOrder.hasRated}
         onAction={handleOrderAction}
       />
 

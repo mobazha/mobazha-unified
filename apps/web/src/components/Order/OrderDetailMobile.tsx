@@ -275,6 +275,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isModerated: !!displayOrder.moderator,
         isFulfilled: isOrderFulfilled(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
+        hasRated: displayOrder.hasRated,
       }
     );
     return !!getPrimaryAction(actions);
@@ -290,6 +291,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isModerated: !!displayOrder.moderator,
         isFulfilled: isOrderFulfilled(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
+        hasRated: displayOrder.hasRated,
       }
     );
     const primary = getPrimaryAction(actions);
