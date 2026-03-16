@@ -9,4 +9,5 @@ export { OrderDisputeBanner, type OrderDisputeBannerProps } from './OrderDispute
 export { FiatDisputeBanner, type FiatDisputeBannerProps } from './FiatDisputeBanner';
 export { OrderMemoCard, type OrderMemoCardProps } from './OrderMemoCard';
 export { OrderStatusCard, type OrderStatusCardProps } from './OrderStatusCard';
+export { OrderProtectionStatus, type OrderProtectionStatusProps } from './OrderProtectionStatus';
 export { getStatusLabel } from './orderProgressUtils';

@@ -100,6 +100,8 @@ export const Footer: React.FC = () => {
       { label: t('policies.termsOfService'), href: '/policies/terms' },
       { label: t('policies.shipping'), href: '/policies/shipping' },
       { label: t('policies.returns'), href: '/policies/returns' },
+      { label: t('policies.buyerProtectionPolicy'), href: '/policies/buyer-protection' },
+      { label: t('policies.refundTitle'), href: '/policies/refund' },
     ],
   };
 
@@ -306,6 +308,18 @@ export const Footer: React.FC = () => {
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t('policies.returns')}
+                </Link>
+                <Link
+                  href="/policies/buyer-protection"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t('policies.buyerProtectionPolicy')}
+                </Link>
+                <Link
+                  href="/policies/refund"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t('policies.refundTitle')}
                 </Link>
               </HStack>
             )}

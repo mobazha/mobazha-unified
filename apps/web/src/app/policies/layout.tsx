@@ -12,7 +12,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
     <div className="min-h-screen bg-background">
       <Header />
       <MobilePageHeader title={t('policies.backToStore')} />
-      <main className="py-6 sm:py-12 pb-24 sm:pb-12">
+      <main className="py-8 sm:py-12 pb-24 sm:pb-12">
         <Container size="md">
           <article className="prose prose-sm dark:prose-invert max-w-none">{children}</article>
         </Container>

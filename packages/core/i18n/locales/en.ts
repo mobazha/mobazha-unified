@@ -1756,6 +1756,7 @@ export const en: TranslationResource = {
     storePolicy: 'Policies',
     allProducts: 'All Products',
     collections: 'Collections',
+    buyerProtection: 'Buyer Protection',
   },
 
   policies: {
@@ -1791,6 +1792,46 @@ export const en: TranslationResource = {
     returnsDisputes: 'Disputes',
     returnsDisputesDesc:
       'If you and the seller cannot reach an agreement, you can open a dispute. A moderator will review the case and make a decision.',
+    buyerProtectionTitle: 'Buyer Protection Policy',
+    buyerProtectionPolicy: 'Buyer Protection',
+    buyerProtectionIntro:
+      'Every purchase here is backed by Buyer Protection, designed to give you peace of mind.',
+    buyerProtectionIntroPlatform:
+      'Every purchase on Mobazha is backed by our Buyer Protection program, designed to give you peace of mind.',
+    bpAutoComplete: 'Automatic Order Completion',
+    bpAutoCompleteDesc:
+      'Orders settle automatically after the protection period ends. You do not need to take any action — if there are no issues, the transaction completes on its own. Protection periods vary by product type: 14 days for physical goods, 3 days for digital products, and 7 days for services.',
+    bpFundsHeld: 'Secure Fund Holding',
+    bpFundsHeldDesc:
+      'When you place an order, your payment is held in a secure account. Funds are only released to the seller after the protection period ends or you confirm receipt.',
+    bpAutoRefund: 'Automatic Refund for Non-Shipment',
+    bpAutoRefundDesc:
+      'If the seller does not ship within the required timeframe (7 days for physical goods, 3 days for digital/services), the order is automatically cancelled and your funds are returned.',
+    bpDisputeProcess: 'Dispute Process',
+    bpDisputeProcessDesc:
+      'If you have an issue during the protection period, you can report it with one tap. You will first have 7 days to resolve it with the seller. If that fails, an independent mediator steps in and makes a fair decision within 7 days.',
+    bpAfterSale: 'After-Sale Support',
+    bpAfterSaleDesc:
+      'Even after the transaction completes, you have a 7-day window to report issues — your satisfaction matters.',
+    bpExtend: 'Protection Period Extension',
+    bpExtendDesc:
+      'For physical goods, if your shipment is delayed, you can request a one-time 14-day extension to the protection period.',
+    refundTitle: 'Refund Policy',
+    refundIntro: 'Every purchase should meet your expectations. Here is how refunds work.',
+    refundIntroPlatform:
+      'We want every purchase to meet your expectations. Here is how refunds work on Mobazha.',
+    refundEligibility: 'Refund Eligibility',
+    refundEligibilityDesc:
+      'You may request a refund during the protection period if the item was not received, is significantly different from the description, or is defective.',
+    refundProcess: 'Refund Process',
+    refundProcessDesc:
+      'To request a refund, open the order details and tap "Report Issue". Select your reason and provide details. The seller will be notified and you will have 7 days to resolve it together.',
+    refundTimeline: 'Refund Timeline',
+    refundTimelineDesc:
+      "Cryptocurrency refunds are processed within 1-3 business days after approval. Fiat refunds follow the payment provider's timeline (typically 5-10 business days).",
+    refundNonRefundable: 'Non-Refundable Items',
+    refundNonRefundableDesc:
+      'Digital products that have been downloaded, custom-made items, and services that have been fully delivered may not be eligible for refund unless they are defective.',
     noPolicies: 'This store has not published any policies yet.',
     backToStore: 'Back to Store',
     privacyTitle: 'Privacy Policy',
@@ -1798,6 +1839,8 @@ export const en: TranslationResource = {
       'Your privacy is important to us. This policy explains how we handle your information.',
     privacyCollection: 'Information We Collect',
     privacyCollectionDesc:
+      'This store runs on decentralized technology. Data collection is minimized by design. Transaction data is stored on the blockchain.',
+    privacyCollectionDescPlatform:
       'Mobazha is a decentralized platform. We minimize data collection by design. Transaction data is stored on the blockchain and distributed storage.',
     privacyUsage: 'How We Use Information',
     privacyUsageDesc:
@@ -1809,9 +1852,12 @@ export const en: TranslationResource = {
     privacySecurityDesc:
       'We use encryption and secure protocols to protect your data. Your private keys are stored locally and never transmitted to our servers.',
     termsTitle: 'Terms of Service',
-    termsIntro: 'By using Mobazha, you agree to these terms.',
+    termsIntro: 'By using this store, you agree to these terms.',
+    termsIntroPlatform: 'By using Mobazha, you agree to these terms.',
     termsUse: 'Acceptable Use',
     termsUseDesc:
+      'You agree to use this service in compliance with all applicable laws. Prohibited items and activities are not allowed.',
+    termsUseDescPlatform:
       'You agree to use Mobazha in compliance with all applicable laws. Prohibited items and activities are not allowed on the platform.',
     termsEscrow: 'Payments & Buyer Protection',
     termsEscrowDesc:
@@ -1821,6 +1867,8 @@ export const en: TranslationResource = {
       'Disputes are resolved by community moderators. Their decisions are final and binding.',
     termsLiability: 'Limitation of Liability',
     termsLiabilityDesc:
+      'This store runs on decentralized technology. Transactions are between buyers and sellers directly. Use the service at your own risk.',
+    termsLiabilityDescPlatform:
       'Mobazha is a decentralized platform and does not control transactions between buyers and sellers. Use the platform at your own risk.',
     lastUpdated: 'Last updated',
   },
@@ -1831,13 +1879,15 @@ export const en: TranslationResource = {
     escrowProtected: 'Payment Protected',
     escrowDesc: 'Your funds are held securely until you confirm delivery',
     disputeResolution: 'Dispute Resolution',
-    disputeDesc: 'Independent moderators available if issues arise',
+    disputeDesc: 'Fair dispute resolution if issues arise',
     cryptoPayment: 'Secure Payment',
     cryptoPaymentDesc: 'Encrypted and verified transactions',
     sellerRating: 'Seller rating',
     reviews: '{{count}} reviews',
     sales: '{{count}} sales',
     memberSince: 'Member since',
+    completionRate: '{{rate}}% completion',
+    newStore: 'New Store',
     escrow: {
       paid: 'Paid',
       confirmed: 'Confirmed',
@@ -1847,7 +1897,48 @@ export const en: TranslationResource = {
     },
     badge: {
       title: 'Buyer Protection',
-      description: 'Your payment is held securely until you confirm delivery',
+      description: 'Your payment is held securely until delivery is confirmed',
+      learnMore: 'Learn more',
+    },
+    panel: {
+      title: 'Buyer Protection',
+      intro: 'Every order is fully protected:',
+      feature1: 'Funds are held securely until the transaction is complete',
+      feature2: "Seller doesn't ship? Automatic refund",
+      feature3: 'Issue after delivery? Report it and it will be resolved fairly',
+      howTitle: 'How it works',
+      step1: 'After you place an order, funds go into a secure holding account',
+      step2: 'Seller ships your order — protection countdown begins',
+      step3: 'If no issues during the protection period, the transaction completes automatically',
+      step4: 'Report any problems with one tap during the protection period',
+      step5: 'After completion, you still have a 7-day after-sale window',
+      zeroAction: "You don't need to do anything — protection is automatic.",
+      viewPolicy: 'View Buyer Protection Policy',
+    },
+    protection: {
+      escrowed: 'Funds Secured',
+      escrowedDesc: 'Your funds are held securely',
+      shipping: 'Shipping',
+      shippingDesc: 'Seller has shipped your order',
+      protectionPeriod: 'Protection Period',
+      protectionPeriodDesc: '{{days}} days remaining — report issues promptly',
+      completed: 'Completed',
+      completedDesc: 'Order complete — thank you for your purchase!',
+      completedSellerDesc: 'Order complete — funds have been released to your account.',
+      disputed: 'Dispute In Progress',
+      disputedDesc: 'Countdown paused — under review',
+      afterSale: 'After-Sale Window',
+      afterSaleDesc: '{{days}} days remaining for after-sale support',
+      daysRemaining: '{{days}} days left',
+      autoCompleteAt: 'Auto-completes on {{date}}',
+      extendable: 'You can extend the protection period if needed',
+      extended: 'Protection period extended',
+      confirmEarly: 'Confirm Receipt',
+      reportIssue: 'Report Issue',
+      sellerCountdown: '{{days}} days until auto-completion',
+      sellerExtended: 'Buyer extended the protection period (+14 days)',
+      sellerAutoCompleted: 'Order auto-completed — funds settled',
+      sellerBuyerConfirmed: 'Buyer confirmed receipt',
     },
   },
 

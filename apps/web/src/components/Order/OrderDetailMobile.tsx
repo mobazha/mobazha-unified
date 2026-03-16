@@ -48,6 +48,10 @@ import {
   OrderStatusCard,
   getStatusLabel,
 } from '@/components/Order/cards';
+import {
+  OrderProtectionStatus,
+  type OrderProtectionStatusProps,
+} from '@/components/Order/cards/OrderProtectionStatus';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -156,6 +160,25 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       !!displayOrder.trackingNumber ||
       ['shipped', 'delivered', 'completed'].includes(displayOrder.status)
     );
+  }, [displayOrder]);
+
+  const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
+    if (!displayOrder) return null;
+    switch (displayOrder.status) {
+      case 'paid':
+      case 'processing':
+        return 'ESCROWED';
+      case 'shipped':
+        return 'SHIPPING';
+      case 'delivered':
+        return 'PROTECTION_PERIOD';
+      case 'completed':
+        return 'COMPLETED';
+      case 'disputed':
+        return 'DISPUTED';
+      default:
+        return null;
+    }
   }, [displayOrder]);
 
   // --- Action handler ---
@@ -506,6 +529,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         >
           {/* 1. Status + progress bar */}
           <OrderStatusCard displayOrder={displayOrder} />
+
+          {protectionStage && (
+            <OrderProtectionStatus
+              stage={protectionStage}
+              daysRemaining={14}
+              userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
+            />
+          )}
 
           {/* 2. Product card (vendor merged inline) */}
           <OrderProductCard displayOrder={displayOrder} />

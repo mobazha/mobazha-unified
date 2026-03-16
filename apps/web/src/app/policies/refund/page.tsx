@@ -3,32 +3,44 @@
 import React from 'react';
 import { useI18n, isStandalone } from '@mobazha/core';
 import { VStack } from '@/components/layouts';
-import { Eye, Database, Users, Lock } from 'lucide-react';
+import { CheckCircle2, MessageSquare, Clock, XCircle } from 'lucide-react';
 
-export default function PrivacyPolicyPage() {
+export default function RefundPolicyPage() {
   const { t } = useI18n();
   const standalone = isStandalone();
 
+  const intro = standalone ? t('policies.refundIntro') : t('policies.refundIntroPlatform');
+
   const sections = [
     {
-      icon: Database,
-      title: t('policies.privacyCollection'),
-      desc: standalone
-        ? t('policies.privacyCollectionDesc')
-        : t('policies.privacyCollectionDescPlatform'),
+      icon: CheckCircle2,
+      title: t('policies.refundEligibility'),
+      desc: t('policies.refundEligibilityDesc'),
     },
-    { icon: Eye, title: t('policies.privacyUsage'), desc: t('policies.privacyUsageDesc') },
-    { icon: Users, title: t('policies.privacySharing'), desc: t('policies.privacySharingDesc') },
-    { icon: Lock, title: t('policies.privacySecurity'), desc: t('policies.privacySecurityDesc') },
+    {
+      icon: MessageSquare,
+      title: t('policies.refundProcess'),
+      desc: t('policies.refundProcessDesc'),
+    },
+    {
+      icon: Clock,
+      title: t('policies.refundTimeline'),
+      desc: t('policies.refundTimelineDesc'),
+    },
+    {
+      icon: XCircle,
+      title: t('policies.refundNonRefundable'),
+      desc: t('policies.refundNonRefundableDesc'),
+    },
   ];
 
   return (
     <VStack gap="lg">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {t('policies.privacyTitle')}
+          {t('policies.refundTitle')}
         </h1>
-        <p className="text-muted-foreground">{t('policies.privacyIntro')}</p>
+        <p className="text-muted-foreground">{intro}</p>
       </div>
 
       <div className="space-y-6">
@@ -46,7 +58,7 @@ export default function PrivacyPolicyPage() {
       </div>
 
       <p className="text-xs text-muted-foreground pt-4 border-t border-border">
-        {t('policies.lastUpdated')}: February 2026
+        {t('policies.lastUpdated')}: March 2026
       </p>
     </VStack>
   );

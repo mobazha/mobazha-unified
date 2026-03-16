@@ -3,28 +3,46 @@
 import React from 'react';
 import { useI18n, isStandalone } from '@mobazha/core';
 import { VStack } from '@/components/layouts';
-import { FileText, ShieldCheck, Scale, AlertTriangle } from 'lucide-react';
+import { Timer, Lock, RotateCcw, Scale, Clock, CalendarPlus } from 'lucide-react';
 
-export default function TermsOfServicePage() {
+export default function BuyerProtectionPolicyPage() {
   const { t } = useI18n();
   const standalone = isStandalone();
 
-  const intro = standalone ? t('policies.termsIntro') : t('policies.termsIntroPlatform');
+  const intro = standalone
+    ? t('policies.buyerProtectionIntro')
+    : t('policies.buyerProtectionIntroPlatform');
 
   const sections = [
     {
-      icon: FileText,
-      title: t('policies.termsUse'),
-      desc: standalone ? t('policies.termsUseDesc') : t('policies.termsUseDescPlatform'),
+      icon: Timer,
+      title: t('policies.bpAutoComplete'),
+      desc: t('policies.bpAutoCompleteDesc'),
     },
-    { icon: ShieldCheck, title: t('policies.termsEscrow'), desc: t('policies.termsEscrowDesc') },
-    { icon: Scale, title: t('policies.termsDisputes'), desc: t('policies.termsDisputesDesc') },
     {
-      icon: AlertTriangle,
-      title: t('policies.termsLiability'),
-      desc: standalone
-        ? t('policies.termsLiabilityDesc')
-        : t('policies.termsLiabilityDescPlatform'),
+      icon: Lock,
+      title: t('policies.bpFundsHeld'),
+      desc: t('policies.bpFundsHeldDesc'),
+    },
+    {
+      icon: RotateCcw,
+      title: t('policies.bpAutoRefund'),
+      desc: t('policies.bpAutoRefundDesc'),
+    },
+    {
+      icon: Scale,
+      title: t('policies.bpDisputeProcess'),
+      desc: t('policies.bpDisputeProcessDesc'),
+    },
+    {
+      icon: Clock,
+      title: t('policies.bpAfterSale'),
+      desc: t('policies.bpAfterSaleDesc'),
+    },
+    {
+      icon: CalendarPlus,
+      title: t('policies.bpExtend'),
+      desc: t('policies.bpExtendDesc'),
     },
   ];
 
@@ -32,7 +50,7 @@ export default function TermsOfServicePage() {
     <VStack gap="lg">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {t('policies.termsTitle')}
+          {t('policies.buyerProtectionTitle')}
         </h1>
         <p className="text-muted-foreground">{intro}</p>
       </div>
@@ -52,7 +70,7 @@ export default function TermsOfServicePage() {
       </div>
 
       <p className="text-xs text-muted-foreground pt-4 border-t border-border">
-        {t('policies.lastUpdated')}: February 2026
+        {t('policies.lastUpdated')}: March 2026
       </p>
     </VStack>
   );

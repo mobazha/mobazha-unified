@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Star, ShoppingBag, Calendar } from 'lucide-react';
+import { Star, ShoppingBag, Calendar, CheckCircle2 } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,8 @@ export interface SellerTrustBadgeProps {
   reviewCount: number;
   /** Number of sales (optional) */
   salesCount?: number;
+  /** Order completion rate 0-100 (optional) */
+  completionRate?: number;
   /** Member since date (ISO string) */
   memberSince?: string;
   /** Compact inline layout for cards */
@@ -29,6 +31,7 @@ export function SellerTrustBadge({
   rating,
   reviewCount,
   salesCount,
+  completionRate,
   memberSince,
   compact = false,
   className,
@@ -96,6 +99,12 @@ export function SellerTrustBadge({
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {completionRate != null && (
+            <span className="inline-flex items-center gap-1.5 min-h-[44px]">
+              <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden />
+              {t('trust.completionRate', { rate: completionRate })}
+            </span>
+          )}
           {salesCount != null && (
             <span className="inline-flex items-center gap-1.5 min-h-[44px]">
               <ShoppingBag className="w-4 h-4 shrink-0" aria-hidden />
@@ -107,6 +116,11 @@ export function SellerTrustBadge({
               <Calendar className="w-4 h-4 shrink-0" aria-hidden />
               {t('trust.memberSince')}:{' '}
               {formatDate(memberSince, { year: 'numeric', month: 'short' })}
+            </span>
+          )}
+          {reviewCount === 0 && salesCount === 0 && (
+            <span className="inline-flex items-center gap-1.5 min-h-[44px] text-primary font-medium">
+              {t('trust.newStore')}
             </span>
           )}
         </div>
