@@ -42,6 +42,10 @@ import {
   OrderStatusCard,
   getStatusLabel,
 } from '@/components/Order/cards';
+import {
+  OrderProtectionStatus,
+  type OrderProtectionStatusProps,
+} from '@/components/Order/cards/OrderProtectionStatus';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
@@ -93,6 +97,25 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   }, [displayOrder, t]);
 
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
+
+  const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
+    if (!displayOrder) return null;
+    switch (displayOrder.status) {
+      case 'paid':
+      case 'processing':
+        return 'ESCROWED';
+      case 'shipped':
+        return 'SHIPPING';
+      case 'delivered':
+        return 'PROTECTION_PERIOD';
+      case 'completed':
+        return 'COMPLETED';
+      case 'disputed':
+        return 'DISPUTED';
+      default:
+        return null;
+    }
+  }, [displayOrder]);
 
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
@@ -346,6 +369,17 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
                 {/* Status context card — gives users clear next-step guidance */}
                 <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+
+                {protectionStage && (
+                  <OrderProtectionStatus
+                    stage={protectionStage}
+                    daysRemaining={14}
+                    userRole={
+                      displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole
+                    }
+                    className="mb-4"
+                  />
+                )}
 
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
                 <OrderSummaryCard

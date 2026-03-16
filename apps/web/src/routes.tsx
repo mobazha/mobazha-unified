@@ -91,6 +91,11 @@ const routes: RouteObject[] = [
       { path: 'terms', element: lazyPage(() => import('./app/policies/terms/page')) },
       { path: 'shipping', element: lazyPage(() => import('./app/policies/shipping/page')) },
       { path: 'returns', element: lazyPage(() => import('./app/policies/returns/page')) },
+      {
+        path: 'buyer-protection',
+        element: lazyPage(() => import('./app/policies/buyer-protection/page')),
+      },
+      { path: 'refund', element: lazyPage(() => import('./app/policies/refund/page')) },
     ],
   },
 
