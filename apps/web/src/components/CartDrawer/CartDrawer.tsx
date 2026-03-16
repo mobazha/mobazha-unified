@@ -157,7 +157,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
                       {item.listing.vendorName && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          @{item.listing.vendorName}
+                          {item.listing.vendorName}
                         </p>
                       )}
 
