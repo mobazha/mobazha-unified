@@ -85,7 +85,7 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="pr-10">
           <DialogTitle className="flex items-center justify-between">
             <span>{t('order.packingSlip.title')}</span>
             <Button onClick={handlePrint} size="sm" className="gap-2">
@@ -95,7 +95,7 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
           </DialogTitle>
         </DialogHeader>
 
-        <div ref={printRef} className="p-4">
+        <div ref={printRef} className="rounded-md bg-white p-4 text-[#1a1a1a]">
           {/* Header */}
           <div
             className="header"

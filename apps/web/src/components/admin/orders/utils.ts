@@ -66,9 +66,12 @@ export function transformOrderListItem(
     : '0';
 
   const counterpartyId = orderType === 'purchases' ? vendorId : buyerId;
+  const apiName = orderType === 'purchases' ? item.vendorName : item.buyerName;
+  const apiAvatar = orderType === 'purchases' ? item.vendorAvatar : item.buyerAvatar;
   const counterpartyHandle = orderType === 'purchases' ? item.vendorHandle : item.buyerHandle;
   const profileInfo = counterpartyId ? profileMap.get(counterpartyId) : undefined;
   const counterpartyName =
+    apiName ||
     profileInfo?.name ||
     counterpartyHandle ||
     (counterpartyId
@@ -76,7 +79,9 @@ export function transformOrderListItem(
       : orderType === 'purchases'
         ? labels.seller
         : labels.buyer);
-  const counterpartyAvatar = profileInfo?.avatar || undefined;
+  const counterpartyAvatar = apiAvatar
+    ? getImageUrl(apiAvatar) || undefined
+    : profileInfo?.avatar || undefined;
 
   return {
     id: orderId,
