@@ -27,15 +27,9 @@ export interface OrderProtectionStatusProps {
 }
 
 const LEVEL_STYLES: Record<ProtectionLevel, { bg: string; text: string }> = {
-  full: {
-    bg: 'bg-emerald-100 dark:bg-emerald-900/30',
-    text: 'text-emerald-700 dark:text-emerald-400',
-  },
+  full: { bg: 'bg-success/10', text: 'text-success' },
   standard: { bg: 'bg-primary/10', text: 'text-primary' },
-  platform: {
-    bg: 'bg-violet-100 dark:bg-violet-900/30',
-    text: 'text-violet-700 dark:text-violet-400',
-  },
+  platform: { bg: 'bg-info/10', text: 'text-info' },
 };
 
 const LEVEL_I18N: Record<ProtectionLevel, string> = {
