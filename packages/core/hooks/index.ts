@@ -62,6 +62,9 @@ export * from './useDisputes';
 // 角色管理相关
 export * from './useRole';
 
+// 用户上下文（能力 + 上下文统一判断）
+export * from './useUserContext';
+
 // 货币相关
 export * from './useCurrency';
 export * from './useCurrencySelection';

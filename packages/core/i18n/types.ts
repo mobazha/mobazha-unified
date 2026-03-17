@@ -1078,10 +1078,12 @@ export interface TranslationResource {
     account?: string;
     myProfile: string;
     myStore: string;
+    startSelling?: string;
     viewStore?: string;
     createListing: string;
     sales: string;
     purchases: string;
+    myOrders?: string;
     rwaAssets?: string;
     settings: string;
     logout: string;
@@ -2437,6 +2439,7 @@ export interface TranslationResource {
       collapseSidebar?: string;
       collections?: string;
       backToMarketplace?: string;
+      backToShopping?: string;
     };
     dashboard?: {
       welcome?: string;
