@@ -9,6 +9,7 @@ import {
   useSales,
   isStandalone,
   useReceivingAccounts,
+  useUserContext,
 } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import {
@@ -182,6 +183,7 @@ export default function AdminDashboardPage() {
     totalSalesDisplay,
   } = useDashboardData();
 
+  const { hasStore } = useUserContext();
   const searchParams = useSearchParams();
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
@@ -192,10 +194,14 @@ export default function AdminDashboardPage() {
   const displayName = profile?.name || t('common.seller');
 
   const cameFromOnboarding = searchParams.get('onboarding') === 'complete';
+  const standaloneMode = useMemo(() => isStandalone(), []);
+  const needsStoreSetup = !standaloneMode && !hasStore;
 
   const showOnboarding = useMemo(
-    () => (!sessionDismissed && isEmpty && !isOnboardingDismissed()) || cameFromOnboarding,
-    [sessionDismissed, isEmpty, cameFromOnboarding]
+    () =>
+      (!sessionDismissed && (needsStoreSetup || (isEmpty && !isOnboardingDismissed()))) ||
+      cameFromOnboarding,
+    [sessionDismissed, needsStoreSetup, isEmpty, cameFromOnboarding]
   );
 
   const handleOnboardingComplete = useCallback(() => {
@@ -207,7 +213,6 @@ export default function AdminDashboardPage() {
     setSessionDismissed(true);
   }, []);
 
-  const standaloneMode = useMemo(() => isStandalone(), []);
   const storeUrl = profile?.peerID ? (standaloneMode ? '/' : `/store/${profile.peerID}`) : '/';
 
   const { data: receivingAccounts } = useReceivingAccounts();

@@ -29,6 +29,9 @@ import {
   Coins,
   Wallet,
   CircleCheck,
+  ShieldCheck,
+  Globe,
+  Zap,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { AvatarCompat } from '@/components/ui/avatar-compat';
@@ -145,23 +148,25 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const searchParams = useSearchParams();
   const { profile, updateProfile } = useUserStore();
 
+  const standaloneMode = useMemo(() => isStandalone(), []);
+
   const { data: receivingAccounts } = useReceivingAccounts();
   const hasPayment = useMemo(
-    () =>
-      Array.isArray(receivingAccounts) &&
-      receivingAccounts.some(a => a.isActive !== false),
+    () => Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false),
     [receivingAccounts]
   );
 
   const TOTAL_STEPS = 4;
   const profileAlreadyComplete = useMemo(() => isProfileComplete(profile), [profile]);
   const cameFromOnboarding = searchParams.get('onboarding') === 'complete';
+  const isFirstTimeSetup = !standaloneMode && profile?.vendor !== true;
 
   const initialStep = useMemo(() => {
     if (cameFromOnboarding) return hasPayment ? 4 : 3;
+    if (isFirstTimeSetup) return 0;
     if (profileAlreadyComplete) return 2;
     return 1;
-  }, [cameFromOnboarding, hasPayment, profileAlreadyComplete]);
+  }, [cameFromOnboarding, hasPayment, isFirstTimeSetup, profileAlreadyComplete]);
   const [step, setStep] = useState(initialStep);
 
   useEffect(() => {
@@ -177,8 +182,6 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-
-  const standaloneMode = useMemo(() => isStandalone(), []);
 
   const stepLabels = [
     t('admin.onboarding.step1Label') || 'Store',
@@ -214,6 +217,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
         updateProfile({
           name: storeName.trim(),
           shortDescription: shortDescription.trim(),
+          vendor: true,
         })
       );
 
@@ -243,6 +247,81 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   };
 
   const storeUrl = profile?.peerID ? (standaloneMode ? '/' : `/store/${profile.peerID}`) : '/';
+
+  if (step === 0) {
+    return (
+      <div className="max-w-2xl mx-auto" data-testid="seller-onboarding-landing">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Store className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            {t('admin.onboarding.landingTitle') || 'Start Your Online Store'}
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            {t('admin.onboarding.landingSubtitle') ||
+              'Join thousands of sellers on Mobazha. Set up in minutes, sell globally.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          {[
+            {
+              icon: <Coins className="w-5 h-5 text-primary" />,
+              title: t('admin.onboarding.landingFeature1') || 'Zero Platform Fees',
+              desc: t('admin.onboarding.landingFeature1Desc') || 'Keep 100% of your revenue',
+            },
+            {
+              icon: <ShieldCheck className="w-5 h-5 text-primary" />,
+              title: t('admin.onboarding.landingFeature2') || 'Buyer Protection',
+              desc:
+                t('admin.onboarding.landingFeature2Desc') ||
+                'Built-in escrow for secure transactions',
+            },
+            {
+              icon: <Globe className="w-5 h-5 text-primary" />,
+              title: t('admin.onboarding.landingFeature3') || 'Sell Globally',
+              desc:
+                t('admin.onboarding.landingFeature3Desc') || 'Accept crypto & fiat from anywhere',
+            },
+          ].map((feat, i) => (
+            <div key={i} className="bg-card rounded-xl border p-4 text-center space-y-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                {feat.icon}
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">{feat.title}</h3>
+              <p className="text-xs text-muted-foreground">{feat.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-card rounded-xl border p-5 sm:p-6 text-center space-y-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Zap className="w-4 h-4 text-primary" />
+            <span>
+              {t('admin.onboarding.landingTimeEstimate') || 'Takes less than 5 minutes to set up'}
+            </span>
+          </div>
+
+          <button
+            onClick={() => setStep(1)}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-8 py-3 text-base font-medium hover:bg-primary/90 transition-colors"
+            data-testid="start-selling-cta"
+          >
+            {t('admin.onboarding.landingCta') || 'Get Started'}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => router.push('/')}
+            className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
+          >
+            {t('admin.onboarding.landingSkip') || 'Maybe later'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto" data-testid="seller-onboarding">

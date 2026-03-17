@@ -556,6 +556,22 @@ export default function MePage() {
             </Link>
           )}
 
+          {/* Start Selling CTA — SaaS 用户无店铺 */}
+          {isAuthenticated && !hasStore && !isPureBuyer && !standaloneMode && !isEmbeddedApp && (
+            <Link href="/admin" className="block">
+              <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:from-primary/10 hover:to-primary/15 active:from-primary/15 active:to-primary/20 transition-all">
+                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+                  <Store className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary">{t('userMenu.startSelling')}</p>
+                  <p className="text-xs text-muted-foreground">{t('me.startSellingDesc')}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-primary/60 flex-shrink-0" />
+              </div>
+            </Link>
+          )}
+
           {/* Feature list */}
           {isAuthenticated && (
             <div className="bg-card rounded-xl border overflow-hidden">
