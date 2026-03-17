@@ -491,6 +491,210 @@ test.describe('S6: CANCELABLE Payment Model', () => {
   });
 });
 
+test.describe('S6: Extend Protection — Click Interaction', () => {
+  test('clicking extend button triggers API and updates UI', async ({ page }) => {
+    await setupPage(page);
+    const futureDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+    let extendCalled = false;
+
+    await page.route('**/v1/orders/QmOrder001', route => {
+      if (route.request().method() === 'GET') {
+        const body = extendCalled
+          ? wrapOrderResponse('FULFILLED', {
+              stage: 'PROTECTION_PERIOD',
+              daysRemaining: 19,
+              autoCompleteAt: new Date(Date.now() + 19 * 24 * 60 * 60 * 1000).toISOString(),
+              extendable: false,
+              extended: true,
+              afterSaleWindowDays: 45,
+            })
+          : wrapOrderResponse('FULFILLED', {
+              stage: 'PROTECTION_PERIOD',
+              daysRemaining: 5,
+              autoCompleteAt: futureDate,
+              extendable: true,
+              extended: false,
+              afterSaleWindowDays: 45,
+            });
+        return route.fulfill({ status: 200, contentType: 'application/json', body });
+      }
+      return route.continue();
+    });
+
+    await page.route('**/v1/orders/QmOrder001/extend-protection', route => {
+      extendCalled = true;
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { success: true } }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}/orders/QmOrder001?type=purchase`);
+    await page.waitForLoadState('networkidle');
+
+    const protectionCard = page.getByTestId('order-protection-status');
+    await expect(protectionCard).toBeVisible();
+
+    const extendButton = protectionCard.getByRole('button');
+    await expect(extendButton).toBeVisible();
+    await extendButton.click();
+
+    await page.waitForResponse(
+      resp => resp.url().includes('extend-protection') && resp.status() === 200
+    );
+
+    const updatedCard = page.getByTestId('order-protection-status');
+    await expect(updatedCard).toBeVisible();
+    await expect(updatedCard.getByRole('button')).toHaveCount(0, { timeout: 5000 });
+  });
+});
+
+test.describe('S6: After-Sale Dispute — Modal Submission', () => {
+  test('buyer opens dispute modal, fills form, and submits', async ({ page }) => {
+    await setupPage(page);
+    let disputeFiled = false;
+
+    await page.route('**/v1/orders/QmOrder001', route => {
+      if (route.request().method() === 'GET') {
+        const extras = disputeFiled
+          ? {
+              afterSaleDisputeReason: 'QUALITY_ISSUE',
+              afterSaleDisputeDesc: 'Product has visible scratches.',
+              afterSaleDisputeAt: new Date().toISOString(),
+            }
+          : {};
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: wrapOrderResponse(
+            'COMPLETED',
+            {
+              stage: 'AFTER_SALE_WINDOW',
+              daysRemaining: 40,
+              autoCompleteAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              extendable: false,
+              extended: false,
+              afterSaleWindowDays: 45,
+            },
+            extras,
+            {
+              orderComplete: {
+                timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                ratingSignatures: [],
+              },
+            }
+          ),
+        });
+      }
+      return route.continue();
+    });
+
+    await page.route('**/v1/disputes/QmOrder001/after-sale', route => {
+      disputeFiled = true;
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { success: true } }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}/orders/QmOrder001?type=purchase`);
+    await page.waitForLoadState('networkidle');
+
+    const reportButton = page.getByRole('button', { name: /report/i });
+    await expect(reportButton).toBeVisible();
+    await reportButton.click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
+    const qualityButton = dialog.getByText(/quality/i);
+    if ((await qualityButton.count()) > 0) {
+      await qualityButton.click();
+    }
+
+    const textarea = dialog.getByRole('textbox');
+    await textarea.fill('Product has visible scratches.');
+
+    const submitButton = dialog.getByRole('button', { name: /submit|file|report/i });
+    await expect(submitButton).toBeVisible();
+    await submitButton.click();
+
+    await expect(dialog).not.toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe('S6: Window Expiry Guard', () => {
+  test('no report issue button when after-sale window is expired', async ({ page }) => {
+    await setupPage(page);
+    await page.route('**/v1/orders/**', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapOrderResponse(
+          'COMPLETED',
+          {
+            stage: 'COMPLETED',
+            daysRemaining: 0,
+            autoCompleteAt: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
+            extendable: false,
+            extended: false,
+            afterSaleWindowDays: 0,
+          },
+          {},
+          {
+            orderComplete: {
+              timestamp: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingSignatures: [],
+            },
+          }
+        ),
+      })
+    );
+
+    await page.goto(`${BASE_URL}/orders/QmOrder001?type=purchase`);
+    await page.waitForLoadState('networkidle');
+
+    const reportButton = page.getByRole('button', { name: /report/i });
+    await expect(reportButton).toHaveCount(0);
+  });
+
+  test('report issue button present when after-sale window is active', async ({ page }) => {
+    await setupPage(page);
+    await page.route('**/v1/orders/**', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapOrderResponse(
+          'COMPLETED',
+          {
+            stage: 'AFTER_SALE_WINDOW',
+            daysRemaining: 30,
+            autoCompleteAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+            extendable: false,
+            extended: false,
+            afterSaleWindowDays: 45,
+          },
+          {},
+          {
+            orderComplete: {
+              timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingSignatures: [],
+            },
+          }
+        ),
+      })
+    );
+
+    await page.goto(`${BASE_URL}/orders/QmOrder001?type=purchase`);
+    await page.waitForLoadState('networkidle');
+
+    const reportButton = page.getByRole('button', { name: /report/i });
+    await expect(reportButton).toBeVisible();
+  });
+});
+
 test.describe('S6: Mobile Responsive', () => {
   test('protection card renders correctly on mobile', async ({ page }) => {
     await setupPage(page);
