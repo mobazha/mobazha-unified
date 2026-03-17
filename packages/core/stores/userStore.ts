@@ -869,6 +869,30 @@ const handleUnauthorized = async (): Promise<boolean> => {
 onUnauthorized(handleUnauthorized);
 onOpenApiUnauthorized(handleUnauthorized as () => void);
 
+// profile → roleStore 同步：profile.vendor/moderator 变化时自动同步到 roleStore
+import { useRoleStore } from './roleStore';
+let _prevVendor: boolean | undefined;
+let _prevModerator: boolean | undefined;
+useUserStore.subscribe(state => {
+  const vendor = state.profile?.vendor;
+  const moderator = state.profile?.moderator;
+  if (vendor === _prevVendor && moderator === _prevModerator) return;
+  _prevVendor = vendor;
+  _prevModerator = moderator;
+
+  const roleStore = useRoleStore.getState();
+  if (vendor && !roleStore.roleState.isSeller) {
+    roleStore.enableSeller();
+  } else if (!vendor && roleStore.roleState.isSeller) {
+    roleStore.disableSeller();
+  }
+  if (moderator && !roleStore.roleState.isModerator) {
+    roleStore.enableModerator();
+  } else if (!moderator && roleStore.roleState.isModerator) {
+    roleStore.disableModerator();
+  }
+});
+
 // 选择器
 export const selectUser = (state: UserState) => state.profile;
 export const selectIsAuthenticated = (state: UserState) => state.isAuthenticated;

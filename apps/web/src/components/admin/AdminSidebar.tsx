@@ -17,6 +17,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -144,6 +145,19 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
           <Eye className="w-4 h-4 shrink-0" />
           {!collapsed && <span>{t('admin.nav.viewStore')}</span>}
         </Link>
+        {!isStandalone() && (
+          <Link
+            href="/"
+            className={cn(
+              'flex items-center gap-3 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
+              collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
+            )}
+            title={collapsed ? t('admin.nav.backToShopping') : undefined}
+          >
+            <ShoppingBag className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>{t('admin.nav.backToShopping')}</span>}
+          </Link>
+        )}
         <a
           href="https://docs.mobazha.org"
           target="_blank"

@@ -19,6 +19,7 @@ import {
   isStandalone,
   startCasdoorLogin,
   NODE_API,
+  useUserContext,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
@@ -207,7 +208,8 @@ const StoreClaimBanner: React.FC<{ onClaimed: () => void }> = ({ onClaimed }) =>
 export default function MePage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { isAuthenticated, profile, isLoading, logout, authMode } = useUserStore();
+  const { isAuthenticated, profile, isLoading, logout } = useUserStore();
+  const { hasStore, isPureBuyer } = useUserContext();
   const { isDark, toggleDarkMode } = useTheme();
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
   const {
@@ -219,7 +221,6 @@ export default function MePage() {
   const { promptRegister } = useMiniAppRegister();
 
   const standaloneMode = isStandalone();
-  const isBuyer = standaloneMode && authMode === 'standalone';
 
   const handleLogout = () => {
     logout();
@@ -524,7 +525,7 @@ export default function MePage() {
                   </div>
                   <span className="text-xs">{t('me.purchases')}</span>
                 </Link>
-                {!isBuyer && (
+                {hasStore && !isPureBuyer && (
                   <Link
                     href="/orders?tab=sales"
                     className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
@@ -540,7 +541,7 @@ export default function MePage() {
           )}
 
           {/* Store admin (non-Mini-App sellers only) */}
-          {isAuthenticated && !isBuyer && !isEmbeddedApp && (
+          {isAuthenticated && hasStore && !isPureBuyer && !isEmbeddedApp && (
             <Link href="/admin" className="block">
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/15 transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">

@@ -5,16 +5,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { useI18n, useUserStore, getImageUrl, isStandalone } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, isStandalone, useUserContext } from '@mobazha/core';
 import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
 
 export const MobileHeader: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
-  const { profile, isAuthenticated, authMode } = useUserStore();
+  const { profile, isAuthenticated } = useUserStore();
+  const { hasStore } = useUserContext();
   const [searchQuery, setSearchQuery] = useState('');
   const standaloneMode = isStandalone();
-  const isSeller = standaloneMode && authMode === 'basic';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +53,7 @@ export const MobileHeader: React.FC = () => {
                   </>
                 )}
               </Link>
-              {isAuthenticated && isSeller && (
+              {isAuthenticated && hasStore && (
                 <Link
                   href="/admin"
                   className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors"
@@ -78,6 +78,16 @@ export const MobileHeader: React.FC = () => {
                   />
                 </div>
               </form>
+
+              {isAuthenticated && (
+                <Link
+                  href="/admin"
+                  className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors"
+                  aria-label={t('userMenu.myStore')}
+                >
+                  <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+                </Link>
+              )}
 
               <button
                 onClick={handleScan}

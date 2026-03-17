@@ -2275,10 +2275,12 @@ export const zh: TranslationResource = {
   userMenu: {
     myProfile: '我的主页',
     myStore: '我的店铺',
+    startSelling: '开始销售',
     viewStore: '查看店铺',
     createListing: '创建商品',
     sales: '销售订单',
     purchases: '购买订单',
+    myOrders: '我的订单',
     rwaAssets: 'RWA 资产',
     settings: '设置',
     account: '个人设置',
@@ -3867,6 +3869,7 @@ export const zh: TranslationResource = {
       expandSidebar: '展开侧边栏',
       collapseSidebar: '收起侧边栏',
       backToMarketplace: '市场',
+      backToShopping: '返回购物',
     },
     dashboard: {
       welcome: '欢迎回来，{{name}}',

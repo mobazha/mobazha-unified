@@ -29,6 +29,7 @@ import {
   isHosted,
   isStandalone,
   startCasdoorLogin,
+  useUserContext,
 } from '@mobazha/core';
 import {
   Search,
@@ -39,6 +40,7 @@ import {
   MessageCircle,
   User,
   LayoutDashboard,
+  ClipboardList,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
 import { WalletConnectButton } from '../Wallet';
@@ -47,7 +49,8 @@ import { CartDrawer } from '../CartDrawer';
 export const Header: React.FC = () => {
   const router = useRouter();
   const { t } = useI18n();
-  const { isAuthenticated, profile, isLoading, logout, authMode } = useUserStore();
+  const { isAuthenticated, profile, isLoading, logout } = useUserStore();
+  const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,8 +59,6 @@ export const Header: React.FC = () => {
   const cartItemCount = useCartStore(state => state.getItemCount());
 
   const standaloneMode = isStandalone();
-  const isSeller = standaloneMode && authMode === 'basic';
-  const isBuyer = standaloneMode && authMode === 'standalone';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +151,7 @@ export const Header: React.FC = () => {
             )}
 
             {/* 卖家：店铺管理入口 */}
-            {isAuthenticated && !isBuyer && (
+            {isAuthenticated && hasStore && !isPureBuyer && (
               <Link href="/admin" data-testid="header-admin-link">
                 <Button
                   variant="ghost"
@@ -159,6 +160,20 @@ export const Header: React.FC = () => {
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="hidden lg:inline">{t('admin.title')}</span>
+                </Button>
+              </Link>
+            )}
+
+            {/* 已登录：订单入口 */}
+            {isAuthenticated && !hasStore && (
+              <Link href="/orders" data-testid="header-orders-link">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-primary/10 hover:text-primary transition-colors"
+                  aria-label={t('userMenu.myOrders')}
+                >
+                  <ClipboardList className="h-5 w-5" />
                 </Button>
               </Link>
             )}
@@ -250,7 +265,7 @@ export const Header: React.FC = () => {
                   <DropdownMenuSeparator />
 
                   {/* 卖家核心入口 */}
-                  {!isBuyer && (
+                  {hasStore && !isPureBuyer && (
                     <>
                       <DropdownMenuItem
                         onClick={() => router.push('/admin')}
@@ -265,15 +280,15 @@ export const Header: React.FC = () => {
                   )}
 
                   {/* 买家购买订单（hosted 模式双角色也显示） */}
-                  {!isSeller && (
+                  {!isPureSeller && (
                     <>
                       <DropdownMenuItem
                         onClick={() => router.push('/orders?tab=purchases')}
                         className="cursor-pointer"
-                        data-testid="header-menu-purchases"
+                        data-testid="header-menu-orders"
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
-                        {t('userMenu.purchases')}
+                        {t('userMenu.myOrders')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
