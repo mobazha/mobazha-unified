@@ -429,10 +429,14 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {showRatingInvite && (
                   <RatingInviteBanner
                     onWriteReview={() => executeConfirmAction('complete')}
-                    onReportIssue={() => {
-                      setIsAfterSaleDispute(true);
-                      setShowDisputeModal(true);
-                    }}
+                    onReportIssue={
+                      displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
+                        ? () => {
+                            setIsAfterSaleDispute(true);
+                            setShowDisputeModal(true);
+                          }
+                        : undefined
+                    }
                     disputeFiled={hasAfterSaleDispute}
                     className="mb-4"
                   />

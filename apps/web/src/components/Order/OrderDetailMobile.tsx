@@ -651,10 +651,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           {showRatingInvite && (
             <RatingInviteBanner
               onWriteReview={() => executeConfirmAction('complete')}
-              onReportIssue={() => {
-                setIsAfterSaleDispute(true);
-                setShowDisputeModal(true);
-              }}
+              onReportIssue={
+                displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
+                  ? () => {
+                      setIsAfterSaleDispute(true);
+                      setShowDisputeModal(true);
+                    }
+                  : undefined
+              }
               disputeFiled={hasAfterSaleDispute}
             />
           )}
