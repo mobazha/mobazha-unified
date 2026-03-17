@@ -634,7 +634,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           )}
 
           {/* 5b. Buyer protection — after tracking context */}
-          {protectionStage && displayOrder.protection && !!displayOrder.moderator && (
+          {protectionStage && displayOrder.protection && (
             <OrderProtectionStatus
               stage={protectionStage}
               daysRemaining={displayOrder.protection.daysRemaining}

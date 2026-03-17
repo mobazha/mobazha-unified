@@ -418,10 +418,7 @@ test.describe('S6: After-Sale Dispute', () => {
 });
 
 test.describe('S6: CANCELABLE Payment Model', () => {
-  // CANCELABLE (1-of-2) orders don't have a moderator, so the current UI
-  // does not render the protection card. After-sale protection for CANCELABLE
-  // orders is handled via after-sale dispute flow once the order is COMPLETED.
-  test('does not show protection card for CANCELABLE order (no moderator)', async ({ page }) => {
+  test('shows protection card for CANCELABLE order (no moderator needed)', async ({ page }) => {
     await setupPage(page);
     const futureDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
     await page.route('**/v1/orders/**', route =>
@@ -456,7 +453,7 @@ test.describe('S6: CANCELABLE Payment Model', () => {
     await page.waitForLoadState('networkidle');
 
     const protectionCard = page.getByTestId('order-protection-status');
-    await expect(protectionCard).toHaveCount(0);
+    await expect(protectionCard).toBeVisible();
   });
 });
 

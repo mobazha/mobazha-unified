@@ -409,7 +409,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {/* Status context card — gives users clear next-step guidance */}
                 <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
 
-                {protectionStage && displayOrder.protection && !!displayOrder.moderator && (
+                {protectionStage && displayOrder.protection && (
                   <OrderProtectionStatus
                     stage={protectionStage}
                     daysRemaining={displayOrder.protection.daysRemaining}
