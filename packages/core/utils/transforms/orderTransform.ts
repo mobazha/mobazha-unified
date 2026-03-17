@@ -13,6 +13,7 @@ import type {
   DisplayOrderProtection,
   DisplayAfterSaleDispute,
   DisplayTimelineEvent,
+  ProtectionLevel,
   DisplayOrderStatus,
   DisplayUserRole,
   TransformOrderOptions,
@@ -408,6 +409,12 @@ function determineUserRole(
   return userRole;
 }
 
+function deriveProtectionLevel(method: string | number, isFiat: boolean): ProtectionLevel {
+  if (isFiat) return 'platform';
+  if (method === 'MODERATED' || method === 2) return 'full';
+  return 'standard';
+}
+
 // ============ Main Transform Function ============
 
 /**
@@ -758,6 +765,7 @@ export function transformCoreOrder(
           extendable: data.protection.extendable,
           extended: data.protection.extended,
           afterSaleWindowDays: data.protection.afterSaleWindowDays,
+          protectionLevel: deriveProtectionLevel(paymentMethod, isFiatPayment),
         } as DisplayOrderProtection)
       : undefined,
     afterSaleDispute: data.afterSaleDisputeAt

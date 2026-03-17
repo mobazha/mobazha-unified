@@ -3,7 +3,9 @@
 import React, { memo, useMemo, useState, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { cn } from '@/lib/utils';
-import { ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Shield } from 'lucide-react';
+
+export type ProtectionLevel = 'full' | 'standard' | 'platform';
 
 export interface OrderProtectionStatusProps {
   stage:
@@ -19,9 +21,28 @@ export interface OrderProtectionStatusProps {
   extended?: boolean;
   afterSaleWindowDays?: number;
   userRole: 'buyer' | 'seller';
+  protectionLevel?: ProtectionLevel;
   onExtendProtection?: () => Promise<void>;
   className?: string;
 }
+
+const LEVEL_STYLES: Record<ProtectionLevel, { bg: string; text: string }> = {
+  full: {
+    bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+    text: 'text-emerald-700 dark:text-emerald-400',
+  },
+  standard: { bg: 'bg-primary/10', text: 'text-primary' },
+  platform: {
+    bg: 'bg-violet-100 dark:bg-violet-900/30',
+    text: 'text-violet-700 dark:text-violet-400',
+  },
+};
+
+const LEVEL_I18N: Record<ProtectionLevel, string> = {
+  full: 'trust.protection.levelFull',
+  standard: 'trust.protection.levelStandard',
+  platform: 'trust.protection.levelPlatform',
+};
 
 export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   stage,
@@ -31,20 +52,34 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   extended,
   afterSaleWindowDays = 0,
   userRole,
+  protectionLevel = 'standard',
   onExtendProtection,
   className,
 }: OrderProtectionStatusProps) {
   const { t } = useI18n();
   const isDisputed = stage === 'DISPUTED';
+  const isCancelable = protectionLevel === 'standard';
 
   const countdownText = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' && stage !== 'DISPUTED') return null;
     if (isDisputed) return t('trust.protection.disputedDesc');
     const days = daysRemaining ?? 0;
-    return userRole === 'buyer'
-      ? t('trust.protection.daysRemaining', { days })
+    if (userRole === 'buyer') {
+      return isCancelable
+        ? t('trust.protection.cancelablePeriodDesc', { days })
+        : t('trust.protection.daysRemaining', { days });
+    }
+    return isCancelable
+      ? t('trust.protection.cancelableSellerCountdown', { days })
       : t('trust.protection.sellerCountdown', { days });
-  }, [stage, daysRemaining, userRole, isDisputed, t]);
+  }, [stage, daysRemaining, userRole, isDisputed, isCancelable, t]);
+
+  const escrowText = useMemo(() => {
+    if (stage !== 'ESCROWED') return null;
+    return isCancelable
+      ? t('trust.protection.cancelableEscrowedDesc')
+      : t('trust.protection.escrowedDesc');
+  }, [stage, isCancelable, t]);
 
   const autoCompleteText = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' || !autoCompleteAt) return null;
@@ -95,11 +130,16 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   }, [stage, afterSaleWindowDays, t]);
 
   const hasContent =
-    countdownText || afterSaleText || completedText || autoCompleteText || extensionText;
+    countdownText ||
+    escrowText ||
+    afterSaleText ||
+    completedText ||
+    autoCompleteText ||
+    extensionText;
 
   if (!hasContent && !isDisputed) return null;
 
-  const Icon = isDisputed ? AlertTriangle : ShieldCheck;
+  const Icon = isDisputed ? AlertTriangle : protectionLevel === 'full' ? ShieldCheck : Shield;
   const iconColor = isDisputed ? 'text-warning' : 'text-primary';
   const bgStyle = isDisputed ? 'bg-warning/8 border-warning/20' : 'bg-primary/5 border-primary/15';
 
@@ -109,6 +149,9 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     !extended &&
     userRole === 'buyer' &&
     onExtendProtection;
+
+  const levelStyle = LEVEL_STYLES[protectionLevel];
+  const levelLabel = t(LEVEL_I18N[protectionLevel]);
 
   return (
     <div
@@ -126,6 +169,19 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
           )}
         >
           <div className="min-w-0">
+            {/* Protection level badge */}
+            <span
+              className={cn(
+                'inline-block text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded mb-1.5',
+                levelStyle.bg,
+                levelStyle.text
+              )}
+              data-testid="protection-level-badge"
+            >
+              {levelLabel}
+            </span>
+
+            {escrowText && <p className="text-sm font-medium text-foreground">{escrowText}</p>}
             {countdownText && (
               <p
                 className={cn(

@@ -420,6 +420,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                     userRole={
                       displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole
                     }
+                    protectionLevel={displayOrder.protection.protectionLevel}
                     onExtendProtection={handleExtendProtection}
                     className="mb-4"
                   />

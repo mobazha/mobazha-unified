@@ -1726,6 +1726,12 @@ export const zh: TranslationResource = {
       sellerExtended: '买家已延长保障期（+14 天）',
       sellerAutoCompleted: '订单已自动完成 — 资金已结算',
       sellerBuyerConfirmed: '买家已确认收货',
+      levelFull: '仲裁保障',
+      levelStandard: '买家保障',
+      levelPlatform: '平台保障',
+      cancelablePeriodDesc: '验证剩余 {{days}} 天 — 确认收货或取消订单',
+      cancelableEscrowedDesc: '您的付款已托管在安全共享账户中',
+      cancelableSellerCountdown: '买家验证剩余 {{days}} 天',
     },
   },
 
