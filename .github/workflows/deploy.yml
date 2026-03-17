@@ -1,14 +1,6 @@
 name: Deploy Web Frontend
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/web/**'
-      - 'packages/core/**'
-      - 'packages/ui/**'
-      - 'deploy/Dockerfile.web'
-      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       target:
@@ -38,7 +30,6 @@ jobs:
     name: Build SaaS Image
     runs-on: ubuntu-latest
     if: >-
-      github.event_name == 'push' ||
       github.event.inputs.target == 'saas' ||
       github.event.inputs.target == 'all'
     permissions:
@@ -93,7 +84,6 @@ jobs:
     name: Build Standalone Image
     runs-on: ubuntu-latest
     if: >-
-      github.event_name == 'push' ||
       github.event.inputs.target == 'standalone' ||
       github.event.inputs.target == 'all'
     permissions:
@@ -149,7 +139,6 @@ jobs:
     needs: build-saas
     runs-on: ubuntu-latest
     if: >-
-      github.event_name == 'push' ||
       github.event.inputs.target == 'saas' ||
       github.event.inputs.target == 'all'
     permissions:
@@ -196,7 +185,6 @@ jobs:
     needs: build-standalone
     runs-on: ubuntu-latest
     if: >-
-      github.event_name == 'push' ||
       github.event.inputs.target == 'standalone' ||
       github.event.inputs.target == 'all'
     permissions:
