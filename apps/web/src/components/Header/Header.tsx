@@ -41,6 +41,7 @@ import {
   User,
   LayoutDashboard,
   ClipboardList,
+  Store,
 } from 'lucide-react';
 import { NotificationDropdown } from '../Notification';
 import { WalletConnectButton } from '../Wallet';
@@ -274,6 +275,21 @@ export const Header: React.FC = () => {
                       >
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         {t('admin.title')}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+
+                  {/* SaaS 用户无店铺：Start Selling 入口 */}
+                  {!hasStore && !isPureBuyer && !standaloneMode && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/admin')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-start-selling"
+                      >
+                        <Store className="mr-2 h-4 w-4" />
+                        {t('userMenu.startSelling')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>

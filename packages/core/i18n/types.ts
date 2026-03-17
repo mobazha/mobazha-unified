@@ -2762,6 +2762,17 @@ export interface TranslationResource {
       reorderError?: string;
     };
     onboarding?: {
+      landingTitle?: string;
+      landingSubtitle?: string;
+      landingFeature1?: string;
+      landingFeature1Desc?: string;
+      landingFeature2?: string;
+      landingFeature2Desc?: string;
+      landingFeature3?: string;
+      landingFeature3Desc?: string;
+      landingTimeEstimate?: string;
+      landingCta?: string;
+      landingSkip?: string;
       title?: string;
       subtitle?: string;
       step1Label?: string;
