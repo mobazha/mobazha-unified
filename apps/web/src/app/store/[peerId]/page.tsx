@@ -1461,7 +1461,7 @@ export default function StorePage() {
                         className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
                       >
                         <FileText className="h-4 w-4" />
-                        {t('settings.storePolicies')}
+                        {t('profile.storePolicy')}
                       </Link>
                     </Card>
                   </div>

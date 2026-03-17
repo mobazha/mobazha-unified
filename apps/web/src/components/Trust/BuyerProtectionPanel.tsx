@@ -62,14 +62,15 @@ export function BuyerProtectionPanel({ className }: { className?: string }) {
       {/* How it works - vertical timeline */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground">{t('trust.panel.howTitle')}</h3>
-        <ol
-          className="relative space-y-4 border-l-2 border-success/20 pl-5"
-          data-testid="buyer-protection-steps"
-        >
+        <ol className="relative space-y-4 pl-8" data-testid="buyer-protection-steps">
+          <div
+            className="absolute left-[9px] top-[10px] bottom-[10px] w-0.5 bg-success/20"
+            aria-hidden
+          />
           {steps.map((text, i) => (
-            <li key={i} className="relative flex gap-3">
+            <li key={i} className="relative flex items-start gap-3">
               <span
-                className="absolute -left-[26px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-success/30 bg-success/10 text-xs font-medium text-success"
+                className="absolute -left-8 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-success/30 bg-success/10 text-xs font-medium text-success"
                 aria-hidden
               >
                 {i + 1}

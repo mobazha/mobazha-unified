@@ -1440,6 +1440,11 @@ export const en: TranslationResource = {
     noFollowers: 'No followers yet',
     noOwnFollowing: 'You are not following anyone yet',
     noFollowing: 'Not following anyone',
+    paymentMethods: 'Accepted Payments',
+    shop: 'Shop',
+    storePolicy: 'Policies',
+    allProducts: 'All Products',
+    collections: 'Collections',
   },
 
   settings: {
