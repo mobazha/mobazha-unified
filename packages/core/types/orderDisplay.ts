@@ -238,6 +238,8 @@ export interface DisplayFiatPayment {
 /**
  * 买家保障状态（从后端 protection 派生字段映射）
  */
+export type ProtectionLevel = 'full' | 'standard' | 'platform';
+
 export interface DisplayOrderProtection {
   stage: 'ESCROWED' | 'PROTECTION_PERIOD' | 'COMPLETED' | 'DISPUTED' | 'AFTER_SALE_WINDOW';
   daysRemaining: number;
@@ -245,6 +247,7 @@ export interface DisplayOrderProtection {
   extendable: boolean;
   extended: boolean;
   afterSaleWindowDays: number;
+  protectionLevel?: ProtectionLevel;
 }
 
 /**

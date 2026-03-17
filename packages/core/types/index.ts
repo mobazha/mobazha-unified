@@ -124,6 +124,7 @@ export type {
   DisplayOrderStatus,
   DisplayUserRole,
   TransformOrderOptions,
+  ProtectionLevel,
 } from './orderDisplay';
 
 // Wallet types

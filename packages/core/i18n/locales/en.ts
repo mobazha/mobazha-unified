@@ -1975,6 +1975,12 @@ export const en: TranslationResource = {
       sellerExtended: 'Buyer extended the protection period (+14 days)',
       sellerAutoCompleted: 'Order auto-completed — funds settled',
       sellerBuyerConfirmed: 'Buyer confirmed receipt',
+      levelFull: 'Arbitration Protected',
+      levelStandard: 'Buyer Protection',
+      levelPlatform: 'Platform Protected',
+      cancelablePeriodDesc: '{{days}} days to verify — confirm receipt or cancel if needed',
+      cancelableEscrowedDesc: 'Your payment is held in a secure shared account',
+      cancelableSellerCountdown: '{{days}} days for buyer to verify',
     },
   },
 

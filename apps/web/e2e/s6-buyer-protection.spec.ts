@@ -418,7 +418,9 @@ test.describe('S6: After-Sale Dispute', () => {
 });
 
 test.describe('S6: CANCELABLE Payment Model', () => {
-  test('shows protection card for CANCELABLE order (no moderator needed)', async ({ page }) => {
+  test('shows protection card with standard badge and cancelable-specific copy', async ({
+    page,
+  }) => {
     await setupPage(page);
     const futureDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
     await page.route('**/v1/orders/**', route =>
@@ -454,6 +456,38 @@ test.describe('S6: CANCELABLE Payment Model', () => {
 
     const protectionCard = page.getByTestId('order-protection-status');
     await expect(protectionCard).toBeVisible();
+
+    const badge = page.getByTestId('protection-level-badge');
+    await expect(badge).toBeVisible();
+    await expect(badge).toContainText(/buyer protection/i);
+
+    await expect(protectionCard).toContainText(/verify/i);
+  });
+
+  test('MODERATED order shows arbitration badge', async ({ page }) => {
+    await setupPage(page);
+    const futureDate = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString();
+    await page.route('**/v1/orders/**', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapOrderResponse('FULFILLED', {
+          stage: 'PROTECTION_PERIOD',
+          daysRemaining: 8,
+          autoCompleteAt: futureDate,
+          extendable: true,
+          extended: false,
+          afterSaleWindowDays: 45,
+        }),
+      })
+    );
+
+    await page.goto(`${BASE_URL}/orders/QmOrder001?type=purchase`);
+    await page.waitForLoadState('networkidle');
+
+    const badge = page.getByTestId('protection-level-badge');
+    await expect(badge).toBeVisible();
+    await expect(badge).toContainText(/arbitration/i);
   });
 });
 

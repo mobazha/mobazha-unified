@@ -643,6 +643,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
               extended={displayOrder.protection.extended}
               afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
               userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
+              protectionLevel={displayOrder.protection.protectionLevel}
               onExtendProtection={handleExtendProtection}
             />
           )}
