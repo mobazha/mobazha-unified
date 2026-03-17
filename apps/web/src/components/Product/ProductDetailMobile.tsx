@@ -26,6 +26,7 @@ import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
+import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
 import { RwaAssetDetail } from '@/components/RwaToken';
 import { ReviewList } from '@/components/Review';
 import { StarRating } from '@/components/ui/star-rating';
@@ -554,13 +555,12 @@ export function ProductDetailMobile({
                 {vendor?.name || vendorPeerID?.slice(0, 8)}
               </h3>
               {vendor?.stats && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-warning text-xs">★</span>
-                  <span className="text-xs text-muted-foreground">
-                    {vendor.stats.averageRating?.toFixed(1) || '0'} ({vendor.stats.ratingCount || 0}
-                    )
-                  </span>
-                </div>
+                <SellerTrustBadge
+                  compact
+                  rating={vendor.stats.averageRating ?? 0}
+                  reviewCount={vendor.stats.ratingCount ?? 0}
+                  className="mt-0.5"
+                />
               )}
             </div>
             <Button variant="outline" size="sm" className="flex-shrink-0 text-xs h-8">
