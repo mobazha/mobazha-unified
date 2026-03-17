@@ -16,6 +16,7 @@ import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
+import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
 import { RwaAssetDetail } from '@/components/RwaToken';
 import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
@@ -859,13 +860,12 @@ export function ProductDetailDesktop({
                         </p>
                       )}
                       {vendor?.stats && (
-                        <HStack gap="xs" align="center" className="mt-0.5">
-                          <span className="text-warning text-sm">★</span>
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {vendor.stats.averageRating?.toFixed(1) || '0'} (
-                            {vendor.stats.ratingCount || 0} {t('product.reviews')})
-                          </span>
-                        </HStack>
+                        <SellerTrustBadge
+                          compact
+                          rating={vendor.stats.averageRating ?? 0}
+                          reviewCount={vendor.stats.ratingCount ?? 0}
+                          className="mt-0.5"
+                        />
                       )}
                     </div>
                     <Button variant="outline" size="sm" className="flex-shrink-0 text-xs">

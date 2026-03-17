@@ -81,6 +81,7 @@ import {
 } from '@/components/store';
 import { StoreSections } from '@/components/store-sections';
 import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
+import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
 
 const STORE_PAGE_EXCLUDE_TYPES = new Set(['testimonials', 'store-tabs']);
 
@@ -960,13 +961,13 @@ export default function StorePage() {
                           {/* 评分 - 点击进入评价 Tab */}
                           <button
                             onClick={() => setActiveTab('reviews')}
-                            className="text-xs sm:text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
+                            className="hover:opacity-80 transition-opacity"
                           >
-                            <span className="text-warning">★</span>
-                            <span className="font-medium text-foreground">
-                              {stats.averageRating.toFixed(1)}
-                            </span>
-                            <span className="text-muted-foreground">({stats.ratingCount})</span>
+                            <SellerTrustBadge
+                              compact
+                              rating={stats.averageRating}
+                              reviewCount={stats.ratingCount}
+                            />
                           </button>
                         </div>
                       </div>
@@ -1393,7 +1394,13 @@ export default function StorePage() {
                     </Card>
                   </div>
 
-                  <div>
+                  <div className="space-y-4 sm:space-y-6">
+                    <SellerTrustBadge
+                      rating={stats.averageRating}
+                      reviewCount={stats.ratingCount}
+                      memberSince={store.lastModified}
+                    />
+
                     <Card className="p-4 sm:p-6">
                       <h3 className="font-semibold text-foreground mb-3 text-base">
                         {t('profile.contactInformation')}
