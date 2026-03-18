@@ -46,18 +46,8 @@ export function SearchBar({
           style={styles.input}
           autoFocus={autoFocus}
         />
-        {(query || onClear) && (
-          <button
-            onClick={() => {
-              if (onClear) {
-                onClear();
-                return;
-              }
-              onQueryChange('');
-            }}
-            style={styles.clearBtn}
-            aria-label="Clear search"
-          >
+        {query && !onClear && (
+          <button onClick={() => onQueryChange('')} style={styles.clearBtn} aria-label="Clear text">
             ×
           </button>
         )}
