@@ -185,19 +185,19 @@ export function SearchDesktop() {
                     </p>
                   )}
 
-                  {/* Popular Categories */}
+                  {/* Browse by Type */}
                   <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border">
                     <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">
-                      {search.t('searchExtended.popularCategories')}
+                      {search.t('search.browseByType', { defaultValue: 'Browse by Type' })}
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {search.categoryOptions.slice(1).map(cat => (
+                      {search.typeOptions.slice(1).map(opt => (
                         <button
-                          key={cat.value}
-                          onClick={() => search.handleRecentSearch(cat.label)}
+                          key={opt.value}
+                          onClick={() => search.handleRecentSearch(opt.label)}
                           className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary active:scale-95 transition-all text-xs sm:text-sm"
                         >
-                          {cat.label}
+                          {opt.label}
                         </button>
                       ))}
                     </div>
@@ -283,14 +283,18 @@ export function SearchDesktop() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
-                          {search.t('filter.category')}
+                          {search.t('filter.productType', { defaultValue: 'Product Type' })}
                         </label>
-                        <Select value={search.category} onValueChange={search.setCategory}>
+                        <Select value={search.listingType} onValueChange={search.setListingType}>
                           <SelectTrigger>
-                            <SelectValue placeholder={search.t('marketplace.allCategories')} />
+                            <SelectValue
+                              placeholder={search.t('marketplace.allTypes', {
+                                defaultValue: 'All Types',
+                              })}
+                            />
                           </SelectTrigger>
                           <SelectContent>
-                            {search.categoryOptions.map(opt => (
+                            {search.typeOptions.map(opt => (
                               <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
                               </SelectItem>

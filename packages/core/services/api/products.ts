@@ -58,8 +58,8 @@ export interface SearchListingsParams {
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  category?: string;
   type?: string;
+  productType?: string;
   rating?: number;
   shipping?: string;
   nsfw?: boolean;
@@ -515,8 +515,8 @@ export async function searchListings(
     page = 0,
     pageSize = 20,
     sortBy = 'relevance',
-    category,
     type,
+    productType,
     rating,
     shipping,
     nsfw = false,
@@ -532,8 +532,8 @@ export async function searchListings(
   });
 
   // 添加可选过滤参数
-  if (category && category !== 'all') {
-    queryParams.append('category', category);
+  if (productType && productType !== 'all') {
+    queryParams.append('productType', productType);
   }
   if (type && type !== 'all') {
     queryParams.append('type', type);

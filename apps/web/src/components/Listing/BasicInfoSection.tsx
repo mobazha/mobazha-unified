@@ -2,7 +2,7 @@
 
 import React, { useCallback } from 'react';
 import type { ContractType, ProductCondition, WeightUnit, DimensionUnit } from '@mobazha/core';
-import { useI18n, calculateDiscountPercent } from '@mobazha/core';
+import { useI18n, calculateDiscountPercent, STANDARD_PRODUCT_TYPES } from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
 import {
   Select,
@@ -43,11 +43,13 @@ interface BasicInfoSectionProps {
   packageHeight?: number;
   dimensionUnit?: DimensionUnit;
   brand?: string;
+  productType?: string;
   onPackageLengthChange?: (value: number | undefined) => void;
   onPackageWidthChange?: (value: number | undefined) => void;
   onPackageHeightChange?: (value: number | undefined) => void;
   onDimensionUnitChange?: (value: DimensionUnit) => void;
   onBrandChange?: (value: string) => void;
+  onProductTypeChange?: (value: string) => void;
   errors?: {
     title?: string;
     price?: string;
@@ -111,11 +113,13 @@ export function BasicInfoSection({
   packageHeight,
   dimensionUnit = 'cm',
   brand = '',
+  productType = '',
   onPackageLengthChange,
   onPackageWidthChange,
   onPackageHeightChange,
   onDimensionUnitChange,
   onBrandChange,
+  onProductTypeChange,
   errors = {},
   className = '',
   onAiImproveTitle,
@@ -217,6 +221,34 @@ export function BasicInfoSection({
               {(shortDescription || '').length}/250
             </span>
           </div>
+        </div>
+
+        {/* 产品类型 */}
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+            {t('listing.productType', { defaultValue: 'Product Type' })}
+          </label>
+          <input
+            type="text"
+            list="standard-product-types"
+            value={productType}
+            onChange={e => onProductTypeChange?.(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            placeholder={t('listing.productTypePlaceholder', {
+              defaultValue: 'Select or enter product type',
+            })}
+            maxLength={100}
+          />
+          <datalist id="standard-product-types">
+            {STANDARD_PRODUCT_TYPES.map(pt => (
+              <option key={pt} value={pt} />
+            ))}
+          </datalist>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t('listing.productTypeHint', {
+              defaultValue: 'Choose from suggestions or type your own',
+            })}
+          </p>
         </div>
 
         {/* 价格和划线价 */}

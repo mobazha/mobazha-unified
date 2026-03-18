@@ -144,23 +144,23 @@ export function SearchMobile() {
             </div>
           )}
 
-          {/* Popular Categories */}
+          {/* Browse by Type */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">
-              {search.t('searchExtended.popularCategories')}
+              {search.t('search.browseByType', { defaultValue: 'Browse by Type' })}
             </h3>
             <div className="flex flex-wrap gap-2">
-              {search.categoryOptions.slice(1).map(cat => (
+              {search.typeOptions.slice(1).map(opt => (
                 <button
-                  key={cat.value}
+                  key={opt.value}
                   onClick={() => {
-                    search.setCategory(cat.value);
-                    search.setSearchQuery(cat.label);
-                    search.handleRecentSearch(cat.label);
+                    search.setListingType(opt.value);
+                    search.setSearchQuery(opt.label);
+                    search.handleRecentSearch(opt.label);
                   }}
                   className="px-3 py-1.5 rounded-full bg-muted text-foreground text-xs active:scale-95 transition-transform"
                 >
-                  {cat.label}
+                  {opt.label}
                 </button>
               ))}
             </div>
@@ -197,8 +197,8 @@ export function SearchMobile() {
             </div>
           </div>
 
-          {/* Sort + Category Bar */}
-          {search.activeTab === 'listings' && <SortCategoryBar search={search} />}
+          {/* Sort + Type Bar */}
+          {search.activeTab === 'listings' && <SortTypeBar search={search} />}
 
           {/* Product Grid / User List */}
           <div className="px-3 py-3 pb-24">
@@ -387,13 +387,13 @@ function UserResults({ search }: { search: ReturnType<typeof useSearch> }) {
   );
 }
 
-function SortCategoryBar({ search }: { search: ReturnType<typeof useSearch> }) {
+function SortTypeBar({ search }: { search: ReturnType<typeof useSearch> }) {
   const [showSort, setShowSort] = useState(false);
-  const [showCategory, setShowCategory] = useState(false);
+  const [showType, setShowType] = useState(false);
 
   const currentSort = search.sortOptions.find(o => o.value === search.sortBy);
-  const currentCategory = search.categoryOptions?.find(
-    (c: { value: string }) => c.value === search.category
+  const currentType = search.typeOptions?.find(
+    (c: { value: string }) => c.value === search.listingType
   );
 
   return (
@@ -414,11 +414,11 @@ function SortCategoryBar({ search }: { search: ReturnType<typeof useSearch> }) {
           {currentSort?.label || search.t('search.sortBy')}
         </button>
 
-        {search.categoryOptions && search.categoryOptions.length > 0 && (
+        {search.typeOptions && search.typeOptions.length > 0 && (
           <button
-            onClick={() => setShowCategory(true)}
+            onClick={() => setShowType(true)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors active:bg-muted/70 ${
-              search.category !== 'all'
+              search.listingType !== 'all'
                 ? 'bg-primary/10 text-primary'
                 : 'bg-muted text-muted-foreground'
             }`}
@@ -431,7 +431,7 @@ function SortCategoryBar({ search }: { search: ReturnType<typeof useSearch> }) {
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
               />
             </svg>
-            {currentCategory?.label || search.t('search.allCategories')}
+            {currentType?.label || search.t('marketplace.allTypes', { defaultValue: 'All Types' })}
           </button>
         )}
       </div>
@@ -457,27 +457,19 @@ function SortCategoryBar({ search }: { search: ReturnType<typeof useSearch> }) {
       </BottomSheet>
 
       <BottomSheet
-        open={showCategory}
-        onClose={() => setShowCategory(false)}
-        title={search.t('search.category')}
+        open={showType}
+        onClose={() => setShowType(false)}
+        title={search.t('filter.productType', { defaultValue: 'Product Type' })}
       >
         <div className="py-1">
-          <BottomSheetItem
-            title={search.t('common.all')}
-            selected={search.category === 'all'}
-            onClick={() => {
-              search.setCategory('all');
-              setShowCategory(false);
-            }}
-          />
-          {search.categoryOptions?.map((cat: { value: string; label: string }) => (
+          {search.typeOptions?.map((opt: { value: string; label: string }) => (
             <BottomSheetItem
-              key={cat.value}
-              title={cat.label}
-              selected={search.category === cat.value}
+              key={opt.value}
+              title={opt.label}
+              selected={search.listingType === opt.value}
               onClick={() => {
-                search.setCategory(cat.value);
-                setShowCategory(false);
+                search.setListingType(opt.value);
+                setShowType(false);
               }}
             />
           ))}

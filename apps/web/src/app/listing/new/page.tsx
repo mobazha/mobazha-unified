@@ -657,11 +657,13 @@ function CreateListingContent() {
                   packageHeight={formData.packageHeight}
                   dimensionUnit={formData.dimensionUnit}
                   brand={formData.brand}
+                  productType={formData.productType}
                   onPackageLengthChange={v => updateField('packageLength', v)}
                   onPackageWidthChange={v => updateField('packageWidth', v)}
                   onPackageHeightChange={v => updateField('packageHeight', v)}
                   onDimensionUnitChange={v => updateField('dimensionUnit', v)}
                   onBrandChange={v => updateField('brand', v)}
+                  onProductTypeChange={v => updateField('productType', v)}
                   onBarcodeChange={v => {
                     const newSkus = [...formData.skus];
                     if (newSkus[0]) {

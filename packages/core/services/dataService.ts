@@ -735,8 +735,8 @@ export const chatDataService = {
 
 export interface SearchFilters {
   sortBy?: string;
-  category?: string;
   type?: string;
+  productType?: string;
   rating?: number;
   shipping?: string;
   nsfw?: boolean;
