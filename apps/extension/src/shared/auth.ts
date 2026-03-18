@@ -77,6 +77,10 @@ export async function extensionSignIn(username: string, password: string): Promi
     const token = await casdoorPasswordGrant(username, password);
     saveToken(token);
 
+    // Sync token to chrome.storage.local for Service Worker access
+    // (Service Worker has no localStorage)
+    chrome.storage?.local?.set({ authToken: token });
+
     let user: StoredUser | undefined;
     try {
       const userInfo = await getUserInfo(token);
@@ -102,6 +106,7 @@ export async function extensionSignIn(username: string, password: string): Promi
 
 export function extensionSignOut(): void {
   clearAuth();
+  chrome.storage?.local?.remove(['authToken', 'orderStates', 'lastPollTime']);
 }
 
 export { isAuthenticated, getStoredToken };

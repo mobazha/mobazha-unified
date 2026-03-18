@@ -1,10 +1,20 @@
-import { useState, useCallback, useEffect, useRef, Suspense, type ReactNode } from 'react';
+import {
+  Component,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  Suspense,
+  type ReactNode,
+} from 'react';
 import { MemoryRouter, Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { CurrencyProvider } from '@/components/CurrencyProvider';
+import { TGMiniAppProvider } from '@/components/TGMiniAppProvider';
 import { Toaster } from '@/components/ui/toaster';
-import { useUserStore } from '@mobazha/core';
+import { ProductModalProvider } from '@/hooks';
+import { useUserStore, AppKitProvider } from '@mobazha/core';
 import { getStoredUser } from '@mobazha/core/services/auth/token';
 import { searchListings } from '@mobazha/core/services/api/products';
 import type { ProductListItem } from '@mobazha/core/types/product';
@@ -52,6 +62,7 @@ function ExtHeader() {
         setShowLogin(false);
         setUsername('');
         setPassword('');
+        chrome.runtime.sendMessage({ action: 'startPolling' });
       } else {
         setLoginError(result.error || 'Sign in failed');
       }
@@ -63,6 +74,7 @@ function ExtHeader() {
   const handleSignOut = useCallback(() => {
     extensionSignOut();
     setAuthenticated(false);
+    chrome.runtime.sendMessage({ action: 'stopPolling' });
   }, []);
 
   return (
@@ -313,6 +325,49 @@ function SidePanelLayout() {
   );
 }
 
+class ExtErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[300px] p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-destructive"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
+          <p className="text-xs text-muted-foreground mb-3 max-w-[260px] break-words">
+            {this.state.error.message}
+          </p>
+          <button
+            onClick={() => this.setState({ error: null })}
+            className="px-4 py-1.5 text-xs font-medium rounded bg-primary text-primary-foreground hover:opacity-90"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function ExtAuthProvider({ children }: { children: ReactNode }) {
   const { restoreSession } = useUserStore();
   const restored = useRef(false);
@@ -339,13 +394,30 @@ function PendingRouteHandler() {
     };
     consumePending();
 
-    const listener = (msg: { action?: string; route?: string }) => {
+    // Listen for storage changes — handles the case where Side Panel
+    // is already open and Popup sets a new pendingRoute.
+    const storageListener = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      area: string
+    ) => {
+      if (area === 'session' && changes.pendingRoute?.newValue) {
+        navigate(changes.pendingRoute.newValue);
+        chrome.storage.session.remove('pendingRoute');
+      }
+    };
+    chrome.storage.onChanged.addListener(storageListener);
+
+    const msgListener = (msg: { action?: string; route?: string }) => {
       if (msg?.action === 'openSidePanel' && msg.route) {
         navigate(msg.route);
       }
     };
-    chrome.runtime.onMessage.addListener(listener);
-    return () => chrome.runtime.onMessage.removeListener(listener);
+    chrome.runtime.onMessage.addListener(msgListener);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(storageListener);
+      chrome.runtime.onMessage.removeListener(msgListener);
+    };
   }, [navigate]);
 
   return null;
@@ -356,20 +428,28 @@ export function SidePanelApp() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <CurrencyProvider>
-          <ExtAuthProvider>
-            <MemoryRouter>
-              <PendingRouteHandler />
-              <Routes>
-                <Route element={<SidePanelLayout />}>
-                  <Route index element={<HomePage />} />
-                  {routes.map(r => (
-                    <Route key={String(r.path)} path={r.path} element={r.element} />
-                  ))}
-                </Route>
-              </Routes>
-            </MemoryRouter>
-            <Toaster />
-          </ExtAuthProvider>
+          <AppKitProvider autoInit={false}>
+            <TGMiniAppProvider>
+              <ExtAuthProvider>
+                <MemoryRouter>
+                  <PendingRouteHandler />
+                  <ProductModalProvider>
+                    <ExtErrorBoundary>
+                      <Routes>
+                        <Route element={<SidePanelLayout />}>
+                          <Route index element={<HomePage />} />
+                          {routes.map(r => (
+                            <Route key={String(r.path)} path={r.path} element={r.element} />
+                          ))}
+                        </Route>
+                      </Routes>
+                    </ExtErrorBoundary>
+                  </ProductModalProvider>
+                </MemoryRouter>
+                <Toaster />
+              </ExtAuthProvider>
+            </TGMiniAppProvider>
+          </AppKitProvider>
         </CurrencyProvider>
       </ThemeProvider>
     </QueryClientProvider>

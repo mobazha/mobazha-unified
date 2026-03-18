@@ -3,7 +3,7 @@
   "name": "Mobazha — Decentralized Marketplace",
   "version": "0.1.0",
   "description": "Shop without middlemen. Zero fees, buyer protection, 6+ blockchains + Stripe/PayPal.",
-  "permissions": ["storage", "sidePanel"],
+  "permissions": ["storage", "sidePanel", "notifications", "alarms"],
   "host_permissions": ["https://test-new.mobazha.org/*", "https://test-new-login.mobazha.org/*"],
   "action": {
     "default_popup": "src/popup/index.html",
