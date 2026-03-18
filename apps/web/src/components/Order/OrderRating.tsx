@@ -9,10 +9,6 @@ import { formatOrderDate } from './utils';
 
 export interface RatingData {
   overall: number;
-  quality?: number;
-  description?: number;
-  deliverySpeed?: number;
-  customerService?: number;
   review?: string;
   anonymous?: boolean;
 }
@@ -56,23 +52,6 @@ const StarDisplay: React.FC<{ value: number; size?: 'sm' | 'md' }> = ({ value, s
         </svg>
       ))}
     </div>
-  );
-};
-
-/**
- * 单项评分展示
- */
-const RatingItem: React.FC<{ label: string; value?: number }> = ({ label, value }) => {
-  if (!value) return null;
-
-  return (
-    <HStack justify="between" className="text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <HStack gap="xs" align="center">
-        <span className="text-foreground font-medium">{value}</span>
-        <StarDisplay value={value} size="sm" />
-      </HStack>
-    </HStack>
   );
 };
 
@@ -151,27 +130,6 @@ export const OrderRating: React.FC<OrderRatingProps> = ({
         {rating.review && (
           <div className="bg-muted/50 rounded-lg p-3">
             <p className="text-sm text-foreground whitespace-pre-wrap">{rating.review}</p>
-          </div>
-        )}
-
-        {/* Detailed Ratings */}
-        {(rating.quality ||
-          rating.description ||
-          rating.deliverySpeed ||
-          rating.customerService) && (
-          <div className="pt-3 border-t border-border">
-            <p className="text-xs text-muted-foreground mb-2">
-              {t('order.rating.detailedRatings')}
-            </p>
-            <VStack gap="xs">
-              <RatingItem label={t('order.rating.quality')} value={rating.quality} />
-              <RatingItem label={t('order.rating.description')} value={rating.description} />
-              <RatingItem label={t('order.rating.deliverySpeed')} value={rating.deliverySpeed} />
-              <RatingItem
-                label={t('order.rating.customerService')}
-                value={rating.customerService}
-              />
-            </VStack>
           </div>
         )}
       </VStack>

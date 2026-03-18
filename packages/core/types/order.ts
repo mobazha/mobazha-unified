@@ -437,12 +437,9 @@ export interface DigitalDelivery {
 export interface OrderRating {
   slug: string;
   overall: number;
-  quality?: number;
-  description?: number;
-  deliverySpeed?: number;
-  customerService?: number;
   review?: string;
   anonymous?: boolean;
+  imageHashes?: string[];
 }
 
 /**

@@ -260,10 +260,6 @@ export const orderDataService = {
     ratings?: Array<{
       slug: string;
       overall: number;
-      quality?: number;
-      description?: number;
-      deliverySpeed?: number;
-      customerService?: number;
       review?: string;
     }>;
     anonymous?: boolean;

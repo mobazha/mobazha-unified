@@ -367,10 +367,6 @@ export const zh: TranslationResource = {
     // Rating labels
     overall: '综合',
     overallRating: '综合评分',
-    quality: '质量',
-    asAdvertised: '描述相符',
-    delivery: '配送',
-    service: '服务',
     // Product attributes
     type: '类型',
     weight: '重量',
@@ -1028,17 +1024,12 @@ export const zh: TranslationResource = {
       ratingFor: '评价 {{vendor}}',
       overall: '综合评分',
       overallRequired: '请提供综合评分',
-      quality: '商品质量',
-      description: '描述相符',
-      deliverySpeed: '发货速度',
-      customerService: '客户服务',
       review: '写评价',
       reviewPlaceholder: '分享您的购物体验...',
       anonymous: '匿名评价',
       submit: '提交评价',
       noRating: '暂无评价',
       buyerReview: '买家评价',
-      detailedRatings: '详细评分',
     },
     // 合约模态框
     contract: {

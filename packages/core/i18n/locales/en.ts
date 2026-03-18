@@ -369,10 +369,6 @@ export const en: TranslationResource = {
     // Rating labels
     overall: 'Overall',
     overallRating: 'overall rating',
-    quality: 'Quality',
-    asAdvertised: 'As Advertised',
-    delivery: 'Delivery',
-    service: 'Service',
     // Product attributes
     type: 'Type',
     weight: 'Weight',
@@ -1120,17 +1116,12 @@ export const en: TranslationResource = {
       ratingFor: 'Rating for {{vendor}}',
       overall: 'Overall Rating',
       overallRequired: 'Please provide an overall rating',
-      quality: 'Quality',
-      description: 'As Described',
-      deliverySpeed: 'Delivery Speed',
-      customerService: 'Customer Service',
       review: 'Write a Review',
       reviewPlaceholder: 'Share your experience with this order...',
       anonymous: 'Post anonymously',
       submit: 'Submit Review',
       noRating: 'No rating yet',
       buyerReview: 'Buyer Review',
-      detailedRatings: 'Detailed Ratings',
     },
     // Contract modal
     contract: {

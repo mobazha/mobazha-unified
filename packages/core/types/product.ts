@@ -335,10 +335,6 @@ export interface RatingDetail {
   ratingID: string;
   timestamp: string;
   overall: number;
-  quality?: number;
-  description?: number;
-  deliverySpeed?: number;
-  customerService?: number;
   review?: string;
   anonymous?: boolean;
   buyerID?: {

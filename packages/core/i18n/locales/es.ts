@@ -334,10 +334,6 @@ export const es: TranslationResource = {
     // Rating labels
     overall: 'General',
     overallRating: 'valoración general',
-    quality: 'Calidad',
-    asAdvertised: 'Como se describe',
-    delivery: 'Entrega',
-    service: 'Servicio',
   },
 
   search: {
@@ -867,17 +863,12 @@ export const es: TranslationResource = {
       ratingFor: 'Valoración para {{vendor}}',
       overall: 'Valoración general',
       overallRequired: 'Por favor proporciona una valoración general',
-      quality: 'Calidad',
-      description: 'Como se describe',
-      deliverySpeed: 'Velocidad de entrega',
-      customerService: 'Atención al cliente',
       review: 'Escribe una reseña',
       reviewPlaceholder: 'Comparte tu experiencia con este pedido...',
       anonymous: 'Publicar anónimamente',
       submit: 'Enviar reseña',
       noRating: 'Sin valoración aún',
       buyerReview: 'Reseña del comprador',
-      detailedRatings: 'Valoraciones detalladas',
     },
     contract: {
       title: 'Contrato del pedido',

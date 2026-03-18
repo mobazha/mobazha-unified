@@ -155,7 +155,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
           </div>
         </div>
 
-        {/* 右侧：评分维度 */}
+        {/* 右侧：评分 */}
         <div className="flex-shrink-0 w-full sm:w-auto">
           <table className="text-xs sm:text-sm w-full sm:w-auto">
             <tbody>
@@ -165,38 +165,6 @@ export function ReviewCard({ review }: ReviewCardProps) {
                   <RatingStars rating={review.overall} />
                 </td>
               </tr>
-              {review.quality !== undefined && (
-                <tr>
-                  <td className="pr-2 py-0.5 text-muted-foreground">{t('product.quality')}</td>
-                  <td>
-                    <RatingStars rating={review.quality} />
-                  </td>
-                </tr>
-              )}
-              {review.description !== undefined && (
-                <tr>
-                  <td className="pr-2 py-0.5 text-muted-foreground">{t('product.asAdvertised')}</td>
-                  <td>
-                    <RatingStars rating={review.description} />
-                  </td>
-                </tr>
-              )}
-              {review.deliverySpeed !== undefined && (
-                <tr>
-                  <td className="pr-2 py-0.5 text-muted-foreground">{t('product.delivery')}</td>
-                  <td>
-                    <RatingStars rating={review.deliverySpeed} />
-                  </td>
-                </tr>
-              )}
-              {review.customerService !== undefined && (
-                <tr>
-                  <td className="pr-2 py-0.5 text-muted-foreground">{t('product.service')}</td>
-                  <td>
-                    <RatingStars rating={review.customerService} />
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
