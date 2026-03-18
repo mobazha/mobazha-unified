@@ -1,20 +1,17 @@
 /**
- * Chrome Extension OAuth via chrome.identity.launchWebAuthFlow.
+ * Chrome Extension inline authentication — no popups, no redirects.
  *
- * Flow:
- *   1. Build Casdoor authorize URL with extension redirect URI
- *   2. chrome.identity.launchWebAuthFlow (opens popup)
- *   3. Extract code + state from callback URL
- *   4. Exchange for JWT via hosting backend
- *   5. saveToken(jwt)
+ * Flow (MetaMask-style in-app login):
+ *   1. User enters username/password in the extension Popup
+ *   2. POST to Casdoor /api/login → get OAuth code (no browser redirect)
+ *   3. Exchange code via hosting backend → get JWT
+ *   4. Store token + user info in localStorage
  */
 
-import {
-  getSigninUrl,
-  getSignupUrl,
-  handleOAuthCallback,
-  getUserInfo,
-} from '@mobazha/core/services/auth/casdoor';
+import { getEnvConfig } from '@mobazha/core/config/env';
+import { getHostingUrl } from '@mobazha/core/services/api/config';
+import { HOSTING_API } from '@mobazha/core/config/apiPaths';
+import { getUserInfo } from '@mobazha/core/services/auth/casdoor';
 import {
   saveToken,
   saveUser,
@@ -30,106 +27,122 @@ export interface AuthResult {
   error?: string;
 }
 
-function getExtensionRedirectUrl(): string {
-  return chrome.identity.getRedirectURL();
+function generateState(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function extractOAuthParams(callbackUrl: string): { code: string; state: string } | null {
-  try {
-    const url = new URL(callbackUrl);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state');
-    if (code && state) return { code, state };
-    return null;
-  } catch {
-    return null;
-  }
-}
+/**
+ * Call Casdoor POST /api/login directly with username/password.
+ * Returns the OAuth code without any browser redirect.
+ */
+async function casdoorDirectLogin(
+  username: string,
+  password: string
+): Promise<{ code: string; state: string }> {
+  const env = getEnvConfig();
+  const { serverUrl, clientId, appName, organizationName } = env.casdoor;
 
-function launchWebAuthFlow(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    chrome.identity.launchWebAuthFlow({ url, interactive: true }, callbackUrl => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (!callbackUrl) {
-        reject(new Error('No callback URL returned'));
-        return;
-      }
-      resolve(callbackUrl);
-    });
+  const state = `${appName}_${generateState()}`;
+  const redirectUri = `https://test-new.mobazha.org/callback`;
+
+  const params = new URLSearchParams({
+    clientId,
+    responseType: 'code',
+    redirectUri,
+    scope: 'openid profile email',
+    state,
   });
-}
 
-async function exchangeAndStore(code: string, state: string): Promise<AuthResult> {
-  const result = await handleOAuthCallback(code, state);
+  const resp = await fetch(`${serverUrl}/api/login?${params.toString()}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'code',
+      organization: organizationName,
+      username,
+      password,
+      application: appName,
+    }),
+  });
 
-  if (!result.success || !result.token) {
-    return { success: false, error: result.error || 'Token exchange failed' };
+  const data = await resp.json();
+
+  if (data.status === 'error' || data.msg) {
+    throw new Error(data.msg || 'Login failed');
   }
 
-  saveToken(result.token);
-
-  let user: StoredUser | undefined;
-  try {
-    const userInfo = await getUserInfo(result.token);
-    if (userInfo) {
-      user = {
-        id: userInfo.id,
-        name: userInfo.name,
-        displayName: userInfo.displayName,
-        avatar: userInfo.avatar,
-      };
-      saveUser(user);
-    }
-  } catch {
-    // User info fetch is best-effort
+  // Casdoor returns the full redirect URL with code & state in data
+  const callbackUrl = typeof data.data === 'string' ? data.data : '';
+  if (!callbackUrl) {
+    throw new Error(data.msg || 'No authorization code returned');
   }
 
-  return { success: true, user };
+  const url = new URL(callbackUrl);
+  const code = url.searchParams.get('code');
+  const returnedState = url.searchParams.get('state');
+
+  if (!code || !returnedState) {
+    throw new Error('Missing code or state in Casdoor response');
+  }
+
+  return { code, state: returnedState };
 }
 
-export async function extensionSignIn(): Promise<AuthResult> {
+/**
+ * Exchange the OAuth code for a JWT via the hosting backend.
+ */
+async function exchangeCodeForToken(code: string, state: string): Promise<string> {
+  const baseUrl = getHostingUrl();
+  const url = `${baseUrl}${HOSTING_API.AUTH_SIGNIN}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Token exchange failed: ${errorText}`);
+  }
+
+  const data = await response.json();
+  if (!data.data) {
+    throw new Error(data.msg || 'No token in response');
+  }
+  return data.data;
+}
+
+/**
+ * Sign in with username/password — fully inline, no popup.
+ */
+export async function extensionSignIn(username: string, password: string): Promise<AuthResult> {
   try {
-    const redirectUri = getExtensionRedirectUrl();
-    const authUrl = getSigninUrl(redirectUri);
+    const { code, state } = await casdoorDirectLogin(username, password);
+    const token = await exchangeCodeForToken(code, state);
 
-    const callbackUrl = await launchWebAuthFlow(authUrl);
-    const params = extractOAuthParams(callbackUrl);
+    saveToken(token);
 
-    if (!params) {
-      return { success: false, error: 'Missing OAuth parameters in callback' };
+    let user: StoredUser | undefined;
+    try {
+      const userInfo = await getUserInfo(token);
+      if (userInfo) {
+        user = {
+          id: userInfo.id,
+          name: userInfo.name,
+          displayName: userInfo.displayName,
+          avatar: userInfo.avatar,
+        };
+        saveUser(user);
+      }
+    } catch {
+      // User info fetch is best-effort
     }
 
-    return exchangeAndStore(params.code, params.state);
+    return { success: true, user };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Sign in failed';
-    if (message.includes('user interaction') || message.includes('canceled')) {
-      return { success: false, error: 'Sign in was cancelled' };
-    }
-    return { success: false, error: message };
-  }
-}
-
-export async function extensionSignUp(): Promise<AuthResult> {
-  try {
-    const redirectUri = getExtensionRedirectUrl();
-    const authUrl = getSignupUrl(redirectUri);
-
-    const callbackUrl = await launchWebAuthFlow(authUrl);
-    const params = extractOAuthParams(callbackUrl);
-
-    if (!params) {
-      return { success: false, error: 'Missing OAuth parameters in callback' };
-    }
-
-    return exchangeAndStore(params.code, params.state);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Sign up failed';
-    if (message.includes('user interaction') || message.includes('canceled')) {
-      return { success: false, error: 'Sign up was cancelled' };
-    }
     return { success: false, error: message };
   }
 }
