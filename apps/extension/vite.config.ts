@@ -17,11 +17,9 @@ export default defineConfig({
             output: {
               manualChunks(id: string) {
                 if (id.includes('node_modules')) {
-                  if (id.includes('@tanstack/react-query')) return 'vendor-query';
-                  if (id.includes('react-router')) return 'vendor-router';
                   if (id.includes('lucide-react')) return 'vendor-icons';
-                  if (id.includes('react-dom') || id.includes('react/')) return 'vendor-react';
-                  return 'vendor';
+                  if (id.includes('matrix-js-sdk') || id.includes('matrix_sdk_crypto_wasm'))
+                    return 'vendor-matrix';
                 }
                 if (id.includes('packages/core/')) return 'core';
               },
@@ -32,6 +30,7 @@ export default defineConfig({
     }),
   ],
   resolve: {
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
     alias: [
       { find: '@', replacement: webSrc },
       {
