@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
 import { useState, useCallback } from 'react';
-import { isAuthenticated } from '@mobazha/core/services/auth/token';
+import { getStoredUser } from '@mobazha/core/services/auth/token';
 import { searchListings } from '@mobazha/core/services/api/products';
 import type { ProductListItem } from '@mobazha/core/types/product';
 import { WEB_APP_ORIGIN } from '../shared/init';
+import { extensionSignIn, extensionSignOut, isAuthenticated } from '../shared/auth';
 import { colors, font, radius } from '../shared/styles';
 import { SearchBar } from '../shared/components/SearchBar';
 import { ProductCard } from '../shared/components/ProductCard';
@@ -18,7 +19,30 @@ export function PopupApp() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [activeFilter, setActiveFilter] = useState<number | null>(null);
-  const authenticated = isAuthenticated();
+  const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  const [signingIn, setSigningIn] = useState(false);
+
+  const storedUser = getStoredUser();
+
+  const handleSignIn = useCallback(async () => {
+    setSigningIn(true);
+    setError(null);
+    try {
+      const result = await extensionSignIn();
+      if (result.success) {
+        setAuthenticated(true);
+      } else if (result.error && !result.error.includes('cancelled')) {
+        setError(result.error);
+      }
+    } finally {
+      setSigningIn(false);
+    }
+  }, []);
+
+  const handleSignOut = useCallback(() => {
+    extensionSignOut();
+    setAuthenticated(false);
+  }, []);
 
   const doSearch = useCallback(async (opts: { query: string; sortBy?: string; type?: string }) => {
     setLoading(true);
@@ -78,13 +102,40 @@ export function PopupApp() {
           <div style={styles.tagline}>Sell Without Middlemen</div>
         </div>
         {authenticated ? (
-          <div style={styles.authChip}>
-            <span style={styles.authDot} />
-            Connected
+          <div style={styles.userArea}>
+            <div style={styles.avatar}>
+              {storedUser?.avatar ? (
+                <img
+                  src={storedUser.avatar}
+                  alt=""
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                <span>{(storedUser?.name || 'U')[0].toUpperCase()}</span>
+              )}
+            </div>
+            <button onClick={handleSignOut} style={styles.signoutBtn} title="Sign out">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
           </div>
         ) : (
-          <button onClick={() => openTab()} style={styles.signinBtn}>
-            Sign In
+          <button
+            onClick={handleSignIn}
+            disabled={signingIn}
+            style={{ ...styles.signinBtn, opacity: signingIn ? 0.7 : 1 }}
+          >
+            {signingIn ? 'Signing in…' : 'Sign In'}
           </button>
         )}
       </div>
@@ -220,24 +271,34 @@ const styles: Record<string, CSSProperties> = {
   },
   brand: { fontSize: font.xl, fontWeight: 700, color: colors.text, lineHeight: '1.2' },
   tagline: { fontSize: font.sm, color: colors.textFaint, lineHeight: '1.3' },
-  authChip: {
+  userArea: {
     display: 'flex',
     alignItems: 'center',
-    gap: '5px',
-    padding: '4px 10px',
-    background: colors.accentGreenBg,
-    borderRadius: radius.lg,
-    fontSize: font.sm,
-    color: colors.accentGreenText,
-    fontWeight: 500,
+    gap: '6px',
     flexShrink: 0,
   },
-  authDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: radius.full,
-    background: colors.accentGreen,
-    display: 'inline-block',
+  avatar: {
+    width: '26px',
+    height: '26px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+    color: colors.white,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '11px',
+    fontWeight: 600,
+    overflow: 'hidden',
+  },
+  signoutBtn: {
+    background: 'none',
+    border: 'none',
+    padding: '4px',
+    cursor: 'pointer',
+    color: colors.textMuted,
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: radius.sm,
   },
   signinBtn: {
     padding: '5px 14px',
