@@ -102,13 +102,40 @@ function Thumbnail({
   );
 }
 
+function formatDisplayPrice(price: ProductListItem['price']): string {
+  if (!price?.amount) return '';
+  const divisibility = price.currency?.divisibility ?? 2;
+  const displayAmount = price.amount / Math.pow(10, divisibility);
+  const code = price.currency?.code ?? '';
+  const isFiat = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'CAD', 'AUD'].includes(code);
+  if (isFiat) {
+    const symbol =
+      code === 'USD'
+        ? '$'
+        : code === 'EUR'
+          ? '€'
+          : code === 'GBP'
+            ? '£'
+            : code === 'JPY'
+              ? '¥'
+              : code === 'CNY'
+                ? '¥'
+                : '';
+    const decimals = code === 'JPY' ? 0 : 2;
+    return symbol
+      ? `${symbol}${displayAmount.toFixed(decimals)}`
+      : `${displayAmount.toFixed(decimals)} ${code}`;
+  }
+  const trimmed = displayAmount.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
+  return `${trimmed} ${code}`;
+}
+
 function PriceBadge({ price }: { price?: ProductListItem['price'] }) {
-  if (!price?.amount)
+  const formatted = formatDisplayPrice(price);
+  if (!formatted)
     return <div style={{ fontSize: font.base, color: colors.textFaint }}>Price unavailable</div>;
   return (
-    <div style={{ fontSize: font.base, fontWeight: 600, color: colors.accent }}>
-      {price.amount} {price.currency?.code ?? ''}
-    </div>
+    <div style={{ fontSize: font.base, fontWeight: 600, color: colors.accent }}>{formatted}</div>
   );
 }
 
