@@ -5,7 +5,13 @@ import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl, copyToClipboard } from './utils';
 import { Card } from '@/components/ui/card';
 import { Check, Package, CheckCircle, Copy, ExternalLink } from 'lucide-react';
-import { useI18n, useCurrency, getChainFromCoin, getChainByEVMId, getTrackingUrl } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getChainFromCoin,
+  getChainByEVMId,
+  getTrackingUrl,
+} from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 export interface OrderStageCardProps {
@@ -245,12 +251,6 @@ export interface OrderRatingCardProps {
     avatar?: string;
   };
   overallRating: number;
-  ratings?: {
-    quality?: number;
-    asAdvertised?: number;
-    delivery?: number;
-    service?: number;
-  };
   review?: string;
   timestamp?: string;
   className?: string;

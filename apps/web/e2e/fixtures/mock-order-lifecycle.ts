@@ -177,10 +177,6 @@ export const LIFECYCLE_ORDERS = {
       orderCompletion: { timestamp: WEEK_AGO },
       buyerRating: {
         overall: 5,
-        quality: 5,
-        description: 4,
-        deliverySpeed: 5,
-        customerService: 5,
         review: 'Excellent design kit! Saved me weeks of work. Highly recommend.',
         timestamp: WEEK_AGO,
       },
@@ -266,10 +262,6 @@ export const MOCK_REVIEWS = [
     buyerName: 'Alex Chen',
     buyerAvatar: mockThumbnail(177),
     overall: 5,
-    quality: 5,
-    description: 5,
-    deliverySpeed: 5,
-    customerService: 5,
     review:
       "Best headphones I've ever owned. The noise cancellation is incredible, and the battery lasts forever.",
     timestamp: WEEK_AGO,
@@ -279,10 +271,6 @@ export const MOCK_REVIEWS = [
     buyerName: 'Sarah Johnson',
     buyerAvatar: mockThumbnail(64),
     overall: 4,
-    quality: 5,
-    description: 4,
-    deliverySpeed: 3,
-    customerService: 5,
     review:
       'Great sound quality. Shipping took a bit longer than expected but the seller was very communicative.',
     timestamp: TWO_WEEKS_AGO,
@@ -292,10 +280,6 @@ export const MOCK_REVIEWS = [
     buyerName: 'Mike Rodriguez',
     buyerAvatar: mockThumbnail(91),
     overall: 5,
-    quality: 5,
-    description: 5,
-    deliverySpeed: 5,
-    customerService: 4,
     review:
       'Crystal clear audio and super comfortable. Using them daily for 8+ hours without any issues.',
     timestamp: MONTH_AGO,

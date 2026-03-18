@@ -623,11 +623,8 @@ export async function completeOrder(payload: {
   ratings?: Array<{
     slug: string;
     overall: number;
-    quality?: number;
-    description?: number;
-    deliverySpeed?: number;
-    customerService?: number;
     review?: string;
+    imageHashes?: string[];
   }>;
   anonymous?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
@@ -656,11 +653,8 @@ export async function rateOrder(payload: {
   ratings: Array<{
     slug: string;
     overall: number;
-    quality?: number;
-    description?: number;
-    deliverySpeed?: number;
-    customerService?: number;
     review?: string;
+    imageHashes?: string[];
   }>;
   anonymous?: boolean;
 }): Promise<{ success: boolean; error?: string }> {

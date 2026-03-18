@@ -37,6 +37,7 @@ export interface ReviewSubmitData {
   overall: number;
   review: string;
   anonymous: boolean;
+  imageHashes?: string[];
 }
 
 export interface UseOrderDetailPageReturn {
@@ -178,7 +179,7 @@ export function useOrderDetailPage(
   }, [coreOrder]);
 
   const doCompleteOrder = useCallback(
-    async (reviewData?: { overall: number; review: string; anonymous: boolean }) => {
+    async (reviewData?: ReviewSubmitData) => {
       setIsActionLoading(true);
 
       const onSuccess = (title: string, desc: string) => {
@@ -200,14 +201,12 @@ export function useOrderDetailPage(
         const reviewText = reviewData?.review || '';
         const anonymous = reviewData?.anonymous || false;
 
+        const imageHashes = reviewData?.imageHashes;
         const ratings = listings.map((item: { listing?: { slug?: string } }) => ({
           slug: item.listing?.slug || '',
           overall,
-          quality: overall,
-          description: overall,
-          deliverySpeed: overall,
-          customerService: overall,
           review: reviewText,
+          imageHashes,
         }));
 
         const isAlreadyCompleted = displayOrder?.status === 'completed';
