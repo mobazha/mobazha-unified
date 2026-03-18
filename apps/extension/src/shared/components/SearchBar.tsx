@@ -8,6 +8,8 @@ interface SearchBarProps {
   loading: boolean;
   autoFocus?: boolean;
   placeholder?: string;
+  /** When provided, shows a "clear all" X that resets entire search state */
+  onClear?: () => void;
 }
 
 export function SearchBar({
@@ -17,6 +19,7 @@ export function SearchBar({
   loading,
   autoFocus,
   placeholder = 'Search products...',
+  onClear,
 }: SearchBarProps) {
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') onSearch();
@@ -43,9 +46,15 @@ export function SearchBar({
           style={styles.input}
           autoFocus={autoFocus}
         />
-        {query && (
+        {(query || onClear) && (
           <button
-            onClick={() => onQueryChange('')}
+            onClick={() => {
+              if (onClear) {
+                onClear();
+                return;
+              }
+              onQueryChange('');
+            }}
             style={styles.clearBtn}
             aria-label="Clear search"
           >

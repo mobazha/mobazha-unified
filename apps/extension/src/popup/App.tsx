@@ -204,6 +204,18 @@ export function PopupApp() {
           onSearch={handleSearch}
           loading={loading}
           autoFocus
+          onClear={
+            searched
+              ? () => {
+                  setQuery('');
+                  setResults([]);
+                  setTotal(0);
+                  setSearched(false);
+                  setActiveFilter(null);
+                  setError(null);
+                }
+              : undefined
+          }
         />
       </div>
       <div style={{ padding: '0 16px 10px' }}>
@@ -223,9 +235,11 @@ export function PopupApp() {
         {results.length > 0 && (
           <>
             <div style={styles.resultMeta}>
-              {total > results.length
-                ? `Showing ${results.length} of ${total}`
-                : `${results.length} products`}
+              <span>
+                {total > results.length
+                  ? `${results.length} of ${total} results`
+                  : `${results.length} results`}
+              </span>
               {total > results.length && (
                 <button onClick={() => openTab('/search')} style={styles.viewAllBtn}>
                   View all →
