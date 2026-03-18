@@ -68,11 +68,27 @@ export interface ContactInfo {
   website?: string;
   email?: string;
   phoneNumber?: string;
-  social?: SocialAccounts;
+  social?: SocialAccount[];
 }
 
 /**
- * 社交账号
+ * Backend wire format: { type, username, proof }
+ */
+export interface SocialAccount {
+  type: string;
+  username: string;
+  proof?: string;
+}
+
+export function getSocialUsername(
+  social: SocialAccount[] | undefined,
+  type: string
+): string | undefined {
+  return social?.find(s => s.type === type)?.username;
+}
+
+/**
+ * @deprecated Use SocialAccount[] instead. Kept for legacy read compatibility.
  */
 export interface SocialAccounts {
   twitter?: string;
