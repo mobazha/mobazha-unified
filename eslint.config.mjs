@@ -154,6 +154,14 @@ export default [
       'no-var': 'error',
     },
   },
+  {
+    files: ['apps/extension/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        chrome: 'readonly',
+      },
+    },
+  },
   prettier,
 ];
 
