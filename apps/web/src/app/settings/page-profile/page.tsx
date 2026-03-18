@@ -10,7 +10,7 @@ export default function PageSettingsPage() {
 
   return (
     <div>
-      <SettingsPageHeader title={t('settings.sidebar.page')} />
+      <SettingsPageHeader title={t('settings.sidebar.profile') || t('settings.sidebar.page')} />
       <ProfileSettingsContent />
     </div>
   );

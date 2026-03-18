@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Camera } from 'lucide-react';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 
 const ValueIcon = memo(function ValueIcon({
   icon,
@@ -67,7 +67,6 @@ export default function OnboardingPage() {
   // Avatar state
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Country / Currency state
   const [country, setCountry] = useState('');
@@ -128,9 +127,7 @@ export default function OnboardingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAvatarSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleAvatarFileSelect = useCallback((file: File) => {
     setAvatarFile(file);
     setAvatarPreview(prev => {
       if (prev) URL.revokeObjectURL(prev);
@@ -301,38 +298,13 @@ export default function OnboardingPage() {
 
           {/* Avatar */}
           <div className="flex flex-col items-center gap-2">
-            <div
-              className="relative group cursor-pointer"
-              onClick={() => avatarInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-              aria-label={t('onboarding.changeAvatar') || 'Change avatar'}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') avatarInputRef.current?.click();
-              }}
-            >
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="Avatar"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-border"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
-                  <Camera className="w-6 h-6 text-muted-foreground" />
-                </div>
-              )}
-              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Camera className="w-5 h-5 text-white" />
-              </div>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarSelect}
-              />
-            </div>
+            <AvatarUpload
+              src={avatarPreview || undefined}
+              name={displayName}
+              onFileSelect={handleAvatarFileSelect}
+              size="xl"
+              label={t('onboarding.changeAvatar') || 'Change avatar'}
+            />
             <span className="text-xs text-muted-foreground">
               {t('onboarding.avatarHint') || 'Click to upload'}
             </span>

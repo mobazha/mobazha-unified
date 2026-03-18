@@ -10,7 +10,10 @@ export default function AdminProfileSettingsPage() {
 
   return (
     <div data-testid="admin-settings-profile">
-      <SettingsPageHeader title={t('settings.sidebar.page')} backHref="/admin/settings" />
+      <SettingsPageHeader
+        title={t('settings.sidebar.profile') || t('settings.sidebar.page')}
+        backHref="/admin/settings"
+      />
       <ProfileSettingsContent />
     </div>
   );

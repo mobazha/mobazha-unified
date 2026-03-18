@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
 import { completeInitialSetup } from '@mobazha/core/services/api/system';
 import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
@@ -20,14 +20,13 @@ import {
   ChevronLeft,
   Check,
   Loader2,
-  Camera,
   Eye,
   EyeOff,
   CircleCheck,
   Palette,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { AvatarCompat } from '@/components/ui/avatar-compat';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import CountryCurrencySelector from './CountryCurrencySelector';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
@@ -158,7 +157,6 @@ export default function StandaloneSetupWizard({
   const [shortDescription, setShortDescription] = useState(profile?.shortDescription || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Step 3: Location & Currency
   const [country, setCountry] = useState('');
@@ -171,9 +169,7 @@ export default function StandaloneSetupWizard({
     t('standalone.setup.stepComplete') || 'Done',
   ];
 
-  const handleAvatarSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleAvatarFileSelect = useCallback((file: File) => {
     setAvatarFile(file);
     setAvatarPreview(prev => {
       if (prev) URL.revokeObjectURL(prev);
@@ -528,41 +524,16 @@ export default function StandaloneSetupWizard({
           </div>
 
           <div className="flex flex-col items-center gap-3">
-            <div
-              className="relative group cursor-pointer"
-              onClick={() => avatarInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-              aria-label={t('admin.onboarding.changeAvatar') || 'Change avatar'}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') avatarInputRef.current?.click();
-              }}
-            >
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="Store avatar"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-border"
-                />
-              ) : (
-                <AvatarCompat
-                  src={profile?.avatarHashes ? getImageUrl(profile.avatarHashes.small) : undefined}
-                  name={storeName}
-                  size="xl"
-                />
-              )}
-              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Camera className="w-5 h-5 text-white" />
-              </div>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                capture="user"
-                className="hidden"
-                onChange={handleAvatarSelect}
-              />
-            </div>
+            <AvatarUpload
+              src={
+                avatarPreview ||
+                (profile?.avatarHashes ? getImageUrl(profile.avatarHashes.small) : undefined)
+              }
+              name={storeName}
+              onFileSelect={handleAvatarFileSelect}
+              size="xl"
+              label={t('admin.onboarding.changeAvatar') || 'Change avatar'}
+            />
             <span className="text-xs text-muted-foreground">
               {t('admin.onboarding.clickToUpload') || 'Click to upload avatar'}
             </span>

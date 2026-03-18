@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,9 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useI18n, useUserStore, getImageUrl, imagesApi } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, imagesApi, getCountryName } from '@mobazha/core';
 import type { ContactInfo, SocialAccounts } from '@mobazha/core';
-import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { Plus, Trash2 } from 'lucide-react';
 import { SettingsSection, SaveBar } from '@/components/SettingsLayout';
 
@@ -92,10 +92,19 @@ function linksToContactInfo(links: Array<{ type: string; url: string }>): Contac
 }
 
 export function ProfileSettingsContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { toast } = useToast();
   const { profile, updateProfile } = useUserStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const locationPlaceholder = useMemo(() => {
+    const savedCountry =
+      typeof window !== 'undefined' ? localStorage.getItem('mobazha-country') : null;
+    if (savedCountry) {
+      const countryName = getCountryName(savedCountry, locale) || savedCountry;
+      return `${t('settingsModal.locationPlaceholderExample') || 'e.g.'} New York, ${countryName}`;
+    }
+    return t('settingsModal.locationPlaceholder');
+  }, [t, locale]);
 
   const [name, setName] = useState(profile?.name || '');
   const [shortDescription, setShortDescription] = useState(profile?.shortDescription || '');
@@ -147,10 +156,7 @@ export function ProfileSettingsContent() {
     setAvatarUrl(profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : '');
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleAvatarFileSelect = (file: File) => {
     const previewUrl = URL.createObjectURL(file);
     setAvatarUrl(previewUrl);
     setPendingAvatarFile(file);
@@ -271,36 +277,26 @@ export function ProfileSettingsContent() {
 
               <FormField
                 label={t('profile.location')}
-                description={t('settingsModal.locationDesc')}
+                description={
+                  t('settingsModal.locationDescDetailed') || t('settingsModal.locationDesc')
+                }
               >
                 <Input
                   value={location}
                   onChange={e => setLocation(e.target.value)}
-                  placeholder={t('settingsModal.locationPlaceholder')}
+                  placeholder={locationPlaceholder}
                 />
               </FormField>
 
               <FormField label={t('settings.avatar')} description={t('settingsModal.avatarDesc')}>
-                <div className="flex items-center gap-4">
-                  <Avatar src={avatarUrl} name={name} size="xl" />
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isSaving}
-                    >
-                      {t('settingsModal.selectPhoto')}
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
+                <AvatarUpload
+                  src={avatarUrl}
+                  name={name}
+                  onFileSelect={handleAvatarFileSelect}
+                  size="xl"
+                  disabled={isSaving}
+                  label={t('settings.loadAvatar') || 'Change Avatar'}
+                />
               </FormField>
 
               <FormField label={t('profile.about')} description={t('settingsModal.aboutDesc')}>

@@ -616,6 +616,7 @@ export interface TranslationResource {
     // 侧边栏导航
     sidebar?: {
       general: string;
+      profile?: string;
       account: string;
       page: string;
       store: string;
@@ -1114,7 +1115,9 @@ export interface TranslationResource {
     shortDescLimit: string;
     shortDescPlaceholder: string;
     locationDesc: string;
+    locationDescDetailed?: string;
     locationPlaceholder: string;
+    locationPlaceholderExample?: string;
     avatarDesc: string;
     selectPhoto: string;
     avatarUploaded: string;
