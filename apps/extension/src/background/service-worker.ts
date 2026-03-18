@@ -2,7 +2,10 @@
  * Ext-0: Service Worker
  *
  * Runs in a separate context (no DOM).
- * Responsibilities: extension lifecycle, badge count, future OAuth token exchange.
+ * Responsibilities: extension lifecycle, badge count.
+ *
+ * Side Panel is opened directly from popup via chrome.sidePanel.open()
+ * (requires user gesture context — cannot be forwarded through sendMessage).
  */
 
 chrome.runtime.onInstalled.addListener(details => {
@@ -21,14 +24,5 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     chrome.action.setBadgeText({ text: count > 0 ? String(count) : '' });
     sendResponse({ ok: true });
   }
-
-  if (message?.action === 'openSidePanel') {
-    chrome.storage.session.set({ pendingRoute: message.route ?? '/' });
-    chrome.windows.getCurrent().then(win => {
-      chrome.sidePanel?.open?.({ windowId: win.id! }).catch(() => {});
-    });
-    sendResponse({ ok: true });
-  }
-
   return false;
 });
