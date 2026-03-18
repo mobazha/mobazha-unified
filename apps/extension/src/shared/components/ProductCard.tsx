@@ -102,30 +102,32 @@ function Thumbnail({
   );
 }
 
+const FIAT_SYMBOLS: Record<string, string> = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+  CNY: '¥',
+  CAD: 'CA$',
+  AUD: 'A$',
+};
+
 function formatDisplayPrice(price: ProductListItem['price']): string {
   if (!price?.amount) return '';
   const divisibility = price.currency?.divisibility ?? 2;
   const displayAmount = price.amount / Math.pow(10, divisibility);
   const code = price.currency?.code ?? '';
-  const isFiat = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'CAD', 'AUD'].includes(code);
-  if (isFiat) {
-    const symbol =
-      code === 'USD'
-        ? '$'
-        : code === 'EUR'
-          ? '€'
-          : code === 'GBP'
-            ? '£'
-            : code === 'JPY'
-              ? '¥'
-              : code === 'CNY'
-                ? '¥'
-                : '';
+
+  const symbol = FIAT_SYMBOLS[code];
+  if (symbol) {
     const decimals = code === 'JPY' ? 0 : 2;
-    return symbol
-      ? `${symbol}${displayAmount.toFixed(decimals)}`
-      : `${displayAmount.toFixed(decimals)} ${code}`;
+    return `${symbol}${displayAmount.toFixed(decimals)}`;
   }
+
+  if (!code) {
+    return `$${displayAmount.toFixed(2)}`;
+  }
+
   const trimmed = displayAmount.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
   return `${trimmed} ${code}`;
 }

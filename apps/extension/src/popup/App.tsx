@@ -204,18 +204,6 @@ export function PopupApp() {
           onSearch={handleSearch}
           loading={loading}
           autoFocus
-          onClear={
-            searched
-              ? () => {
-                  setQuery('');
-                  setResults([]);
-                  setTotal(0);
-                  setSearched(false);
-                  setActiveFilter(null);
-                  setError(null);
-                }
-              : undefined
-          }
         />
       </div>
       <div style={{ padding: '0 16px 10px' }}>
@@ -235,6 +223,20 @@ export function PopupApp() {
         {results.length > 0 && (
           <>
             <div style={styles.resultMeta}>
+              <button
+                onClick={() => {
+                  setQuery('');
+                  setResults([]);
+                  setTotal(0);
+                  setSearched(false);
+                  setActiveFilter(null);
+                  setError(null);
+                }}
+                style={styles.backBtn}
+                title="Back to home"
+              >
+                ←
+              </button>
               <span>
                 {total > results.length
                   ? `${results.length} of ${total} results`
@@ -445,6 +447,16 @@ const styles: Record<string, CSSProperties> = {
     padding: '4px 0 8px',
     fontSize: font.sm,
     color: colors.textFaint,
+  },
+  backBtn: {
+    border: 'none',
+    background: 'none',
+    color: colors.accent,
+    fontSize: font.md,
+    cursor: 'pointer',
+    padding: '0 6px 0 0',
+    fontWeight: 600,
+    lineHeight: 1,
   },
   viewAllBtn: {
     border: 'none',
