@@ -125,7 +125,7 @@ function formatDisplayPrice(price: ProductListItem['price']): string {
   }
 
   if (!code) {
-    return `$${displayAmount.toFixed(2)}`;
+    return '';
   }
 
   const trimmed = displayAmount.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
