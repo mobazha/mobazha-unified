@@ -40,6 +40,23 @@ import { onOpenApiUnauthorized } from '../services/api/openapi-client';
 /** Auth source tracks how the user authenticated */
 export type AuthSource = 'casdoor' | 'telegram' | 'discord' | null;
 
+/**
+ * Derive authMode from token — single source of truth.
+ *
+ * Standalone deployments serve two user types on the same frontend:
+ *   - Seller/Admin: authenticates with Basic Auth  → token starts with "basic:"
+ *   - Buyer:        authenticates via OAuth popup   → JWT token (no "basic:" prefix)
+ *
+ * The Vite build mode (`--mode standalone`) sets the *environment* authMode to
+ * "standalone", but that only describes the deployment, not the current user's
+ * identity.  This helper resolves the actual identity from the token.
+ */
+function resolveAuthMode(token: string | null | undefined): 'hosted' | 'basic' | 'standalone' {
+  if (!isStandaloneMode()) return getCurrentAuthMode();
+  if (token?.startsWith('basic:')) return 'basic';
+  return 'standalone';
+}
+
 interface UserState {
   // 状态
   profile: UserProfile | null;
@@ -204,7 +221,7 @@ export const useUserStore = create<UserState>()(
                 token: result.token,
                 isAuthenticated: true,
                 isLoading: false,
-                authMode: getCurrentAuthMode(),
+                authMode: resolveAuthMode(result.token),
                 isSessionRestored: true,
                 needsOnboarding: false,
               });
@@ -224,7 +241,7 @@ export const useUserStore = create<UserState>()(
               token: result.token,
               isAuthenticated: true,
               isLoading: false,
-              authMode: getCurrentAuthMode(),
+              authMode: resolveAuthMode(result.token),
               isSessionRestored: true,
               needsOnboarding: true,
             });
@@ -587,8 +604,13 @@ export const useUserStore = create<UserState>()(
           // 这样即使后续 API 请求失败（如网络问题），用户仍保持登录
           set({ isLoading: true, token, isAuthenticated: true });
 
-          const isStandaloneBuyer = get().authMode === 'standalone' && isStandaloneMode();
-          const isBasicSeller = get().authMode === 'basic';
+          const effectiveMode = resolveAuthMode(token);
+          const isStandaloneBuyer = effectiveMode === 'standalone';
+          const isBasicSeller = effectiveMode === 'basic';
+
+          if (get().authMode !== effectiveMode) {
+            set({ authMode: effectiveMode });
+          }
           setStandaloneBuyerAuth(isStandaloneBuyer);
 
           try {
@@ -665,7 +687,7 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true });
 
           try {
-            const isBuyer = get().authMode === 'standalone' && isStandaloneMode();
+            const isBuyer = get().authMode === 'standalone';
             const profile = isBuyer
               ? await profileApi.getBuyerProfile()
               : await profileApi.getMyProfile();
@@ -721,8 +743,7 @@ export const useUserStore = create<UserState>()(
         createProfile: async (profileData: Partial<UserProfile>) => {
           set({ error: null });
 
-          const { authMode } = get();
-          const isStandaloneBuyer = authMode === 'standalone';
+          const isStandaloneBuyer = get().authMode === 'standalone';
 
           try {
             const result = isStandaloneBuyer
@@ -813,6 +834,11 @@ export const useUserStore = create<UserState>()(
           token: state.token,
           authSource: state.authSource,
         }),
+        merge: (persisted, current) => {
+          const merged = { ...current, ...(persisted as Partial<UserState>) };
+          merged.authMode = resolveAuthMode(merged.token);
+          return merged;
+        },
       }
     ),
     { name: 'UserStore' }

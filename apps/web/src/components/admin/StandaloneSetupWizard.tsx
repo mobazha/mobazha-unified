@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useMemo } from 'react';
-import { useI18n, useUserStore, isStandalone, getImageUrl } from '@mobazha/core';
-import { completeInitialSetup, getSetupStatus } from '@mobazha/core/services/api/system';
-import { saveToken } from '@mobazha/core/services/auth/token';
+import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
+import { completeInitialSetup } from '@mobazha/core/services/api/system';
+import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
+import {
+  createProfile as apiCreateProfile,
+  setProfile as apiUpdateProfile,
+} from '@mobazha/core/services/api/profile';
+import { getGatewayUrl } from '@mobazha/core/services/api/config';
 import {
   Lock,
   Store,
@@ -122,24 +127,31 @@ export default function StandaloneSetupWizard({
 }: StandaloneSetupWizardProps) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { profile, updateProfile, updateSettings } = useUserStore();
+  const { profile, updateSettings } = useUserStore();
+
+  const hasTokenOnMount = useMemo(() => !!getStoredToken(), []);
+
+  const passwordAlreadySet = initialCompletedSteps?.password ?? false;
+  const needsLogin = passwordAlreadySet && !hasTokenOnMount;
 
   const initialStep = useMemo(() => {
     if (!initialCompletedSteps) return 1;
     if (!initialCompletedSteps.password) return 1;
+    if (needsLogin) return 1;
     if (!initialCompletedSteps.profile) return 2;
     if (!initialCompletedSteps.preferences) return 3;
     return 4;
-  }, [initialCompletedSteps]);
+  }, [initialCompletedSteps, needsLogin]);
 
   const [step, setStep] = useState(initialStep);
   const [saving, setSaving] = useState(false);
 
-  // Step 1: Password
+  // Step 1: Password (create) or Login (existing)
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordDone, setPasswordDone] = useState(initialCompletedSteps?.password ?? false);
+  const [passwordDone, setPasswordDone] = useState(passwordAlreadySet && !needsLogin);
+  const [loginMode, setLoginMode] = useState(needsLogin);
 
   // Step 2: Profile
   const [storeName, setStoreName] = useState(profile?.name || '');
@@ -169,10 +181,50 @@ export default function StandaloneSetupWizard({
     });
   }, []);
 
+  const saveBasicAuth = (username: string, pwd: string) => {
+    const authHeader = btoa(`${username}:${pwd}`);
+    const basicToken = `basic:${authHeader}`;
+    saveToken(basicToken);
+    useUserStore.setState({ authMode: 'basic', token: basicToken, isAuthenticated: true });
+  };
+
+  const handleLogin = async () => {
+    if (!password.trim()) return;
+    setSaving(true);
+    try {
+      const authHeader = `Basic ${btoa('admin:' + password)}`;
+      const resp = await fetch(`${getGatewayUrl()}/config`, {
+        headers: { Authorization: authHeader },
+      });
+      if (resp.status === 401) {
+        toast({
+          title: t('standalone.setup.invalidPassword') || 'Invalid password',
+          variant: 'destructive',
+        });
+        return;
+      }
+      saveBasicAuth('admin', password);
+      setPasswordDone(true);
+      setLoginMode(false);
+      setStep(2);
+    } catch {
+      toast({
+        title: t('standalone.setup.loginFailed') || 'Failed to connect to server',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handlePasswordSetup = async () => {
     if (passwordDone) {
       setStep(2);
       return;
+    }
+
+    if (loginMode) {
+      return handleLogin();
     }
 
     if (password.length < 8) {
@@ -193,8 +245,7 @@ export default function StandaloneSetupWizard({
     setSaving(true);
     try {
       const result = await completeInitialSetup(password);
-      const authHeader = btoa(`${result.username}:${password}`);
-      saveToken(`basic:${authHeader}`);
+      saveBasicAuth(result.username, password);
       setPasswordDone(true);
       setStep(2);
     } catch (err) {
@@ -221,6 +272,18 @@ export default function StandaloneSetupWizard({
 
     setSaving(true);
     try {
+      const profileData = {
+        name: storeName.trim(),
+        shortDescription: shortDescription.trim(),
+        vendor: true,
+      };
+
+      const createResult = await apiCreateProfile(profileData);
+      if (!createResult.success) {
+        const updateResult = await apiUpdateProfile(profileData);
+        if (!updateResult.success) throw new Error(updateResult.error || 'Profile save failed');
+      }
+
       if (avatarFile) {
         const uploaded = await uploadAvatar(avatarFile);
         if (!uploaded) {
@@ -232,11 +295,7 @@ export default function StandaloneSetupWizard({
           });
         }
       }
-      await updateProfile({
-        name: storeName.trim(),
-        shortDescription: shortDescription.trim(),
-        vendor: true,
-      });
+
       setStep(3);
     } catch {
       toast({
@@ -286,7 +345,7 @@ export default function StandaloneSetupWizard({
 
       <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} labels={stepLabels} />
 
-      {/* Step 1: Password */}
+      {/* Step 1: Password (create) or Login (existing) */}
       {step === 1 && (
         <div className="bg-card rounded-xl border p-4 sm:p-6 space-y-5 sm:space-y-6">
           <div className="flex items-center gap-3 mb-2">
@@ -299,18 +358,60 @@ export default function StandaloneSetupWizard({
             </div>
             <div>
               <h2 className="text-lg font-semibold">
-                {t('standalone.setup.passwordTitle') || 'Set Admin Password'}
+                {loginMode
+                  ? t('standalone.setup.loginTitle') || 'Sign In'
+                  : passwordDone
+                    ? t('standalone.setup.passwordAlreadySet') || 'Password has been set'
+                    : t('standalone.setup.passwordTitle') || 'Set Admin Password'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {passwordDone
-                  ? t('standalone.setup.passwordAlreadySet') || 'Password has been set'
-                  : t('standalone.setup.passwordDesc') ||
-                    'This password protects your store admin panel'}
+                {loginMode
+                  ? t('standalone.setup.loginDesc') || 'Enter your admin password to continue setup'
+                  : passwordDone
+                    ? t('standalone.setup.passwordAlreadySet') || 'Password has been set'
+                    : t('standalone.setup.passwordDesc') ||
+                      'This password protects your store admin panel'}
               </p>
             </div>
           </div>
 
-          {!passwordDone && (
+          {loginMode && (
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="login-password" className="block text-sm font-medium mb-1.5">
+                  {t('standalone.setup.password') || 'Password'} *
+                </label>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full rounded-lg border bg-background px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 pr-10"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={t('standalone.setup.loginPlaceholder') || 'Enter admin password'}
+                    autoComplete="current-password"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && password.trim()) handleLogin();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('standalone.setup.loginHint') ||
+                  'Username is "admin". Use the password you set during initial setup.'}
+              </p>
+            </div>
+          )}
+
+          {!passwordDone && !loginMode && (
             <div className="space-y-4">
               <div>
                 <label htmlFor="setup-password" className="block text-sm font-medium mb-1.5">
@@ -387,7 +488,10 @@ export default function StandaloneSetupWizard({
             <button
               onClick={handlePasswordSetup}
               disabled={
-                saving || (!passwordDone && (password.length < 8 || password !== passwordConfirm))
+                saving ||
+                (loginMode
+                  ? !password.trim()
+                  : !passwordDone && (password.length < 8 || password !== passwordConfirm))
               }
               className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 sm:px-5 sm:py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors min-h-[44px] sm:min-h-0"
             >
@@ -395,7 +499,9 @@ export default function StandaloneSetupWizard({
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  {t('admin.onboarding.next') || 'Next'}
+                  {loginMode
+                    ? t('standalone.setup.signIn') || 'Sign In'
+                    : t('admin.onboarding.next') || 'Next'}
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}

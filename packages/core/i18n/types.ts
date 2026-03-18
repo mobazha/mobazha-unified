@@ -2410,6 +2410,13 @@ export interface TranslationResource {
       confirmPasswordPlaceholder?: string;
       passwordHint?: string;
       passwordAlreadySet?: string;
+      loginTitle?: string;
+      loginDesc?: string;
+      loginPlaceholder?: string;
+      loginHint?: string;
+      invalidPassword?: string;
+      loginFailed?: string;
+      signIn?: string;
       paymentLater?: string;
       passwordTooShort?: string;
       passwordMismatch?: string;

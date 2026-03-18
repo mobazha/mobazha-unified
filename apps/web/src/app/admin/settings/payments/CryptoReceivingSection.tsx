@@ -724,7 +724,7 @@ export const CryptoReceivingSection: React.FC = () => {
           <h2 className="text-lg font-semibold text-foreground">{t('receivingAccounts.title')}</h2>
           <p className="text-sm text-muted-foreground mt-1">{t('receivingAccounts.subtitle')}</p>
         </div>
-        {!showForm && (
+        {!showForm && cryptoAccounts.length > 0 && (
           <button
             type="button"
             onClick={handleAdd}
