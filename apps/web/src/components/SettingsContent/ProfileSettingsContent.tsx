@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useI18n, useUserStore, getImageUrl, imagesApi, getCountryName } from '@mobazha/core';
-import type { ContactInfo, SocialAccounts } from '@mobazha/core';
+import type { ContactInfo, SocialAccount } from '@mobazha/core';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { Plus, Trash2 } from 'lucide-react';
 import { SettingsSection, SaveBar } from '@/components/SettingsLayout';
@@ -53,39 +53,30 @@ function contactInfoToLinks(ci?: ContactInfo): Array<{ type: LinkType; url: stri
   const links: Array<{ type: LinkType; url: string }> = [];
   if (ci?.website) links.push({ type: 'website', url: ci.website });
   if (ci?.email) links.push({ type: 'email', url: ci.email });
-  if (ci?.social?.twitter) links.push({ type: 'twitter', url: ci.social.twitter });
-  if (ci?.social?.facebook) links.push({ type: 'facebook', url: ci.social.facebook });
-  if (ci?.social?.instagram) links.push({ type: 'instagram', url: ci.social.instagram });
-  if (ci?.social?.youtube) links.push({ type: 'youtube', url: ci.social.youtube });
+  if (Array.isArray(ci?.social)) {
+    for (const sa of ci.social) {
+      const t = sa.type as LinkType;
+      if (LINK_TYPES.some(lt => lt.value === t) && sa.username) {
+        links.push({ type: t, url: sa.username });
+      }
+    }
+  }
   return links;
 }
 
 function linksToContactInfo(links: Array<{ type: string; url: string }>): ContactInfo {
-  const social: SocialAccounts = {};
+  const social: SocialAccount[] = [];
   let website: string | undefined;
   let email: string | undefined;
   for (const link of links) {
     const url = link.url.trim();
     if (!url) continue;
-    switch (link.type) {
-      case 'website':
-        website = url;
-        break;
-      case 'email':
-        email = url;
-        break;
-      case 'twitter':
-        social.twitter = url;
-        break;
-      case 'facebook':
-        social.facebook = url;
-        break;
-      case 'instagram':
-        social.instagram = url;
-        break;
-      case 'youtube':
-        social.youtube = url;
-        break;
+    if (link.type === 'website') {
+      website = url;
+    } else if (link.type === 'email') {
+      email = url;
+    } else {
+      social.push({ type: link.type, username: url });
     }
   }
   return { website, email, social };
