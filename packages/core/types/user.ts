@@ -88,16 +88,6 @@ export function getSocialUsername(
 }
 
 /**
- * @deprecated Use SocialAccount[] instead. Kept for legacy read compatibility.
- */
-export interface SocialAccounts {
-  twitter?: string;
-  facebook?: string;
-  instagram?: string;
-  youtube?: string;
-}
-
-/**
  * 用户设置
  */
 export interface UserSettings {

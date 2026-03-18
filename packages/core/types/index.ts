@@ -27,7 +27,6 @@ export type {
   ContactInfo,
   SocialAccount,
   getSocialUsername,
-  SocialAccounts,
   UserSettings,
   SmtpSettings,
   AuthCredentials,
