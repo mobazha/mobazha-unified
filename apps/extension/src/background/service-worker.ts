@@ -15,16 +15,20 @@ chrome.sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: false }).catch(()
   // Side Panel API not available — popup-only mode
 });
 
-/**
- * Badge count API.
- * Popup / Side Panel can send { action: 'setBadge', count: N }
- * to update the toolbar icon badge.
- */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.action === 'setBadge') {
     const count = Number(message.count) || 0;
     chrome.action.setBadgeText({ text: count > 0 ? String(count) : '' });
     sendResponse({ ok: true });
   }
+
+  if (message?.action === 'openSidePanel') {
+    chrome.storage.session.set({ pendingRoute: message.route ?? '/' });
+    chrome.windows.getCurrent().then(win => {
+      chrome.sidePanel?.open?.({ windowId: win.id! }).catch(() => {});
+    });
+    sendResponse({ ok: true });
+  }
+
   return false;
 });
