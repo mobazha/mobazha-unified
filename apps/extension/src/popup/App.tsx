@@ -83,14 +83,12 @@ export function PopupApp() {
 
   const openTab = (path = '') => chrome.tabs.create({ url: `${WEB_APP_ORIGIN}${path}` });
 
-  const openSidePanel = async () => {
-    try {
-      const win = await chrome.windows.getCurrent();
-      await chrome.sidePanel?.open?.({ windowId: win.id! });
-    } catch {
-      openTab();
-    }
+  const openSidePanelAt = (route = '/') => {
+    chrome.runtime.sendMessage({ action: 'openSidePanel', route });
+    window.close();
   };
+
+  const openSidePanel = () => openSidePanelAt('/');
 
   return (
     <div style={styles.root}>
@@ -185,7 +183,7 @@ export function PopupApp() {
                   key={`${item.slug}-${i}`}
                   item={item}
                   variant="compact"
-                  onClick={() => openTab(`/listing/${item.slug}`)}
+                  onClick={() => openSidePanelAt(`/product/${item.slug}`)}
                 />
               ))}
             </div>

@@ -1,7 +1,10 @@
-import { useState, useCallback, useEffect, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense, type ReactNode } from 'react';
 import { MemoryRouter, Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { CurrencyProvider } from '@/components/CurrencyProvider';
+import { Toaster } from '@/components/ui/toaster';
+import { useUserStore } from '@mobazha/core';
 import { getStoredUser } from '@mobazha/core/services/auth/token';
 import { searchListings } from '@mobazha/core/services/api/products';
 import type { ProductListItem } from '@mobazha/core/types/product';
@@ -269,20 +272,64 @@ function SidePanelLayout() {
   );
 }
 
+function ExtAuthProvider({ children }: { children: ReactNode }) {
+  const { restoreSession } = useUserStore();
+  const restored = useRef(false);
+
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    restoreSession();
+  }, [restoreSession]);
+
+  return <>{children}</>;
+}
+
+function PendingRouteHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const consumePending = async () => {
+      const data = await chrome.storage.session.get('pendingRoute');
+      if (data.pendingRoute && data.pendingRoute !== '/') {
+        navigate(data.pendingRoute);
+        await chrome.storage.session.remove('pendingRoute');
+      }
+    };
+    consumePending();
+
+    const listener = (msg: { action?: string; route?: string }) => {
+      if (msg?.action === 'openSidePanel' && msg.route) {
+        navigate(msg.route);
+      }
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    return () => chrome.runtime.onMessage.removeListener(listener);
+  }, [navigate]);
+
+  return null;
+}
+
 export function SidePanelApp() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <MemoryRouter>
-          <Routes>
-            <Route element={<SidePanelLayout />}>
-              <Route index element={<HomePage />} />
-              {routes.map(r => (
-                <Route key={String(r.path)} path={r.path} element={r.element} />
-              ))}
-            </Route>
-          </Routes>
-        </MemoryRouter>
+        <CurrencyProvider>
+          <ExtAuthProvider>
+            <MemoryRouter>
+              <PendingRouteHandler />
+              <Routes>
+                <Route element={<SidePanelLayout />}>
+                  <Route index element={<HomePage />} />
+                  {routes.map(r => (
+                    <Route key={String(r.path)} path={r.path} element={r.element} />
+                  ))}
+                </Route>
+              </Routes>
+            </MemoryRouter>
+            <Toaster />
+          </ExtAuthProvider>
+        </CurrencyProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
