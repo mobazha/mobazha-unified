@@ -84,7 +84,7 @@ export const TEST_ENV: EnvConfig = {
     mode: 'hosted', // 测试环境默认使用托管模式
   },
   casdoor: {
-    serverUrl: 'https://test-login.mobazha.org',
+    serverUrl: 'https://test-new-login.mobazha.org',
     clientId: '22649a5edc7cabcb4398',
     organizationName: 'built-in',
     appName: 'app-built-in',

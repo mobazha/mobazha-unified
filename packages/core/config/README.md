@@ -20,7 +20,7 @@ NEXT_PUBLIC_USE_MOCK_DATA=false
 ### 测试环境 (test)
 
 - API: `https://miniapptest.mobazha.org`
-- Casdoor: `https://test-login.mobazha.org`
+- Casdoor: `https://test-new-login.mobazha.org`
 
 ### 生产环境 (production)
 
