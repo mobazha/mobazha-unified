@@ -2,8 +2,8 @@
 name: browser-extension-dev
 description: >-
   Chrome/Brave 浏览器扩展开发执行器。覆盖 Ext-0 原型验证到 Ext-4 生态增强的全生命周期。
-  Manifest V3 + Vite 多入口构建 + packages/core 100% 复用。
-  触发词："浏览器扩展", "browser extension", "Chrome 扩展", "Ext-0",
+  Manifest V3 + Vite 多入口构建 + 四壳一码（Vite alias 复用 apps/web/src/）。
+  触发词："浏览器扩展", "browser extension", "Chrome 扩展", "Ext-0", "Ext-1",
   "扩展原型", "继续扩展开发", "extension dev", "Popup 开发", "Side Panel"。
 ---
 
@@ -14,28 +14,38 @@ description: >-
 阅读以下文件获取完整上下文：
 
 ```
-mobazha_hosting/docs/extension/BROWSER_EXTENSION_DESIGN.md  # 深度设计文档
+mobazha_hosting/docs/extension/BROWSER_EXTENSION_DESIGN.md  # 深度设计文档（§8 四壳一码架构）
 mobazha_hosting/docs/PRODUCT_ARCHITECTURE_DESIGN.md §4.7    # 产品战略定位
 mobazha_hosting/docs/product/IMPLEMENTATION_ROADMAP.md §6.3 # 实施计划
+mobazha_hosting/docs/FRONTEND_ARCHITECTURE_DESIGN.md        # ADR-FE-005 组件复用决策
 ```
 
-## 2. 架构要点
+## 2. 架构要点（四壳一码）
+
+**关键原则**：扩展通过 Vite alias 直接复用 `apps/web/src/` 的全部 UI 组件，不新建轻量组件。
 
 ```
-apps/extension/                    # Chrome Manifest V3 扩展
+apps/extension/                    # Shell 4：浏览器扩展
 ├── manifest.json                  # MV3 声明（permissions, service_worker, popup, side_panel）
-├── vite.config.ts                 # 多入口构建（popup + sidepanel + background）
+├── vite.config.ts                 # 多入口构建 + Vite alias 指向 apps/web/src/
 ├── src/
-│   ├── popup/                     # Popup 视图（React 19, 400×600 上限）
-│   ├── sidepanel/                 # Side Panel 视图（Chrome 114+）
+│   ├── popup/                     # 快捷入口（搜索 + 快捷操作，400×600 上限）
+│   ├── sidepanel/                 # 主购物界面（复用移动端组件，Chrome 114+）
 │   ├── background/                # Service Worker（无 DOM，事件驱动）
 │   ├── content/                   # Content Script（Ext-3+，isolated world）
-│   └── shared/                    # 扩展内共享代码（storage adapter 等）
+│   └── shared/                    # 初始化 + design tokens（Ext-0 轻量组件，Ext-1 后可淘汰）
 └── public/icons/                  # 扩展图标 16/48/128
 
+apps/web/src/                      # UI 组件源（通过 Vite alias 复用）
+├── components/                    # ProductDetailMobile, CheckoutMobile 等
+├── compat/                        # Next.js 兼容层: link.tsx, navigation.tsx, image.tsx
+└── routes.tsx                     # React Router 路由表
+
 packages/core/                     # 100% 复用：API、stores、hooks、utils
-packages/ui/                       # 复用 UI 组件（需适配窄宽度）
+packages/ui/                       # usePlatform() → 'extension' 类型自动移动视图
 ```
+
+**Vite alias 配置**（Ext-1 核心）：扩展的 `vite.config.ts` 镜像 `apps/web/vite.config.ts` 的 alias，使 `@/` → `apps/web/src/`，`next/*` → `apps/web/src/compat/*`。这让 `ProductDetailMobile`、`CheckoutMobile` 等组件在扩展中直接可用。
 
 ## 3. 执行协议
 
@@ -49,12 +59,13 @@ bash -c 'ls -la ~/dev/openbazaar/mobazha-unified/apps/extension/ 2>/dev/null || 
 
 ### Step 2: 确认所在阶段
 
-| 阶段         | 判断条件                  | 目标       |
-| ------------ | ------------------------- | ---------- |
-| Ext-0 未开始 | `apps/extension/` 不存在  | 创建脚手架 |
-| Ext-0 进行中 | 有 manifest.json 但未验证 | 完成原型   |
-| Ext-0 已完成 | 6 项成功标准全通过        | 进入 Ext-1 |
-| Ext-1+       | Side Panel 完整购物流程   | 见设计文档 |
+| 阶段                 | 判断条件                                                  | 目标                               |
+| -------------------- | --------------------------------------------------------- | ---------------------------------- |
+| Ext-0 未开始         | `apps/extension/` 不存在                                  | 创建脚手架                         |
+| Ext-0 进行中         | 有 manifest.json 但 OAuth 未实施                          | 完成 OAuth                         |
+| **Ext-0 大部分完成** | **Popup 搜索 + Side Panel 浏览 + Badge ✅，OAuth 待实施** | **← 当前**                         |
+| Ext-1 准备           | OAuth 完成                                                | 配置 Vite alias 复用 apps/web 组件 |
+| Ext-1+               | Side Panel 完整购物流程                                   | 见设计文档                         |
 
 ### Step 3: 按阶段执行
 
@@ -139,7 +150,7 @@ cd apps/extension && pnpm dev
 # - Service Worker: chrome://extensions → 扩展卡片 → "Service Worker" 链接
 ```
 
-**HMR**：`@crxjs/vite-plugin` 支持 Popup/Side Panel 热更新。Service Worker 变更自动重载。`manifest.json` 变更需手动刷新扩展。
+**HMR**：`vite-plugin-web-extension` 支持 Popup/Side Panel 热更新。Service Worker 变更自动重载。`manifest.json` 变更需手动刷新扩展。
 
 ## 6. 关键约束速查
 
@@ -166,20 +177,22 @@ cd apps/extension && pnpm dev
 
 ## 8. 阶段路线图
 
-| Phase     | 范围                                                | 依赖             |
-| --------- | --------------------------------------------------- | ---------------- |
-| **Ext-0** | 脚手架 + Popup 登录 + 搜索                          | 无（可立即启动） |
-| **Ext-1** | Side Panel 完整购物 + `chrome.storage.session` 迁移 | Ext-0 ✅         |
-| **Ext-2** | 桌面通知 + Badge + 钱包概览                         | Ext-1            |
-| **Ext-3** | Content Script 跨站增强                             | Ext-2            |
-| **Ext-4** | 生态增强（推荐、同步）                              | Ext-3            |
+| Phase     | 范围                                                        | 依赖           | 状态                          |
+| --------- | ----------------------------------------------------------- | -------------- | ----------------------------- |
+| **Ext-0** | 脚手架 + Popup 搜索 + Side Panel 浏览 + Badge 示例          | 无             | **大部分 ✅**（OAuth 待实施） |
+| **Ext-1** | Vite alias 复用 apps/web 组件 + OAuth + Side Panel 完整购物 | Ext-0 OAuth ✅ | 待启动                        |
+| **Ext-2** | 桌面通知 + 订单状态追踪 + Badge 未读计数                    | Ext-1          | 待启动                        |
+| **Ext-3** | Content Script 跨站增强                                     | Ext-2          | 待启动                        |
+| **Ext-4** | 生态增强（推荐、同步）                                      | Ext-3          | 待启动                        |
+
+> **Ext-2 变更**：从"钱包概览"改为"订单状态追踪"（Mobazha 使用外部钱包）。
 
 ## 9. 常见问题
 
-| 问题                | 原因                       | 解决                                     |
-| ------------------- | -------------------------- | ---------------------------------------- |
-| Popup 白屏          | CSP 阻止内联脚本           | 检查 Vite 构建无内联 `<script>`          |
-| Service Worker 报错 | 引用了 `window`/`document` | 拆分浏览器代码和 SW 代码                 |
-| API 返回 CORS 错误  | 缺少 `host_permissions`    | manifest 添加 API 域名                   |
-| HMR 不生效          | 插件版本不匹配             | 检查 `@crxjs/vite-plugin` 兼容 Vite 版本 |
-| OAuth redirect 失败 | Casdoor 未注册 URI         | 添加 `https://<id>.chromiumapp.org/`     |
+| 问题                | 原因                       | 解决                                            |
+| ------------------- | -------------------------- | ----------------------------------------------- |
+| Popup 白屏          | CSP 阻止内联脚本           | 检查 Vite 构建无内联 `<script>`                 |
+| Service Worker 报错 | 引用了 `window`/`document` | 拆分浏览器代码和 SW 代码                        |
+| API 返回 CORS 错误  | 缺少 `host_permissions`    | manifest 添加 API 域名                          |
+| HMR 不生效          | 插件版本不匹配             | 检查 `vite-plugin-web-extension` 兼容 Vite 版本 |
+| OAuth redirect 失败 | Casdoor 未注册 URI         | 添加 `https://<id>.chromiumapp.org/`            |
