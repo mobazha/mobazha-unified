@@ -1,0 +1,10 @@
+/*
+ * Extension global styles — reuses web app theme via import.
+ * Adds @source paths so Tailwind v4 scans reused web components.
+ */
+@import '../../web/src/app/globals.css';
+
+@source '../../web/src/**/*.{js,ts,jsx,tsx}';
+@source './popup/**/*.{js,ts,jsx,tsx}';
+@source './sidepanel/**/*.{js,ts,jsx,tsx}';
+@source './shared/**/*.{js,ts,jsx,tsx}';

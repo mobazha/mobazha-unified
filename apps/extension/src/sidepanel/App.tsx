@@ -1,41 +1,44 @@
-import type { CSSProperties } from 'react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
+import { MemoryRouter, Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import { getStoredUser } from '@mobazha/core/services/auth/token';
 import { searchListings } from '@mobazha/core/services/api/products';
 import type { ProductListItem } from '@mobazha/core/types/product';
 import { WEB_APP_ORIGIN } from '../shared/init';
 import { extensionSignIn, extensionSignOut, isAuthenticated } from '../shared/auth';
-import { colors, font, radius } from '../shared/styles';
 import { SearchBar } from '../shared/components/SearchBar';
 import { ProductCard } from '../shared/components/ProductCard';
 import { QuickFilters, QUICK_FILTERS } from '../shared/components/QuickFilters';
 import { LoadingState, NoResultsState, WelcomeState } from '../shared/components/EmptyStates';
+import { routes } from './routes';
 
 const PAGE_SIZE = 20;
 
-export function SidePanelApp() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<ProductListItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searched, setSearched] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<number | null>(null);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function ExtHeader() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
   const [signingIn, setSigningIn] = useState(false);
-
   const storedUser = getStoredUser();
+  const isHome = location.pathname === '/';
 
   const handleSignIn = useCallback(async () => {
     setSigningIn(true);
-    setError(null);
     try {
       const result = await extensionSignIn();
-      if (result.success) {
-        setAuthenticated(true);
-      } else if (result.error && !result.error.includes('cancelled')) {
-        setError(result.error);
-      }
+      if (result.success) setAuthenticated(true);
     } finally {
       setSigningIn(false);
     }
@@ -46,356 +49,241 @@ export function SidePanelApp() {
     setAuthenticated(false);
   }, []);
 
-  const doSearch = useCallback(async (opts: { query: string; sortBy?: string; type?: string }) => {
-    setLoading(true);
-    setError(null);
-    setSearched(true);
-    try {
-      const resp = await searchListings({
-        query: opts.query || '*',
-        pageSize: PAGE_SIZE,
-        sortBy: opts.sortBy,
-        type: opts.type,
-      });
-      setResults(resp.products);
-      setTotal(resp.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    doSearch({ query: '*', sortBy: 'recently-added' });
-    setActiveFilter(0);
-  }, [doSearch]);
-
-  const handleSearch = useCallback(() => {
-    const q = query.trim();
-    if (!q) return;
-    setActiveFilter(null);
-    doSearch({ query: q });
-  }, [query, doSearch]);
-
-  const handleQuickFilter = useCallback(
-    (index: number) => {
-      setActiveFilter(index);
-      setQuery('');
-      const f = QUICK_FILTERS[index];
-      doSearch({ query: f.query, sortBy: f.sortBy, type: f.type });
-    },
-    [doSearch]
-  );
-
-  const openTab = (path = '') => chrome.tabs.create({ url: `${WEB_APP_ORIGIN}${path}` });
-
   return (
-    <div style={styles.root}>
-      {/* Top bar */}
-      <div style={styles.topBar}>
-        <div style={styles.topLeft}>
-          <div style={styles.logo}>M</div>
-          <span style={styles.brand}>Mobazha</span>
-        </div>
-        <div style={styles.topRight}>
-          {authenticated ? (
-            <div style={styles.userArea}>
-              <div style={styles.avatar}>
-                {storedUser?.avatar ? (
-                  <img
-                    src={storedUser.avatar}
-                    alt=""
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                ) : (
-                  <span>{(storedUser?.name || 'U')[0].toUpperCase()}</span>
-                )}
-              </div>
-              <button onClick={handleSignOut} style={styles.signoutBtn} title="Sign out">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleSignIn}
-              disabled={signingIn}
-              style={{ ...styles.signinBtn, opacity: signingIn ? 0.7 : 1 }}
+    <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-background sticky top-0 z-50">
+      <div className="flex items-center gap-2">
+        {!isHome && (
+          <button
+            onClick={() => navigate(-1)}
+            className="p-1 rounded hover:bg-muted text-foreground"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              {signingIn ? 'Signing in…' : 'Sign In'}
-            </button>
-          )}
-          <button onClick={() => openTab()} style={styles.openSiteBtn} title="Open full site">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
-                clipRule="evenodd"
-              />
-              <path
-                fillRule="evenodd"
-                d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
-                clipRule="evenodd"
-              />
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-        </div>
+        )}
+        <button
+          onClick={() => navigate('/')}
+          className="font-bold text-base text-foreground hover:opacity-80"
+        >
+          Mobazha
+        </button>
       </div>
-
-      {/* Search + Filters */}
-      <div style={styles.searchSection}>
-        <SearchBar
-          query={query}
-          onQueryChange={v => {
-            setQuery(v);
-            if (activeFilter !== null) setActiveFilter(null);
-          }}
-          onSearch={handleSearch}
-          loading={loading}
-          autoFocus
-        />
-        <div style={{ marginTop: '8px' }}>
-          <QuickFilters activeIndex={activeFilter} onSelect={handleQuickFilter} />
-        </div>
-      </div>
-
-      {/* Quick nav for authenticated users */}
-      {authenticated && (
-        <div style={styles.navRow}>
-          <NavButton label="Orders" icon="📋" onClick={() => openTab('/orders')} />
-          <NavButton label="My Store" icon="🏪" onClick={() => openTab('/store')} />
-          <NavButton label="Wallet" icon="💰" onClick={() => openTab('/wallet')} />
-          <NavButton label="Chat" icon="💬" onClick={() => openTab('/chat')} />
-        </div>
-      )}
-
-      {/* Error */}
-      {error && <div style={styles.errorBar}>{error}</div>}
-
-      {/* Content */}
-      <div style={styles.content}>
-        {loading && results.length > 0 && <div style={styles.loadingOverlay} />}
-        {loading && results.length === 0 && <LoadingState />}
-        {!loading && searched && results.length === 0 && !error && <NoResultsState />}
-        {!searched && !loading && <WelcomeState />}
-
-        {results.length > 0 && (
-          <>
-            <div style={styles.resultMeta}>
-              <span>
-                {total > results.length
-                  ? `Showing ${results.length} of ${total}`
-                  : `${results.length} products`}
-              </span>
-              {total > results.length && (
-                <button onClick={() => openTab('/search')} style={styles.viewAllBtn}>
-                  View all →
-                </button>
+      <div className="flex items-center gap-2">
+        {authenticated ? (
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white flex items-center justify-center text-xs font-semibold overflow-hidden">
+              {storedUser?.avatar ? (
+                <img
+                  src={storedUser.avatar}
+                  alt=""
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span>{(storedUser?.name || 'U')[0].toUpperCase()}</span>
               )}
             </div>
-            <div style={styles.grid}>
-              {results.map((item, i) => (
-                <ProductCard
-                  key={`${item.slug}-${i}`}
-                  item={item}
-                  variant="grid"
-                  onClick={() => openTab(`/listing/${item.slug}`)}
-                />
-              ))}
-            </div>
-          </>
+            <button
+              onClick={handleSignOut}
+              className="p-1 text-muted-foreground hover:text-foreground rounded"
+              title="Sign out"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleSignIn}
+            disabled={signingIn}
+            className="px-3 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            {signingIn ? 'Signing in…' : 'Sign In'}
+          </button>
         )}
-      </div>
-
-      {/* Footer */}
-      <div style={styles.footer}>
-        <span style={{ color: colors.textFaint, fontSize: font.xs }}>
-          Zero Fees · Buyer Protection · 6 Chains + Fiat
-        </span>
+        <button
+          onClick={() => window.open(`${WEB_APP_ORIGIN}/`, '_blank')}
+          className="p-1 text-muted-foreground hover:text-foreground rounded"
+          title="Open full site"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </button>
       </div>
     </div>
   );
 }
 
-function NavButton({ label, icon, onClick }: { label: string; icon: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={styles.navBtn}
-      onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = colors.bgMuted)}
-      onMouseLeave={e =>
-        ((e.currentTarget as HTMLButtonElement).style.background = colors.bgSubtle)
+function HomePage() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<ProductListItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<number | null>(null);
+
+  const doSearch = useCallback(async (opts: { query: string; sortBy?: string; type?: string }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const resp = await searchListings({
+        query: opts.query,
+        sortBy: opts.sortBy,
+        type: opts.type,
+        pageSize: PAGE_SIZE,
+        page: 0,
+      });
+      setResults(resp.products || []);
+      setTotal(resp.total ?? 0);
+      setSearched(true);
+    } catch {
+      setError('Search failed. Please try again.');
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleSearch = useCallback(
+    (q: string) => {
+      const trimmed = q.trim();
+      setQuery(trimmed);
+      setActiveFilter(null);
+      if (trimmed) doSearch({ query: trimmed });
+    },
+    [doSearch]
+  );
+
+  const handleFilter = useCallback(
+    (idx: number) => {
+      if (activeFilter === idx) {
+        setActiveFilter(null);
+        setResults([]);
+        setSearched(false);
+        return;
       }
-    >
-      <span style={{ fontSize: '16px' }}>{icon}</span>
-      <span style={{ fontSize: font.sm, color: colors.textSecondary }}>{label}</span>
-    </button>
+      setActiveFilter(idx);
+      const f = QUICK_FILTERS[idx];
+      doSearch({ query: f.query || '', sortBy: f.sortBy, type: f.type });
+    },
+    [activeFilter, doSearch]
+  );
+
+  useEffect(() => {
+    doSearch({ query: '', sortBy: 'newest' });
+  }, [doSearch]);
+
+  const handleProductClick = useCallback(
+    (item: ProductListItem) => {
+      if (item.slug) navigate(`/product/${item.slug}`);
+    },
+    [navigate]
+  );
+
+  return (
+    <div className="flex flex-col min-h-0 flex-1">
+      <div className="px-3 pt-3 pb-1">
+        <SearchBar
+          query={query}
+          onQueryChange={setQuery}
+          onSearch={() => handleSearch(query)}
+          loading={loading}
+          placeholder="Search products…"
+        />
+      </div>
+      <div className="px-3 py-1">
+        <QuickFilters activeIndex={activeFilter} onSelect={handleFilter} />
+      </div>
+      {error && (
+        <div className="mx-3 my-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs">
+          {error}
+        </div>
+      )}
+      <div className="flex-1 overflow-y-auto px-3 pb-3">
+        {loading ? (
+          <LoadingState />
+        ) : !searched ? (
+          <WelcomeState />
+        ) : results.length === 0 ? (
+          <NoResultsState />
+        ) : (
+          <>
+            <div className="text-xs text-muted-foreground mb-2">{total} results</div>
+            <div className="flex flex-col gap-2">
+              {results.map(item => (
+                <ProductCard key={item.slug} item={item} onClick={() => handleProductClick(item)} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
-const styles: Record<string, CSSProperties> = {
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    background: colors.bg,
-    fontFamily: font.family,
-  },
-  topBar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '10px 16px',
-    borderBottom: `1px solid ${colors.borderLight}`,
-  },
-  topLeft: { display: 'flex', alignItems: 'center', gap: '8px' },
-  logo: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '6px',
-    background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
-    color: colors.white,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: font.lg,
-    fontWeight: 700,
-  },
-  brand: { fontSize: font.xl, fontWeight: 700, color: colors.text },
-  topRight: { display: 'flex', alignItems: 'center', gap: '8px' },
-  userArea: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  avatar: {
-    width: '26px',
-    height: '26px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-    color: colors.white,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '11px',
-    fontWeight: 600,
-    overflow: 'hidden',
-  },
-  signoutBtn: {
-    background: 'none',
-    border: 'none',
-    padding: '4px',
-    cursor: 'pointer',
-    color: colors.textMuted,
-    display: 'flex',
-    alignItems: 'center',
-    borderRadius: radius.sm,
-  },
-  signinBtn: {
-    padding: '5px 14px',
-    background: colors.btnPrimary,
-    color: colors.white,
-    border: 'none',
-    borderRadius: radius.sm,
-    fontSize: font.base,
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  openSiteBtn: {
-    width: '30px',
-    height: '30px',
-    border: `1px solid ${colors.border}`,
-    borderRadius: radius.sm,
-    background: 'transparent',
-    color: colors.textMuted,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
-  },
-  searchSection: { padding: '12px 16px' },
-  navRow: {
-    display: 'flex',
-    gap: '8px',
-    padding: '0 16px 12px',
-  },
-  navBtn: {
-    flex: 1,
-    padding: '8px 4px',
-    background: colors.bgSubtle,
-    border: `1px solid ${colors.borderLight}`,
-    borderRadius: radius.md,
-    cursor: 'pointer',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '4px',
-    transition: 'background 0.1s',
-  },
-  errorBar: {
-    margin: '0 16px 8px',
-    padding: '8px 12px',
-    background: colors.errorBg,
-    borderRadius: radius.sm,
-    color: colors.errorText,
-    fontSize: font.base,
-  },
-  content: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '0 16px',
-    minHeight: 0,
-    position: 'relative',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'rgba(255,255,255,0.6)',
-    zIndex: 10,
-  },
-  resultMeta: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 0 10px',
-    fontSize: font.sm,
-    color: colors.textFaint,
-  },
-  viewAllBtn: {
-    border: 'none',
-    background: 'none',
-    color: colors.accent,
-    fontSize: font.sm,
-    cursor: 'pointer',
-    padding: 0,
-    fontWeight: 500,
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-    gap: '10px',
-    paddingBottom: '16px',
-  },
-  footer: {
-    borderTop: `1px solid ${colors.borderLight}`,
-    padding: '8px 16px',
-    textAlign: 'center',
-  },
-};
+function SidePanelLayout() {
+  return (
+    <div className="flex flex-col h-screen bg-background text-foreground">
+      <ExtHeader />
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+export function SidePanelApp() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <MemoryRouter>
+          <Routes>
+            <Route element={<SidePanelLayout />}>
+              <Route index element={<HomePage />} />
+              {routes.map(r => (
+                <Route key={String(r.path)} path={r.path} element={r.element} />
+              ))}
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
