@@ -1394,6 +1394,7 @@ export const zh: TranslationResource = {
     // 侧边栏导航
     sidebar: {
       general: '通用',
+      profile: '个人资料',
       account: '账号绑定',
       page: '个人页面',
       store: '店铺',
@@ -2354,7 +2355,9 @@ export const zh: TranslationResource = {
     shortDescLimit: '160字符以内',
     shortDescPlaceholder: '写点有趣的内容...',
     locationDesc: '您在哪里？',
+    locationDescDetailed: '显示在店铺主页上。业务国家和货币可在通用设置中配置。',
     locationPlaceholder: '输入您的位置',
+    locationPlaceholderExample: '如',
     avatarDesc: '建议 280x280 像素或更大',
     selectPhoto: '选择图片',
     avatarUploaded: '头像上传成功',

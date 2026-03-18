@@ -1487,6 +1487,7 @@ export const en: TranslationResource = {
     // Sidebar navigation
     sidebar: {
       general: 'General',
+      profile: 'Profile',
       account: 'Linked Accounts',
       page: 'Page',
       store: 'Store',
@@ -2514,7 +2515,10 @@ export const en: TranslationResource = {
     shortDescLimit: '160 characters or less',
     shortDescPlaceholder: 'Say something interesting...',
     locationDesc: 'Where are you located?',
+    locationDescDetailed:
+      'Shown on your store page. Business country and currency can be set in General Settings.',
     locationPlaceholder: 'Enter your location',
+    locationPlaceholderExample: 'e.g.',
     avatarDesc: '280px by 280px or larger recommended',
     selectPhoto: 'Select Photo',
     avatarUploaded: 'Avatar uploaded successfully',

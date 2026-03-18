@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
-import { Settings, MapPin, Link2, Ban, Key, Wrench, Scale } from 'lucide-react';
+import { Settings, User, MapPin, Link2, Ban, Key, Wrench, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarItem {
@@ -20,6 +20,12 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.general',
     href: '/settings/general',
     icon: <Settings className="w-4 h-4" />,
+  },
+  {
+    id: 'page-profile',
+    labelKey: 'settings.sidebar.profile',
+    href: '/settings/page-profile',
+    icon: <User className="w-4 h-4" />,
   },
   {
     id: 'account',

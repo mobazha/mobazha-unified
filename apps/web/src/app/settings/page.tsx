@@ -78,7 +78,7 @@ export default function SettingsPage() {
         />
         <SettingsCategory
           icon={<User className="w-5 h-5" />}
-          title={t('settings.sidebar.page')}
+          title={t('settings.sidebar.profile') || t('settings.sidebar.page')}
           description={t('settingsModal.shortDescription')}
           onClick={() => router.push('/settings/page-profile')}
         />
