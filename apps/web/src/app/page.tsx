@@ -89,31 +89,29 @@ export default function HomePage() {
 
 // ===================== SaaS Home Page =====================
 
-const CATEGORY_LINKS = [
-  { key: 'electronics', icon: '💻', href: '/search?category=electronics' },
-  { key: 'clothing', icon: '👕', href: '/search?category=clothing' },
-  { key: 'art', icon: '🎨', href: '/search?category=art' },
-  { key: 'collectibles', icon: '💎', href: '/search?category=collectibles' },
-  { key: 'home', icon: '🏠', href: '/search?category=home' },
-  { key: 'sports', icon: '⚽', href: '/search?category=sports' },
+const TYPE_LINKS = [
+  { key: 'all', icon: '🛒', href: '/search?q=*' },
+  { key: 'physical', icon: '📦', href: '/search?q=*&type=PHYSICAL_GOOD' },
+  { key: 'digital', icon: '💻', href: '/search?q=*&type=DIGITAL_GOOD' },
+  { key: 'service', icon: '🛠️', href: '/search?q=*&type=SERVICE' },
 ];
 
-function CategoryQuickLinks() {
+function TypeQuickLinks() {
   const { t } = useI18n();
   return (
     <section className="py-4 sm:py-6">
       <Container size="xl">
         <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {CATEGORY_LINKS.map(cat => (
+          {TYPE_LINKS.map(item => (
             <Link
-              key={cat.key}
-              href={cat.href}
+              key={item.key}
+              href={item.href}
               className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium text-foreground"
             >
-              <span>{cat.icon}</span>
+              <span>{item.icon}</span>
               <span>
-                {t(`categories.${cat.key}`, {
-                  defaultValue: cat.key.charAt(0).toUpperCase() + cat.key.slice(1),
+                {t(`listing.types.${item.key}`, {
+                  defaultValue: item.key.charAt(0).toUpperCase() + item.key.slice(1),
                 })}
               </span>
             </Link>
@@ -201,8 +199,8 @@ function SaaSHomePage() {
         {/* Why: Hero + Value Props */}
         <Hero />
 
-        {/* Browse: Category Quick Links */}
-        <CategoryQuickLinks />
+        {/* Browse: Product Type Quick Links */}
+        <TypeQuickLinks />
 
         <ValuePropsSection />
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { Package, FileDigit, Briefcase, Coins } from 'lucide-react';
+import { Package, FileDigit, Briefcase } from 'lucide-react';
 import type { ContractType } from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
 
@@ -31,12 +31,6 @@ const productTypeOptions: ProductTypeOption[] = [
     descriptionKey: 'listing.types.serviceDesc',
     icon: <Briefcase className="w-6 h-6" />,
   },
-  {
-    value: 'RWA_TOKEN',
-    labelKey: 'listing.types.rwaToken',
-    descriptionKey: 'listing.types.rwaTokenDesc',
-    icon: <Coins className="w-6 h-6" />,
-  },
 ];
 
 export interface ProductTypeSelectorProps {
@@ -64,7 +58,7 @@ export function ProductTypeSelector({
   );
 
   return (
-    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 ${className}`}>
+    <div className={`grid grid-cols-3 gap-3 ${className}`}>
       {productTypeOptions.map(option => {
         const isSelected = value === option.value;
         return (

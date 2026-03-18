@@ -116,7 +116,7 @@ export function useSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
-  const categoryParam = searchParams.get('category') || 'all';
+  const typeParam = searchParams.get('type') || 'all';
   const { t } = useI18n();
   const { hasVerifiedMod } = useVerifiedModerators();
   const { isInWishlist, toggleItem } = useWishlist();
@@ -125,7 +125,7 @@ export function useSearch() {
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [activeTab, setActiveTab] = useState<TabType>('listings');
   const [sortBy, setSortBy] = useState('relevance');
-  const [category, setCategory] = useState(categoryParam);
+  const [listingType, setListingType] = useState(typeParam);
   const [showFilters, setShowFilters] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
 
@@ -154,15 +154,18 @@ export function useSearch() {
     [t]
   );
 
-  const categoryOptions = useMemo(
+  const typeOptions = useMemo(
     () => [
-      { value: 'all', label: t('marketplace.allCategories') },
-      { value: 'electronics', label: t('homeExtended.electronics') },
-      { value: 'fashion', label: 'Fashion' },
-      { value: 'home', label: 'Home & Garden' },
-      { value: 'art', label: 'Art & Collectibles' },
-      { value: 'services', label: t('homeExtended.services') },
-      { value: 'rwa', label: t('filter.rwaTokens') },
+      { value: 'all', label: t('marketplace.allTypes', { defaultValue: 'All Types' }) },
+      {
+        value: 'PHYSICAL_GOOD',
+        label: t('listing.types.physicalGood', { defaultValue: 'Physical Goods' }),
+      },
+      {
+        value: 'DIGITAL_GOOD',
+        label: t('listing.types.digitalGood', { defaultValue: 'Digital Goods' }),
+      },
+      { value: 'SERVICE', label: t('listing.types.service', { defaultValue: 'Services' }) },
     ],
     [t]
   );
@@ -179,7 +182,7 @@ export function useSearch() {
       try {
         const result = await searchDataService.searchProducts(query, page, 20, {
           sortBy,
-          category: category !== 'all' ? category : undefined,
+          type: listingType !== 'all' ? listingType : undefined,
         });
         const displayProducts = result.products.map(convertToDisplayProduct);
         if (append) {
@@ -200,7 +203,7 @@ export function useSearch() {
         setIsLoadingProducts(false);
       }
     },
-    [sortBy, category]
+    [sortBy, listingType]
   );
 
   const searchUsersApi = useCallback(
@@ -237,7 +240,7 @@ export function useSearch() {
 
   useEffect(() => {
     setSearchQuery(queryParam);
-    setCategory(categoryParam);
+    setListingType(typeParam);
     if (queryParam) {
       setProductsPage(0);
       setUsersPage(0);
@@ -249,7 +252,7 @@ export function useSearch() {
       setProductsTotal(0);
       setUsersTotal(0);
     }
-  }, [queryParam, categoryParam, searchProducts, searchUsersApi]);
+  }, [queryParam, typeParam, searchProducts, searchUsersApi]);
 
   useEffect(() => {
     const trimmed = searchQuery.trim();
@@ -257,20 +260,20 @@ export function useSearch() {
 
     const timer = setTimeout(() => {
       const params = new URLSearchParams({ q: trimmed });
-      if (category && category !== 'all') {
-        params.set('category', category);
+      if (listingType && listingType !== 'all') {
+        params.set('type', listingType);
       }
       router.push(`/search?${params.toString()}`, { scroll: false });
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, queryParam, category, router]);
+  }, [searchQuery, queryParam, listingType, router]);
 
   useEffect(() => {
     if (queryParam) {
       searchProducts(queryParam, 0, false);
     }
-  }, [sortBy, category, queryParam, searchProducts]);
+  }, [sortBy, listingType, queryParam, searchProducts]);
 
   const handleSearch = useCallback(
     (e?: { preventDefault: () => void }) => {
@@ -361,12 +364,12 @@ export function useSearch() {
     // Filter/sort
     sortBy,
     setSortBy,
-    category,
-    setCategory,
+    listingType,
+    setListingType,
     showFilters,
     setShowFilters,
     sortOptions,
-    categoryOptions,
+    typeOptions,
 
     // Products
     products,
