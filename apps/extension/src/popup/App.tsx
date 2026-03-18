@@ -20,24 +20,31 @@ export function PopupApp() {
   const [searched, setSearched] = useState(false);
   const [activeFilter, setActiveFilter] = useState<number | null>(null);
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [signingIn, setSigningIn] = useState(false);
 
   const storedUser = getStoredUser();
 
   const handleSignIn = useCallback(async () => {
+    if (!loginUsername.trim() || !loginPassword) return;
     setSigningIn(true);
     setError(null);
     try {
-      const result = await extensionSignIn();
+      const result = await extensionSignIn(loginUsername.trim(), loginPassword);
       if (result.success) {
         setAuthenticated(true);
-      } else if (result.error && !result.error.includes('cancelled')) {
-        setError(result.error);
+        setShowLoginForm(false);
+        setLoginUsername('');
+        setLoginPassword('');
+      } else {
+        setError(result.error || 'Sign in failed');
       }
     } finally {
       setSigningIn(false);
     }
-  }, []);
+  }, [loginUsername, loginPassword]);
 
   const handleSignOut = useCallback(() => {
     extensionSignOut();
@@ -128,15 +135,44 @@ export function PopupApp() {
             </button>
           </div>
         ) : (
-          <button
-            onClick={handleSignIn}
-            disabled={signingIn}
-            style={{ ...styles.signinBtn, opacity: signingIn ? 0.7 : 1 }}
-          >
-            {signingIn ? 'Signing in…' : 'Sign In'}
+          <button onClick={() => setShowLoginForm(v => !v)} style={styles.signinBtn}>
+            Sign In
           </button>
         )}
       </div>
+
+      {/* Inline Login Form */}
+      {showLoginForm && !authenticated && (
+        <div style={styles.loginForm}>
+          <input
+            type="text"
+            placeholder="Username or email"
+            value={loginUsername}
+            onChange={e => setLoginUsername(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSignIn()}
+            style={styles.loginInput}
+            autoFocus
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={loginPassword}
+            onChange={e => setLoginPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSignIn()}
+            style={styles.loginInput}
+          />
+          <button
+            onClick={handleSignIn}
+            disabled={signingIn || !loginUsername.trim() || !loginPassword}
+            style={{
+              ...styles.loginSubmitBtn,
+              opacity: signingIn || !loginUsername.trim() || !loginPassword ? 0.6 : 1,
+            }}
+          >
+            {signingIn ? 'Signing in…' : 'Sign In'}
+          </button>
+        </div>
+      )}
 
       {/* Search + Filters */}
       <div style={{ padding: '10px 16px 6px' }}>
@@ -308,6 +344,34 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
     cursor: 'pointer',
     flexShrink: 0,
+  },
+  loginForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    padding: '10px 16px 12px',
+    borderBottom: `1px solid ${colors.borderLight}`,
+    background: colors.bgSubtle,
+  },
+  loginInput: {
+    padding: '8px 10px',
+    border: `1px solid ${colors.border}`,
+    borderRadius: radius.sm,
+    fontSize: font.base,
+    fontFamily: font.family,
+    background: colors.bg,
+    color: colors.text,
+    outline: 'none',
+  },
+  loginSubmitBtn: {
+    padding: '8px 14px',
+    background: colors.btnPrimary,
+    color: colors.white,
+    border: 'none',
+    borderRadius: radius.sm,
+    fontSize: font.base,
+    fontWeight: 600,
+    cursor: 'pointer',
   },
   errorBar: {
     margin: '0 16px 8px',

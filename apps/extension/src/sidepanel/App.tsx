@@ -33,19 +33,32 @@ function ExtHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  const [showLogin, setShowLogin] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const storedUser = getStoredUser();
   const isHome = location.pathname === '/';
 
   const handleSignIn = useCallback(async () => {
+    if (!username.trim() || !password) return;
     setSigningIn(true);
+    setLoginError('');
     try {
-      const result = await extensionSignIn();
-      if (result.success) setAuthenticated(true);
+      const result = await extensionSignIn(username.trim(), password);
+      if (result.success) {
+        setAuthenticated(true);
+        setShowLogin(false);
+        setUsername('');
+        setPassword('');
+      } else {
+        setLoginError(result.error || 'Sign in failed');
+      }
     } finally {
       setSigningIn(false);
     }
-  }, []);
+  }, [username, password]);
 
   const handleSignOut = useCallback(() => {
     extensionSignOut();
@@ -53,7 +66,7 @@ function ExtHeader() {
   }, []);
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-background sticky top-0 z-50">
+    <div className="relative flex items-center justify-between px-3 py-2 border-b border-border bg-background sticky top-0 z-50">
       <div className="flex items-center gap-2">
         {!isHome && (
           <button
@@ -114,11 +127,10 @@ function ExtHeader() {
           </div>
         ) : (
           <button
-            onClick={handleSignIn}
-            disabled={signingIn}
-            className="px-3 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            onClick={() => setShowLogin(v => !v)}
+            className="px-3 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90"
           >
-            {signingIn ? 'Signing in…' : 'Sign In'}
+            Sign In
           </button>
         )}
         <button
@@ -140,6 +152,35 @@ function ExtHeader() {
           </svg>
         </button>
       </div>
+      {showLogin && !authenticated && (
+        <div className="absolute top-full left-0 right-0 bg-muted border-b border-border p-3 flex flex-col gap-2 z-50">
+          <input
+            type="text"
+            placeholder="Username or email"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSignIn()}
+            className="px-2.5 py-1.5 text-sm border border-border rounded bg-background text-foreground outline-none"
+            autoFocus
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSignIn()}
+            className="px-2.5 py-1.5 text-sm border border-border rounded bg-background text-foreground outline-none"
+          />
+          {loginError && <p className="text-xs text-destructive">{loginError}</p>}
+          <button
+            onClick={handleSignIn}
+            disabled={signingIn || !username.trim() || !password}
+            className="px-3 py-1.5 text-sm font-medium rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            {signingIn ? 'Signing in…' : 'Sign In'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

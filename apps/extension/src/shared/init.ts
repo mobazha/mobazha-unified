@@ -1,5 +1,5 @@
 import { setApiConfig } from '@mobazha/core/services/api/config';
-import { switchToTestEnv } from '@mobazha/core/config/env';
+import { switchToTestEnv, getEnvConfig, setEnvConfig } from '@mobazha/core/config/env';
 
 export const WEB_APP_ORIGIN = 'https://test-new.mobazha.org';
 
@@ -9,6 +9,18 @@ export const WEB_APP_ORIGIN = 'https://test-new.mobazha.org';
  */
 export function initExtension(): void {
   switchToTestEnv();
+
+  const env = getEnvConfig();
+  setEnvConfig({
+    ...env,
+    casdoor: {
+      ...env.casdoor,
+      serverUrl: 'https://test-new-login.mobazha.org',
+      clientId: 'test-mobazha-client-id',
+      organizationName: 'mobazha',
+      appName: 'app-mobazha',
+    },
+  });
 
   setApiConfig({
     gatewayUrl: `${WEB_APP_ORIGIN}/v1`,
