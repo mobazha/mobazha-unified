@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getStoredUser } from '@mobazha/core/services/auth/token';
 import { searchListings } from '@mobazha/core/services/api/products';
 import type { ProductListItem } from '@mobazha/core/types/product';
@@ -24,8 +24,15 @@ export function PopupApp() {
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const storedUser = getStoredUser();
+
+  useEffect(() => {
+    chrome.storage.local.get('unreadCount', ({ unreadCount: count }) => {
+      setUnreadCount(count ?? 0);
+    });
+  }, []);
 
   const handleSignIn = useCallback(async () => {
     if (!loginUsername.trim() || !loginPassword) return;
@@ -38,6 +45,7 @@ export function PopupApp() {
         setShowLoginForm(false);
         setLoginUsername('');
         setLoginPassword('');
+        chrome.runtime.sendMessage({ action: 'startPolling' });
       } else {
         setError(result.error || 'Sign in failed');
       }
@@ -49,6 +57,8 @@ export function PopupApp() {
   const handleSignOut = useCallback(() => {
     extensionSignOut();
     setAuthenticated(false);
+    setUnreadCount(0);
+    chrome.runtime.sendMessage({ action: 'stopPolling' });
   }, []);
 
   const doSearch = useCallback(async (opts: { query: string; sortBy?: string; type?: string }) => {
@@ -240,8 +250,18 @@ export function PopupApp() {
       <div style={styles.footer}>
         {authenticated && (
           <div style={styles.quickActions}>
-            <button onClick={() => openTab('/orders')} style={styles.quickActionBtn}>
+            <button
+              onClick={() => {
+                chrome.runtime.sendMessage({ action: 'clearUnread' });
+                setUnreadCount(0);
+                openSidePanelAt('/orders');
+              }}
+              style={styles.quickActionBtn}
+            >
               📋 Orders
+              {unreadCount > 0 && (
+                <span style={styles.badge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+              )}
             </button>
             <button onClick={() => openTab('/store')} style={styles.quickActionBtn}>
               🏪 My Store
@@ -445,6 +465,24 @@ const styles: Record<string, CSSProperties> = {
     color: colors.textSecondary,
     cursor: 'pointer',
     textAlign: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: '-4px',
+    right: '-2px',
+    minWidth: '16px',
+    height: '16px',
+    borderRadius: '8px',
+    background: '#ef4444',
+    color: '#fff',
+    fontSize: '10px',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 4px',
+    lineHeight: 1,
   },
   footerActions: { display: 'flex', gap: '6px' },
   footerBtn: {
