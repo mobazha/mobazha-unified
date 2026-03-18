@@ -151,10 +151,20 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
   );
 }
 
+const fallbackValue: ProductModalContextValue = {
+  openProduct: () => {},
+  closeProduct: () => {},
+  isMobile: true,
+  modalState: { isOpen: false, slug: null, peerID: null },
+};
+
 export function useProductModal() {
   const context = useContext(ProductModalContext);
   if (!context) {
-    throw new Error('useProductModal must be used within a ProductModalProvider');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('useProductModal called outside ProductModalProvider — using fallback');
+    }
+    return fallbackValue;
   }
   return context;
 }

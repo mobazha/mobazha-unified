@@ -157,6 +157,10 @@ export type { StandaloneStore } from './standaloneStores';
 export * as webhooksApi from './webhooks';
 export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from './webhooks';
 
+// System API (standalone setup)
+export * as systemApi from './system';
+export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } from './system';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type {

@@ -38,6 +38,9 @@ import {
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
 import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
+import StandaloneSetupWizard from '@/components/admin/StandaloneSetupWizard';
+import { getSetupStatus } from '@mobazha/core/services/api/system';
+import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
 
 const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
 
@@ -187,6 +190,35 @@ export default function AdminDashboardPage() {
   const searchParams = useSearchParams();
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
+  const standaloneMode = useMemo(() => isStandalone(), []);
+
+  // Standalone first-run setup detection
+  const [standaloneSetupNeeded, setStandaloneSetupNeeded] = useState<boolean | null>(
+    standaloneMode ? null : false
+  );
+  const [standaloneCompletedSteps, setStandaloneCompletedSteps] = useState<
+    SetupCompletedSteps | undefined
+  >();
+
+  useEffect(() => {
+    if (!standaloneMode) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const status = await getSetupStatus();
+        if (!cancelled) {
+          setStandaloneSetupNeeded(!status.setupComplete);
+          setStandaloneCompletedSteps(status.completedSteps);
+        }
+      } catch {
+        if (!cancelled) setStandaloneSetupNeeded(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [standaloneMode]);
+
   const isDataLoading = productsLoading || salesLoading;
   const hasProducts = products.length > 0;
   const hasOrders = salesOrders.length > 0;
@@ -194,7 +226,6 @@ export default function AdminDashboardPage() {
   const displayName = profile?.name || t('common.seller');
 
   const cameFromOnboarding = searchParams.get('onboarding') === 'complete';
-  const standaloneMode = useMemo(() => isStandalone(), []);
   const needsStoreSetup = !standaloneMode && !hasStore;
 
   const showOnboarding = useMemo(
@@ -222,6 +253,18 @@ export default function AdminDashboardPage() {
     Array.isArray(receivingAccounts) &&
     receivingAccounts.filter(a => a.isActive !== false).length === 0
   );
+
+  if (standaloneSetupNeeded === null) {
+    return null;
+  }
+
+  if (standaloneSetupNeeded) {
+    return (
+      <div data-testid="admin-dashboard">
+        <StandaloneSetupWizard initialCompletedSteps={standaloneCompletedSteps} />
+      </div>
+    );
+  }
 
   if (showOnboarding) {
     return (

@@ -568,6 +568,63 @@ export function inferCountryFromCurrency(currencyCode: string): string {
 }
 
 /**
+ * 国家 → 默认货币正向映射（与 CURRENCY_PRIMARY_COUNTRY 互补）
+ *
+ * 用于 onboarding 向导：用户选择国家后自动推荐对应货币。
+ * 用户仍可手动覆盖。
+ */
+export const COUNTRY_DEFAULT_CURRENCY: Record<string, string> = {
+  US: 'USD',
+  CN: 'CNY',
+  JP: 'JPY',
+  GB: 'GBP',
+  KR: 'KRW',
+  AU: 'AUD',
+  CA: 'CAD',
+  CH: 'CHF',
+  IN: 'INR',
+  BR: 'BRL',
+  DE: 'EUR',
+  FR: 'EUR',
+  IT: 'EUR',
+  ES: 'EUR',
+  NL: 'EUR',
+  AT: 'EUR',
+  BE: 'EUR',
+  FI: 'EUR',
+  GR: 'EUR',
+  IE: 'EUR',
+  PT: 'EUR',
+  SG: 'SGD',
+  HK: 'HKD',
+  TW: 'TWD',
+  SE: 'SEK',
+  NO: 'NOK',
+  DK: 'DKK',
+  NZ: 'NZD',
+  ZA: 'ZAR',
+  TH: 'THB',
+  TR: 'TRY',
+  PL: 'PLN',
+  PH: 'PHP',
+  MY: 'MYR',
+  ID: 'IDR',
+  VN: 'VND',
+  MX: 'MXN',
+  RU: 'RUB',
+};
+
+/**
+ * 根据国家代码获取默认货币
+ *
+ * @param countryCode ISO 国家代码（如 'US', 'CN'）
+ * @returns 货币代码，未匹配时回退到 'USD'
+ */
+export function getDefaultCurrencyForCountry(countryCode: string): string {
+  return COUNTRY_DEFAULT_CURRENCY[countryCode.toUpperCase()] ?? 'USD';
+}
+
+/**
  * 热门国家/地区配置
  * 常用的跨境电商目的地国家
  */

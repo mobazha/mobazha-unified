@@ -2394,6 +2394,32 @@ export interface TranslationResource {
     browseOurCollection?: string;
     products?: string;
     searchProducts?: string;
+    setup?: {
+      title?: string;
+      subtitle?: string;
+      stepPassword?: string;
+      stepProfile?: string;
+      stepRegion?: string;
+      stepPayments?: string;
+      stepComplete?: string;
+      passwordTitle?: string;
+      passwordDesc?: string;
+      password?: string;
+      confirmPassword?: string;
+      passwordPlaceholder?: string;
+      confirmPasswordPlaceholder?: string;
+      passwordHint?: string;
+      passwordAlreadySet?: string;
+      paymentLater?: string;
+      passwordTooShort?: string;
+      passwordMismatch?: string;
+      passwordFailed?: string;
+      regionTitle?: string;
+      regionDesc?: string;
+      preferencesFailed?: string;
+      completeTitle?: string;
+      completeDesc?: string;
+    };
   };
 
   moderation?: {
@@ -2797,6 +2823,7 @@ export interface TranslationResource {
       changeAvatar?: string;
       clickToUpload?: string;
       nameRequired?: string;
+      avatarUploadFailed?: string;
       saveFailed?: string;
       createProduct?: string;
       featureAi?: string;
@@ -2811,6 +2838,7 @@ export interface TranslationResource {
       back?: string;
       skip?: string;
       skipStep?: string;
+      locationCurrencyTitle?: string;
     };
     settings?: {
       title?: string;

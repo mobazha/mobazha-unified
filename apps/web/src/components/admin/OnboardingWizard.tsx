@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { AvatarCompat } from '@/components/ui/avatar-compat';
+import CountryCurrencySelector from './CountryCurrencySelector';
 
 const STORAGE_KEY = 'sellerOnboardingDismissed';
 
@@ -146,7 +147,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profile, updateProfile } = useUserStore();
+  const { profile, updateProfile, updateSettings } = useUserStore();
 
   const standaloneMode = useMemo(() => isStandalone(), []);
 
@@ -182,6 +183,8 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [country, setCountry] = useState('');
+  const [currency, setCurrency] = useState('USD');
 
   const stepLabels = [
     t('admin.onboarding.step1Label') || 'Store',
@@ -211,8 +214,19 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
 
     setSaving(true);
     try {
-      const saves: Promise<unknown>[] = [];
+      if (avatarFile) {
+        const uploaded = await uploadAvatar(avatarFile);
+        if (!uploaded) {
+          toast({
+            title:
+              t('admin.onboarding.avatarUploadFailed') ||
+              'Avatar upload failed, you can update it later in settings',
+            variant: 'destructive',
+          });
+        }
+      }
 
+      const saves: Promise<unknown>[] = [];
       saves.push(
         updateProfile({
           name: storeName.trim(),
@@ -221,8 +235,13 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
         })
       );
 
-      if (avatarFile) {
-        saves.push(uploadAvatar(avatarFile));
+      if (currency) {
+        saves.push(
+          updateSettings({
+            localCurrency: currency,
+            country: country || undefined,
+          })
+        );
       }
 
       await Promise.all(saves);
@@ -429,6 +448,20 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 {shortDescription.length}/160
               </p>
             </div>
+          </div>
+
+          {/* Location & Currency */}
+          <div className="border-t pt-4 space-y-3">
+            <h3 className="text-sm font-medium text-foreground">
+              {t('admin.onboarding.locationCurrencyTitle') || 'Location & Currency'}
+            </h3>
+            <CountryCurrencySelector
+              country={country}
+              currency={currency}
+              onCountryChange={setCountry}
+              onCurrencyChange={setCurrency}
+              disabled={saving}
+            />
           </div>
 
           <div className="flex items-center justify-between pt-2">

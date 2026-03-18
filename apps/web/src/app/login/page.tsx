@@ -316,7 +316,7 @@ function LoginPageContent() {
 
           {/* Brand Footer */}
           <div className="mt-6 text-center">
-            <p className="text-xs text-white/40">Decentralized Commerce, Powered by Mobazha</p>
+            <p className="text-xs text-white/40">{t('login.brandFooter')}</p>
           </div>
         </div>
       </div>
@@ -432,7 +432,7 @@ function LoginPageContent() {
 
           {/* Brand Footer */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-white/40">Decentralized Commerce, Powered by Mobazha</p>
+            <p className="text-xs text-white/40">{t('login.brandFooter')}</p>
           </div>
         </div>
       </div>
@@ -538,7 +538,7 @@ function LoginPageContent() {
 
         {/* Brand Footer */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-white/40">Decentralized Commerce, Powered by Mobazha</p>
+          <p className="text-xs text-white/40">{t('login.brandFooter')}</p>
         </div>
       </div>
     </div>
