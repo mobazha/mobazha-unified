@@ -11,6 +11,24 @@ export default defineConfig({
     webExtension({
       manifest: 'manifest.json',
       watchFilePaths: ['src/**/*'],
+      htmlViteConfig: {
+        build: {
+          rollupOptions: {
+            output: {
+              manualChunks(id: string) {
+                if (id.includes('node_modules')) {
+                  if (id.includes('@tanstack/react-query')) return 'vendor-query';
+                  if (id.includes('react-router')) return 'vendor-router';
+                  if (id.includes('lucide-react')) return 'vendor-icons';
+                  if (id.includes('react-dom') || id.includes('react/')) return 'vendor-react';
+                  return 'vendor';
+                }
+                if (id.includes('packages/core/')) return 'core';
+              },
+            },
+          },
+        },
+      },
     }),
   ],
   resolve: {
