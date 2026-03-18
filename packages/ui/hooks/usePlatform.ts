@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useBreakpoint, BREAKPOINTS } from './useBreakpoint';
 import type { Breakpoint } from './useBreakpoint';
 
-export type PlatformType = 'web' | 'telegram' | 'discord' | 'farcaster';
+export type PlatformType = 'web' | 'telegram' | 'discord' | 'farcaster' | 'extension';
 
 export interface PlatformInfo {
   platform: PlatformType;
@@ -19,6 +19,7 @@ export interface PlatformInfo {
   isTGMiniApp: boolean;
   isDiscordActivity: boolean;
   isFarcasterFrame: boolean;
+  isChromeExtension: boolean;
   isEmbeddedApp: boolean;
   isTouchDevice: boolean;
 
@@ -35,6 +36,13 @@ function detectPlatform(): PlatformType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const win = window as any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (
+    typeof globalThis !== 'undefined' &&
+    'chrome' in globalThis &&
+    (globalThis as any).chrome?.runtime?.id
+  )
+    return 'extension';
   if (win.Telegram?.WebApp?.initData) return 'telegram';
   if (win.__DISCORD_EMBEDDED__ || new URLSearchParams(window.location.search).has('frame_id'))
     return 'discord';
@@ -69,7 +77,8 @@ export function usePlatform(): PlatformInfo {
   const isTGMiniApp = platform === 'telegram';
   const isDiscordActivity = platform === 'discord';
   const isFarcasterFrame = platform === 'farcaster';
-  const isEmbeddedApp = isTGMiniApp || isDiscordActivity || isFarcasterFrame;
+  const isChromeExtension = platform === 'extension';
+  const isEmbeddedApp = isTGMiniApp || isDiscordActivity || isFarcasterFrame || isChromeExtension;
 
   const shouldUseMobileView = isEmbeddedApp || bp.isMobile;
 
@@ -85,6 +94,7 @@ export function usePlatform(): PlatformInfo {
       isTGMiniApp,
       isDiscordActivity,
       isFarcasterFrame,
+      isChromeExtension,
       isEmbeddedApp,
       isTouchDevice,
       shouldUseMobileView,
@@ -100,6 +110,7 @@ export function usePlatform(): PlatformInfo {
       isTGMiniApp,
       isDiscordActivity,
       isFarcasterFrame,
+      isChromeExtension,
       isEmbeddedApp,
       isTouchDevice,
       shouldUseMobileView,
