@@ -218,6 +218,7 @@ export const NODE_API = {
   ANALYTICS_STATS: '/analytics/stats',
 
   // --- System ---
+  SYSTEM_SETUP: '/system/setup',
   SYSTEM_CLAIM_STORE: '/system/claim-store',
 
   // --- Misc (deprecated — no backend routes exist) ---

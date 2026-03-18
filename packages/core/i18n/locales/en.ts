@@ -209,6 +209,7 @@ export const en: TranslationResource = {
     buyerLogin: 'Buyer',
     loginWithMobazha: 'Login with Mobazha Account',
     buyerLoginHint: 'Login to place orders and chat with the seller',
+    brandFooter: 'Decentralized Commerce, Powered by Mobazha',
     // Session Expired
     sessionExpiredTitle: 'Session Expired',
     sessionExpiredMessage:
@@ -3987,6 +3988,33 @@ export const en: TranslationResource = {
     browseOurCollection: 'Browse our collection',
     products: 'Products',
     searchProducts: 'Search products...',
+    setup: {
+      title: 'Configure Your Store',
+      subtitle: 'Complete the initial setup to get started',
+      stepPassword: 'Password',
+      stepProfile: 'Profile',
+      stepRegion: 'Region',
+      stepPayments: 'Payments',
+      stepComplete: 'Done',
+      passwordTitle: 'Set Admin Password',
+      passwordDesc: 'This password protects your store admin panel',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      passwordPlaceholder: 'At least 8 characters',
+      confirmPasswordPlaceholder: 'Re-enter password',
+      passwordHint: 'Username is "admin". You can use this to log in after setup.',
+      passwordAlreadySet: 'Password has been set. Click Next to continue.',
+      paymentLater:
+        'You can set this up anytime from Settings → Payments after completing the wizard.',
+      passwordTooShort: 'Password must be at least 8 characters',
+      passwordMismatch: 'Passwords do not match',
+      passwordFailed: 'Failed to set password',
+      regionTitle: 'Location & Currency',
+      regionDesc: 'Set your country and preferred display currency',
+      preferencesFailed: 'Failed to save preferences',
+      completeTitle: 'Your Store is Ready!',
+      completeDesc: 'Setup is complete. You can now manage your store from the admin panel.',
+    },
   },
 
   ai: {
@@ -4413,6 +4441,7 @@ export const en: TranslationResource = {
       changeAvatar: 'Change avatar',
       clickToUpload: 'Click to upload avatar',
       nameRequired: 'Store name is required',
+      avatarUploadFailed: 'Avatar upload failed — you can update it later in settings',
       saveFailed: 'Failed to save store profile',
       createProduct: 'Create Product',
       featureAi: 'AI-powered title & description',
@@ -4429,6 +4458,7 @@ export const en: TranslationResource = {
       back: 'Back',
       skip: 'Skip setup',
       skipStep: 'Skip this step',
+      locationCurrencyTitle: 'Location & Currency',
     },
     settings: {
       title: 'Settings',
