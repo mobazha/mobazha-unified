@@ -90,8 +90,17 @@ export function PopupApp() {
 
   const openTab = (path = '') => chrome.tabs.create({ url: `${WEB_APP_ORIGIN}${path}` });
 
-  const openSidePanelAt = (route = '/') => {
-    chrome.runtime.sendMessage({ action: 'openSidePanel', route });
+  const openSidePanelAt = async (route = '/') => {
+    await chrome.storage.session.set({ pendingRoute: route });
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id != null) {
+        await chrome.sidePanel.open({ tabId: tab.id });
+      }
+    } catch {
+      // Side Panel API unavailable — fall back to full site
+      openTab(route === '/' ? '' : route);
+    }
     window.close();
   };
 
