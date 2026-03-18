@@ -117,13 +117,14 @@ export function useSearch() {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const typeParam = searchParams.get('type') || 'all';
+  const tabParam = (searchParams.get('tab') as TabType) || 'listings';
   const { t } = useI18n();
   const { hasVerifiedMod } = useVerifiedModerators();
   const { isInWishlist, toggleItem } = useWishlist();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState(queryParam);
-  const [activeTab, setActiveTab] = useState<TabType>('listings');
+  const [activeTab, setActiveTab] = useState<TabType>(tabParam);
   const [sortBy, setSortBy] = useState('relevance');
   const [listingType, setListingType] = useState(typeParam);
   const [showFilters, setShowFilters] = useState(false);

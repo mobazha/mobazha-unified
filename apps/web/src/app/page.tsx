@@ -89,31 +89,53 @@ export default function HomePage() {
 
 // ===================== SaaS Home Page =====================
 
-const TYPE_LINKS = [
-  { key: 'all', icon: '🛒', href: '/search?q=*' },
-  { key: 'physical', icon: '📦', href: '/search?q=*&type=PHYSICAL_GOOD' },
-  { key: 'digital', icon: '💻', href: '/search?q=*&type=DIGITAL_GOOD' },
-  { key: 'service', icon: '🛠️', href: '/search?q=*&type=SERVICE' },
+const BROWSE_LINKS = [
+  {
+    labelKey: 'saasHome.browse.stores',
+    defaultLabel: 'Browse Stores',
+    icon: '🏪',
+    href: '/search?q=*&tab=users',
+  },
+  {
+    labelKey: 'saasHome.browse.trending',
+    defaultLabel: 'Trending',
+    icon: '🔥',
+    href: '/search?q=*&sortBy=online-desc',
+  },
+  {
+    labelKey: 'saasHome.browse.justListed',
+    defaultLabel: 'Just Listed',
+    icon: '🆕',
+    href: '/search?q=*&sortBy=newest',
+  },
+  {
+    labelKey: 'saasHome.browse.digital',
+    defaultLabel: 'Digital Goods',
+    icon: '💻',
+    href: '/search?q=*&type=DIGITAL_GOOD',
+  },
+  {
+    labelKey: 'saasHome.browse.services',
+    defaultLabel: 'Services',
+    icon: '🛠️',
+    href: '/search?q=*&type=SERVICE',
+  },
 ];
 
-function TypeQuickLinks() {
+function BrowseQuickLinks() {
   const { t } = useI18n();
   return (
     <section className="py-4 sm:py-6">
       <Container size="xl">
         <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {TYPE_LINKS.map(item => (
+          {BROWSE_LINKS.map(item => (
             <Link
-              key={item.key}
+              key={item.labelKey}
               href={item.href}
               className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium text-foreground"
             >
               <span>{item.icon}</span>
-              <span>
-                {t(`listing.types.${item.key}`, {
-                  defaultValue: item.key.charAt(0).toUpperCase() + item.key.slice(1),
-                })}
-              </span>
+              <span>{t(item.labelKey, { defaultValue: item.defaultLabel })}</span>
             </Link>
           ))}
         </div>
@@ -199,8 +221,8 @@ function SaaSHomePage() {
         {/* Why: Hero + Value Props */}
         <Hero />
 
-        {/* Browse: Product Type Quick Links */}
-        <TypeQuickLinks />
+        {/* Browse: Scene-based Quick Links */}
+        <BrowseQuickLinks />
 
         <ValuePropsSection />
 
