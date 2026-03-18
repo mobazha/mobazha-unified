@@ -12,6 +12,7 @@ import {
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
+import { createProfile as apiCreateProfile } from '@mobazha/core/services/api/profile';
 import {
   Store,
   ShoppingBag,
@@ -214,6 +215,17 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
 
     setSaving(true);
     try {
+      const profileData = {
+        name: storeName.trim(),
+        shortDescription: shortDescription.trim(),
+        vendor: true,
+      };
+
+      const created = await apiCreateProfile(profileData);
+      if (!created.success) {
+        await updateProfile(profileData);
+      }
+
       if (avatarFile) {
         const uploaded = await uploadAvatar(avatarFile);
         if (!uploaded) {
@@ -226,25 +238,13 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
         }
       }
 
-      const saves: Promise<unknown>[] = [];
-      saves.push(
-        updateProfile({
-          name: storeName.trim(),
-          shortDescription: shortDescription.trim(),
-          vendor: true,
-        })
-      );
-
       if (currency) {
-        saves.push(
-          updateSettings({
-            localCurrency: currency,
-            country: country || undefined,
-          })
-        );
+        await updateSettings({
+          localCurrency: currency,
+          country: country || undefined,
+        });
       }
 
-      await Promise.all(saves);
       setStep(2);
     } catch {
       toast({

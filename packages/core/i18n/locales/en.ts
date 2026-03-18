@@ -4004,6 +4004,13 @@ export const en: TranslationResource = {
       confirmPasswordPlaceholder: 'Re-enter password',
       passwordHint: 'Username is "admin". You can use this to log in after setup.',
       passwordAlreadySet: 'Password has been set. Click Next to continue.',
+      loginTitle: 'Sign In',
+      loginDesc: 'Enter your admin password to continue setup',
+      loginPlaceholder: 'Enter admin password',
+      loginHint: 'Username is "admin". Use the password you set during initial setup.',
+      invalidPassword: 'Invalid password',
+      loginFailed: 'Failed to connect to server',
+      signIn: 'Sign In',
       paymentLater:
         'You can set this up anytime from Settings → Payments after completing the wizard.',
       passwordTooShort: 'Password must be at least 8 characters',
