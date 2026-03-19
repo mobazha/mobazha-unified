@@ -13,6 +13,9 @@ const EXPLORER_MAP: Record<string, string> = {
   TBNB: 'https://testnet.bscscan.com/tx/',
   ETH: 'https://etherscan.io/tx/',
   MATIC: 'https://polygonscan.com/tx/',
+  TRX: 'https://tronscan.org/#/transaction/',
+  TRON: 'https://tronscan.org/#/transaction/',
+  TTRX: 'https://shasta.tronscan.org/#/transaction/',
 };
 const DEFAULT_EXPLORER = 'https://testnet.bscscan.com/tx/';
 

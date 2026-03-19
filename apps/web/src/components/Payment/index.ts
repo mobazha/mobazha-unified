@@ -22,3 +22,5 @@ export type { FiatPaymentSuccessResult } from './StripePaymentForm';
 export { PayPalPaymentForm } from './PayPalPaymentForm';
 export { FiatPaymentSection } from './FiatPaymentSection';
 export { PaymentMethodBadges } from './PaymentMethodBadges';
+export { TronGasHint } from './TronGasHint';
+export { ConfirmationProgress } from './ConfirmationProgress';

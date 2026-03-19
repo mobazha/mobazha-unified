@@ -133,6 +133,18 @@ export const TOKENS: TokenConfig[] = [
     decimals: 6,
     disabled: false,
   },
+
+  // TRON代币
+  { id: 'TRX', token: 'TRX', chain: 'TRON', isNative: true, decimals: 6, disabled: false },
+  {
+    id: 'TRONUSDT',
+    token: 'USDT',
+    chain: 'TRON',
+    type: 'TRC20',
+    isNative: false,
+    decimals: 6,
+    disabled: false,
+  },
 ];
 
 // 链配置
@@ -209,6 +221,16 @@ export const CHAINS: ChainConfig[] = [
   //   addressPrefix: '0x',
   //   comingSoon: false,
   // },
+  {
+    id: 'TRON',
+    name: 'TRON',
+    iconCode: 'TRON',
+    color: '#eb0029',
+    type: 'blockchain',
+    addressPrefix: 'T',
+    isExternalWallet: true,
+    comingSoon: false,
+  },
 ];
 
 // 法币支付方式 — UI metadata only; availability determined by backend
