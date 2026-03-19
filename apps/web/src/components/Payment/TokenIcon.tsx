@@ -34,6 +34,10 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   MATICUSDT: 'usdt',
   MATICUSDC: 'usdc',
   POLYGON: 'matic',
+  // TRON & TRC20
+  TRON: 'trx',
+  TRX: 'trx',
+  TRONUSDT: 'usdt',
   // Conflux
   CFX: 'cfx',
   // MBZ
@@ -81,6 +85,8 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   cfx: 'CFX',
   base: 'BASE',
   bsc: 'BSC',
+  trx: 'TRX',
+  tron: 'TRX',
   mbz: 'MBZ',
 };
 

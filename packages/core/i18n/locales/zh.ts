@@ -519,6 +519,13 @@ export const zh: TranslationResource = {
     nextStepsSeller: '卖家将审核并确认您的订单。处理完成后您会收到通知。',
     nextStepsEscrow: '您的付款受买家保障保护，直到您确认收货。',
     nextStepsTrack: '您可随时在订单详情页查看订单状态。',
+    // TRON
+    tron: {
+      insufficientGas: 'TRX 余额不足以支付网络费用。需要 {{required}}，当前余额 {{balance}}。',
+      gasExplanation: 'TRON 交易需要 TRX 支付能量和带宽费用。请在继续操作前充值 TRX。',
+      walletNotDetected: '未检测到 TronLink 钱包，请安装 TronLink 浏览器扩展。',
+      connectionDenied: 'TronLink 未授权连接。',
+    },
     discount: {
       title: '折扣码',
       label: '折扣',

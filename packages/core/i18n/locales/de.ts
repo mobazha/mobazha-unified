@@ -446,6 +446,15 @@ export const de: TranslationResource = {
     nextStepsEscrow:
       'Ihre Zahlung ist durch Käuferschutz geschützt, bis Sie die Lieferung bestätigen.',
     nextStepsTrack: 'Verfolgen Sie Ihren Bestellstatus jederzeit auf der Bestelldetailseite.',
+    tron: {
+      insufficientGas:
+        'Unzureichend TRX für Netzwerkgebühren. Sie benötigen {{required}}, haben aber nur {{balance}}.',
+      gasExplanation:
+        'TRON-Transaktionen erfordern TRX zur Deckung der Energie- und Bandbreitenkosten. Bitte laden Sie Ihr TRX-Guthaben auf, bevor Sie fortfahren.',
+      walletNotDetected:
+        'TronLink-Wallet nicht erkannt. Bitte installieren Sie die TronLink-Browsererweiterung.',
+      connectionDenied: 'TronLink hat die Verbindung nicht autorisiert.',
+    },
     discount: {
       title: 'Rabattcode',
       label: 'Rabatt',

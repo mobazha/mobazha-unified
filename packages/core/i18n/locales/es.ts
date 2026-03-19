@@ -451,6 +451,15 @@ export const es: TranslationResource = {
       'Tu pago está protegido por Protección al comprador hasta que confirmes la entrega.',
     nextStepsTrack:
       'Sigue el estado de tu pedido en cualquier momento desde la página de detalles.',
+    tron: {
+      insufficientGas:
+        'TRX insuficiente para tarifas de red. Necesitas {{required}} pero solo tienes {{balance}}.',
+      gasExplanation:
+        'Las transacciones TRON requieren TRX para cubrir costos de energía y ancho de banda. Recarga tu saldo de TRX antes de continuar.',
+      walletNotDetected:
+        'No se detectó la billetera TronLink. Instala la extensión del navegador TronLink.',
+      connectionDenied: 'TronLink no autorizó la conexión.',
+    },
     discount: {
       title: 'Código de descuento',
       label: 'Descuento',

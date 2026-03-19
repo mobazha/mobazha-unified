@@ -26,7 +26,7 @@ import type { ReceivingAccount, ReceivingAccountInput } from '@mobazha/core/serv
 
 // ── Chain metadata ──────────────────────────────────────────────
 
-type ChainFamily = 'evm' | 'solana' | 'utxo';
+type ChainFamily = 'evm' | 'solana' | 'utxo' | 'tron';
 
 interface ChainMeta {
   id: string;
@@ -109,6 +109,16 @@ const CHAINS: ChainMeta[] = [
     family: 'utxo',
     tokens: [{ symbol: 'NATIVE', label: 'ZEC' }],
   },
+  {
+    id: 'TRON',
+    name: 'TRON',
+    color: '#EB0029',
+    family: 'tron',
+    tokens: [
+      { symbol: 'NATIVE', label: 'TRX' },
+      { symbol: 'USDT', label: 'USDT' },
+    ],
+  },
 ];
 
 function chainMeta(chainType: string): ChainMeta | undefined {
@@ -127,6 +137,7 @@ const BTC_ADDR_RE =
 const BCH_ADDR_RE = /^([13][1-9A-HJ-NP-Za-km-z]{25,34}|bitcoincash:[0-9a-z]{42,}|[0-9a-z]{42,})$/;
 const LTC_ADDR_RE = /^([LM3][1-9A-HJ-NP-Za-km-z]{25,34}|ltc1[0-9a-z]{39,59})$/;
 const ZEC_ADDR_RE = /^(t1[1-9A-HJ-NP-Za-km-z]{33}|t3[1-9A-HJ-NP-Za-km-z]{33})$/;
+const TRON_ADDR_RE = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
 
 function validateAddress(chain: ChainMeta | undefined, addr: string): string | null {
   if (!chain || !addr.trim()) return null;
@@ -147,6 +158,8 @@ function validateAddress(chain: ChainMeta | undefined, addr: string): string | n
       if (!re) return null;
       return re.test(a) ? null : 'receivingAccounts.invalidUtxoAddress';
     }
+    case 'tron':
+      return TRON_ADDR_RE.test(a) ? null : 'receivingAccounts.invalidTronAddress';
     default:
       return null;
   }
@@ -163,6 +176,8 @@ function addressPlaceholder(chain: ChainMeta | undefined): string {
       return 'LQTpS3... / ltc1q...';
     case 'ZEC':
       return 't1UYsZ...';
+    case 'TRON':
+      return 'TJYs7M...';
     default:
       return chain.family === 'evm' ? '0x...' : '';
   }

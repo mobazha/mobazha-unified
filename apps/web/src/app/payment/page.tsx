@@ -9,6 +9,7 @@ import {
   CheckoutBottomBar,
   TransactionOverlay,
   FiatPaymentSection,
+  TronGasHint,
 } from '@/components/Payment';
 import type { PaymentStep, FiatPaymentSuccessResult } from '@/components/Payment';
 import { OrderSummaryCard } from '@/components/Order';
@@ -21,6 +22,7 @@ import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { usePaymentSelector } from '@/hooks';
 import {
   useWallet,
+  useTronWallet,
   useCurrency,
   useRateFreshness,
   useI18n,
@@ -28,6 +30,8 @@ import {
   profileApi,
   getImageUrl,
   getTransactionService,
+  getPaymentExecutor,
+  resolveChainCategory,
   convertCurrency,
   toMinimalUnit,
   fetchExchangeRates,
@@ -112,7 +116,8 @@ export default function PaymentPage() {
   const { secondsAgo } = useRateFreshness('payment');
   const { t } = useI18n();
   const { toast } = useToast();
-  const { isConnected, isConnecting, connect, getSigner } = useWallet();
+  const evmWallet = useWallet();
+  const tronWallet = useTronWallet();
 
   // 从 URL 获取参数
   const orderID = searchParams.get('orderID');
@@ -154,6 +159,15 @@ export default function PaymentPage() {
     restoreFromSession,
     setVendorPeerID,
   } = usePaymentSelector();
+
+  // TRON 链检测与统一钱包状态
+  const isTronPayment = selectedTokenId ? resolveChainCategory(selectedTokenId) === 'tron' : false;
+  const isConnected = isTronPayment ? tronWallet.isConnected : evmWallet.isConnected;
+  const isConnecting = isTronPayment ? tronWallet.isConnecting : evmWallet.isConnecting;
+  const connect = isTronPayment
+    ? () => tronWallet.connect().then(() => undefined)
+    : evmWallet.connect;
+  const getSigner = evmWallet.getSigner;
 
   // beforeunload: warn user when payment is in progress
   useEffect(() => {
@@ -572,11 +586,15 @@ export default function PaymentPage() {
       }
 
       // 2. 获取钱包地址
-      const signer = await getSigner();
-      const payerAddress = signer ? await signer.getAddress() : undefined;
+      let payerAddress: string | undefined;
+      if (isTronPayment) {
+        payerAddress = tronWallet.address ?? undefined;
+      } else {
+        const signer = await getSigner();
+        payerAddress = signer ? await signer.getAddress() : undefined;
+      }
 
       // 3. 获取支付指令（传入金额、付款地址和仲裁人）
-      // 如果启用了支付保护且选择了仲裁人，传入仲裁人 peerID
       const moderatorPeerID =
         paymentProtectionEnabled && paymentModerator?.peerID ? paymentModerator.peerID : undefined;
 
@@ -609,33 +627,56 @@ export default function PaymentPage() {
         throw new Error(t('payment.noPaymentAddress'));
       }
 
-      // 6. 验证 signer（已在前面获取）
-      if (!signer) {
-        throw new Error(t('payment.signerNotAvailable'));
+      let txResult;
+
+      if (isTronPayment) {
+        // ── TRON 支付路径 ──
+        const tronWeb = tronWallet.getTronWeb();
+        if (!tronWeb) {
+          throw new Error(t('payment.signerNotAvailable'));
+        }
+
+        const executor = getPaymentExecutor('TRON', selectedTokenId);
+        if (!executor) {
+          throw new Error(t('payment.providerNotAvailable'));
+        }
+
+        const initOk = await executor.initialize(tronWeb);
+        if (!initOk) {
+          throw new Error(t('payment.providerNotAvailable'));
+        }
+
+        const { paymentData } = response;
+        txResult = await executor.executeContractPayment(response.instructions, {
+          tokenAddress: paymentData?.paymentTokenAddress,
+          contractAddress: paymentData?.contractAddress || to,
+          amount: (paymentAmountForApi ?? 0).toString(),
+        });
+      } else {
+        // ── EVM 支付路径（原逻辑）──
+        const signer = await getSigner();
+        if (!signer) {
+          throw new Error(t('payment.signerNotAvailable'));
+        }
+
+        const transactionService = getTransactionService();
+        const initResult = await transactionService.initializeWithSigner(signer);
+        if (!initResult) {
+          throw new Error(t('payment.providerNotAvailable'));
+        }
+
+        const { paymentData } = response;
+        const paymentTokenAddress = paymentData?.paymentTokenAddress;
+        const contractAddress = paymentData?.contractAddress || to;
+        const paymentAmount = paymentAmountForApi;
+
+        txResult = await transactionService.executeContractPayment(
+          paymentTokenAddress,
+          contractAddress,
+          paymentAmount?.toString() || '0',
+          { to, data, value: value || '0' }
+        );
       }
-
-      // 7. 初始化交易服务
-      const transactionService = getTransactionService();
-      const initResult = await transactionService.initializeWithSigner(signer);
-      if (!initResult) {
-        throw new Error(t('payment.providerNotAvailable'));
-      }
-
-      // 8. 使用交易服务执行支付（包含 ERC20 授权和交易执行）
-      const { paymentData } = response;
-      const paymentTokenAddress = paymentData?.paymentTokenAddress;
-      const contractAddress = paymentData?.contractAddress || to;
-
-      // 使用已计算的支付金额（paymentAmountForApi）
-      const paymentAmount = paymentAmountForApi;
-
-      // 执行合约支付（自动处理 ERC20 授权）
-      const txResult = await transactionService.executeContractPayment(
-        paymentTokenAddress,
-        contractAddress,
-        paymentAmount?.toString() || '0',
-        { to, data, value: value || '0' }
-      );
 
       if (!txResult.success) {
         throw new Error(txResult.error || t('payment.transactionFailed'));
@@ -683,6 +724,8 @@ export default function PaymentPage() {
     paymentProtectionEnabled,
     paymentModerator,
     isConnected,
+    isTronPayment,
+    tronWallet,
     getSigner,
     router,
     t,
@@ -956,6 +999,13 @@ export default function PaymentPage() {
                           )}
                         </div>
                       </HStack>
+
+                      {/* TRON Gas Hint */}
+                      {isTronPayment && (
+                        <div className="mb-3">
+                          <TronGasHint trxBalance={tronWallet.trxBalance} />
+                        </div>
+                      )}
 
                       {/* Pay Button - Desktop (crypto only) */}
                       {selectedFiatProvider ? (

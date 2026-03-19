@@ -87,6 +87,10 @@ export const TOKENS: TokenConfig[] = [
   { id: 'MATIC', token: 'MATIC', chain: 'MATIC', isNative: true, decimals: 18 },
   { id: 'MATICUSDT', token: 'USDT', chain: 'MATIC', type: 'Polygon', isNative: false, decimals: 6 },
   { id: 'MATICUSDC', token: 'USDC', chain: 'MATIC', type: 'Polygon', isNative: false, decimals: 6 },
+
+  // TRON 代币
+  { id: 'TRX', token: 'TRX', chain: 'TRON', isNative: true, decimals: 6 },
+  { id: 'TRONUSDT', token: 'USDT', chain: 'TRON', type: 'TRC20', isNative: false, decimals: 6 },
 ];
 
 /**
@@ -158,6 +162,15 @@ export const CHAINS: PaymentChainConfig[] = [
     type: 'blockchain',
     comingSoon: true,
   },
+  {
+    id: 'TRON',
+    name: 'TRON',
+    iconCode: 'TRON',
+    color: '#eb0029',
+    addressPrefix: 'T',
+    type: 'blockchain',
+    isExternalWallet: true,
+  },
 ];
 
 // ============ 辅助函数 ============
@@ -207,6 +220,9 @@ export function getTokenDecimals(tokenId: string): number {
   }
   if (upperTokenId === 'SOL') {
     return 9;
+  }
+  if (upperTokenId === 'TRX') {
+    return 6;
   }
 
   // 默认 8 位小数（BTC 标准）
@@ -323,6 +339,19 @@ export function isSolanaChain(coinOrChain?: string): boolean {
 }
 
 /**
+ * 判断是否为 TRON 链
+ *
+ * @param coinOrChain 代币 ID 或链 ID
+ * @returns 是否为 TRON 链
+ */
+export function isTRONChain(coinOrChain?: string): boolean {
+  if (!coinOrChain) return false;
+
+  const chain = getChainFromCoin(coinOrChain);
+  return chain === 'TRON';
+}
+
+/**
  * 判断订单操作是否需要前端钱包签名
  * - UTXO 链：不需要（后端处理）
  * - EVM/Solana 链：需要
@@ -338,8 +367,8 @@ export function requiresWalletSignature(coinOrChain?: string): boolean {
     return false;
   }
 
-  // EVM 和 Solana 链需要签名
-  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain);
+  // EVM, Solana, TRON 链需要签名
+  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain) || isTRONChain(coinOrChain);
 }
 
 /**

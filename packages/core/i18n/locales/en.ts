@@ -525,6 +525,16 @@ export const en: TranslationResource = {
       "The seller will review and confirm your order. You'll receive a notification once it's processed.",
     nextStepsEscrow: 'Your payment is protected by buyer protection until you confirm delivery.',
     nextStepsTrack: 'Track your order status anytime from your order details page.',
+    // TRON
+    tron: {
+      insufficientGas:
+        'Insufficient TRX for network fees. You need {{required}} but only have {{balance}}.',
+      gasExplanation:
+        'TRON transactions require TRX to cover energy and bandwidth costs. Please top up your TRX balance before proceeding.',
+      walletNotDetected:
+        'TronLink wallet not detected. Please install the TronLink browser extension.',
+      connectionDenied: 'TronLink did not authorize the connection.',
+    },
     // Discount
     discount: {
       title: 'Discount Code',

@@ -11,6 +11,7 @@
 import type { ChainPaymentExecutor, ChainCategory } from './types';
 import { EVMPaymentExecutor } from './evmExecutor';
 import { SolanaPaymentExecutor } from './solanaExecutor';
+import { TronPaymentExecutor } from './tronExecutor';
 
 // ── Registry ────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export function getExecutorRegistry(): ExecutorRegistry {
     registryInstance = new ExecutorRegistry();
     registryInstance.register('evm', new EVMPaymentExecutor());
     registryInstance.register('solana', new SolanaPaymentExecutor());
+    registryInstance.register('tron', new TronPaymentExecutor());
   }
   return registryInstance;
 }
@@ -82,6 +84,9 @@ const EVM_COINS = new Set([
 /** Solana 链 coin 标识符 */
 const SOLANA_COINS = new Set(['SOL']);
 
+/** TRON 链 coin 标识符（含 TRC20 tokens） */
+const TRON_COINS = new Set(['TRX', 'TRONUSDT']);
+
 /**
  * 从 coin 标识符解析链分类
  * 用于在 paymentChain 不可用时，通过 paymentCoin 推断链类型
@@ -91,6 +96,7 @@ export function resolveChainCategory(coin: string): ChainCategory | null {
   if (UTXO_COINS.has(upper)) return 'utxo';
   if (EVM_COINS.has(upper)) return 'evm';
   if (SOLANA_COINS.has(upper)) return 'solana';
+  if (TRON_COINS.has(upper)) return 'tron';
   return null;
 }
 
@@ -109,6 +115,11 @@ export function resolveChainCategoryFromPaymentChain(paymentChain: string): Chai
   // Solana
   if (upper === 'SOLANA') {
     return 'solana';
+  }
+
+  // TRON
+  if (upper === 'TRON') {
+    return 'tron';
   }
 
   // UTXO chains

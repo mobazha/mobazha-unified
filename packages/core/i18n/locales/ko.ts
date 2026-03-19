@@ -441,6 +441,15 @@ export const ko: TranslationResource = {
     nextStepsSeller: '판매자가 주문을 검토하고 확인합니다. 처리되면 알림을 받습니다.',
     nextStepsEscrow: '수령 확인 전까지 구매자 보호로 결제가 보호됩니다.',
     nextStepsTrack: '주문 상세 페이지에서 언제든 주문 상태를 확인할 수 있습니다.',
+    tron: {
+      insufficientGas:
+        '네트워크 수수료를 위한 TRX가 부족합니다. {{required}}가 필요하지만 잔액은 {{balance}}입니다.',
+      gasExplanation:
+        'TRON 트랜잭션에는 에너지와 대역폭 비용으로 TRX가 필요합니다. 진행하기 전에 TRX를 충전하세요.',
+      walletNotDetected:
+        'TronLink 지갑이 감지되지 않았습니다. TronLink 브라우저 확장 프로그램을 설치하세요.',
+      connectionDenied: 'TronLink가 연결을 승인하지 않았습니다.',
+    },
     discount: {
       title: '할인 코드',
       label: '할인',

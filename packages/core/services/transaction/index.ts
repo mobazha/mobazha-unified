@@ -7,4 +7,5 @@ export * from './types';
 export * from './transactionService';
 export * from './evmExecutor';
 export * from './solanaExecutor';
+export * from './tronExecutor';
 export * from './executorRegistry';

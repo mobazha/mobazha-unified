@@ -19,7 +19,7 @@ export type NetworkType =
   | 'solana-devnet';
 
 /** 链的支付分类（与后端 PaymentModel 对齐） */
-export type ChainCategory = 'evm' | 'solana' | 'utxo';
+export type ChainCategory = 'evm' | 'solana' | 'utxo' | 'tron';
 
 // 交易数据（EVM 格式）
 export interface TransactionData {

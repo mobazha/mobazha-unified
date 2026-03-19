@@ -442,6 +442,15 @@ export const ja: TranslationResource = {
     nextStepsSeller: '販売者が注文を確認します。処理が完了すると通知が届きます。',
     nextStepsEscrow: '受取確認まで支払いはバイヤー保護で保護されています。',
     nextStepsTrack: '注文詳細ページでいつでも注文状況を確認できます。',
+    tron: {
+      insufficientGas:
+        'ネットワーク手数料のTRXが不足しています。{{required}}が必要ですが、残高は{{balance}}です。',
+      gasExplanation:
+        'TRONトランザクションにはエネルギーと帯域幅のためにTRXが必要です。続行する前にTRXをチャージしてください。',
+      walletNotDetected:
+        'TronLinkウォレットが検出されませんでした。TronLinkブラウザ拡張機能をインストールしてください。',
+      connectionDenied: 'TronLinkが接続を許可しませんでした。',
+    },
     discount: {
       title: '割引コード',
       label: '割引',
