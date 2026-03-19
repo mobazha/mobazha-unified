@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,7 @@ import { CartDrawer } from '../CartDrawer';
 
 export const Header: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
@@ -60,6 +61,7 @@ export const Header: React.FC = () => {
   const cartItemCount = useCartStore(state => state.getItemCount());
 
   const standaloneMode = isStandalone();
+  const isSearchPage = pathname === '/search';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,8 +102,8 @@ export const Header: React.FC = () => {
             )}
           </Link>
 
-          {/* Search Bar - Desktop (hidden in standalone mode) */}
-          {!standaloneMode && (
+          {/* Search Bar - Desktop (hidden in standalone mode and on search results page) */}
+          {!standaloneMode && !isSearchPage && (
             <form
               onSubmit={handleSearch}
               className="flex flex-1 max-w-xl mx-8"
@@ -121,7 +123,7 @@ export const Header: React.FC = () => {
               </div>
             </form>
           )}
-          {standaloneMode && <div className="flex-1" />}
+          {(standaloneMode || isSearchPage) && <div className="flex-1" />}
 
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="flex items-center">
