@@ -372,12 +372,18 @@ export const mockWalletService = {
     return { success: true, txid: `tx-${Date.now()}` };
   },
 
-  async getExchangeRates(): Promise<Record<string, Record<string, number>>> {
+  async getExchangeRates(): Promise<Record<string, string>> {
     await delay();
+    // USD-base minimal units: 1 USD = X minimal units of target currency
+    // BTC@$65k: 1538 satoshi, USD: 100 cents, EUR@0.92: 92 cents,
+    // CNY@7.25: 725 fen, ETH@$2500: 400000000000000 wei, USDT@1:1: 1000000
     return {
-      BTC: { USD: 45000, EUR: 41000, CNY: 290000 },
-      ETH: { USD: 2500, EUR: 2300, CNY: 16000 },
-      USDT: { USD: 1, EUR: 0.92, CNY: 7.2 },
+      BTC: '1538',
+      USD: '100',
+      EUR: '92',
+      CNY: '725',
+      ETH: '400000000000000',
+      USDT: '1000000',
     };
   },
 

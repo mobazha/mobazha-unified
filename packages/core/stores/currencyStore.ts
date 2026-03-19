@@ -9,6 +9,7 @@ import type { ExchangeRates } from '../types/currency';
 import {
   fetchExchangeRates,
   setRates,
+  getLastFetchTime,
   convertCurrency,
   formatPrice,
   convertAndFormatPrice,
@@ -22,6 +23,18 @@ import {
 import { DEFAULT_LOCAL_CURRENCY, EXCHANGE_RATE_REFRESH_INTERVAL } from '../types/currency';
 
 /**
+ * 页面级刷新间隔配置
+ * 结账/支付页使用更短的间隔以保证汇率新鲜度
+ */
+export const REFRESH_INTERVALS = {
+  default: EXCHANGE_RATE_REFRESH_INTERVAL, // 5 min
+  checkout: 30 * 1000, // 30s
+  payment: 15 * 1000, // 15s
+} as const;
+
+export type RefreshLevel = keyof typeof REFRESH_INTERVALS;
+
+/**
  * 货币 Store 状态接口
  */
 interface CurrencyStoreState {
@@ -31,10 +44,12 @@ interface CurrencyStoreState {
   loading: boolean;
   error: string | null;
   localCurrency: string;
+  refreshLevel: RefreshLevel;
 
   // 动作
   fetchRates: () => Promise<void>;
   setLocalCurrency: (currency: string) => void;
+  setRefreshLevel: (level: RefreshLevel) => void;
   reset: () => void;
 
   // 工具方法 (使用 store 中的 rates 和 localCurrency)
@@ -68,10 +83,8 @@ export const useCurrencyStore = create<CurrencyStoreState>()(
         loading: false,
         error: null,
         localCurrency: DEFAULT_LOCAL_CURRENCY,
+        refreshLevel: 'default',
 
-        /**
-         * 获取汇率数据
-         */
         fetchRates: async () => {
           set({ loading: true, error: null });
 
@@ -79,7 +92,7 @@ export const useCurrencyStore = create<CurrencyStoreState>()(
             const rates = await fetchExchangeRates(true);
             set({
               rates,
-              lastFetched: Date.now(),
+              lastFetched: getLastFetchTime(),
               loading: false,
             });
           } catch (err) {
@@ -90,16 +103,18 @@ export const useCurrencyStore = create<CurrencyStoreState>()(
           }
         },
 
-        /**
-         * 设置本地货币
-         */
         setLocalCurrency: (currency: string) => {
           set({ localCurrency: currency.toUpperCase() });
         },
 
         /**
-         * 重置状态
+         * 设置刷新级别（结账/支付页进入时调用，离开时恢复 default）
          */
+        setRefreshLevel: (level: RefreshLevel) => {
+          set({ refreshLevel: level });
+          restartRefreshTimer(level);
+        },
+
         reset: () => {
           set({
             rates: {},
@@ -107,6 +122,7 @@ export const useCurrencyStore = create<CurrencyStoreState>()(
             loading: false,
             error: null,
             localCurrency: DEFAULT_LOCAL_CURRENCY,
+            refreshLevel: 'default',
           });
         },
 
@@ -178,23 +194,34 @@ export const useCurrencyStore = create<CurrencyStoreState>()(
 );
 
 /**
+ * 重启刷新定时器（按指定级别）
+ */
+function restartRefreshTimer(level: RefreshLevel): void {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+  }
+
+  const interval = REFRESH_INTERVALS[level];
+  const store = useCurrencyStore.getState();
+
+  if (level !== 'default') {
+    store.fetchRates();
+  }
+
+  refreshTimer = setInterval(() => {
+    useCurrencyStore.getState().fetchRates();
+  }, interval);
+}
+
+/**
  * 初始化货币系统
  * 应在应用启动时调用
  */
 export function initializeCurrencyStore(): void {
   const store = useCurrencyStore.getState();
 
-  // 立即获取汇率
   store.fetchRates();
-
-  // 设置自动刷新
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-  }
-
-  refreshTimer = setInterval(() => {
-    store.fetchRates();
-  }, EXCHANGE_RATE_REFRESH_INTERVAL);
+  restartRefreshTimer('default');
 }
 
 /**
@@ -214,6 +241,7 @@ export const selectLocalCurrency = (state: CurrencyStoreState) => state.localCur
 export const selectCurrencyLoading = (state: CurrencyStoreState) => state.loading;
 export const selectCurrencyError = (state: CurrencyStoreState) => state.error;
 export const selectLastFetched = (state: CurrencyStoreState) => state.lastFetched;
+export const selectRefreshLevel = (state: CurrencyStoreState) => state.refreshLevel;
 
 // 导出工具函数以便直接使用
 export {
@@ -224,4 +252,5 @@ export {
   formatLocalPrice,
   fromMinimalUnit,
   toMinimalUnit,
+  getLastFetchTime,
 };

@@ -534,7 +534,7 @@ export const walletDataService = {
   /**
    * 获取汇率
    */
-  async getExchangeRates(): Promise<Record<string, Record<string, number>>> {
+  async getExchangeRates(): Promise<Record<string, string>> {
     if (isMockMode()) {
       return mockServices.wallet.getExchangeRates();
     }

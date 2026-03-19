@@ -4761,6 +4761,7 @@ export const zh: TranslationResource = {
       'PayPal 付款会进入您的 PayPal 余额。您可以从 PayPal 应用转账到银行，或设置自动提现。',
     payoutInfoCrypto: '加密货币付款直接到达您的钱包地址。无中间商——您完全控制自己的资金。',
     payoutInfoLearnMore: '了解更多',
+    rateUpdated: '{{seconds}}秒前更新',
   },
 };
 

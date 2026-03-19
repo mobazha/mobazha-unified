@@ -80,9 +80,11 @@ export async function sendTransaction(
 
 /**
  * 获取汇率（公开 API，无需认证）
+ * 返回 USD 基准 flat map: { "BTC": "1538", "USD": "100", ... }
+ * 值为 string 类型的最小单位数量
  */
-export async function getExchangeRates(): Promise<Record<string, Record<string, number>>> {
-  return publicSafeGet<Record<string, Record<string, number>>>(NODE_API.EXCHANGE_RATES, {});
+export async function getExchangeRates(): Promise<Record<string, string>> {
+  return publicSafeGet<Record<string, string>>(NODE_API.EXCHANGE_RATES, {});
 }
 
 /**

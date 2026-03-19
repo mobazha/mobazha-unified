@@ -52,6 +52,13 @@ export class UnrecognizedCurrencyError extends Error {
 }
 
 /**
+ * 获取上次成功获取汇率的时间戳（毫秒），null 表示尚未获取
+ */
+export function getLastFetchTime(): number | null {
+  return lastFetchTime;
+}
+
+/**
  * 获取汇率数据
  * @param forceRefresh 是否强制刷新
  */
@@ -66,61 +73,38 @@ export async function fetchExchangeRates(forceRefresh = false): Promise<Exchange
   try {
     const rawRates = await fetchExchangeRatesApi();
 
-    // API 返回格式: { BTC: 100000000, USD: 9007864, ETH: 28910090000000000000, ... }
-    // 值的含义: 1 BTC = X 最小单位的目标货币（如 satoshi, cents, wei）
-    // 我们需要转换为标准单位: { BTC: 1, USD: 90078.64, ETH: 28.91, ... }
+    // API 返回格式 (USD 基准 flat map, string 值):
+    //   { "BTC": "1538", "USD": "100", "ETH": "555555555555555", ... }
+    // 值的含义: 1 USD = X 最小单位的目标货币
+    // 解析为标准单位后 USD = 1.0，其他货币为相对 USD 的比率
     const rates: ExchangeRates = {};
 
-    // BTC 是基准货币，汇率为 1
-    rates['BTC'] = 1;
-
-    // 提取所有汇率并转换为标准单位
     for (const [currency, rateValue] of Object.entries(rawRates)) {
       const currencyCode = currency.toUpperCase();
+      const numValue =
+        typeof rateValue === 'string'
+          ? parseFloat(rateValue)
+          : typeof rateValue === 'number'
+            ? rateValue
+            : 0;
 
-      if (typeof rateValue === 'object' && rateValue !== null) {
-        // 嵌套格式: { BTC: { USD: 45000, EUR: 42000 }, ... }
-        for (const [targetCurrency, rate] of Object.entries(rateValue)) {
-          if (typeof rate === 'number' && currencyCode === 'BTC') {
-            // 转换为标准单位
-            const decimals = getCurrencyDecimals(targetCurrency);
-            const standardRate = rate / Math.pow(10, decimals);
-            rates[targetCurrency.toUpperCase()] = standardRate;
-          }
-        }
-      } else if (typeof rateValue === 'number' && rateValue > 0) {
-        // 扁平格式: { BTC: 100000000, USD: 9007864, ... }
-        // API 返回的是最小单位，需要转换为标准单位
-        // 例如: USD: 9007864 (cents) → 90078.64 (dollars)
-        // 例如: ETH: 28910090000000000000 (wei) → 28.91 (ether)
-        if (currencyCode === 'BTC') {
-          // BTC 是基准，值为 1
-          rates['BTC'] = 1;
-        } else {
-          const decimals = getCurrencyDecimals(currencyCode);
-          const standardRate = rateValue / Math.pow(10, decimals);
-          rates[currencyCode] = standardRate;
-        }
+      if (numValue > 0) {
+        const decimals = getCurrencyDecimals(currencyCode);
+        rates[currencyCode] = numValue / Math.pow(10, decimals);
       }
     }
 
-    // 为链上代币添加汇率映射
     addTokenRateMappings(rates);
 
     cachedRates = rates;
     lastFetchTime = now;
 
-    // Debug: 汇率加载完成
-    // console.log('Exchange rates loaded:', { BTC: rates['BTC'], USD: rates['USD'], ETH: rates['ETH'] });
-
     return rates;
   } catch (error) {
     console.error('Failed to fetch exchange rates:', error);
-    // 如果有缓存数据，返回缓存
     if (Object.keys(cachedRates).length > 0) {
       return cachedRates;
     }
-    // 返回空对象而不是抛出错误，避免页面崩溃
     return {};
   }
 }
@@ -539,6 +523,7 @@ export const currencyService = {
   getCachedRates,
   setRates,
   getExchangeRate,
+  getLastFetchTime,
   convertCurrency,
   fromMinimalUnit,
   toMinimalUnit,

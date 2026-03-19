@@ -22,6 +22,7 @@ import { usePaymentSelector } from '@/hooks';
 import {
   useWallet,
   useCurrency,
+  useRateFreshness,
   useI18n,
   ordersApi,
   profileApi,
@@ -108,6 +109,7 @@ export default function PaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { renderPairedPrice } = useCurrency();
+  const { secondsAgo } = useRateFreshness('payment');
   const { t } = useI18n();
   const { toast } = useToast();
   const { isConnected, isConnecting, connect, getSigner } = useWallet();
@@ -468,10 +470,10 @@ export default function PaymentPage() {
   // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入
   const totalWithFee = orderDetails?.total || 0;
 
-  // Mock exchange rate (TODO: 从 API 获取)
-  const exchangeRate = 2500;
-  const cryptoAmount = totalWithFee / exchangeRate;
-  const nativeSymbol = 'ETH'; // TODO: 根据选择的支付方式确定
+  const nativeSymbol = selectedTokenId || '';
+  const cryptoAmount = selectedTokenId
+    ? convertCurrency(totalWithFee, orderDetails?.currency || 'USD', selectedTokenId)
+    : 0;
 
   // 执行支付（仅加密货币，法币由 FiatPaymentSection 独立处理）
   const handlePayment = useCallback(async () => {
@@ -942,9 +944,14 @@ export default function PaymentPage() {
                               isMinimalUnit: false,
                             })}
                           </p>
-                          {selectedTokenId && (
+                          {selectedTokenId && cryptoAmount > 0 && (
                             <p className="text-xs text-muted-foreground">
                               ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
+                              {secondsAgo !== null && (
+                                <span className="ml-1.5 opacity-60">
+                                  ({t('payment.rateUpdated', { seconds: secondsAgo })})
+                                </span>
+                              )}
                             </p>
                           )}
                         </div>
@@ -1008,8 +1015,10 @@ export default function PaymentPage() {
                             </HStack>
                           ) : !isConnected ? (
                             t('payment.connectWallet')
-                          ) : (
+                          ) : cryptoAmount > 0 ? (
                             `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
+                          ) : (
+                            t('payment.pay')
                           )}
                         </Button>
                       )}

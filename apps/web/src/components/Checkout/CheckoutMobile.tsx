@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { useCurrency, useI18n } from '@mobazha/core';
+import { useCurrency, useRateFreshness, useI18n } from '@mobazha/core';
 import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
@@ -27,6 +27,7 @@ interface Props {
 export function CheckoutMobile({ checkout }: Props) {
   const { t } = useI18n();
   const { renderPairedPrice } = useCurrency();
+  useRateFreshness('checkout');
 
   const {
     checkoutItems,

@@ -3411,6 +3411,7 @@ export interface TranslationResource {
     payoutInfoPaypal?: string;
     payoutInfoCrypto?: string;
     payoutInfoLearnMore?: string;
+    rateUpdated?: string;
   };
   store?: TranslationSection & {
     offlineBanner?: string;
