@@ -15,7 +15,7 @@ description: >-
 
 ```
 mobazha_hosting/docs/extension/BROWSER_EXTENSION_DESIGN.md  # 深度设计文档（§8 四壳一码架构）
-mobazha_hosting/docs/PRODUCT_ARCHITECTURE_DESIGN.md §4.7    # 产品战略定位
+mobazha_hosting/docs/product/PRODUCT_ARCHITECTURE_DESIGN.md §4.7    # 产品战略定位
 mobazha_hosting/docs/product/IMPLEMENTATION_ROADMAP.md §6.3 # 实施计划
 mobazha_hosting/docs/FRONTEND_ARCHITECTURE_DESIGN.md        # ADR-FE-005 组件复用决策
 ```
