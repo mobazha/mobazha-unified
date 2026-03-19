@@ -1043,7 +1043,6 @@ export interface PaymentInstructionsResponse {
 export async function getPaymentInstructions(requestData: {
   orderId: string;
   coin: string;
-  amount?: number; // 支付金额（最小单位）
   payerAddress?: string; // 付款人地址
   moderator?: string; // 仲裁人 peerID
 }): Promise<PaymentInstructionsResponse> {
@@ -1052,9 +1051,6 @@ export async function getPaymentInstructions(requestData: {
       orderID: requestData.orderId,
       coinType: requestData.coin,
     };
-    if (requestData.amount !== undefined) {
-      backendRequestData.amount = requestData.amount;
-    }
     if (requestData.payerAddress) {
       backendRequestData.payerAddress = requestData.payerAddress;
     }
