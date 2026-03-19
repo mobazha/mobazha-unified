@@ -2162,6 +2162,7 @@ export const en: TranslationResource = {
     payNow: 'Pay Now',
     paymentWindowRemaining: 'Time remaining to pay',
     paymentWindowExpired: 'Payment window expired',
+    rateUpdated: 'updated {{seconds}}s ago',
     leaveWarning:
       'Your payment is being processed. Leaving this page may result in a failed transaction.',
     // Moderator selector

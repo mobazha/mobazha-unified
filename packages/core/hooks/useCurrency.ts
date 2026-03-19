@@ -3,9 +3,13 @@
  * 提供货币转换、格式化等功能的 React Hook
  */
 
-import { useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useCurrencyStore, initializeCurrencyStore } from '../stores/currencyStore';
+import {
+  useCurrencyStore,
+  initializeCurrencyStore,
+  type RefreshLevel,
+} from '../stores/currencyStore';
 import {
   convertCurrency,
   formatPrice as formatPriceService,
@@ -310,6 +314,38 @@ export function useLocalCurrency() {
     localCurrency,
     setLocalCurrency,
   };
+}
+
+/**
+ * 汇率新鲜度 Hook — 用于结账/支付页面
+ *
+ * 进入页面时设置更高的刷新频率并强制刷新一次，
+ * 离开页面时恢复默认。同时提供 "X seconds ago" 倒计时。
+ */
+export function useRateFreshness(level: RefreshLevel) {
+  const lastFetched = useCurrencyStore(state => state.lastFetched);
+  const setRefreshLevel = useCurrencyStore(state => state.setRefreshLevel);
+  const [secondsAgo, setSecondsAgo] = useState<number | null>(null);
+
+  useEffect(() => {
+    setRefreshLevel(level);
+    return () => {
+      setRefreshLevel('default');
+    };
+  }, [level, setRefreshLevel]);
+
+  useEffect(() => {
+    const tick = () => {
+      if (lastFetched) {
+        setSecondsAgo(Math.round((Date.now() - lastFetched) / 1000));
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lastFetched]);
+
+  return { secondsAgo, lastFetched };
 }
 
 export default useCurrency;
