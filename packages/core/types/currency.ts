@@ -32,12 +32,12 @@ export interface CurrencyInfo {
 /**
  * 汇率数据
  * key 为货币代码，value 为相对于基准货币的汇率
- * 基准货币为 BTC (或服务器配置的加密货币)
+ * 基准货币为 USD（EXR-1a 迁移后）
  */
 export type ExchangeRates = Record<string, number>;
 
 /**
- * 汇率数据详情 (完整格式，来自 tickerproxy)
+ * 汇率数据详情（完整格式，来自后端 CoinGecko Provider）
  */
 export interface ExchangeRateDetail {
   /** 询价 */
