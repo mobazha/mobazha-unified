@@ -618,6 +618,9 @@ export async function searchProfiles(params: {
         header?: string;
         shortDescription?: string;
         location?: string;
+        ratingAvg?: number;
+        ratingCount?: number;
+        listingCount?: number;
       }>;
       meta?: { total?: number };
     }
@@ -636,9 +639,9 @@ export async function searchProfiles(params: {
       headerImage: item.header?.trim() ? getImageUrl(item.header.trim(), item.peerId) : undefined,
       shortDescription: item.shortDescription,
       location: item.location,
-      listingCount: 0,
-      rating: 0,
-      reviewCount: 0,
+      listingCount: item.listingCount ?? 0,
+      rating: item.ratingAvg ?? 0,
+      reviewCount: item.ratingCount ?? 0,
     }));
 
     const total = raw?.meta?.total ?? users.length;
