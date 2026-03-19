@@ -395,4 +395,5 @@ export const SEARCH_API = {
     const base = `/search/v1/stores/${peerID}/metadata`;
     return types?.length ? `${base}?type=${types.join(',')}` : base;
   },
+  VERIFIED_MODERATORS: '/search/v1/moderators/verified',
 } as const;
