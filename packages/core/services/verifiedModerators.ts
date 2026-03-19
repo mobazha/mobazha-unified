@@ -4,6 +4,7 @@
  */
 
 import { getSearchUrl } from './api/config';
+import { SEARCH_API } from '../config/apiPaths';
 
 // Verified moderator 类型
 export interface VerifiedModeratorType {
@@ -47,7 +48,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
  * 使用配置的 searchUrl 来构造完整路径
  */
 function getVerifiedModeratorsUrl(): string {
-  return `${getSearchUrl()}/api/moderator/verified`;
+  return `${getSearchUrl()}${SEARCH_API.VERIFIED_MODERATORS}`;
 }
 
 /**
