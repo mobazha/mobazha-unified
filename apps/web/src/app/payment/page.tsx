@@ -34,7 +34,6 @@ import {
   resolveChainCategory,
   convertCurrency,
   toMinimalUnit,
-  fetchExchangeRates,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
@@ -530,59 +529,13 @@ export default function PaymentPage() {
     setSubmittedTxHash(undefined);
 
     try {
-      // 1. 计算支付金额
-      // 与移动端保持一致：使用汇率转换将订单金额（USD）转换为支付代币金额
+      // 1. 计算支付金额（仅 RWA Token 需要客户端计算，普通订单由后端统一计算）
       let paymentAmountForApi: number | undefined;
-      if (orderDetails) {
-        const isRwaToken = orderDetails.isRwaToken;
-        // 订单的定价币种（通常是 USD）
-        const pricingCurrency = orderDetails.currency || 'USD';
-        // 订单金额（最小单位，如 cents）
-        const rawAmount = orderDetails.rawOrderAmount || 0;
-        // 转换为标准单位（如 dollars）
-        const pricingDivisibility = 2; // USD 精度
-        const amountInStandardUnit = rawAmount / Math.pow(10, pricingDivisibility);
-
-        if (isRwaToken) {
-          // RWA Token 订单：使用稳定币支付，直接使用订单金额
-          const totalInFiat = orderDetails.total;
-          // 稳定币（USDT/USDC）精度是 6，DAI 是 18
-          const isDAI = selectedTokenId.toUpperCase().includes('DAI');
-          const stableCoinDivisibility = isDAI ? 18 : 6;
-          paymentAmountForApi = Math.round(totalInFiat * Math.pow(10, stableCoinDivisibility));
-        } else {
-          // 传统订单：需要从定价币种转换为支付代币
-          // 使用 currencyService 进行汇率转换
-          // 确保有汇率数据
-          await fetchExchangeRates();
-
-          // 将 USD 金额转换为支付代币金额（标准单位）
-          // convertCurrency(amount, fromCur, toCur) - amount 是标准单位
-          const convertedAmount = convertCurrency(
-            amountInStandardUnit,
-            pricingCurrency,
-            selectedTokenId
-          );
-
-          // Bug Fix: 验证汇率转换结果有效
-          if (
-            convertedAmount === undefined ||
-            convertedAmount === null ||
-            isNaN(convertedAmount) ||
-            convertedAmount <= 0
-          ) {
-            throw new Error(`Currency conversion failed: ${pricingCurrency} to ${selectedTokenId}`);
-          }
-
-          // 转换为最小单位（如 wei, satoshi）
-          paymentAmountForApi = Math.round(toMinimalUnit(convertedAmount, selectedTokenId));
-
-          // Debug: 金额转换日志
-          // console.log('[Payment] Amount conversion:', {
-          //   rawAmount, pricingCurrency, amountInStandardUnit,
-          //   selectedTokenId, convertedAmount, paymentAmountForApi,
-          // });
-        }
+      if (orderDetails?.isRwaToken) {
+        const totalInFiat = orderDetails.total;
+        const isDAI = selectedTokenId.toUpperCase().includes('DAI');
+        const stableCoinDivisibility = isDAI ? 18 : 6;
+        paymentAmountForApi = Math.round(totalInFiat * Math.pow(10, stableCoinDivisibility));
       }
 
       // 2. 获取钱包地址
@@ -601,12 +554,16 @@ export default function PaymentPage() {
       const response = await ordersApi.getPaymentInstructions({
         orderId: orderID!,
         coin: selectedTokenId,
-        amount: paymentAmountForApi,
         payerAddress: payerAddress,
         moderator: moderatorPeerID,
       });
 
-      // 4. 检查是否为外部钱包支付（UTXO 链如 BTC/LTC）
+      // 4. Use backend-computed amount for ERC20 approval (non-RWA orders)
+      if (!orderDetails?.isRwaToken && response.paymentData?.amount) {
+        paymentAmountForApi = response.paymentData.amount;
+      }
+
+      // 5. 检查是否为外部钱包支付（UTXO 链如 BTC/LTC）
       if (response.paymentType === 'external_wallet') {
         toast({
           title: t('payment.externalWalletRequired'),
@@ -616,7 +573,7 @@ export default function PaymentPage() {
         return;
       }
 
-      // 5. 验证必要的支付数据
+      // 6. 验证必要的支付数据
       if (!response.instructions) {
         throw new Error(t('payment.noPaymentInstructions'));
       }
@@ -653,7 +610,7 @@ export default function PaymentPage() {
           amount: (paymentAmountForApi ?? 0).toString(),
         });
       } else {
-        // ── EVM 支付路径（原逻辑）──
+        // ── EVM 支付路径 ──
         const signer = await getSigner();
         if (!signer) {
           throw new Error(t('payment.signerNotAvailable'));
