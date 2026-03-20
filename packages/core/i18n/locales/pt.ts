@@ -144,6 +144,7 @@ export const pt: TranslationResource = {
     search: 'Pesquisar',
     messages: 'Mensagens',
     orders: 'Pedidos',
+    purchases: 'Compras',
     profile: 'Perfil',
     settings: 'Configurações',
     wallet: 'Carteira',
@@ -578,8 +579,13 @@ export const pt: TranslationResource = {
     fundsProtected: 'Valor protegido',
     processing: 'Processando',
     manageOrders: 'Gerencie suas compras e vendas',
+    managePurchases: 'Visualize e acompanhe suas compras',
     noOrdersFound: 'Nenhum pedido encontrado',
+    noPurchasesFound: 'Nenhuma compra ainda',
     noOrdersMessage: 'Você ainda não tem {{type}}. Explore o marketplace!',
+    noPurchasesMessage: 'Você ainda não fez nenhuma compra. Descubra produtos incríveis!',
+    browseProducts: 'Explorar produtos',
+    allPurchases: 'Todas as compras',
     noStatusOrders: 'Nenhum pedido {{status}} no momento.',
     backToOrders: 'Voltar aos pedidos',
     placedOn: 'Realizado em {{date}}',
@@ -1755,6 +1761,9 @@ export const pt: TranslationResource = {
 
   settingsExtended: {
     profile: 'Perfil',
+    generalDesc: 'Language, theme, and display preferences',
+    profileDesc: 'Your name, avatar, and bio',
+    chatEncryptionDesc: 'End-to-end encryption keys and backup',
     country: 'País',
     shippingAddresses: 'Endereços de Entrega',
     manageAddresses: 'Gerenciar endereços de entrega',
@@ -3467,6 +3476,7 @@ export const pt: TranslationResource = {
       filterDisputed: 'Em disputa',
       filterCancelled: 'Cancelados',
       clearFilters: 'Limpar filtros',
+      dateFilter: 'Date filter',
       dateFrom: 'Data inicial',
       dateTo: 'Data final',
       emptyTitle: 'Sem pedidos ainda',
@@ -4126,6 +4136,12 @@ export const pt: TranslationResource = {
     pendingRequirements: 'Ação necessária',
     manageDashboard: 'Painel {{provider}}',
     dashboardLoginHint: 'Entre no {{provider}} com {{email}}',
+  },
+  support: {
+    documentation: 'Documentation',
+    documentationDesc: 'Guides and tutorials for getting started',
+    community: 'Community',
+    communityDesc: 'Join our Telegram community for help',
   },
 };
 

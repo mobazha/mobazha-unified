@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -35,6 +36,7 @@ const TABS: TabConfig[] = [
 
 export default function NotificationsPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const {
     apiNotifications,
     unreadCount,
@@ -170,7 +172,7 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <MobilePageHeader title={t('notifications.title')} />
+      <MobilePageHeader title={t('notifications.title')} onBack={() => router.push('/me')} />
 
       <main className="py-4 sm:py-8">
         <Container size="md">
@@ -255,7 +257,7 @@ export default function NotificationsPage() {
                         handleDeleteNotification(notification.id);
                       }}
                       aria-label={t('common.delete')}
-                      className="absolute top-3 right-3 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 touch-feedback"
+                      className="absolute bottom-2 right-3 sm:top-3 sm:bottom-auto p-1.5 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] sm:p-2 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors opacity-0 active:opacity-100 sm:active:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
                     >
                       <svg
                         className="w-4 h-4"

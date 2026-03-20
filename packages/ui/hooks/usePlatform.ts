@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useBreakpoint, BREAKPOINTS } from './useBreakpoint';
 import type { Breakpoint } from './useBreakpoint';
 
@@ -36,14 +36,13 @@ function detectPlatform(): PlatformType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const win = window as any;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (
     typeof globalThis !== 'undefined' &&
     'chrome' in globalThis &&
     (globalThis as any).chrome?.runtime?.id
   )
     return 'extension';
-  if (win.Telegram?.WebApp?.initData) return 'telegram';
+  if (win.Telegram?.WebApp) return 'telegram';
   if (win.__DISCORD_EMBEDDED__ || new URLSearchParams(window.location.search).has('frame_id'))
     return 'discord';
   if (win.__FARCASTER_FRAME__ || window.location.ancestorOrigins?.[0]?.includes('warpcast'))
@@ -71,8 +70,17 @@ function detectTouch(): boolean {
 export function usePlatform(): PlatformInfo {
   const bp = useBreakpoint();
 
-  const [platform] = useState<PlatformType>(detectPlatform);
+  const [platform, setPlatform] = useState<PlatformType>(detectPlatform);
   const [isTouchDevice] = useState<boolean>(detectTouch);
+
+  // Re-detect after mount: catches late-injected SDKs (Telegram WebApp, Discord, etc.)
+  useEffect(() => {
+    const detected = detectPlatform();
+    if (detected !== platform) {
+      setPlatform(detected);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isTGMiniApp = platform === 'telegram';
   const isDiscordActivity = platform === 'discord';

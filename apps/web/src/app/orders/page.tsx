@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, MobilePageHeader } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
@@ -20,7 +21,7 @@ import {
   batchGetProfileDisplayInfo,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
-import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useIsDesktop, useIsMobile } from '@/hooks/useMediaQuery';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
@@ -44,16 +45,25 @@ function OrdersPageContent() {
   const { toast } = useToast();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
+  const isMobile = useIsMobile();
   const [isProcessing, setIsProcessing] = useState(false);
   const { isAvailable: isTG } = useTGMiniApp();
 
   useTGBackButton({ visible: isTG });
 
+  // Mobile: redirect ?tab=sales to Admin Orders (sales managed via Store Admin)
+  useEffect(() => {
+    if (isMobile && searchParams.get('tab') === 'sales') {
+      router.replace('/admin/orders');
+    }
+  }, [isMobile, searchParams, router]);
+
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
+    if (isMobile) return 'purchases';
     const tab = searchParams.get('tab');
     return tab === 'sales' ? 'sales' : 'purchases';
-  }, [searchParams]);
+  }, [searchParams, isMobile]);
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
   const [showStatusSheet, setShowStatusSheet] = useState(false);
@@ -143,7 +153,7 @@ function OrdersPageContent() {
   }, [rawOrders, orderType, profileMap, roleLabels]);
 
   const statusTabs: { value: OrderStatus; label: string }[] = [
-    { value: 'all', label: t('order.allOrders') },
+    { value: 'all', label: isMobile ? t('order.allPurchases') : t('order.allOrders') },
     { value: 'pending', label: t('order.pending') },
     { value: 'processing', label: t('order.processing') },
     { value: 'shipped', label: t('order.shipped') },
@@ -299,7 +309,7 @@ function OrdersPageContent() {
     <div className="min-h-screen bg-background" ref={pullRefreshRef}>
       <Header />
       {/* 移动端顶部导航栏 */}
-      <MobilePageHeader title={t('nav.orders')} />
+      <MobilePageHeader title={isMobile ? t('order.myPurchases') : t('nav.orders')} />
 
       <main className="py-3 sm:py-8">
         <Container>
@@ -318,29 +328,32 @@ function OrdersPageContent() {
           </div>
 
           {/* 移动端副标题 */}
-          <p className="lg:hidden text-xs text-muted-foreground mb-3">{t('order.manageOrders')}</p>
+          <p className="lg:hidden text-xs text-muted-foreground mb-3">
+            {isMobile ? t('order.managePurchases') : t('order.manageOrders')}
+          </p>
 
-          {/* Order Type Toggle */}
-          <div className="mb-3 sm:mb-6">
-            <div className="inline-flex rounded-lg bg-muted p-1">
-              {(['purchases', 'sales'] as OrderType[]).map(type => (
-                <button
-                  key={type}
-                  onClick={() => {
-                    // 更新 URL 参数，orderType 将通过 useMemo 自动更新
-                    router.push(`/orders?tab=${type}`);
-                  }}
-                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
-                    orderType === type
-                      ? 'bg-card text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {type === 'purchases' ? t('order.myPurchases') : t('order.mySales')}
-                </button>
-              ))}
+          {/* Order Type Toggle — desktop only (mobile always shows purchases) */}
+          {!isMobile && (
+            <div className="mb-3 sm:mb-6">
+              <div className="inline-flex rounded-lg bg-muted p-1">
+                {(['purchases', 'sales'] as OrderType[]).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      router.push(`/orders?tab=${type}`);
+                    }}
+                    className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors touch-feedback ${
+                      orderType === type
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {type === 'purchases' ? t('order.myPurchases') : t('order.mySales')}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Status Filter */}
           <div className="mb-4 sm:mb-6">
@@ -426,35 +439,56 @@ function OrdersPageContent() {
             />
           ) : filteredOrders.length === 0 ? (
             <Card className="text-center">
-              <CardContent className="py-16">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+              <CardContent className="py-10 sm:py-16">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-muted flex items-center justify-center">
                   <svg
-                    className="w-10 h-10 text-muted-foreground"
+                    className="w-7 h-7 sm:w-10 sm:h-10 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
+                    {isMobile ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                      />
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    )}
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                  {t('order.noOrdersFound')}
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-1.5 sm:mb-2">
+                  {isMobile && statusFilter === 'all'
+                    ? t('order.noPurchasesFound')
+                    : t('order.noOrdersFound')}
                 </h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">
+                <p className="text-sm sm:text-base text-muted-foreground max-w-sm mx-auto">
                   {statusFilter === 'all'
-                    ? t('order.noOrdersMessage', {
-                        type: orderType === 'purchases' ? t('order.purchases') : t('order.sales'),
-                      })
+                    ? isMobile
+                      ? t('order.noPurchasesMessage')
+                      : t('order.noOrdersMessage', {
+                          type: orderType === 'purchases' ? t('order.purchases') : t('order.sales'),
+                        })
                     : t('order.noStatusOrders', {
                         status:
                           statusTabs.find(s => s.value === statusFilter)?.label || statusFilter,
                       })}
                 </p>
+                {isMobile && statusFilter === 'all' && (
+                  <Link
+                    href="/"
+                    className="inline-block mt-4 sm:mt-6 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors touch-feedback"
+                  >
+                    {t('order.browseProducts')}
+                  </Link>
+                )}
               </CardContent>
             </Card>
           ) : (

@@ -114,12 +114,8 @@ export default function AddressesSettingsPage() {
           </div>
         ) : addresses.length === 0 ? (
           <div className="py-8 text-center">
-            <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">{t('settingsExtended.noAddresses')}</p>
-            <Button className="mt-4" onClick={() => setShowAddModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              {t('address.addAddress')}
-            </Button>
+            <MapPin className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+            <p className="text-sm text-muted-foreground">{t('settingsExtended.noAddresses')}</p>
           </div>
         ) : (
           <div className="space-y-3">

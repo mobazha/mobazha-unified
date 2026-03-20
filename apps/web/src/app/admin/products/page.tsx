@@ -327,12 +327,12 @@ export default function AdminProductsPage() {
       </AlertDialog>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground">
             {t('admin.products.title')}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-0.5 sm:mt-1">
             {t('admin.products.count', { count: products.length })}
           </p>
         </div>

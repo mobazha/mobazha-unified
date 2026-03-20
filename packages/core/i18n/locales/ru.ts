@@ -144,6 +144,7 @@ export const ru: TranslationResource = {
     search: 'Поиск',
     messages: 'Сообщения',
     orders: 'Заказы',
+    purchases: 'Покупки',
     profile: 'Профиль',
     settings: 'Настройки',
     wallet: 'Кошелёк',
@@ -612,8 +613,13 @@ export const ru: TranslationResource = {
     fundsProtected: 'Защищённая сумма',
     processing: 'Обработка',
     manageOrders: 'Управление покупками и продажами',
+    managePurchases: 'Просмотр и отслеживание покупок',
     noOrdersFound: 'Заказы не найдены',
+    noPurchasesFound: 'Покупок пока нет',
     noOrdersMessage: 'У вас пока нет {{type}}. Изучите маркетплейс!',
+    noPurchasesMessage: 'Вы ещё ничего не покупали. Откройте для себя отличные товары!',
+    browseProducts: 'Смотреть товары',
+    allPurchases: 'Все покупки',
     noStatusOrders: 'Нет заказов со статусом {{status}}.',
     // Order detail page
     backToOrders: 'К списку заказов',
@@ -1788,6 +1794,9 @@ export const ru: TranslationResource = {
 
   settingsExtended: {
     profile: 'Профиль',
+    generalDesc: 'Language, theme, and display preferences',
+    profileDesc: 'Your name, avatar, and bio',
+    chatEncryptionDesc: 'End-to-end encryption keys and backup',
     country: 'Страна',
     shippingAddresses: 'Адреса доставки',
     manageAddresses: 'Управление адресами доставки',
@@ -3423,6 +3432,7 @@ export const ru: TranslationResource = {
       filterDisputed: 'Спор',
       filterCancelled: 'Отменено',
       clearFilters: 'Сбросить фильтры',
+      dateFilter: 'Date filter',
       dateFrom: 'С даты',
       dateTo: 'По дату',
       emptyTitle: 'Пока нет заказов',
@@ -4094,6 +4104,12 @@ export const ru: TranslationResource = {
     pendingRequirements: 'Требуется действие',
     manageDashboard: 'Панель {{provider}}',
     dashboardLoginHint: 'Войдите в {{provider}} с {{email}}',
+  },
+  support: {
+    documentation: 'Documentation',
+    documentationDesc: 'Guides and tutorials for getting started',
+    community: 'Community',
+    communityDesc: 'Join our Telegram community for help',
   },
 };
 

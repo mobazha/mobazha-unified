@@ -16,14 +16,16 @@ function SettingsCard({ icon: Icon, title, description, href }: SettingsCardProp
   return (
     <Link
       href={href}
-      className="flex items-start gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group"
+      className="flex items-start gap-3 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group active:bg-muted/30"
     >
-      <div className="p-2.5 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+      <div className="p-2 sm:p-2.5 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
         <Icon className="w-5 h-5" />
       </div>
-      <div>
-        <h3 className="font-medium text-foreground">{title}</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+      <div className="min-w-0">
+        <h3 className="text-sm sm:text-base font-medium text-foreground">{title}</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">
+          {description}
+        </p>
       </div>
     </Link>
   );
@@ -40,7 +42,7 @@ function SettingsSection({ title, children }: SettingsSectionProps) {
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
         {title}
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">{children}</div>
     </div>
   );
 }
@@ -50,12 +52,16 @@ export default function AdminSettingsPage() {
 
   return (
     <div data-testid="admin-settings">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{t('admin.settings.title')}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{t('admin.settings.subtitle')}</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-lg sm:text-2xl font-bold text-foreground">
+          {t('admin.settings.title')}
+        </h1>
+        <p className="hidden sm:block text-sm text-muted-foreground mt-1">
+          {t('admin.settings.subtitle')}
+        </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Store */}
         <SettingsSection title={t('admin.settings.sectionStore')}>
           <SettingsCard

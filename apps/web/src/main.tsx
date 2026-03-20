@@ -58,7 +58,7 @@ function AppLayout() {
               <Outlet />
             </div>
 
-            {/* Mobile bottom navigation */}
+            {/* Mobile bottom navigation (Web + TMA) */}
             <MobileNav />
 
             {/* Chat floating button and drawer */}

@@ -891,6 +891,9 @@ export interface TranslationResource {
   // 设置扩展
   settingsExtended: {
     profile: string;
+    generalDesc?: string;
+    profileDesc?: string;
+    chatEncryptionDesc?: string;
     country: string;
     shippingAddresses: string;
     manageAddresses: string;
@@ -2605,6 +2608,7 @@ export interface TranslationResource {
       filterDisputed?: string;
       filterCancelled?: string;
       clearFilters?: string;
+      dateFilter?: string;
       dateFrom?: string;
       dateTo?: string;
       emptyTitle?: string;
@@ -3412,6 +3416,13 @@ export interface TranslationResource {
     payoutInfoCrypto?: string;
     payoutInfoLearnMore?: string;
     rateUpdated?: string;
+  };
+
+  support?: {
+    documentation: string;
+    documentationDesc: string;
+    community: string;
+    communityDesc: string;
   };
   store?: TranslationSection & {
     offlineBanner?: string;

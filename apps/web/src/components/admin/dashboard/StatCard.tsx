@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Skeleton } from '@/components/ui';
 
 const COLOR_MAP = {
@@ -15,6 +16,7 @@ interface StatCardProps {
   sublabel?: string;
   color?: keyof typeof COLOR_MAP;
   loading?: boolean;
+  href?: string;
 }
 
 export function StatCard({
@@ -24,30 +26,49 @@ export function StatCard({
   sublabel,
   color = 'primary',
   loading,
+  href,
 }: StatCardProps) {
-  return (
-    <div
-      className="bg-card border border-border rounded-xl p-3 sm:p-5"
-      data-testid="admin-stat-card"
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
-          {loading ? (
-            <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
-          ) : (
-            <p className="text-lg sm:text-2xl font-bold text-foreground mt-1 truncate">{value}</p>
-          )}
-          {sublabel && (
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">
-              {sublabel}
-            </p>
-          )}
-        </div>
-        <div className={`p-1.5 sm:p-2.5 rounded-lg shrink-0 ${COLOR_MAP[color]}`}>
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-        </div>
+  const content = (
+    <div className="flex items-start justify-between">
+      <div className="min-w-0">
+        <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
+        {loading ? (
+          <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
+        ) : (
+          <p className="text-lg sm:text-2xl font-bold text-foreground mt-1 truncate">{value}</p>
+        )}
+        {sublabel && (
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">
+            {sublabel}
+          </p>
+        )}
       </div>
+      <div className={`p-1.5 sm:p-2.5 rounded-lg shrink-0 ${COLOR_MAP[color]}`}>
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+      </div>
+    </div>
+  );
+
+  const baseClass = 'bg-card border border-border rounded-xl p-3 sm:p-5';
+  const interactiveClass = href
+    ? ' hover:border-primary/30 hover:shadow-sm transition-all cursor-pointer'
+    : '';
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`block ${baseClass}${interactiveClass}`}
+        data-testid="admin-stat-card"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={baseClass} data-testid="admin-stat-card">
+      {content}
     </div>
   );
 }

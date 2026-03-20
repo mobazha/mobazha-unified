@@ -154,6 +154,7 @@ export const zh: TranslationResource = {
     search: '搜索',
     messages: '消息',
     orders: '订单',
+    purchases: '我的购买',
     profile: '我的',
     settings: '设置',
     wallet: '钱包',
@@ -728,8 +729,13 @@ export const zh: TranslationResource = {
     to: '给',
     processing: '处理中',
     manageOrders: '管理您的购买和销售订单',
+    managePurchases: '查看和追踪您的购买订单',
     noOrdersFound: '未找到订单',
+    noPurchasesFound: '还没有购买记录',
     noOrdersMessage: '您还没有任何{{type}}订单。去市场逛逛吧！',
+    noPurchasesMessage: '您还没有任何购买记录，快去发现好物吧！',
+    browseProducts: '去逛逛',
+    allPurchases: '全部购买',
     noStatusOrders: '暂无{{status}}状态的订单。',
     // 订单详情页
     backToOrders: '返回订单列表',
@@ -2093,6 +2099,9 @@ export const zh: TranslationResource = {
   settingsExtended: {
     shortDescription: '简短描述',
     profile: '个人资料',
+    generalDesc: '语言、主题和显示偏好',
+    profileDesc: '您的名称、头像和简介',
+    chatEncryptionDesc: '端对端加密密钥和备份',
     country: '国家',
     shippingAddresses: '收货地址',
     manageAddresses: '管理收货地址',
@@ -4032,6 +4041,7 @@ export const zh: TranslationResource = {
       filterDisputed: '争议中',
       filterCancelled: '已取消',
       clearFilters: '清除筛选',
+      dateFilter: '日期筛选',
       dateFrom: '开始日期',
       dateTo: '结束日期',
       emptyTitle: '暂无订单',
@@ -4769,6 +4779,12 @@ export const zh: TranslationResource = {
     payoutInfoCrypto: '加密货币付款直接到达您的钱包地址。无中间商——您完全控制自己的资金。',
     payoutInfoLearnMore: '了解更多',
     rateUpdated: '{{seconds}}秒前更新',
+  },
+  support: {
+    documentation: '文档',
+    documentationDesc: '入门指南和教程',
+    community: '社区',
+    communityDesc: '加入我们的 Telegram 社区获取帮助',
   },
 };
 

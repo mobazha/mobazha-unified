@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    labelKey: 'nav.orders',
+    labelKey: 'nav.purchases',
     href: '/orders',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,16 +151,16 @@ const HIDE_NAV_PATTERNS = [
   /^\/payment/, // 支付页面（有自己的底部支付栏）
   /^\/product\/[^/]+$/, // 商品详情页（有自己的底部操作栏）
   /^\/listing\//, // 商品创建/编辑页面（有自己的底部步骤栏）
-  /^\/admin\//, // 管理后台（有自己的底部 Tab）
+  /^\/admin(\/|$)/, // 管理后台（有自己的底部 Tab）
 ];
 
 // 需要登录才能显示的导航项 (使用 labelKey)
-const AUTH_REQUIRED_LABEL_KEYS = ['nav.orders', 'chat.title'];
+const AUTH_REQUIRED_LABEL_KEYS = ['nav.purchases', 'chat.title'];
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
   const { t } = useI18n();
-  const { isEmbeddedApp } = usePlatform();
+  const { isEmbeddedApp, isTGMiniApp } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const totalUnread = useChatStore(selectTotalUnreadCount);
@@ -187,8 +187,8 @@ export const MobileNav: React.FC = () => {
 
   const shouldHideNav = HIDE_NAV_PATTERNS.some(pattern => pattern.test(pathname));
 
-  // Embedded apps (TG/Discord/Farcaster) have their own navigation controls
-  if (isEmbeddedApp || shouldHideNav) {
+  // TMA uses MobileNav; other embedded apps (Discord/Farcaster) have their own nav
+  if ((isEmbeddedApp && !isTGMiniApp) || shouldHideNav) {
     return null;
   }
 

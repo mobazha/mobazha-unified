@@ -27,8 +27,6 @@ import { usePlatform } from '@mobazha/ui/hooks';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import {
   Settings,
-  Package,
-  ShoppingBag,
   Heart,
   Bell,
   Moon,
@@ -41,7 +39,6 @@ import {
   LayoutDashboard,
   MessageCircle,
   Store,
-  ListOrdered,
   ShieldQuestion,
   CheckCircle2,
   Loader2,
@@ -289,7 +286,7 @@ export default function MePage() {
             <div className="bg-card rounded-xl border overflow-hidden">
               <FeatureItem
                 icon={<Settings className="w-5 h-5" />}
-                title={t('me.settings')}
+                title={t('settings.title')}
                 description={t('me.settingsDesc')}
                 href="/settings"
               />
@@ -365,58 +362,28 @@ export default function MePage() {
               )}
             </div>
 
-            {/* My Store section */}
-            <div>
-              <SectionLabel>{t('me.myStore')}</SectionLabel>
-              <div className="bg-card rounded-xl border overflow-hidden">
-                <FeatureItem
-                  icon={<LayoutDashboard className="w-5 h-5" />}
-                  title={t('me.dashboard')}
-                  description={t('me.dashboardDesc')}
-                  href="/admin"
-                />
-                <FeatureItem
-                  icon={<Package className="w-5 h-5" />}
-                  title={t('me.ordersReceived')}
-                  description={t('me.ordersReceivedDesc')}
-                  href="/orders?tab=sales"
-                />
-                <FeatureItem
-                  icon={<ListOrdered className="w-5 h-5" />}
-                  title={t('me.manageListings')}
-                  description={t('me.manageListingsDesc')}
-                  href="/admin/listings"
-                />
-                <FeatureItem
-                  icon={<Settings className="w-5 h-5" />}
-                  title={t('me.storeSettings')}
-                  description={t('me.storeSettingsDesc')}
-                  href="/settings"
-                />
+            {/* Store Admin — single entry point */}
+            <Link href="/admin" className="block">
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/15 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+                  <LayoutDashboard className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary">{t('me.storeAdmin')}</p>
+                  <p className="text-xs text-muted-foreground">{t('me.storeAdminDesc')}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-primary/60 flex-shrink-0" />
               </div>
-            </div>
-
-            {/* My Shopping section */}
-            <div>
-              <SectionLabel>{t('me.myShopping')}</SectionLabel>
-              <div className="bg-card rounded-xl border overflow-hidden">
-                <FeatureItem
-                  icon={<ShoppingBag className="w-5 h-5" />}
-                  title={t('me.myPurchases')}
-                  description={t('me.myPurchasesDesc')}
-                  href="/orders?tab=purchases"
-                />
-                <FeatureItem
-                  icon={<MessageCircle className="w-5 h-5" />}
-                  title={t('me.myChats')}
-                  description={t('me.myChatsDesc')}
-                  href="/chat"
-                />
-              </div>
-            </div>
+            </Link>
 
             {/* Settings */}
             <div className="bg-card rounded-xl border overflow-hidden">
+              <FeatureItem
+                icon={<Settings className="w-5 h-5" />}
+                title={t('settings.title')}
+                description={t('me.settingsDesc')}
+                href="/settings"
+              />
               <div className="flex items-center gap-3 p-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <Moon className="w-5 h-5" />
@@ -511,37 +478,8 @@ export default function MePage() {
             )}
           </div>
 
-          {/* Orders */}
-          {isAuthenticated && (
-            <div className="bg-card rounded-xl p-3 border">
-              <h3 className="text-xs font-medium mb-2 text-muted-foreground">{t('me.myOrders')}</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href="/orders?tab=purchases"
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
-                >
-                  <div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center">
-                    <ShoppingBag className="w-5 h-5 text-info" />
-                  </div>
-                  <span className="text-xs">{t('me.purchases')}</span>
-                </Link>
-                {hasStore && !isPureBuyer && (
-                  <Link
-                    href="/orders?tab=sales"
-                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors touch-feedback"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                      <Package className="w-5 h-5 text-success" />
-                    </div>
-                    <span className="text-xs">{t('me.sales')}</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Store admin (non-Mini-App sellers only) */}
-          {isAuthenticated && hasStore && !isPureBuyer && !isEmbeddedApp && (
+          {/* Store admin — Web + TMA Marketplace */}
+          {isAuthenticated && hasStore && !isPureBuyer && (!isEmbeddedApp || isTGMiniApp) && (
             <Link href="/admin" className="block">
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/15 transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
@@ -556,21 +494,25 @@ export default function MePage() {
             </Link>
           )}
 
-          {/* Start Selling CTA — SaaS 用户无店铺 */}
-          {isAuthenticated && !hasStore && !isPureBuyer && !standaloneMode && !isEmbeddedApp && (
-            <Link href="/admin" className="block">
-              <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:from-primary/10 hover:to-primary/15 active:from-primary/15 active:to-primary/20 transition-all">
-                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
-                  <Store className="w-5 h-5 text-primary" />
+          {/* Start Selling CTA — SaaS / TMA Marketplace 用户无店铺 */}
+          {isAuthenticated &&
+            !hasStore &&
+            !isPureBuyer &&
+            !standaloneMode &&
+            (!isEmbeddedApp || isTGMiniApp) && (
+              <Link href="/admin" className="block">
+                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-3 flex items-center gap-3 hover:from-primary/10 hover:to-primary/15 active:from-primary/15 active:to-primary/20 transition-all">
+                  <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+                    <Store className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-primary">{t('userMenu.startSelling')}</p>
+                    <p className="text-xs text-muted-foreground">{t('me.startSellingDesc')}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-primary/60 flex-shrink-0" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-primary">{t('userMenu.startSelling')}</p>
-                  <p className="text-xs text-muted-foreground">{t('me.startSellingDesc')}</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-primary/60 flex-shrink-0" />
-              </div>
-            </Link>
-          )}
+              </Link>
+            )}
 
           {/* Feature list */}
           {isAuthenticated && (
@@ -597,7 +539,7 @@ export default function MePage() {
                 description={t('me.wishlistDesc')}
                 href="/wishlist"
               />
-              {isEmbeddedApp && (
+              {isEmbeddedApp && !isTGMiniApp && (
                 <FeatureItem
                   icon={<MessageCircle className="w-5 h-5" />}
                   title={t('me.myChats')}
@@ -618,7 +560,7 @@ export default function MePage() {
           <div className="bg-card rounded-xl border overflow-hidden">
             <FeatureItem
               icon={<Settings className="w-5 h-5" />}
-              title={t('me.settings')}
+              title={t('settings.title')}
               description={t('me.settingsDesc')}
               href="/settings"
             />
