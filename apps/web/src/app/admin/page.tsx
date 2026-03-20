@@ -23,9 +23,12 @@ import {
   Palette,
   AlertCircle,
   AlertTriangle,
+  Tag,
+  Layers,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   StatCard,
   RecentOrderRow,
@@ -171,6 +174,7 @@ function ErrorBanner({ message }: { message: string }) {
 
 export default function AdminDashboardPage() {
   const { t } = useI18n();
+  const isMobile = useIsMobile();
   const {
     profile,
     products,
@@ -324,6 +328,7 @@ export default function AdminDashboardPage() {
           sublabel={t('admin.dashboard.published')}
           color="primary"
           loading={productsLoading}
+          href="/admin/products"
         />
         <StatCard
           icon={ShoppingCart}
@@ -332,6 +337,7 @@ export default function AdminDashboardPage() {
           sublabel={t('admin.dashboard.allTime')}
           color="info"
           loading={salesLoading}
+          href="/admin/orders"
         />
         <StatCard
           icon={TrendingUp}
@@ -340,6 +346,7 @@ export default function AdminDashboardPage() {
           sublabel={t('admin.dashboard.completedOrders')}
           color="success"
           loading={salesLoading}
+          href="/admin/analytics"
         />
         <StatCard
           icon={Star}
@@ -352,6 +359,7 @@ export default function AdminDashboardPage() {
           }
           color="warning"
           loading={productsLoading && ratingAvg === null}
+          href="/admin/analytics"
         />
       </div>
 
@@ -382,22 +390,24 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        <Link
-          href="/admin/orders"
-          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-        >
-          <div className="p-2.5 sm:p-3 rounded-lg bg-info/10 text-info group-hover:bg-info group-hover:text-primary-foreground transition-colors">
-            <ShoppingCart className="w-5 h-5" />
-          </div>
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-base font-medium text-foreground">
-              {t('admin.dashboard.manageOrders')}
-            </p>
-            <p className="hidden sm:block text-sm text-muted-foreground">
-              {t('admin.dashboard.manageOrdersDesc')}
-            </p>
-          </div>
-        </Link>
+        {!isMobile && (
+          <Link
+            href="/admin/orders"
+            className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+          >
+            <div className="p-2.5 sm:p-3 rounded-lg bg-info/10 text-info group-hover:bg-info group-hover:text-primary-foreground transition-colors">
+              <ShoppingCart className="w-5 h-5" />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-base font-medium text-foreground">
+                {t('admin.dashboard.manageOrders')}
+              </p>
+              <p className="hidden sm:block text-sm text-muted-foreground">
+                {t('admin.dashboard.manageOrdersDesc')}
+              </p>
+            </div>
+          </Link>
+        )}
 
         <Link
           href="/admin/storefront"
@@ -416,24 +426,51 @@ export default function AdminDashboardPage() {
           </div>
         </Link>
 
-        <a
-          href={storeUrl}
-          target={standaloneMode ? undefined : '_blank'}
-          rel="noopener noreferrer"
-          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-        >
-          <div className="p-2.5 sm:p-3 rounded-lg bg-success/10 text-success group-hover:bg-success group-hover:text-primary-foreground transition-colors">
-            <Eye className="w-5 h-5" />
-          </div>
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-base font-medium text-foreground">
-              {t('admin.dashboard.viewStore')}
-            </p>
-            <p className="hidden sm:block text-sm text-muted-foreground">
-              {t('admin.dashboard.viewStoreDesc')}
-            </p>
-          </div>
-        </a>
+        {isMobile ? (
+          <>
+            <Link
+              href="/admin/collections"
+              className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+            >
+              <div className="p-2.5 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition-colors">
+                <Layers className="w-5 h-5" />
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-medium text-foreground">{t('admin.nav.collections')}</p>
+              </div>
+            </Link>
+            <Link
+              href="/admin/discounts"
+              className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+            >
+              <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                <Tag className="w-5 h-5" />
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-medium text-foreground">{t('admin.nav.discounts')}</p>
+              </div>
+            </Link>
+          </>
+        ) : (
+          <a
+            href={storeUrl}
+            target={standaloneMode ? undefined : '_blank'}
+            rel="noopener noreferrer"
+            className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+          >
+            <div className="p-2.5 sm:p-3 rounded-lg bg-success/10 text-success group-hover:bg-success group-hover:text-primary-foreground transition-colors">
+              <Eye className="w-5 h-5" />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-base font-medium text-foreground">
+                {t('admin.dashboard.viewStore')}
+              </p>
+              <p className="hidden sm:block text-sm text-muted-foreground">
+                {t('admin.dashboard.viewStoreDesc')}
+              </p>
+            </div>
+          </a>
+        )}
       </div>
 
       {/* Lists: Recent Orders + Top Products */}

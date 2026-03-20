@@ -144,6 +144,7 @@ export const ja: TranslationResource = {
     search: '検索',
     messages: 'メッセージ',
     orders: '注文',
+    purchases: '購入履歴',
     profile: 'プロフィール',
     settings: '設定',
     wallet: 'ウォレット',
@@ -525,8 +526,13 @@ export const ja: TranslationResource = {
     allOrders: 'すべての注文',
     processing: '処理中',
     manageOrders: '購入と販売を管理',
+    managePurchases: '購入履歴を確認・追跡',
     noOrdersFound: '注文が見つかりません',
+    noPurchasesFound: 'まだ購入がありません',
     noOrdersMessage: 'まだ{{type}}がありません。マーケットプレイスを探索してみましょう！',
+    noPurchasesMessage: 'まだ購入がありません。素敵な商品を見つけましょう！',
+    browseProducts: '商品を見る',
+    allPurchases: 'すべての購入',
     noStatusOrders: '現在{{status}}の注文はありません。',
     // Order detail page
     backToOrders: '注文一覧に戻る',
@@ -1777,6 +1783,9 @@ export const ja: TranslationResource = {
 
   settingsExtended: {
     profile: 'プロフィール',
+    generalDesc: 'Language, theme, and display preferences',
+    profileDesc: 'Your name, avatar, and bio',
+    chatEncryptionDesc: 'End-to-end encryption keys and backup',
     country: '国',
     shippingAddresses: '配送先住所',
     manageAddresses: '配送先住所を管理',
@@ -3431,6 +3440,7 @@ export const ja: TranslationResource = {
       filterDisputed: '紛争中',
       filterCancelled: 'キャンセル',
       clearFilters: 'フィルターをクリア',
+      dateFilter: 'Date filter',
       dateFrom: '開始日',
       dateTo: '終了日',
       emptyTitle: 'まだ注文がありません',
@@ -4082,6 +4092,12 @@ export const ja: TranslationResource = {
     pendingRequirements: '対応が必要です',
     manageDashboard: '{{provider}}ダッシュボード',
     dashboardLoginHint: '{{email}}で{{provider}}にサインイン',
+  },
+  support: {
+    documentation: 'Documentation',
+    documentationDesc: 'Guides and tutorials for getting started',
+    community: 'Community',
+    communityDesc: 'Join our Telegram community for help',
   },
 };
 

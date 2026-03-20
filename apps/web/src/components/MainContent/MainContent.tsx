@@ -6,12 +6,20 @@ import { usePlatform } from '@mobazha/ui/hooks';
 
 /**
  * Main content wrapper that adjusts bottom padding based on platform.
- * Embedded apps (TG/Discord/Farcaster) and /embed/* iframe pages don't show MobileNav, so no padding needed.
+ * - Web / TMA: pb-24 for MobileNav (hidden on md+ for web)
+ * - Other embedded / iframe: no padding
  */
 export function MainContent({ children }: { children: React.ReactNode }) {
-  const { isEmbeddedApp } = usePlatform();
+  const { isEmbeddedApp, isTGMiniApp } = usePlatform();
   const pathname = usePathname();
   const isEmbed = pathname === '/embed' || pathname?.startsWith('/embed/');
 
-  return <div className={isEmbeddedApp || isEmbed ? '' : 'pb-24 md:pb-0'}>{children}</div>;
+  let paddingClass = 'pb-24 md:pb-0';
+  if (isEmbed) {
+    paddingClass = '';
+  } else if (isEmbeddedApp && !isTGMiniApp) {
+    paddingClass = '';
+  }
+
+  return <div className={paddingClass}>{children}</div>;
 }

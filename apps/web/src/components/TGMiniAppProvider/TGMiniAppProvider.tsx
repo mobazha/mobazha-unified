@@ -165,7 +165,7 @@ interface TGMiniAppProviderProps {
 function initWebApp(): TGWebApp | null {
   if (typeof window === 'undefined') return null;
   const wa = (window as unknown as { Telegram?: { WebApp?: TGWebApp } }).Telegram?.WebApp;
-  if (!wa?.initData) return null;
+  if (!wa) return null;
   wa.ready?.();
   wa.expand?.();
   return wa;
@@ -245,7 +245,7 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
   }, [webApp]);
 
   const value = useMemo<TGMiniAppContextValue>(() => {
-    const isAvailable = !!webApp?.initData;
+    const isAvailable = !!webApp;
 
     return {
       isAvailable,

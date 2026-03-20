@@ -144,6 +144,7 @@ export const fr: TranslationResource = {
     search: 'Rechercher',
     messages: 'Messages',
     orders: 'Commandes',
+    purchases: 'Achats',
     profile: 'Profil',
     settings: 'Paramètres',
     wallet: 'Portefeuille',
@@ -612,8 +613,13 @@ export const fr: TranslationResource = {
     fundsProtected: 'Montant protégé',
     processing: 'En cours',
     manageOrders: 'Gérez vos achats et ventes',
+    managePurchases: 'Consultez et suivez vos achats',
     noOrdersFound: 'Aucune commande trouvée',
+    noPurchasesFound: "Pas encore d'achats",
     noOrdersMessage: "Vous n'avez pas encore de {{type}}. Explorez le marketplace !",
+    noPurchasesMessage: "Vous n'avez pas encore effectué d'achats. Découvrez de super produits !",
+    browseProducts: 'Découvrir les produits',
+    allPurchases: 'Tous les achats',
     noStatusOrders: 'Aucune commande {{status}} pour le moment.',
     backToOrders: 'Retour aux commandes',
     placedOn: 'Passée le {{date}}',
@@ -1803,6 +1809,9 @@ export const fr: TranslationResource = {
 
   settingsExtended: {
     profile: 'Profil',
+    generalDesc: 'Language, theme, and display preferences',
+    profileDesc: 'Your name, avatar, and bio',
+    chatEncryptionDesc: 'End-to-end encryption keys and backup',
     country: 'Pays',
     shippingAddresses: 'Adresses de Livraison',
     manageAddresses: 'Gérer vos adresses de livraison',
@@ -3491,6 +3500,7 @@ export const fr: TranslationResource = {
       filterDisputed: 'En litige',
       filterCancelled: 'Annulé',
       clearFilters: 'Effacer les filtres',
+      dateFilter: 'Date filter',
       dateFrom: 'Date de début',
       dateTo: 'Date de fin',
       emptyTitle: 'Aucune commande',
@@ -4143,6 +4153,12 @@ export const fr: TranslationResource = {
     pendingRequirements: 'Action requise',
     manageDashboard: 'Tableau de bord {{provider}}',
     dashboardLoginHint: 'Connectez-vous à {{provider}} avec {{email}}',
+  },
+  support: {
+    documentation: 'Documentation',
+    documentationDesc: 'Guides and tutorials for getting started',
+    community: 'Community',
+    communityDesc: 'Join our Telegram community for help',
   },
 };
 

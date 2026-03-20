@@ -74,14 +74,14 @@ export function SearchMobile() {
               value={search.searchQuery}
               onChange={e => search.setSearchQuery(e.target.value)}
               placeholder={search.t('searchExtended.searchPlaceholder')}
-              className="w-full h-11 pl-10 pr-20 rounded-xl border border-border bg-muted/50 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+              className="w-full h-11 pl-10 pr-[88px] rounded-xl border border-border bg-muted/50 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
               enterKeyHint="search"
             />
             {search.searchQuery && (
               <button
                 type="button"
                 onClick={() => search.setSearchQuery('')}
-                className="absolute right-16 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center"
+                className="absolute right-[76px] top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center"
               >
                 <XIcon className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -89,7 +89,7 @@ export function SearchMobile() {
             <Button
               type="submit"
               size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-9"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 text-xs px-3"
               disabled={search.isLoading}
             >
               {search.isLoading ? (

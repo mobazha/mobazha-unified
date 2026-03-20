@@ -20,6 +20,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
+    <!-- Telegram Mini App SDK — loaded only inside Telegram WebView.
+         window.Telegram is injected by Telegram before any scripts run;
+         usePlatform useEffect re-detects if SDK arrives late. -->
+    <script>
+      if (window.Telegram) {
+        var s = document.createElement('script');
+        s.src = 'https://telegram.org/js/telegram-web-app.js';
+        document.head.appendChild(s);
+      }
+    </script>
+    
     <!-- 防闪烁脚本 - 在页面加载前立即应用主题 -->
     <script>
       (function() {

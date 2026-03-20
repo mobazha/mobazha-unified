@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -12,13 +13,14 @@ import { cn } from '@/lib/utils';
 
 export default function WishlistPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const { items, isLoading, removeItem } = useWishlist();
   const { getUpdate, isChecking } = usePriceUpdates(items);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <MobilePageHeader title={t('me.wishlist')} />
+      <MobilePageHeader title={t('me.wishlist')} onBack={() => router.push('/me')} />
 
       <main className="py-4 sm:py-8">
         <Container size="lg">

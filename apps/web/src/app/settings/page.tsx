@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import {
   Settings,
   User,
@@ -61,65 +62,68 @@ export default function SettingsPage() {
   // 移动端显示分类列表（点击打开 Drawer）
   return (
     <div className="lg:hidden">
-      <h1 className="text-lg font-semibold mb-4">{t('settings.title')}</h1>
+      <MobilePageHeader title={t('settings.title')} onBack={() => router.push('/me')} />
 
-      <div className="bg-card rounded-lg border overflow-hidden mb-4">
-        <SettingsCategory
-          icon={<Settings className="w-5 h-5" />}
-          title={t('settings.sidebar.general')}
-          description={t('settingsModal.languageDesc')}
-          onClick={() => router.push('/settings/general')}
-        />
-        <SettingsCategory
-          icon={<Link2 className="w-5 h-5" />}
-          title={t('settings.sidebar.account')}
-          description={t('settings.accountBinding.description')}
-          onClick={() => router.push('/settings/account')}
-        />
-        <SettingsCategory
-          icon={<User className="w-5 h-5" />}
-          title={t('settings.sidebar.profile') || t('settings.sidebar.page')}
-          description={t('settingsModal.shortDescription')}
-          onClick={() => router.push('/settings/page-profile')}
-        />
-      </div>
+      <div className="px-4 pt-4">
+        <div className="bg-card rounded-lg border overflow-hidden mb-4">
+          <SettingsCategory
+            icon={<Settings className="w-5 h-5" />}
+            title={t('settings.sidebar.general')}
+            description={t('settingsExtended.generalDesc')}
+            onClick={() => router.push('/settings/general')}
+          />
+          <SettingsCategory
+            icon={<User className="w-5 h-5" />}
+            title={t('settings.sidebar.profile') || t('settings.sidebar.page')}
+            description={t('settingsExtended.profileDesc')}
+            onClick={() => router.push('/settings/page-profile')}
+          />
+          <SettingsCategory
+            icon={<Link2 className="w-5 h-5" />}
+            title={t('settings.sidebar.account')}
+            description={t('settings.accountBinding.description')}
+            onClick={() => router.push('/settings/account')}
+          />
+        </div>
 
-      <div className="bg-card rounded-lg border overflow-hidden mb-4">
-        <SettingsCategory
-          icon={<MapPin className="w-5 h-5" />}
-          title={t('settings.sidebar.addresses')}
-          description={t('settingsExtended.manageAddresses')}
-          onClick={() => router.push('/settings/addresses')}
-        />
-        <SettingsCategory
-          icon={<Ban className="w-5 h-5" />}
-          title={t('settings.sidebar.blocked')}
-          description={t('settingsExtended.manageBlocked')}
-          onClick={() => router.push('/settings/blocked')}
-        />
-        <SettingsCategory
-          icon={<Lock className="w-5 h-5" />}
-          title={t('settings.sidebar.chatEncryption')}
-          onClick={() => router.push('/settings/chat-encryption')}
-        />
-      </div>
+        <div className="bg-card rounded-lg border overflow-hidden mb-4">
+          <SettingsCategory
+            icon={<MapPin className="w-5 h-5" />}
+            title={t('settings.sidebar.addresses')}
+            description={t('settingsExtended.manageAddresses')}
+            onClick={() => router.push('/settings/addresses')}
+          />
+          <SettingsCategory
+            icon={<Ban className="w-5 h-5" />}
+            title={t('settings.sidebar.blocked')}
+            description={t('settingsExtended.manageBlocked')}
+            onClick={() => router.push('/settings/blocked')}
+          />
+          <SettingsCategory
+            icon={<Lock className="w-5 h-5" />}
+            title={t('settings.sidebar.chatEncryption')}
+            description={t('settingsExtended.chatEncryptionDesc')}
+            onClick={() => router.push('/settings/chat-encryption')}
+          />
+        </div>
 
-      <div className="bg-card rounded-lg border overflow-hidden mb-4">
-        <SettingsCategory
-          icon={<Scale className="w-5 h-5" />}
-          title={t('settings.sidebar.moderation')}
-          description={t('moderatorSettings.description')}
-          onClick={() => router.push('/settings/moderation')}
-        />
-      </div>
+        <div className="bg-card rounded-lg border overflow-hidden mb-4">
+          <SettingsCategory
+            icon={<Scale className="w-5 h-5" />}
+            title={t('settings.sidebar.moderation')}
+            description={t('moderatorSettings.description')}
+            onClick={() => router.push('/settings/moderation')}
+          />
+        </div>
 
-      <div className="bg-card rounded-lg border overflow-hidden">
-        <SettingsCategory
-          icon={<Wrench className="w-5 h-5" />}
-          title={t('settings.sidebar.advanced')}
-          description={t('settingsExtended.analyticsDesc')}
-          onClick={() => router.push('/settings/advanced')}
-        />
+        <div className="bg-card rounded-lg border overflow-hidden">
+          <SettingsCategory
+            icon={<Wrench className="w-5 h-5" />}
+            title={t('settings.sidebar.advanced')}
+            description={t('settingsExtended.analyticsDesc')}
+            onClick={() => router.push('/settings/advanced')}
+          />
+        </div>
       </div>
     </div>
   );

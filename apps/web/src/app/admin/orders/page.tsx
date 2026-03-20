@@ -112,6 +112,7 @@ export default function AdminOrdersPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showDateFilter, setShowDateFilter] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -357,26 +358,33 @@ export default function AdminOrdersPage() {
   return (
     <div data-testid="admin-orders">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground">
             {t('admin.orders.title')}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{t('admin.orders.subtitle')}</p>
+          <p className="hidden sm:block text-sm text-muted-foreground mt-1">
+            {t('admin.orders.subtitle')}
+          </p>
         </div>
-        <div className="relative">
+        <div className="relative shrink-0">
           <Button
             variant="outline"
-            className="gap-2"
+            size={isDesktop ? 'default' : 'icon'}
+            className={isDesktop ? 'gap-2' : 'h-9 w-9'}
             onClick={() => setShowExportMenu(!showExportMenu)}
             aria-haspopup="menu"
             aria-expanded={showExportMenu}
             aria-controls="admin-orders-export-menu"
           >
             <Download className="w-4 h-4" />
-            {t('admin.orders.export')}
-            {isSomeSelected && <span className="text-xs opacity-70">({selectedIds.size})</span>}
-            <ChevronDown className="w-3 h-3" />
+            {isDesktop && (
+              <>
+                {t('admin.orders.export')}
+                {isSomeSelected && <span className="text-xs opacity-70">({selectedIds.size})</span>}
+                <ChevronDown className="w-3 h-3" />
+              </>
+            )}
           </Button>
           {showExportMenu && (
             <>
@@ -434,25 +442,38 @@ export default function AdminOrdersPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 mb-6">
+      <div className="flex flex-col gap-3 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('admin.orders.searchPlaceholder')}
-              className="pl-10"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
+          <div className="flex gap-2 flex-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('admin.orders.searchPlaceholder')}
+                className="pl-10"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {/* Mobile: toggle date filter */}
+            <Button
+              variant={showDateFilter || dateFrom || dateTo ? 'default' : 'outline'}
+              size="icon"
+              className="sm:hidden h-9 w-9 shrink-0"
+              onClick={() => setShowDateFilter(prev => !prev)}
+              aria-label={t('admin.orders.dateFilter')}
+            >
+              <Calendar className="w-4 h-4" />
+            </Button>
           </div>
-          <div className="flex gap-2">
+          {/* Desktop: always show date range */}
+          <div className="hidden sm:flex gap-2">
             <div className="relative">
               <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <input
                 type="date"
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
-                className="h-11 sm:h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
                 aria-label={t('admin.orders.dateFrom')}
               />
             </div>
@@ -463,12 +484,39 @@ export default function AdminOrdersPage() {
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
-                className="h-11 sm:h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
                 aria-label={t('admin.orders.dateTo')}
               />
             </div>
           </div>
         </div>
+
+        {/* Mobile: collapsible date range */}
+        {showDateFilter && (
+          <div className="flex gap-2 sm:hidden">
+            <div className="relative flex-1">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                aria-label={t('admin.orders.dateFrom')}
+              />
+            </div>
+            <span className="self-center text-muted-foreground text-sm">–</span>
+            <div className="relative flex-1">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                aria-label={t('admin.orders.dateTo')}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Status tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
@@ -522,14 +570,14 @@ export default function AdminOrdersPage() {
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted mb-4">
-            <ShoppingCart className="w-7 h-7 text-muted-foreground" />
+        <div className="text-center py-10 sm:py-16 border border-dashed border-border rounded-xl">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted mb-3 sm:mb-4">
+            <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
             {hasActiveFilters ? t('admin.orders.noMatchTitle') : t('admin.orders.emptyTitle')}
           </h3>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto">
             {hasActiveFilters
               ? t('admin.orders.noMatchDescription')
               : t('admin.orders.emptyDescription')}

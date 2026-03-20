@@ -165,6 +165,9 @@ const routes: RouteObject[] = [
     element: protectedPage(() => import('./app/moderation/cases/[orderId]/page')),
   },
 
+  // 帮助与支持
+  { path: '/support', element: lazyPage(() => import('./app/support/page')) },
+
   // 通知
   { path: '/notifications', element: protectedPage(() => import('./app/notifications/page')) },
 

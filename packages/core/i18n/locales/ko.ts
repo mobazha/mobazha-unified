@@ -144,6 +144,7 @@ export const ko: TranslationResource = {
     search: '검색',
     messages: '메시지',
     orders: '주문',
+    purchases: '구매 내역',
     profile: '프로필',
     settings: '설정',
     wallet: '지갑',
@@ -490,8 +491,13 @@ export const ko: TranslationResource = {
     allOrders: '모든 주문',
     processing: '처리 중',
     manageOrders: '구매 및 판매 관리',
+    managePurchases: '구매 내역 확인 및 추적',
     noOrdersFound: '주문을 찾을 수 없습니다',
+    noPurchasesFound: '아직 구매가 없습니다',
     noOrdersMessage: '아직 {{type}}이(가) 없습니다. 마켓플레이스를 둘러보세요!',
+    noPurchasesMessage: '아직 구매한 상품이 없습니다. 멋진 상품을 찾아보세요!',
+    browseProducts: '상품 둘러보기',
+    allPurchases: '전체 구매',
     noStatusOrders: '현재 {{status}} 주문이 없습니다.',
     // Order detail page
     backToOrders: '주문 목록으로',
@@ -1737,6 +1743,9 @@ export const ko: TranslationResource = {
 
   settingsExtended: {
     profile: '프로필',
+    generalDesc: 'Language, theme, and display preferences',
+    profileDesc: 'Your name, avatar, and bio',
+    chatEncryptionDesc: 'End-to-end encryption keys and backup',
     country: '국가',
     shippingAddresses: '배송 주소',
     manageAddresses: '배송 주소 관리',
@@ -3303,6 +3312,7 @@ export const ko: TranslationResource = {
       filterDisputed: '분쟁 중',
       filterCancelled: '취소됨',
       clearFilters: '필터 지우기',
+      dateFilter: 'Date filter',
       dateFrom: '시작일',
       dateTo: '종료일',
       emptyTitle: '아직 주문 없음',
@@ -4067,6 +4077,12 @@ export const ko: TranslationResource = {
       '1M': '1개월',
       ALL: '전체',
     },
+  },
+  support: {
+    documentation: 'Documentation',
+    documentationDesc: 'Guides and tutorials for getting started',
+    community: 'Community',
+    communityDesc: 'Join our Telegram community for help',
   },
 };
 
