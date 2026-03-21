@@ -1,5 +1,5 @@
 /**
- * Traduction française
+ * French Translations
  */
 
 import type { TranslationResource } from '../types';
@@ -43,6 +43,7 @@ export const fr: TranslationResource = {
     clear: 'Effacer',
     copy: 'Copier',
     copied: 'Copié !',
+    use: 'Utiliser',
     seller: 'Vendeur',
     days: 'jours',
     hours: 'heures',
@@ -98,6 +99,9 @@ export const fr: TranslationResource = {
     removing: 'Suppression...',
     remove: 'Supprimer',
     loginRequired: 'Veuillez vous connecter pour continuer',
+    loginToSave: 'Connectez-vous pour enregistrer vos favoris',
+    loginToSaveDesc:
+      'Créez un compte pour enregistrer des articles dans votre liste de souhaits et y accéder à tout moment.',
     backToHome: "Retour à l'accueil",
     clearAll: 'Tout effacer',
     done: 'Terminé',
@@ -112,7 +116,6 @@ export const fr: TranslationResource = {
     moveUp: 'Monter',
     moveDown: 'Descendre',
   },
-
   share: {
     copyLink: 'Copier le lien',
     linkCopied: 'Lien copié !',
@@ -120,7 +123,14 @@ export const fr: TranslationResource = {
     shareToTelegram: 'Partager sur Telegram',
     shareProduct: 'Partager le produit',
   },
-
+  embed: {
+    title: "Code d'intégration",
+    embedCode: 'Intégrer',
+    size: 'Taille',
+    code: 'Code HTML',
+    preview: 'Aperçu',
+    codeCopied: "Code d'intégration copié !",
+  },
   review: {
     summary: 'Résumé des notes',
     noReviews: "Pas encore d'avis",
@@ -131,13 +141,11 @@ export const fr: TranslationResource = {
     showMore: "Voir plus d'avis",
     showLess: 'Voir moins',
   },
-
   validation: {
     required: 'Ce champ est obligatoire',
     titleRequired: 'Le titre est obligatoire',
     priceRequired: 'Le prix est obligatoire',
   },
-
   nav: {
     home: 'Accueil',
     market: 'Marché',
@@ -157,7 +165,6 @@ export const fr: TranslationResource = {
     viewCart: 'Voir le panier',
     openUserMenu: 'Ouvrir le menu utilisateur',
   },
-
   login: {
     title: 'Mobazha',
     subtitle: 'Place de marché décentralisée',
@@ -173,6 +180,9 @@ export const fr: TranslationResource = {
     passwordPlaceholder: 'Entrez le mot de passe',
     login: 'Connexion',
     loginRegister: 'Connexion / Inscription',
+    createAccount: 'Créer un compte',
+    signInToContinue: 'Veuillez vous connecter pour continuer',
+    invalidCredentials: 'Identifiant ou mot de passe incorrect',
     loginFailed: 'Échec de la connexion, veuillez réessayer',
     usernamePasswordRequired: "Veuillez entrer le nom d'utilisateur et le mot de passe",
     hostedModeInfo:
@@ -188,12 +198,12 @@ export const fr: TranslationResource = {
     buyerLogin: 'Acheteur',
     loginWithMobazha: 'Connexion avec compte Mobazha',
     buyerLoginHint: 'Connectez-vous pour passer des commandes et discuter avec le vendeur',
+    brandFooter: 'Commerce décentralisé, propulsé par Mobazha',
     sessionExpiredTitle: 'Session expirée',
     sessionExpiredMessage:
       "Votre session a expiré ou n'est plus valide. Veuillez vous reconnecter pour continuer.",
     sessionExpiredAction: 'Se reconnecter',
   },
-
   home: {
     welcome: 'Bienvenue sur Mobazha',
     featured: 'Produits en vedette',
@@ -202,7 +212,14 @@ export const fr: TranslationResource = {
     categories: 'Catégories',
     viewAll: 'Tout voir',
   },
-
+  categories: {
+    electronics: 'Électronique',
+    clothing: 'Vêtements',
+    art: 'Art',
+    collectibles: 'Objets de collection',
+    home: 'Maison et jardin',
+    sports: 'Sport',
+  },
   me: {
     title: 'Moi',
     anonymous: 'Anonyme',
@@ -233,6 +250,7 @@ export const fr: TranslationResource = {
     darkModeDesc: 'Activer le mode sombre',
     storeAdmin: 'Administration boutique',
     storeAdminDesc: 'Gérer les produits, commandes et paramètres',
+    startSellingDesc: "Configurez votre boutique et commencez à vendre dès aujourd'hui",
     support: 'Aide et support',
     supportDesc: "Obtenir de l'aide et consulter la FAQ",
     language: 'Langue',
@@ -252,8 +270,38 @@ export const fr: TranslationResource = {
     accessControl: "Contrôle d'accès",
     accessRequests: "Demandes d'accès",
     accessRequestsDesc: "Examiner les demandes d'accès en attente",
+    storeOwner: 'Propriétaire de la boutique',
+    myStore: 'Ma boutique',
+    dashboard: 'Tableau de bord',
+    dashboardDesc: "Vue d'ensemble des ventes et analyses",
+    ordersReceived: 'Commandes reçues',
+    ordersReceivedDesc: 'Gérer les commandes entrantes',
+    manageListings: 'Gérer les annonces',
+    manageListingsDesc: 'Ajouter et modifier des produits',
+    storeSettings: 'Paramètres de la boutique',
+    storeSettingsDesc: 'Configurer votre boutique',
+    myShopping: 'Mes achats',
+    myPurchases: 'Mes commandes',
+    myPurchasesDesc: 'Suivre vos commandes',
+    myChats: 'Messages',
+    myChatsDesc: 'Discuter avec vendeurs et acheteurs',
+    signInPrompt: 'Créez votre compte',
+    signInBenefits:
+      'Suivez vos commandes, enregistrez vos favoris et synchronisez sur tous vos appareils',
+    continueWithTelegram: 'Continuer avec Telegram',
+    cartSyncHint: 'Connectez-vous pour sauvegarder votre panier sur tous vos appareils',
+    unclaimedStorePrompt: 'Êtes-vous le propriétaire de cette boutique ?',
+    unclaimedStoreDesc: 'Revendiquez cette boutique pour gérer les produits et les commandes',
+    claimStore: 'Revendiquer la boutique',
+    claimStoreExpand: 'Oui, revendiquer cette boutique',
+    adminPasswordLabel: 'Mot de passe administrateur',
+    adminPasswordPlaceholder: 'Saisissez le mot de passe administrateur de la boutique',
+    claiming: 'Revendication en cours...',
+    claimSuccess: 'Boutique revendiquée avec succès !',
+    claimErrorWrongPassword: 'Mot de passe administrateur incorrect',
+    claimErrorAlreadyClaimed: 'Cette boutique a déjà été revendiquée',
+    claimErrorGeneric: 'Échec de la revendication. Veuillez réessayer.',
   },
-
   product: {
     title: 'Titre',
     description: 'Description',
@@ -338,13 +386,15 @@ export const fr: TranslationResource = {
     shippingFee: 'Frais',
     additionalItemFee: 'Article supplémentaire',
     noShippingOptions: 'Aucune option de livraison disponible',
+    contactSellerForShipping: 'Livraison organisée directement avec le vendeur',
+    contactSellerForShippingDesc:
+      'Contactez le vendeur pour les tarifs et délais avant de commander',
     localPickup: 'Retrait sur place',
     priceToBeCalculated: 'À calculer',
     worldwide: 'Monde entier',
     moreFromStore: 'Plus de cette boutique',
     viewAllProducts: 'Tout voir',
   },
-
   search: {
     placeholder: 'Rechercher produits, boutiques...',
     results: '{{count}} résultats',
@@ -361,7 +411,6 @@ export const fr: TranslationResource = {
     category: 'Catégorie',
     allCategories: 'Toutes les catégories',
   },
-
   cart: {
     title: 'Panier',
     empty: 'Votre panier est vide',
@@ -372,6 +421,8 @@ export const fr: TranslationResource = {
     shipping: 'Livraison',
     total: 'Total',
     checkout: 'Commander',
+    loginToCheckout: 'Se connecter pour payer',
+    registerToCheckout: "S'inscrire pour payer",
     remove: 'Supprimer',
     decreaseQuantity: 'Diminuer la quantité',
     increaseQuantity: 'Augmenter la quantité',
@@ -393,8 +444,8 @@ export const fr: TranslationResource = {
     clearConfirmTitle: 'Vider le panier',
     clearConfirmMessage:
       'Êtes-vous sûr de vouloir supprimer tous les articles du panier ? Cette action est irréversible.',
+    viewCart: 'Voir le panier',
   },
-
   checkout: {
     title: 'Paiement',
     stepCheckout: 'Paiement',
@@ -432,6 +483,7 @@ export const fr: TranslationResource = {
     quantity: 'Qté',
     subtotal: 'Sous-total',
     shipping: 'Livraison',
+    tax: 'Taxes',
     shippingMethod: 'Méthode de livraison',
     free: 'Gratuit',
     cheapest: 'Moins cher',
@@ -482,7 +534,6 @@ export const fr: TranslationResource = {
       proximityHint: 'Ajoutez {{amount}} de plus pour obtenir {{reward}} !',
     },
   },
-
   address: {
     title: 'Adresses de livraison',
     addAddress: 'Ajouter une adresse',
@@ -516,7 +567,6 @@ export const fr: TranslationResource = {
     addressNotes: 'Notes de livraison (optionnel)',
     addressNotesPlaceholder: 'Instructions de livraison spéciales...',
   },
-
   order: {
     title: 'Commande',
     myOrders: 'Mes commandes',
@@ -541,6 +591,11 @@ export const fr: TranslationResource = {
     viewTransaction: 'Voir la transaction',
     summary: 'Récapitulatif',
     orderHistory: 'Historique des commandes',
+    trackingSection: {
+      title: 'Suivi',
+      noTrackingNumber: 'Aucun numéro de suivi fourni',
+      track: 'Suivre',
+    },
     stages: {
       paid: 'Payé',
       accepted: 'Accepté',
@@ -572,6 +627,7 @@ export const fr: TranslationResource = {
     shippingDetails: 'Détails de livraison',
     menu: 'Menu',
     tabs: {
+      label: 'Détails de la commande',
       summary: 'Récapitulatif',
       discussion: 'Discussion',
       contract: 'Contrat (JSON)',
@@ -585,7 +641,34 @@ export const fr: TranslationResource = {
       packageShippedWithTracking: 'Colis expédié - {{shipper}} : {{trackingNumber}}',
       orderCompleted: 'Commande terminée - Fonds libérés au vendeur',
       disputeOpened: 'Litige ouvert',
+      fiatDisputeOpened: "Paiement contesté par l'acheteur via le prestataire de paiement",
       disputeClosed: 'Litige clos : {{verdict}}',
+      refunded: 'Commande remboursée',
+    },
+    statusCard: {
+      awaitingPaymentBuyer: 'Paiement requis pour finaliser cette commande',
+      awaitingPaymentSeller: "En attente du paiement de l'acheteur",
+      awaitingPaymentHint: 'Appuyez sur « Payer maintenant » ci-dessous pour continuer',
+      pendingBuyer: "En attente de l'acceptation de votre commande par le vendeur",
+      pendingBuyerConfirmingHint: 'Confirmation sur la chaîne, généralement 15 à 60 secondes',
+      pendingSeller: 'Nouvelle commande — examinez et acceptez pour continuer',
+      processingBuyer: 'Le vendeur prépare votre commande',
+      processingSeller: 'Commande acceptée — préparez et expédiez quand vous êtes prêt',
+      shippedBuyer: 'Votre commande est en route',
+      shippedSeller: "Commande expédiée — en attente de confirmation de réception par l'acheteur",
+      shippedHint: 'Confirmez la réception dès réception du colis',
+      deliveredBuyer: 'Votre commande a été livrée',
+      deliveredSeller: "L'acheteur a confirmé la réception",
+      completed: 'Transaction terminée — fonds libérés',
+      disputed: "Cette commande fait l'objet d'un litige",
+      disputedHint: 'Un médiateur examine ce dossier',
+      cancelled: 'Cette commande a été annulée',
+      refunded: 'Cette commande a été remboursée',
+      reason: 'Motif',
+      stepPaid: 'Payé',
+      stepAccepted: 'Accepté',
+      stepShipped: 'Expédié',
+      stepComplete: 'Terminé',
     },
     shipTo: 'Livrer à',
     viewOnMap: 'Voir sur la carte',
@@ -601,6 +684,7 @@ export const fr: TranslationResource = {
       quantity: 'Qté',
       service: 'Service',
       digital: 'Numérique',
+      soldBy: 'Vendu par',
     },
     countries: {
       UNITED_STATES: 'États-Unis',
@@ -715,6 +799,7 @@ export const fr: TranslationResource = {
     receiptConfirmed: 'Commande terminée avec succès ! Les fonds ont été libérés au vendeur.',
     receiptConfirmFailed: 'Échec de la confirmation de réception : ',
     disputeOpenedSuccess: 'Le litige a été ouvert. Le modérateur examinera votre dossier.',
+    afterSaleDisputeSuccess: 'Votre problème a été signalé. Le vendeur en sera informé.',
     disputeOpenFailed: "Échec de l'ouverture du litige : ",
     provideDisputeReason: 'Veuillez fournir une raison pour le litige',
     orderShipped: 'Commande marquée comme expédiée !',
@@ -724,10 +809,19 @@ export const fr: TranslationResource = {
     refundFailed: 'Échec du remboursement : ',
     disputeResolvedSuccess: 'Le litige a été résolu !',
     resolveDisputeFailed: 'Échec de la résolution du litige : ',
+    packingSlip: {
+      title: 'Bon de préparation',
+      print: 'Imprimer',
+      orderNumber: 'Commande n°',
+      item: 'Article',
+      price: 'Prix',
+      thankYou: 'Merci pour votre commande !',
+    },
     actions: {
       pay: 'Payer maintenant',
       cancel: 'Annuler la commande',
       dispute: 'Ouvrir un litige',
+      reportIssue: 'Signaler un problème',
       complete: 'Confirmer la réception',
       writeReview: 'Écrire un avis',
       accept: 'Accepter la commande',
@@ -736,6 +830,8 @@ export const fr: TranslationResource = {
       refund: 'Rembourser',
       claim: 'Réclamer le paiement',
       acceptPayout: 'Accepter le paiement',
+      chat: 'Discussion',
+      confirmDelivery: 'Confirmer',
       acceptSuccess: 'Commande acceptée',
       acceptSuccessDesc: "Vous avez accepté la commande. Veuillez l'expédier dès que possible.",
       declineSuccess: 'Commande refusée',
@@ -752,6 +848,8 @@ export const fr: TranslationResource = {
       fulfillSuccessDesc: "La commande a été marquée comme expédiée. L'acheteur a été notifié.",
       completeSuccess: 'Commande terminée',
       completeSuccessDesc: 'La commande est terminée. Les fonds ont été libérés au vendeur.',
+      rateSuccess: 'Avis envoyé',
+      rateSuccessDesc: 'Votre avis a bien été envoyé.',
       walletRequired: 'Portefeuille requis',
       pleaseConnectWallet: 'Veuillez connecter votre portefeuille pour finaliser cette commande.',
       walletConnectionCancelled: 'Connexion du portefeuille annulée.',
@@ -838,6 +936,21 @@ export const fr: TranslationResource = {
           'Êtes-vous sûr de vouloir confirmer la réception de cette commande ? Cela libérera les fonds au vendeur et marquera la commande comme terminée.',
       },
     },
+    fiatRefund: {
+      title: 'Rembourser le paiement',
+      description:
+        'Choisissez le montant et le motif du remboursement. Le remboursement sera traité par le prestataire de paiement.',
+      fullRefund: 'Remboursement intégral',
+      partialRefund: 'Remboursement partiel',
+      amount: 'Montant du remboursement',
+      amountPlaceholder: '0,00',
+      reason: 'Motif',
+      reasons: {
+        requestedByCustomer: 'Demandé par le client',
+        duplicate: 'Paiement en double',
+        fraudulent: 'Frauduleux',
+      },
+    },
     review: {
       title: 'Laisser un avis',
       rateExperience: 'Comment était votre expérience ?',
@@ -848,6 +961,15 @@ export const fr: TranslationResource = {
       skip: "Passer pour l'instant",
       confirmTitle: "Confirmer la réception et l'avis",
       confirmDesc: 'Souhaitez-vous laisser un avis avant de terminer cette commande ?',
+      star1: 'Très mauvais',
+      star2: 'Médiocre',
+      star3: 'Moyen',
+      star4: 'Bien',
+      star5: 'Excellent',
+      inviteTitle: "Comment s'est passée votre expérience ?",
+      inviteDesc:
+        'Partagez votre avis en 30 secondes — cela aide les autres acheteurs et le vendeur.',
+      writeReview: 'Rédiger un avis',
     },
     accept: {
       title: 'Accepter la commande',
@@ -866,6 +988,7 @@ export const fr: TranslationResource = {
       trackingNumber: 'Numéro de suivi',
       trackingPlaceholder: 'Entrez le numéro de suivi',
       trackingRequired: 'Veuillez fournir un numéro de suivi',
+      carrierHint: 'Astuce : ajoutez un transporteur ci-dessus pour activer le lien de suivi',
       fileUrl: 'URL du fichier',
       fileUrlPlaceholder: "Entrez l'URL de téléchargement",
       urlRequired: 'Veuillez fournir une URL de fichier',
@@ -903,6 +1026,47 @@ export const fr: TranslationResource = {
       confirmText:
         'Êtes-vous sûr de vouloir ouvrir un litige ? Le modérateur sera notifié et interviendra pour résoudre le problème.',
       confirm: 'Ouvrir le litige',
+      viewInProviderDashboard: "Répondre dans l'espace prestataire de paiement",
+      haveProblem: 'Un problème avec cette commande ?',
+      afterSaleTitle: 'Signaler un problème',
+      afterSaleDescription:
+        'Décrivez le problème concernant votre commande terminée. Le vendeur en sera informé.',
+      selectReason: 'Veuillez sélectionner un motif',
+      reasonLabel: 'Motif',
+      reason: {
+        notReceived: 'Article non reçu',
+        notAsDescribed: 'Article non conforme à la description',
+        qualityIssue: 'Problème de qualité',
+        other: 'Autre',
+      },
+    },
+    afterSaleDispute: {
+      buyerTitle: 'Vous avez signalé un problème pour cette commande',
+      sellerTitle: "L'acheteur a signalé un problème pour cette commande",
+      reasonLabel: 'Motif',
+      messageSeller: 'Contacter le vendeur',
+      contactBuyer: "Contacter l'acheteur",
+      issueReported: 'Problème signalé',
+      reason: {
+        notReceived: 'Article non reçu',
+        qualityIssue: 'Problème de qualité',
+        notAsDescribed: 'Article non conforme à la description',
+        other: 'Autre',
+      },
+    },
+    fiatDispute: {
+      title: 'Litige de paiement ouvert',
+      titleResolved: 'Litige de paiement résolu',
+      description: 'Un litige a été ouvert auprès de {{provider}} pour cette commande.',
+      descriptionResolved: 'Le litige de paiement a été résolu.',
+      reason: 'Motif : {{reason}}',
+      outcomeWon: 'Le litige a été résolu en votre faveur.',
+      outcomeLost: "Le litige a été résolu en faveur de l'acheteur. Un remboursement a été émis.",
+      outcomeAccepted: 'Le litige a été accepté et un remboursement a été émis.',
+      sellerHint:
+        "Répondez à ce litige dans l'espace prestataire de paiement pour fournir des preuves.",
+      buyerHint: 'Votre litige est examiné par le prestataire de paiement.',
+      viewDashboard: "Répondre dans l'espace {{provider}}",
     },
     refund: {
       title: 'Confirmer le remboursement',
@@ -938,6 +1102,8 @@ export const fr: TranslationResource = {
       digitalDelivered: 'Contenu numérique livré',
       carrier: 'Transporteur',
       trackingNumber: 'Suivi',
+      trackShipment: "Suivre l'envoi",
+      copyTracking: 'Copier le numéro de suivi',
       downloadUrl: 'URL de téléchargement',
       password: 'Mot de passe',
       transactionId: 'ID de transaction',
@@ -1033,6 +1199,17 @@ export const fr: TranslationResource = {
         userRejected: "Transaction rejetée par l'utilisateur.",
       },
     },
+    fiatPayment: {
+      title: 'Paiement',
+      provider: 'Prestataire',
+      method: 'Mode de paiement',
+      amount: 'Montant',
+      paidAt: 'Payé le',
+      paid: 'Payé',
+      refunded: 'Remboursé',
+      disputed: 'Contesté',
+      transactionId: 'ID de transaction',
+    },
     paymentLocked: {
       title: 'Paiement verrouillé',
       locked: 'Verrouillé',
@@ -1052,7 +1229,6 @@ export const fr: TranslationResource = {
       claimRefund: 'Demander le remboursement',
     },
   },
-
   chat: {
     title: 'Messages',
     defaultRoom: 'Chat',
@@ -1071,7 +1247,16 @@ export const fr: TranslationResource = {
     selectConversation:
       'Sélectionnez une conversation pour commencer à discuter, ou créez-en une nouvelle pour vous connecter avec les vendeurs et acheteurs.',
     searchConversations: 'Rechercher des conversations...',
-    // Sections
+    loginRequired: 'Connexion requise',
+    loginToChat: 'Veuillez vous connecter pour accéder à vos messages et discuter.',
+    connecting: 'Connexion au chat...',
+    noConversations: 'Pas encore de conversations',
+    startFirstConversation:
+      'Démarrez votre première conversation en cliquant sur le bouton ci-dessous ou en visitant une boutique.',
+    startNewConversation: 'Démarrer une nouvelle conversation',
+    startConversation: 'Démarrer une conversation',
+    today: "Aujourd'hui",
+    yesterday: 'Hier',
     directMessages: 'Messages directs',
     communities: 'Communautés',
     orderChats: 'Discussions de commandes',
@@ -1079,7 +1264,6 @@ export const fr: TranslationResource = {
     invitedYou: 'Vous a invité à discuter',
     inviteConfirm: 'Invitation',
     invitedBy: 'Invité par {{name}}',
-    // Room settings
     roomSettings: 'Paramètres de la salle',
     roomId: 'ID de la salle',
     members: 'Membres',
@@ -1087,29 +1271,15 @@ export const fr: TranslationResource = {
     groupChat: 'Chat de groupe',
     viewStore: 'Voir la boutique',
     sendMessage: 'Envoyer un message',
-    // User info
     unknownUser: 'Utilisateur inconnu',
     externalUser: 'Utilisateur Matrix externe',
     peerId: 'Peer ID',
     matrixId: 'Matrix ID',
-    // Time
-    today: "Aujourd'hui",
-    yesterday: 'Hier',
-    connecting: 'Connexion au chat...',
-    startConversation: 'Démarrer une conversation',
-    loginRequired: 'Connexion requise',
-    loginToChat: 'Veuillez vous connecter pour accéder à vos messages et discuter.',
-    noConversations: 'Pas encore de conversations',
-    startFirstConversation:
-      'Démarrez votre première conversation en cliquant sur le bouton ci-dessous ou en visitant une boutique.',
-    startNewConversation: 'Démarrer une nouvelle conversation',
     roomNotFound: 'Salle introuvable',
     roomNotFoundDesc:
       "La salle de chat que vous recherchez n'existe pas ou vous n'y avez pas accès.",
     backToMessages: 'Retour aux messages',
   },
-
-  // Matrix 房间事件
   matrix: {
     events: {
       join: '{{name}} a rejoint la conversation',
@@ -1126,7 +1296,6 @@ export const fr: TranslationResource = {
       roomCreated: '{{name}} a créé cette conversation',
     },
   },
-
   wallet: {
     title: 'Portefeuille',
     balance: 'Solde',
@@ -1168,101 +1337,19 @@ export const fr: TranslationResource = {
     viewInExplorer: "Voir dans l'explorateur",
     walletDetails: 'Détails du portefeuille',
   },
-
-  payment: {
-    title: 'Paiement',
-    selectPaymentMethod: 'Sélectionner le mode de paiement',
-    selectPaymentMethodDesc: 'Choisissez comment vous souhaitez payer cette commande',
-    paymentMethod: 'Mode de paiement',
-    otherMethods: 'Autres modes de paiement',
-    showMore: 'Plus',
-    showLess: 'Moins',
-    noTokensAvailable: 'Aucun mode de paiement disponible',
-    paymentProtection: 'Protection de paiement',
-    paymentProtectionInfo:
-      'La protection de paiement permet à un modérateur de résoudre les litiges entre acheteur et vendeur.',
-    protectFor: 'Protéger mon paiement pendant {{days}} jours maximum',
-    selectModerator: 'Sélectionner un modérateur',
-    selectModeratorDesc: 'Choisissez un modérateur pour la protection de paiement',
-    selectModeratorWarning: 'Veuillez sélectionner un modérateur pour la protection séquestre',
-    selectPaymentMethodWarning: 'Veuillez sélectionner un mode de paiement',
-    changeModerator: 'Modifier',
-    enableProtection: 'Activer la protection',
-    disableProtection: 'Désactiver la protection',
-    fee: 'Frais',
-    noOrderID: 'Aucun ID de commande fourni',
-    loadOrderFailed: 'Échec du chargement des détails de la commande',
-    errorTitle: 'Impossible de charger la commande',
-    noOrderData: 'Aucune donnée de commande',
-    paymentSummary: 'Résumé du paiement',
-    orderTotal: 'Total de la commande',
-    moderatorFee: 'Frais de modérateur',
-    totalToPay: 'Total à payer',
-    pay: 'Payer',
-    connectWallet: 'Connecter le portefeuille pour payer',
-    connecting: 'Connexion...',
-    processing: 'Traitement...',
-    success: 'Paiement réussi !',
-    failed: 'Paiement échoué : ',
-    securityNote: 'Paiement sécurisé avec protection séquestre multi-signature',
-    noPaymentMethods: 'Aucun mode de paiement disponible',
-    noPaymentMethodsDesc:
-      "Le vendeur n'a pas encore configuré de modes de paiement. Contactez le vendeur ou réessayez plus tard.",
-    noPaymentMethodsSellerTitle: 'Configurer les modes de paiement',
-    noPaymentMethodsSellerDesc:
-      'Configurez les adresses de réception pour que les acheteurs puissent payer vos produits.',
-    noPaymentMethodsSellerAction: 'Configurer les paiements',
-    paymentUnavailable: 'Paiement indisponible',
-    paymentUnavailableDesc:
-      "Ce vendeur n'a pas configuré de modes de paiement. Vous pouvez contacter le vendeur pour plus d'informations.",
-    subtotal: 'Sous-total',
-    shipping: 'Livraison',
-    moderatorFeeNote: 'déduit du vendeur',
-    connectWalletFirst: "Veuillez d'abord connecter votre portefeuille",
-    noPaymentAddress: 'Aucune adresse de paiement disponible',
-    noPaymentInstructions: "Échec de l'obtention des instructions de paiement",
-    externalWalletRequired: 'Portefeuille externe requis',
-    pleaseUseExternalWallet:
-      'Veuillez utiliser un portefeuille externe (BTC/LTC) pour effectuer ce paiement',
-    invalidAmount: 'Montant de paiement invalide',
-    signerNotAvailable: 'Signataire du portefeuille indisponible',
-    providerNotAvailable: 'Fournisseur de portefeuille indisponible',
-    approvalRequired: 'Approbation du token requise',
-    pleaseApproveToken: 'Veuillez approuver la dépense du token dans votre portefeuille',
-    approvalSent: "Transaction d'approbation envoyée",
-    waitingForApproval: "En attente de confirmation d'approbation...",
-    approvalFailed: "Échec de l'approbation du token",
-    approvalSuccess: 'Token approuvé',
-    proceedingWithPayment: 'Poursuite du paiement...',
-    confirmInWallet: 'Confirmer dans le portefeuille',
-    pleaseConfirmTransaction: 'Veuillez confirmer la transaction dans votre portefeuille',
-    transactionSent: 'Transaction envoyée',
-    txHash: 'Identifiant de transaction',
-    transactionFailed: 'Transaction échouée',
-    paymentComplete: 'Votre paiement a été traité avec succès',
-    waitingForConfirmation: 'En attente de confirmation sur la blockchain...',
-    completing: 'Finalisation du paiement',
-    finalizingOrder: 'Finalisation de votre commande...',
-    redirecting: 'Redirection vers la confirmation de commande...',
-    cancelled: 'Paiement annulé',
-    userCancelledTransaction: "Transaction annulée par l'utilisateur",
-    searchModerators: 'Rechercher des modérateurs...',
-    loadingModerators: 'Chargement des modérateurs...',
-    noModeratorsFound: 'Aucun modérateur trouvé',
-    noModeratorsAvailable: 'Aucun modérateur disponible',
-  },
-
   profile: {
     title: 'Profil',
     myProfile: 'Mon profil',
     editProfile: 'Modifier le profil',
     about: 'À propos',
     location: 'Localisation',
+    noLocation: 'Pas de localisation',
     joined: 'Membre depuis {{date}}',
     followers: 'Abonnés',
     following: 'Abonnements',
     listings: 'Produits',
     reviews: 'Avis',
+    review: 'avis',
     verified: 'Vérifié',
     store: 'Boutique',
     rwa: 'Actifs Numériques',
@@ -1292,10 +1379,12 @@ export const fr: TranslationResource = {
     noFollowers: 'Aucun abonné',
     noOwnFollowing: 'Vous ne suivez personne',
     noFollowing: 'Ne suit personne',
-    noLocation: 'Pas de localisation',
-    review: 'avis',
+    paymentMethods: 'Paiements acceptés',
+    shop: 'Boutique',
+    storePolicy: 'Politiques',
+    allProducts: 'Tous les produits',
+    collections: 'Collections',
   },
-
   settings: {
     title: 'Paramètres',
     general: 'Général',
@@ -1333,6 +1422,7 @@ export const fr: TranslationResource = {
     adjustAvatar: "Ajuster l'avatar",
     sidebar: {
       general: 'Général',
+      profile: 'Profil',
       account: 'Comptes liés',
       page: 'Page de profil',
       store: 'Boutique',
@@ -1468,7 +1558,6 @@ export const fr: TranslationResource = {
       reviewNotePlaceholder: "Ajoutez une note pour l'utilisateur...",
     },
   },
-
   moderatorSettings: {
     title: 'Résolution des litiges',
     description:
@@ -1499,7 +1588,6 @@ export const fr: TranslationResource = {
     disableConfirm:
       'Êtes-vous sûr de vouloir désactiver votre statut de modérateur ? Vous ne serez plus affiché dans la liste des modérateurs.',
   },
-
   theme: {
     classic: 'Cyan classique',
     classicDesc: 'Couleurs classiques Mobazha, fraîches et vibrantes',
@@ -1514,7 +1602,6 @@ export const fr: TranslationResource = {
     luxury: 'Or luxe',
     luxuryDesc: 'Noir et or pour le commerce de luxe',
   },
-
   errors: {
     generic: 'Une erreur est survenue',
     network: 'Erreur réseau. Vérifiez votre connexion.',
@@ -1531,7 +1618,6 @@ export const fr: TranslationResource = {
     invalidInput: 'Entrée invalide',
     requiredField: 'Ce champ est requis',
   },
-
   time: {
     justNow: "À l'instant",
     minutesAgo: 'Il y a {{count}} min',
@@ -1541,7 +1627,6 @@ export const fr: TranslationResource = {
     monthsAgo: 'Il y a {{count}} mois',
     yearsAgo: 'Il y a {{count}} ans',
   },
-
   hero: {
     badge: 'Décentralisé & Pair-à-Pair',
     titleLine1: 'Échangez librement.',
@@ -1554,8 +1639,65 @@ export const fr: TranslationResource = {
     productsListed: 'Produits Listés',
     privacyFirst: 'Confidentialité',
   },
-
+  saasHome: {
+    hero: {
+      title: 'Lancez votre boutique Web3',
+      subtitle:
+        "Zéro frais de plateforme. Vos données vous appartiennent. Acceptez les paiements en crypto avec protection de l'acheteur.",
+      ctaCreate: 'Créer votre boutique',
+      ctaExplore: 'Explorer les boutiques',
+      welcomeBack: 'Bon retour, {{storeName}}',
+      ctaDashboard: 'Aller au tableau de bord',
+      ctaViewStore: 'Voir votre boutique',
+      ctaStartSelling: 'Commencer à vendre',
+      ctaBrowse: 'Parcourir les boutiques',
+    },
+    valueProps: {
+      buyerProtection: {
+        title: "Protection de l'acheteur",
+        description: "Chaque transaction est sécurisée par la protection de l'acheteur",
+      },
+      selfHosted: {
+        title: 'Vos données vous appartiennent',
+        description:
+          'Hébergez votre boutique sur votre propre matériel ou utilisez notre service hébergé',
+      },
+      lowFees: {
+        title: 'Zéro frais de plateforme',
+        description: "Pas d'abonnement mensuel, pas de commission sur les transactions",
+      },
+      cryptoNative: {
+        title: 'Natif crypto',
+        description: 'Acceptez BNB, ETH, SOL et plus, avec règlement instantané',
+      },
+    },
+    featuredStores: {
+      title: 'Boutiques à la une',
+      subtitle: 'Découvrez ce que les vendeurs construisent sur le réseau Mobazha',
+      visitStore: 'Visiter la boutique',
+      products: '{{count}} produits',
+      viewAll: 'Voir toutes les boutiques',
+      emptyTitle: 'Soyez le premier',
+      emptySubtitle: 'Créez votre boutique Web3 et rejoignez le réseau',
+      growingCta: 'Rejoindre le réseau en croissance',
+    },
+    popularProducts: {
+      title: 'Produits populaires',
+      subtitle: 'Tendances sur le réseau',
+    },
+    networkActivity: {
+      title: 'Activité du réseau',
+      subtitle: 'Produits récemment mis en ligne par les boutiques du réseau',
+      fromStore: 'depuis {{storeName}}',
+    },
+    stats: {
+      activeStores: 'Boutiques actives',
+      productsListed: 'Produits listés',
+      chainsSupported: 'Chaînes prises en charge',
+    },
+  },
   footer: {
+    slogan: 'Achetez et développez avec les cryptos',
     tagline: 'La place de marché décentralisée pour le commerce de demain.',
     marketplace: 'Marché',
     browseProducts: 'Parcourir les Produits',
@@ -1567,6 +1709,7 @@ export const fr: TranslationResource = {
     documentation: 'Documentation',
     api: 'API',
     faq: 'FAQ',
+    community: 'Communauté',
     company: 'Entreprise',
     about: 'À Propos',
     blog: 'Blog',
@@ -1574,10 +1717,12 @@ export const fr: TranslationResource = {
     contact: 'Contact',
     allRightsReserved: 'Tous droits réservés.',
     paymentMethods: 'Paiements acceptés',
-    slogan: 'Achetez et développez avec les cryptos',
-    community: 'Communauté',
+    shop: 'Boutique',
+    storePolicy: 'Politiques',
+    allProducts: 'Tous les produits',
+    collections: 'Collections',
+    buyerProtection: "Protection de l'acheteur",
   },
-
   policies: {
     privacyPolicy: 'Politique de confidentialité',
     termsOfService: "Conditions d'utilisation",
@@ -1611,6 +1756,47 @@ export const fr: TranslationResource = {
     returnsDisputes: 'Litiges',
     returnsDisputesDesc:
       'Si vous et le vendeur ne parvenez pas à un accord, vous pouvez ouvrir un litige. Un modérateur examinera le dossier.',
+    buyerProtectionTitle: "Politique de protection de l'acheteur",
+    buyerProtectionPolicy: "Protection de l'acheteur",
+    buyerProtectionIntro:
+      "Chaque achat ici est couvert par la protection de l'acheteur, conçue pour vous rassurer.",
+    buyerProtectionIntroPlatform:
+      "Chaque achat sur Mobazha est couvert par notre programme de protection de l'acheteur, conçu pour vous rassurer.",
+    bpAutoComplete: 'Finalisation automatique des commandes',
+    bpAutoCompleteDesc:
+      "Les commandes se finalisent automatiquement à l'issue de la période de protection. Vous n'avez rien à faire — en l'absence de problème, la transaction se conclut d'elle-même. Les durées de protection varient selon le type de produit : 14 jours pour les biens physiques, 3 jours pour les produits numériques et 7 jours pour les services.",
+    bpFundsHeld: 'Détention sécurisée des fonds',
+    bpFundsHeldDesc:
+      "Lorsque vous passez commande, votre paiement est conservé sur un compte sécurisé. Les fonds ne sont versés au vendeur qu'après la fin de la période de protection ou lorsque vous confirmez la réception.",
+    bpAutoRefund: 'Remboursement automatique en cas de non-expédition',
+    bpAutoRefundDesc:
+      "Si le vendeur n'expédie pas dans le délai requis (7 jours pour les biens physiques, 3 jours pour le numérique et les services), la commande est automatiquement annulée et vos fonds vous sont restitués.",
+    bpDisputeProcess: 'Procédure de litige',
+    bpDisputeProcessDesc:
+      "Si un problème survient pendant la période de protection, vous pouvez le signaler en un geste. Vous disposez d'abord de 7 jours pour le résoudre avec le vendeur. À défaut, un médiateur indépendant intervient et rend une décision équitable sous 7 jours.",
+    bpAfterSale: 'Assistance après vente',
+    bpAfterSaleDesc:
+      "Même après la fin de la transaction, vous disposez d'une fenêtre de 7 jours pour signaler des problèmes — votre satisfaction compte.",
+    bpExtend: 'Prolongation de la période de protection',
+    bpExtendDesc:
+      'Pour les biens physiques, si votre envoi est retardé, vous pouvez demander une prolongation unique de 14 jours de la période de protection.',
+    refundTitle: 'Politique de remboursement',
+    refundIntro:
+      'Chaque achat doit répondre à vos attentes. Voici comment fonctionnent les remboursements.',
+    refundIntroPlatform:
+      'Nous voulons que chaque achat réponde à vos attentes. Voici comment fonctionnent les remboursements sur Mobazha.',
+    refundEligibility: 'Éligibilité au remboursement',
+    refundEligibilityDesc:
+      "Vous pouvez demander un remboursement pendant la période de protection si l'article n'a pas été reçu, diffère nettement de la description ou est défectueux.",
+    refundProcess: 'Procédure de remboursement',
+    refundProcessDesc:
+      'Pour demander un remboursement, ouvrez les détails de la commande et appuyez sur « Signaler un problème ». Sélectionnez le motif et précisez les détails. Le vendeur sera informé et vous aurez 7 jours pour trouver une solution ensemble.',
+    refundTimeline: 'Délais de remboursement',
+    refundTimelineDesc:
+      'Les remboursements en cryptomonnaie sont traités sous 1 à 3 jours ouvrables après approbation. Les remboursements en monnaie fiduciaire suivent les délais du prestataire de paiement (généralement 5 à 10 jours ouvrables).',
+    refundNonRefundable: 'Articles non remboursables',
+    refundNonRefundableDesc:
+      "Les produits numériques déjà téléchargés, les articles sur mesure et les services entièrement fournis peuvent ne pas être remboursables sauf s'ils sont défectueux.",
     noPolicies: "Cette boutique n'a pas encore publié de politiques.",
     backToStore: 'Retour à la boutique',
     privacyTitle: 'Politique de confidentialité',
@@ -1619,6 +1805,8 @@ export const fr: TranslationResource = {
     privacyCollection: 'Informations collectées',
     privacyCollectionDesc:
       'Mobazha est une plateforme décentralisée. Nous minimisons la collecte de données. Les données de transaction sont stockées sur la blockchain et le réseau IPFS.',
+    privacyCollectionDescPlatform:
+      'Mobazha est une plateforme décentralisée. Nous limitons volontairement la collecte de données. Les données de transaction sont stockées sur la blockchain et le stockage distribué.',
     privacyUsage: 'Utilisation des informations',
     privacyUsageDesc:
       "Les informations sont utilisées uniquement pour l'exécution des commandes, la communication acheteur-vendeur et le fonctionnement de la plateforme.",
@@ -1630,9 +1818,12 @@ export const fr: TranslationResource = {
       'Nous utilisons le chiffrement et des protocoles sécurisés. Vos clés privées sont stockées localement et jamais transmises.',
     termsTitle: "Conditions d'utilisation",
     termsIntro: 'En utilisant Mobazha, vous acceptez ces conditions.',
+    termsIntroPlatform: 'En utilisant Mobazha, vous acceptez ces conditions.',
     termsUse: 'Utilisation acceptable',
     termsUseDesc:
       'Vous vous engagez à utiliser Mobazha conformément aux lois applicables. Les articles et activités interdits ne sont pas autorisés.',
+    termsUseDescPlatform:
+      'Vous vous engagez à utiliser Mobazha conformément à toutes les lois applicables. Les articles et activités interdits ne sont pas autorisés sur la plateforme.',
     termsEscrow: 'Paiements et protection acheteur',
     termsEscrowDesc:
       "Tous les paiements crypto sont traités avec protection acheteur. Les fonds sont sécurisés jusqu'à confirmation de réception ou résolution du litige.",
@@ -1642,9 +1833,10 @@ export const fr: TranslationResource = {
     termsLiability: 'Limitation de responsabilité',
     termsLiabilityDesc:
       'Mobazha est une plateforme décentralisée et ne contrôle pas les transactions. Utilisez la plateforme à vos risques.',
+    termsLiabilityDescPlatform:
+      'Mobazha est une plateforme décentralisée et ne contrôle pas les transactions entre acheteurs et vendeurs. Vous utilisez la plateforme à vos propres risques.',
     lastUpdated: 'Dernière mise à jour',
   },
-
   trust: {
     buyerProtection: 'Protection acheteur',
     buyerProtectionDesc: "Votre paiement est protégé jusqu'à confirmation de réception",
@@ -1658,6 +1850,8 @@ export const fr: TranslationResource = {
     reviews: '{{count}} avis',
     sales: '{{count}} ventes',
     memberSince: 'Membre depuis',
+    completionRate: '{{rate}} % de finalisation',
+    newStore: 'Nouvelle boutique',
     escrow: {
       paid: 'Payé',
       confirmed: 'Confirmé',
@@ -1668,9 +1862,58 @@ export const fr: TranslationResource = {
     badge: {
       title: 'Protection acheteur',
       description: "Votre paiement est sécurisé jusqu'à confirmation de livraison",
+      learnMore: 'En savoir plus',
+    },
+    panel: {
+      title: "Protection de l'acheteur",
+      intro: 'Chaque commande est entièrement protégée :',
+      feature1: "Les fonds sont conservés en sécurité jusqu'à la fin de la transaction",
+      feature2: "Le vendeur n'expédie pas ? Remboursement automatique",
+      feature3: 'Problème après livraison ? Signalez-le, il sera traité équitablement',
+      howTitle: 'Comment ça marche',
+      step1: 'Après votre commande, les fonds sont placés sur un compte séquestre sécurisé',
+      step2: 'Le vendeur expédie votre commande — le décompte de protection commence',
+      step3:
+        'Sans incident pendant la période de protection, la transaction se finalise automatiquement',
+      step4: 'Signalez tout problème en un geste pendant la période de protection',
+      step5: "Après la finalisation, vous disposez encore d'une fenêtre après-vente de 7 jours",
+      zeroAction: "Vous n'avez rien à faire — la protection est automatique.",
+      viewPolicy: "Voir la politique de protection de l'acheteur",
+    },
+    protection: {
+      escrowed: 'Fonds sécurisés',
+      escrowedDesc: 'Vos fonds sont conservés en sécurité',
+      shipping: 'Expédition',
+      shippingDesc: 'Le vendeur a expédié votre commande',
+      protectionPeriod: 'Période de protection',
+      protectionPeriodDesc: 'Il reste {{days}} jours — signalez les problèmes rapidement',
+      completed: 'Terminé',
+      completedDesc: 'Commande terminée — merci pour votre achat !',
+      completedSellerDesc: 'Commande terminée — les fonds ont été versés sur votre compte.',
+      disputed: 'Litige en cours',
+      disputedDesc: "Décompte suspendu — en cours d'examen",
+      afterSale: 'Fenêtre après-vente',
+      afterSaleDesc: "Il reste {{days}} jours pour l'assistance après-vente",
+      daysRemaining: 'Il reste {{days}} jours',
+      autoCompleteAt: 'Finalisation automatique le {{date}}',
+      extendable: 'Vous pouvez prolonger la période de protection si nécessaire',
+      extendButton: 'Prolonger la protection (+14 jours)',
+      extended: 'Période de protection prolongée',
+      confirmEarly: 'Confirmer la réception',
+      reportIssue: 'Signaler un problème',
+      sellerCountdown: '{{days}} jours avant finalisation automatique',
+      sellerExtended: "L'acheteur a prolongé la période de protection (+14 jours)",
+      sellerAutoCompleted: 'Commande finalisée automatiquement — fonds réglés',
+      sellerBuyerConfirmed: "L'acheteur a confirmé la réception",
+      levelFull: 'Protégé par arbitrage',
+      levelStandard: "Protection de l'acheteur",
+      levelPlatform: 'Protégé par la plateforme',
+      cancelablePeriodDesc:
+        '{{days}} jours pour vérifier — confirmez la réception ou annulez si besoin',
+      cancelableEscrowedDesc: 'Votre paiement est conservé sur un compte partagé sécurisé',
+      cancelableSellerCountdown: "{{days}} jours pour que l'acheteur vérifie",
     },
   },
-
   marketplace: {
     title: 'Marchés Communautaires',
     subtitle: 'Découvrez et rejoignez des marchés animés par la communauté.',
@@ -1739,7 +1982,6 @@ export const fr: TranslationResource = {
       step3: 'Commencez à proposer et vendre vos produits !',
     },
   },
-
   moderator: {
     title: 'Modérateurs',
     subtitle: 'Choisissez un modérateur de confiance pour protéger vos transactions avec séquestre',
@@ -1760,7 +2002,106 @@ export const fr: TranslationResource = {
     fee: 'frais',
     noModeratorsFound: 'Aucun modérateur ne correspond à vos critères',
   },
-
+  payment: {
+    title: 'Paiement',
+    selectPaymentMethod: 'Sélectionner le mode de paiement',
+    selectPaymentMethodDesc: 'Choisissez comment vous souhaitez payer cette commande',
+    paymentMethod: 'Mode de paiement',
+    otherMethods: 'Autres modes de paiement',
+    showMore: 'Plus',
+    showLess: 'Moins',
+    noTokensAvailable: 'Aucun mode de paiement disponible',
+    paymentProtection: 'Protection de paiement',
+    paymentProtectionInfo:
+      'La protection de paiement permet à un modérateur de résoudre les litiges entre acheteur et vendeur.',
+    protectFor: 'Protéger mon paiement pendant {{days}} jours maximum',
+    selectModerator: 'Sélectionner un modérateur',
+    selectModeratorDesc: 'Choisissez un modérateur pour la protection de paiement',
+    selectModeratorWarning: 'Veuillez sélectionner un modérateur pour la protection séquestre',
+    selectPaymentMethodWarning: 'Veuillez sélectionner un mode de paiement',
+    noPaymentMethods: 'Aucun mode de paiement disponible',
+    noPaymentMethodsDesc:
+      "Le vendeur n'a pas encore configuré de modes de paiement. Contactez le vendeur ou réessayez plus tard.",
+    noPaymentMethodsSellerTitle: 'Configurer les modes de paiement',
+    noPaymentMethodsSellerDesc:
+      'Configurez les adresses de réception pour que les acheteurs puissent payer vos produits.',
+    noPaymentMethodsSellerAction: 'Configurer les paiements',
+    paymentUnavailable: 'Paiement indisponible',
+    paymentUnavailableDesc:
+      "Ce vendeur n'a pas configuré de modes de paiement. Vous pouvez contacter le vendeur pour plus d'informations.",
+    changeModerator: 'Modifier',
+    enableProtection: 'Activer la protection',
+    disableProtection: 'Désactiver la protection',
+    fee: 'Frais',
+    verified: 'Vérifié',
+    noOrderID: 'Aucun ID de commande fourni',
+    loadOrderFailed: 'Échec du chargement des détails de la commande',
+    errorTitle: 'Impossible de charger la commande',
+    noOrderData: 'Aucune donnée de commande',
+    paymentSummary: 'Résumé du paiement',
+    subtotal: 'Sous-total',
+    shipping: 'Livraison',
+    orderTotal: 'Total de la commande',
+    moderatorFee: 'Frais de modérateur',
+    moderatorFeeNote: 'déduit du vendeur',
+    totalToPay: 'Total à payer',
+    pay: 'Payer',
+    connectWallet: 'Connecter le portefeuille pour payer',
+    connecting: 'Connexion...',
+    processing: 'Traitement...',
+    success: 'Paiement réussi !',
+    failed: 'Paiement échoué : ',
+    securityNote: 'Paiement sécurisé avec protection séquestre multi-signature',
+    connectWalletFirst: "Veuillez d'abord connecter votre portefeuille",
+    noPaymentAddress: 'Aucune adresse de paiement disponible',
+    noPaymentInstructions: "Échec de l'obtention des instructions de paiement",
+    externalWalletRequired: 'Portefeuille externe requis',
+    pleaseUseExternalWallet:
+      'Veuillez utiliser un portefeuille externe (BTC/LTC) pour effectuer ce paiement',
+    invalidAmount: 'Montant de paiement invalide',
+    signerNotAvailable: 'Signataire du portefeuille indisponible',
+    providerNotAvailable: 'Fournisseur de portefeuille indisponible',
+    approvalRequired: 'Approbation du token requise',
+    pleaseApproveToken: 'Veuillez approuver la dépense du token dans votre portefeuille',
+    approvalSent: "Transaction d'approbation envoyée",
+    waitingForApproval: "En attente de confirmation d'approbation...",
+    approvalFailed: "Échec de l'approbation du token",
+    approvalSuccess: 'Token approuvé',
+    proceedingWithPayment: 'Poursuite du paiement...',
+    confirmInWallet: 'Confirmer dans le portefeuille',
+    pleaseConfirmTransaction: 'Veuillez confirmer la transaction dans votre portefeuille',
+    transactionSent: 'Transaction envoyée',
+    txHash: 'Identifiant de transaction',
+    transactionFailed: 'Transaction échouée',
+    paymentComplete: 'Votre paiement a été traité avec succès',
+    waitingForConfirmation: 'En attente de confirmation sur la blockchain...',
+    estimatedTime: 'Généralement 1 à 3 minutes',
+    completing: 'Finalisation du paiement',
+    finalizingOrder: 'Finalisation de votre commande...',
+    redirecting: 'Redirection vers la confirmation de commande...',
+    cancelled: 'Paiement annulé',
+    userCancelledTransaction: "Transaction annulée par l'utilisateur",
+    errorInsufficientFunds:
+      'Solde insuffisant. Ajoutez des fonds à votre portefeuille et réessayez.',
+    errorNetworkCongestion:
+      'Le réseau est congestionné. Réessayez dans quelques minutes ou augmentez les frais de réseau.',
+    errorContractReverted:
+      'La transaction a été rejetée par le contrat. Vérifiez le montant et réessayez.',
+    errorUserRejected: 'Vous avez annulé la transaction. Vous pouvez réessayer quand vous voulez.',
+    errorGeneric:
+      'Un problème est survenu lors du paiement. Vérifiez la connexion à votre portefeuille et réessayez.',
+    continuePayment: 'Continuer le paiement',
+    payNow: 'Payer maintenant',
+    paymentWindowRemaining: 'Temps restant pour payer',
+    paymentWindowExpired: 'Délai de paiement expiré',
+    rateUpdated: 'mis à jour il y a {{seconds}} s',
+    leaveWarning:
+      'Votre paiement est en cours de traitement. Quitter cette page peut faire échouer la transaction.',
+    searchModerators: 'Rechercher des modérateurs...',
+    loadingModerators: 'Chargement des modérateurs...',
+    noModeratorsFound: 'Aucun modérateur trouvé',
+    noModeratorsAvailable: 'Aucun modérateur disponible',
+  },
   filter: {
     filters: 'Filtres',
     category: 'Catégorie',
@@ -1789,7 +2130,6 @@ export const fr: TranslationResource = {
     resultsFound: 'résultats',
     searchRwa: 'Rechercher des actifs numériques...',
   },
-
   empty: {
     noProductsFound: 'Aucun produit trouvé',
     noStoresFound: 'Aucune boutique trouvée',
@@ -1798,7 +2138,6 @@ export const fr: TranslationResource = {
     noRecentSearches: 'Pas de recherches récentes',
     loadMoreResults: 'Charger Plus de Résultats',
   },
-
   homeExtended: {
     trendingNow: 'Tendances',
     trendingSubtitle: 'Produits les plus populaires cette semaine',
@@ -1810,7 +2149,6 @@ export const fr: TranslationResource = {
     services: 'Services',
     digitalAssets: 'Actifs Numériques',
   },
-
   searchExtended: {
     searchPlaceholder: 'Rechercher des produits, boutiques ou coller une URL...',
     recentSearches: 'Recherches Récentes',
@@ -1819,14 +2157,13 @@ export const fr: TranslationResource = {
     products: 'Produits',
     stores: 'Boutiques',
   },
-
   settingsExtended: {
     profile: 'Profil',
+    country: 'Pays',
+    shippingAddresses: 'Adresses de Livraison',
     generalDesc: 'Language, theme, and display preferences',
     profileDesc: 'Your name, avatar, and bio',
     chatEncryptionDesc: 'End-to-end encryption keys and backup',
-    country: 'Pays',
-    shippingAddresses: 'Adresses de Livraison',
     manageAddresses: 'Gérer vos adresses de livraison',
     blockedUsers: 'Utilisateurs Bloqués',
     manageBlocked: 'Gérer les comptes bloqués',
@@ -1839,6 +2176,11 @@ export const fr: TranslationResource = {
     privateStoreDesc: 'Seuls les utilisateurs approuvés peuvent voir vos produits',
     storePolicies: 'Politiques de Boutique',
     storePoliciesDesc: 'Politique de retour, conditions générales',
+    moderators: 'Modérateurs',
+    moderatorsDesc: 'Gérer les modérateurs de litiges',
+    acceptedCrypto: 'Cryptomonnaies Acceptées',
+    shippingOptions: 'Options de Livraison',
+    shippingOptionsDesc: 'Configurer les méthodes et tarifs de livraison',
     storePoliciesSaved: 'Les politiques de boutique ont été enregistrées',
     termsDesc:
       'Définissez les conditions générales applicables à tous les achats de votre boutique',
@@ -1847,14 +2189,6 @@ export const fr: TranslationResource = {
     storeModerators: 'Modérateurs de la boutique',
     storeModeratorsDesc:
       'Sélectionnez les modérateurs pour traiter les litiges de vos transactions',
-    moderators: 'Modérateurs',
-    moderatorsDesc: 'Gérer les modérateurs de litiges',
-    acceptedCrypto: 'Cryptomonnaies Acceptées',
-    selected: '{{count}} sélectionnés',
-    shippingOptions: 'Options de Livraison',
-    shippingOptionsDesc: 'Configurer les méthodes et tarifs de livraison',
-    paymentAndShipping: 'Paiement et Livraison',
-    paymentAndShippingDesc: 'Gérer les devises acceptées et les méthodes de livraison',
     advanced: 'Avancé',
     analytics: 'Analytiques',
     analyticsDesc: "Aidez à améliorer l'app en partageant des données d'usage anonymes",
@@ -1889,7 +2223,6 @@ export const fr: TranslationResource = {
     restoreComingSoon: 'Fonction de restauration du profil bientôt disponible !',
     followingSystem: 'Selon le système',
     returnToPreviousPage: "Vous venez d'une autre page",
-    // Advanced tab sections
     privacy: 'Confidentialité',
     backup: 'Sauvegarde',
     developer: 'Développeur',
@@ -1908,7 +2241,6 @@ export const fr: TranslationResource = {
     themeStyle: 'Style du Thème',
     themeStyleDesc: "Choisissez un schéma de couleurs qui s'adapte à votre mode d'affichage",
     currentEffect: 'Effet actuel',
-    // Sound Settings
     soundSettings: 'Paramètres de Son',
     soundNotifications: 'Notifications Sonores',
     soundNotificationsDesc: 'Jouer un son lors de la réception de messages et notifications',
@@ -1916,7 +2248,6 @@ export const fr: TranslationResource = {
     voiceAnnouncementsDesc: 'Lire le contenu des notifications à haute voix',
     volume: 'Volume',
     test: 'Test',
-    // Access Control
     accessControl: "Contrôle d'Accès",
     userGroups: "Groupes d'Utilisateurs",
     userGroupsDesc: "Gérer les groupes d'utilisateurs pour le contrôle d'accès",
@@ -1925,13 +2256,10 @@ export const fr: TranslationResource = {
     accessRequests: "Demandes d'Accès",
     accessRequestsDesc: "Examiner les demandes d'accès en attente",
     storeSettings: 'Paramètres de Boutique',
-    // Addresses
     addAddress: 'Ajouter une adresse',
     noAddresses: 'Aucune adresse enregistrée',
-    // Shipping
     addShipping: 'Ajouter une option de livraison',
     addShippingHint: 'Ajoutez des options de livraison pour activer la livraison physique',
-    // Moderator (être modérateur) settings
     enableModeration: 'Activer le service de modération',
     enableModerationDesc:
       'Activer votre disponibilité en tant que modérateur de litiges sur le réseau',
@@ -1969,7 +2297,6 @@ export const fr: TranslationResource = {
       "Fournissez d'autres moyens pour que les utilisateurs vous contactent (optionnel)",
     website: 'Site web',
     moderatorSettingsSaved: 'Vos paramètres de modération ont été enregistrés',
-    // Modérateurs de la boutique
     moderatorDetails: 'Détails du modérateur',
     moderatorDetailsDesc: 'Informations détaillées sur le modérateur sélectionné',
     rating: 'Note',
@@ -1979,7 +2306,6 @@ export const fr: TranslationResource = {
     removeModerator: 'Retirer le modérateur',
     removeModeratorDesc: 'Êtes-vous sûr de vouloir retirer {{name}} de vos modérateurs ?',
     remove: 'Retirer',
-    // Adresses de réception
     receivingDesc: 'Gérer vos adresses de réception de portefeuille externe',
     loadFailed: 'Échec du chargement des données',
     fillRequired: 'Veuillez remplir tous les champs obligatoires',
@@ -2012,7 +2338,6 @@ export const fr: TranslationResource = {
     receivingTip3:
       "Veuillez vérifier que l'adresse est correcte, une mauvaise adresse peut entraîner une perte de fonds",
     receivingTip4: 'Chaque devise nécessite une adresse de réception différente',
-    // Page confidentialité
     privacyDesc: 'Contrôlez qui peut accéder à votre boutique et à vos produits',
     storePrivacySection: 'Confidentialité de la boutique',
     storePrivacySectionDesc: "Configurer la visibilité et les paramètres d'accès de votre boutique",
@@ -2031,20 +2356,20 @@ export const fr: TranslationResource = {
     accessMgmt: 'Gestion des accès',
     accessMgmtDesc: "Gérer les groupes d'utilisateurs et les permissions des groupes de produits",
   },
-
   userMenu: {
     myProfile: 'Mon Profil',
     myStore: 'Ma Boutique',
+    startSelling: 'Commencer à vendre',
     viewStore: 'Voir la boutique',
     createListing: 'Créer un produit',
     sales: 'Ventes',
     purchases: 'Achats',
+    myOrders: 'Mes commandes',
     rwaAssets: 'Actifs RWA',
     settings: 'Paramètres',
     account: 'Paramètres personnels',
     logout: 'Déconnexion',
   },
-
   settingsModal: {
     languageAndRegion: 'Langue et région',
     languageDesc: "Afficher l'interface en",
@@ -2107,7 +2432,10 @@ export const fr: TranslationResource = {
     shortDescLimit: '160 caractères ou moins',
     shortDescPlaceholder: "Dites quelque chose d'intéressant...",
     locationDesc: 'Où êtes-vous situé ?',
+    locationDescDetailed:
+      "Affiché sur la page de votre boutique. Le pays d'activité et la devise peuvent être définis dans les paramètres généraux.",
     locationPlaceholder: 'Entrez votre localisation',
+    locationPlaceholderExample: 'ex. :',
     avatarDesc: '280px par 280px ou plus recommandé',
     selectPhoto: 'Sélectionner une photo',
     avatarUploaded: 'Avatar téléversé avec succès',
@@ -2204,43 +2532,6 @@ export const fr: TranslationResource = {
     resyncComplete: 'Synchronisation des transactions terminée',
     resyncFailed: 'Échec de la synchronisation',
   },
-
-  onboarding: {
-    welcome: 'Bienvenue sur Mobazha',
-    tagline: 'Échangez librement. Échangez en sécurité.',
-    setupProfile: 'Configurer votre profil',
-    displayName: "Nom d'affichage",
-    displayNamePlaceholder: 'Comment voulez-vous être appelé ?',
-    displayNameRequired: "Le nom d'affichage est requis",
-    shortBio: 'Courte bio',
-    shortBioPlaceholder: 'Parlez de vous...',
-    avatar: 'Photo de profil',
-    avatarHint: 'Cliquez pour téléverser',
-    changeAvatar: 'Changer la photo',
-    country: 'Pays / Région',
-    countryPlaceholder: 'Sélectionnez votre pays',
-    countrySearch: 'Rechercher des pays...',
-    popularCountries: 'Populaires',
-    allCountries: 'Tous les pays',
-    currency: "Devise d'affichage",
-    currencyPlaceholder: 'Sélectionnez la devise',
-    currencyHint: 'Utilisée pour afficher les prix',
-    startExploring: 'Commencer à explorer',
-    customizeLater: 'Vous pourrez personnaliser votre boutique plus tard dans les paramètres',
-    creating: 'Création de votre profil...',
-    createFailed: 'Échec de la création du profil. Veuillez réessayer.',
-    valueDecentralized: 'Décentralisé',
-    valuePrivacy: "Confidentialité d'abord",
-    valueMultiCurrency: 'Multi-devises',
-  },
-
-  imageCrop: {
-    adjustImage: "Ajuster l'image",
-    zoom: 'Zoom',
-    rotate: 'Pivoter',
-  },
-
-  // OTC Commerce Privé
   otc: {
     title: 'Commerce OTC',
     createNft: 'Créer une Commande NFT',
@@ -2262,7 +2553,11 @@ export const fr: TranslationResource = {
       setPrice: 'Définir le Prix',
       shareLink: 'Partager le Lien',
     },
-    status: { active: 'Actif', completed: 'Terminé', cancelled: 'Annulé' },
+    status: {
+      active: 'Actif',
+      completed: 'Terminé',
+      cancelled: 'Annulé',
+    },
     price: 'Prix',
     priceDesc: "L'acheteur paiera en USDT",
     shares: 'Parts',
@@ -2313,8 +2608,6 @@ export const fr: TranslationResource = {
     filterType: 'Type',
     items: 'éléments',
   },
-
-  // Notifications
   notifications: {
     title: 'Notifications',
     markAllRead: 'Tout marquer comme lu',
@@ -2335,62 +2628,6 @@ export const fr: TranslationResource = {
     totalCount: '{{count}} notifications au total',
     allMarkedRead: 'Toutes les notifications marquées comme lues',
     notificationDeleted: 'Notification supprimée',
-    titles: {
-      newOrder: 'Nouvelle commande',
-      paymentReceived: 'Paiement reçu',
-      orderConfirmed: 'Commande confirmée',
-      orderDeclined: 'Commande refusée',
-      orderCancelled: 'Commande annulée',
-      refundReceived: 'Remboursement reçu',
-      orderFulfilled: 'Commande expédiée',
-      orderCompleted: 'Commande terminée',
-      paymentFinalized: 'Paiement finalisé',
-      disputeOpened: 'Litige ouvert',
-      disputeResolved: 'Litige résolu',
-      disputeAccepted: 'Litige accepté',
-      caseUpdate: 'Mise à jour du dossier',
-      newFollower: 'Nouvel abonné',
-      unfollowed: 'Désabonné',
-      moderatorAdded: 'Modérateur ajouté',
-      moderatorRemoved: 'Modérateur retiré',
-    },
-    messages: {
-      newOrderWithId: 'Vous avez reçu une nouvelle commande #{{orderId}}',
-      newOrderNoId: 'Vous avez reçu une nouvelle commande',
-      paymentReceivedWithId: 'Paiement reçu pour la commande #{{orderId}}',
-      paymentReceivedNoId: 'Paiement reçu',
-      orderConfirmedWithId: 'La commande #{{orderId}} a été confirmée',
-      orderConfirmedNoId: 'Commande confirmée',
-      orderDeclinedWithId: 'La commande #{{orderId}} a été refusée',
-      orderDeclinedNoId: 'Commande refusée',
-      orderCancelledWithId: 'La commande #{{orderId}} a été annulée',
-      orderCancelledNoId: 'Commande annulée',
-      refundReceivedWithId: 'Remboursement reçu pour la commande #{{orderId}}',
-      refundReceivedNoId: 'Remboursement reçu',
-      orderShippedWithId: 'La commande #{{orderId}} a été expédiée',
-      orderShippedNoId: 'Commande expédiée',
-      orderCompleteWithId: 'La commande #{{orderId}} est terminée',
-      orderCompleteNoId: 'Commande terminée',
-      paymentFinalizedWithId: 'Paiement finalisé pour la commande #{{orderId}}',
-      paymentFinalizedNoId: 'Paiement finalisé',
-      disputeOpenedWithId: 'Un litige a été ouvert pour la commande #{{orderId}}',
-      disputeOpenedNoId: 'Un litige a été ouvert',
-      disputeResolvedWithId: 'Litige résolu pour la commande #{{orderId}}',
-      disputeResolvedNoId: 'Litige résolu',
-      disputeAcceptedWithId: 'Litige accepté pour la commande #{{orderId}}',
-      disputeAcceptedNoId: 'Litige accepté',
-      caseUpdateWithId: 'Dossier mis à jour pour la commande #{{orderId}}',
-      caseUpdateNoId: 'Dossier mis à jour',
-      followedBy: '{{name}} a commencé à vous suivre',
-      followedBySomeone: "Quelqu'un a commencé à vous suivre",
-      unfollowedBy: '{{name}} ne vous suit plus',
-      unfollowedBySomeone: "Quelqu'un ne vous suit plus",
-      moderatorAddedBy: '{{name}} vous a ajouté comme modérateur',
-      moderatorAddedBySomeone: 'Vous avez été ajouté comme modérateur',
-      moderatorRemovedBy: '{{name}} vous a retiré comme modérateur',
-      moderatorRemovedBySomeone: 'Vous avez été retiré comme modérateur',
-      defaultNotification: 'Notification',
-    },
     order: {
       youPlacedOrder: 'Vous avez passé une commande',
       placedOrder: 'a passé une commande',
@@ -2436,6 +2673,71 @@ export const fr: TranslationResource = {
       addedAsModerator: 'vous a ajouté comme modérateur',
       removedAsModerator: 'vous a retiré comme modérateur',
     },
+    titles: {
+      newOrder: 'Nouvelle commande',
+      paymentReceived: 'Paiement reçu',
+      orderConfirmed: 'Commande confirmée',
+      orderDeclined: 'Commande refusée',
+      orderCancelled: 'Commande annulée',
+      refundReceived: 'Remboursement reçu',
+      orderFulfilled: 'Commande expédiée',
+      orderCompleted: 'Commande terminée',
+      paymentFinalized: 'Paiement finalisé',
+      disputeOpened: 'Litige ouvert',
+      disputeResolved: 'Litige résolu',
+      disputeAccepted: 'Litige accepté',
+      caseUpdate: 'Mise à jour du dossier',
+      newFollower: 'Nouvel abonné',
+      unfollowed: 'Désabonné',
+      moderatorAdded: 'Modérateur ajouté',
+      moderatorRemoved: 'Modérateur retiré',
+      orderExpired: 'Commande expirée',
+      orderStaleWarning: 'Alerte commande',
+    },
+    messages: {
+      newOrderWithId: 'Vous avez reçu une nouvelle commande #{{orderId}}',
+      newOrderNoId: 'Vous avez reçu une nouvelle commande',
+      paymentReceivedWithId: 'Paiement reçu pour la commande #{{orderId}}',
+      paymentReceivedNoId: 'Paiement reçu',
+      orderConfirmedWithId: 'La commande #{{orderId}} a été confirmée',
+      orderConfirmedNoId: 'Commande confirmée',
+      orderDeclinedWithId: 'La commande #{{orderId}} a été refusée',
+      orderDeclinedNoId: 'Commande refusée',
+      orderCancelledWithId: 'La commande #{{orderId}} a été annulée',
+      orderCancelledNoId: 'Commande annulée',
+      refundReceivedWithId: 'Remboursement reçu pour la commande #{{orderId}}',
+      refundReceivedNoId: 'Remboursement reçu',
+      orderShippedWithId: 'La commande #{{orderId}} a été expédiée',
+      orderShippedNoId: 'Commande expédiée',
+      orderCompleteWithId: 'La commande #{{orderId}} est terminée',
+      orderCompleteNoId: 'Commande terminée',
+      paymentFinalizedWithId: 'Paiement finalisé pour la commande #{{orderId}}',
+      paymentFinalizedNoId: 'Paiement finalisé',
+      disputeOpenedWithId: 'Un litige a été ouvert pour la commande #{{orderId}}',
+      disputeOpenedNoId: 'Un litige a été ouvert',
+      disputeResolvedWithId: 'Litige résolu pour la commande #{{orderId}}',
+      disputeResolvedNoId: 'Litige résolu',
+      disputeAcceptedWithId: 'Litige accepté pour la commande #{{orderId}}',
+      disputeAcceptedNoId: 'Litige accepté',
+      caseUpdateWithId: 'Dossier mis à jour pour la commande #{{orderId}}',
+      caseUpdateNoId: 'Dossier mis à jour',
+      followedBy: '{{name}} a commencé à vous suivre',
+      followedBySomeone: "Quelqu'un a commencé à vous suivre",
+      unfollowedBy: '{{name}} ne vous suit plus',
+      unfollowedBySomeone: "Quelqu'un ne vous suit plus",
+      moderatorAddedBy: '{{name}} vous a ajouté comme modérateur',
+      moderatorAddedBySomeone: 'Vous avez été ajouté comme modérateur',
+      moderatorRemovedBy: '{{name}} vous a retiré comme modérateur',
+      moderatorRemovedBySomeone: 'Vous avez été retiré comme modérateur',
+      orderExpiredWithTitle: 'La commande « {{title}} » n°{{orderId}} a expiré',
+      orderExpiredWithId: 'La commande n°{{orderId}} a expiré',
+      orderExpiredNoId: 'Une commande a expiré',
+      orderStaleWarningWithTitle:
+        'La commande « {{title}} » n°{{orderId}} peut nécessiter votre attention',
+      orderStaleWarningWithId: 'La commande n°{{orderId}} peut nécessiter votre attention',
+      orderStaleWarningNoId: 'Une commande peut nécessiter votre attention',
+      defaultNotification: 'Notification',
+    },
     tts: {
       newMessage: 'Nouveau message',
       orderChat: 'Message de commande',
@@ -2445,8 +2747,6 @@ export const fr: TranslationResource = {
       orderComplete: 'Commande terminée',
     },
   },
-
-  // Connexion P2P
   p2p: {
     connecting: 'Connexion...',
     failedToConnect: 'Échec de connexion',
@@ -2457,7 +2757,6 @@ export const fr: TranslationResource = {
     fromP2pNetwork: 'depuis le réseau pair-à-pair mondial pour vous...',
     socialHeading: 'Actualités et Discussions Mobazha :',
   },
-
   storeAccess: {
     requestSubmitted: "Demande d'accès soumise",
     waitingForApproval: "Votre demande d'accès est en attente. Veuillez patienter.",
@@ -2488,8 +2787,34 @@ export const fr: TranslationResource = {
     confirmRemove: 'Confirmer la suppression',
     confirmRemoveMessage: 'Êtes-vous sûr de vouloir supprimer cet utilisateur de la liste blanche?',
   },
-
-  // Page utilisateur
+  onboarding: {
+    welcome: 'Bienvenue sur Mobazha',
+    tagline: 'Échangez librement. Échangez en sécurité.',
+    setupProfile: 'Configurer votre profil',
+    displayName: "Nom d'affichage",
+    displayNamePlaceholder: 'Comment voulez-vous être appelé ?',
+    displayNameRequired: "Le nom d'affichage est requis",
+    shortBio: 'Courte bio',
+    shortBioPlaceholder: 'Parlez de vous...',
+    avatar: 'Photo de profil',
+    avatarHint: 'Cliquez pour téléverser',
+    changeAvatar: 'Changer la photo',
+    country: 'Pays / Région',
+    countryPlaceholder: 'Sélectionnez votre pays',
+    countrySearch: 'Rechercher des pays...',
+    popularCountries: 'Populaires',
+    allCountries: 'Tous les pays',
+    currency: "Devise d'affichage",
+    currencyPlaceholder: 'Sélectionnez la devise',
+    currencyHint: 'Utilisée pour afficher les prix',
+    startExploring: 'Commencer à explorer',
+    customizeLater: 'Vous pourrez personnaliser votre boutique plus tard dans les paramètres',
+    creating: 'Création de votre profil...',
+    createFailed: 'Échec de la création du profil. Veuillez réessayer.',
+    valueDecentralized: 'Décentralisé',
+    valuePrivacy: "Confidentialité d'abord",
+    valueMultiCurrency: 'Multi-devises',
+  },
   userPage: {
     customize: 'Personnaliser',
     createListing: 'Créer une annonce',
@@ -2499,8 +2824,6 @@ export const fr: TranslationResource = {
       'Votre boutique Mobazha est maintenant en ligne. Commencez par créer des annonces ou personnaliser votre page.',
     storeWelcomeCalloutBtnClose: 'Fermer',
   },
-
-  // Importer des annonces
   importListings: {
     title: 'Importer des annonces',
     subtitle: 'Importation en masse depuis un fichier ZIP',
@@ -2533,8 +2856,11 @@ export const fr: TranslationResource = {
     importComplete: 'Importation terminée',
     error: 'Erreur',
   },
-
-  // Créer/modifier une annonce
+  imageCrop: {
+    adjustImage: "Ajuster l'image",
+    zoom: 'Zoom',
+    rotate: 'Pivoter',
+  },
   listing: {
     createListing: 'Créer une annonce',
     createListingDesc: 'Ajouter un nouveau produit ou service à votre boutique',
@@ -2547,6 +2873,16 @@ export const fr: TranslationResource = {
     deleteListing: "Supprimer l'annonce",
     previewProduct: 'Aperçu',
     productType: 'Type de produit',
+    types: {
+      physicalGood: 'Bien physique',
+      physicalGoodDesc: 'Articles tangibles nécessitant une expédition',
+      digitalGood: 'Bien numérique',
+      digitalGoodDesc: 'Fichiers téléchargeables ou contenu numérique',
+      service: 'Service',
+      serviceDesc: 'Services professionnels ou conseil',
+      rwaToken: 'Token RWA',
+      rwaTokenDesc: 'Actif réel tokenisé sur blockchain',
+    },
     mobile: {
       stepEssentials: 'Essentiels',
       stepMedia: 'Photos et vidéo',
@@ -2557,15 +2893,38 @@ export const fr: TranslationResource = {
       takePhoto: 'Prendre une photo',
       chooseFromLibrary: 'Depuis la galerie',
     },
-    types: {
-      physicalGood: 'Bien physique',
-      physicalGoodDesc: 'Articles tangibles nécessitant une expédition',
-      digitalGood: 'Bien numérique',
-      digitalGoodDesc: 'Fichiers téléchargeables ou contenu numérique',
-      service: 'Service',
-      serviceDesc: 'Services professionnels ou conseil',
-      rwaToken: 'Token RWA',
-      rwaTokenDesc: 'Actif réel tokenisé sur blockchain',
+    quickCreate: {
+      title: 'Création rapide',
+      subtitle: "Téléchargez des photos, l'IA fait le reste",
+      stepPhotos: 'Photos',
+      stepReview: 'Vérification',
+      stepPublish: 'Publication',
+      uploadPhotos: 'Télécharger des photos du produit',
+      uploadPhotosDesc:
+        "Glissez-déposez ou cliquez pour importer. L'IA générera les détails à partir de vos photos.",
+      selectType: 'Type de produit',
+      analyzing: 'Analyse des images...',
+      aiGenerated: "Généré par l'IA",
+      regenerate: 'Régénérer',
+      editFields: 'Vérifier et modifier',
+      editFieldsDesc: "L'IA a rempli ces champs. Modifiez ce qu'il faut avant publication.",
+      priceRequired: 'Indiquez votre prix',
+      pricePlaceholder: '0,00',
+      previewTitle: 'Prêt à publier',
+      previewDesc: 'Vérifiez votre annonce avant mise en ligne.',
+      checklist: 'Liste de contrôle',
+      checkImages: 'Images du produit',
+      checkTitle: 'Titre',
+      checkPrice: 'Prix',
+      publish: 'Publier maintenant',
+      saveDraft: 'Enregistrer comme brouillon',
+      publishing: 'Publication...',
+      publishSuccess: 'Produit publié avec succès !',
+      draftSuccess: 'Brouillon enregistré avec succès !',
+      publishError: 'Échec de la publication. Veuillez réessayer.',
+      openFullEditor: 'Éditeur complet',
+      noImages: 'Ajoutez au moins une photo pour continuer',
+      manualMode: 'Remplir manuellement',
     },
     wizard: {
       steps: {
@@ -2614,6 +2973,17 @@ export const fr: TranslationResource = {
     conditionHelper: "L'état général de votre annonce",
     weight: 'Poids',
     weightHelper: "Poids de l'article en grammes",
+    packageDimensions: {
+      label: 'Dimensions du colis',
+      length: 'Longueur',
+      width: 'Largeur',
+      height: 'Hauteur',
+      helper: 'Longueur × Largeur × Hauteur pour le calcul des frais de port',
+    },
+    brand: {
+      label: 'Marque',
+      placeholder: 'Entrez le nom de la marque',
+    },
     sku: 'SKU',
     skuPlaceholder: 'SKU, numéro de pièce, ID, etc.',
     skuHelper: 'Un identifiant unique pour votre annonce',
@@ -2629,6 +2999,11 @@ export const fr: TranslationResource = {
     photosHelper: "Incluez jusqu'à 30 photos. Glissez pour réorganiser.",
     photosHelperMobile: "Jusqu'à 30 photos. Appui long pour réorganiser.",
     primaryPhoto: 'PHOTO PRINCIPALE',
+    imageAlt: {
+      edit: 'Modifier le texte alternatif',
+      placeholder: 'Décrivez cette image...',
+      default: 'Image du produit {{index}}',
+    },
     add: 'Ajouter',
     introVideo: "Vidéo d'introduction",
     externalVideoLink: 'Ou ajoutez un lien vidéo externe (YouTube, etc.)',
@@ -2640,9 +3015,6 @@ export const fr: TranslationResource = {
     enterTag: 'Entrez des #tags...',
     productTypeHelper: 'Classifiez votre produit pour la recherche et le filtrage',
     productTypePlaceholder: 'ex: Électronique, Vêtements, Art...',
-    category: 'Catégorie',
-    categoryHelper: 'Pour organiser votre boutique',
-    enterCategory: 'Entrez une catégorie...',
     shippingOptions: "Options d'expédition",
     shippingOptionsHelper: 'Les options de votre configuration seront utilisées pour cette annonce',
     manageShippingOptions: "Gérer les options d'expédition",
@@ -2663,8 +3035,59 @@ export const fr: TranslationResource = {
       weightPlaceholder: '0',
     },
     variantsHelper: 'Ajoutez des tailles, couleurs, matériaux supplémentaires, etc.',
+    variantsDesc:
+      'Ajoutez des options comme différentes tailles, couleurs ou matériaux pour que les acheteurs choisissent.',
     addVariant: 'Ajouter une variante',
     videoUrlPlaceholder: 'https://www.youtube.com/watch?v=...',
+    variant: {
+      optionName: "Nom de l'option",
+      optionNamePlaceholder: 'ex. Taille, Couleur, Matériau',
+      optionValues: "Valeurs de l'option",
+      addFirstValue: 'Tapez une valeur et appuyez sur Entrée',
+      addValuePlaceholder: 'Ajouter une autre valeur...',
+      addValueHint: 'Séparez les valeurs avec Entrée. ex. Petit, Moyen, Grand',
+      untitledOption: 'Option sans titre',
+      valuesCount: 'valeurs',
+      addOption: 'Ajouter une option',
+      addAnotherOption: 'Ajouter une autre option',
+      customOption: 'Option personnalisée',
+      chooseOption: 'Ajoutez une option pour créer des variantes du produit :',
+      limitHint: '{{current}} sur {{maxOptions}} options utilisées',
+      suggestedOptions: {
+        size: 'Taille',
+        color: 'Couleur',
+        material: 'Matériau',
+        style: 'Style',
+      },
+      image: 'Image',
+      selectImage: "Sélectionner l'image de la variante",
+      variant: 'Variante',
+      price: 'Prix',
+      compareAtPrice: 'Prix de comparaison',
+      quantity: 'Quantité',
+      barcode: 'Code-barres',
+      weight: 'Poids',
+      unlimited: 'Illimité',
+      skuCount: '{{count}} variante(s)',
+      basePriceHint: 'Vide = prix de base {{price}} {{currency}}',
+      selectedCount: '{{count}} sélectionné(s)',
+      moveUp: 'Monter',
+      moveDown: 'Descendre',
+      removeOption: "Supprimer l'option",
+      removeValue: 'Supprimer la valeur',
+      bulkPrice: 'Définir le prix',
+      bulkCompareAtPrice: 'Définir le prix de comparaison',
+      bulkQuantity: 'Définir la quantité',
+      bulkWeight: 'Définir le poids',
+      bulkApply: 'Appliquer',
+      bulkCancel: 'Annuler',
+      error: {
+        maxOptions: 'Maximum 3 options autorisées',
+        maxValues: 'Trop de valeurs pour une option',
+        duplicateOptionName: "Les noms d'options doivent être uniques",
+        maxCombinations: 'Trop de combinaisons de variantes (max. 100)',
+      },
+    },
     policies: 'Politique de retour et conditions',
     returnPolicy: 'Politique de retour',
     returnPolicyPlaceholder: 'Entrez votre politique de retour...',
@@ -2697,6 +3120,22 @@ export const fr: TranslationResource = {
     minQuantityHelper: "Quantité minimale qu'un acheteur peut acheter en une commande",
     maxQuantity: "Quantité d'achat maximale",
     maxQuantityHelper: "Quantité maximale qu'un acheteur peut acheter en une commande",
+    tradeMode: 'Mode de transaction',
+    instantTrade: 'Transaction instantanée',
+    instantTradeDesc:
+      "L'acheteur reçoit les parts RWA immédiatement après le paiement, sans confirmation manuelle",
+    confirmTrade: 'Transaction avec confirmation',
+    confirmTradeDesc:
+      'Le paiement est mis sous séquestre, vous confirmez pour compléter la transaction',
+    recommended: 'Recommandé',
+    escrowTimeout: 'Délai de séquestre',
+    min: 'min',
+    hour: 'heure',
+    hours: 'heures',
+    day: 'jour',
+    days: 'jours',
+    escrowTimeoutWarning:
+      "Sans confirmation dans le délai, les fonds seront automatiquement retournés à l'acheteur",
     rwa: {
       realEstate: 'Token immobilier',
       bond: 'Token obligataire',
@@ -2748,29 +3187,7 @@ export const fr: TranslationResource = {
       copied: 'Copié',
       addressCopied: 'Adresse copiée dans le presse-papiers',
       contract: 'Contrat',
-      // Page de détail produit - Affichage des actifs
       verifiedAsset: 'Actif vérifié',
-      atomicSwap: 'Échange atomique',
-      atomicSwapShort: 'Actif et paiement complétés simultanément, sécurisé',
-      atomicSwapPurchase: 'Achat par échange atomique',
-      atomicSwapDescription:
-        "Ce produit utilise l'échange atomique blockchain pour assurer un échange sécurisé d'actifs et de paiement:",
-      step1Title: '1. Connecter le portefeuille et autoriser',
-      step1Desc: 'Autoriser le montant du paiement, les fonds restent dans le portefeuille',
-      step2Title: '2. Attendre la confirmation du vendeur',
-      step2Desc: 'Le vendeur confirme et expédie après réception de la commande',
-      step3Title: '3. Échange automatique terminé',
-      step3Desc: 'Actif et paiement complétés atomiquement, sécurité maximale',
-      safetyNote:
-        "Sécurité: Actif et paiement complétés simultanément, pas d'intermédiaire nécessaire",
-      blockchainInfo: 'Info blockchain',
-      network: 'Réseau',
-      nftMetadata: 'Info NFT',
-      creator: 'Créateur',
-      collection: 'Collection',
-      rarity: 'Rareté',
-      mintedAt: 'Date de création',
-      // Mode de transaction RWA (affichage acheteur)
       instantTrade: 'Transaction instantanée',
       confirmTrade: 'Transaction avec confirmation',
       instantTradeHint:
@@ -2781,104 +3198,39 @@ export const fr: TranslationResource = {
         'Protection par contrat intelligent : les fonds sont retournés automatiquement si le vendeur ne confirme pas',
       escrowTimeout: 'Délai de séquestre',
       acceptedPayments: 'Paiements acceptés',
+      atomicSwap: 'Échange atomique',
+      atomicSwapShort: 'Actif et paiement complétés simultanément, sécurisé',
+      atomicSwapPurchase: 'Achat par échange atomique',
+      atomicSwapDescription:
+        "Ce produit utilise l'échange atomique blockchain pour assurer un échange sécurisé d'actifs et de paiement:",
       instantSwap: 'Échange instantané',
       instantSwapShort: "Recevez l'actif immédiatement après le paiement",
       instantSwapPurchase: 'Achat par échange instantané',
       instantSwapDescription:
         "Ce produit supporte l'achat instantané, recevez l'actif immédiatement après le paiement :",
+      step1Title: '1. Connecter le portefeuille et autoriser',
+      step1Desc: 'Autoriser le montant du paiement, les fonds restent dans le portefeuille',
+      step2Title: '2. Attendre la confirmation du vendeur',
+      step2Desc: 'Le vendeur confirme et expédie après réception de la commande',
+      step3Title: '3. Échange automatique terminé',
+      step3Desc: 'Actif et paiement complétés atomiquement, sécurité maximale',
       instantStep2Title: '2. Échange instantané terminé',
       instantStep2Desc: 'Actif transféré directement dans votre portefeuille, sans attente',
+      safetyNote:
+        "Sécurité: Actif et paiement complétés simultanément, pas d'intermédiaire nécessaire",
+      blockchainInfo: 'Info blockchain',
+      network: 'Réseau',
+      nftMetadata: 'Info NFT',
+      creator: 'Créateur',
+      collection: 'Collection',
+      rarity: 'Rareté',
+      mintedAt: 'Date de création',
     },
     preview: 'Aperçu',
     productTitle: 'Titre du produit',
-    packageDimensions: {
-      label: 'Dimensions du colis',
-      length: 'Longueur',
-      width: 'Largeur',
-      height: 'Hauteur',
-      helper: 'Longueur × Largeur × Hauteur pour le calcul des frais de port',
-    },
-    brand: {
-      label: 'Marque',
-      placeholder: 'Entrez le nom de la marque',
-    },
-    imageAlt: {
-      edit: 'Modifier le texte alternatif',
-      placeholder: 'Décrivez cette image...',
-      default: 'Image du produit {{index}}',
-    },
-    categoryDesc:
-      'Ajoutez des catégories pour organiser votre boutique. Les acheteurs peuvent filtrer par catégorie.',
-    createCategory: 'Créer "{{name}}"',
-    variantsDesc:
-      'Ajoutez des options comme différentes tailles, couleurs ou matériaux pour que les acheteurs choisissent.',
-    variant: {
-      optionName: "Nom de l'option",
-      optionNamePlaceholder: 'ex. Taille, Couleur, Matériau',
-      optionValues: "Valeurs de l'option",
-      addFirstValue: 'Tapez une valeur et appuyez sur Entrée',
-      addValuePlaceholder: 'Ajouter une autre valeur...',
-      addValueHint: 'Séparez les valeurs avec Entrée. ex. Petit, Moyen, Grand',
-      untitledOption: 'Option sans titre',
-      valuesCount: 'valeurs',
-      addOption: 'Ajouter une option',
-      addAnotherOption: 'Ajouter une autre option',
-      customOption: 'Option personnalisée',
-      chooseOption: 'Ajoutez une option pour créer des variantes du produit :',
-      limitHint: '{{current}} sur {{maxOptions}} options utilisées',
-      suggestedOptions: {
-        size: 'Taille',
-        color: 'Couleur',
-        material: 'Matériau',
-        style: 'Style',
-      },
-      image: 'Image',
-      selectImage: "Sélectionner l'image de la variante",
-      variant: 'Variante',
-      price: 'Prix',
-      compareAtPrice: 'Prix de comparaison',
-      quantity: 'Quantité',
-      barcode: 'Code-barres',
-      weight: 'Poids',
-      unlimited: 'Illimité',
-      skuCount: '{{count}} variante(s)',
-      basePriceHint: 'Vide = prix de base {{price}} {{currency}}',
-      selectedCount: '{{count}} sélectionné(s)',
-      moveUp: 'Monter',
-      moveDown: 'Descendre',
-      removeOption: "Supprimer l'option",
-      removeValue: 'Supprimer la valeur',
-      bulkPrice: 'Définir le prix',
-      bulkCompareAtPrice: 'Définir le prix de comparaison',
-      bulkQuantity: 'Définir la quantité',
-      bulkWeight: 'Définir le poids',
-      bulkApply: 'Appliquer',
-      bulkCancel: 'Annuler',
-      error: {
-        maxOptions: 'Maximum 3 options autorisées',
-        maxValues: 'Trop de valeurs pour une option',
-        duplicateOptionName: "Les noms d'options doivent être uniques",
-        maxCombinations: 'Trop de combinaisons de variantes (max. 100)',
-      },
-    },
-    tradeMode: 'Mode de transaction',
-    instantTrade: 'Transaction instantanée',
-    instantTradeDesc:
-      "L'acheteur reçoit les parts RWA immédiatement après le paiement, sans confirmation manuelle",
-    confirmTrade: 'Transaction avec confirmation',
-    confirmTradeDesc:
-      'Le paiement est mis sous séquestre, vous confirmez pour compléter la transaction',
-    recommended: 'Recommandé',
-    escrowTimeout: 'Délai de séquestre',
-    min: 'min',
-    hour: 'heure',
-    hours: 'heures',
-    day: 'jour',
-    days: 'jours',
-    escrowTimeoutWarning:
-      "Sans confirmation dans le délai, les fonds seront automatiquement retournés à l'acheteur",
     publish: 'Publier',
     saveDraft: 'Enregistrer comme brouillon',
+    unpublish: 'Dépublier',
     nsfwLabel: 'Contenu adulte',
     nsfwDesc: 'Cette annonce contient du contenu adulte (NSFW, 18+)',
     processingTime: 'Délai de préparation',
@@ -2910,14 +3262,41 @@ export const fr: TranslationResource = {
     termsTemplates: {
       placeholder: 'Sélectionner un modèle de conditions',
       standardLabel: 'Conditions de transaction standard',
-      standard:
-        "En passant une commande, vous acceptez les conditions suivantes :\n\n1. Paiement : Tous les paiements sont effectués en cryptomonnaie via le séquestre. Les fonds sont libérés au vendeur lors de la confirmation de livraison par l'acheteur ou à l'expiration du délai de litige.\n\n2. Litiges : Si vous n'êtes pas satisfait de votre commande, vous pouvez ouvrir un litige pendant la période de protection. Un modérateur mutuellement convenu examinera le dossier et prendra une décision contraignante.\n\n3. Livraison : Le vendeur est responsable de l'expédition de l'article comme décrit. Les informations de suivi doivent être fournies lorsque disponibles.\n\n4. Responsabilité : Le vendeur ne garantit rien au-delà de ce qui est explicitement indiqué dans la description. Tous les articles sont vendus tels que décrits.\n\n5. Confidentialité : Les détails des transactions sont stockés sur un réseau pair-à-pair. Aucune donnée personnelle n'est partagée avec des tiers au-delà de ce qui est nécessaire pour finaliser la transaction.",
+      standard: `En passant une commande, vous acceptez les conditions suivantes :
+
+1. Paiement : Tous les paiements sont effectués en cryptomonnaie via le séquestre. Les fonds sont libérés au vendeur lors de la confirmation de livraison par l'acheteur ou à l'expiration du délai de litige.
+
+2. Litiges : Si vous n'êtes pas satisfait de votre commande, vous pouvez ouvrir un litige pendant la période de protection. Un modérateur mutuellement convenu examinera le dossier et prendra une décision contraignante.
+
+3. Livraison : Le vendeur est responsable de l'expédition de l'article comme décrit. Les informations de suivi doivent être fournies lorsque disponibles.
+
+4. Responsabilité : Le vendeur ne garantit rien au-delà de ce qui est explicitement indiqué dans la description. Tous les articles sont vendus tels que décrits.
+
+5. Confidentialité : Les détails des transactions sont stockés sur un réseau pair-à-pair. Aucune donnée personnelle n'est partagée avec des tiers au-delà de ce qui est nécessaire pour finaliser la transaction.`,
       digitalLabel: 'Conditions pour biens numériques',
-      digital:
-        "En achetant des biens numériques dans cette boutique, vous acceptez les conditions suivantes :\n\n1. Livraison : Les articles numériques seront livrés par message chiffré ou lien de téléchargement après confirmation du paiement. La livraison est généralement sous 24 heures.\n\n2. Pas de retour : En raison de la nature des biens numériques, toutes les ventes sont définitives une fois le contenu livré et consulté.\n\n3. Licence : Sauf indication contraire, vous recevez une licence personnelle et non transférable. La redistribution ou la revente est interdite.\n\n4. Litiges : Si le contenu livré ne correspond pas à la description, vous pouvez ouvrir un litige pendant la période de protection.\n\n5. Support : Le vendeur fournira un support raisonnable pour les problèmes d'accès ou d'utilisation du contenu acheté.",
+      digital: `En achetant des biens numériques dans cette boutique, vous acceptez les conditions suivantes :
+
+1. Livraison : Les articles numériques seront livrés par message chiffré ou lien de téléchargement après confirmation du paiement. La livraison est généralement sous 24 heures.
+
+2. Pas de retour : En raison de la nature des biens numériques, toutes les ventes sont définitives une fois le contenu livré et consulté.
+
+3. Licence : Sauf indication contraire, vous recevez une licence personnelle et non transférable. La redistribution ou la revente est interdite.
+
+4. Litiges : Si le contenu livré ne correspond pas à la description, vous pouvez ouvrir un litige pendant la période de protection.
+
+5. Support : Le vendeur fournira un support raisonnable pour les problèmes d'accès ou d'utilisation du contenu acheté.`,
       handmadeLabel: 'Conditions pour articles faits main / sur mesure',
-      handmade:
-        "En commandant des articles faits main ou sur mesure, vous acceptez les conditions suivantes :\n\n1. Délai de production : Les articles faits main et sur mesure nécessitent un délai de production supplémentaire comme indiqué. Veuillez prévoir ce délai avant d'attendre l'expédition.\n\n2. Variations : Les articles faits main peuvent présenter de légères variations de couleur, taille ou apparence. C'est inhérent aux produits artisanaux et ne constitue pas un défaut.\n\n3. Personnalisation : Les commandes sur mesure sont réalisées selon vos spécifications. Vérifiez attentivement tous les détails avant de confirmer. Les modifications après le début de la production peuvent ne pas être possibles.\n\n4. Retours : En raison de la nature personnalisée, les retours ne sont acceptés que si l'article diffère significativement de ce qui a été convenu.\n\n5. Litiges : Si l'article reçu ne correspond pas aux spécifications convenues, vous pouvez ouvrir un litige pendant la période de protection.",
+      handmade: `En commandant des articles faits main ou sur mesure, vous acceptez les conditions suivantes :
+
+1. Délai de production : Les articles faits main et sur mesure nécessitent un délai de production supplémentaire comme indiqué. Veuillez prévoir ce délai avant d'attendre l'expédition.
+
+2. Variations : Les articles faits main peuvent présenter de légères variations de couleur, taille ou apparence. C'est inhérent aux produits artisanaux et ne constitue pas un défaut.
+
+3. Personnalisation : Les commandes sur mesure sont réalisées selon vos spécifications. Vérifiez attentivement tous les détails avant de confirmer. Les modifications après le début de la production peuvent ne pas être possibles.
+
+4. Retours : En raison de la nature personnalisée, les retours ne sont acceptés que si l'article diffère significativement de ce qui a été convenu.
+
+5. Litiges : Si l'article reçu ne correspond pas aux spécifications convenues, vous pouvez ouvrir un litige pendant la période de protection.`,
       custom: 'Conditions personnalisées',
     },
     inventoryPolicy: {
@@ -2961,10 +3340,16 @@ export const fr: TranslationResource = {
     statusPublished: 'Publié',
     statusPrivate: 'Privé',
     draftSaved: 'Brouillon enregistré avec succès !',
-
     validationFailed: 'Veuillez corriger les erreurs avant de soumettre',
     createSuccess: 'Annonce créée avec succès!',
     createFailed: "Échec de la création de l'annonce",
+    publishSuccess: {
+      title: 'Produit publié !',
+      description: 'Votre produit est en ligne et visible par les acheteurs.',
+      viewProduct: 'Voir',
+      createAnother: 'Créer un autre',
+      backToDashboard: 'Retour au tableau de bord',
+    },
     updateSuccess: 'Annonce mise à jour avec succès!',
     deleteSuccess: 'Annonce supprimée avec succès!',
     deleteFailed: "Échec de la suppression de l'annonce",
@@ -2972,7 +3357,6 @@ export const fr: TranslationResource = {
     deleteConfirmDesc: "Cette action est irréversible. L'annonce sera définitivement supprimée.",
     notFound: 'Annonce non trouvée',
   },
-
   rwa: {
     fetchError: 'Échec du chargement des produits RWA',
     filterTokenStandard: 'Standard de token',
@@ -3037,7 +3421,6 @@ export const fr: TranslationResource = {
       error: "Échec de l'exécution",
     },
   },
-
   rwaDashboard: {
     title: 'Tableau de bord des actifs RWA',
     walletNotConnected: 'Portefeuille non connecté',
@@ -3084,9 +3467,12 @@ export const fr: TranslationResource = {
     avgPrice: 'Moyenne',
     noData: 'Aucune donnée disponible',
     priceHistoryNotAvailable: "L'historique des prix n'est disponible que sur le web",
-    timeRange: { '1W': '1S', '1M': '1M', ALL: 'TOUT' },
+    timeRange: {
+      '1W': '1S',
+      '1M': '1M',
+      ALL: 'TOUT',
+    },
   },
-
   shipping: {
     shippingProfiles: "Profils d'expédition",
     shippingOptions: "option(s) d'expédition",
@@ -3236,6 +3622,12 @@ export const fr: TranslationResource = {
       "Ce tarif s'appliquera uniquement lorsque le poids de la commande sera dans la plage spécifiée.",
     priceConditionHint:
       "Ce tarif s'appliquera uniquement lorsque le total de la commande sera dans la plage spécifiée.",
+    ratePreview: 'Aperçu des tarifs',
+    ratePreviewDesc: "Testez quel tarif s'applique pour un poids ou un montant de commande donné",
+    previewWeight: "Poids de l'article (g)",
+    previewOrderAmount: 'Montant de la commande',
+    previewMatchedRate: 'Tarif correspondant',
+    previewNoMatch: 'Aucun tarif correspondant',
     shippingLocations: "Lieux d'expédition",
     location: 'lieu',
     locations: 'lieux',
@@ -3265,7 +3657,6 @@ export const fr: TranslationResource = {
     selectLocations: 'Sélectionner les lieux',
     locationsSelected: 'lieu(x) sélectionné(s)',
   },
-
   shippingConfig: {
     noOptions: "Aucune option d'expédition",
     noOptionsDesc: 'Ajoutez des options pour activer la livraison physique',
@@ -3273,7 +3664,6 @@ export const fr: TranslationResource = {
     deleteConfirmTitle: "Supprimer l'option",
     deleteConfirmDesc: 'Êtes-vous sûr de vouloir supprimer',
   },
-
   shippingTemplates: {
     quickStart: 'Modèles de démarrage rapide',
     quickStartDesc: 'Choisissez un modèle pour commencer',
@@ -3286,8 +3676,31 @@ export const fr: TranslationResource = {
     expressDesc: 'Livraison 1-2 jours, tarif premium',
     localPickup: 'Retrait sur place',
     localPickupDesc: 'Le client récupère en boutique (gratuit)',
+    profileQuickStart: 'Démarrage rapide',
+    profileQuickStartDesc:
+      "Sélectionnez un modèle de profil d'expédition pour configurer votre boutique",
+    profileDomestic: 'Expédition nationale',
+    profileDomesticDesc: 'Tarifs standard et express pour la livraison nationale',
+    profileInternational: 'Expédition internationale',
+    profileInternationalDesc: 'Zones nationales et internationales avec tarifs distincts',
+    profileFreeShipping: 'Livraison gratuite',
+    profileFreeShippingDesc:
+      'Offrez la livraison gratuite dans le monde entier sur toutes les commandes',
+    tplDomesticZone: 'National',
+    tplInternationalZone: 'International',
+    tplWorldwideZone: 'Monde entier',
+    tplStandard: 'Standard',
+    tplExpress: 'Express',
+    tplInternationalRate: 'International',
+    tplFreeRate: 'Livraison gratuite',
+    tplStorePickup: 'Retrait en boutique',
+    tplNextDay: 'Lendemain',
+    tplDelivery1to2: '1 à 2 jours',
+    tplDelivery3to5: '3 à 5 jours',
+    tplDelivery5to10: '5 à 10 jours',
+    tplDelivery7to14: '7 à 14 jours',
+    tplPickupReady: 'Prêt au retrait',
   },
-
   emptyState: {
     noProducts: {
       title: 'Aucun produit',
@@ -3358,15 +3771,50 @@ export const fr: TranslationResource = {
       description: 'Aucun litige à traiter pour le moment.',
     },
   },
-
   standalone: {
     storeName: 'Boutique',
     allProducts: 'Tous les produits',
     browseOurCollection: 'Parcourir notre collection',
     products: 'Produits',
     searchProducts: 'Rechercher des produits...',
+    setup: {
+      title: 'Configurer votre boutique',
+      subtitle: 'Terminez la configuration initiale pour commencer',
+      stepPassword: 'Mot de passe',
+      stepProfile: 'Profil',
+      stepRegion: 'Région',
+      stepPayments: 'Paiements',
+      stepComplete: 'Terminé',
+      passwordTitle: 'Définir le mot de passe administrateur',
+      passwordDesc: "Ce mot de passe protège l'administration de votre boutique",
+      password: 'Mot de passe',
+      confirmPassword: 'Confirmer le mot de passe',
+      passwordPlaceholder: 'Au moins 8 caractères',
+      confirmPasswordPlaceholder: 'Saisissez à nouveau le mot de passe',
+      passwordHint:
+        "Le nom d'utilisateur est « admin ». Vous pourrez vous connecter après la configuration.",
+      passwordAlreadySet: 'Le mot de passe a été défini. Cliquez sur Suivant pour continuer.',
+      loginTitle: 'Connexion',
+      loginDesc: 'Saisissez votre mot de passe administrateur pour poursuivre la configuration',
+      loginPlaceholder: 'Mot de passe administrateur',
+      loginHint:
+        "Le nom d'utilisateur est « admin ». Utilisez le mot de passe défini lors de la configuration initiale.",
+      invalidPassword: 'Mot de passe incorrect',
+      loginFailed: 'Échec de la connexion au serveur',
+      signIn: 'Se connecter',
+      paymentLater:
+        "Vous pourrez configurer cela à tout moment dans Paramètres → Paiements après l'assistant.",
+      passwordTooShort: 'Le mot de passe doit contenir au moins 8 caractères',
+      passwordMismatch: 'Les mots de passe ne correspondent pas',
+      passwordFailed: "Échec de l'enregistrement du mot de passe",
+      regionTitle: 'Lieu et devise',
+      regionDesc: "Définissez votre pays et la devise d'affichage préférée",
+      preferencesFailed: "Échec de l'enregistrement des préférences",
+      completeTitle: 'Votre boutique est prête !',
+      completeDesc:
+        "La configuration est terminée. Vous pouvez désormais gérer votre boutique depuis l'administration.",
+    },
   },
-
   ai: {
     assist: 'IA',
     improveTitle: 'Amélioration IA',
@@ -3382,8 +3830,18 @@ export const fr: TranslationResource = {
     setupPrompt: "Configurez l'IA pour optimiser automatiquement titres et descriptions.",
     goToSettings: 'Aller aux paramètres',
     error: 'Échec de la génération. Veuillez réessayer.',
+    title: 'Assistant IA',
+    openAssistant: "Ouvrir l'assistant IA",
+    history: 'Historique',
+    newChat: 'Nouvelle conversation',
+    untitled: 'Sans titre',
+    noConversations: "Aucune conversation pour l'instant",
+    welcomeMessage: 'Posez-moi des questions sur votre boutique',
+    welcomeHint: 'Produits, commandes, analyses...',
+    inputPlaceholder: 'Écrivez un message...',
+    stopGenerating: 'Arrêter la génération',
+    send: 'Envoyer le message',
   },
-
   moderation: {
     title: 'Dossiers de modération',
     description: 'Examiner et résoudre les litiges entre acheteurs et vendeurs',
@@ -3409,7 +3867,6 @@ export const fr: TranslationResource = {
     noCasesDesc: "Vous n'avez aucun dossier de modération.",
     caseDetail: 'Détail du dossier',
   },
-
   admin: {
     title: 'Administration boutique',
     nav: {
@@ -3422,6 +3879,7 @@ export const fr: TranslationResource = {
       storefront: 'Vitrine',
       settings: 'Paramètres',
       viewStore: 'Voir la boutique',
+      backToShopping: 'Retour aux achats',
       help: 'Aide et documentation',
       openMenu: 'Ouvrir le menu',
       closeMenu: 'Fermer le menu',
@@ -3444,8 +3902,11 @@ export const fr: TranslationResource = {
       emptyDescription: 'Commencez par créer votre premier produit ou configurer votre profil.',
       createFirstProduct: 'Créer le premier produit',
       setupStore: 'Configurer la boutique',
+      quickCreate: 'Création rapide',
+      quickCreateDesc: 'Photo + IA en 60 secondes',
       addProduct: 'Ajouter un produit',
       addProductDesc: 'Créer une annonce avec assistance IA',
+      fullEditor: 'Éditeur complet',
       manageOrders: 'Gérer les commandes',
       manageOrdersDesc: 'Voir et traiter les commandes clients',
       designStore: 'Concevoir la boutique',
@@ -3465,6 +3926,45 @@ export const fr: TranslationResource = {
       completedOrders: 'Commandes terminées',
       reviewCount: '{{count}} avis',
       noReviews: "Pas encore d'avis",
+      actionPendingReview: 'Commandes à examiner',
+      actionToFulfill: 'Commandes à traiter',
+      actionDisputed: 'Litiges nécessitant une réponse',
+    },
+    checklist: {
+      title: 'Liste de configuration',
+      progress: '{{completed}}/{{total}} terminé(s)',
+      addProduct: 'Ajoutez votre premier produit',
+      addProductDesc: 'Créez une annonce pour commencer à vendre',
+      setupPayment: 'Configurer les paiements',
+      setupPaymentDesc: 'Connectez Stripe, PayPal ou des portefeuilles crypto',
+      setupShipping: "Configurer l'expédition",
+      setupShippingDesc: "Définissez les tarifs et zones d'expédition",
+      customizeStore: 'Personnaliser votre boutique',
+      customizeStoreDesc: "Ajoutez l'identité visuelle, les couleurs et la mise en page",
+      goSetup: 'Configurer →',
+      allDoneTitle: 'Votre boutique est prête !',
+      allDoneDesc: 'Toutes les étapes sont terminées. Vous pouvez commencer à vendre.',
+      dismiss: 'Fermer',
+    },
+    backup: {
+      bannerTitle: 'Sauvegardez votre phrase de récupération',
+      bannerDesc:
+        "Votre phrase de récupération est le seul moyen de restaurer votre portefeuille si vous perdez l'accès.",
+      startBackup: 'Sauvegarder maintenant',
+      fetchError: 'Impossible de charger la phrase de récupération. Veuillez réessayer.',
+      revealTitle: 'Votre phrase de récupération',
+      securityWarning:
+        "Ne partagez jamais votre phrase de récupération. Ne faites pas de capture d'écran. Notez-la et conservez-la en lieu sûr.",
+      reveal: 'Afficher les mots',
+      hide: 'Masquer',
+      continueToVerify: "Je l'ai notée",
+      verifyTitle: 'Vérifiez votre sauvegarde',
+      verifyDesc:
+        'Saisissez les mots manquants pour confirmer que vous avez enregistré votre phrase de récupération.',
+      wordPlaceholder: 'Mot n°{{n}}',
+      verifyBtn: 'Vérifier',
+      verifyFailed: 'Un ou plusieurs mots sont incorrects. Veuillez réessayer.',
+      doneTitle: 'Phrase de récupération sauvegardée avec succès !',
     },
     products: {
       title: 'Produits',
@@ -3482,8 +3982,10 @@ export const fr: TranslationResource = {
       noResults: 'Aucun produit trouvé',
       noResultsDesc: 'Ajustez vos termes de recherche.',
       colProduct: 'Produit',
+      colStock: 'Stock',
       colType: 'Type',
       colPrice: 'Prix',
+      outOfStock: 'Rupture de stock',
       preview: 'Aperçu',
       edit: 'Modifier',
       duplicate: 'Dupliquer',
@@ -3495,6 +3997,10 @@ export const fr: TranslationResource = {
       typeDigital: 'Numérique',
       typeService: 'Service',
       typeCrypto: 'Crypto',
+      colStatus: 'Statut',
+      statusActive: 'Actif',
+      statusDraft: 'Brouillon',
+      statusPrivate: 'Privé',
       viewTable: 'Vue tableau',
       viewGrid: 'Vue grille',
       selectAll: 'Tout sélectionner',
@@ -3660,17 +4166,69 @@ export const fr: TranslationResource = {
       comingSoon: 'Analytiques bientôt disponibles',
       comingSoonDesc:
         'Analytiques détaillées, insights clients et métriques dans une future mise à jour.',
+      period7d: '7 jours',
+      period30d: '30 jours',
+      period90d: '90 jours',
+      periodAll: 'Tout',
+      periodLabel: 'Sur la période sélectionnée',
+      totalRevenue: "Chiffre d'affaires total",
+      totalOrders: 'Nombre total de commandes',
+      avgOrderValue: 'Panier moyen',
+      activeProducts: 'Produits actifs',
+      published: 'Publiés',
+      revenueOrders: '{{count}} commandes terminées',
+      revenueTrend: "Évolution du chiffre d'affaires",
+      ordersTrend: 'Commandes dans le temps',
+      orderStatus: 'Statut des commandes',
+      topProducts: "Meilleurs produits par chiffre d'affaires",
+      revenue: "Chiffre d'affaires",
+      orders: 'Commandes',
+      product: 'Produit',
+      unitsSold: 'Unités vendues',
+      noData: 'Aucune donnée pour cette période',
+      visitorTitle: 'Analyse des visiteurs',
+      visitorSubtitle: 'Trafic, engagement et conversion',
+      visitorTrend: 'Tendance du trafic',
+      pageViews: 'Pages vues',
+      productViews: 'Vues produits',
+      uniqueVisitors: 'Visiteurs uniques',
+      addToCartCount: 'Ajouts au panier',
+      checkoutCount: 'Paiements entamés',
+      conversionFunnel: 'Entonnoir de conversion',
+      trafficSources: 'Sources de trafic',
+      topPages: 'Pages les plus vues',
+      page: 'Page',
+      views: 'Vues',
+      visitors: 'Visiteurs',
     },
     onboarding: {
+      landingTitle: 'Lancez votre boutique en ligne',
+      landingSubtitle:
+        'Rejoignez des milliers de vendeurs sur Mobazha. Configurez en quelques minutes, vendez dans le monde entier.',
+      landingFeature1: 'Zéro frais de plateforme',
+      landingFeature1Desc: 'Conservez 100 % de vos revenus',
+      landingFeature2: "Protection de l'acheteur",
+      landingFeature2Desc: 'Séquestre intégré pour des transactions sécurisées',
+      landingFeature3: 'Vendez dans le monde entier',
+      landingFeature3Desc: 'Acceptez crypto et monnaie fiduciaire partout',
+      landingTimeEstimate: 'Moins de 5 minutes pour la configuration',
+      landingCta: 'Commencer',
+      landingSkip: 'Plus tard',
       title: 'Configurer votre boutique',
       subtitle: 'Préparez votre boutique en quelques étapes simples',
       step1Label: 'Boutique',
       step2Label: 'Produit',
       step3Label: 'Lancement',
+      step4Label: 'Lancement',
       step1Title: 'Profil de la boutique',
       step1Desc: 'Présentez votre boutique aux acheteurs',
       step2Title: 'Créez votre premier produit',
       step2Desc: 'Ajoutez un produit pour commencer à vendre',
+      step3Title: 'Configurer les paiements',
+      step3Desc: 'Choisissez comment vous souhaitez être payé',
+      setupPayments: 'Configurer les modes de paiement',
+      setupPaymentsDesc: 'Ajoutez des portefeuilles crypto, connectez Stripe ou PayPal',
+      paymentConfigured: 'Mode de paiement configuré',
       storeName: 'Nom de la boutique',
       storeNamePlaceholder: 'Ma super boutique',
       storeDescription: 'Courte description',
@@ -3678,6 +4236,8 @@ export const fr: TranslationResource = {
       changeAvatar: "Changer l'avatar",
       clickToUpload: "Cliquez pour téléverser l'avatar",
       nameRequired: 'Le nom de la boutique est obligatoire',
+      avatarUploadFailed:
+        "Échec du téléchargement de l'avatar — vous pourrez le modifier plus tard dans les paramètres",
       saveFailed: "Échec de l'enregistrement du profil de la boutique",
       createProduct: 'Créer un produit',
       featureAi: 'Titre et description assistés par IA',
@@ -3696,6 +4256,7 @@ export const fr: TranslationResource = {
       back: 'Retour',
       skip: 'Passer la configuration',
       skipStep: 'Passer cette étape',
+      locationCurrencyTitle: 'Lieu et devise',
     },
     settings: {
       title: 'Paramètres',
@@ -3783,6 +4344,18 @@ export const fr: TranslationResource = {
       telegramDocsLink: 'Documentation Telegram Bot',
       telegramBotTokenHelp: 'Le token de @BotFather (format: 123456:ABC-DEF...)',
       telegramChatIdHelp: 'ID du groupe/canal (commence par -100) ou votre ID de chat personnel',
+      emailRecipientHelp: 'Adresse e-mail à laquelle vous souhaitez recevoir les notifications',
+      emailSenderHelp:
+        'Facultatif. Format : « Nom de la boutique <email@domaine.com> ». Laissez vide pour la valeur par défaut.',
+      emailDefaultName: 'Notifications par e-mail',
+      emailStepDelivery: "Paramètres d'envoi",
+      emailDeliveryMethod: "Mode d'envoi",
+      emailResendHint: 'Service cloud, configuration simple',
+      emailSmtpHint: 'Serveur de messagerie auto-hébergé',
+      next: 'Suivant',
+      back: 'Retour',
+      emailApiKeyHelp: "Clé API Resend pour l'envoi d'e-mails cloud.",
+      emailSmtpServerHelp: "Nom d'hôte du serveur SMTP.",
       detectChat: 'Détecter',
       detectChatDesc: 'Détecter automatiquement les chats ayant interagi avec votre bot',
       detecting: 'Détection...',
@@ -3950,6 +4523,15 @@ export const fr: TranslationResource = {
       sectionCountdownDesc: 'Compte à rebours pour promotions, lancements ou événements',
       sectionStoreTabs: 'Onglets de la boutique',
       sectionStoreTabsDesc: 'Onglets avis, abonnements et abonnés',
+      defaultHeroTitle: 'Bienvenue',
+      defaultHeroSubtitle: 'Découvrez notre sélection',
+      defaultFeaturedTitle: 'Produits à la une',
+      defaultAboutTitle: 'Notre histoire',
+      defaultTestimonialsTitle: 'Ce que disent nos clients',
+      defaultFaqTitle: 'FAQ',
+      defaultCollectionsTitle: 'Acheter par collection',
+      defaultContactTitle: 'Nous contacter',
+      defaultProductGridTitle: 'Tous les produits',
       heroDefaultTitle: 'Welcome',
       searchProducts: 'Search products...',
       noProductsMatch: 'No products match your search',
@@ -3966,6 +4548,27 @@ export const fr: TranslationResource = {
       testimonialsAutoMsg: 'Customer reviews will appear here automatically.',
       galleryPrev: 'Previous',
       galleryNext: 'Next',
+      galleryImage: 'Image de galerie {{index}}',
+      presetQuickStart: 'Modèles de démarrage rapide',
+      presetMinimal: 'Minimal',
+      presetMinimalDesc: 'Épuré et simple — laissez parler vos produits',
+      presetOcean: 'Bleu océan',
+      presetOceanDesc: 'Tons bleus professionnels avec titres en serif',
+      presetForest: 'Vert forêt',
+      presetForestDesc: "Tons naturels et terreux, idéaux pour le bio ou l'artisanat",
+      presetSunset: 'Chaleur coucher de soleil',
+      presetSunsetDesc: 'Couleurs chaleureuses — parfait pour les marques lifestyle',
+      presetMidnight: 'Violet minuit',
+      presetMidnightDesc: 'Esthétique sombre et luxueuse pour le premium ou le numérique',
+      presetEarth: 'Tons terre',
+      presetEarthDesc:
+        "Tons chauds et terreux — idéal pour l'artisanat, le bio ou les produits faits main",
+      presetLavender: 'Rêve lavande',
+      presetLavenderDesc: 'Tons violet doux — parfait pour la beauté, le bien-être ou le lifestyle',
+      presetRose: 'Rose poudré',
+      presetRoseDesc: 'Tons rose élégants — idéal pour la mode, les cadeaux ou les boutiques',
+      presetCurrentSections: 'Actuel',
+      presetNewSections: 'Nouveau',
       trustEscrow: 'Protection acheteur',
       trustEscrowDesc: "Fonds sécurisés jusqu'à confirmation de livraison",
       trustCrypto: 'Paiements crypto',
@@ -3980,7 +4583,7 @@ export const fr: TranslationResource = {
       collectionsEmpty: 'Aucune collection disponible.',
       collectionsLoading: 'Chargement des collections...',
       allSectionsAdded: 'Tous les types de sections disponibles ont été ajoutés.',
-      sectionCountLabel: '{count} section(s) · {font}',
+      sectionCountLabel: '{{count}} section(s) · {{font}}',
       presetConfirmTitle: 'Appliquer le modèle',
       presetConfirmMessage: 'Cela remplacera votre thème et sections actuels. Êtes-vous sûr ?',
       paletteOcean: 'Océan',
@@ -4093,9 +4696,14 @@ export const fr: TranslationResource = {
       aiGenerateSuccess: 'Design IA appliqué',
       aiGenerateFailed: 'Échec de la génération du design',
       aiRetry: 'Réessayer',
+      editAppearance: "Modifier l'apparence",
+      resetClassicLayout: 'Réinitialiser au classique',
+      resetClassicTitle: 'Réinitialiser la mise en page classique',
+      resetClassicMessage:
+        "Toutes les sections personnalisées seront supprimées et la mise en page d'origine sera restaurée. Continuer ?",
+      resetClassicConfirm: 'Réinitialiser',
     },
   },
-
   receivingAccounts: {
     title: 'Réception de cryptomonnaies',
     subtitle: 'Configurer les cryptomonnaies et adresses acceptées',
@@ -4122,7 +4730,6 @@ export const fr: TranslationResource = {
     invalidSolAddress: 'Veuillez entrer une adresse Solana valide',
     invalidUtxoAddress: 'Veuillez entrer une adresse de portefeuille valide',
   },
-
   fiat: {
     creditDebitCard: 'Carte bancaire',
     paypal: 'PayPal',
@@ -4145,6 +4752,8 @@ export const fr: TranslationResource = {
     connected: 'Connecté',
     notConnected: 'Non connecté',
     connectProvider: 'Connecter {{provider}}',
+    connecting: 'Connexion...',
+    onboardingFailed: 'Impossible de démarrer la connexion. Veuillez réessayer.',
     configureApiKeys: 'Configurer les clés API',
     disconnect: 'Déconnecter',
     saveFailed: "Échec de l'enregistrement",
@@ -4166,6 +4775,14 @@ export const fr: TranslationResource = {
     pendingRequirements: 'Action requise',
     manageDashboard: 'Tableau de bord {{provider}}',
     dashboardLoginHint: 'Connectez-vous à {{provider}} avec {{email}}',
+    payoutInfoTitle: 'Comment suis-je payé ?',
+    payoutInfoStripe:
+      'Stripe verse les fonds sur votre compte bancaire de façon continue (généralement sous 2 jours ouvrables). Vous pouvez consulter et ajuster votre calendrier de versements dans le tableau de bord Stripe.',
+    payoutInfoPaypal:
+      "Les paiements PayPal arrivent sur votre solde PayPal. Vous pouvez transférer vers votre banque depuis l'application PayPal ou configurer des retraits automatiques.",
+    payoutInfoCrypto:
+      "Les paiements en cryptomonnaie vont directement à l'adresse de votre portefeuille. Aucun intermédiaire — vous contrôlez entièrement vos fonds.",
+    payoutInfoLearnMore: 'En savoir plus',
   },
   support: {
     documentation: 'Documentation',
@@ -4173,6 +4790,8 @@ export const fr: TranslationResource = {
     community: 'Community',
     communityDesc: 'Join our Telegram community for help',
   },
+  store: {
+    offlineBanner: 'Cette boutique est hors ligne. Affichage des données en cache.',
+    offlinePriceDisclaimer: 'Les prix ont pu changer',
+  },
 };
-
-export default fr;
