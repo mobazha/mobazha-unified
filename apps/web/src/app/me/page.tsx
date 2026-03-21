@@ -114,6 +114,12 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
               description={t('me.linkedAccountsDesc')}
               href="/settings/account"
             />
+            <FeatureItem
+              icon={<MapPin className="w-5 h-5" />}
+              title={t('settings.sidebar.addresses')}
+              description={t('me.addressesDesc')}
+              href="/settings/addresses"
+            />
           </div>
         </>
       )}
@@ -156,14 +162,6 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
           </div>
           <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
         </div>
-        {authenticated && (
-          <FeatureItem
-            icon={<MapPin className="w-5 h-5" />}
-            title={t('settings.sidebar.addresses')}
-            description={t('me.addressesDesc')}
-            href="/settings/addresses"
-          />
-        )}
       </div>
 
       {authenticated && (
@@ -384,7 +382,7 @@ export default function MePage() {
 
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-center h-11">
-            <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
+            <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
           </div>
         </div>
 
@@ -428,7 +426,7 @@ export default function MePage() {
 
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-center h-11">
-            <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
+            <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
           </div>
         </div>
 
@@ -507,7 +505,7 @@ export default function MePage() {
 
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-center h-11">
-          <span className="text-base font-semibold text-foreground">{t('nav.profile')}</span>
+          <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
         </div>
       </div>
 
