@@ -14,9 +14,13 @@ const MODE_STORAGE_KEY = 'mobazha-theme-mode';
 
 /**
  * 获取系统主题模式
+ * TMA WebView 不一定传播 prefers-color-scheme，优先读取 Telegram SDK 的 colorScheme
  */
 function getSystemMode(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light';
+  const tgScheme = (window as { Telegram?: { WebApp?: { colorScheme?: string } } }).Telegram?.WebApp
+    ?.colorScheme;
+  if (tgScheme === 'dark' || tgScheme === 'light') return tgScheme;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
@@ -129,7 +133,17 @@ export function useTheme(): UseThemeReturn {
     [currentTheme, resolvedMode]
   );
 
-  // 监听系统主题变化
+  // TMA 强制 system 模式 — 始终跟随 Telegram 宿主主题
+  useEffect(() => {
+    const isTMA = !!(window as { Telegram?: { WebApp?: { colorScheme?: string } } }).Telegram
+      ?.WebApp?.colorScheme;
+    if (isTMA && config.mode !== 'system') {
+      setMode('system');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 监听系统主题变化（含 Telegram themeChanged 事件）
   useEffect(() => {
     if (config.mode !== 'system') return;
 
@@ -137,9 +151,26 @@ export function useTheme(): UseThemeReturn {
     const handleChange = (e: MediaQueryListEvent) => {
       setResolvedMode(e.matches ? 'dark' : 'light');
     };
-
     mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+
+    const tgWebApp = (window as { Telegram?: { WebApp?: Record<string, unknown> } }).Telegram
+      ?.WebApp as
+      | {
+          colorScheme?: string;
+          onEvent?: (e: string, cb: () => void) => void;
+          offEvent?: (e: string, cb: () => void) => void;
+        }
+      | undefined;
+    const handleTGThemeChange = () => {
+      const scheme = tgWebApp?.colorScheme;
+      if (scheme === 'dark' || scheme === 'light') setResolvedMode(scheme);
+    };
+    tgWebApp?.onEvent?.('themeChanged', handleTGThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      tgWebApp?.offEvent?.('themeChanged', handleTGThemeChange);
+    };
   }, [config.mode]);
 
   // 更新 DOM
