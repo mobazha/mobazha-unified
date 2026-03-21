@@ -49,6 +49,7 @@ import {
   Wrench,
   Send,
   ShoppingCart,
+  Globe,
 } from 'lucide-react';
 
 interface FeatureItemProps {
@@ -143,9 +144,11 @@ const AnonymousMePage: React.FC<{
 
           {/* Cart sync nudge */}
           {cartItemCount > 0 && (
-            <div className="flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2.5">
-              <ShoppingCart className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-              <p className="text-xs text-amber-800 dark:text-amber-300">{t('me.cartSyncHint')}</p>
+            <div className="flex items-center gap-3 rounded-xl bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 px-3 py-2.5">
+              <ShoppingCart className="w-4 h-4 text-amber-700 dark:text-amber-400 flex-shrink-0" />
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+                {t('me.cartSyncHint')}
+              </p>
             </div>
           )}
 
@@ -162,8 +165,11 @@ const AnonymousMePage: React.FC<{
 
 // --- Inline Settings (replaces Settings intermediate page on mobile) ---
 const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated }) => {
-  const { t } = useI18n();
+  const { t, locale, setLocale, supportedLocales, localeInfo } = useI18n();
   const { isDark, toggleDarkMode } = useTheme();
+  const { isEmbeddedApp: isEmbedded } = usePlatform();
+  const showThemeToggle = !isEmbedded;
+  const [langOpen, setLangOpen] = useState(false);
 
   return (
     <>
@@ -223,16 +229,63 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
             href="/settings/general"
           />
         )}
-        <div className="flex items-center gap-3 py-3 px-3 min-h-[52px]">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-            <Moon className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">{t('me.appearance')}</p>
-            <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
-          </div>
-          <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
+
+        {/* Language selector — available for all users */}
+        <div>
+          <button
+            type="button"
+            className="w-full flex items-center gap-3 py-3 px-3 min-h-[52px] text-left"
+            onClick={() => setLangOpen(prev => !prev)}
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{t('me.language')}</p>
+              <p className="text-xs text-muted-foreground">{localeInfo[locale].nativeName}</p>
+            </div>
+            <ChevronRight
+              className={`w-4 h-4 text-muted-foreground transition-transform ${langOpen ? 'rotate-90' : ''}`}
+            />
+          </button>
+          {langOpen && (
+            <div className="px-3 pb-2">
+              <div className="grid grid-cols-2 gap-1.5">
+                {supportedLocales.map(loc => (
+                  <button
+                    key={loc}
+                    type="button"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+                      loc === locale
+                        ? 'bg-primary/15 text-primary font-medium'
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                    onClick={() => {
+                      setLocale(loc);
+                      setLangOpen(false);
+                    }}
+                  >
+                    <span className="text-base">{localeInfo[loc].flag}</span>
+                    <span className="truncate">{localeInfo[loc].nativeName}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        {showThemeToggle && (
+          <div className="flex items-center gap-3 py-3 px-3 min-h-[52px]">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+              <Moon className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{t('me.appearance')}</p>
+              <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
+            </div>
+            <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
+          </div>
+        )}
         {!authenticated && (
           <FeatureItem
             icon={<HelpCircle className="w-5 h-5" />}
