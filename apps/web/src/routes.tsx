@@ -151,8 +151,8 @@ const routes: RouteObject[] = [
   // 收藏/愿望单
   { path: '/wishlist', element: protectedPage(() => import('./app/wishlist/page')) },
 
-  // 用户中心
-  { path: '/me', element: protectedPage(() => import('./app/me/page')) },
+  // 用户中心（Me 页自带 anonymous/buyer/owner 三态渲染，不需要 ProtectedRoute 硬门控）
+  { path: '/me', element: lazyPage(() => import('./app/me/page')) },
   { path: '/profile', element: protectedPage(() => import('./app/profile/page')) },
 
   // 仲裁案例管理
