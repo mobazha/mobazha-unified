@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui';
 import {
   useI18n,
   useUserStore,
+  useCartStore,
   useTheme,
   useMiniAppRole,
   getImageUrl,
@@ -46,6 +47,8 @@ import {
   Lock,
   Ban,
   Wrench,
+  Send,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface FeatureItemProps {
@@ -91,6 +94,71 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     {children}
   </h3>
 );
+
+// --- Anonymous Me Page (MA-1.4) ---
+const AnonymousMePage: React.FC<{
+  isTGMiniApp: boolean;
+  onContinueWithTelegram: () => void;
+  onLogin: () => void;
+}> = ({ isTGMiniApp, onContinueWithTelegram, onLogin }) => {
+  const { t } = useI18n();
+  const cartItemCount = useCartStore(state => state.items.length);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center justify-center h-11">
+          <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+        </div>
+      </div>
+
+      <Container size="sm" className="py-3">
+        <VStack gap="sm">
+          {/* Sign-in CTA */}
+          <div className="bg-card rounded-xl p-6 border flex flex-col items-center text-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+              {isTGMiniApp ? (
+                <Send className="w-7 h-7 text-primary" />
+              ) : (
+                <LogIn className="w-7 h-7 text-primary" />
+              )}
+            </div>
+            <div>
+              <h2 className="text-base font-semibold">{t('me.signInPrompt')}</h2>
+              <p className="text-xs text-muted-foreground mt-1">{t('me.signInBenefits')}</p>
+            </div>
+            {isTGMiniApp ? (
+              <Button className="w-full" onClick={onContinueWithTelegram}>
+                <Send className="w-4 h-4 mr-2" />
+                {t('me.continueWithTelegram')}
+              </Button>
+            ) : (
+              <Button className="w-full" onClick={onLogin}>
+                {t('nav.login')}
+              </Button>
+            )}
+          </div>
+
+          {/* Cart sync nudge */}
+          {cartItemCount > 0 && (
+            <div className="flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2.5">
+              <ShoppingCart className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <p className="text-xs text-amber-800 dark:text-amber-300">{t('me.cartSyncHint')}</p>
+            </div>
+          )}
+
+          <InlineSettings authenticated={false} />
+
+          <div className="h-20 md:hidden" />
+        </VStack>
+      </Container>
+
+      <Footer />
+    </div>
+  );
+};
 
 // --- Inline Settings (replaces Settings intermediate page on mobile) ---
 const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated }) => {
@@ -147,12 +215,14 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
 
       <SectionLabel>{t('me.sectionPreferences')}</SectionLabel>
       <div className="bg-card rounded-xl border overflow-hidden">
-        <FeatureItem
-          icon={<Settings className="w-5 h-5" />}
-          title={t('settings.sidebar.general')}
-          description={t('settingsExtended.generalDesc')}
-          href="/settings/general"
-        />
+        {authenticated && (
+          <FeatureItem
+            icon={<Settings className="w-5 h-5" />}
+            title={t('settings.sidebar.general')}
+            description={t('settingsExtended.generalDesc')}
+            href="/settings/general"
+          />
+        )}
         <div className="flex items-center gap-3 py-3 px-3 min-h-[52px]">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
             <Moon className="w-5 h-5" />
@@ -163,6 +233,14 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
           </div>
           <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
         </div>
+        {!authenticated && (
+          <FeatureItem
+            icon={<HelpCircle className="w-5 h-5" />}
+            title={t('me.support')}
+            description={t('me.supportDesc')}
+            href="/support"
+          />
+        )}
       </div>
 
       {authenticated && (
@@ -199,17 +277,6 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
             />
           </div>
         </>
-      )}
-
-      {!authenticated && (
-        <div className="bg-card rounded-xl border overflow-hidden">
-          <FeatureItem
-            icon={<HelpCircle className="w-5 h-5" />}
-            title={t('me.support')}
-            description={t('me.supportDesc')}
-            href="/support"
-          />
-        </div>
       )}
     </>
   );
@@ -391,44 +458,11 @@ export default function MePage() {
   // --- Mini App: Anonymous mode (MA-1.4) ---
   if (role === 'anonymous') {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-center h-11">
-            <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
-          </div>
-        </div>
-
-        <Container size="sm" className="py-3">
-          <VStack gap="sm">
-            <div className="bg-card rounded-xl p-6 border flex flex-col items-center text-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <LogIn className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold">{t('me.signInPrompt')}</h2>
-                <p className="text-xs text-muted-foreground mt-1">{t('me.loginPrompt')}</p>
-              </div>
-              {isTGMiniApp ? (
-                <Button className="w-full" onClick={handleContinueWithTelegram}>
-                  {t('me.continueWithTelegram')}
-                </Button>
-              ) : (
-                <Button className="w-full" onClick={handleLogin}>
-                  {t('nav.login')}
-                </Button>
-              )}
-            </div>
-
-            <InlineSettings authenticated={false} />
-
-            <div className="h-20 md:hidden" />
-          </VStack>
-        </Container>
-
-        <Footer />
-      </div>
+      <AnonymousMePage
+        isTGMiniApp={isTGMiniApp}
+        onContinueWithTelegram={handleContinueWithTelegram}
+        onLogin={handleLogin}
+      />
     );
   }
 
