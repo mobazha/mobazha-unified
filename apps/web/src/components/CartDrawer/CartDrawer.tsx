@@ -7,9 +7,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/com
 import { Button } from '@/components/ui/button';
 import { HStack, VStack } from '@/components/layouts';
 import { useCartStore, useUserStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { ClearCartAlert } from '@/components/Cart/ClearCartAlert';
+import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import { buildCheckoutUrl } from '@/hooks/useCart';
 
 interface CartDrawerProps {
@@ -23,6 +25,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const router = useRouter();
 
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
+  const { isTGMiniApp, isEmbeddedApp } = usePlatform();
+  const { promptRegister } = useMiniAppRegister();
   const items = useCartStore(state => state.items);
   const updateQuantity = useCartStore(state => state.updateQuantity);
   const removeItem = useCartStore(state => state.removeItem);
@@ -31,12 +35,12 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const subtotal = items.reduce((sum, item) => sum + item.listing.price.amount * item.quantity, 0);
   const currency = items[0]?.listing.price.currency.code ?? 'USD';
 
-  const handleCheckout = useCallback(() => {
-    onOpenChange(false);
+  const handleCheckout = useCallback(async () => {
     if (items.length === 0) return;
 
     const vendors = new Set(items.map(i => i.listing.vendorPeerID));
     if (vendors.size > 1) {
+      onOpenChange(false);
       router.push('/cart');
       return;
     }
@@ -44,12 +48,21 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     const checkoutUrl = buildCheckoutUrl(items, items[0].listing.vendorPeerID);
 
     if (!isAuthenticated) {
+      if (isTGMiniApp || isEmbeddedApp) {
+        const action = await promptRegister();
+        if (action !== 'register') return;
+        onOpenChange(false);
+        router.push(checkoutUrl);
+        return;
+      }
+      onOpenChange(false);
       router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`);
       return;
     }
 
+    onOpenChange(false);
     router.push(checkoutUrl);
-  }, [items, isAuthenticated, router, onOpenChange]);
+  }, [items, isAuthenticated, isTGMiniApp, isEmbeddedApp, promptRegister, router, onOpenChange]);
 
   const handleContinueShopping = useCallback(() => {
     onOpenChange(false);
@@ -238,7 +251,11 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 </span>
               </HStack>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
-                {isAuthenticated ? t('cart.checkout') : t('cart.loginToCheckout')}
+                {isAuthenticated
+                  ? t('cart.checkout')
+                  : isTGMiniApp || isEmbeddedApp
+                    ? t('cart.registerToCheckout')
+                    : t('cart.loginToCheckout')}
               </Button>
               <Button
                 variant="outline"
