@@ -62,6 +62,7 @@ import {
   Ban,
   ImageIcon,
   FileText,
+  ChevronLeft,
 } from 'lucide-react';
 import { ShareButton } from '@/components/Share';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
@@ -799,6 +800,15 @@ export default function StorePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {isMobile && (
+        <button
+          onClick={() => router.back()}
+          className="fixed top-3 left-3 z-40 lg:hidden w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm shadow-md flex items-center justify-center active:scale-95 transition-transform"
+          aria-label={t('common.back')}
+        >
+          <ChevronLeft className="w-5 h-5 text-foreground" />
+        </button>
+      )}
       {isOffline && <OfflineBanner />}
 
       <main>
