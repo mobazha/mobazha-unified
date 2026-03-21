@@ -58,14 +58,23 @@ export function AdminHeader({ title }: AdminHeaderProps) {
             <span className="hidden sm:inline">{t('userMenu.viewStore')}</span>
           </button>
         ) : (
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
-            data-testid="admin-back-to-marketplace"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('admin.nav.backToMarketplace')}</span>
-          </Link>
+          <>
+            <Link
+              href="/me"
+              className="lg:hidden flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+              data-testid="admin-back-mobile"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/"
+              className="hidden lg:flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+              data-testid="admin-back-to-marketplace"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{t('admin.nav.backToMarketplace')}</span>
+            </Link>
+          </>
         )}
 
         <Link href="/admin" className="lg:hidden flex items-center gap-2">

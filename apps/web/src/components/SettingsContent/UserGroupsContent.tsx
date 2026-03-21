@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui';
 import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Loader2, Plus, Users, AlertCircle } from 'lucide-react';
 
 interface UserGroupForm {
@@ -161,29 +162,28 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({
           {t('settings.accessControl.userGroupsDesc')}
         </p>
       )}
-      <Card className="p-4 md:p-6">
-        <div className="flex items-center justify-end mb-4">
-          <Button
-            size="sm"
-            onClick={() => setShowCreateModal(true)}
-            disabled={!isAuthenticated || !ownerPeerID}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t('common.create')}
-          </Button>
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
+      )}
 
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
-        )}
-
-        {loading && (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      {!loading && groups.length > 0 && (
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center justify-end mb-4">
+            <Button
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              disabled={!isAuthenticated || !ownerPeerID}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t('common.create')}
+            </Button>
           </div>
-        )}
-
-        {!loading && groups.length > 0 && (
           <div className="space-y-3">
             {groups.map(group => (
               <div key={group.id} className="p-4 rounded-lg border border-border">
@@ -257,54 +257,35 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({
               </div>
             ))}
           </div>
-        )}
+        </Card>
+      )}
 
-        {!loading && groups.length === 0 && (
-          <Card className="p-4 md:p-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">
-                {t('settings.accessControl.noUserGroups')}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                {t('settings.accessControl.noUserGroupsDesc')}
-              </p>
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-4 mb-6">
-              <h4 className="font-medium text-sm mb-3">
-                {t('settings.accessControl.userGroupsHelp')}
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  {t('settings.accessControl.userGroupsHelp1')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  {t('settings.accessControl.userGroupsHelp2')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  {t('settings.accessControl.userGroupsHelp3')}
-                </li>
-              </ul>
-            </div>
-
-            <div className="text-center">
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                disabled={!isAuthenticated || !ownerPeerID}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('settings.accessControl.createFirstUserGroup')}
-              </Button>
-            </div>
-          </Card>
-        )}
-      </Card>
+      {!loading && groups.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title={t('settings.accessControl.noUserGroups')}
+          description={t('settings.accessControl.noUserGroupsDesc')}
+          action={{
+            label: t('settings.accessControl.createFirstUserGroup'),
+            onClick: () => setShowCreateModal(true),
+          }}
+        >
+          <ul className="text-sm text-muted-foreground space-y-1.5 text-left max-w-xs mb-4">
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.userGroupsHelp1')}</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.userGroupsHelp2')}</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.userGroupsHelp3')}</span>
+            </li>
+          </ul>
+        </EmptyState>
+      )}
 
       {/* Create/Edit Modal */}
       <Dialog

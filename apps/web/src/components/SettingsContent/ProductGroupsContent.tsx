@@ -28,6 +28,7 @@ import {
   GROUP_COLORS,
   type ProductGroup,
 } from '@mobazha/core';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Loader2, Plus, Layers, AlertCircle } from 'lucide-react';
 
 interface ProductGroupForm {
@@ -172,29 +173,28 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({
           {t('settings.accessControl.productGroupsDesc')}
         </p>
       )}
-      <Card className="p-4 md:p-6">
-        <div className="flex items-center justify-end mb-4">
-          <Button
-            size="sm"
-            onClick={() => setShowCreateModal(true)}
-            disabled={!isAuthenticated || !userID}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t('common.create')}
-          </Button>
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
+      )}
 
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
-        )}
-
-        {loading && (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      {!loading && groups.length > 0 && (
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center justify-end mb-4">
+            <Button
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              disabled={!isAuthenticated || !userID}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t('common.create')}
+            </Button>
           </div>
-        )}
-
-        {!loading && groups.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {groups.map(group => (
               <div key={group.id} className="p-4 rounded-lg border border-border">
@@ -283,54 +283,35 @@ export const ProductGroupsContent: React.FC<ProductGroupsContentProps> = ({
               </div>
             ))}
           </div>
-        )}
+        </Card>
+      )}
 
-        {!loading && groups.length === 0 && (
-          <Card className="p-4 md:p-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Layers className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">
-                {t('settings.accessControl.noProductGroups')}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                {t('settings.accessControl.noProductGroupsDesc')}
-              </p>
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-4 mb-6">
-              <h4 className="font-medium text-sm mb-3">
-                {t('settings.accessControl.productGroupsHelp')}
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  {t('settings.accessControl.productGroupsHelp1')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  {t('settings.accessControl.productGroupsHelp2')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  {t('settings.accessControl.productGroupsHelp3')}
-                </li>
-              </ul>
-            </div>
-
-            <div className="text-center">
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                disabled={!isAuthenticated || !userID}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('settings.accessControl.createFirstProductGroup')}
-              </Button>
-            </div>
-          </Card>
-        )}
-      </Card>
+      {!loading && groups.length === 0 && (
+        <EmptyState
+          icon={Layers}
+          title={t('settings.accessControl.noProductGroups')}
+          description={t('settings.accessControl.noProductGroupsDesc')}
+          action={{
+            label: t('settings.accessControl.createFirstProductGroup'),
+            onClick: () => setShowCreateModal(true),
+          }}
+        >
+          <ul className="text-sm text-muted-foreground space-y-1.5 text-left max-w-xs mb-4">
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.productGroupsHelp1')}</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.productGroupsHelp2')}</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.productGroupsHelp3')}</span>
+            </li>
+          </ul>
+        </EmptyState>
+      )}
 
       {/* Create/Edit Modal */}
       <Dialog
