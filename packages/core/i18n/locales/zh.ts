@@ -1,5 +1,5 @@
 /**
- * 中文翻译
+ * Chinese Translations
  */
 
 import type { TranslationResource } from '../types';
@@ -99,6 +99,8 @@ export const zh: TranslationResource = {
     removing: '移除中...',
     remove: '移除',
     loginRequired: '请先登录以继续',
+    loginToSave: '登录以保存收藏',
+    loginToSaveDesc: '创建账户，将商品加入心愿单并随时查看。',
     backToHome: '返回首页',
     clearAll: '清除全部',
     done: '完成',
@@ -113,13 +115,6 @@ export const zh: TranslationResource = {
     moveUp: '上移',
     moveDown: '下移',
   },
-
-  validation: {
-    required: '此字段必填',
-    titleRequired: '标题必填',
-    priceRequired: '价格必填',
-  },
-
   share: {
     copyLink: '复制链接',
     linkCopied: '链接已复制！',
@@ -127,7 +122,6 @@ export const zh: TranslationResource = {
     shareToTelegram: '分享到 Telegram',
     shareProduct: '分享商品',
   },
-
   embed: {
     title: '嵌入代码',
     embedCode: '嵌入',
@@ -136,7 +130,6 @@ export const zh: TranslationResource = {
     preview: '预览',
     codeCopied: '嵌入代码已复制！',
   },
-
   review: {
     summary: '评分概览',
     noReviews: '暂无评价',
@@ -147,7 +140,11 @@ export const zh: TranslationResource = {
     showMore: '查看更多评价',
     showLess: '收起',
   },
-
+  validation: {
+    required: '此字段必填',
+    titleRequired: '标题必填',
+    priceRequired: '价格必填',
+  },
   nav: {
     home: '首页',
     market: '市场',
@@ -167,41 +164,31 @@ export const zh: TranslationResource = {
     viewCart: '查看购物车',
     openUserMenu: '打开用户菜单',
   },
-
   login: {
-    // 页面标题和副标题
     title: 'Mobazha',
     subtitle: '去中心化市场',
-    // 模式
     hostedMode: '托管模式',
     vpsMode: 'VPS 模式',
-    // 加载状态
     redirectingToLogin: '正在跳转登录...',
     pleaseWait: '请稍候',
     loggingIn: '正在登录...',
     processing: '处理中...',
-    // 表单标签
     username: '用户名',
     password: '密码',
     usernamePlaceholder: '请输入用户名',
     passwordPlaceholder: '请输入密码',
-    // 按钮
     login: '登录',
     loginRegister: '登录 / 注册',
+    createAccount: '创建账户',
     signInToContinue: '请登录后继续',
-    // 错误消息
     invalidCredentials: '用户名或密码错误',
     loginFailed: '登录失败，请重试',
     usernamePasswordRequired: '请输入用户名和密码',
-    // 托管模式信息
     hostedModeInfo: '点击下方按钮将跳转到安全登录页面，完成登录后会自动返回。',
-    // 平台支持
     supportedPlatforms: '支持平台',
     browser: '浏览器',
-    // 环境
     testEnvironment: '测试环境',
     productionEnvironment: '生产环境',
-    // 独立站模式
     standaloneMode: '独立站模式',
     sellerAdmin: '店铺管理',
     loginAsAdmin: '管理员登录',
@@ -210,12 +197,10 @@ export const zh: TranslationResource = {
     loginWithMobazha: '使用 Mobazha 账号登录',
     buyerLoginHint: '登录后可下单购物并与卖家沟通',
     brandFooter: '由 Mobazha 提供技术支持',
-    // 会话过期
     sessionExpiredTitle: '会话已过期',
     sessionExpiredMessage: '您的会话已过期或不再有效，请重新登录以继续使用。',
     sessionExpiredAction: '重新登录',
   },
-
   home: {
     welcome: '欢迎来到 Mobazha',
     featured: '精选商品',
@@ -224,7 +209,6 @@ export const zh: TranslationResource = {
     categories: '分类',
     viewAll: '查看全部',
   },
-
   categories: {
     electronics: '电子产品',
     clothing: '服装',
@@ -233,7 +217,6 @@ export const zh: TranslationResource = {
     home: '家居',
     sports: '运动',
   },
-
   me: {
     title: '我',
     anonymous: '匿名用户',
@@ -284,8 +267,6 @@ export const zh: TranslationResource = {
     accessControl: '访问控制',
     accessRequests: '访问申请',
     accessRequestsDesc: '审核待处理的访问申请',
-
-    // Mini App 角色相关
     storeOwner: '店铺管理员',
     myStore: '我的店铺',
     dashboard: '仪表盘',
@@ -301,14 +282,10 @@ export const zh: TranslationResource = {
     myPurchasesDesc: '追踪您的订单',
     myChats: '消息',
     myChatsDesc: '与卖家和买家聊天',
-
-    // 匿名模式
     signInPrompt: '创建您的账号',
     signInBenefits: '追踪订单、收藏商品、多设备同步',
     continueWithTelegram: '使用 Telegram 继续',
     cartSyncHint: '登录后购物车将跨设备同步',
-
-    // 未认领店铺 / 认领流程
     unclaimedStorePrompt: '你是这家店的店主吗？',
     unclaimedStoreDesc: '认领店铺以管理商品和订单',
     claimStore: '认领店铺',
@@ -321,7 +298,6 @@ export const zh: TranslationResource = {
     claimErrorAlreadyClaimed: '该店铺已被认领',
     claimErrorGeneric: '认领失败，请重试',
   },
-
   product: {
     title: '标题',
     description: '描述',
@@ -358,14 +334,14 @@ export const zh: TranslationResource = {
     report: '举报',
     options: '选项',
     selectOption: '选择选项',
-    editProduct: '编辑商品',
-    shareLink: '分享链接',
-    linkCopied: '商品链接已复制到剪贴板',
-    sellerViewHint: '这是买家看到的商品展示效果',
     variants: '规格',
     notFound: '商品未找到',
     viewStore: '访问店铺',
     goToStore: '进入店铺',
+    editProduct: '编辑商品',
+    shareLink: '分享链接',
+    linkCopied: '商品链接已复制到剪贴板',
+    sellerViewHint: '这是买家看到的商品展示效果',
     viewPhotos: '查看 {{count}} 张图片',
     details: '商品详情',
     acceptedCurrencies: '接受支付',
@@ -380,10 +356,8 @@ export const zh: TranslationResource = {
     noReviews: '暂无评价',
     viewAllReviews: '查看全部评价',
     anonymous: '匿名',
-    // Rating labels
     overall: '综合',
     overallRating: '综合评分',
-    // Product attributes
     type: '类型',
     weight: '重量',
     weightGrams: '{{weight}}g',
@@ -396,11 +370,9 @@ export const zh: TranslationResource = {
     conditionUsedGood: '二手-良好',
     conditionUsedPoor: '二手-一般',
     conditionRefurbished: '翻新',
-    // Verified moderator
     verifiedModerator: '认证仲裁员',
     verifiedModeratorDesc: '此商品支持使用 Mobazha 认证仲裁员进行交易保护',
     learnMore: '了解更多',
-    // Shipping options
     shippingOptions: '配送选项',
     shipTo: '配送到',
     selectDestination: '选择目的地',
@@ -414,11 +386,9 @@ export const zh: TranslationResource = {
     localPickup: '到店自提',
     priceToBeCalculated: '待计算',
     worldwide: '全球',
-    // More from store
     moreFromStore: '该店铺更多商品',
     viewAllProducts: '查看全部',
   },
-
   search: {
     placeholder: '搜索商品、店铺...',
     results: '{{count}} 个结果',
@@ -435,7 +405,6 @@ export const zh: TranslationResource = {
     category: '分类',
     allCategories: '全部分类',
   },
-
   cart: {
     title: '购物车',
     empty: '购物车为空',
@@ -447,7 +416,10 @@ export const zh: TranslationResource = {
     total: '合计',
     checkout: '结算',
     loginToCheckout: '登录后结算',
+    registerToCheckout: '注册后结账',
     remove: '删除',
+    decreaseQuantity: '减少数量',
+    increaseQuantity: '增加数量',
     quantity: '数量',
     items: '件',
     itemCount: '{{count}} 件商品',
@@ -466,10 +438,7 @@ export const zh: TranslationResource = {
     clearConfirmTitle: '清空购物车',
     clearConfirmMessage: '确定要移除购物车中的所有商品吗？此操作无法撤销。',
     viewCart: '查看购物车',
-    decreaseQuantity: '减少数量',
-    increaseQuantity: '增加数量',
   },
-
   checkout: {
     title: '结算',
     stepCheckout: '结账',
@@ -494,7 +463,6 @@ export const zh: TranslationResource = {
     amountToPay: '待付金额',
     waitingPayment: '等待付款',
     paymentConfirmed: '付款确认',
-    // 地址相关
     selectAddress: '选择收货地址',
     selectAddressDesc: '选择订单的配送地址',
     noAddresses: '暂无收货地址',
@@ -503,7 +471,6 @@ export const zh: TranslationResource = {
     pay: '支付',
     connectWallet: '连接钱包',
     connecting: '连接中...',
-    // 新下单页面（仅创建订单）
     orderNote: '订单备注（可选）',
     orderNotePlaceholder: '给卖家留言...',
     quantity: '数量',
@@ -524,18 +491,15 @@ export const zh: TranslationResource = {
     creating: '创建中...',
     createOrderFailed: '创建订单失败：',
     paymentNextStep: '您将在下一步选择支付方式',
-    // RWA 相关
     rwaTransaction: 'RWA 代币交易',
     rwaInstantHint: '这是即时 RWA 交换。确认后，您的付款将立即兑换为代币份额。',
     rwaConfirmRequiredHint: '此交易需要卖家确认。您的付款将被锁定，直到卖家确认交易。',
     loadFailed: '无法加载结账页面',
     loadFailedDesc: '准备订单时出现问题，请稍后重试。',
-    // 折扣
     nextStepsTitle: '接下来会怎样',
     nextStepsSeller: '卖家将审核并确认您的订单。处理完成后您会收到通知。',
     nextStepsEscrow: '您的付款受买家保障保护，直到您确认收货。',
     nextStepsTrack: '您可随时在订单详情页查看订单状态。',
-    // TRON
     tron: {
       insufficientGas: 'TRX 余额不足以支付网络费用。需要 {{required}}，当前余额 {{balance}}。',
       gasExplanation: 'TRON 交易需要 TRX 支付能量和带宽费用。请在继续操作前充值 TRX。',
@@ -556,8 +520,6 @@ export const zh: TranslationResource = {
       proximityHint: '再购买 {{amount}} 即可享受 {{reward}}！',
     },
   },
-
-  // 地址管理
   address: {
     title: '收货地址',
     addAddress: '添加地址',
@@ -568,7 +530,6 @@ export const zh: TranslationResource = {
     deleted: '地址已删除',
     added: '地址已添加',
     updated: '地址已更新',
-    // 表单字段
     name: '收件人姓名',
     namePlaceholder: '请输入收件人姓名',
     nameRequired: '请输入收件人姓名',
@@ -592,7 +553,6 @@ export const zh: TranslationResource = {
     addressNotes: '配送备注（可选）',
     addressNotesPlaceholder: '特殊配送要求...',
   },
-
   order: {
     title: '订单',
     myOrders: '我的订单',
@@ -614,9 +574,7 @@ export const zh: TranslationResource = {
     cancelled: '已取消',
     refunded: '已退款',
     disputed: '申诉中',
-    // 查看交易
     viewTransaction: '查看交易',
-    // 摘要
     summary: '概要',
     orderHistory: '订单历史',
     trackingSection: {
@@ -624,7 +582,6 @@ export const zh: TranslationResource = {
       noTrackingNumber: '暂无物流单号',
       track: '查看物流',
     },
-    // 进度条阶段
     stages: {
       paid: '已付款',
       accepted: '已接受',
@@ -636,7 +593,6 @@ export const zh: TranslationResource = {
       resolved: '已解决',
       declined: '已拒绝',
     },
-    // 状态标签（底部显示）
     statusLabels: {
       pending: '待处理',
       awaitingPayment: '待付款',
@@ -654,17 +610,15 @@ export const zh: TranslationResource = {
       error: '错误',
       unknown: '未知',
     },
-    // 发货
     shippingDetails: '发货详情',
-    // 弹框侧边栏
     menu: '菜单',
     tabs: {
+      label: '订单详情',
       summary: '摘要',
       discussion: '讨论',
       contract: '合同 (JSON)',
     },
     discussionPlaceholder: '与交易对方讨论此订单相关事宜。',
-    // 时间线事件描述
     timeline: {
       orderPlaced: '订单已提交',
       paymentConfirmed: '支付已确认',
@@ -677,12 +631,12 @@ export const zh: TranslationResource = {
       disputeClosed: '纠纷已关闭: {{verdict}}',
       refunded: '订单已退款',
     },
-    // 订单状态卡片
     statusCard: {
       awaitingPaymentBuyer: '请完成付款以处理此订单',
       awaitingPaymentSeller: '等待买家完成付款',
       awaitingPaymentHint: '点击下方"立即付款"继续',
       pendingBuyer: '等待卖家接受您的订单',
+      pendingBuyerConfirmingHint: '链上确认中，通常需 15–60 秒',
       pendingSeller: '收到新订单 — 请确认并接受',
       processingBuyer: '卖家正在准备您的订单',
       processingSeller: '订单已接受 — 准备发货',
@@ -702,7 +656,6 @@ export const zh: TranslationResource = {
       stepShipped: '已发货',
       stepComplete: '已完成',
     },
-    // 订单详情标签
     shipTo: '收货地址',
     viewOnMap: '在地图上查看',
     shippingOption: '配送区域',
@@ -712,9 +665,6 @@ export const zh: TranslationResource = {
     additionalInfo: '附加信息',
     coupons: '优惠券',
     unknownItem: '未知商品',
-    untitledItem: '未命名商品',
-    fundsProtected: '保障金额',
-    // 商品信息
     product: {
       unitPrice: '单价',
       quantity: '数量',
@@ -742,6 +692,8 @@ export const zh: TranslationResource = {
     allOrders: '全部订单',
     from: '来自',
     to: '给',
+    untitledItem: '未命名商品',
+    fundsProtected: '保障金额',
     processing: '处理中',
     manageOrders: '管理您的购买和销售订单',
     managePurchases: '查看和追踪您的购买订单',
@@ -752,7 +704,6 @@ export const zh: TranslationResource = {
     browseProducts: '去逛逛',
     allPurchases: '全部购买',
     noStatusOrders: '暂无{{status}}状态的订单。',
-    // 订单详情页
     backToOrders: '返回订单列表',
     placedOn: '下单时间：{{date}}',
     orderNotFound: '订单未找到',
@@ -769,7 +720,6 @@ export const zh: TranslationResource = {
     markAsShipped: '标记发货',
     refundOrder: '退款',
     shipOrder: '发货',
-    // 时间线
     orderTimeline: '订单进度',
     orderPlaced: '订单已提交',
     paymentConfirmed: '支付已确认',
@@ -779,7 +729,6 @@ export const zh: TranslationResource = {
     fundsReleased: '资金已释放给卖家',
     disputeOpened: '已发起申诉',
     disputeResolved: '申诉已解决',
-    // 订单项
     orderSummary: '订单摘要',
     orderItems: '订单商品',
     quantity: '数量',
@@ -788,31 +737,26 @@ export const zh: TranslationResource = {
     shipping: '运费',
     free: '免费',
     moderatorFee: '仲裁费',
-    // 参与方
     seller: '卖家',
     buyer: '买家',
     moderator: '仲裁员',
     viewStore: '查看店铺',
     moderatorFeePercent: '{{fee}}% 费率',
-    // 地址和支付
     shippingAddress: '收货地址',
     trackingNumber: '物流单号',
     paymentDetails: '支付详情',
     paymentTransaction: '支付交易',
     escrowAddress: '支付地址',
     orderNotes: '订单备注',
-    // 支付卡片
     paid: '已付款',
     fundsInEscrow: '资金受买家保障保护，直到订单完成。',
     directPaymentDesc: '直接付款 - 资金直接发送给卖家。',
-    // 申诉
     disputeOpen: '申诉进行中',
     initiatedBy: '发起方：{{party}}',
     disputeStatus: '申诉状态：{{status}}',
     favorBuyer: '支持买家',
     favorSeller: '支持卖家',
     splitFunds: '分割资金',
-    // 弹窗
     openDisputeTitle: '发起申诉',
     openDisputeDesc: '请描述您遇到的问题，仲裁员将审核您的申诉。',
     describeIssue: '描述您的问题...',
@@ -832,10 +776,10 @@ export const zh: TranslationResource = {
     resolveDisputeBuyerDesc: '您确定要支持买家吗？将全额退款给买家。',
     resolveDisputeSellerDesc: '您确定要支持卖家吗？将全额付款给卖家。',
     resolveDisputeSplitDesc: '您确定要分割资金吗？买卖双方将各获得部分资金。',
-    // 成功/错误消息
     receiptConfirmed: '确认收货成功！资金已释放给卖家。',
     receiptConfirmFailed: '确认收货失败：',
     disputeOpenedSuccess: '申诉已提交，仲裁员将审核您的申诉。',
+    afterSaleDisputeSuccess: '您的反馈已提交，卖家将收到通知。',
     disputeOpenFailed: '发起申诉失败：',
     provideDisputeReason: '请提供申诉原因',
     orderShipped: '订单已发货！',
@@ -845,11 +789,19 @@ export const zh: TranslationResource = {
     refundFailed: '退款失败：',
     disputeResolvedSuccess: '申诉已解决！',
     resolveDisputeFailed: '解决申诉失败：',
-    // 订单操作
+    packingSlip: {
+      title: '装箱单',
+      print: '打印',
+      orderNumber: '订单号',
+      item: '商品',
+      price: '价格',
+      thankYou: '感谢您的下单！',
+    },
     actions: {
       pay: '立即支付',
       cancel: '取消订单',
       dispute: '发起申诉',
+      reportIssue: '反馈问题',
       complete: '确认收货',
       writeReview: '写评价',
       accept: '接受订单',
@@ -858,7 +810,8 @@ export const zh: TranslationResource = {
       refund: '退款',
       claim: '领取资金',
       acceptPayout: '接受裁决',
-      // 成功消息
+      chat: '聊天',
+      confirmDelivery: '确认',
       acceptSuccess: '订单已接受',
       acceptSuccessDesc: '您已接受订单，请尽快完成发货。',
       declineSuccess: '订单已拒绝',
@@ -875,6 +828,8 @@ export const zh: TranslationResource = {
       fulfillSuccessDesc: '订单已标记为已发货，买家将收到通知。',
       completeSuccess: '订单已完成',
       completeSuccessDesc: '订单已完成，资金已释放给卖家。',
+      rateSuccess: '评价已提交',
+      rateSuccessDesc: '您的评价已成功提交。',
       walletRequired: '需要连接钱包',
       pleaseConnectWallet: '请连接钱包以完成此订单。',
       walletConnectionCancelled: '钱包连接已取消。',
@@ -889,7 +844,6 @@ export const zh: TranslationResource = {
       reviewComingSoon: '评价功能即将上线。',
       reviewSubmitted: '您的评价已提交，感谢！',
       error: '错误',
-      // ActionSheet 和复制操作
       orderIdUnavailable: '订单号不可用',
       orderIdCopied: '已复制订单号',
       copyFailed: '复制失败',
@@ -901,7 +855,6 @@ export const zh: TranslationResource = {
       viewContract: '查看交易合约',
       copyToClipboard: '复制到剪贴板',
     },
-    // 表格表头
     table: {
       orderId: '订单号',
       date: '日期',
@@ -909,7 +862,6 @@ export const zh: TranslationResource = {
       total: '总计',
       status: '状态',
     },
-    // 状态筛选描述（用于底部弹窗）
     statusDesc: {
       allPurchases: '所有购买订单',
       allSales: '所有出售订单',
@@ -919,7 +871,6 @@ export const zh: TranslationResource = {
       completed: '货物已送达，资金已释放，反馈已留下',
       disputed: '订单在有仲裁人参与的争议中',
     },
-    // 订单操作确认对话框
     dialogs: {
       acceptOrder: {
         title: '接受订单',
@@ -954,7 +905,6 @@ export const zh: TranslationResource = {
         description: '确定要确认收货吗？确认后资金将释放给卖家，订单将标记为完成。',
       },
     },
-    // 法币退款对话框
     fiatRefund: {
       title: '退款',
       description: '选择退款金额和原因，退款将通过支付服务商处理。',
@@ -969,13 +919,30 @@ export const zh: TranslationResource = {
         fraudulent: '欺诈交易',
       },
     },
-    // 接受订单模态框
+    review: {
+      title: '留下评价',
+      rateExperience: '体验如何？',
+      reviewLabel: '写评价（可选）',
+      reviewPlaceholder: '分享您对这个商品的体验...',
+      anonymous: '匿名发布',
+      submit: '提交评价',
+      skip: '暂时跳过',
+      confirmTitle: '确认收货并评价',
+      confirmDesc: '确认完成前是否要留下评价？',
+      star1: '很差',
+      star2: '较差',
+      star3: '一般',
+      star4: '好',
+      star5: '非常好',
+      inviteTitle: '体验如何？',
+      inviteDesc: '花约 30 秒分享反馈，帮助其他买家与卖家。',
+      writeReview: '写评价',
+    },
     accept: {
       title: '接受订单',
       description: '请选择您希望接收此订单付款的收款账户。',
       receivingAccountRequired: '请选择收款账户',
     },
-    // 发货模态框
     fulfill: {
       shipOrder: '发货',
       deliverDigital: '交付数字内容',
@@ -1001,14 +968,12 @@ export const zh: TranslationResource = {
       note: '备注',
       notePlaceholder: '给买家留言...',
       confirm: '确认发货',
-      // 收款账户
       receivingAccount: '收款账户',
       selectReceivingAccount: '选择收款账户',
       receivingAccountHint: '选择您希望接收付款的地址',
       receivingAccountRequired: '请选择收款账户',
       noReceivingAccount: '未配置收款账户，请在设置中添加收款账户以接收付款。',
     },
-    // 申诉模态框
     dispute: {
       escrowHint:
         '订单资金在买家保障下安全持有约 {{time}}，或直到买家完成订单。如您对订单有任何疑问，可以与仲裁人提出争议。',
@@ -1024,20 +989,44 @@ export const zh: TranslationResource = {
       confirm: '发起申诉',
       viewInProviderDashboard: '在支付服务商面板中回应',
       haveProblem: '订单遇到问题？',
+      afterSaleTitle: '反馈问题',
+      afterSaleDescription: '请描述已完成订单中的问题，卖家将收到通知。',
+      selectReason: '请选择原因',
+      reasonLabel: '原因',
+      reason: {
+        notReceived: '未收到货',
+        notAsDescribed: '与描述不符',
+        qualityIssue: '质量问题',
+        other: '其他',
+      },
     },
-    // 写评价弹框
-    review: {
-      title: '留下评价',
-      rateExperience: '体验如何？',
-      reviewLabel: '写评价（可选）',
-      reviewPlaceholder: '分享您对这个商品的体验...',
-      anonymous: '匿名发布',
-      submit: '提交评价',
-      skip: '暂时跳过',
-      confirmTitle: '确认收货并评价',
-      confirmDesc: '确认完成前是否要留下评价？',
+    afterSaleDispute: {
+      buyerTitle: '您已就该订单反馈问题',
+      sellerTitle: '买家已就该订单反馈问题',
+      reasonLabel: '原因',
+      messageSeller: '联系卖家',
+      contactBuyer: '联系买家',
+      issueReported: '问题已反馈',
+      reason: {
+        notReceived: '未收到货',
+        qualityIssue: '质量问题',
+        notAsDescribed: '与描述不符',
+        other: '其他',
+      },
     },
-    // 退款模态框
+    fiatDispute: {
+      title: '已发起支付争议',
+      titleResolved: '支付争议已解决',
+      description: '本订单已向 {{provider}} 提交争议。',
+      descriptionResolved: '支付争议已处理完毕。',
+      reason: '原因：{{reason}}',
+      outcomeWon: '争议结果对您有利。',
+      outcomeLost: '争议结果对买家有利，已退款。',
+      outcomeAccepted: '争议已受理，已退款。',
+      sellerHint: '请在支付服务商后台回应本争议并提交凭证。',
+      buyerHint: '支付服务商正在审核您的争议。',
+      viewDashboard: '在 {{provider}} 后台处理',
+    },
     refund: {
       title: '确认退款',
       description: '确定要退款吗？资金将返还给买家。',
@@ -1046,7 +1035,6 @@ export const zh: TranslationResource = {
       warning: '此操作无法撤销。退款后，资金将释放给买家。',
       confirm: '确认退款',
     },
-    // 评价模态框
     rating: {
       title: '评价订单',
       ratingFor: '评价 {{vendor}}',
@@ -1059,12 +1047,10 @@ export const zh: TranslationResource = {
       noRating: '暂无评价',
       buyerReview: '买家评价',
     },
-    // 合约模态框
     contract: {
       title: '订单合约',
       description: '这是此订单的原始合约数据，包含所有加密证明和签名。',
     },
-    // 发货信息展示
     fulfillment: {
       title: '发货详情',
       packageShipped: '包裹已发出',
@@ -1079,7 +1065,6 @@ export const zh: TranslationResource = {
       transactionId: '交易ID',
       note: '备注',
     },
-    // 争议展示
     disputeDisplay: {
       title: '争议',
       statusOpen: '进行中',
@@ -1101,7 +1086,6 @@ export const zh: TranslationResource = {
       moderatorFee: '仲裁费',
       moderatorHint: '作为仲裁员，您可以审查证据并做出公正裁决来帮助解决此争议。',
     },
-    // 支付展示
     payment: {
       title: '支付详情',
       method: '支付方式',
@@ -1118,18 +1102,11 @@ export const zh: TranslationResource = {
       transactions: '交易记录',
       confirmed: '已确认',
       confirmations: '确认数',
-      // 仲裁员选择
-      searchModerators: '搜索仲裁员...',
-      loadingModerators: '加载仲裁员中...',
-      noModeratorsFound: '未找到匹配的仲裁员',
-      noModeratorsAvailable: '暂无可用的仲裁员',
     },
-    // 地址展示
     address: {
       title: '收货地址',
       notes: '配送备注',
     },
-    // 订单聊天
     chat: {
       discussion: '订单讨论',
       orderNumber: '订单 #{{orderId}}',
@@ -1138,7 +1115,6 @@ export const zh: TranslationResource = {
       startChat: '开始讨论',
       noMessages: '暂无消息，开始对话吧！',
     },
-    // 支付指引
     paymentInstructions: {
       title: '完成支付',
       description: '发送指定金额以完成订单 #{{orderId}}',
@@ -1157,7 +1133,6 @@ export const zh: TranslationResource = {
       warning3: '在付款确认前请勿关闭此页面',
       cancelOrder: '取消订单',
     },
-    // RWA Token
     rwa: {
       transferToken: '转移 RWA Token',
       transferDescription: '完成代币转移以履行此订单',
@@ -1178,7 +1153,6 @@ export const zh: TranslationResource = {
         userRejected: '用户拒绝了交易。',
       },
     },
-    // 法币支付卡片
     fiatPayment: {
       title: '支付信息',
       provider: '支付服务商',
@@ -1188,8 +1162,8 @@ export const zh: TranslationResource = {
       paid: '已支付',
       refunded: '已退款',
       disputed: '争议中',
+      transactionId: '交易 ID',
     },
-    // RWA 资金锁定
     paymentLocked: {
       title: '资金已锁定',
       locked: '已锁定',
@@ -1209,9 +1183,9 @@ export const zh: TranslationResource = {
       claimRefund: '认领退款',
     },
   },
-
   chat: {
     title: '消息',
+    defaultRoom: '聊天',
     conversations: '会话',
     newMessage: '新消息',
     typeMessage: '输入消息...',
@@ -1226,19 +1200,15 @@ export const zh: TranslationResource = {
     welcomeToMessages: '欢迎使用消息',
     selectConversation: '选择一个会话开始聊天，或创建新会话与卖家和买家联系。',
     searchConversations: '搜索会话...',
-    // 登录状态
     loginRequired: '需要登录',
     loginToChat: '请登录以访问您的消息并开始与他人聊天。',
     connecting: '正在连接聊天...',
-    // 空状态
     noConversations: '暂无会话',
     startFirstConversation: '点击下方按钮开始您的第一次对话，或访问店铺与卖家联系。',
     startNewConversation: '开始新对话',
     startConversation: '开始对话',
-    // 时间
     today: '今天',
     yesterday: '昨天',
-    // 分组
     directMessages: '私信',
     communities: '社群',
     orderChats: '订单讨论',
@@ -1246,7 +1216,6 @@ export const zh: TranslationResource = {
     invitedYou: '邀请您加入会话',
     inviteConfirm: '邀请确认',
     invitedBy: '由 {{name}} 邀请',
-    // 房间设置
     roomSettings: '房间设置',
     roomId: '房间 ID',
     members: '成员',
@@ -1254,19 +1223,14 @@ export const zh: TranslationResource = {
     groupChat: '群聊',
     viewStore: '查看店铺',
     sendMessage: '发送消息',
-    // 用户信息
     unknownUser: '未知用户',
     externalUser: '外部 Matrix 用户',
     peerId: 'Peer ID',
     matrixId: 'Matrix ID',
-    // 房间状态
     roomNotFound: '房间未找到',
     roomNotFoundDesc: '您要查找的聊天室不存在或您没有访问权限。',
     backToMessages: '返回消息列表',
-    defaultRoom: '聊天',
   },
-
-  // Matrix 房间事件
   matrix: {
     events: {
       join: '{{name}} 加入了聊天',
@@ -1283,7 +1247,6 @@ export const zh: TranslationResource = {
       roomCreated: '{{name}} 创建了此聊天',
     },
   },
-
   wallet: {
     title: '钱包',
     balance: '余额',
@@ -1325,7 +1288,6 @@ export const zh: TranslationResource = {
     viewInExplorer: '在浏览器中查看',
     walletDetails: '钱包详情',
   },
-
   profile: {
     title: '个人资料',
     myProfile: '我的资料',
@@ -1374,7 +1336,6 @@ export const zh: TranslationResource = {
     allProducts: '所有商品',
     collections: '商品集合',
   },
-
   settings: {
     title: '个人设置',
     general: '通用',
@@ -1410,7 +1371,6 @@ export const zh: TranslationResource = {
     dragOrClickCover: '拖拽图片到此处或点击更换封面',
     adjustCover: '调整封面图片',
     adjustAvatar: '调整头像',
-    // 侧边栏导航
     sidebar: {
       general: '通用',
       profile: '个人资料',
@@ -1430,7 +1390,6 @@ export const zh: TranslationResource = {
       chatEncryption: '聊天加密',
       advanced: '高级',
     },
-    // 账号绑定
     accountBinding: {
       title: '账号绑定',
       description: '管理已绑定的登录方式',
@@ -1451,7 +1410,6 @@ export const zh: TranslationResource = {
         '绑定多个账号后，您可以使用任意一个登录。为确保账号安全，至少需要保留一种登录方式。',
       standaloneStore: '我的独立站',
     },
-    // 访问控制
     accessControl: {
       privacyDesc: '控制谁可以访问您的店铺',
       userGroupsDesc: '创建和管理客户群组',
@@ -1469,7 +1427,6 @@ export const zh: TranslationResource = {
       welcomeMessageDesc: '用户获批后显示的欢迎消息',
       welcomeMessagePlaceholder: '欢迎光临我的店铺！请随意浏览...',
       settingsSaved: '隐私设置已保存',
-      // No PeerID warning
       noPeerID: '需要完成店铺设置',
       noPeerIDDesc: '用户组/产品组功能需要您的店铺节点已初始化。请先完成店铺资料设置。',
       goToStoreSettings: '前往店铺设置',
@@ -1501,7 +1458,6 @@ export const zh: TranslationResource = {
       productGroupDescPlaceholder: '描述这个产品组...',
       manageProducts: '管理商品',
       configureAccess: '配置访问权限',
-      // Product Group Detail Page
       productGroupNotFound: '产品组不存在',
       productList: '商品列表',
       addProducts: '添加商品',
@@ -1513,7 +1469,6 @@ export const zh: TranslationResource = {
       noMatchingProducts: '没有匹配的商品',
       removeProduct: '移除商品',
       removeProductConfirm: '确定要从产品组中移除商品 "{{slug}}" 吗？',
-      // Authorization Page
       authorizationDesc: '共 {{count}} 条授权规则',
       addAuthorization: '添加授权',
       authorizationInfo: '授权说明',
@@ -1532,7 +1487,6 @@ export const zh: TranslationResource = {
       removeAuthorizationConfirm: '确定要移除此授权规则吗？相关用户将无法访问此产品组中的商品。',
       userGroup: '用户组',
       groupMarketplace: '群组集市',
-      // User Group Members Page
       userGroupNotFound: '用户组不存在',
       noMembers: '暂无成员',
       addFirstMember: '添加第一个成员',
@@ -1550,7 +1504,6 @@ export const zh: TranslationResource = {
       reviewNotePlaceholder: '为用户添加备注...',
     },
   },
-
   moderatorSettings: {
     title: '争议仲裁',
     description: '注册成为争议仲裁人，帮助解决买卖双方的交易纠纷。',
@@ -1577,7 +1530,6 @@ export const zh: TranslationResource = {
     disableFailed: '取消仲裁人身份失败',
     disableConfirm: '确定要取消仲裁人身份吗？你将不再出现在仲裁人列表中。',
   },
-
   theme: {
     classic: '经典青橙',
     classicDesc: 'Mobazha 品牌经典配色，清新活力',
@@ -1592,9 +1544,124 @@ export const zh: TranslationResource = {
     luxury: '极简黑金',
     luxuryDesc: '黑金配色，适合高端商品和奢侈品交易',
   },
-
+  errors: {
+    generic: '出错了',
+    network: '网络错误，请检查连接',
+    notFound: '未找到',
+    notFoundDesc: '您要找的页面不存在或已被移动。请尝试搜索或返回首页。',
+    unauthorized: '请登录后继续',
+    forbidden: '无权访问',
+    serverError: '服务器错误，请稍后重试',
+    timeout: '请求超时',
+    offline: '您已离线',
+    offlineDesc: '部分功能可能不可用。',
+    backOnline: '网络已恢复！',
+    invalidInput: '输入无效',
+    requiredField: '此字段为必填项',
+  },
+  time: {
+    justNow: '刚刚',
+    minutesAgo: '{{count}} 分钟前',
+    hoursAgo: '{{count}} 小时前',
+    daysAgo: '{{count}} 天前',
+    weeksAgo: '{{count}} 周前',
+    monthsAgo: '{{count}} 个月前',
+    yearsAgo: '{{count}} 年前',
+  },
+  hero: {
+    badge: 'Web3 建站平台',
+    titleLine1: '创建你的',
+    titleLine2: 'Web3 店铺',
+    subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
+    exploreMarket: '探索市场',
+    startSelling: '开始销售',
+    activeStores: '活跃店铺',
+    productsListed: '上架商品',
+    privacyFirst: '隐私保护',
+  },
+  saasHome: {
+    hero: {
+      title: '创建你的 Web3 店铺',
+      subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
+      ctaCreate: '创建店铺',
+      ctaExplore: '发现店铺',
+      welcomeBack: '欢迎回来，{{storeName}}',
+      ctaDashboard: '进入管理后台',
+      ctaViewStore: '查看我的店铺',
+      ctaStartSelling: '开始销售',
+      ctaBrowse: '浏览店铺',
+    },
+    valueProps: {
+      buyerProtection: {
+        title: '买家保障',
+        description: '每笔交易由买家保障保护',
+      },
+      selfHosted: {
+        title: '数据自主',
+        description: '在自己的服务器上运行店铺，或使用我们的托管服务',
+      },
+      lowFees: {
+        title: '零平台费用',
+        description: '无月费，无交易佣金',
+      },
+      cryptoNative: {
+        title: '加密货币原生',
+        description: '支持 BNB、ETH、SOL 等多链即时结算',
+      },
+    },
+    featuredStores: {
+      title: '精选店铺',
+      subtitle: '看看卖家们在 Mobazha 上建立的品牌店铺',
+      visitStore: '访问店铺',
+      products: '{{count}} 件商品',
+      viewAll: '查看全部店铺',
+      emptyTitle: '成为第一个',
+      emptySubtitle: '创建你的 Web3 店铺，加入网络',
+      growingCta: '加入不断壮大的网络',
+    },
+    popularProducts: {
+      title: '热门商品',
+      subtitle: '全网热门趋势商品',
+    },
+    networkActivity: {
+      title: '网络动态',
+      subtitle: '来自全网店铺的最新上架商品',
+      fromStore: '来自 {{storeName}}',
+    },
+    stats: {
+      activeStores: '活跃店铺',
+      productsListed: '上架商品',
+      chainsSupported: '支持的链',
+    },
+  },
+  footer: {
+    slogan: '用加密货币购物和成长',
+    tagline: '面向未来商业的去中心化市场。',
+    marketplace: '市场',
+    browseProducts: '浏览商品',
+    categories: '分类',
+    findModerators: '寻找调解员',
+    startSelling: '开始销售',
+    resources: '资源',
+    gettingStarted: '快速入门',
+    documentation: '文档',
+    api: 'API',
+    faq: '常见问题',
+    community: '社区',
+    company: '公司',
+    about: '关于我们',
+    blog: '博客',
+    careers: '招聘',
+    contact: '联系我们',
+    allRightsReserved: '保留所有权利。',
+    paymentMethods: '支持支付',
+    shop: '购物',
+    storePolicy: '政策条款',
+    allProducts: '所有商品',
+    collections: '商品集合',
+    buyerProtection: '买家保障',
+  },
   policies: {
-    noPolicies: '该店铺尚未发布任何政策。',
     privacyPolicy: '隐私政策',
     termsOfService: '服务条款',
     shipping: '配送政策',
@@ -1619,30 +1686,6 @@ export const zh: TranslationResource = {
     returnsRefundsDesc: '退款通过买家保障系统处理。退货确认后，资金将退还给买家。',
     returnsDisputes: '争议',
     returnsDisputesDesc: '如果您与卖家无法达成一致，您可以发起争议。仲裁员将审查案件并做出决定。',
-    privacyTitle: '隐私政策',
-    privacyIntro: '您的隐私对我们很重要。本政策说明我们如何处理您的信息。',
-    privacyCollection: '信息收集',
-    privacyCollectionDesc:
-      'Mobazha 是去中心化平台，在设计上最大限度减少数据收集。交易数据存储在区块链和 IPFS 网络上。',
-    privacyUsage: '信息使用',
-    privacyUsageDesc: '信息仅用于订单履行、买卖双方沟通和平台功能。',
-    privacySharing: '信息共享',
-    privacySharingDesc:
-      '我们不会向第三方出售或共享您的个人信息。区块链上的交易数据本身是公开可见的。',
-    privacySecurity: '数据安全',
-    privacySecurityDesc:
-      '我们使用加密和安全协议保护您的数据。您的私钥存储在本地，永远不会传输到我们的服务器。',
-    termsTitle: '服务条款',
-    termsIntro: '使用 Mobazha 即表示您同意这些条款。',
-    termsUse: '合规使用',
-    termsUseDesc: '您同意遵守所有适用法律使用 Mobazha。平台禁止违规物品和活动。',
-    termsEscrow: '支付与买家保障',
-    termsEscrowDesc: '所有加密货币支付均受买家保障保护。资金安全保管，直到买家确认收货或争议解决。',
-    termsDisputes: '争议解决',
-    termsDisputesDesc: '争议由社区仲裁员解决。他们的决定是最终且有约束力的。',
-    termsLiability: '责任限制',
-    termsLiabilityDesc:
-      'Mobazha 是去中心化平台，不控制买卖双方之间的交易。请自行承担使用平台的风险。',
     buyerProtectionTitle: '买家保障政策',
     buyerProtectionPolicy: '买家保障',
     buyerProtectionIntro: '您的每笔购买都享有买家保障，为您提供安心的购物体验。',
@@ -1678,10 +1721,41 @@ export const zh: TranslationResource = {
     refundNonRefundable: '不可退款项目',
     refundNonRefundableDesc:
       '已下载的数字商品、定制商品及已完全交付的服务可能不支持退款，除非存在缺陷。',
-    lastUpdated: '最后更新',
+    noPolicies: '该店铺尚未发布任何政策。',
     backToStore: '返回店铺',
+    privacyTitle: '隐私政策',
+    privacyIntro: '您的隐私对我们很重要。本政策说明我们如何处理您的信息。',
+    privacyCollection: '信息收集',
+    privacyCollectionDesc:
+      'Mobazha 是去中心化平台，在设计上最大限度减少数据收集。交易数据存储在区块链和 IPFS 网络上。',
+    privacyCollectionDescPlatform:
+      'Mobazha 为去中心化平台，设计上尽量减少数据采集。交易数据存储在区块链与分布式存储中。',
+    privacyUsage: '信息使用',
+    privacyUsageDesc: '信息仅用于订单履行、买卖双方沟通和平台功能。',
+    privacySharing: '信息共享',
+    privacySharingDesc:
+      '我们不会向第三方出售或共享您的个人信息。区块链上的交易数据本身是公开可见的。',
+    privacySecurity: '数据安全',
+    privacySecurityDesc:
+      '我们使用加密和安全协议保护您的数据。您的私钥存储在本地，永远不会传输到我们的服务器。',
+    termsTitle: '服务条款',
+    termsIntro: '使用 Mobazha 即表示您同意这些条款。',
+    termsIntroPlatform: '使用 Mobazha 即表示您同意本条款。',
+    termsUse: '合规使用',
+    termsUseDesc: '您同意遵守所有适用法律使用 Mobazha。平台禁止违规物品和活动。',
+    termsUseDescPlatform:
+      '您同意在遵守适用法律法规的前提下使用 Mobazha。禁止的商品与活动不得在平台上进行。',
+    termsEscrow: '支付与买家保障',
+    termsEscrowDesc: '所有加密货币支付均受买家保障保护。资金安全保管，直到买家确认收货或争议解决。',
+    termsDisputes: '争议解决',
+    termsDisputesDesc: '争议由社区仲裁员解决。他们的决定是最终且有约束力的。',
+    termsLiability: '责任限制',
+    termsLiabilityDesc:
+      'Mobazha 是去中心化平台，不控制买卖双方之间的交易。请自行承担使用平台的风险。',
+    termsLiabilityDescPlatform:
+      'Mobazha 为去中心化平台，不控制买卖双方之间的交易，请自行承担使用风险。',
+    lastUpdated: '最后更新',
   },
-
   trust: {
     buyerProtection: '买家保障',
     buyerProtectionDesc: '在您确认收货前，您的付款受到保护',
@@ -1757,128 +1831,6 @@ export const zh: TranslationResource = {
       cancelableSellerCountdown: '买家验证剩余 {{days}} 天',
     },
   },
-
-  errors: {
-    generic: '出错了',
-    network: '网络错误，请检查连接',
-    notFound: '未找到',
-    notFoundDesc: '您要找的页面不存在或已被移动。请尝试搜索或返回首页。',
-    unauthorized: '请登录后继续',
-    forbidden: '无权访问',
-    serverError: '服务器错误，请稍后重试',
-    timeout: '请求超时',
-    offline: '您已离线',
-    offlineDesc: '部分功能可能不可用。',
-    backOnline: '网络已恢复！',
-    invalidInput: '输入无效',
-    requiredField: '此字段为必填项',
-  },
-
-  time: {
-    justNow: '刚刚',
-    minutesAgo: '{{count}} 分钟前',
-    hoursAgo: '{{count}} 小时前',
-    daysAgo: '{{count}} 天前',
-    weeksAgo: '{{count}} 周前',
-    monthsAgo: '{{count}} 个月前',
-    yearsAgo: '{{count}} 年前',
-  },
-
-  hero: {
-    badge: 'Web3 建站平台',
-    titleLine1: '创建你的',
-    titleLine2: 'Web3 店铺',
-    subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
-    exploreMarket: '探索市场',
-    startSelling: '开始销售',
-    activeStores: '活跃店铺',
-    productsListed: '上架商品',
-    privacyFirst: '隐私保护',
-  },
-
-  saasHome: {
-    hero: {
-      title: '创建你的 Web3 店铺',
-      subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
-      ctaCreate: '创建店铺',
-      ctaExplore: '发现店铺',
-      welcomeBack: '欢迎回来，{{storeName}}',
-      ctaDashboard: '进入管理后台',
-      ctaViewStore: '查看我的店铺',
-      ctaStartSelling: '开始销售',
-      ctaBrowse: '浏览店铺',
-    },
-    valueProps: {
-      buyerProtection: {
-        title: '买家保障',
-        description: '每笔交易由买家保障保护',
-      },
-      selfHosted: {
-        title: '数据自主',
-        description: '在自己的服务器上运行店铺，或使用我们的托管服务',
-      },
-      lowFees: {
-        title: '零平台费用',
-        description: '无月费，无交易佣金',
-      },
-      cryptoNative: {
-        title: '加密货币原生',
-        description: '支持 BNB、ETH、SOL 等多链即时结算',
-      },
-    },
-    featuredStores: {
-      title: '精选店铺',
-      subtitle: '看看卖家们在 Mobazha 上建立的品牌店铺',
-      visitStore: '访问店铺',
-      products: '{{count}} 件商品',
-      viewAll: '查看全部店铺',
-      emptyTitle: '成为第一个',
-      emptySubtitle: '创建你的 Web3 店铺，加入网络',
-      growingCta: '加入不断壮大的网络',
-    },
-    popularProducts: {
-      title: '热门商品',
-      subtitle: '全网热门趋势商品',
-    },
-    networkActivity: {
-      title: '网络动态',
-      subtitle: '来自全网店铺的最新上架商品',
-      fromStore: '来自 {{storeName}}',
-    },
-    stats: {
-      activeStores: '活跃店铺',
-      productsListed: '上架商品',
-      chainsSupported: '支持的链',
-    },
-  },
-
-  footer: {
-    slogan: '用加密货币购物和成长',
-    paymentMethods: '支持支付',
-    tagline: '面向未来商业的去中心化市场。',
-    marketplace: '市场',
-    browseProducts: '浏览商品',
-    categories: '分类',
-    findModerators: '寻找调解员',
-    startSelling: '开始销售',
-    resources: '资源',
-    gettingStarted: '快速入门',
-    documentation: '文档',
-    api: 'API',
-    faq: '常见问题',
-    community: '社区',
-    company: '公司',
-    about: '关于我们',
-    blog: '博客',
-    careers: '招聘',
-    contact: '联系我们',
-    allRightsReserved: '保留所有权利。',
-    shop: '购物',
-    storePolicy: '政策条款',
-    allProducts: '所有商品',
-    collections: '商品集合',
-  },
-
   marketplace: {
     title: '社区市场',
     subtitle: '发现并加入社区驱动的市场。从可信卖家购买或成为卖家。',
@@ -1944,7 +1896,6 @@ export const zh: TranslationResource = {
       step3: '开始上架和销售你的商品！',
     },
   },
-
   moderator: {
     title: '调解员',
     subtitle: '选择可信的调解员通过托管保护您的交易',
@@ -1965,7 +1916,6 @@ export const zh: TranslationResource = {
     fee: '费率',
     noModeratorsFound: '未找到符合条件的调解员',
   },
-
   payment: {
     title: '支付',
     selectPaymentMethod: '选择支付方式',
@@ -1995,22 +1945,13 @@ export const zh: TranslationResource = {
     disableProtection: '关闭保护',
     fee: '费率',
     verified: '已认证',
-    waitingForConfirmation: '等待区块链确认中...',
-    completing: '支付处理中',
-    finalizingOrder: '正在完成订单...',
-    redirecting: '正在跳转到订单确认页...',
-    searchModerators: '搜索仲裁员...',
-    loadingModerators: '加载仲裁员中...',
-    noModeratorsFound: '未找到匹配的仲裁员',
-    noModeratorsAvailable: '暂无可用的仲裁员',
-    shipping: '运费',
-    // 支付页面
     noOrderID: '未提供订单ID',
     loadOrderFailed: '加载订单详情失败',
     errorTitle: '无法加载订单',
     noOrderData: '无订单数据',
     paymentSummary: '支付摘要',
     subtotal: '商品小计',
+    shipping: '运费',
     orderTotal: '订单总额',
     moderatorFee: '调解员费用',
     moderatorFeeNote: '从卖家收益中扣除',
@@ -2022,7 +1963,6 @@ export const zh: TranslationResource = {
     success: '支付成功！',
     failed: '支付失败',
     securityNote: '安全支付保护',
-    // 交易相关
     connectWalletFirst: '请先连接钱包',
     noPaymentAddress: '无可用的支付地址',
     noPaymentInstructions: '获取支付指令失败',
@@ -2031,7 +1971,6 @@ export const zh: TranslationResource = {
     invalidAmount: '支付金额无效',
     signerNotAvailable: '钱包签名器不可用',
     providerNotAvailable: '钱包提供者不可用',
-    // ERC20 授权
     approvalRequired: '需要代币授权',
     pleaseApproveToken: '请在钱包中授权代币支出',
     approvalSent: '授权交易已发送',
@@ -2039,17 +1978,35 @@ export const zh: TranslationResource = {
     approvalFailed: '代币授权失败',
     approvalSuccess: '代币已授权',
     proceedingWithPayment: '正在处理支付...',
-    // 交易
     confirmInWallet: '请在钱包中确认',
     pleaseConfirmTransaction: '请在您的钱包中确认交易',
     transactionSent: '交易已发送',
     txHash: '交易哈希',
     transactionFailed: '交易失败',
     paymentComplete: '您的支付已成功处理',
+    waitingForConfirmation: '等待区块链确认中...',
+    estimatedTime: '通常约 1–3 分钟',
+    completing: '支付处理中',
+    finalizingOrder: '正在完成订单...',
+    redirecting: '正在跳转到订单确认页...',
     cancelled: '支付已取消',
     userCancelledTransaction: '用户取消了交易',
+    errorInsufficientFunds: '余额不足，请向钱包充值后重试。',
+    errorNetworkCongestion: '网络拥堵，请稍后再试或提高 Gas 费用。',
+    errorContractReverted: '合约拒绝了该交易，请核对支付金额后重试。',
+    errorUserRejected: '您已取消交易，可在准备好后重试。',
+    errorGeneric: '支付出现问题，请检查钱包连接后重试。',
+    continuePayment: '继续支付',
+    payNow: '立即支付',
+    paymentWindowRemaining: '剩余支付时间',
+    paymentWindowExpired: '支付时限已过',
+    rateUpdated: '{{seconds}} 秒前更新',
+    leaveWarning: '支付处理中，离开页面可能导致交易失败。',
+    searchModerators: '搜索仲裁员...',
+    loadingModerators: '加载仲裁员中...',
+    noModeratorsFound: '未找到匹配的仲裁员',
+    noModeratorsAvailable: '暂无可用的仲裁员',
   },
-
   filter: {
     filters: '筛选',
     category: '分类',
@@ -2066,22 +2023,18 @@ export const zh: TranslationResource = {
     services: '服务',
     rwaTokens: 'RWA 代币',
     rwaToken: 'RWA代币',
-    // 店铺筛选
     searchInStore: '搜索店铺商品...',
     freeShippingOnly: '仅显示免运费',
     freeShipping: '免运费',
     clearFilters: '清除筛选',
     resetFilters: '重置',
     productType: '商品类型',
-    // 左侧边栏筛选
     shipping: '快递',
     shipTo: '发往:',
     anyCountry: '(任何国家)',
     resultsFound: '件商品',
-    // RWA 筛选
     searchRwa: '搜索数字资产...',
   },
-
   empty: {
     noProductsFound: '未找到商品',
     noStoresFound: '未找到店铺',
@@ -2090,7 +2043,6 @@ export const zh: TranslationResource = {
     noRecentSearches: '暂无最近搜索',
     loadMoreResults: '加载更多结果',
   },
-
   homeExtended: {
     trendingNow: '热门推荐',
     trendingSubtitle: '本周最受欢迎的商品',
@@ -2102,7 +2054,6 @@ export const zh: TranslationResource = {
     services: '服务',
     digitalAssets: '数字资产',
   },
-
   searchExtended: {
     searchPlaceholder: '搜索商品、店铺，或粘贴商品链接...',
     recentSearches: '最近搜索',
@@ -2111,15 +2062,13 @@ export const zh: TranslationResource = {
     products: '商品',
     stores: '店铺',
   },
-
   settingsExtended: {
-    shortDescription: '简短描述',
     profile: '个人资料',
+    country: '国家',
+    shippingAddresses: '收货地址',
     generalDesc: '语言、主题和显示偏好',
     profileDesc: '您的名称、头像和简介',
     chatEncryptionDesc: '端对端加密密钥和备份',
-    country: '国家',
-    shippingAddresses: '收货地址',
     manageAddresses: '管理收货地址',
     blockedUsers: '已屏蔽用户',
     manageBlocked: '管理已屏蔽的账户',
@@ -2175,7 +2124,6 @@ export const zh: TranslationResource = {
     restoreComingSoon: '恢复资料功能即将推出！',
     followingSystem: '跟随系统',
     returnToPreviousPage: '您是从其他页面进入的',
-    // Advanced tab sections
     privacy: '隐私',
     backup: '备份',
     developer: '开发者',
@@ -2191,7 +2139,6 @@ export const zh: TranslationResource = {
     themeStyle: '主题风格',
     themeStyleDesc: '选择配色方案，会根据外观模式自动适配',
     currentEffect: '当前效果',
-    // Sound Settings
     soundSettings: '声音设置',
     soundNotifications: '声音通知',
     soundNotificationsDesc: '收到消息和通知时播放提示音',
@@ -2199,7 +2146,6 @@ export const zh: TranslationResource = {
     voiceAnnouncementsDesc: '朗读通知内容',
     volume: '音量',
     test: '测试',
-    // Access Control
     accessControl: '访问控制',
     userGroups: '用户组',
     userGroupsDesc: '管理用户组以控制访问权限',
@@ -2208,6 +2154,50 @@ export const zh: TranslationResource = {
     accessRequests: '访问申请',
     accessRequestsDesc: '审核待处理的访问申请',
     storeSettings: '店铺设置',
+    addAddress: '添加地址',
+    noAddresses: '暂无保存的地址',
+    addShipping: '添加配送选项',
+    addShippingHint: '添加配送选项以支持实物商品配送',
+    enableModeration: '启用仲裁服务',
+    enableModerationDesc: '开启或关闭您在网络中作为争议仲裁人的可用性',
+    enableModerationHint: '开启后，买家和卖家可以选择您作为交易仲裁人',
+    moderatorBasicInfo: '基本信息',
+    moderatorBasicInfoDesc: '向买家和卖家介绍您的仲裁服务',
+    shortDescription: '简短描述',
+    shortDescriptionPlaceholder: '简要描述您的仲裁服务（最多 160 字符）',
+    detailedDescription: '详细描述',
+    detailedDescriptionPlaceholder: '详细介绍您的仲裁经验、专业领域和服务承诺...',
+    feeSettings: '费率设置',
+    feeSettingsDesc: '设置您的仲裁服务收费标准',
+    feeType: '费率类型',
+    feePercentage: '按比例收费',
+    feeFixed: '固定费用',
+    feeFixedPlusPercentage: '固定 + 比例',
+    percentageLabel: '比例 (%)',
+    percentageHint: '争议金额的 {{percentage}}% 作为仲裁费用',
+    fixedAmount: '固定金额',
+    currency: '货币',
+    languagesAndCurrencies: '语言和货币',
+    languagesAndCurrenciesDesc: '设置您支持的语言和接受的加密货币',
+    supportedLanguages: '支持的语言',
+    selectAtLeastOneLanguage: '请至少选择一种语言',
+    selectAtLeastOneCurrency: '请至少选择一种货币',
+    moderatorTerms: '条款和条件',
+    moderatorTermsDesc: '设置您的仲裁服务条款，用户选择您时将看到这些内容',
+    moderatorTermsPlaceholder: '请输入您的仲裁服务条款...',
+    contactInfo: '联系方式',
+    contactInfoDesc: '提供额外的联系方式，方便用户联系您（可选）',
+    website: '网站',
+    moderatorSettingsSaved: '仲裁人设置已保存',
+    moderatorDetails: '仲裁人详情',
+    moderatorDetailsDesc: '所选仲裁人的详细信息',
+    rating: '评分',
+    disputes: '处理纠纷',
+    successRate: '成功率',
+    avgResolution: '平均处理时间',
+    removeModerator: '移除仲裁人',
+    removeModeratorDesc: '确定要将 {{name}} 从您的店铺仲裁人中移除吗？',
+    remove: '移除',
     receivingDesc: '管理您的外部钱包收款地址',
     loadFailed: '加载数据失败',
     fillRequired: '请填写所有必填项',
@@ -2250,55 +2240,7 @@ export const zh: TranslationResource = {
     deny: '拒绝',
     accessMgmt: '访问管理',
     accessMgmtDesc: '管理用户组和产品组权限',
-    // Addresses
-    addAddress: '添加地址',
-    noAddresses: '暂无保存的地址',
-    // Shipping
-    addShipping: '添加配送选项',
-    addShippingHint: '添加配送选项以支持实物商品配送',
-    // 仲裁人（成为仲裁人）设置
-    enableModeration: '启用仲裁服务',
-    enableModerationDesc: '开启或关闭您在网络中作为争议仲裁人的可用性',
-    enableModerationHint: '开启后，买家和卖家可以选择您作为交易仲裁人',
-    moderatorBasicInfo: '基本信息',
-    moderatorBasicInfoDesc: '向买家和卖家介绍您的仲裁服务',
-    shortDescriptionPlaceholder: '简要描述您的仲裁服务（最多 160 字符）',
-    detailedDescription: '详细描述',
-    detailedDescriptionPlaceholder: '详细介绍您的仲裁经验、专业领域和服务承诺...',
-    feeSettings: '费率设置',
-    feeSettingsDesc: '设置您的仲裁服务收费标准',
-    feeType: '费率类型',
-    feePercentage: '按比例收费',
-    feeFixed: '固定费用',
-    feeFixedPlusPercentage: '固定 + 比例',
-    percentageLabel: '比例 (%)',
-    percentageHint: '争议金额的 {{percentage}}% 作为仲裁费用',
-    fixedAmount: '固定金额',
-    currency: '货币',
-    languagesAndCurrencies: '语言和货币',
-    languagesAndCurrenciesDesc: '设置您支持的语言和接受的加密货币',
-    supportedLanguages: '支持的语言',
-    selectAtLeastOneLanguage: '请至少选择一种语言',
-    selectAtLeastOneCurrency: '请至少选择一种货币',
-    moderatorTerms: '条款和条件',
-    moderatorTermsDesc: '设置您的仲裁服务条款，用户选择您时将看到这些内容',
-    moderatorTermsPlaceholder: '请输入您的仲裁服务条款...',
-    contactInfo: '联系方式',
-    contactInfoDesc: '提供额外的联系方式，方便用户联系您（可选）',
-    website: '网站',
-    moderatorSettingsSaved: '仲裁人设置已保存',
-    // 店铺仲裁人
-    moderatorDetails: '仲裁人详情',
-    moderatorDetailsDesc: '所选仲裁人的详细信息',
-    rating: '评分',
-    disputes: '处理纠纷',
-    successRate: '成功率',
-    avgResolution: '平均处理时间',
-    removeModerator: '移除仲裁人',
-    removeModeratorDesc: '确定要将 {{name}} 从您的店铺仲裁人中移除吗？',
-    remove: '移除',
   },
-
   userMenu: {
     myProfile: '我的主页',
     myStore: '我的店铺',
@@ -2313,9 +2255,7 @@ export const zh: TranslationResource = {
     account: '个人设置',
     logout: '退出登录',
   },
-
   settingsModal: {
-    // General tab
     languageAndRegion: '语言与区域',
     languageDesc: '界面显示语言',
     helpTranslate: '帮助在 Transifex 上翻译 Mobazha',
@@ -2333,7 +2273,6 @@ export const zh: TranslationResource = {
     settingsSaved: '设置保存成功',
     saveFailed: '保存设置失败',
     unsavedChanges: '有未保存的更改',
-    // Blocked Users
     blockUser: '屏蔽用户',
     blockUserDesc: '输入要屏蔽的用户 Peer ID',
     enterPeerId: '输入 Peer ID',
@@ -2352,7 +2291,6 @@ export const zh: TranslationResource = {
     unblockFailed: '取消屏蔽失败',
     unblockConfirmTitle: '取消屏蔽',
     unblockConfirmDesc: '确定要取消屏蔽 {{name}} 吗？',
-    // Moderation
     addModerator: '添加调解员',
     addModeratorDesc: '输入要添加的调解员 Peer ID',
     moderationDesc: '调解员帮助解决买家和卖家之间的纠纷',
@@ -2360,7 +2298,6 @@ export const zh: TranslationResource = {
     moderatorAdded: '调解员添加成功',
     moderatorRemoved: '调解员已移除',
     fee: '费用',
-    // Chat Encryption
     e2eEncryption: '端对端加密',
     e2eEncryptionDesc: '您的消息已加密，只有您和收件人可以阅读',
     yourEncryptionKey: '您的加密密钥',
@@ -2373,7 +2310,6 @@ export const zh: TranslationResource = {
     keysRegenerated: '密钥重新生成成功',
     regenerateConfirmTitle: '重新生成加密密钥',
     regenerateConfirmDesc: '这将使您当前的密钥失效。旧的加密消息可能无法读取。确定要继续吗？',
-    // Page tab
     shortDescription: '简介',
     shortDescLimit: '160字符以内',
     shortDescPlaceholder: '写点有趣的内容...',
@@ -2393,7 +2329,6 @@ export const zh: TranslationResource = {
     nameRequired: '名称为必填项',
     namePlaceholder: '您的名字 / 收件人姓名',
     profileSaved: '资料保存成功',
-    // Contact Info
     contactInfo: '联系方式',
     email: '邮箱',
     emailPlaceholder: 'your@email.com',
@@ -2401,11 +2336,9 @@ export const zh: TranslationResource = {
     websitePlaceholder: 'https://yourwebsite.com',
     phoneNumber: '电话',
     phonePlaceholder: '+1 (555) 123-4567',
-    // Social Links
     socialLinks: '社交链接',
     noSocialLinks: '暂无社交链接',
     usernamePlaceholder: '用户名',
-    // Addresses tab
     newAddress: '新地址',
     recipientName: '您的名字 / 收件人姓名',
     company: '公司',
@@ -2426,7 +2359,6 @@ export const zh: TranslationResource = {
     setDefault: '设为默认',
     defaultAddressSet: '默认地址设置成功',
     fillRequired: '请填写所有必填字段',
-    // Moderation tab
     disputeResolution: '纠纷调解',
     disputeResolutionDesc:
       '卖家可以选择您作为其店铺的调解员。当他们与客户发生纠纷时，您将被邀请审查订单详情并决定如何分配订单资金。',
@@ -2448,7 +2380,6 @@ export const zh: TranslationResource = {
     guidelinesLink: 'Mobazha 纠纷解决指南',
     understandTerms: '我理解必须向任何请求的人提供纠纷解决服务，除非他们违反了上述条款。',
     moderationSaved: '调解设置已保存',
-    // Chat Encryption tab
     e2eAvailable: '端到端加密可用',
     myChatId: '我的聊天 ID',
     myChatIdDesc: '分享此 ID 让他人可以与您开始聊天',
@@ -2476,15 +2407,12 @@ export const zh: TranslationResource = {
     alwaysConfirm: '始终需要确认',
     alwaysConfirmDesc: '最安全，手动批准所有聊天请求',
     notLoggedIn: '未登录',
-    // Store tab
     customize: '自定义',
     policyPlaceholder: '输入您的退货/退款政策...',
     termsPlaceholder: '输入您的条款和条件...',
     resyncComplete: '交易同步完成',
     resyncFailed: '交易同步失败',
   },
-
-  // OTC 私密交易
   otc: {
     title: 'OTC 交易',
     createNft: '创建 NFT 挂单',
@@ -2500,20 +2428,17 @@ export const zh: TranslationResource = {
     activeOrders: '活跃挂单',
     historyOrders: '历史记录',
     fetchError: '获取 OTC 订单失败',
-    // 步骤
     step: {
       selectNft: '选择 NFT',
       selectShares: '选择份额',
       setPrice: '设定价格',
       shareLink: '分享链接',
     },
-    // 状态
     status: {
       active: '活跃',
       completed: '已成交',
       cancelled: '已取消',
     },
-    // 表单
     price: '出售价格',
     priceDesc: '买家将使用 USDT 支付购买',
     shares: '份额',
@@ -2527,7 +2452,6 @@ export const zh: TranslationResource = {
     yourShares: '持有份额',
     sharesToSell: '出售份额',
     pricePerShare: '每份价格',
-    // 操作
     creating: '创建中...',
     purchasing: '购买中...',
     cancelling: '取消中...',
@@ -2535,7 +2459,6 @@ export const zh: TranslationResource = {
     buyShares: '购买份额',
     cancelOrder: '取消订单',
     confirmCancel: '确定要取消此订单吗？',
-    // 结果消息
     createFailed: '创建订单失败',
     orderCreated: '挂单创建成功！',
     purchaseSuccess: '购买成功！',
@@ -2545,13 +2468,11 @@ export const zh: TranslationResource = {
     orderNotFound: '订单不存在',
     transactionCompleted: '交易已完成',
     orderCancelled: '订单已取消',
-    // 分享
     shareText: '我正在出售一个私密 NFT 资产，快来看看！',
     shareToSell: '分享下面的链接给潜在买家',
     shareToTelegram: '分享到 Telegram',
     viewOrder: '查看订单',
     createAnother: '创建另一个挂单',
-    // 详情页
     contractInfo: '合约信息',
     seller: '卖家',
     network: '网络',
@@ -2559,20 +2480,15 @@ export const zh: TranslationResource = {
     weeklyRevenue: '周收益',
     annualizedRevenue: '年化收益',
     chatWithSeller: '联系卖家',
-    // 钱包
     connectWalletRequired: '请先连接钱包',
     connectWalletDesc: '连接钱包后才能创建 OTC 挂单',
     backToStore: '返回店铺',
-    // 市场
     marketplaceOtcTitle: '🔐 私密 OTC 交易',
     marketplaceOtcDesc: '社区成员发布的 NFT 和 RWA 份额私密挂单',
-    // 筛选
     filterStatus: '状态',
     filterType: '类型',
     items: '项',
   },
-
-  // 通知
   notifications: {
     title: '通知',
     markAllRead: '全部标为已读',
@@ -2584,19 +2500,15 @@ export const zh: TranslationResource = {
     viewAll: '查看所有通知',
     filterAll: '全部',
     filterUnread: '未读',
-    // 分类标签
     tabAll: '全部',
     tabOrders: '订单',
     tabFollowers: '关注',
-    // 空状态
     noOrderNotifications: '暂无订单通知',
     noFollowerNotifications: '暂无关注通知',
     noMoreNotifications: '没有更多通知了',
-    // 其他
     totalCount: '共 {{count}} 条通知',
     allMarkedRead: '已将所有通知标为已读',
     notificationDeleted: '通知已删除',
-    // 订单通知
     order: {
       youPlacedOrder: '您下了一个订单',
       placedOrder: '下了一个订单',
@@ -2623,7 +2535,6 @@ export const zh: TranslationResource = {
       staleWarning: '订单已数天无活动',
       expired: '订单因超时已自动取消',
     },
-    // 争议通知
     dispute: {
       startedDispute: '发起了争议',
       disputeOpened: '争议已开启',
@@ -2635,7 +2546,6 @@ export const zh: TranslationResource = {
       acceptedPayout: '接受了争议赔付',
       claimedPayment: '领取了付款',
     },
-    // 社交通知
     social: {
       startedFollowing: '关注了您',
       someoneFollowed: '有人关注了您',
@@ -2644,7 +2554,6 @@ export const zh: TranslationResource = {
       addedAsModerator: '将您添加为调解员',
       removedAsModerator: '移除了您的调解员身份',
     },
-    // 通知列表标题（API 获取的通知）
     titles: {
       newOrder: '新订单',
       paymentReceived: '收到付款',
@@ -2663,8 +2572,9 @@ export const zh: TranslationResource = {
       unfollowed: '取消关注',
       moderatorAdded: '调解员已添加',
       moderatorRemoved: '调解员已移除',
+      orderExpired: '订单已过期',
+      orderStaleWarning: '订单提醒',
     },
-    // 通知列表消息（API 获取的通知）
     messages: {
       newOrderWithId: '您收到了一个新订单 #{{orderId}}',
       newOrderNoId: '您收到了一个新订单',
@@ -2700,9 +2610,14 @@ export const zh: TranslationResource = {
       moderatorAddedBySomeone: '您已被添加为调解员',
       moderatorRemovedBy: '{{name}} 移除了您的调解员身份',
       moderatorRemovedBySomeone: '您的调解员身份已被移除',
+      orderExpiredWithTitle: '「{{title}}」订单 #{{orderId}} 已过期',
+      orderExpiredWithId: '订单 #{{orderId}} 已过期',
+      orderExpiredNoId: '有订单已过期',
+      orderStaleWarningWithTitle: '「{{title}}」订单 #{{orderId}} 可能需要处理',
+      orderStaleWarningWithId: '订单 #{{orderId}} 可能需要处理',
+      orderStaleWarningNoId: '有订单可能需要处理',
       defaultNotification: '通知',
     },
-    // TTS (语音播报)
     tts: {
       newMessage: '新消息',
       orderChat: '订单消息',
@@ -2712,8 +2627,6 @@ export const zh: TranslationResource = {
       orderComplete: '订单已完成',
     },
   },
-
-  // P2P 连接
   p2p: {
     connecting: '连接中...',
     failedToConnect: '连接失败',
@@ -2724,7 +2637,6 @@ export const zh: TranslationResource = {
     fromP2pNetwork: '从全球点对点网络为您获取数据...',
     socialHeading: 'Mobazha 新闻与讨论：',
   },
-
   storeAccess: {
     requestSubmitted: '访问申请已提交',
     waitingForApproval: '您的访问申请正在等待店铺所有者审核，请耐心等待。',
@@ -2742,7 +2654,6 @@ export const zh: TranslationResource = {
     submitRequest: '提交申请',
     noAccess: '无法访问',
     noAccessDesc: '您目前没有权限访问此店铺。',
-    // 访问申请管理
     pendingRequests: '待处理',
     approvedRequests: '已批准',
     rejectedRequests: '已拒绝',
@@ -2756,8 +2667,6 @@ export const zh: TranslationResource = {
     confirmRemove: '确认移除',
     confirmRemoveMessage: '确定要从白名单中移除此用户吗？',
   },
-
-  // 新用户引导
   onboarding: {
     welcome: '欢迎来到 Mobazha',
     tagline: '自由交易，安全交易',
@@ -2782,13 +2691,10 @@ export const zh: TranslationResource = {
     customizeLater: '您可以稍后在设置中自定义您的店铺',
     creating: '正在创建您的资料...',
     createFailed: '创建资料失败，请重试。',
-    // 价值主张
     valueDecentralized: '去中心化',
     valuePrivacy: '隐私优先',
     valueMultiCurrency: '多币种',
   },
-
-  // 用户页面（店铺页面）
   userPage: {
     customize: '自定义',
     createListing: '创建商品',
@@ -2798,8 +2704,6 @@ export const zh: TranslationResource = {
       '您的 Mobazha 商店现在已经上线了。可以从创建新商品或自定义您的页面开始。',
     storeWelcomeCalloutBtnClose: '关闭',
   },
-
-  // 导入商品
   importListings: {
     title: '导入商品',
     subtitle: '从 ZIP 文件批量导入商品',
@@ -2831,20 +2735,15 @@ export const zh: TranslationResource = {
     importComplete: '导入完成',
     error: '错误',
   },
-
   imageCrop: {
     adjustImage: '调整图片',
     zoom: '缩放',
     rotate: '旋转',
   },
-
-  // 商品创建/编辑
   listing: {
-    // 页面标题
     createListing: '创建商品',
     createListingDesc: '添加新商品或服务到您的店铺',
     editListing: '编辑商品',
-    // 商品卡片操作
     verifiedModerator: '此商品有经过验证的仲裁者',
     report: '举报此商品',
     blockSeller: '屏蔽此卖家',
@@ -2852,11 +2751,6 @@ export const zh: TranslationResource = {
     clone: '克隆商品',
     deleteListing: '删除商品',
     previewProduct: '预览',
-    noShippingConfigured: '暂无配送档案',
-    noShippingConfiguredDesc: '发布实物商品前，请先在设置中创建配送档案。',
-    goToShippingSettings: '前往配送设置',
-
-    // 商品类型
     productType: '商品类型',
     types: {
       physicalGood: '物理商品',
@@ -2868,8 +2762,6 @@ export const zh: TranslationResource = {
       rwaToken: 'RWA 代币',
       rwaTokenDesc: '在区块链上代币化的真实世界资产',
     },
-
-    // 移动端向导
     mobile: {
       stepEssentials: '基本信息',
       stepMedia: '图片视频',
@@ -2880,8 +2772,6 @@ export const zh: TranslationResource = {
       takePhoto: '拍照',
       chooseFromLibrary: '从相册选择',
     },
-
-    // 快速创建
     quickCreate: {
       title: '快速创建',
       subtitle: '上传照片，AI 帮你搞定',
@@ -2914,8 +2804,6 @@ export const zh: TranslationResource = {
       noImages: '请至少添加一张照片',
       manualMode: '手动填写',
     },
-
-    // 向导式创建
     wizard: {
       steps: {
         type: '商品类型',
@@ -2940,8 +2828,6 @@ export const zh: TranslationResource = {
       reviewDesc: '请确认商品信息无误后发布',
       publish: '发布商品',
     },
-
-    // 标签页
     tabs: {
       general: '基本信息',
       photos: '图片',
@@ -2953,8 +2839,6 @@ export const zh: TranslationResource = {
       policies: '政策',
       other: '其他设置',
     },
-
-    // 基本信息
     basicInfo: '基本信息',
     title: '标题',
     titlePlaceholder: '输入一个描述性的标题',
@@ -2963,8 +2847,6 @@ export const zh: TranslationResource = {
     descriptionPlaceholder: '尽可能详细地描述您的商品...可以包含图片链接、YouTube视频等',
     price: '价格',
     priceHelper: '您可以使用美元、人民币、比特币等任何货币定价',
-
-    // 物理商品字段
     condition: '成色',
     conditionHelper: '商品的整体状况',
     weight: '重量',
@@ -2984,8 +2866,6 @@ export const zh: TranslationResource = {
     skuPlaceholder: 'SKU、零件号、ID 等',
     skuHelper: '商品的唯一标识符',
     nsfw: '成人内容（NSFW、18+ 等）',
-
-    // 成色选项
     conditions: {
       new: '全新',
       usedExcellent: '二手 - 成色极好',
@@ -2993,8 +2873,6 @@ export const zh: TranslationResource = {
       usedPoor: '二手 - 成色一般',
       refurbished: '翻新',
     },
-
-    // 媒体
     photos: '图片',
     photosHelper: '最多可上传 30 张图片，可拖拽添加或排序',
     photosHelperMobile: '最多可上传 30 张图片，长按可排序',
@@ -3008,18 +2886,13 @@ export const zh: TranslationResource = {
     introVideo: '介绍视频',
     externalVideoLink: '或添加外部视频链接（YouTube 等）',
     videoTooLarge: '视频必须小于 15MB',
-    videoUrlPlaceholder: 'https://www.youtube.com/watch?v=...',
     noImage: '暂无图片',
-
-    // 标签和分类
     tags: '标签',
     tagsHelper: '帮助买家发现您的商品',
     tagsDesc: '添加多个标签。输入标签名称后按回车确认。',
     enterTag: '输入标签...',
     productTypeHelper: '为商品分类，便于搜索和筛选',
     productTypePlaceholder: '例如：电子产品、服装、艺术品...',
-
-    // 物流
     shippingOptions: '物流选项',
     shippingOptionsHelper: '以下是您店铺设置中的物流选项，将应用于此商品',
     manageShippingOptions: '管理物流选项',
@@ -3032,8 +2905,6 @@ export const zh: TranslationResource = {
     fixedPrice: '固定价格',
     worldwide: '全球',
     free: '免费',
-
-    // 变体
     variants: {
       title: '变体',
       dashPlaceholder: '—',
@@ -3044,9 +2915,8 @@ export const zh: TranslationResource = {
     variantsHelper: '添加额外的尺寸、颜色、材质等',
     variantsDesc: '添加不同的尺寸、颜色、材质等选项供买家选择。',
     addVariant: '添加变体',
-
+    videoUrlPlaceholder: 'https://www.youtube.com/watch?v=...',
     variant: {
-      // 选项编辑器
       optionName: '选项名称',
       optionNamePlaceholder: '如：尺寸、颜色、材质',
       optionValues: '选项值',
@@ -3066,8 +2936,6 @@ export const zh: TranslationResource = {
         material: '材质',
         style: '款式',
       },
-
-      // 库存表格
       image: '图片',
       selectImage: '选择变体图片',
       variant: '变体',
@@ -3080,22 +2948,16 @@ export const zh: TranslationResource = {
       skuCount: '{{count}} 个变体',
       basePriceHint: '留空 = 基础价格 {{price}} {{currency}}',
       selectedCount: '已选 {{count}} 项',
-
-      // 无障碍
       moveUp: '上移',
       moveDown: '下移',
       removeOption: '删除选项',
       removeValue: '删除值',
-
-      // 批量编辑
       bulkPrice: '设置价格',
       bulkCompareAtPrice: '设置划线价',
       bulkQuantity: '设置库存',
       bulkWeight: '设置重量',
       bulkApply: '应用',
       bulkCancel: '取消',
-
-      // 验证错误
       error: {
         maxOptions: '最多允许 3 个选项',
         maxValues: '单个选项值数量过多',
@@ -3103,8 +2965,6 @@ export const zh: TranslationResource = {
         maxCombinations: '变体组合过多（最多 100 个）',
       },
     },
-
-    // 政策
     policies: '退货政策和条款',
     returnPolicy: '退货政策',
     returnPolicyPlaceholder: '输入您的退货政策...',
@@ -3112,8 +2972,6 @@ export const zh: TranslationResource = {
     termsAndConditions: '条款和条件',
     termsPlaceholder: '输入条款和条件...',
     termsHelper: '如果留空，将显示"未填写条款和条件"',
-
-    // RWA 代币
     rwaTokenDetails: 'RWA 代币详情',
     blockchain: '区块链',
     blockchainHelper: '选择 RWA 代币所在的区块链网络',
@@ -3139,8 +2997,6 @@ export const zh: TranslationResource = {
     minQuantityHelper: '买家单次订单可购买的最小数量',
     maxQuantity: '最大购买数量',
     maxQuantityHelper: '买家单次订单可购买的最大数量',
-
-    // RWA 交易模式
     tradeMode: '交易模式',
     instantTrade: '即时交易',
     instantTradeDesc: '买家付款后自动获得 RWA 份额，无需您手动确认',
@@ -3154,8 +3010,6 @@ export const zh: TranslationResource = {
     day: '天',
     days: '天',
     escrowTimeoutWarning: '超时未确认，资金将自动退还给买家',
-
-    // RWA 代币类型和详情
     rwa: {
       realEstate: '房地产代币',
       bond: '债券代币',
@@ -3164,7 +3018,6 @@ export const zh: TranslationResource = {
       carbonCredit: '碳信用代币',
       custom: '自定义代币',
       customAsset: '自定义资产',
-      // 资产类型选择
       selectAssetType: '选择资产类型',
       selectAsset: '选择要出售的资产',
       selectedAsset: '已选择资产',
@@ -3178,7 +3031,6 @@ export const zh: TranslationResource = {
         broadway: '音乐剧、话剧等演出的票房收益份额',
         custom: '手动输入合约地址和 Token 参数',
       },
-      // Token 详情
       tokenStandard: 'Token 标准',
       selectTokenStandard: '选择 Token 标准',
       contractAddress: '合约地址',
@@ -3187,24 +3039,20 @@ export const zh: TranslationResource = {
       available: '可售',
       holders: '人持有',
       dividendRate: '年化',
-      // 会员信息 (ERC1155)
       membershipInfo: '会员信息',
       memberLevel: '会员等级',
       currentHolders: '当前持有',
       exclusivePerks: '专属福利',
       validity: '有效期',
-      // 收益信息 (ERC3525)
       revenueInfo: '收益信息',
       totalShares: '总份额',
       annualRate: '年化收益',
       settlementPeriod: '结算周期',
       holderRights: '持有者权益',
-      // 钱包状态
       walletConnected: '钱包已连接',
       pleaseConnectWallet: '请连接钱包以查看资产余额',
       showingRealBalance: '显示您的真实资产余额',
       connectWalletHint: '连接钱包后才能查看您的资产余额',
-      // 余额显示
       liveBalance: '链上实时',
       staticBalance: '静态数据',
       refreshBalance: '刷新余额',
@@ -3213,9 +3061,7 @@ export const zh: TranslationResource = {
       copied: '已复制',
       addressCopied: '地址已复制到剪贴板',
       contract: '合约',
-      // 商品详情页 - 资产展示
       verifiedAsset: '已认证资产',
-      // 交易模式提示
       instantTrade: '即时交易',
       confirmTrade: '确认交易',
       instantTradeHint: '付款后立即获得 RWA 份额',
@@ -3242,28 +3088,19 @@ export const zh: TranslationResource = {
       safetyNote: '安全保障: 资产与支付同时完成，无需信任中介',
       blockchainInfo: '区块链信息',
       network: '网络',
-      // NFT 元数据 (ERC721)
       nftMetadata: 'NFT 信息',
       creator: '创作者',
       collection: '收藏系列',
       rarity: '稀有度',
       mintedAt: '铸造时间',
     },
-
-    // 预览
     preview: '预览',
     productTitle: '商品标题',
-
-    // 发布
     publish: '发布',
     saveDraft: '保存草稿',
     unpublish: '下架',
-
-    // NSFW
     nsfwLabel: '成人内容',
     nsfwDesc: '此商品包含成人内容（NSFW、18+）',
-
-    // 处理时间
     processingTime: '处理时间',
     processingTimePlaceholder: '例如：1-3 个工作日',
     processingTimeHelper: '发货前准备订单所需的时间',
@@ -3277,8 +3114,6 @@ export const zh: TranslationResource = {
       '2to4weeks': '2-4 周',
       custom: '自定义',
     },
-
-    // 退货政策模板
     returnPolicyTemplates: {
       placeholder: '选择退货政策模板',
       '30dayLabel': '30 天无理由退换',
@@ -3291,62 +3126,74 @@ export const zh: TranslationResource = {
       noReturn: '所有销售均为最终售出，我们不接受退货或换货。请在购买前仔细查看商品详情。',
       custom: '自定义政策',
     },
-
-    // 条款和条件模板
     termsTemplates: {
       placeholder: '选择条款模板',
       standardLabel: '标准交易条款',
-      standard:
-        '下单即表示您同意以下条款：\n\n1. 付款：所有付款通过加密货币并受买家保障保护。买家确认收货或争议窗口到期后，资金将释放给卖家。\n\n2. 争议：如果您对订单不满意，可以在买家保障期内发起争议。双方共同选定的仲裁人将审查案件并做出具有约束力的裁决。\n\n3. 配送：卖家负责按照描述发货。在可能的情况下应提供物流追踪信息。\n\n4. 免责：卖家不做出超出商品描述明确说明之外的任何保证。所有商品按描述出售。\n\n5. 隐私：交易详情存储在点对点网络上。除完成交易所必需的信息外，不会与第三方共享个人数据。',
+      standard: `下单即表示您同意以下条款：
+
+1. 付款：所有付款通过加密货币并受买家保障保护。买家确认收货或争议窗口到期后，资金将释放给卖家。
+
+2. 争议：如果您对订单不满意，可以在买家保障期内发起争议。双方共同选定的仲裁人将审查案件并做出具有约束力的裁决。
+
+3. 配送：卖家负责按照描述发货。在可能的情况下应提供物流追踪信息。
+
+4. 免责：卖家不做出超出商品描述明确说明之外的任何保证。所有商品按描述出售。
+
+5. 隐私：交易详情存储在点对点网络上。除完成交易所必需的信息外，不会与第三方共享个人数据。`,
       digitalLabel: '数字商品条款',
-      digital:
-        '购买本店数字商品即表示您同意以下条款：\n\n1. 交付：数字商品将在付款确认后通过加密消息或下载链接交付，通常在 24 小时内完成。\n\n2. 不退货：由于数字商品的特殊性，一旦交付并被访问，所有销售均为最终销售。\n\n3. 授权：除另有说明外，您获得的是个人、不可转让的使用许可。禁止再分发或转售。\n\n4. 争议：如果交付的内容与商品描述不符，您可以在买家保障期内发起争议。\n\n5. 支持：卖家将为与购买的数字内容的访问或使用相关的问题提供合理的支持。',
+      digital: `购买本店数字商品即表示您同意以下条款：
+
+1. 交付：数字商品将在付款确认后通过加密消息或下载链接交付，通常在 24 小时内完成。
+
+2. 不退货：由于数字商品的特殊性，一旦交付并被访问，所有销售均为最终销售。
+
+3. 授权：除另有说明外，您获得的是个人、不可转让的使用许可。禁止再分发或转售。
+
+4. 争议：如果交付的内容与商品描述不符，您可以在买家保障期内发起争议。
+
+5. 支持：卖家将为与购买的数字内容的访问或使用相关的问题提供合理的支持。`,
       handmadeLabel: '手工/定制商品条款',
-      handmade:
-        '订购手工或定制商品即表示您同意以下条款：\n\n1. 制作时间：手工和定制商品需要商品描述中注明的额外制作时间。请在预期发货前留出相应时间。\n\n2. 差异：手工商品可能在颜色、尺寸或外观上存在细微差异。这些是手工制品固有的特性，不视为缺陷。\n\n3. 定制：定制订单按您的要求制作。请在确认前仔细检查所有细节。制作开始后可能无法更改。\n\n4. 退货：由于定制商品的个性化特点，仅在收到的商品与约定明显不符时才接受退货。\n\n5. 争议：如果收到的商品与约定的规格不符，您可以在买家保障期内发起争议。',
+      handmade: `订购手工或定制商品即表示您同意以下条款：
+
+1. 制作时间：手工和定制商品需要商品描述中注明的额外制作时间。请在预期发货前留出相应时间。
+
+2. 差异：手工商品可能在颜色、尺寸或外观上存在细微差异。这些是手工制品固有的特性，不视为缺陷。
+
+3. 定制：定制订单按您的要求制作。请在确认前仔细检查所有细节。制作开始后可能无法更改。
+
+4. 退货：由于定制商品的个性化特点，仅在收到的商品与约定明显不符时才接受退货。
+
+5. 争议：如果收到的商品与约定的规格不符，您可以在买家保障期内发起争议。`,
       custom: '自定义条款',
     },
-
-    // 库存策略
     inventoryPolicy: {
       label: '缺货时继续销售',
       helper: '允许库存为零时客户仍可下单',
     },
-
-    // 克隆
     cloneListing: '克隆商品',
     loadingCloneData: '正在加载商品数据...',
     cloneNotFound: '商品不存在或无法访问',
     cloneFailed: '加载商品数据失败',
-
-    // 配送档案
     shippingProfile: '配送方案',
     selectShippingProfile: '为此商品选择配送方案',
     manageProfiles: '管理配送方案',
-
-    // 富文本编辑器
+    noShippingConfigured: '暂无配送档案',
+    noShippingConfiguredDesc: '发布实物商品前，请先在设置中创建配送档案。',
+    goToShippingSettings: '前往配送设置',
     richEditor: {
       enterUrl: '链接地址',
       enterLinkText: '链接文字',
       insertLink: '插入链接',
     },
-
-    // 短描述
     shortDescription: '短描述',
     shortDescriptionPlaceholder: '简短的商品摘要，用于搜索结果和商品卡片',
     shortDescriptionHelper: '最多 250 字。显示在搜索结果和商品卡片中。',
-
-    // 划线价
     compareAtPrice: '划线价',
     compareAtPriceHelper: '原价，将以删除线形式显示折扣',
     discount: '省 {{percent}}%',
-
-    // 条码
     barcode: '条码',
     barcodePlaceholder: 'UPC、EAN、ISBN...',
     barcodeHelper: '商品条码，用于库存追踪',
-
-    // 数字商品文件
     digital: {
       title: '数字文件',
       description: '上传买家购买后将收到的文件。',
@@ -3354,14 +3201,10 @@ export const zh: TranslationResource = {
       uploadHint: '拖拽或点击选择文件（单文件最大 500MB）',
       fileTooLarge: '超过 500MB 文件大小限制',
     },
-
-    // 状态
     statusDraft: '草稿',
     statusPublished: '已发布',
     statusPrivate: '私密',
     draftSaved: '草稿保存成功！',
-
-    // 操作和状态
     validationFailed: '请修正错误后再提交',
     createSuccess: '商品创建成功！',
     createFailed: '创建商品失败',
@@ -3379,10 +3222,7 @@ export const zh: TranslationResource = {
     deleteConfirmDesc: '此操作无法撤销，商品将被永久删除。',
     notFound: '商品不存在',
   },
-
-  // RWA 数字资产 Tab
   rwa: {
-    // Tab 相关
     fetchError: '获取 RWA 商品失败',
     filterTokenStandard: '代币标准',
     filterTradeMode: '交易模式',
@@ -3394,7 +3234,6 @@ export const zh: TranslationResource = {
     noRwaYet: '还没有 RWA 数字资产商品',
     noRwaInStore: '该店铺暂无 RWA 数字资产商品',
     createFirstRwa: '创建商品时选择 RWA Token 类型，开始销售数字资产',
-    // 原子交换购买流程
     purchase: {
       connectWallet: '连接钱包',
       connectDesc: '请连接钱包以授权支付代币',
@@ -3443,25 +3282,19 @@ export const zh: TranslationResource = {
       error: '执行失败',
     },
   },
-
-  // RWA 资产仪表盘
   rwaDashboard: {
     title: 'RWA 资产仪表盘',
-    // 钱包状态
     walletNotConnected: '钱包未连接',
     connectWalletHint: '请连接钱包以查看您的 RWA 资产',
     connectWallet: '连接钱包',
     walletConnected: '钱包已连接',
-    // 统计
     totalAssets: '资产总数',
     assetTypes: '资产类型',
-    // 资产列表
     heldAssets: '持有资产',
     assetTypesCount: '{{count}} 种资产',
     shares: '份',
     erc3525Contract: 'ERC3525 合约',
     unknownAsset: '未知资产',
-    // 交易
     recentTransactions: '最近交易',
     filtered: '已筛选',
     viewAll: '查看全部 →',
@@ -3469,7 +3302,6 @@ export const zh: TranslationResource = {
     loadingMore: '加载更多...',
     noTransactions: '暂无交易记录',
     noTransactionsFiltered: '该资产暂无交易记录',
-    // 交易类型
     txType: {
       label: '类型',
       transferIn: '转入',
@@ -3479,21 +3311,16 @@ export const zh: TranslationResource = {
       unknown: '未知',
     },
     initiated: '发起',
-    // 桌面端表格表头
     asset: '资产',
     amount: '数量',
     time: '时间',
     txHash: '交易哈希',
-    // 桌面端统计
     totalBalance: '总余额',
     todayTransactions: '今日交易',
-    // 桌面端占位
     selectAsset: '选择资产',
     selectAssetHint: '点击左侧资产查看详情和价格历史',
-    // 空状态
     noAssets: '暂无 RWA 资产',
     noAssetsHint: '您当前没有任何 RWA 资产，可以通过购买获取',
-    // 价格历史
     priceHistory: '价格走势',
     lastPrice: '最新价格',
     highPrice: '最高',
@@ -3501,17 +3328,13 @@ export const zh: TranslationResource = {
     avgPrice: '均价',
     noData: '暂无数据',
     priceHistoryNotAvailable: '价格历史仅在网页端可用',
-    // 时间范围
     timeRange: {
       '1W': '1周',
       '1M': '1月',
       ALL: '全部',
     },
   },
-
-  // 配送设置
   shipping: {
-    // 配送档案（Shopify 风格）
     shippingProfiles: '配送档案',
     shippingOptions: '个配送选项',
     upgradeToProfiles: '升级到配送档案',
@@ -3524,6 +3347,14 @@ export const zh: TranslationResource = {
     addProfile: '添加档案',
     editProfile: '编辑档案',
     deleteProfileTitle: '删除档案',
+    profileDeleted: '档案已删除',
+    profileName: '档案名称',
+    profileNamePlaceholder: '例如：默认配送',
+    defaultProfileName: '默认配送',
+    defaultProfileSet: '默认档案已更新',
+    setAsDefault: '设为默认',
+    orUseTemplate: '或使用模板快速创建：',
+    cannotDeleteDefault: '默认档案不能删除',
     deleteProfileDesc: '确定要删除此档案吗？',
     deleteProfileHasListings:
       '此档案有关联商品。请选择另一个档案迁移它们，否则商品将失去配送配置。',
@@ -3531,7 +3362,6 @@ export const zh: TranslationResource = {
     selectTargetProfile: '选择档案...',
     deleteWithoutMigration: '不迁移直接删除',
     profileDeletedWithMigration: '档案已删除，{{count}} 个商品已迁移',
-    profileDeleted: '档案已删除',
     listingsCount: '{{count}} 个商品',
     staleListingsTitle: '{{count}} 个商品需要更新',
     staleListingsDesc: '部分商品引用了过期的配送档案。刷新以更新其配送快照。',
@@ -3540,49 +3370,36 @@ export const zh: TranslationResource = {
     refreshComplete: '已刷新 {{refreshed}} 个商品',
     refreshFailed: '刷新快照失败',
     profileSavedStaleNotice: '档案已保存。{{count}} 个商品需要刷新快照。',
-    profileName: '档案名称',
-    profileNamePlaceholder: '例如：默认配送',
-    defaultProfileName: '默认配送',
-    defaultProfileSet: '默认档案已更新',
-    setAsDefault: '设为默认',
-    orUseTemplate: '或使用模板快速创建：',
-    cannotDeleteDefault: '默认档案不能删除',
     addOptionToProfile: '添加配送选项',
     viewOptions: '查看配送选项',
     option: '选项',
     options: '选项',
     region: '地区',
     multipleCurrencies: '多种货币',
-    // 标题
     createOption: '创建配送选项',
     editOption: '编辑配送选项',
     optionCreated: '配送选项已创建',
     optionUpdated: '配送选项已更新',
-    // 基本信息
     basicInfo: '基本信息',
     optionName: '选项名称',
     optionNamePlaceholder: '例如：标准配送',
     shippingType: '配送类型',
     currency: '货币',
     pricingModel: '计费模式',
-    // 配送类型
     type: {
       FIXED_PRICE: '固定运费',
       LOCAL_PICKUP: '本地自提',
     },
-    // 服务类型（嵌套格式用于动态 key）
     serviceType: {
       FIRST_RENEWAL_FEE: '首重+续重费',
       SAME_WEIGHT_SAME_FEE: '按重量区间定价',
     },
-    // 服务类型标签（卡片显示）
     serviceTypeLabel: {
       firstRenewal: '首重+续重',
       flatRate: '固定费率',
     },
     firstRenewalFeeDesc: '收取首重费用 + 每单位超重量额外收费',
     sameWeightSameFeeDesc: '根据重量区间收取固定运费',
-    // 地区
     shippingRegions: '配送地区',
     selectRegions: '选择地区...',
     regionsSelected: '个地区已选',
@@ -3592,7 +3409,6 @@ export const zh: TranslationResource = {
     allCountries: '所有国家',
     regions: '地区',
     noRegions: '未设置地区',
-    // 服务
     shippingServices: '配送服务',
     service: '服务',
     services: '个服务',
@@ -3602,7 +3418,6 @@ export const zh: TranslationResource = {
     serviceNamePlaceholder: '例如：普通快递',
     estimatedDelivery: '预计送达',
     deliveryPlaceholder: '例如：5-7 天',
-    // 重量和定价
     firstWeight: '首重',
     firstFreight: '首重费',
     renewalUnitWeight: '续重单位',
@@ -3611,9 +3426,7 @@ export const zh: TranslationResource = {
     endWeight: '最大重量',
     shippingFee: '运费',
     registrationFee: '挂号费',
-    // 卡片显示
     unnamed: '未命名',
-    // 免邮设置
     freeShipping: '满额免邮',
     enableFreeShipping: '启用满额免邮',
     freeShippingDesc: '订单金额达到最低门槛时免运费',
@@ -3621,7 +3434,6 @@ export const zh: TranslationResource = {
     freeShippingExample: '例如：订单满 50 元免运费',
     freeShippingBadge: '满额免邮',
     spendMoreForFreeShipping: '再消费 {amount} 可享免运费',
-    // 配送区域（Shopify 风格）
     shippingZones: '配送区域',
     zone: '区域',
     zones: '区域',
@@ -3639,7 +3451,6 @@ export const zh: TranslationResource = {
     viewZones: '查看配送区域',
     unnamedZone: '未命名区域',
     deleteZoneTitle: '删除配送区域',
-    // 运费费率
     shippingRates: '运费费率',
     rate: '费率',
     rates: '费率',
@@ -3654,7 +3465,6 @@ export const zh: TranslationResource = {
     rateDeleted: '费率已删除',
     noRates: '暂无费率',
     noRatesDesc: '为此区域添加运费费率',
-    // 费率条件
     addCondition: '添加条件（可选）',
     conditionType: '条件类型',
     selectCondition: '选择条件',
@@ -3674,7 +3484,6 @@ export const zh: TranslationResource = {
     previewOrderAmount: '订单金额',
     previewMatchedRate: '匹配费率',
     previewNoMatch: '无匹配费率',
-    // 发货地点
     shippingLocations: '发货地点',
     location: '个地点',
     locations: '个地点',
@@ -3695,7 +3504,6 @@ export const zh: TranslationResource = {
     locationAddressPlaceholder: '完整地址（可选）',
     locationAddressHint: '此地址仅供您参考，不会显示给买家。',
     unnamedLocation: '未命名地点',
-    // 地点组（渐进式 UI）
     locationGroups: '地点组',
     locationGroup: '地点组',
     addLocationGroup: '添加地点组',
@@ -3704,8 +3512,6 @@ export const zh: TranslationResource = {
     selectLocations: '选择发货地点',
     locationsSelected: '个地点已选',
   },
-
-  // 配送选项配置
   shippingConfig: {
     noOptions: '暂无配送选项',
     noOptionsDesc: '添加配送选项以支持实物商品配送',
@@ -3713,8 +3519,6 @@ export const zh: TranslationResource = {
     deleteConfirmTitle: '删除配送选项',
     deleteConfirmDesc: '确定要删除此配送选项吗？',
   },
-
-  // 运费模板
   shippingTemplates: {
     quickStart: '快速入门模板',
     quickStartDesc: '选择一个模板快速开始配置',
@@ -3750,7 +3554,6 @@ export const zh: TranslationResource = {
     tplDelivery7to14: '7-14天',
     tplPickupReady: '即时可取',
   },
-
   emptyState: {
     noProducts: {
       title: '暂无商品',
@@ -3817,35 +3620,6 @@ export const zh: TranslationResource = {
       description: '目前没有需要处理的争议案件。',
     },
   },
-
-  ai: {
-    assist: 'AI',
-    improveTitle: 'AI 优化',
-    polishDescription: 'AI 润色',
-    suggestTags: 'AI 建议',
-    generateFromImages: 'AI 自动填充',
-    generateFromImagesDesc: '从商品图片自动生成标题、描述和标签',
-    generating: '正在分析图片...',
-    generateAll: '生成所有字段',
-    applyAll: '全部应用',
-    regenerate: '重新生成',
-    notConfigured: 'AI 助手尚未配置。',
-    setupPrompt: '配置 AI 助手，自动优化商品标题和描述。',
-    goToSettings: '前往设置',
-    error: '生成失败，请重试。',
-    title: 'AI 助手',
-    openAssistant: '打开 AI 助手',
-    history: '历史记录',
-    newChat: '新对话',
-    untitled: '未命名',
-    noConversations: '暂无对话记录',
-    welcomeMessage: '有关店铺的任何问题，尽管问我',
-    welcomeHint: '商品、订单、数据分析……',
-    inputPlaceholder: '输入消息……',
-    stopGenerating: '停止生成',
-    send: '发送消息',
-  },
-
   standalone: {
     storeName: '店铺',
     allProducts: '全部商品',
@@ -3886,7 +3660,33 @@ export const zh: TranslationResource = {
       completeDesc: '初始设置已完成，您现在可以从管理后台管理您的店铺。',
     },
   },
-
+  ai: {
+    assist: 'AI',
+    improveTitle: 'AI 优化',
+    polishDescription: 'AI 润色',
+    suggestTags: 'AI 建议',
+    generateFromImages: 'AI 自动填充',
+    generateFromImagesDesc: '从商品图片自动生成标题、描述和标签',
+    generating: '正在分析图片...',
+    generateAll: '生成所有字段',
+    applyAll: '全部应用',
+    regenerate: '重新生成',
+    notConfigured: 'AI 助手尚未配置。',
+    setupPrompt: '配置 AI 助手，自动优化商品标题和描述。',
+    goToSettings: '前往设置',
+    error: '生成失败，请重试。',
+    title: 'AI 助手',
+    openAssistant: '打开 AI 助手',
+    history: '历史记录',
+    newChat: '新对话',
+    untitled: '未命名',
+    noConversations: '暂无对话记录',
+    welcomeMessage: '有关店铺的任何问题，尽管问我',
+    welcomeHint: '商品、订单、数据分析……',
+    inputPlaceholder: '输入消息……',
+    stopGenerating: '停止生成',
+    send: '发送消息',
+  },
   moderation: {
     title: '调解案件',
     description: '审核并解决买家和卖家之间的争议',
@@ -3912,7 +3712,6 @@ export const zh: TranslationResource = {
     noCasesDesc: '您目前没有调解案件。',
     caseDetail: '案件详情',
   },
-
   admin: {
     title: '店铺管理',
     nav: {
@@ -3925,13 +3724,13 @@ export const zh: TranslationResource = {
       storefront: '店铺外观',
       settings: '设置',
       viewStore: '查看店铺',
+      backToShopping: '返回购物',
       help: '帮助文档',
       openMenu: '打开菜单',
       closeMenu: '关闭菜单',
       expandSidebar: '展开侧边栏',
       collapseSidebar: '收起侧边栏',
       backToMarketplace: '市场',
-      backToShopping: '返回购物',
     },
     dashboard: {
       welcome: '欢迎回来，{{name}}',
@@ -3971,6 +3770,9 @@ export const zh: TranslationResource = {
       completedOrders: '已完成订单',
       reviewCount: '{{count}} 条评价',
       noReviews: '暂无评价',
+      actionPendingReview: '待审核订单',
+      actionToFulfill: '待发货订单',
+      actionDisputed: '待回应争议',
     },
     checklist: {
       title: '设置检查清单',
@@ -4221,6 +4023,20 @@ export const zh: TranslationResource = {
       product: '商品',
       unitsSold: '销量',
       noData: '该时段暂无数据',
+      visitorTitle: '访客分析',
+      visitorSubtitle: '流量、互动与转化洞察',
+      visitorTrend: '流量趋势',
+      pageViews: '页面浏览',
+      productViews: '商品浏览',
+      uniqueVisitors: '独立访客',
+      addToCartCount: '加入购物车',
+      checkoutCount: '开始结账',
+      conversionFunnel: '转化漏斗',
+      trafficSources: '流量来源',
+      topPages: '热门页面',
+      page: '页面',
+      views: '浏览',
+      visitors: '访客',
     },
     onboarding: {
       landingTitle: '开设你的在线店铺',
@@ -4378,7 +4194,6 @@ export const zh: TranslationResource = {
       detectNoChats: '未发现聊天。请先向你的 Bot 发送一条消息，然后重试。',
       detectFailed: '检测失败',
       detectSelectChat: '选择一个聊天',
-
       webhooks: 'Webhook 端点',
       webhooksDesc: '当店铺事件发生时，向你的服务器发送 HTTP 回调',
       addWebhook: '添加 Webhook',
@@ -4411,7 +4226,6 @@ export const zh: TranslationResource = {
       webhookGuideRetry: '重试机制',
       webhookGuideRetryDesc:
         '投递失败时系统会自动重试，采用指数退避策略，最多重试 5 次。请确保你的端点返回 2xx 状态码以确认接收成功。',
-
       aiTitle: 'AI 助手',
       aiDesc: '连接 AI 服务商，解锁智能商品管理功能。',
       aiFeatureGenerate: '从图片自动生成商品标题、描述和标签',
@@ -4446,8 +4260,6 @@ export const zh: TranslationResource = {
       aiProviderActive: '使用中',
       aiApiKeySaved: '密钥已保存',
       unsavedChanges: '有未保存的更改',
-
-      // Payment Providers
       paymentProviders: {
         title: '支付服务商',
         subtitle: '接受来自客户的法币支付',
@@ -4599,7 +4411,7 @@ export const zh: TranslationResource = {
       collectionsEmpty: '暂无可用的商品集合。',
       collectionsLoading: '正在加载商品集合...',
       allSectionsAdded: '所有可用的区域类型都已添加。',
-      sectionCountLabel: '{{count}} 个区域 · {{font}}',
+      sectionCountLabel: '{{{count}}} 个区域 · {{{font}}}',
       presetConfirmTitle: '应用模板',
       presetConfirmMessage: '这将替换当前的主题和区域配置。确定继续吗？',
       paletteOcean: '海洋',
@@ -4749,9 +4561,6 @@ export const zh: TranslationResource = {
     paypal: 'PayPal',
     orPayWithCrypto: '或使用加密货币支付',
     protectedBy: '由 {{provider}} 提供保障',
-    sectionTitle: '银行卡 / 电子钱包',
-    cryptoSection: '加密货币支付',
-    cryptoBadge: '加密货币',
     payAmount: '支付 {{amount}}',
     processing: '正在处理支付...',
     confirming: '已收到支付，正在确认订单...',
@@ -4769,6 +4578,8 @@ export const zh: TranslationResource = {
     connected: '已连接',
     notConnected: '未连接',
     connectProvider: '连接 {{provider}}',
+    connecting: '连接中…',
+    onboardingFailed: '无法开始连接，请重试。',
     configureApiKeys: '配置 API 密钥',
     disconnect: '断开连接',
     saveFailed: '保存配置失败',
@@ -4776,6 +4587,9 @@ export const zh: TranslationResource = {
     genericError: '支付失败',
     payNow: '立即支付',
     stripeLoadFailed: '加载支付表单失败',
+    cryptoBadge: '加密货币',
+    sectionTitle: '银行卡 / 电子钱包',
+    cryptoSection: '加密货币支付',
     captureFailed: '支付捕获失败，请联系客服。',
     email: '邮箱',
     accountId: '账户',
@@ -4794,7 +4608,6 @@ export const zh: TranslationResource = {
       'PayPal 付款会进入您的 PayPal 余额。您可以从 PayPal 应用转账到银行，或设置自动提现。',
     payoutInfoCrypto: '加密货币付款直接到达您的钱包地址。无中间商——您完全控制自己的资金。',
     payoutInfoLearnMore: '了解更多',
-    rateUpdated: '{{seconds}}秒前更新',
   },
   support: {
     documentation: '文档',
@@ -4802,6 +4615,8 @@ export const zh: TranslationResource = {
     community: '社区',
     communityDesc: '加入我们的 Telegram 社区获取帮助',
   },
+  store: {
+    offlineBanner: '店铺当前离线，显示为缓存数据。',
+    offlinePriceDisclaimer: '价格可能已变更',
+  },
 };
-
-export default zh;
