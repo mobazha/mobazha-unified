@@ -81,14 +81,17 @@ function SwipeableCartItem({
         onTouchEnd={handleTouchEnd}
       >
         <div className="flex gap-3">
-          <Link href={`/product/${item.listing.slug}`} className="flex-shrink-0">
+          <Link
+            href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
+            className="flex-shrink-0"
+          >
             <div className="w-20 h-20 rounded-lg overflow-hidden">
               <ProductImageNative src={thumbUrl} alt={item.listing.title} iconSize="sm" />
             </div>
           </Link>
 
           <div className="flex-1 min-w-0 flex flex-col">
-            <Link href={`/product/${item.listing.slug}`}>
+            <Link href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}>
               <h3 className="font-medium text-foreground text-sm line-clamp-2">
                 {item.listing.title}
               </h3>

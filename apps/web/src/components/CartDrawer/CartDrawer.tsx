@@ -122,7 +122,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   >
                     {/* Thumbnail */}
                     <Link
-                      href={`/product/${item.listing.slug}`}
+                      href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
                       onClick={() => onOpenChange(false)}
                       className="flex-shrink-0"
                     >
@@ -135,7 +135,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <Link
-                          href={`/product/${item.listing.slug}`}
+                          href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
                           onClick={() => onOpenChange(false)}
                           className="min-w-0 flex-1"
                         >
