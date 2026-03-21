@@ -56,7 +56,14 @@ function AnonymousHero({ isAnonymous }: { isAnonymous: boolean }) {
           <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
             {t('hero.titleLine1')}
             <br className="hidden sm:block" />{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--hero-accent)] to-[var(--hero-accent-secondary)]">
+            <span
+              className="text-[var(--hero-accent)] bg-gradient-to-r from-[var(--hero-accent)] to-[var(--hero-accent-secondary)]"
+              style={{
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               {t('hero.titleLine2')}
             </span>
           </h1>
@@ -148,7 +155,14 @@ function StandaloneHero() {
           <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
             {t('hero.titleLine1')}
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--hero-accent)] to-[var(--hero-accent-secondary)]">
+            <span
+              className="text-[var(--hero-accent)] bg-gradient-to-r from-[var(--hero-accent)] to-[var(--hero-accent-secondary)]"
+              style={{
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               {t('hero.titleLine2')}
             </span>
           </h1>

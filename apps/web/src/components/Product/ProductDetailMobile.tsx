@@ -593,7 +593,7 @@ export function ProductDetailMobile({
       </div>
 
       {/* --- Fixed Bottom Action Bar --- */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-3 py-2.5 z-50 pb-[env(safe-area-inset-bottom,12px)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-3 pt-2.5 pb-3 z-50">
         {isOwnProduct ? (
           <div className="flex gap-2">
             <Button
