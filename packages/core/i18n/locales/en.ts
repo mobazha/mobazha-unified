@@ -308,8 +308,10 @@ export const en: TranslationResource = {
     myChatsDesc: 'Chat with sellers and buyers',
 
     // Anonymous mode
-    signInPrompt: 'Sign in to manage your orders',
+    signInPrompt: 'Create your account',
+    signInBenefits: 'Track orders, save favorites, and sync across devices',
     continueWithTelegram: 'Continue with Telegram',
+    cartSyncHint: 'Sign in to save your cart across devices',
 
     // Unclaimed store / claim flow
     unclaimedStorePrompt: 'Are you the store owner?',

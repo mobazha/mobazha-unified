@@ -303,8 +303,10 @@ export const zh: TranslationResource = {
     myChatsDesc: '与卖家和买家聊天',
 
     // 匿名模式
-    signInPrompt: '登录以管理您的订单',
+    signInPrompt: '创建您的账号',
+    signInBenefits: '追踪订单、收藏商品、多设备同步',
     continueWithTelegram: '使用 Telegram 继续',
+    cartSyncHint: '登录后购物车将跨设备同步',
 
     // 未认领店铺 / 认领流程
     unclaimedStorePrompt: '你是这家店的店主吗？',
