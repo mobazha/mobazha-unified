@@ -217,7 +217,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </div>
 
                         <span className="text-sm font-semibold">
-                          {renderPairedPrice(lineTotal, currency, { isMinimalUnit: false })}
+                          {renderPairedPrice(lineTotal, currency)}
                         </span>
                       </div>
                     </div>
@@ -246,9 +246,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             <VStack gap="sm" className="w-full">
               <HStack className="justify-between">
                 <span className="text-sm text-muted-foreground">{t('cart.subtotal')}</span>
-                <span className="text-lg font-bold">
-                  {renderPairedPrice(subtotal, currency, { isMinimalUnit: false })}
-                </span>
+                <span className="text-lg font-bold">{renderPairedPrice(subtotal, currency)}</span>
               </HStack>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
                 {isAuthenticated

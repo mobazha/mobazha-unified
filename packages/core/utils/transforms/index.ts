@@ -5,3 +5,5 @@
 
 export { transformCoreOrder, mapOrderState } from './orderTransform';
 export { convertProductToFormData } from './productTransform';
+export { parsePriceFields } from './priceTransform';
+export type { ParsedPrice } from './priceTransform';

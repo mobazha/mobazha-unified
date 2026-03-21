@@ -181,7 +181,7 @@ export const MoreFromStore = memo(function MoreFromStore({
                   getImageUrl(product.thumbnail?.small, vendorPeerID)
                 }
                 price={product.price?.amount || 0}
-                currency={product.price?.currency?.code || 'USD'}
+                currency={product.price?.currency?.code}
                 rating={product.averageRating}
                 reviewCount={product.ratingCount}
                 freeShipping={product.freeShipping && product.freeShipping.length > 0}

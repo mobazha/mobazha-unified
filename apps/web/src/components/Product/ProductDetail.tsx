@@ -112,7 +112,7 @@ export function ProductDetail({
 }: ProductDetailProps) {
   const { t } = useI18n();
   const router = useRouter();
-  const { formatPrice, renderPairedPrice } = useCurrency();
+  const { formatPrice, renderPairedPrice, fromMinimalUnit } = useCurrency();
   const openChatDrawer = useChatStore(state => state.openDrawer);
 
   // 状态管理
@@ -347,10 +347,10 @@ export function ProductDetail({
       return { price: 0, currency: 'USD', formattedPrice: '$0.00', pairedPrice: '$0.00' };
     const price = Number(product.item.price) || 0;
     const currency = product.metadata?.pricingCurrency?.code || 'USD';
-    const formattedPrice = formatPrice(price, currency);
+    const formattedPrice = formatPrice(fromMinimalUnit(price, currency), currency);
     const pairedPrice = renderPairedPrice(price, currency);
     return { price, currency, formattedPrice, pairedPrice };
-  }, [product, formatPrice, renderPairedPrice]);
+  }, [product, formatPrice, renderPairedPrice, fromMinimalUnit]);
 
   const safeRatings = useMemo(() => {
     return Array.isArray(ratings) ? ratings : [];
@@ -425,8 +425,8 @@ export function ProductDetail({
     if (!product) return '';
     const price = Number(product.item?.price) || 0;
     const curr = product.metadata?.pricingCurrency?.code || 'USD';
-    return formatPrice(price, curr);
-  }, [product, formatPrice]);
+    return renderPairedPrice(price, curr);
+  }, [product, renderPairedPrice]);
 
   const handleTGAddToCart = useCallback(() => {
     handleAddToCart();

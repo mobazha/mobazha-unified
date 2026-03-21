@@ -178,7 +178,9 @@ function NotificationItem({
             <span className="text-xs text-text-tertiary truncate">{data.productTitle}</span>
             {data.price && (
               <span className="text-xs font-semibold text-primary flex-shrink-0">
-                {renderPairedPrice(data.price.amount, data.price.currencyCode || 'USD')}
+                {data.price.currencyCode
+                  ? renderPairedPrice(data.price.amount, data.price.currencyCode)
+                  : '—'}
               </span>
             )}
           </div>

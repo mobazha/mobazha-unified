@@ -41,7 +41,7 @@ export interface ProductCardProps {
   imageUrl?: string;
   /** 价格 (默认为最小单位，即 API 返回的原始值) */
   price: number | string;
-  /** 货币代码 (如 USD, BTC, ETH) */
+  /** 货币代码 (如 USD, BTC, ETH)，缺失时显示"—"代替价格 */
   currency?: string;
   /** 价格精度/小数位数 (如 2 for USD cents, 8 for BTC satoshi)，如果提供则使用此值 */
   divisibility?: number;
@@ -113,9 +113,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   title,
   imageUrl,
   price,
-  currency = 'USD',
+  currency,
   divisibility,
-  priceInMinimalUnit = true, // 默认 true，因为 API 返回的都是最小单位
+  priceInMinimalUnit = true,
   originalPrice,
   vendorName,
   vendorAvatar,
@@ -184,13 +184,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ? contractTypeConfig.DIGITAL_GOOD
       : null;
 
-  // 使用货币系统格式化价格（自动转换到用户本地货币）
-  // 如果提供了 divisibility，使用它；否则让服务使用货币的默认精度
   const formatOptions = { isMinimalUnit: priceInMinimalUnit, divisibility };
-  const formattedPrice = formatLocalPrice(price, currency, formatOptions);
-  const formattedOriginalPrice = originalPrice
-    ? formatLocalPrice(originalPrice, currency, formatOptions)
-    : '';
+  const formattedPrice = currency ? formatLocalPrice(price, currency, formatOptions) : '—';
+  const formattedOriginalPrice =
+    originalPrice && currency ? formatLocalPrice(originalPrice, currency, formatOptions) : '';
 
   // 处理 Report 按钮点击
   const handleReportClick = (e: React.MouseEvent) => {

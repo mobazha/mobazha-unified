@@ -228,7 +228,7 @@ export function OrderNotificationCard({
               )}
               {price && (
                 <p className="text-sm font-semibold text-primary">
-                  {renderPairedPrice(price.amount, price.currencyCode || 'USD')}
+                  {price.currencyCode ? renderPairedPrice(price.amount, price.currencyCode) : '—'}
                 </p>
               )}
             </div>

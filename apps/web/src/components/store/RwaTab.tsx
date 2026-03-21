@@ -310,7 +310,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
                   title={product.title}
                   imageUrl={getImageUrl(product.thumbnail?.medium)}
                   price={Number(product.price?.amount || 0)}
-                  currency={product.price?.currency?.code || 'USD'}
+                  currency={product.price?.currency?.code}
                   divisibility={product.price?.currency?.divisibility}
                   // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
                   vendorPeerID={peerId}
