@@ -16,6 +16,7 @@ import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
+import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { UseCheckoutReturn } from './types';
 
@@ -75,6 +76,8 @@ export function CheckoutMobile({ checkout }: Props) {
     disabled: !canSubmit,
     showProgress: isSubmitting,
   });
+
+  useTGBackButton({ visible: isTG });
 
   return (
     <div
