@@ -145,7 +145,7 @@ export default function CollectionDetailPage() {
                   title={product.title}
                   imageUrl={getImageUrl(product.thumbnail?.medium)}
                   price={Number(product.price?.amount ?? 0)}
-                  currency={product.price?.currency?.code ?? 'USD'}
+                  currency={product.price?.currency?.code}
                   divisibility={product.price?.currency?.divisibility}
                   contractType={product.contractType as ProductContractType}
                   rwaTradeMode={product.rwaTradeMode as RwaTradeMode}

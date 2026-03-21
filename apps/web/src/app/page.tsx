@@ -20,6 +20,7 @@ import {
   productDataService,
   getImageUrl,
   isStandalone,
+  parsePriceFields,
 } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
@@ -55,6 +56,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
       : '');
   const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
 
+  const { amount, currencyCode, divisibility } = parsePriceFields(item.price);
+
   return {
     id: item.slug,
     slug: item.slug,
@@ -63,9 +66,9 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
       getImageUrl(item.thumbnail?.medium) ||
       getImageUrl(item.thumbnail?.small) ||
       'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
-    price: item.price?.amount || 0,
-    currency: item.price?.currency?.code || 'USD',
-    divisibility: item.price?.currency?.divisibility,
+    price: amount,
+    currency: currencyCode,
+    divisibility,
     vendorName,
     vendorAvatar,
     vendorPeerID: item.vendorPeerID,

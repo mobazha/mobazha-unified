@@ -6,6 +6,7 @@ import type { Product, ProductListItem, RatingIndex, RatingDetail } from '../../
 import { getImageUrl } from './config';
 import type { Image } from '../../types';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
+import { parsePriceFields } from '../../utils/transforms/priceTransform';
 import { isStoreUnavailableError } from './client';
 import {
   authPost,
@@ -183,7 +184,7 @@ interface ProfileListingItem {
   title: string;
   image?: string;
   thumbnail?: Image;
-  price?: string | number;
+  price?: string | number | Record<string, unknown>;
   peerID?: string;
   vendorPeerID?: string;
   cid?: string;
@@ -218,26 +219,29 @@ export async function fetchStoreListings(
     `${SEARCH_API.PROFILE_LISTINGS(storePeerID)}?pageSize=${pageSize}`,
     []
   );
-  return raw.map(item => ({
-    slug: item.slug,
-    title: item.title,
-    thumbnail:
-      transformImageUrls(
-        hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
-        storePeerID
-      ) ?? ({} as Image),
-    price:
-      typeof item.price === 'object'
+  return raw.map(item => {
+    const priceSource =
+      typeof item.price === 'object' && item.price !== null
         ? (item.price as unknown as ProductListItem['price'])
-        : {
-            amount: Number(item.price) || 0,
-            currency: { code: 'USD', divisibility: 2 },
-          },
-    vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
-    cid: item.cid ?? item.hash,
-    contractType: item.contractType as ProductListItem['contractType'],
-    nsfw: item.nsfw?.status,
-  }));
+        : undefined;
+    const { amount, currencyCode, divisibility } = parsePriceFields(priceSource);
+    return {
+      slug: item.slug,
+      title: item.title,
+      thumbnail:
+        transformImageUrls(
+          hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
+          storePeerID
+        ) ?? ({} as Image),
+      price: currencyCode
+        ? { amount, currency: { code: currencyCode, divisibility: divisibility ?? 2 } }
+        : { amount, currency: { code: '', divisibility: divisibility ?? 2 } },
+      vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
+      cid: item.cid ?? item.hash,
+      contractType: item.contractType as ProductListItem['contractType'],
+      nsfw: item.nsfw?.status,
+    };
+  });
 }
 
 /**
