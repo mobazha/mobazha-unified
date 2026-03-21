@@ -42,7 +42,7 @@ function detectPlatform(): PlatformType {
     (globalThis as any).chrome?.runtime?.id
   )
     return 'extension';
-  if (win.Telegram?.WebApp) return 'telegram';
+  if (win.Telegram?.WebApp || win.Telegram) return 'telegram';
   if (win.__DISCORD_EMBEDDED__ || new URLSearchParams(window.location.search).has('frame_id'))
     return 'discord';
   if (win.__FARCASTER_FRAME__ || window.location.ancestorOrigins?.[0]?.includes('warpcast'))

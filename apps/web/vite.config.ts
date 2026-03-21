@@ -159,6 +159,13 @@ export default defineConfig(({ mode }) => {
     server: {
       port: parseInt(process.env.PORT || '3001', 10),
       allowedHosts: ['miniappdev.mobazha.org'],
+      ...(mode === 'miniappdev' && {
+        hmr: {
+          host: 'miniappdev.mobazha.org',
+          protocol: 'wss',
+          clientPort: 443,
+        },
+      }),
       proxy: {
         '/v1': withStripWwwAuth({
           target: apiBase,

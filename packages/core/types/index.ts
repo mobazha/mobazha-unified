@@ -26,11 +26,12 @@ export type {
   ProfileStats,
   ContactInfo,
   SocialAccount,
-  getSocialUsername,
   UserSettings,
   SmtpSettings,
   AuthCredentials,
 } from './user';
+
+export { getSocialUsername } from './user';
 
 // Product types
 export { CONTRACT_TYPES } from './product';

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useI18n, useWishlist, useCurrency, usePriceUpdates, getImageUrl } from '@mobazha/core';
 import type { WishlistItem, PriceUpdate } from '@mobazha/core';
 import { Heart, Trash2, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react';
@@ -45,17 +46,12 @@ export default function WishlistPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : items.length === 0 ? (
-            <VStack gap="md" align="center" className="py-20">
-              <Heart className="w-16 h-16 text-muted-foreground/30" />
-              <p className="text-lg font-medium text-muted-foreground">{t('me.wishlistEmpty')}</p>
-              <p className="text-sm text-muted-foreground/70">{t('me.wishlistEmptyDesc')}</p>
-              <Link href="/search">
-                <Button variant="outline" className="mt-4">
-                  <ShoppingBag className="w-4 h-4 mr-2" />
-                  {t('nav.explore')}
-                </Button>
-              </Link>
-            </VStack>
+            <EmptyState
+              icon={Heart}
+              title={t('me.wishlistEmpty')}
+              description={t('me.wishlistEmptyDesc')}
+              action={{ label: t('nav.explore'), onClick: () => router.push('/search') }}
+            />
           ) : (
             <div className="grid grid-cols-1 gap-3">
               {items.map(item => (

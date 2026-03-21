@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import {
-  Switch,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -15,19 +13,15 @@ import {
   AlertDialogTitle,
   useToast,
 } from '@/components/ui';
-import { useI18n, useUserStore, isHosted, startCasdoorLogin } from '@mobazha/core';
-import { ChevronRight, LogOut, RefreshCw, Download, Upload, Terminal, Trash2 } from 'lucide-react';
+import { useI18n } from '@mobazha/core';
+import { ChevronRight, Download, Upload, Terminal, Trash2 } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
 export default function AdvancedSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const router = useRouter();
-  const { logout } = useUserStore();
 
-  const [analytics, setAnalytics] = useState(true);
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleBackup = () => {
@@ -45,23 +39,6 @@ export default function AdvancedSettingsPage() {
     setShowRestoreDialog(false);
   };
 
-  const handleLogoutConfirm = () => {
-    logout();
-    // 托管模式下直接跳转 Casdoor，避免闪烁
-    if (isHosted()) {
-      startCasdoorLogin();
-    } else {
-      router.push('/');
-    }
-  };
-
-  const handleResync = () => {
-    toast({
-      title: t('settingsExtended.comingSoon'),
-      description: t('settingsExtended.resyncDesc'),
-    });
-  };
-
   const handleServerLogs = () => {
     toast({
       title: t('settingsExtended.comingSoon'),
@@ -74,26 +51,6 @@ export default function AdvancedSettingsPage() {
       <SettingsPageHeader title={t('settings.sidebar.advanced')} />
 
       <div className="divide-y divide-border">
-        {/* Privacy & Analytics */}
-        <SettingsSection
-          className="pt-0 pb-5 md:pb-8"
-          title={t('settings.privacy')}
-          description={t('settingsExtended.analyticsDesc')}
-        >
-          <Card className="p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">{t('settingsExtended.analytics')}</p>
-              </div>
-              <Switch
-                checked={analytics}
-                onCheckedChange={setAnalytics}
-                className="flex-shrink-0"
-              />
-            </div>
-          </Card>
-        </SettingsSection>
-
         {/* Backup & Restore */}
         <SettingsSection
           className="py-5 md:py-8"
@@ -181,46 +138,22 @@ export default function AdvancedSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
-                    <RefreshCw className="w-4 h-4" />
+                    <Terminal className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">
-                      {t('settingsExtended.resyncTransactions')}
-                    </p>
+                    <p className="font-medium text-sm">{t('settingsExtended.serverLogs')}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {t('settingsExtended.resyncDesc')}
+                      {t('settingsExtended.serverLogsDesc')}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={handleResync}
+                  onClick={handleServerLogs}
                   className="flex items-center text-muted-foreground hover:text-foreground"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
-              </div>
-              <div className="border-t border-border pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
-                      <Terminal className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{t('settingsExtended.serverLogs')}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {t('settingsExtended.serverLogsDesc')}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleServerLogs}
-                    className="flex items-center text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
               <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between">
@@ -258,35 +191,21 @@ export default function AdvancedSettingsPage() {
           description={t('settingsExtended.deleteAccountDesc')}
         >
           <Card className="p-4 md:p-6">
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setShowLogoutDialog(true)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-destructive"
-              >
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
-                  <LogOut className="w-4 h-4" />
-                </div>
-                <p className="font-medium text-sm">{t('settings.logout')}</p>
-              </button>
-              <div className="border-t border-border pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-destructive"
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
-                    <Trash2 className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium text-sm">{t('settings.deleteAccount')}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t('settingsExtended.deleteAccountDesc')}
-                    </p>
-                  </div>
-                </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteDialog(true)}
+              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-destructive"
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
+                <Trash2 className="w-4 h-4" />
               </div>
-            </div>
+              <div className="text-left">
+                <p className="font-medium text-sm">{t('settings.deleteAccount')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('settingsExtended.deleteAccountDesc')}
+                </p>
+              </div>
+            </button>
           </Card>
         </SettingsSection>
       </div>
@@ -304,24 +223,6 @@ export default function AdvancedSettingsPage() {
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleRestoreConfirm}>
               {t('settingsExtended.continue')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Logout Confirmation */}
-      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsExtended.logoutConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsExtended.logoutConfirmDesc')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogoutConfirm}>
-              {t('settings.logout')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

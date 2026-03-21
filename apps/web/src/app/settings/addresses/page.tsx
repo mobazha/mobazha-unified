@@ -9,6 +9,7 @@ import type { Address as ApiAddress, DisplayAddress, DisplayAddressUI } from '@m
 import { Plus, MapPin, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { AddressFormModal } from '@/components/Address';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export default function AddressesSettingsPage() {
   const { t } = useI18n();
@@ -99,25 +100,31 @@ export default function AddressesSettingsPage() {
         title={t('settings.sidebar.addresses')}
         description={t('settingsModal.addressesDescription')}
         actions={
-          <Button size="sm" onClick={() => setShowAddModal(true)} disabled={isSaving}>
-            <Plus className="w-4 h-4 mr-2" />
-            {t('address.addAddress')}
-          </Button>
+          addresses.length > 0 ? (
+            <Button size="sm" onClick={() => setShowAddModal(true)} disabled={isSaving}>
+              <Plus className="w-4 h-4 mr-2" />
+              {t('address.addAddress')}
+            </Button>
+          ) : undefined
         }
       />
 
-      <Card className="p-4 md:p-6">
-        {isLoading ? (
+      {isLoading ? (
+        <Card className="p-4 md:p-6">
           <div className="py-8 text-center">
             <Loader2 className="w-8 h-8 mx-auto text-muted-foreground animate-spin mb-4" />
             <p className="text-muted-foreground">{t('common.loading')}</p>
           </div>
-        ) : addresses.length === 0 ? (
-          <div className="py-8 text-center">
-            <MapPin className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
-            <p className="text-sm text-muted-foreground">{t('settingsExtended.noAddresses')}</p>
-          </div>
-        ) : (
+        </Card>
+      ) : addresses.length === 0 ? (
+        <EmptyState
+          icon={MapPin}
+          title={t('settingsExtended.noAddresses')}
+          description={t('me.addressesDesc')}
+          action={{ label: t('address.addAddress'), onClick: () => setShowAddModal(true) }}
+        />
+      ) : (
+        <Card className="p-4 md:p-6">
           <div className="space-y-3">
             {addresses.map(address => (
               <div
@@ -184,8 +191,8 @@ export default function AddressesSettingsPage() {
               </div>
             ))}
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Add Address Modal */}
       <AddressFormModal
