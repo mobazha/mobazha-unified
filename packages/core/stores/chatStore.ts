@@ -385,6 +385,18 @@ export const selectIsLoadingMessages = (roomId: string) => (state: ChatState) =>
 export const selectTotalUnreadCount = (state: ChatState) =>
   state.rooms.reduce((sum, room) => sum + room.unreadCount, 0);
 
+// 指定 peerID 的未读消息数（匹配 memberPeerIDs 中的值）
+export const selectUnreadCountByPeerID = (peerID: string | undefined) => (state: ChatState) => {
+  if (!peerID) return 0;
+  return state.rooms.reduce((sum, room) => {
+    const peerIDs = room.memberPeerIDs ? Object.values(room.memberPeerIDs) : [];
+    if (peerIDs.includes(peerID)) {
+      return sum + room.unreadCount;
+    }
+    return sum;
+  }, 0);
+};
+
 // 连接状态
 export const selectIsConnected = (state: ChatState) => state.isConnected;
 export const selectConnectionError = (state: ChatState) => state.connectionError;

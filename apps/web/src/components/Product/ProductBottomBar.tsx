@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Heart } from 'lucide-react';
 import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, useCartStore, useChatStore } from '@mobazha/core';
+import { useI18n, useCartStore, useChatStore, selectUnreadCountByPeerID } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 
 export interface ProductBottomBarProps {
@@ -42,6 +42,7 @@ export function ProductBottomBar({
   const addCartItem = useCartStore(state => state.addItem);
   const cartItemCount = useCartStore(state => state.getItemCount());
   const openChatDrawer = useChatStore(state => state.openDrawer);
+  const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(product?.vendorID?.peerID));
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
@@ -148,7 +149,7 @@ export function ProductBottomBar({
           {/* 消息按钮 */}
           <button
             onClick={handleMessage}
-            className="flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
+            className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
           >
             <svg
               className="w-5 h-5 text-muted-foreground"
@@ -166,6 +167,11 @@ export function ProductBottomBar({
             <span className="text-xs text-muted-foreground leading-tight">
               {t('profile.message')}
             </span>
+            {vendorUnreadCount > 0 && (
+              <span className="absolute top-0 right-0.5 min-w-[16px] h-[16px] bg-destructive text-white text-[9px] font-medium rounded-full flex items-center justify-center px-0.5">
+                {vendorUnreadCount > 99 ? '99+' : vendorUnreadCount}
+              </span>
+            )}
           </button>
 
           {/* 购物车按钮 */}

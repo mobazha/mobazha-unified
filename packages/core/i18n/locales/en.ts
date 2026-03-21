@@ -99,6 +99,8 @@ export const en: TranslationResource = {
     removing: 'Removing...',
     remove: 'Remove',
     loginRequired: 'Please log in to continue',
+    loginToSave: 'Sign in to save your favorites',
+    loginToSaveDesc: 'Create an account to save items to your wishlist and access them anytime.',
     backToHome: 'Back to Home',
     clearAll: 'Clear All',
     done: 'Done',
@@ -188,6 +190,7 @@ export const en: TranslationResource = {
     // Buttons
     login: 'Login',
     loginRegister: 'Login / Register',
+    createAccount: 'Create Account',
     signInToContinue: 'Please sign in to continue',
     // Error messages
     invalidCredentials: 'Invalid username or password',

@@ -7,7 +7,15 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
-import { getImageUrl, decodeHtmlEntities, sanitizeHtml, useI18n } from '@mobazha/core';
+import {
+  getImageUrl,
+  decodeHtmlEntities,
+  sanitizeHtml,
+  useI18n,
+  useCartStore,
+  useChatStore,
+  selectUnreadCountByPeerID,
+} from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 import {
   Heart,
@@ -91,6 +99,9 @@ export function ProductDetailMobile({
     t,
     router,
   } = useProductDetail({ slug, peerID, onProductLoaded });
+
+  const cartItemCount = useCartStore(state => state.getItemCount());
+  const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(vendorPeerID));
 
   // --- Loading ---
   if (isLoading) {
@@ -607,7 +618,7 @@ export function ProductDetailMobile({
             <div className="flex flex-shrink-0">
               <button
                 onClick={openChatDrawer}
-                className="flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
+                className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
               >
                 <svg
                   className="w-5 h-5 text-muted-foreground"
@@ -622,10 +633,15 @@ export function ProductDetailMobile({
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   />
                 </svg>
+                {vendorUnreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {vendorUnreadCount > 99 ? '99+' : vendorUnreadCount}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => router.push('/cart')}
-                className="flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
+                className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
               >
                 <svg
                   className="w-5 h-5 text-muted-foreground"
@@ -640,6 +656,11 @@ export function ProductDetailMobile({
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
+                {cartItemCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
               </button>
               {onToggleWishlist && (
                 <button

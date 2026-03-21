@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { useCart } from '@/hooks/useCart';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
-import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem, OrderItemOption } from '@mobazha/core';
@@ -247,8 +246,6 @@ export function CartMobile() {
     onClick: handleTGCheckout,
     visible: isTG && items.length > 0 && groups.length === 1,
   });
-
-  useTGBackButton({ visible: isTG });
 
   if (items.length === 0) {
     return (

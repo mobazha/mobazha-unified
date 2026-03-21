@@ -24,7 +24,6 @@ export {
   type UseRwaSellerConfirmReturn,
   type UseRwaSellerConfirmOptions,
 } from './useRwaSellerConfirm';
-export { useTGBackButton } from './useTGBackButton';
 export { useTGMainButton } from './useTGMainButton';
 export { useShare } from './useShare';
 export { useMiniAppPayment } from './useMiniAppPayment';

@@ -35,7 +35,7 @@ export const useWishlistStore = create<WishlistState>()(
           set({ items, isLoading: false, _fetched: true });
         } catch (error) {
           const msg = error instanceof Error ? error.message : 'Failed to fetch wishlist';
-          set({ error: msg, isLoading: false });
+          set({ error: msg, isLoading: false, _fetched: true });
         }
       },
 
