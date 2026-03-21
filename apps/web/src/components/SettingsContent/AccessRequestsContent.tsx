@@ -209,13 +209,13 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
           </div>
         )}
 
-        <div className="border-b border-border">
-          <div className="flex gap-6">
+        <div className="border-b border-border overflow-x-auto -mx-4 px-4 md:-mx-6 md:px-6 scrollbar-hide">
+          <div className="flex gap-4 md:gap-6 min-w-max">
             {tabs.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => handleTabChange(tab.key)}
-                className={`relative py-3 text-sm font-medium transition-colors ${
+                className={`relative py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab.key
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -224,7 +224,7 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
                 {tab.label}
                 {tab.count > 0 && (
                   <span
-                    className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${
+                    className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
                       activeTab === tab.key
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
@@ -282,8 +282,8 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
                 />
               ))
             ) : (
-              <div className="p-8 text-center rounded-lg border border-border">
-                <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <div className="py-12 text-center">
+                <Inbox className="w-12 h-12 mx-auto text-muted-foreground/60 mb-4" />
                 <p className="text-muted-foreground">{t('storeAccess.noAccessList')}</p>
               </div>
             )}
@@ -306,8 +306,8 @@ export const AccessRequestsContent: React.FC<AccessRequestsContentProps> = ({
                 />
               ))
             ) : (
-              <div className="p-8 text-center rounded-lg border border-border">
-                <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <div className="py-12 text-center">
+                <Inbox className="w-12 h-12 mx-auto text-muted-foreground/60 mb-4" />
                 <p className="text-muted-foreground">{t('settings.accessControl.noRequests')}</p>
               </div>
             )}
