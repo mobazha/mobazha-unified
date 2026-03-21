@@ -15,9 +15,9 @@
     "types": ["chrome", "node"],
     "paths": {
       "@/*": ["../web/src/*"],
-      "@mobazha/core": ["../../packages/core"],
+      "@mobazha/core": ["../../packages/core/index.ts"],
       "@mobazha/core/*": ["../../packages/core/*"],
-      "@mobazha/ui": ["../../packages/ui"],
+      "@mobazha/ui": ["../../packages/ui/index.ts"],
       "@mobazha/ui/*": ["../../packages/ui/*"],
       "next/link": ["../web/src/compat/link.tsx"],
       "next/navigation": ["../web/src/compat/navigation.tsx"],
