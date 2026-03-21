@@ -10,18 +10,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './app/globals.css';
 
 // 导入 Provider 组件
-import {
-  ThemeProvider,
-  AppKitProvider,
-  CurrencyProvider,
-  AuthProvider,
-  ServiceWorkerProvider,
-  TGMiniAppProvider,
-  MobileNav,
-  ChatSystem,
-  PWAInstall,
-} from '@/components';
-import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
+import { AuthProvider, MobileNav, ChatSystem, PWAInstall } from '@/components';
+import { OuterProviders } from '@/components/OuterProviders';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 
@@ -86,23 +76,13 @@ const router = createBrowserRouter([
   },
 ]);
 
-// 应用根组件 - 不使用路由 hooks 的 Provider 放在外层
+// 应用根组件 — OuterProviders 与 layout.tsx 共享同一组件，保证 Provider 树一致
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TGMiniAppProvider>
-          <DiscordActivityProvider>
-            <ServiceWorkerProvider>
-              <AppKitProvider>
-                <CurrencyProvider>
-                  <RouterProvider router={router} />
-                </CurrencyProvider>
-              </AppKitProvider>
-            </ServiceWorkerProvider>
-          </DiscordActivityProvider>
-        </TGMiniAppProvider>
-      </ThemeProvider>
+      <OuterProviders>
+        <RouterProvider router={router} />
+      </OuterProviders>
     </QueryClientProvider>
   );
 }
