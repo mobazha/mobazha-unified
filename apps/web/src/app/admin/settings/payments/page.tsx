@@ -82,7 +82,7 @@ export default function AdminPaymentsPage() {
         backHref="/admin/settings"
       />
 
-      <div className="space-y-10">
+      <div className="space-y-6 md:space-y-10">
         <CryptoReceivingSection />
 
         <div className="border-t border-border" />

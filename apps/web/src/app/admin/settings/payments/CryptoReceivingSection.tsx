@@ -736,7 +736,9 @@ export const CryptoReceivingSection: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-foreground">{t('receivingAccounts.title')}</h2>
+          <h2 className="text-base font-semibold text-foreground">
+            {t('receivingAccounts.title')}
+          </h2>
           <p className="text-sm text-muted-foreground mt-1">{t('receivingAccounts.subtitle')}</p>
         </div>
         {!showForm && cryptoAccounts.length > 0 && (
