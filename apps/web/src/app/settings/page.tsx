@@ -48,15 +48,12 @@ export default function SettingsPage() {
   const { t } = useI18n();
   const router = useRouter();
 
-  // 桌面端：跳转到 general 设置页
   useEffect(() => {
-    const checkAndRedirect = () => {
-      if (window.innerWidth >= 1024) {
-        router.replace('/settings/general');
-      }
-    };
-
-    checkAndRedirect();
+    if (window.innerWidth >= 1024) {
+      router.replace('/settings/general');
+    } else {
+      router.replace('/me');
+    }
   }, [router]);
 
   // 移动端显示分类列表（点击打开 Drawer）

@@ -91,11 +91,11 @@ export const TEST_ENV: EnvConfig = {
     redirectPath: '/',
   },
   api: {
-    baseUrl: 'https://miniapptest.mobazha.org', // 基础 URL，用于 /platform/*
-    gateway: 'https://miniapptest.mobazha.org/v1', // 节点 API，用于 /v1/*
-    search: 'https://miniapptest.mobazha.org/info',
-    mbzGateway: 'https://miniapptest.mobazha.org/info/v1',
-    websocket: 'wss://miniapptest.mobazha.org/ws',
+    baseUrl: 'https://miniappdev.mobazha.org', // 基础 URL，用于 /platform/*
+    gateway: 'https://miniappdev.mobazha.org/v1', // 节点 API，用于 /v1/*
+    search: 'https://miniappdev.mobazha.org/info',
+    mbzGateway: 'https://miniappdev.mobazha.org/info/v1',
+    websocket: 'wss://miniappdev.mobazha.org/ws',
   },
 };
 

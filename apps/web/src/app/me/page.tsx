@@ -26,22 +26,25 @@ import { ApiError } from '@mobazha/core/services/api';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import {
-  Settings,
   Heart,
   Bell,
   Moon,
   HelpCircle,
   LogOut,
-  Wallet,
   ChevronRight,
   LogIn,
-  PieChart,
   LayoutDashboard,
-  MessageCircle,
   Store,
   ShieldQuestion,
   CheckCircle2,
   Loader2,
+  Settings,
+  User,
+  Link2,
+  MapPin,
+  Lock,
+  Ban,
+  Wrench,
 } from 'lucide-react';
 
 interface FeatureItemProps {
@@ -87,6 +90,131 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     {children}
   </h3>
 );
+
+// --- Inline Settings (replaces Settings intermediate page on mobile) ---
+const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated }) => {
+  const { t } = useI18n();
+  const { isDark, toggleDarkMode } = useTheme();
+
+  return (
+    <>
+      {authenticated && (
+        <>
+          <SectionLabel>{t('me.sectionAccount')}</SectionLabel>
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <FeatureItem
+              icon={<User className="w-5 h-5" />}
+              title={t('settings.sidebar.profile') || t('settings.sidebar.page')}
+              description={t('me.profileDesc')}
+              href="/settings/page-profile"
+            />
+            <FeatureItem
+              icon={<Link2 className="w-5 h-5" />}
+              title={t('settings.sidebar.account')}
+              description={t('me.linkedAccountsDesc')}
+              href="/settings/account"
+            />
+          </div>
+        </>
+      )}
+
+      {authenticated && (
+        <>
+          <SectionLabel>{t('me.sectionActivity')}</SectionLabel>
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <FeatureItem
+              icon={<Heart className="w-5 h-5" />}
+              title={t('me.wishlist')}
+              description={t('me.wishlistDesc')}
+              href="/wishlist"
+            />
+            <FeatureItem
+              icon={<Bell className="w-5 h-5" />}
+              title={t('me.notifications')}
+              description={t('me.notificationsDesc')}
+              href="/notifications"
+            />
+          </div>
+        </>
+      )}
+
+      <SectionLabel>{t('me.sectionPreferences')}</SectionLabel>
+      <div className="bg-card rounded-xl border overflow-hidden">
+        <FeatureItem
+          icon={<Settings className="w-5 h-5" />}
+          title={t('settings.sidebar.general')}
+          description={t('settingsExtended.generalDesc')}
+          href="/settings/general"
+        />
+        <div className="flex items-center gap-3 py-3 px-3 min-h-[52px]">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+            <Moon className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{t('me.appearance')}</p>
+            <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
+          </div>
+          <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
+        </div>
+        {authenticated && (
+          <FeatureItem
+            icon={<MapPin className="w-5 h-5" />}
+            title={t('settings.sidebar.addresses')}
+            description={t('me.addressesDesc')}
+            href="/settings/addresses"
+          />
+        )}
+      </div>
+
+      {authenticated && (
+        <>
+          <SectionLabel>{t('me.sectionPrivacy')}</SectionLabel>
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <FeatureItem
+              icon={<Lock className="w-5 h-5" />}
+              title={t('settings.sidebar.chatEncryption')}
+              description={t('me.chatEncryptionDesc')}
+              href="/settings/chat-encryption"
+            />
+            <FeatureItem
+              icon={<Ban className="w-5 h-5" />}
+              title={t('settings.sidebar.blocked')}
+              description={t('me.blockedDesc')}
+              href="/settings/blocked"
+            />
+          </div>
+
+          <SectionLabel>{t('me.sectionMore')}</SectionLabel>
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <FeatureItem
+              icon={<Wrench className="w-5 h-5" />}
+              title={t('settings.sidebar.advanced')}
+              description={t('me.advancedDesc')}
+              href="/settings/advanced"
+            />
+            <FeatureItem
+              icon={<HelpCircle className="w-5 h-5" />}
+              title={t('me.support')}
+              description={t('me.supportDesc')}
+              href="/support"
+            />
+          </div>
+        </>
+      )}
+
+      {!authenticated && (
+        <div className="bg-card rounded-xl border overflow-hidden">
+          <FeatureItem
+            icon={<HelpCircle className="w-5 h-5" />}
+            title={t('me.support')}
+            description={t('me.supportDesc')}
+            href="/support"
+          />
+        </div>
+      )}
+    </>
+  );
+};
 
 // --- Store Claim Banner (MA-2.4) ---
 const StoreClaimBanner: React.FC<{ onClaimed: () => void }> = ({ onClaimed }) => {
@@ -207,7 +335,6 @@ export default function MePage() {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureBuyer } = useUserContext();
-  const { isDark, toggleDarkMode } = useTheme();
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
   const {
     role,
@@ -282,31 +409,7 @@ export default function MePage() {
               )}
             </div>
 
-            {/* Settings (always visible) */}
-            <div className="bg-card rounded-xl border overflow-hidden">
-              <FeatureItem
-                icon={<Settings className="w-5 h-5" />}
-                title={t('settings.title')}
-                description={t('me.settingsDesc')}
-                href="/settings"
-              />
-              <div className="flex items-center gap-3 p-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <Moon className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{t('me.appearance')}</p>
-                  <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
-                </div>
-                <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
-              </div>
-              <FeatureItem
-                icon={<HelpCircle className="w-5 h-5" />}
-                title={t('me.support')}
-                description={t('me.supportDesc')}
-                href="/support"
-              />
-            </div>
+            <InlineSettings authenticated={false} />
 
             <div className="h-20 md:hidden" />
           </VStack>
@@ -376,31 +479,7 @@ export default function MePage() {
               </div>
             </Link>
 
-            {/* Settings */}
-            <div className="bg-card rounded-xl border overflow-hidden">
-              <FeatureItem
-                icon={<Settings className="w-5 h-5" />}
-                title={t('settings.title')}
-                description={t('me.settingsDesc')}
-                href="/settings"
-              />
-              <div className="flex items-center gap-3 p-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <Moon className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{t('me.appearance')}</p>
-                  <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
-                </div>
-                <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
-              </div>
-              <FeatureItem
-                icon={<HelpCircle className="w-5 h-5" />}
-                title={t('me.support')}
-                description={t('me.supportDesc')}
-                href="/support"
-              />
-            </div>
+            <InlineSettings authenticated={true} />
 
             {/* Logout */}
             <Button
@@ -514,73 +593,7 @@ export default function MePage() {
               </Link>
             )}
 
-          {/* Feature list */}
-          {isAuthenticated && (
-            <div className="bg-card rounded-xl border overflow-hidden">
-              {!isEmbeddedApp && (
-                <FeatureItem
-                  icon={<Wallet className="w-5 h-5" />}
-                  title={t('me.receivingAccounts')}
-                  description={t('me.receivingAccountsDesc')}
-                  href="/wallet"
-                />
-              )}
-              {!isEmbeddedApp && (
-                <FeatureItem
-                  icon={<PieChart className="w-5 h-5" />}
-                  title={t('userMenu.rwaAssets')}
-                  description={t('me.rwaAssetsDescription')}
-                  href="/rwa-dashboard"
-                />
-              )}
-              <FeatureItem
-                icon={<Heart className="w-5 h-5" />}
-                title={t('me.wishlist')}
-                description={t('me.wishlistDesc')}
-                href="/wishlist"
-              />
-              {isEmbeddedApp && !isTGMiniApp && (
-                <FeatureItem
-                  icon={<MessageCircle className="w-5 h-5" />}
-                  title={t('me.myChats')}
-                  description={t('me.myChatsDesc')}
-                  href="/chat"
-                />
-              )}
-              <FeatureItem
-                icon={<Bell className="w-5 h-5" />}
-                title={t('me.notifications')}
-                description={t('me.notificationsDesc')}
-                href="/notifications"
-              />
-            </div>
-          )}
-
-          {/* Settings */}
-          <div className="bg-card rounded-xl border overflow-hidden">
-            <FeatureItem
-              icon={<Settings className="w-5 h-5" />}
-              title={t('settings.title')}
-              description={t('me.settingsDesc')}
-              href="/settings"
-            />
-            <div className="flex items-center gap-3 p-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Moon className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{t('me.appearance')}</p>
-                <p className="text-xs text-muted-foreground">{t('me.darkModeDesc')}</p>
-              </div>
-              <Switch checked={isDark} onCheckedChange={() => toggleDarkMode()} />
-            </div>
-            <FeatureItem
-              icon={<HelpCircle className="w-5 h-5" />}
-              title={t('me.support')}
-              description={t('me.supportDesc')}
-              href="/support"
-            />
-          </div>
+          <InlineSettings authenticated={isAuthenticated} />
 
           {/* Unclaimed store — interactive claim flow (MA-2.4) */}
           {isAuthenticated && isEmbeddedApp && storeClaimed === false && (
