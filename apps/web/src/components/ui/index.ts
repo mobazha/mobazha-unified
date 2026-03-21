@@ -20,6 +20,7 @@ export * from './separator';
 export * from './avatar';
 export * from './badge';
 export * from './alert-dialog';
+export * from './confirm-dialog';
 export * from './popover';
 export * from './accordion';
 export * from './textarea';

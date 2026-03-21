@@ -2,17 +2,8 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  useToast,
-} from '@/components/ui';
+import { useToast } from '@/components/ui';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useI18n } from '@mobazha/core';
 import { ChevronRight, Download, Upload, Terminal, Trash2 } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
@@ -210,50 +201,31 @@ export default function AdvancedSettingsPage() {
         </SettingsSection>
       </div>
 
-      {/* Restore Confirmation */}
-      <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsExtended.restoreConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsExtended.restoreConfirmDesc')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestoreConfirm}>
-              {t('settingsExtended.continue')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showRestoreDialog}
+        onOpenChange={setShowRestoreDialog}
+        title={t('settingsExtended.restoreConfirmTitle')}
+        description={t('settingsExtended.restoreConfirmDesc')}
+        confirmLabel={t('settingsExtended.continue')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleRestoreConfirm}
+      />
 
-      {/* Delete Account Confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsExtended.deleteConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsExtended.deleteConfirmDesc')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setShowDeleteDialog(false);
-                toast({
-                  title: t('settingsExtended.comingSoon'),
-                  description: t('settingsExtended.deleteAccountDesc'),
-                });
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {t('settings.deleteAccount')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title={t('settingsExtended.deleteConfirmTitle')}
+        description={t('settingsExtended.deleteConfirmDesc')}
+        confirmLabel={t('settings.deleteAccount')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        onConfirm={() => {
+          toast({
+            title: t('settingsExtended.comingSoon'),
+            description: t('settingsExtended.deleteAccountDesc'),
+          });
+        }}
+      />
     </div>
   );
 }

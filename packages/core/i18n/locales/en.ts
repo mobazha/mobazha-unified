@@ -451,6 +451,7 @@ export const en: TranslationResource = {
     total: 'Total',
     checkout: 'Checkout',
     loginToCheckout: 'Login to Checkout',
+    registerToCheckout: 'Register to Checkout',
     remove: 'Remove',
     decreaseQuantity: 'Decrease quantity',
     increaseQuantity: 'Increase quantity',
