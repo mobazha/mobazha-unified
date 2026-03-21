@@ -78,10 +78,8 @@ export function AdminHeader({ title }: AdminHeaderProps) {
 
       <div className="flex items-center gap-2">
         <NotificationDropdown />
-        <div className="hidden sm:flex items-center gap-2">
-          <LanguageSwitcher compact />
-          <ThemeSwitcher compact />
-        </div>
+        <LanguageSwitcher compact />
+        <ThemeSwitcher compact />
 
         {profile && (
           <div className="ml-2 pl-2 border-l border-border">
