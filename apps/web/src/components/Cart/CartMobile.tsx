@@ -10,7 +10,8 @@ import { useTGMainButton } from '@/hooks/useTGMainButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem, OrderItemOption } from '@mobazha/core';
-import { useI18n, type TranslateFunction } from '@mobazha/core';
+import { useI18n, useUserStore, type TranslateFunction } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
@@ -138,6 +139,7 @@ function SwipeableCartItem({
 
 function VendorSection({
   group,
+  isSingleVendor,
   onCheckout,
   onRemove,
   onUpdateQuantity,
@@ -148,6 +150,7 @@ function VendorSection({
   checkoutLabel,
 }: {
   group: VendorGroup;
+  isSingleVendor: boolean;
   onCheckout: (g: VendorGroup) => void;
   onRemove: (slug: string, vendorPeerID: string, options?: OrderItemOption[]) => void;
   onUpdateQuantity: (
@@ -199,7 +202,7 @@ function VendorSection({
         })}
       </div>
 
-      {/* Vendor checkout */}
+      {/* Vendor subtotal / checkout */}
       <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between">
         <div className="text-sm">
           <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
@@ -207,13 +210,15 @@ function VendorSection({
             {renderPairedPrice(group.subtotal, group.currency)}
           </span>
         </div>
-        <Button
-          size="sm"
-          className="touch-feedback h-9 px-4 text-sm"
-          onClick={() => onCheckout(group)}
-        >
-          {checkoutLabel}
-        </Button>
+        {!isSingleVendor && (
+          <Button
+            size="sm"
+            className="touch-feedback h-9 px-4 text-sm"
+            onClick={() => onCheckout(group)}
+          >
+            {checkoutLabel}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -236,6 +241,13 @@ export function CartMobile() {
   } = useCart();
 
   const { isAvailable: isTG } = useTGMiniApp();
+  const { isTGMiniApp, isEmbeddedApp } = usePlatform();
+  const isAuthenticated = useUserStore(state => state.isAuthenticated);
+
+  const effectiveCheckoutLabel =
+    !isAuthenticated && (isTGMiniApp || isEmbeddedApp)
+      ? t('cart.registerToCheckout')
+      : checkoutLabel;
 
   const handleTGCheckout = useCallback(() => {
     if (groups.length === 1) handleCheckout(groups[0]);
@@ -293,6 +305,7 @@ export function CartMobile() {
             <VendorSection
               key={group.vendorPeerID}
               group={group}
+              isSingleVendor={groups.length === 1}
               onCheckout={handleCheckout}
               onRemove={removeItem}
               onUpdateQuantity={updateQuantity}
@@ -300,37 +313,28 @@ export function CartMobile() {
               renderPrice={renderPairedPrice}
               t={t}
               renderPairedPrice={renderPairedPrice}
-              checkoutLabel={checkoutLabel}
+              checkoutLabel={effectiveCheckoutLabel}
             />
           ))}
-        </div>
-
-        <div className="mt-4 text-center">
-          <Link href="/">
-            <Button variant="ghost" className="text-sm touch-feedback">
-              {t('cart.continueShopping')}
-            </Button>
-          </Link>
         </div>
       </div>
 
       {/* Fixed bottom bar — hidden in TG (MainButton replaces it) */}
       {!isTG && (
-        <div className="fixed bottom-0 inset-x-0 bg-background border-t border-border px-4 py-3 pb-safe z-40">
+        <div className="fixed bottom-0 inset-x-0 bg-background border-t border-border px-4 py-2.5 pb-safe z-40">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs text-muted-foreground">{t('cart.total')}</span>
-              <div className="text-lg font-bold text-foreground">
+              <div className="text-lg font-bold text-primary">
                 {renderPairedPrice(totalAmount, defaultCurrency)}
               </div>
             </div>
             {groups.length === 1 && (
               <Button
-                size="lg"
-                className="touch-feedback h-12 px-8 text-base"
+                className="touch-feedback h-11 px-6 text-[15px] font-medium"
                 onClick={() => handleCheckout(groups[0])}
               >
-                {checkoutLabel}
+                {effectiveCheckoutLabel}
               </Button>
             )}
           </div>

@@ -30,16 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -298,33 +289,22 @@ export default function AdminProductsPage() {
 
   return (
     <div data-testid="admin-products">
-      {/* Delete confirmation dialog */}
-      <AlertDialog
+      <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={open => {
           if (!open) setDeleteTarget(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('admin.products.delete')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget?.type === 'bulk'
-                ? t('admin.products.bulkDeleteConfirm', { count: selectedSlugs.size })
-                : t('admin.products.deleteConfirm')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {t('admin.products.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={t('admin.products.delete')}
+        description={
+          deleteTarget?.type === 'bulk'
+            ? t('admin.products.bulkDeleteConfirm', { count: selectedSlugs.size })
+            : t('admin.products.deleteConfirm')
+        }
+        confirmLabel={t('admin.products.delete')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">

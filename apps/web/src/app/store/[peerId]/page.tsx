@@ -17,16 +17,7 @@ import { Input } from '@/components/ui/input';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui';
 import {
   profileApi,
@@ -1638,39 +1629,26 @@ export default function StorePage() {
         </DialogContent>
       </Dialog>
 
-      {/* 删除商品确认对话框 */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('listingCard.confirmDelete.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('listingCard.confirmDelete.body')}
-              {productToDelete && (
-                <span className="block mt-2 font-medium text-foreground">
-                  &quot;{productToDelete.title}&quot;
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                  {t('common.deleting')}
-                </span>
-              ) : (
-                t('common.delete')
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={t('listingCard.confirmDelete.title')}
+        description={
+          <>
+            {t('listingCard.confirmDelete.body')}
+            {productToDelete && (
+              <span className="block mt-2 font-medium text-foreground">
+                &quot;{productToDelete.title}&quot;
+              </span>
+            )}
+          </>
+        }
+        confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* Image Crop Dialog */}
       {cropDialogSrc && cropTarget && (

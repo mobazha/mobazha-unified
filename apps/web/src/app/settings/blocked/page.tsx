@@ -4,21 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  useToast,
-} from '@/components/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, useToast } from '@/components/ui';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { socialApi, useI18n } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
@@ -239,25 +226,19 @@ export default function BlockedSettingsPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!unblockTarget} onOpenChange={() => setUnblockTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settingsModal.unblockConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settingsModal.unblockConfirmDesc', {
-                name: unblockTarget?.name || truncatePeerId(unblockTarget?.peerId || ''),
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnblock} disabled={isUnblocking}>
-              {isUnblocking && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {t('settingsModal.unblock')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!unblockTarget}
+        onOpenChange={() => setUnblockTarget(null)}
+        title={t('settingsModal.unblockConfirmTitle')}
+        description={t('settingsModal.unblockConfirmDesc', {
+          name: unblockTarget?.name || truncatePeerId(unblockTarget?.peerId || ''),
+        })}
+        confirmLabel={t('settingsModal.unblock')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        isLoading={isUnblocking}
+        onConfirm={handleUnblock}
+      />
     </div>
   );
 }

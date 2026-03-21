@@ -6,20 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Loader2, Plus, Users, AlertCircle } from 'lucide-react';
@@ -388,30 +376,17 @@ export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
-      <AlertDialog
+      <ConfirmDialog
         open={deleteGroupId !== null}
         onOpenChange={open => !open && setDeleteGroupId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settings.accessControl.deleteUserGroup')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('settings.accessControl.deleteUserGroupConfirm')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={saving}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteGroupConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={saving}
-            >
-              {saving ? t('common.deleting') : t('common.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={t('settings.accessControl.deleteUserGroup')}
+        description={t('settings.accessControl.deleteUserGroupConfirm')}
+        confirmLabel={saving ? t('common.deleting') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        isLoading={saving}
+        onConfirm={handleDeleteGroupConfirm}
+      />
     </>
   );
 };
