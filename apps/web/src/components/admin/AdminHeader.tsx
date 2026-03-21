@@ -17,7 +17,8 @@ import {
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { NotificationDropdown } from '../Notification';
-import { ArrowLeft, Eye, User, LogOut } from 'lucide-react';
+import { ArrowLeft, Eye, User, LogOut, MessageSquare } from 'lucide-react';
+import { useAIChatStore } from '@mobazha/core/stores';
 
 interface AdminHeaderProps {
   title?: string;
@@ -28,6 +29,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const { t } = useI18n();
   const { profile, logout } = useUserStore();
   const standaloneMode = isStandalone();
+  const toggleAIChat = useAIChatStore(s => s.toggle);
 
   const handleLogout = () => {
     logout();
@@ -86,8 +88,18 @@ export function AdminHeader({ title }: AdminHeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={toggleAIChat}
+          className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          aria-label={t('ai.openAssistant')}
+          data-testid="admin-header-ai-chat"
+        >
+          <MessageSquare className="w-4 h-4" />
+        </button>
         <NotificationDropdown />
-        <LanguageSwitcher compact />
+        <div className="hidden md:block">
+          <LanguageSwitcher compact />
+        </div>
         <ThemeSwitcher compact />
 
         {profile && (

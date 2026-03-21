@@ -230,7 +230,7 @@ export function AIChatPanel() {
     return (
       <button
         onClick={toggle}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+        className="hidden md:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg items-center justify-center hover:opacity-90 transition-opacity"
         aria-label={t('ai.openAssistant')}
       >
         <MessageSquare className="w-5 h-5" />

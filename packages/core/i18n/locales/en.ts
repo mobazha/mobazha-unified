@@ -2129,6 +2129,7 @@ export const en: TranslationResource = {
     enableProtection: 'Enable Protection',
     disableProtection: 'Disable Protection',
     fee: 'Fee',
+    verified: 'Verified',
     // Payment page
     noOrderID: 'No order ID provided',
     loadOrderFailed: 'Failed to load order details',

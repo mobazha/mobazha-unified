@@ -15,7 +15,14 @@ import {
   useToast,
   Skeleton,
 } from '@/components/ui';
-import { useI18n, useShippingProfiles, createEmptyProfile, getAllZones, useCurrency, profileApi } from '@mobazha/core';
+import {
+  useI18n,
+  useShippingProfiles,
+  createEmptyProfile,
+  getAllZones,
+  useCurrency,
+  profileApi,
+} from '@mobazha/core';
 import type { ShippingProfile, ShippingZone, ShippingLocation } from '@mobazha/core';
 import { Plus, Truck, FolderOpen, MapPin, AlertTriangle, RefreshCw } from 'lucide-react';
 import { VStack, HStack } from '@/components/layouts';
@@ -306,9 +313,12 @@ export function ShippingSettingsContent() {
 
   const [sellerCountry, setSellerCountry] = useState<string | undefined>();
   useEffect(() => {
-    profileApi.getSettings().then(s => {
-      if (s?.country) setSellerCountry(s.country);
-    }).catch(() => {});
+    profileApi
+      .getSettings()
+      .then(s => {
+        if (s?.country) setSellerCountry(s.country);
+      })
+      .catch(() => {});
   }, []);
 
   const [showProfileEditor, setShowProfileEditor] = useState(false);
@@ -612,15 +622,6 @@ export function ShippingSettingsContent() {
 
         {/* Profiles section */}
         <div>
-          {hasProfiles && !isLoading && (
-            <div className="flex justify-end mb-4">
-              <Button onClick={handleCreateProfile} size="sm">
-                <Plus className="w-4 h-4 mr-1" />
-                {t('shipping.addProfile')}
-              </Button>
-            </div>
-          )}
-
           {isLoading ? (
             <LoadingSkeleton />
           ) : hasProfiles ? (
@@ -692,6 +693,15 @@ export function ShippingSettingsContent() {
                   </div>
                 );
               })}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-dashed"
+                onClick={handleCreateProfile}
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                {t('shipping.addProfile')}
+              </Button>
             </VStack>
           ) : (
             <EmptyState
@@ -706,44 +716,51 @@ export function ShippingSettingsContent() {
         {/* Locations section */}
         {hasProfiles && (
           <div>
-            <div className="mb-4">
-              <h2 className="text-base font-semibold">{t('shipping.shippingLocations')}</h2>
-              <p className="text-sm text-muted-foreground mt-1">{t('shipping.noLocationsDesc')}</p>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-base font-semibold">{t('shipping.shippingLocations')}</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('shipping.noLocationsDesc')}
+                </p>
+              </div>
+              {locations.length > 0 && (
+                <Button
+                  onClick={handleAddLocation}
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  {t('shipping.addLocation')}
+                </Button>
+              )}
             </div>
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Button onClick={handleAddLocation} size="sm" variant="outline">
+
+            {locations.length === 0 ? (
+              <div className="py-12 text-center">
+                <MapPin className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground mb-4">
+                  {t('shipping.noLocationsDesc')}
+                </p>
+                <Button onClick={handleAddLocation} variant="outline" size="sm">
                   <Plus className="w-4 h-4 mr-1" />
                   {t('shipping.addLocation')}
                 </Button>
               </div>
-
-              {locations.length === 0 ? (
-                <Card className="p-4 md:p-6">
-                  <VStack gap="sm" align="center" className="text-center">
-                    <MapPin className="w-10 h-10 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">{t('shipping.noLocationsDesc')}</p>
-                    <Button onClick={handleAddLocation} variant="outline" size="sm">
-                      <Plus className="w-4 h-4 mr-1" />
-                      {t('shipping.addLocation')}
-                    </Button>
-                  </VStack>
-                </Card>
-              ) : (
-                <VStack gap="md">
-                  {locations.map(location => (
-                    <ShippingLocationCard
-                      key={location.id}
-                      location={location}
-                      onEdit={() => handleEditLocation(location)}
-                      onDelete={() => handleDeleteLocationClick(location)}
-                      onSetDefault={() => handleSetDefaultLocation(location.id)}
-                      disabled={isSaving}
-                    />
-                  ))}
-                </VStack>
-              )}
-            </div>
+            ) : (
+              <VStack gap="md">
+                {locations.map(location => (
+                  <ShippingLocationCard
+                    key={location.id}
+                    location={location}
+                    onEdit={() => handleEditLocation(location)}
+                    onDelete={() => handleDeleteLocationClick(location)}
+                    onSetDefault={() => handleSetDefaultLocation(location.id)}
+                    disabled={isSaving}
+                  />
+                ))}
+              </VStack>
+            )}
           </div>
         )}
       </div>

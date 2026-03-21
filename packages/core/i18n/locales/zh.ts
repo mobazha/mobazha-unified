@@ -1992,6 +1992,7 @@ export const zh: TranslationResource = {
     enableProtection: '启用保护',
     disableProtection: '关闭保护',
     fee: '费率',
+    verified: '已认证',
     waitingForConfirmation: '等待区块链确认中...',
     completing: '支付处理中',
     finalizingOrder: '正在完成订单...',
