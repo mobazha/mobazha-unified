@@ -56,6 +56,7 @@ export { QueryProvider } from './QueryProvider';
 
 // Platform Provider
 export { TGMiniAppProvider, useTGMiniApp } from './TGMiniAppProvider';
+export { OuterProviders } from './OuterProviders';
 
 // Access Control Components
 export { StoreAccessGuard } from './StoreAccessGuard';

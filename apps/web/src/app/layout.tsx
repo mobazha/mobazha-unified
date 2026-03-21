@@ -2,22 +2,17 @@ import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import {
-  AppKitProvider,
   AuthProvider,
-  CurrencyProvider,
   MainContent,
   MobileNav,
   NonEmbedUI,
   PWAInstall,
   QueryProvider,
-  ServiceWorkerProvider,
   SessionExpiredDialog,
-  TGMiniAppProvider,
-  ThemeProvider,
 } from '@/components';
+import { OuterProviders } from '@/components/OuterProviders';
 import { ChatSystemLazy } from '@/components/ChatSystem';
 import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
-import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
@@ -119,39 +114,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${defaultFont.className} ${storeFontVariableClasses}`}>
         <QueryProvider>
-          <ThemeProvider>
-            <TGMiniAppProvider>
-              <DiscordActivityProvider>
-                <ServiceWorkerProvider>
-                  <AppKitProvider>
-                    <CurrencyProvider>
-                      <Suspense fallback={<AuthProviderLoading />}>
-                        <AuthProvider>
-                          <ProductModalProvider>
-                            <PaymentSelectorProvider>
-                              <StandaloneThemeWrapper>
-                                <MainContent>{children}</MainContent>
+          <OuterProviders>
+            <Suspense fallback={<AuthProviderLoading />}>
+              <AuthProvider>
+                <ProductModalProvider>
+                  <PaymentSelectorProvider>
+                    <StandaloneThemeWrapper>
+                      <MainContent>{children}</MainContent>
 
-                                <NonEmbedUI>
-                                  <MobileNav />
-                                  <ChatSystemLazy />
-                                  <PWAInstall />
-                                  <SessionExpiredDialog />
-                                </NonEmbedUI>
+                      <NonEmbedUI>
+                        <MobileNav />
+                        <ChatSystemLazy />
+                        <PWAInstall />
+                        <SessionExpiredDialog />
+                      </NonEmbedUI>
 
-                                {/* Toast notifications */}
-                                <Toaster />
-                              </StandaloneThemeWrapper>
-                            </PaymentSelectorProvider>
-                          </ProductModalProvider>
-                        </AuthProvider>
-                      </Suspense>
-                    </CurrencyProvider>
-                  </AppKitProvider>
-                </ServiceWorkerProvider>
-              </DiscordActivityProvider>
-            </TGMiniAppProvider>
-          </ThemeProvider>
+                      {/* Toast notifications */}
+                      <Toaster />
+                    </StandaloneThemeWrapper>
+                  </PaymentSelectorProvider>
+                </ProductModalProvider>
+              </AuthProvider>
+            </Suspense>
+          </OuterProviders>
         </QueryProvider>
       </body>
     </html>
