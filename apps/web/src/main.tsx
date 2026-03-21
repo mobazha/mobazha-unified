@@ -16,10 +16,12 @@ import {
   CurrencyProvider,
   AuthProvider,
   ServiceWorkerProvider,
+  TGMiniAppProvider,
   MobileNav,
   ChatSystem,
   PWAInstall,
 } from '@/components';
+import { DiscordActivityProvider } from '@/components/DiscordActivityProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 
@@ -89,13 +91,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <ServiceWorkerProvider>
-          <AppKitProvider>
-            <CurrencyProvider>
-              <RouterProvider router={router} />
-            </CurrencyProvider>
-          </AppKitProvider>
-        </ServiceWorkerProvider>
+        <TGMiniAppProvider>
+          <DiscordActivityProvider>
+            <ServiceWorkerProvider>
+              <AppKitProvider>
+                <CurrencyProvider>
+                  <RouterProvider router={router} />
+                </CurrencyProvider>
+              </AppKitProvider>
+            </ServiceWorkerProvider>
+          </DiscordActivityProvider>
+        </TGMiniAppProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
