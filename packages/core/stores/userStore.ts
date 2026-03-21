@@ -847,50 +847,65 @@ export const useUserStore = create<UserState>()(
 
 // 401 interceptor: attempt Mini App re-auth before falling back to forceLogout.
 // Returns true if the token was refreshed (request will be retried automatically).
+let _handlingUnauthorized = false;
 const handleUnauthorized = async (): Promise<boolean> => {
+  // Re-entrancy guard: signinTelegram/signinDiscord themselves use `request()`
+  // which can 401 and re-trigger this handler → infinite loop.
+  if (_handlingUnauthorized) return false;
+
   const state = useUserStore.getState();
 
-  if (state.authSource === 'telegram') {
-    try {
-      const tgWebApp = (window as unknown as Record<string, unknown>).Telegram as
-        | { WebApp?: { initData?: string } }
-        | undefined;
-      const initData = tgWebApp?.WebApp?.initData;
-      if (initData) {
-        const { signinTelegram } = await import('../services/auth/miniAppAuth');
-        const token = await signinTelegram(initData, false);
-        if (token) {
-          await state.loginMiniApp(token, 'telegram');
-          return true;
-        }
-      }
-    } catch {
-      // Re-auth failed — fall through to forceLogout
-    }
+  // Anonymous Mini App users are EXPECTED to get 401 on protected endpoints.
+  // Do NOT attempt re-auth — just let the caller handle it gracefully.
+  if (state.isAnonymousMiniAppUser) {
+    return false;
   }
 
-  if (state.authSource === 'discord') {
-    try {
-      // Discord access_token is saved to sessionStorage by AuthProvider (URL is lost after navigation)
-      const accessToken =
-        typeof sessionStorage !== 'undefined'
-          ? sessionStorage.getItem('discord_access_token')
-          : null;
-      if (accessToken) {
-        const { signinDiscord } = await import('../services/auth/miniAppAuth');
-        const token = await signinDiscord(accessToken, false);
-        if (token) {
-          await state.loginMiniApp(token, 'discord');
-          return true;
+  _handlingUnauthorized = true;
+  try {
+    if (state.authSource === 'telegram') {
+      try {
+        const tgWebApp = (window as unknown as Record<string, unknown>).Telegram as
+          | { WebApp?: { initData?: string } }
+          | undefined;
+        const initData = tgWebApp?.WebApp?.initData;
+        if (initData) {
+          const { signinTelegram } = await import('../services/auth/miniAppAuth');
+          const token = await signinTelegram(initData, false);
+          if (token) {
+            await state.loginMiniApp(token, 'telegram');
+            return true;
+          }
         }
+      } catch {
+        // Re-auth failed — fall through to forceLogout
       }
-    } catch {
-      // Re-auth failed — fall through to forceLogout
     }
-  }
 
-  state.forceLogout();
-  return false;
+    if (state.authSource === 'discord') {
+      try {
+        const accessToken =
+          typeof sessionStorage !== 'undefined'
+            ? sessionStorage.getItem('discord_access_token')
+            : null;
+        if (accessToken) {
+          const { signinDiscord } = await import('../services/auth/miniAppAuth');
+          const token = await signinDiscord(accessToken, false);
+          if (token) {
+            await state.loginMiniApp(token, 'discord');
+            return true;
+          }
+        }
+      } catch {
+        // Re-auth failed — fall through to forceLogout
+      }
+    }
+
+    state.forceLogout();
+    return false;
+  } finally {
+    _handlingUnauthorized = false;
+  }
 };
 onUnauthorized(handleUnauthorized);
 onOpenApiUnauthorized(handleUnauthorized as () => void);

@@ -25,6 +25,7 @@ export function ProtectedRoute({ children, redirectTo = '/login', fallback }: Pr
   const { shouldRedirect, shouldPromptRegister, isSessionRestored, isLoading, isAuthenticated } =
     useAuthGuard(location.pathname);
   const { t } = useI18n();
+
   const hasRedirected = useRef(false);
   const hasPrompted = useRef(false);
   const [showGate, setShowGate] = useState(false);
@@ -62,6 +63,13 @@ export function ProtectedRoute({ children, redirectTo = '/login', fallback }: Pr
     if (!isSessionRestored) return;
 
     if (shouldRedirect && !hasRedirected.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const _win = typeof window !== 'undefined' ? (window as any) : undefined;
+      const inTMA = !!(_win?.Telegram || _win?.__EMBEDDED_APP__);
+      if (inTMA) {
+        // Never redirect to /login in TMA — treat as registration prompt
+        return;
+      }
       hasRedirected.current = true;
       navigate(redirectTo, {
         replace: true,

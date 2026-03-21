@@ -42,7 +42,7 @@ function detectPlatform(): PlatformType {
     (globalThis as any).chrome?.runtime?.id
   )
     return 'extension';
-  if (win.Telegram?.WebApp || win.Telegram) return 'telegram';
+  if (win.Telegram?.WebApp || win.Telegram || win.__EMBEDDED_APP__) return 'telegram';
   if (win.__DISCORD_EMBEDDED__ || new URLSearchParams(window.location.search).has('frame_id'))
     return 'discord';
   if (win.__FARCASTER_FRAME__ || window.location.ancestorOrigins?.[0]?.includes('warpcast'))
@@ -123,6 +123,23 @@ export function usePlatform(): PlatformInfo {
       isTouchDevice,
       shouldUseMobileView,
     ]
+  );
+}
+
+/**
+ * Synchronous, non-reactive check for embedded app runtime.
+ * Use as a safety guard where React state might lag (SSR hydration, useEffect race).
+ */
+export function isEmbeddedRuntime(): boolean {
+  if (typeof window === 'undefined') return false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as any;
+  return !!(
+    win.Telegram?.WebApp ||
+    win.Telegram ||
+    win.__DISCORD_EMBEDDED__ ||
+    win.__FARCASTER_FRAME__ ||
+    win.__EMBEDDED_APP__
   );
 }
 

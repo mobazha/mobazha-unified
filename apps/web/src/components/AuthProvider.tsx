@@ -104,8 +104,14 @@ export function AuthProvider({
     prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated, isInitialized]);
 
-  // Detect Mini App platform (non-reactive, determined at mount)
-  const isTGMiniApp = tg.isAvailable;
+  // Detect Mini App platform (non-reactive, determined at mount).
+  // __EMBEDDED_APP__ is set synchronously in index.html when window.Telegram
+  // exists, providing a reliable fallback even if the TG SDK hasn't fully
+  // initialized by the time this component mounts.
+  const isTGMiniApp =
+    tg.isAvailable ||
+    (typeof window !== 'undefined' &&
+      !!(window as unknown as Record<string, unknown>).__EMBEDDED_APP__);
   const isDiscordActivity = discord.isAvailable;
   const isMiniApp = isTGMiniApp || isDiscordActivity;
 
@@ -140,6 +146,14 @@ export function AuthProvider({
     let credential: string | null = null;
     if (isTGMiniApp) {
       credential = tg.initData;
+      // Fallback: TGMiniAppProvider context may not have initialized yet
+      // (SDK loaded via document.write but useState ran before context propagated).
+      // Read directly from the global if the context value is empty.
+      if (!credential) {
+        const wa = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram
+          ?.WebApp;
+        credential = wa?.initData || null;
+      }
     } else {
       // SDK flow stores token in context + sessionStorage; URL fallback for legacy
       credential =
@@ -187,7 +201,15 @@ export function AuthProvider({
       enterAnonymousMode(platform as 'telegram' | 'discord');
       return true;
     }
-  }, [isMiniApp, isTGMiniApp, tg.initData, tg.initDataUnsafe, discord.accessToken, loginMiniApp, enterAnonymousMode]);
+  }, [
+    isMiniApp,
+    isTGMiniApp,
+    tg.initData,
+    tg.initDataUnsafe,
+    discord.accessToken,
+    loginMiniApp,
+    enterAnonymousMode,
+  ]);
 
   // 处理 OAuth 回调（在任何页面都可能发生）
   useEffect(() => {
@@ -236,7 +258,6 @@ export function AuthProvider({
       if (!hasOAuthCallback() && !isProcessingOAuth) {
         hasRestoredSession.current = true;
 
-        // Mini App environments use platform credentials instead of stored tokens
         if (isMiniApp) {
           await handleMiniAppAuth();
         } else {

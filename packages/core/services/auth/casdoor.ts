@@ -134,6 +134,10 @@ export function getSignupUrl(redirectUri?: string): string {
 
 /**
  * 发起 OAuth2 登录（跳转到 Casdoor）
+ *
+ * Embedded apps (TMA / Discord / Farcaster) use platform-native auth
+ * (`initData` / access_token) and must never be redirected to Casdoor.
+ * The guard lives here (not only at call sites) as defense-in-depth.
  */
 export function startCasdoorLogin(): void {
   if (typeof window === 'undefined') {
@@ -141,17 +145,26 @@ export function startCasdoorLogin(): void {
     return;
   }
 
-  // Only save redirect path if login page hasn't already set an explicit one
-  // (e.g. /login?redirect=%2Fadmin sets login_redirect=/admin before this runs)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as any;
+  if (
+    win.Telegram?.WebApp ||
+    win.Telegram ||
+    win.__DISCORD_EMBEDDED__ ||
+    win.__FARCASTER_FRAME__ ||
+    win.__EMBEDDED_APP__
+  ) {
+    console.warn('[startCasdoorLogin] BLOCKED: embedded app detected — use platform-native auth');
+    return;
+  }
+
   if (!sessionStorage.getItem('login_redirect')) {
     const currentPath = window.location.pathname + window.location.search;
     const cleanPath = currentPath.replace(/[?&](code|state)=[^&]*/g, '').replace(/\?$/, '');
     sessionStorage.setItem('login_redirect', cleanPath || '/');
   }
 
-  console.log('🔐 Redirecting to Casdoor login...');
-  const signinUrl = getSigninUrl();
-  window.location.href = signinUrl;
+  window.location.href = getSigninUrl();
 }
 
 /**
