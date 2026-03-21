@@ -112,7 +112,7 @@ const FIAT_SYMBOLS: Record<string, string> = {
   AUD: 'A$',
 };
 
-function formatDisplayPrice(price: ProductListItem['price']): string {
+function formatDisplayPrice(price?: ProductListItem['price']): string {
   if (!price?.amount) return '';
   const divisibility = price.currency?.divisibility ?? 2;
   const displayAmount = price.amount / Math.pow(10, divisibility);

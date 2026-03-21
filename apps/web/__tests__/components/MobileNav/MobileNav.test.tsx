@@ -106,7 +106,7 @@ describe('MobileNav', () => {
       const nav = screen.getByTestId('mobile-nav');
       expect(nav).toBeInTheDocument();
       expect(screen.getByTestId('mobile-nav-home')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-nav-orders')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-nav-purchases')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-nav-cart')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-nav-chat')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-nav-title')).toBeInTheDocument();
@@ -119,11 +119,11 @@ describe('MobileNav', () => {
       expect(homeLink.className).toContain('text-primary');
     });
 
-    it('highlights orders tab when on /orders', () => {
+    it('highlights purchases tab when on /orders', () => {
       mockPathname = '/orders';
       render(<MobileNav />);
-      const ordersLink = screen.getByTestId('mobile-nav-orders');
-      expect(ordersLink.className).toContain('text-primary');
+      const purchasesLink = screen.getByTestId('mobile-nav-purchases');
+      expect(purchasesLink.className).toContain('text-primary');
     });
   });
 });

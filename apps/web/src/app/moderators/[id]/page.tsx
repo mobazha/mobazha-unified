@@ -59,10 +59,10 @@ We believe in fair and impartial mediation. Every dispute is carefully reviewed,
   contactInfo: {
     email: 'support@trustguard.mod',
     website: 'https://trustguard.mod',
-    social: {
-      twitter: '@trustguard_mod',
-      telegram: '@trustguard_support',
-    },
+    social: [
+      { type: 'twitter', username: '@trustguard_mod' },
+      { type: 'telegram', username: '@trustguard_support' },
+    ],
   },
   createdAt: '2022-03-15',
 };
