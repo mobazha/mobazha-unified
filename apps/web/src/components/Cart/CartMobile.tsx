@@ -2,13 +2,15 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MobilePageHeader } from '@/components';
 import { Button } from '@/components/ui/button';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { useCart } from '@/hooks/useCart';
+import { useCart, buildCheckoutUrl } from '@/hooks/useCart';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
 import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
+import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem, OrderItemOption } from '@mobazha/core';
 import { useI18n, useUserStore, type TranslateFunction } from '@mobazha/core';
@@ -241,18 +243,34 @@ export function CartMobile() {
     renderPairedPrice,
   } = useCart();
 
+  const router = useRouter();
   const { isAvailable: isTG } = useTGMiniApp();
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
+  const { promptRegister } = useMiniAppRegister();
 
   const effectiveCheckoutLabel =
     !isAuthenticated && (isTGMiniApp || isEmbeddedApp)
       ? t('cart.registerToCheckout')
       : checkoutLabel;
 
+  const handleCheckoutWithAuth = useCallback(
+    async (group: VendorGroup) => {
+      if (!isAuthenticated && (isTGMiniApp || isEmbeddedApp)) {
+        const action = await promptRegister();
+        if (action !== 'register') return;
+        const url = buildCheckoutUrl(group.items, group.vendorPeerID);
+        router.push(url);
+        return;
+      }
+      handleCheckout(group);
+    },
+    [isAuthenticated, isTGMiniApp, isEmbeddedApp, promptRegister, handleCheckout, router]
+  );
+
   const handleTGCheckout = useCallback(() => {
-    if (groups.length === 1) handleCheckout(groups[0]);
-  }, [groups, handleCheckout]);
+    if (groups.length === 1) handleCheckoutWithAuth(groups[0]);
+  }, [groups, handleCheckoutWithAuth]);
 
   useTGMainButton({
     text: `${t('cart.checkout')} (${renderPairedPrice(totalAmount, defaultCurrency)})`,
@@ -309,7 +327,7 @@ export function CartMobile() {
               key={group.vendorPeerID}
               group={group}
               isSingleVendor={groups.length === 1}
-              onCheckout={handleCheckout}
+              onCheckout={handleCheckoutWithAuth}
               onRemove={removeItem}
               onUpdateQuantity={updateQuantity}
               getThumbUrl={getThumbUrl}
@@ -335,7 +353,7 @@ export function CartMobile() {
             {groups.length === 1 && (
               <Button
                 className="touch-feedback h-11 px-6 text-[15px] font-medium"
-                onClick={() => handleCheckout(groups[0])}
+                onClick={() => handleCheckoutWithAuth(groups[0])}
               >
                 {effectiveCheckoutLabel}
               </Button>
