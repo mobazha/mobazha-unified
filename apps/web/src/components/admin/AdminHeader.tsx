@@ -44,7 +44,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
 
   return (
     <header
-      className="h-14 border-b border-border bg-background/95 backdrop-blur-sm flex items-center justify-between px-4 shrink-0"
+      className="h-14 border-b border-border bg-background/95 backdrop-blur-sm flex items-center justify-between px-4 shrink-0 relative z-50"
       data-testid="admin-header"
     >
       <div className="flex items-center gap-3">
