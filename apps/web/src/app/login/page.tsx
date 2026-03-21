@@ -14,6 +14,7 @@ import {
   isBasic,
   isStandalone,
 } from '@mobazha/core';
+import { usePlatform, isEmbeddedRuntime } from '@mobazha/ui/hooks';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { Lock, User } from 'lucide-react';
 
@@ -71,6 +72,7 @@ function LoginPageContent() {
   const { login, loginWithOAuth, loginStandalone, isAuthenticated, isLoading, error } =
     useUserStore();
   const { t } = useI18n();
+  const { isEmbeddedApp } = usePlatform();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -106,7 +108,6 @@ function LoginPageContent() {
     if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
       hasSavedRedirect.current = true;
       setLoginRedirectPath(redirect);
-      console.log('📝 Saved redirect path:', redirect);
     }
   }, [searchParams]);
 
@@ -154,15 +155,21 @@ function LoginPageContent() {
     }
 
     // 托管模式：自动跳转到 Casdoor（无中间界面）
+    // TMA/嵌入式应用不走 Casdoor OAuth 重定向，直接回首页由原生认证流程处理
     if (isHosted() && !isAuthenticated && !isProcessing && !hasRedirectedToCasdoor.current) {
       hasRedirectedToCasdoor.current = true;
-      // eslint-disable-next-line no-console
-      console.log('🔐 Hosted mode: Redirecting to Casdoor...');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const _win = window as any;
+      const embedded =
+        isEmbeddedApp || isEmbeddedRuntime() || !!_win.Telegram || !!_win.__EMBEDDED_APP__;
+      if (embedded) {
+        router.replace('/');
+        return;
+      }
       startCasdoorLogin();
-      // 注意：跳转后页面会离开，不需要设置 isHostedInitializing
       return;
     }
-  }, [isAuthenticated, isProcessing, router, loginWithOAuth, searchParams, t]);
+  }, [isAuthenticated, isProcessing, router, loginWithOAuth, searchParams, t, isEmbeddedApp]);
 
   // Basic Auth 登录处理
   const handleBasicLogin = async (e: React.FormEvent) => {
@@ -437,6 +444,13 @@ function LoginPageContent() {
         </div>
       </div>
     );
+  }
+
+  // Embedded apps (TMA/Discord) should never see the login page UI.
+  // If we reach here, the useEffect redirect hasn't fired yet — push home.
+  if (isEmbeddedApp || isEmbeddedRuntime()) {
+    router.replace('/');
+    return <LoginPageLoading />;
   }
 
   // 托管模式但没有自动跳转（可能是用户手动访问）：显示跳转按钮

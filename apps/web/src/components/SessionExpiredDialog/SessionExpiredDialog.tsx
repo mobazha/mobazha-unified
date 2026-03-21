@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore, useI18n } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -22,16 +23,16 @@ import {
 export function SessionExpiredDialog() {
   const router = useRouter();
   const { t } = useI18n();
+  const { isEmbeddedApp } = usePlatform();
 
   const sessionExpired = useUserStore(state => state.sessionExpired);
   const logout = useUserStore(state => state.logout);
 
   const handleReLogin = useCallback(() => {
-    // 清除所有认证状态
     logout();
-    // 重定向到登录页
-    router.replace('/login');
-  }, [logout, router]);
+    // TMA/嵌入式应用回首页，由原生认证流程重新处理；Web 跳登录页
+    router.replace(isEmbeddedApp ? '/' : '/login');
+  }, [logout, router, isEmbeddedApp]);
 
   if (!sessionExpired) return null;
 

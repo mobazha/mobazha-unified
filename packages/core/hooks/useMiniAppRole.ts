@@ -39,7 +39,11 @@ interface UseMiniAppRoleResult {
 
 export function useMiniAppRole(isMiniApp: boolean): UseMiniAppRoleResult {
   const { isAuthenticated, isAnonymousMiniAppUser } = useUserStore();
-  const [role, setRole] = useState<MiniAppRole | null>(null);
+  const [role, setRole] = useState<MiniAppRole | null>(() => {
+    if (!isMiniApp) return null;
+    if (!isAuthenticated) return 'anonymous';
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [storeClaimed, setStoreClaimed] = useState<boolean | null>(null);
   const [fetchKey, setFetchKey] = useState(0);

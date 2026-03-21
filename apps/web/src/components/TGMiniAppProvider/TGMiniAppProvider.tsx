@@ -164,7 +164,7 @@ interface TGMiniAppProviderProps {
 
 function initWebApp(): TGWebApp | null {
   if (typeof window === 'undefined') return null;
-  const wa = (window as unknown as { Telegram?: { WebApp?: TGWebApp } }).Telegram?.WebApp;
+  const wa = (window as unknown as { Telegram?: { WebApp?: TGWebApp } }).Telegram?.WebApp ?? null;
   if (!wa) return null;
   wa.ready?.();
   wa.expand?.();
@@ -172,7 +172,16 @@ function initWebApp(): TGWebApp | null {
 }
 
 export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
-  const [webApp] = useState<TGWebApp | null>(initWebApp);
+  const [webApp, setWebApp] = useState<TGWebApp | null>(initWebApp);
+
+  // Re-check after mount: if the SDK loaded between the initial useState call
+  // and this effect (possible in some WebViews where document.write timing varies),
+  // pick it up now rather than staying stuck with null forever.
+  useEffect(() => {
+    if (webApp) return;
+    const wa = initWebApp();
+    if (wa) setWebApp(wa); // eslint-disable-line react-hooks/set-state-in-effect -- syncing with external Telegram SDK on window
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const expand = useCallback(() => webApp?.expand?.(), [webApp]);
   const close = useCallback(() => webApp?.close?.(), [webApp]);

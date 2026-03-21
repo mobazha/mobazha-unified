@@ -23,8 +23,9 @@ import {
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
-import { usePlatform } from '@mobazha/ui/hooks';
+import { usePlatform, isEmbeddedRuntime } from '@mobazha/ui/hooks';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
+import { useToast } from '@/components/ui/use-toast';
 import {
   Heart,
   Bell,
@@ -342,11 +343,14 @@ export default function MePage() {
   } = useMiniAppRole(isEmbeddedApp);
   const { promptRegister } = useMiniAppRegister();
 
+  const { toast } = useToast();
   const standaloneMode = isStandalone();
 
   const handleLogout = () => {
     logout();
-    if (isHosted()) {
+    if (isTGMiniApp || isEmbeddedApp || isEmbeddedRuntime()) {
+      router.push('/');
+    } else if (isHosted()) {
       startCasdoorLogin();
     } else {
       router.push('/');
@@ -354,7 +358,9 @@ export default function MePage() {
   };
 
   const handleLogin = () => {
-    if (isHosted()) {
+    if (isTGMiniApp || isEmbeddedApp || isEmbeddedRuntime()) {
+      router.push('/');
+    } else if (isHosted()) {
       startCasdoorLogin();
     } else {
       router.push('/login');
@@ -365,6 +371,14 @@ export default function MePage() {
     const action = await promptRegister();
     if (action === 'register') {
       router.refresh();
+    } else if (action === 'error') {
+      toast({
+        title: t('me.registrationFailedTitle', { defaultValue: 'Registration failed' }),
+        description: t('me.registrationFailedDesc', {
+          defaultValue: 'Please check your network and try again.',
+        }),
+        variant: 'destructive',
+      });
     }
   };
 

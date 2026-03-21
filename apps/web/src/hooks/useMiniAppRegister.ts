@@ -5,7 +5,7 @@ import { useUserStore } from '@mobazha/core';
 import { registerTelegram, registerDiscord } from '@mobazha/core';
 import { useTGMiniApp } from '../components/TGMiniAppProvider/TGMiniAppProvider';
 
-export type RegisterAction = 'register' | 'bind' | 'cancel';
+export type RegisterAction = 'register' | 'bind' | 'cancel' | 'error';
 
 interface UseMiniAppRegisterOptions {
   onBindRequested?: () => void;
@@ -76,7 +76,7 @@ export function useMiniAppRegister(options?: UseMiniAppRegisterOptions) {
       if (buttonId === 'register') {
         tg.haptic?.impactOccurred('medium');
         const success = await doRegister();
-        return success ? 'register' : 'cancel';
+        return success ? 'register' : 'error';
       }
 
       if (buttonId === 'bind') {
@@ -95,7 +95,7 @@ export function useMiniAppRegister(options?: UseMiniAppRegisterOptions) {
     if (confirmed) {
       tg.haptic?.impactOccurred('medium');
       const success = await doRegister();
-      return success ? 'register' : 'cancel';
+      return success ? 'register' : 'error';
     }
 
     return 'cancel';

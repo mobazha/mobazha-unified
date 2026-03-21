@@ -43,6 +43,7 @@ import {
   ClipboardList,
   Store,
 } from 'lucide-react';
+import { usePlatform } from '@mobazha/ui/hooks';
 import { NotificationDropdown } from '../Notification';
 import { WalletConnectButton } from '../Wallet';
 import { CartDrawer } from '../CartDrawer';
@@ -53,6 +54,7 @@ export const Header: React.FC = () => {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
+  const { isEmbeddedApp } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
@@ -338,8 +340,9 @@ export const Header: React.FC = () => {
                 className="gap-2"
                 data-testid="header-login-btn"
                 onClick={() => {
-                  // hosted 模式直接跳转 Casdoor，无需中间页
-                  if (isHosted()) {
+                  if (isEmbeddedApp) {
+                    router.push('/');
+                  } else if (isHosted()) {
                     startCasdoorLogin();
                   } else {
                     router.push('/login');

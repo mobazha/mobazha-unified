@@ -20,14 +20,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
-    <!-- Telegram Mini App SDK — loaded only inside Telegram WebView.
-         window.Telegram is injected by Telegram before any scripts run;
-         usePlatform useEffect re-detects if SDK arrives late. -->
+    <!-- Telegram Mini App SDK — loaded SYNCHRONOUSLY inside Telegram WebView.
+         window.Telegram is injected by Telegram before any scripts run.
+         We use document.write to load the SDK synchronously so that
+         window.Telegram.WebApp is available before React mounts
+         (createElement+appendChild is async and causes race conditions). -->
     <script>
-      if (window.Telegram) {
-        var s = document.createElement('script');
-        s.src = 'https://telegram.org/js/telegram-web-app.js';
-        document.head.appendChild(s);
+      var _tg = window.Telegram;
+      var _hash = location.hash || '';
+      var _hasTgHash = _hash.indexOf('tgWebAppData') !== -1;
+      if (_tg || _hasTgHash) {
+        window.__EMBEDDED_APP__ = true;
+        document.write('<scr' + 'ipt src="https://telegram.org/js/telegram-web-app.js"></scr' + 'ipt>');
       }
     </script>
     
