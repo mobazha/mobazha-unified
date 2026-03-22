@@ -35,6 +35,8 @@ interface RichTextEditorProps {
   minHeight?: number;
   /** CSS class name */
   className?: string;
+  /** Compact mode: smaller toolbar for mobile */
+  compact?: boolean;
 }
 
 interface ToolbarButton {
@@ -54,6 +56,7 @@ export function RichTextEditor({
   placeholder,
   minHeight = 200,
   className = '',
+  compact = false,
 }: RichTextEditorProps) {
   const { t } = useI18n();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -196,41 +199,43 @@ export function RichTextEditor({
     [handleInput]
   );
 
+  const iconSize = compact ? 'w-3.5 h-3.5' : 'w-4 h-4';
+
   const toolbarButtons: ToolbarButton[] = [
-    { command: 'bold', icon: <Bold className="w-4 h-4" />, label: 'Bold' },
-    { command: 'italic', icon: <Italic className="w-4 h-4" />, label: 'Italic' },
+    { command: 'bold', icon: <Bold className={iconSize} />, label: 'Bold' },
+    { command: 'italic', icon: <Italic className={iconSize} />, label: 'Italic' },
     {
       command: 'formatBlock',
-      icon: <Heading2 className="w-4 h-4" />,
+      icon: <Heading2 className={iconSize} />,
       label: 'Heading 2',
       value: 'h2',
     },
     {
       command: 'formatBlock',
-      icon: <Heading3 className="w-4 h-4" />,
+      icon: <Heading3 className={iconSize} />,
       label: 'Heading 3',
       value: 'h3',
     },
     {
       command: 'insertUnorderedList',
-      icon: <List className="w-4 h-4" />,
+      icon: <List className={iconSize} />,
       label: 'Bullet List',
     },
     {
       command: 'insertOrderedList',
-      icon: <ListOrdered className="w-4 h-4" />,
+      icon: <ListOrdered className={iconSize} />,
       label: 'Numbered List',
     },
     {
       command: 'formatBlock',
-      icon: <Quote className="w-4 h-4" />,
+      icon: <Quote className={iconSize} />,
       label: 'Blockquote',
       value: 'blockquote',
     },
-    { command: 'code', icon: <Code className="w-4 h-4" />, label: 'Code' },
-    { command: 'link', icon: <LinkIcon className="w-4 h-4" />, label: 'Link' },
-    { command: 'undo', icon: <Undo className="w-4 h-4" />, label: 'Undo' },
-    { command: 'redo', icon: <Redo className="w-4 h-4" />, label: 'Redo' },
+    { command: 'code', icon: <Code className={iconSize} />, label: 'Code' },
+    { command: 'link', icon: <LinkIcon className={iconSize} />, label: 'Link' },
+    { command: 'undo', icon: <Undo className={iconSize} />, label: 'Undo' },
+    { command: 'redo', icon: <Redo className={iconSize} />, label: 'Redo' },
   ];
 
   const handleToolbarClick = useCallback(
@@ -259,13 +264,15 @@ export function RichTextEditor({
         } ${className}`}
       >
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/30">
+        <div
+          className={`flex flex-wrap items-center gap-0.5 ${compact ? 'px-1.5 py-1' : 'px-2 py-1.5'} border-b border-border bg-muted/30`}
+        >
           {toolbarButtons.map((btn, i) => (
             <button
               key={`${btn.command}-${btn.value || i}`}
               type="button"
               onClick={() => handleToolbarClick(btn)}
-              className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className={`${compact ? 'p-1' : 'p-1.5'} rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors`}
               title={btn.label}
               aria-label={btn.label}
             >
@@ -277,7 +284,9 @@ export function RichTextEditor({
         {/* Editor */}
         <div className="relative">
           {showPlaceholder && !isFocused && (
-            <div className="absolute inset-0 px-4 py-3 text-muted-foreground pointer-events-none">
+            <div
+              className={`absolute inset-0 ${compact ? 'px-3 py-2 text-sm' : 'px-4 py-3'} text-muted-foreground pointer-events-none`}
+            >
               {placeholder || t('listing.descriptionPlaceholder')}
             </div>
           )}
@@ -288,7 +297,7 @@ export function RichTextEditor({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onPaste={handlePaste}
-            className="px-4 py-3 bg-background text-foreground focus:outline-none prose prose-sm max-w-none dark:prose-invert"
+            className={`${compact ? 'px-3 py-2' : 'px-4 py-3'} bg-background text-foreground focus:outline-none prose prose-sm max-w-none dark:prose-invert`}
             style={{ minHeight }}
             role="textbox"
             aria-multiline="true"

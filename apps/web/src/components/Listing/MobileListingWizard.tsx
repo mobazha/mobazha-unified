@@ -132,6 +132,7 @@ export function MobileListingWizard({
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const [currentStep, setCurrentStep] = useState<WizardStep>('essentials');
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const currentIndex = STEPS.indexOf(currentStep);
   const isFirstStep = currentIndex === 0;
@@ -163,28 +164,45 @@ export function MobileListingWizard({
 
   const goNext = useCallback(() => {
     if (!isLastStep && validateStep()) {
+      setPublishError(null);
       setCurrentStep(STEPS[currentIndex + 1]);
     }
   }, [currentIndex, isLastStep, validateStep]);
 
   const goPrev = useCallback(() => {
-    if (!isFirstStep) setCurrentStep(STEPS[currentIndex - 1]);
+    if (!isFirstStep) {
+      setPublishError(null);
+      setCurrentStep(STEPS[currentIndex - 1]);
+    }
   }, [currentIndex, isFirstStep]);
 
   const handleSubmit = useCallback(() => {
+    setPublishError(null);
+
     if (!validate()) {
-      const stepForError: [keyof FormErrors, WizardStep][] = [
-        ['title', 'essentials'],
-        ['price', 'essentials'],
-        ['images', 'media'],
-        ['shipping', 'details'],
+      const errorChecks: { check: boolean; step: WizardStep; label: string }[] = [
+        { check: !formData.title.trim(), step: 'essentials', label: t('listing.title') },
+        {
+          check: !formData.price || parseFloat(formData.price) <= 0,
+          step: 'essentials',
+          label: t('listing.price'),
+        },
+        { check: formData.images.length === 0, step: 'media', label: t('listing.photos') },
       ];
-      const firstErrorStep = stepForError.find(([key]) => errors[key])?.[1] || 'essentials';
-      setCurrentStep(firstErrorStep);
+      const firstError = errorChecks.find(e => e.check);
+      if (firstError) {
+        setPublishError(
+          t('listing.mobile.requiredMissing', {
+            field: firstError.label,
+            defaultValue: `${firstError.label} is required`,
+          })
+        );
+        setCurrentStep(firstError.step);
+      }
       return;
     }
     onSubmit();
-  }, [validate, onSubmit, errors]);
+  }, [validate, onSubmit, formData.title, formData.price, formData.images.length, t]);
 
   const normalizeTag = useCallback((input: string) => {
     return input
@@ -230,17 +248,44 @@ export function MobileListingWizard({
   }, []);
 
   const reviewChecklist = useMemo(() => {
-    const items: { label: string; done: boolean }[] = [
-      { label: t('listing.title'), done: formData.title.trim().length > 0 },
-      { label: t('listing.price'), done: formData.price !== '' && formData.price !== '0' },
-      { label: t('listing.photos'), done: formData.images.length > 0 },
-      { label: t('listing.tags'), done: formData.tags.length > 0 },
-      { label: t('listing.productType'), done: !!formData.productType },
+    const items: { label: string; done: boolean; required: boolean; step: WizardStep }[] = [
+      {
+        label: t('listing.title'),
+        done: formData.title.trim().length > 0,
+        required: true,
+        step: 'essentials',
+      },
+      {
+        label: t('listing.price'),
+        done: formData.price !== '' && formData.price !== '0',
+        required: true,
+        step: 'essentials',
+      },
+      {
+        label: t('listing.photos'),
+        done: formData.images.length > 0,
+        required: true,
+        step: 'media',
+      },
+      {
+        label: t('listing.tags'),
+        done: formData.tags.length > 0,
+        required: false,
+        step: 'details',
+      },
+      {
+        label: t('listing.productType'),
+        done: !!formData.productType,
+        required: false,
+        step: 'details',
+      },
     ];
     if (formData.contractType === 'PHYSICAL_GOOD') {
       items.push({
         label: t('listing.tabs.shipping'),
         done: !!formData.shippingProfile,
+        required: false,
+        step: 'details',
       });
     }
     if (formData.contractType === 'RWA_TOKEN') {
@@ -248,10 +293,14 @@ export function MobileListingWizard({
         {
           label: t('listing.tokenAddress', { defaultValue: 'Token Address' }),
           done: !!formData.tokenAddress?.trim(),
+          required: true,
+          step: 'details',
         },
         {
           label: t('listing.blockchain', { defaultValue: 'Blockchain' }),
           done: !!formData.blockchain,
+          required: true,
+          step: 'details',
         }
       );
     }
@@ -293,33 +342,43 @@ export function MobileListingWizard({
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar + step labels */}
         <div
           role="progressbar"
           aria-valuenow={currentIndex + 1}
           aria-valuemin={1}
           aria-valuemax={STEPS.length}
           aria-label={`${stepLabels[currentStep]} (${currentIndex + 1}/${STEPS.length})`}
-          className="flex gap-1 px-4 pb-2"
+          className="px-4 pb-2"
         >
-          {STEPS.map((step, i) => (
-            <div
-              key={step}
-              className={cn(
-                'h-1 flex-1 rounded-full transition-colors',
-                i <= currentIndex ? 'bg-primary' : 'bg-muted'
-              )}
-            />
-          ))}
-        </div>
-        <div className="px-4 pb-2">
-          <span className="text-xs text-muted-foreground">
-            {t('listing.mobile.stepOf', {
-              current: currentIndex + 1,
-              total: STEPS.length,
-            })}{' '}
-            &middot; {stepLabels[currentStep]}
-          </span>
+          <div className="flex gap-1 mb-1.5">
+            {STEPS.map((step, i) => (
+              <div
+                key={step}
+                className={cn(
+                  'h-1 flex-1 rounded-full transition-colors',
+                  i <= currentIndex ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            ))}
+          </div>
+          <div className="flex gap-1">
+            {STEPS.map((step, i) => (
+              <span
+                key={step}
+                className={cn(
+                  'flex-1 text-center text-[10px] leading-tight transition-colors',
+                  i === currentIndex
+                    ? 'text-primary font-medium'
+                    : i < currentIndex
+                      ? 'text-muted-foreground'
+                      : 'text-muted-foreground/50'
+                )}
+              >
+                {stepLabels[step]}
+              </span>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -342,6 +401,7 @@ export function MobileListingWizard({
             {formData.contractType !== 'RWA_TOKEN' ? (
               <>
                 <BasicInfoSection
+                  compact
                   title={formData.title}
                   shortDescription={formData.shortDescription}
                   description={formData.description}
@@ -611,10 +671,10 @@ export function MobileListingWizard({
 
         {/* Step 4: Review */}
         {currentStep === 'review' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Preview card */}
             <Card className="overflow-hidden">
-              <div className="aspect-[16/10] bg-muted relative">
+              <div className="aspect-[16/9] bg-muted relative">
                 {formData.images[0] ? (
                   <img
                     src={getPreviewImageUrl(formData.images[0])}
@@ -625,15 +685,15 @@ export function MobileListingWizard({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <Eye className="w-10 h-10" />
+                    <Eye className="w-8 h-8" />
                   </div>
                 )}
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-foreground text-lg line-clamp-2">
+              <div className="p-3">
+                <h3 className="font-medium text-foreground text-base line-clamp-2">
                   {formData.title || t('listing.productTitle')}
                 </h3>
-                <p className="text-primary font-bold text-xl mt-1">
+                <p className="text-primary font-bold text-lg mt-0.5">
                   {formData.price
                     ? formatPrice(
                         Number(formData.price),
@@ -642,7 +702,7 @@ export function MobileListingWizard({
                     : formatPrice(0, formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY)}
                 </p>
                 {formData.shortDescription && (
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
                     {formData.shortDescription}
                   </p>
                 )}
@@ -650,28 +710,54 @@ export function MobileListingWizard({
             </Card>
 
             {/* Checklist */}
-            <Card className="p-4">
-              <h3 className="text-sm font-semibold text-foreground mb-3">
+            <Card className="p-3">
+              <h3 className="text-sm font-medium text-foreground mb-2">
                 {t('listing.mobile.readinessCheck')}
               </h3>
-              <div className="space-y-2">
-                {reviewChecklist.map(item => (
-                  <div key={item.label} className="flex items-center gap-2">
-                    {item.done ? (
-                      <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-amber-500" />
-                    )}
-                    <span
+              <div className="space-y-1.5">
+                {reviewChecklist.map(item => {
+                  const Wrapper = item.done ? 'div' : 'button';
+                  return (
+                    <Wrapper
+                      key={item.label}
+                      {...(!item.done && {
+                        type: 'button' as const,
+                        onClick: () => {
+                          setPublishError(null);
+                          setCurrentStep(item.step);
+                        },
+                      })}
                       className={cn(
-                        'text-sm',
-                        item.done ? 'text-foreground' : 'text-muted-foreground'
+                        'flex items-center gap-2 w-full text-left',
+                        !item.done && 'active:opacity-70'
                       )}
                     >
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
+                      {item.done ? (
+                        <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                      ) : item.required ? (
+                        <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      )}
+                      <span
+                        className={cn(
+                          'text-sm',
+                          item.done
+                            ? 'text-foreground'
+                            : item.required
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                        )}
+                      >
+                        {item.label}
+                        {item.required && !item.done && ' *'}
+                      </span>
+                      {!item.done && (
+                        <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto shrink-0" />
+                      )}
+                    </Wrapper>
+                  );
+                })}
               </div>
             </Card>
 
@@ -690,6 +776,14 @@ export function MobileListingWizard({
           </div>
         )}
       </div>
+
+      {/* Error banner */}
+      {publishError && (
+        <div className="shrink-0 bg-destructive/10 border-t border-destructive/20 px-4 py-2 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+          <span className="text-xs text-destructive">{publishError}</span>
+        </div>
+      )}
 
       {/* Bottom action bar */}
       <div className="shrink-0 bg-background border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">

@@ -93,7 +93,7 @@ export function BottomSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true">
       <div
         className="absolute inset-0 bg-black/40 animate-in fade-in duration-200"
         onClick={onClose}

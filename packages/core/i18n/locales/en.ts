@@ -3056,6 +3056,7 @@ export const en: TranslationResource = {
       stepReview: 'Review',
       stepOf: 'Step {{current}} of {{total}}',
       readinessCheck: 'Readiness Check',
+      requiredMissing: '{{field}} is required',
       takePhoto: 'Take Photo',
       chooseFromLibrary: 'From Library',
     },
