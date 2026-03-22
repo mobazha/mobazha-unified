@@ -77,27 +77,24 @@ export async function checkTelegramUser(initData: string): Promise<MiniAppCheckR
 }
 
 /**
- * Silent sign-in for a returning Telegram user (account already exists).
- * Uses &createNode=false to avoid creating a new account/node.
+ * Sign in or register a Telegram user via Mini App initData.
+ * Always creates a Casdoor user if one doesn't exist.
+ * SaaS node is provisioned implicitly by SaaSNodeResolver on first /v1/* request.
  *
- * Backend: POST /platform/v1/auth/telegram/mini-app-signin?{initData}&createNode=false
- * Returns JWT token or throws 404 if user doesn't exist.
+ * Backend: POST /platform/v1/auth/telegram/mini-app-signin?{initData}
  */
-export async function signinTelegram(initData: string, create: boolean = false): Promise<string> {
-  const createParam = create ? '' : '&createNode=false';
-  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_MINI_APP_SIGNIN}?${initData}${createParam}`);
+export async function signinTelegram(initData: string): Promise<string> {
+  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_MINI_APP_SIGNIN}?${initData}`);
   return request<string>(url, {
     method: 'POST',
   });
 }
 
 /**
- * Register a new Telegram user (creates account + returns JWT).
- *
- * Backend: POST /platform/v1/auth/telegram/mini-app-signin (no createNode=false)
+ * Alias for signinTelegram (kept for semantic clarity in registration flows).
  */
 export async function registerTelegram(initData: string): Promise<string> {
-  return signinTelegram(initData, true);
+  return signinTelegram(initData);
 }
 
 /**
@@ -178,7 +175,7 @@ export async function attemptSilentAuth(
     if (!exists) return null;
 
     const signinFn = platform === 'telegram' ? signinTelegram : signinDiscord;
-    return await signinFn(platformCredential, false);
+    return await signinFn(platformCredential);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       return null;
