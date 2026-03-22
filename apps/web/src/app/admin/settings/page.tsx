@@ -1,9 +1,12 @@
 'use client';
 
-import React from 'react';
-import { useI18n } from '@mobazha/core';
-import { Shield, Truck, Scale, User, Plug, Wallet } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { useI18n, useUserContext } from '@mobazha/core';
+import { useUserStore } from '@mobazha/core/stores/userStore';
+import { Shield, Truck, Scale, User, Plug, Wallet, PauseCircle, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SettingsCardProps {
   icon: React.ElementType;
@@ -47,6 +50,93 @@ function SettingsSection({ title, children }: SettingsSectionProps) {
   );
 }
 
+function StoreStatusToggle() {
+  const { t } = useI18n();
+  const { isStorePaused } = useUserContext();
+  const updateProfile = useUserStore(s => s.updateProfile);
+  const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { toast } = useToast();
+
+  const handleToggle = useCallback(async () => {
+    setLoading(true);
+    try {
+      await updateProfile({ storePaused: !isStorePaused });
+      toast({
+        variant: 'success',
+        title: isStorePaused ? t('store.resumeStore') : t('store.pauseStore'),
+      });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: t('common.error'),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [isStorePaused, updateProfile, toast, t]);
+
+  return (
+    <>
+      <div className="flex items-center justify-between p-4 sm:p-5 bg-card border border-border rounded-xl">
+        <div className="flex items-start gap-3">
+          <div
+            className={`p-2 rounded-lg ${isStorePaused ? 'bg-warning/10 text-warning' : 'bg-emerald-500/10 text-emerald-500'}`}
+          >
+            {isStorePaused ? (
+              <PauseCircle className="w-5 h-5" />
+            ) : (
+              <PlayCircle className="w-5 h-5" />
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-medium text-foreground">
+                {t('store.storeStatus')}
+              </h3>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  isStorePaused
+                    ? 'bg-warning/10 text-warning'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                }`}
+              >
+                {isStorePaused ? t('store.statusPaused') : t('store.statusActive')}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              {t('store.pauseStoreDesc')}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowConfirm(true)}
+          disabled={loading}
+          className={`shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+            isStorePaused
+              ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+              : 'border-warning/30 text-warning hover:bg-warning/10'
+          } disabled:opacity-50`}
+        >
+          {loading ? '...' : isStorePaused ? t('store.resumeStore') : t('store.pauseStore')}
+        </button>
+      </div>
+
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title={isStorePaused ? t('store.resumeConfirmTitle') : t('store.pauseConfirmTitle')}
+        description={isStorePaused ? t('store.resumeConfirmDesc') : t('store.pauseConfirmDesc')}
+        confirmLabel={
+          isStorePaused ? t('store.resumeConfirmAction') : t('store.pauseConfirmAction')
+        }
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleToggle}
+      />
+    </>
+  );
+}
+
 export default function AdminSettingsPage() {
   const { t } = useI18n();
 
@@ -62,6 +152,9 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="space-y-6 sm:space-y-8">
+        {/* Store Status */}
+        <StoreStatusToggle />
+
         {/* Store */}
         <SettingsSection title={t('admin.settings.sectionStore')}>
           <SettingsCard

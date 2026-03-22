@@ -22,6 +22,8 @@ export interface UserProfile {
   moderatorInfo?: ModeratorInfo;
   /** 是否为私密店铺（仅授权用户可访问） */
   private?: boolean;
+  /** 店铺是否处于暂停状态（度假模式） */
+  storePaused?: boolean;
   avatarHashes?: Image;
   headerHashes?: Image;
   stats?: ProfileStats;

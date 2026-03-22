@@ -153,6 +153,8 @@ export function ProductDetail({
   const paymentAvailable =
     paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
+  const isStorePaused = !isOwnProduct && vendor?.storePaused === true;
+
   // 存储回调函数的 ref，避免在依赖数组中引用
   const onProductLoadedRef = useRef(onProductLoaded);
   onProductLoadedRef.current = onProductLoaded;
@@ -434,10 +436,14 @@ export function ProductDetail({
   }, [handleAddToCart, haptic]);
 
   useTGMainButton({
-    text: tgStock === 0 ? t('product.outOfStock') : `${t('product.addToCart')} - ${tgPriceDisplay}`,
+    text: isStorePaused
+      ? t('store.statusPaused')
+      : tgStock === 0
+        ? t('product.outOfStock')
+        : `${t('product.addToCart')} - ${tgPriceDisplay}`,
     onClick: handleTGAddToCart,
     visible: isTG && !!product && !isModal,
-    disabled: tgStock === 0,
+    disabled: tgStock === 0 || isStorePaused,
   });
 
   useTGBackButton({ visible: isTG && !isModal });
@@ -544,6 +550,14 @@ export function ProductDetail({
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
+      {isStorePaused && (
+        <div
+          role="status"
+          className="flex items-center gap-2 px-4 py-2.5 bg-warning/10 border-b border-warning/20 text-sm"
+        >
+          <span className="text-warning font-medium">{t('store.pausedBanner')}</span>
+        </div>
+      )}
       {/* 弹框模式顶部商家栏 - 不使用 sticky，避免遮挡图片 */}
       {isModal && vendor && (
         <div className="bg-background border-b border-border px-4 py-3 pr-14">
@@ -1152,10 +1166,11 @@ export function ProductDetail({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
+                      (stock === 0 || !paymentAvailable || isStorePaused) &&
+                        'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleAddToCart}
-                    disabled={stock === 0 || !paymentAvailable}
+                    disabled={stock === 0 || !paymentAvailable || isStorePaused}
                     data-testid="product-detail-add-to-cart"
                   >
                     {cartSuccess ? (
@@ -1175,6 +1190,8 @@ export function ProductDetail({
                         </svg>
                         {t('product.addedToCart')}
                       </span>
+                    ) : isStorePaused ? (
+                      t('store.statusPaused')
                     ) : stock === 0 ? (
                       t('product.outOfStock')
                     ) : !paymentAvailable ? (
@@ -1188,10 +1205,11 @@ export function ProductDetail({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
+                      (stock === 0 || !paymentAvailable || isStorePaused) &&
+                        'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleBuyNow}
-                    disabled={stock === 0 || !paymentAvailable}
+                    disabled={stock === 0 || !paymentAvailable || isStorePaused}
                     data-testid="product-detail-buy-now"
                   >
                     {t('product.buyNow')}
