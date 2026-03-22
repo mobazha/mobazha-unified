@@ -391,6 +391,51 @@ const REGION_NAMES: Record<string, { en: string; zh: string }> = {
 };
 
 /**
+ * ISO 官方名称过长或政治敏感时的显示名覆盖。
+ * 与 Shopify / Stripe / Apple 等主流平台保持一致的通用名称。
+ */
+const COUNTRY_DISPLAY_OVERRIDES: Record<string, Record<string, string>> = {
+  en: {
+    CN: 'China',
+    TW: 'Taiwan',
+    US: 'United States',
+    RU: 'Russia',
+    IR: 'Iran',
+    KR: 'South Korea',
+    KP: 'North Korea',
+    BO: 'Bolivia',
+    VE: 'Venezuela',
+    TZ: 'Tanzania',
+    MD: 'Moldova',
+    SY: 'Syria',
+    LA: 'Laos',
+    PS: 'Palestine',
+    BN: 'Brunei',
+    FM: 'Micronesia',
+    CD: 'DR Congo',
+    VI: 'US Virgin Islands',
+    VG: 'British Virgin Islands',
+    GS: 'South Georgia',
+    HM: 'Heard & McDonald Islands',
+    UM: 'US Minor Outlying Islands',
+    SJ: 'Svalbard & Jan Mayen',
+    TC: 'Turks & Caicos',
+    MP: 'Northern Mariana Islands',
+    BQ: 'Caribbean Netherlands',
+    MF: 'Saint Martin',
+    BL: 'Saint Barthélemy',
+    PM: 'Saint Pierre & Miquelon',
+    SH: 'Saint Helena',
+    IO: 'British Indian Ocean Territory',
+    TF: 'French Southern Territories',
+    CC: 'Cocos (Keeling) Islands',
+  },
+  zh: {
+    TW: '台湾',
+  },
+};
+
+/**
  * 获取国家名称（本地化）
  *
  * @param countryCode 国家标识，支持 ISO 代码、下划线格式名称、洲级区域等
@@ -415,12 +460,18 @@ export function getCountryName(countryCode: string, locale: string = 'en'): stri
   // 转换为 ISO 代码
   const isoCode = toISOCountryCode(countryCode);
 
-  // 尝试获取本地化名称
+  // 优先使用显示名覆盖
   const normalizedLocale = locale.split('-')[0]; // zh-CN -> zh
+  const override = COUNTRY_DISPLAY_OVERRIDES[normalizedLocale]?.[isoCode];
+  if (override) return override;
+
+  // 尝试获取本地化名称
   let name = countries.getName(isoCode, normalizedLocale);
 
-  // 如果找不到，回退到英文
+  // 如果找不到，回退到英文（先查覆盖表，再查库）
   if (!name && normalizedLocale !== 'en') {
+    const enOverride = COUNTRY_DISPLAY_OVERRIDES['en']?.[isoCode];
+    if (enOverride) return enOverride;
     name = countries.getName(isoCode, 'en');
   }
 
@@ -513,9 +564,10 @@ export async function ensureCountryLocale(locale: string): Promise<void> {
 export function getAllCountries(locale: string = 'en'): Array<{ code: string; name: string }> {
   const normalizedLocale = locale.split('-')[0];
   const countryNames = countries.getNames(normalizedLocale) || countries.getNames('en');
+  const overrides = COUNTRY_DISPLAY_OVERRIDES[normalizedLocale] ?? {};
 
   return Object.entries(countryNames)
-    .map(([code, name]) => ({ code, name }))
+    .map(([code, name]) => ({ code, name: overrides[code] ?? name }))
     .sort((a, b) => a.name.localeCompare(b.name, locale));
 }
 

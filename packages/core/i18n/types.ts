@@ -1478,6 +1478,8 @@ export interface TranslationResource {
     countrySearch?: string;
     popularCountries?: string;
     allCountries?: string;
+    popularCurrencies?: string;
+    fiatCurrencies?: string;
     currency?: string;
     currencyPlaceholder?: string;
     currencyHint?: string;

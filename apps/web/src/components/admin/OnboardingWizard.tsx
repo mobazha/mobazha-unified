@@ -57,7 +57,7 @@ interface StepIndicatorProps {
 function StepIndicator({ currentStep, totalSteps, labels }: StepIndicatorProps) {
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
   return (
-    <div className="mb-8">
+    <div className="mb-4 sm:mb-8">
       {/* Mobile: linear progress bar */}
       <div className="sm:hidden space-y-3">
         <div className="flex justify-between text-xs">
@@ -266,20 +266,20 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   if (step === 0) {
     return (
       <div className="max-w-2xl mx-auto" data-testid="seller-onboarding-landing">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Store className="w-8 h-8 text-primary" />
+        <div className="text-center mb-4 sm:mb-8">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground">
             {t('admin.onboarding.landingTitle') || 'Start Your Online Store'}
           </h1>
-          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2 max-w-md mx-auto">
             {t('admin.onboarding.landingSubtitle') ||
               'Join thousands of sellers on Mobazha. Set up in minutes, sell globally.'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+        <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3 mb-4 sm:mb-8">
           {[
             {
               icon: <Coins className="w-5 h-5 text-primary" />,
@@ -300,17 +300,22 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 t('admin.onboarding.landingFeature3Desc') || 'Accept crypto & fiat from anywhere',
             },
           ].map((feat, i) => (
-            <div key={i} className="bg-card rounded-xl border p-4 text-center space-y-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <div
+              key={i}
+              className="flex items-center gap-3 bg-card rounded-xl border px-4 py-3 sm:flex-col sm:text-center sm:p-4 sm:gap-0 sm:space-y-2"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 sm:mx-auto">
                 {feat.icon}
               </div>
-              <h3 className="text-sm font-semibold text-foreground">{feat.title}</h3>
-              <p className="text-xs text-muted-foreground">{feat.desc}</p>
+              <div className="sm:space-y-1">
+                <h3 className="text-sm font-semibold text-foreground">{feat.title}</h3>
+                <p className="text-xs text-muted-foreground">{feat.desc}</p>
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="bg-card rounded-xl border p-5 sm:p-6 text-center space-y-4">
+        <div className="bg-card rounded-xl border p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Zap className="w-4 h-4 text-primary" />
             <span>
@@ -329,7 +334,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
 
           <button
             onClick={() => router.push('/')}
-            className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
+            className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             {t('admin.onboarding.landingSkip') || 'Maybe later'}
           </button>
@@ -340,11 +345,11 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
 
   return (
     <div className="max-w-2xl mx-auto" data-testid="seller-onboarding">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
+      <div className="text-center mb-3 sm:mb-6">
+        <h1 className="text-lg sm:text-2xl font-bold text-foreground">
           {t('admin.onboarding.title') || 'Set Up Your Store'}
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm sm:text-base text-muted-foreground mt-0.5 sm:mt-1">
           {t('admin.onboarding.subtitle') || 'Get your store ready in a few simple steps'}
         </p>
       </div>
@@ -352,46 +357,75 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} labels={stepLabels} />
 
       {step === 1 && (
-        <div className="bg-card rounded-xl border p-4 sm:p-6 space-y-5 sm:space-y-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Store className="w-5 h-5 text-primary" />
+        <div className="bg-card rounded-xl border p-3 sm:p-6 space-y-3 sm:space-y-6">
+          {/* Mobile: compact avatar + title only; Desktop: full header with subtitle */}
+          <div className="flex items-center gap-2.5 sm:flex-col sm:items-stretch">
+            <div className="sm:flex sm:items-center sm:gap-3 sm:mb-2 hidden">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Store className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">
+                  {t('admin.onboarding.step1Title') || 'Store Profile'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.onboarding.step1Desc') || 'Tell buyers about your store'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold">
+
+            {/* Mobile: compact avatar + title (no subtitle — fields are self-explanatory) */}
+            <div className="shrink-0 sm:hidden">
+              <AvatarUpload
+                src={
+                  avatarPreview ||
+                  (profile?.avatarHashes ? getImageUrl(profile.avatarHashes.small) : undefined)
+                }
+                name={storeName}
+                onFileSelect={handleAvatarFileSelect}
+                size="md"
+                label={t('admin.onboarding.changeAvatar') || 'Change avatar'}
+              />
+            </div>
+            <div className="sm:hidden">
+              <h2 className="text-sm font-semibold">
                 {t('admin.onboarding.step1Title') || 'Store Profile'}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {t('admin.onboarding.step1Desc') || 'Tell buyers about your store'}
+              <p className="text-[11px] text-muted-foreground">
+                {t('admin.onboarding.clickToUpload') || 'Click to upload avatar'}
               </p>
+            </div>
+
+            {/* Desktop: centered avatar */}
+            <div className="hidden sm:flex flex-col items-center gap-3">
+              <AvatarUpload
+                src={
+                  avatarPreview ||
+                  (profile?.avatarHashes ? getImageUrl(profile.avatarHashes.small) : undefined)
+                }
+                name={storeName}
+                onFileSelect={handleAvatarFileSelect}
+                size="xl"
+                label={t('admin.onboarding.changeAvatar') || 'Change avatar'}
+              />
+              <span className="text-xs text-muted-foreground">
+                {t('admin.onboarding.clickToUpload') || 'Click to upload avatar'}
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-3">
-            <AvatarUpload
-              src={
-                avatarPreview ||
-                (profile?.avatarHashes ? getImageUrl(profile.avatarHashes.small) : undefined)
-              }
-              name={storeName}
-              onFileSelect={handleAvatarFileSelect}
-              size="xl"
-              label={t('admin.onboarding.changeAvatar') || 'Change avatar'}
-            />
-            <span className="text-xs text-muted-foreground">
-              {t('admin.onboarding.clickToUpload') || 'Click to upload avatar'}
-            </span>
-          </div>
-
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label htmlFor="store-name" className="block text-sm font-medium mb-1.5">
+              <label
+                htmlFor="store-name"
+                className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5"
+              >
                 {t('admin.onboarding.storeName') || 'Store Name'} *
               </label>
               <input
                 id="store-name"
                 type="text"
-                className="w-full rounded-lg border bg-background px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 value={storeName}
                 onChange={e => setStoreName(e.target.value)}
                 placeholder={t('admin.onboarding.storeNamePlaceholder') || 'My Awesome Store'}
@@ -400,12 +434,15 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
 
             <div>
-              <label htmlFor="store-desc" className="block text-sm font-medium mb-1.5">
+              <label
+                htmlFor="store-desc"
+                className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5"
+              >
                 {t('admin.onboarding.storeDescription') || 'Short Description'}
               </label>
               <textarea
                 id="store-desc"
-                className="w-full rounded-lg border bg-background px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                 rows={3}
                 value={shortDescription}
                 onChange={e => setShortDescription(e.target.value)}
@@ -415,15 +452,15 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 }
                 maxLength={160}
               />
-              <p className="text-xs text-muted-foreground mt-1 text-right">
+              <p className="text-xs text-muted-foreground mt-0.5 text-right">
                 {shortDescription.length}/160
               </p>
             </div>
           </div>
 
           {/* Location & Currency */}
-          <div className="border-t pt-4 space-y-3">
-            <h3 className="text-sm font-medium text-foreground">
+          <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+            <h3 className="text-xs sm:text-sm font-medium text-foreground">
               {t('admin.onboarding.locationCurrencyTitle') || 'Location & Currency'}
             </h3>
             <CountryCurrencySelector
@@ -435,7 +472,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-1 sm:pt-2">
             <button
               onClick={() => {
                 dismissOnboarding();
@@ -650,14 +687,12 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
           </button>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
-            <a
-              href={storeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => router.push(storeUrl)}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border px-5 py-3 sm:py-2.5 text-sm font-medium hover:bg-accent transition-colors min-h-[44px] sm:min-h-0"
             >
               {t('admin.onboarding.viewStore') || 'View Your Store'}
-            </a>
+            </button>
             <button
               onClick={handleFinish}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-3 sm:py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors min-h-[44px] sm:min-h-0"

@@ -14,7 +14,7 @@ interface AppKitProviderProps {
 }
 
 export function AppKitProvider({ children }: AppKitProviderProps) {
-  return <CoreAppKitProvider autoInit={true}>{children}</CoreAppKitProvider>;
+  return <CoreAppKitProvider autoInit={false}>{children}</CoreAppKitProvider>;
 }
 
 export default AppKitProvider;

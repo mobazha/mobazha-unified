@@ -43,20 +43,22 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
           'bg-muted hover:bg-muted/80',
           'text-foreground text-sm font-medium',
           'transition-colors duration-200',
-          compact && 'px-2'
+          compact && 'gap-1 px-1.5 py-1.5'
         )}
         aria-label="Change language"
       >
-        <span className="text-lg">{currentLocaleInfo.flag}</span>
+        <span className={cn('text-lg', compact && 'text-base')}>{currentLocaleInfo.flag}</span>
         {!compact && <span>{currentLocaleInfo.nativeName}</span>}
-        <svg
-          className={cn('w-4 h-4 transition-transform', isOpen && 'rotate-180')}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        {!compact && (
+          <svg
+            className={cn('w-4 h-4 transition-transform', isOpen && 'rotate-180')}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
       </button>
 
       {/* 下拉菜单 */}
