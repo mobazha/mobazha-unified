@@ -78,13 +78,13 @@ export async function checkTelegramUser(initData: string): Promise<MiniAppCheckR
 
 /**
  * Silent sign-in for a returning Telegram user (account already exists).
- * Uses &create=false to avoid creating a new account.
+ * Uses &createNode=false to avoid creating a new account/node.
  *
- * Backend: POST /platform/v1/auth/telegram/mini-app-signin?{initData}&create=false
+ * Backend: POST /platform/v1/auth/telegram/mini-app-signin?{initData}&createNode=false
  * Returns JWT token or throws 404 if user doesn't exist.
  */
 export async function signinTelegram(initData: string, create: boolean = false): Promise<string> {
-  const createParam = create ? '' : '&create=false';
+  const createParam = create ? '' : '&createNode=false';
   const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_MINI_APP_SIGNIN}?${initData}${createParam}`);
   return request<string>(url, {
     method: 'POST',
@@ -94,7 +94,7 @@ export async function signinTelegram(initData: string, create: boolean = false):
 /**
  * Register a new Telegram user (creates account + returns JWT).
  *
- * Backend: POST /platform/v1/auth/telegram/mini-app-signin (no create=false)
+ * Backend: POST /platform/v1/auth/telegram/mini-app-signin (no createNode=false)
  */
 export async function registerTelegram(initData: string): Promise<string> {
   return signinTelegram(initData, true);

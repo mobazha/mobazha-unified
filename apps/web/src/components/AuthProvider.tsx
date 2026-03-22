@@ -16,6 +16,7 @@ import {
 } from '@mobazha/core';
 import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
 import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
+import { BrandedSplash } from './BrandedSplash';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -301,14 +302,7 @@ export function AuthProvider({
   // 正在处理 OAuth 回调 or Mini App auth
   if (isProcessingOAuth || (!isInitialized && (isLoading || loadingMessage))) {
     const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : 'Loading…');
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">{message}</p>
-        </div>
-      </div>
-    );
+    return <BrandedSplash message={message} />;
   }
 
   return <>{children}</>;
