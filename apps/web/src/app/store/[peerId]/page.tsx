@@ -81,7 +81,6 @@ import {
 } from '@/components/store';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
 import { StoreSections } from '@/components/store-sections';
-import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
 import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
 
 const STORE_PAGE_EXCLUDE_TYPES = new Set(['testimonials', 'store-tabs']);
@@ -126,20 +125,20 @@ export default function StorePage() {
 
   const { config: storefrontConfig } = useStorefrontConfigPublic(peerId);
   const hasSections = !!storefrontConfig?.sections?.length;
-  const hasHeroSection = !!storefrontConfig?.sections?.some(
+  const heroSection = storefrontConfig?.sections?.find(
     s => s.type === 'hero' && s.visible !== false
   );
-  const heroMode = hasSections && hasHeroSection ? 'fused' : 'separate';
+  const heroProps = heroSection?.props as Record<string, unknown> | undefined;
 
   const filteredSections = useMemo(() => {
     if (!storefrontConfig) return storefrontConfig;
     const exclude = new Set(STORE_PAGE_EXCLUDE_TYPES);
-    if (heroMode === 'fused') exclude.add('hero');
+    exclude.add('hero');
     return {
       ...storefrontConfig,
       sections: storefrontConfig.sections.filter(s => !exclude.has(s.type)),
     };
-  }, [storefrontConfig, heroMode]);
+  }, [storefrontConfig]);
 
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [isFollowing, setIsFollowing] = useState(false);
@@ -777,6 +776,11 @@ export default function StorePage() {
   const displayHeaderUrl =
     previewHeaderUrl ||
     getImageUrl(pendingHeaderHashes?.large || store.headerHashes?.large, storeImageHint);
+  const heroConfigBg = heroProps?.backgroundImage as string | undefined;
+  const heroBgUrl = previewHeaderUrl || heroConfigBg || displayHeaderUrl;
+  const heroOverlayOpacity = (heroProps?.overlayOpacity as number) ?? 0.4;
+  const heroCtaText = !isOwnStore ? (heroProps?.ctaText as string | undefined) : undefined;
+  const heroCtaLink = heroProps?.ctaLink as string | undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -796,329 +800,219 @@ export default function StorePage() {
       )}
 
       <main>
-        {heroMode === 'fused' ? (
-          /* ── Fused mode: BrandedHeroHeader ── */
-          <>
-            <BrandedHeroHeader
-              store={store}
-              peerId={peerId}
-              stats={stats}
-              isOwnStore={isOwnStore}
-              isAuthenticated={isAuthenticated}
-              storefrontConfig={storefrontConfig}
-              isFollowing={isFollowing}
-              followLoading={followLoading}
-              onFollowToggle={handleFollowToggle}
-              isBlocked={isBlockedUser}
-              blockLoading={blockLoading}
-              onBlockToggle={handleBlockToggle}
-              onMessage={handleMessage}
-              onTabChange={tab => setActiveTab(tab as TabType)}
-            />
-
-            {/* Private store access notice */}
-            {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
-              <Container size="xl">
-                <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
-                  <ShieldCheck className="h-4 w-4 shrink-0" />
-                  <span>{t('storeAccess.fullAccessGranted')}</span>
-                </div>
-              </Container>
+        {/* ── Unified Hero Header ── */}
+        <div
+          className="relative overflow-hidden"
+          onDragOver={isOwnStore ? handleCoverDragOver : undefined}
+          onDragLeave={isOwnStore ? handleCoverDragLeave : undefined}
+          onDrop={isOwnStore ? handleCoverDrop : undefined}
+        >
+          {/* Background */}
+          <div className="absolute inset-0">
+            {heroBgUrl ? (
+              <img src={heroBgUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-primary to-slate-800" />
+                <div className="absolute -top-1/4 -right-1/4 w-3/4 h-3/4 rounded-full bg-primary/40 blur-3xl" />
+                <div className="absolute -bottom-1/4 -left-1/4 w-2/3 h-2/3 rounded-full bg-cyan-500/25 blur-3xl" />
+                <div className="absolute top-1/3 left-1/2 w-1/2 h-1/2 rounded-full bg-teal-400/15 blur-2xl" />
+              </div>
             )}
-          </>
-        ) : (
-          /* ── Separate mode: original Cover + Profile Card ── */
-          <div className="relative">
-            {/* Cover Image */}
             <div
-              className="h-32 sm:h-48 md:h-64 bg-gradient-to-br from-primary/80 to-primary/60 relative overflow-hidden group"
-              onDragOver={isOwnStore ? handleCoverDragOver : undefined}
-              onDragLeave={isOwnStore ? handleCoverDragLeave : undefined}
-              onDrop={isOwnStore ? handleCoverDrop : undefined}
-            >
-              {displayHeaderUrl && (
-                <img
-                  src={displayHeaderUrl}
-                  alt={`${store.name || peerId.slice(0, 8)} store header`}
-                  className="w-full h-full object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              className="absolute inset-0"
+              style={{ backgroundColor: `rgba(0,0,0,${heroOverlayOpacity})` }}
+            />
+          </div>
 
-              {/* Drag overlay */}
-              {isOwnStore && isDragOver && (
-                <div className="absolute inset-0 bg-primary/30 border-2 border-dashed border-primary-foreground/60 flex items-center justify-center z-20 backdrop-blur-sm">
-                  <div className="flex flex-col items-center gap-2 text-white">
-                    <ImageIcon className="w-8 h-8" />
-                    <p className="text-sm font-medium">{t('settings.dragOrClickCover')}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Upload progress overlay */}
-              {headerUploading && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                  <div className="flex flex-col items-center gap-3">
-                    <span className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent" />
-                    <p className="text-white text-sm">{t('common.uploading')}</p>
-                  </div>
-                </div>
-              )}
-
-              {isOwnStore && !headerUploading && (
-                <>
-                  <input
-                    ref={headerInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={e => handleFileSelect(e, 'cover')}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => headerInputRef.current?.click()}
-                    className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
-                  >
-                    <Camera className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
-                  </button>
-                </>
-              )}
+          {/* Drag overlay */}
+          {isOwnStore && isDragOver && (
+            <div className="absolute inset-0 bg-primary/30 border-2 border-dashed border-primary-foreground/60 flex items-center justify-center z-20 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-2 text-white">
+                <ImageIcon className="w-8 h-8" />
+                <p className="text-sm font-medium">{t('settings.dragOrClickCover')}</p>
+              </div>
             </div>
+          )}
 
-            {/* Store Info - 白色背景卡片 */}
-            <Container size="xl" className="relative">
-              <div className="bg-background -mt-12 sm:-mt-16 rounded-t-2xl pt-4 px-4 sm:px-6">
-                {/* 头像 + 核心信息行 */}
-                <div className="flex items-start gap-4">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0 -mt-10 sm:-mt-12">
-                    <Avatar
-                      src={displayAvatarUrl}
-                      name={store.name || peerId.slice(0, 8)}
-                      size="xl"
-                      className="ring-4 ring-background w-20 h-20 sm:w-24 sm:h-24 shadow-lg"
-                    />
-                    {isOwnStore && (
-                      <>
-                        <input
-                          ref={avatarInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={e => handleFileSelect(e, 'avatar')}
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => avatarInputRef.current?.click()}
-                          disabled={avatarUploading}
-                          className="absolute -bottom-1 -right-1 z-10 w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-background cursor-pointer"
-                        >
-                          {avatarUploading ? (
-                            <span className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent" />
-                          ) : (
-                            <Camera className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </>
-                    )}
-                  </div>
+          {/* Upload progress overlay */}
+          {headerUploading && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+              <div className="flex flex-col items-center gap-3">
+                <span className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent" />
+                <p className="text-white text-sm">{t('common.uploading')}</p>
+              </div>
+            </div>
+          )}
 
-                  {/* 头像旁信息：移动端只放名称+评分，桌面端放全部 */}
-                  <div className="flex-1 min-w-0 pt-1">
-                    {isOwnStore ? (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
-                            {store.name || peerId.slice(0, 8)}
-                          </h1>
-                          {store.private && (
-                            <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
-                              title={t('storeAccess.privateStore')}
-                            >
-                              <Lock className="h-3 w-3" />
-                              {t('storeAccess.privateStoreBadge') || t('common.private')}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 sm:gap-3 mt-0.5">
-                          {store.location && (
-                            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                              <span>📍</span>
-                              <span>{store.location}</span>
-                            </p>
-                          )}
-                          <button
-                            onClick={() => setActiveTab('reviews')}
-                            className="hover:opacity-80 transition-opacity min-h-[44px] inline-flex items-center"
-                          >
-                            <SellerTrustBadge
-                              compact
-                              rating={stats.averageRating}
-                              reviewCount={stats.ratingCount}
-                            />
-                          </button>
-                        </div>
-                        {/* 桌面端：简介和按钮在头像旁 */}
-                        {store.shortDescription && (
-                          <p className="hidden sm:block text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                            {stripHtmlTags(store.shortDescription)}
-                          </p>
+          {/* Cover upload button */}
+          {isOwnStore && !headerUploading && (
+            <>
+              <input
+                ref={headerInputRef}
+                type="file"
+                accept="image/*"
+                onChange={e => handleFileSelect(e, 'cover')}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => headerInputRef.current?.click()}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
+              >
+                <Camera className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
+              </button>
+            </>
+          )}
+
+          {/* Content */}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-end min-h-[280px] sm:min-h-[360px] pb-5 sm:pb-8">
+              <div className="flex items-end gap-4 sm:gap-6">
+                {/* Avatar with upload */}
+                <div className="relative flex-shrink-0">
+                  <Avatar
+                    src={displayAvatarUrl}
+                    name={store.name || peerId.slice(0, 8)}
+                    size="xl"
+                    className="ring-4 ring-white/30 w-20 h-20 sm:w-24 sm:h-24 shadow-lg"
+                  />
+                  {isOwnStore && (
+                    <>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleFileSelect(e, 'avatar')}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={avatarUploading}
+                        className="absolute -bottom-1 -right-1 z-10 w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-white/30 cursor-pointer"
+                      >
+                        {avatarUploading ? (
+                          <span className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent" />
+                        ) : (
+                          <Camera className="h-3.5 w-3.5" />
                         )}
-                        {(productsLoading || products.length > 0 || activeTab !== 'products') && (
-                          <div className="hidden sm:flex gap-2 mt-2.5">
-                            <Button
-                              variant="outline"
-                              onClick={() =>
-                                router.push(
-                                  hasSections ? '/admin/storefront' : '/settings/page-profile'
-                                )
-                              }
-                              size="sm"
-                              className="touch-feedback gap-1.5"
-                            >
-                              <Settings className="h-3.5 w-3.5" />
-                              {t('settingsModal.customize')}
-                            </Button>
-                            <Link href="/listing/new">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="touch-feedback gap-1.5"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                                {t('userPage.createListing')}
-                              </Button>
-                            </Link>
-                            <Link href="/listing/import">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="touch-feedback gap-1.5"
-                              >
-                                <Upload className="h-3.5 w-3.5" />
-                                {t('userPage.importListings')}
-                              </Button>
-                            </Link>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {/* 访客视图 */}
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
-                                {store.name || peerId.slice(0, 8)}
-                              </h1>
-                              {store.private && (
-                                <span
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
-                                  title={t('storeAccess.privateStore')}
-                                >
-                                  <Lock className="h-3 w-3" />
-                                  {t('storeAccess.privateStoreBadge') || t('common.private')}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 sm:gap-3 mt-0.5">
-                              {store.location && (
-                                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                                  <span>📍</span>
-                                  <span>{store.location}</span>
-                                </p>
-                              )}
-                              <button
-                                onClick={() => setActiveTab('reviews')}
-                                className="hover:opacity-80 transition-opacity"
-                              >
-                                <SellerTrustBadge
-                                  compact
-                                  rating={stats.averageRating}
-                                  reviewCount={stats.ratingCount}
-                                />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 flex-shrink-0">
-                            <Button
-                              variant={isFollowing ? 'outline' : 'default'}
-                              onClick={handleFollowToggle}
-                              disabled={followLoading || !isAuthenticated}
-                              size="sm"
-                              className="touch-feedback h-9 sm:h-auto"
-                            >
-                              {followLoading ? (
-                                <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                              ) : isFollowing ? (
-                                t('profile.unfollow')
-                              ) : (
-                                t('profile.follow')
-                              )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="touch-feedback h-9 sm:h-auto"
-                              onClick={handleMessage}
-                            >
-                              {t('profile.message')}
-                            </Button>
-                            <Button
-                              variant={isBlockedUser ? 'destructive' : 'outline'}
-                              onClick={handleBlockToggle}
-                              disabled={blockLoading || !isAuthenticated}
-                              size="sm"
-                              className="touch-feedback h-9 w-9 sm:h-auto sm:w-auto"
-                              title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
-                            >
-                              {blockLoading ? (
-                                <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                              ) : (
-                                <Ban className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <ShareButton
-                              url={
-                                typeof window !== 'undefined'
-                                  ? window.location.href
-                                  : `/store/${peerId}`
-                              }
-                              title={store.name || peerId.slice(0, 8)}
-                              description={
-                                store.shortDescription
-                                  ? stripHtmlTags(store.shortDescription)
-                                  : undefined
-                              }
-                              embedType="store"
-                              embedIdentifier={peerId}
-                            />
-                          </div>
-                        </div>
-                        {/* 桌面端：简介在头像旁 */}
-                        {store.shortDescription && (
-                          <p className="hidden sm:block text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                            {stripHtmlTags(store.shortDescription)}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
+                      </button>
+                    </>
+                  )}
                 </div>
 
-                {/* 移动端：简介和店主按钮在头像行下方，全宽展示 */}
-                {store.shortDescription && (
-                  <p className="sm:hidden text-xs text-muted-foreground mt-2 line-clamp-2">
-                    {stripHtmlTags(store.shortDescription)}
-                  </p>
-                )}
-                {isOwnStore &&
-                  (productsLoading || products.length > 0 || activeTab !== 'products') && (
-                    <div className="flex gap-2 mt-2 sm:hidden">
+                {/* Info */}
+                <div className="flex-1 min-w-0 text-white">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md">
+                      {store.name || peerId.slice(0, 8)}
+                    </h1>
+                    {store.private && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-white/20 text-white shrink-0">
+                        <Lock className="h-3 w-3" />
+                        {t('storeAccess.privateStoreBadge') || t('common.private')}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:gap-3 mt-1 text-sm">
+                    {store.location && (
+                      <span className="flex items-center gap-1 opacity-80">
+                        <span>📍</span>
+                        <span>{store.location}</span>
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setActiveTab('reviews')}
+                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    >
+                      <span className="text-yellow-400">★</span>
+                      <span className="font-medium">{stats.averageRating.toFixed(1)}</span>
+                      <span className="opacity-70">({stats.ratingCount})</span>
+                    </button>
+                  </div>
+
+                  {/* Desktop: description */}
+                  {store.shortDescription && (
+                    <p className="hidden sm:block mt-1 text-sm opacity-80 line-clamp-2 drop-shadow">
+                      {stripHtmlTags(store.shortDescription)}
+                    </p>
+                  )}
+
+                  {/* Stats row */}
+                  <div className="flex items-center gap-3 sm:gap-5 mt-2 text-sm">
+                    <button
+                      onClick={() => setActiveTab('followers')}
+                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    >
+                      <span className="font-medium">{stats.followerCount}</span>
+                      <span className="opacity-70">{t('profile.followers')}</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('following')}
+                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    >
+                      <span className="font-medium">{stats.followingCount}</span>
+                      <span className="opacity-70">{t('profile.following')}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile: bio below avatar row */}
+              {store.shortDescription && (
+                <p className="sm:hidden text-xs text-white/80 mt-2 line-clamp-2 drop-shadow">
+                  {stripHtmlTags(store.shortDescription)}
+                </p>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                {isOwnStore ? (
+                  <>
+                    {/* Desktop owner buttons */}
+                    <div className="hidden sm:flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="gap-1.5 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                        onClick={() =>
+                          router.push(hasSections ? '/admin/storefront' : '/settings/page-profile')
+                        }
+                      >
+                        <Settings className="h-4 w-4" />
+                        {t('settingsModal.customize')}
+                      </Button>
                       <Link href="/listing/new">
-                        <Button size="sm" className="touch-feedback gap-1.5 min-h-[44px] text-xs">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="gap-1.5 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                        >
+                          <Plus className="h-4 w-4" />
+                          {t('userPage.createListing')}
+                        </Button>
+                      </Link>
+                      <Link href="/listing/import">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="gap-1.5 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                        >
+                          <Upload className="h-4 w-4" />
+                          {t('userPage.importListings')}
+                        </Button>
+                      </Link>
+                    </div>
+                    {/* Mobile owner buttons */}
+                    <div className="flex gap-2 sm:hidden">
+                      <Link href="/listing/new">
+                        <Button
+                          size="sm"
+                          className="touch-feedback gap-1.5 min-h-[44px] text-xs bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                        >
                           <Plus className="h-3.5 w-3.5" />
                           {t('userPage.createListing')}
                         </Button>
@@ -1128,7 +1022,7 @@ export default function StorePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="touch-feedback min-h-[44px] w-11 p-0"
+                            className="touch-feedback min-h-[44px] w-11 p-0 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -1151,40 +1045,86 @@ export default function StorePage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  )}
-
-                {/* 统计数据：关注中 / 粉丝 - 点击可查看列表 */}
-                <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
-                  <button
-                    onClick={() => setActiveTab('following')}
-                    className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
-                  >
-                    <span className="font-semibold text-foreground">{stats.followingCount}</span>
-                    <span className="text-muted-foreground hover:text-primary">
-                      {t('profile.following')}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('followers')}
-                    className="flex items-baseline gap-1 min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
-                  >
-                    <span className="font-semibold text-foreground">{stats.followerCount}</span>
-                    <span className="text-muted-foreground hover:text-primary">
-                      {t('profile.followers')}
-                    </span>
-                  </button>
-                </div>
-
-                {/* 私密店铺完整访问权限提示 */}
-                {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
-                  <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
-                    <ShieldCheck className="h-4 w-4 shrink-0" />
-                    <span>{t('storeAccess.fullAccessGranted')}</span>
-                  </div>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant={isFollowing ? 'secondary' : 'default'}
+                      size="sm"
+                      onClick={handleFollowToggle}
+                      disabled={followLoading || !isAuthenticated}
+                      className="min-h-[36px] sm:min-h-0"
+                    >
+                      {followLoading ? (
+                        <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                      ) : isFollowing ? (
+                        t('profile.unfollow')
+                      ) : (
+                        t('profile.follow')
+                      )}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleMessage}
+                      className="min-h-[36px] sm:min-h-0 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                    >
+                      {t('profile.message')}
+                    </Button>
+                    <Button
+                      variant={isBlockedUser ? 'destructive' : 'secondary'}
+                      size="sm"
+                      onClick={handleBlockToggle}
+                      disabled={blockLoading || !isAuthenticated}
+                      className="min-h-[36px] sm:min-h-0 min-w-[36px] bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                      title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
+                    >
+                      {blockLoading ? (
+                        <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                      ) : (
+                        <Ban className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </>
                 )}
+
+                {heroCtaText && (
+                  <a
+                    href={heroCtaLink || '#products'}
+                    className="inline-flex items-center justify-center px-5 py-2 rounded-md text-sm font-semibold transition-colors min-h-[36px]"
+                    style={{
+                      backgroundColor: 'var(--store-primary, #ffffff)',
+                      color: 'var(--store-on-primary, #111827)',
+                    }}
+                  >
+                    {heroCtaText}
+                  </a>
+                )}
+
+                <div className="ml-auto">
+                  <ShareButton
+                    url={typeof window !== 'undefined' ? window.location.href : `/store/${peerId}`}
+                    title={store.name || peerId.slice(0, 8)}
+                    description={
+                      store.shortDescription ? stripHtmlTags(store.shortDescription) : undefined
+                    }
+                    embedType="store"
+                    embedIdentifier={peerId}
+                  />
+                </div>
               </div>
-            </Container>
+            </div>
           </div>
+        </div>
+
+        {/* Private store access notice */}
+        {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
+          <Container size="xl">
+            <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span>{t('storeAccess.fullAccessGranted')}</span>
+            </div>
+          </Container>
         )}
 
         {hasSections && (

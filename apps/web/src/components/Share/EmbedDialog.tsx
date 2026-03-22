@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
+function getSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (typeof window !== 'undefined') return window.location.origin;
+  return 'https://app.mobazha.org';
+}
 
 type EmbedType = 'product' | 'store';
 
@@ -29,7 +33,7 @@ export interface EmbedDialogProps {
   type: EmbedType;
   /** Product slug or store peerID */
   identifier: string;
-  /** peerID for product embeds */
+  /** peerID — required for product embeds, ignored for store */
   peerID?: string;
 }
 
@@ -42,11 +46,12 @@ export function EmbedDialog({ open, onOpenChange, type, identifier, peerID }: Em
   const size = SIZES[sizeIndex];
 
   const embedUrl = useMemo(() => {
+    const base = getSiteUrl();
     if (type === 'product') {
-      const base = `${SITE_URL}/embed/product/${identifier}`;
-      return peerID ? `${base}?peerID=${peerID}` : base;
+      if (!peerID) return '';
+      return `${base}/embed/product/${identifier}?peerID=${peerID}`;
     }
-    return `${SITE_URL}/embed/store/${identifier}`;
+    return `${base}/embed/store/${identifier}`;
   }, [type, identifier, peerID]);
 
   const embedCode = useMemo(() => {
