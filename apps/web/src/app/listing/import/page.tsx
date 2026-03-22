@@ -7,7 +7,8 @@ import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui';
-import { useI18n, getGatewayUrl } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
+import { getMyGatewayUrl, getAuthHeaders } from '@mobazha/core/services/api/config';
 import {
   ArrowLeft,
   Download,
@@ -47,14 +48,28 @@ export default function ImportListingsPage() {
   // Get template language based on current locale
   const templateLang = locale?.startsWith('zh') ? 'zh' : 'en';
 
-  // Download template
+  // Download template via authenticated fetch + blob
   const handleDownloadTemplate = useCallback(async () => {
     if (downloading) return;
 
     setDownloading(true);
     try {
-      const url = `${getGatewayUrl()}/listings/template?lang=${templateLang}`;
-      window.open(url, '_blank');
+      const url = `${getMyGatewayUrl()}/listings/template?lang=${templateLang}`;
+      const headers = getAuthHeaders();
+      delete headers['Content-Type'];
+      const resp = await fetch(url, { headers });
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `listings_template_${templateLang}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Failed to download template:', error);
       toast({
@@ -170,7 +185,11 @@ export default function ImportListingsPage() {
           reject(new Error('Network error'));
         });
 
-        xhr.open('POST', `${getGatewayUrl()}/listings/import`);
+        xhr.open('POST', `${getMyGatewayUrl()}/listings/import`);
+        const authHdrs = getAuthHeaders();
+        if (authHdrs['Authorization']) {
+          xhr.setRequestHeader('Authorization', authHdrs['Authorization']);
+        }
         xhr.send(formData);
       });
 
@@ -204,10 +223,10 @@ export default function ImportListingsPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Container size="md">
           {/* Page Header */}
-          <HStack gap="md" align="center" className="mb-8">
+          <HStack gap="md" align="center" className="mb-4 sm:mb-8">
             <Link
               href="/profile"
               className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
@@ -215,16 +234,24 @@ export default function ImportListingsPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{t('importListings.title')}</h1>
-              <p className="text-muted-foreground">{t('importListings.subtitle')}</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                {t('importListings.title')}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {t('importListings.subtitle')}
+              </p>
             </div>
           </HStack>
 
           <VStack gap="lg">
             {/* Step 1: Download Template */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-2">{t('importListings.step1Title')}</h2>
-              <p className="text-muted-foreground text-sm mb-4">{t('importListings.step1Desc')}</p>
+            <Card className="p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                {t('importListings.step1Title')}
+              </h2>
+              <p className="text-muted-foreground text-sm mb-3 sm:mb-4">
+                {t('importListings.step1Desc')}
+              </p>
               <Button
                 variant="outline"
                 onClick={handleDownloadTemplate}
@@ -241,15 +268,19 @@ export default function ImportListingsPage() {
             </Card>
 
             {/* Step 2: Upload ZIP */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-2">{t('importListings.step2Title')}</h2>
-              <p className="text-muted-foreground text-sm mb-4">{t('importListings.step2Desc')}</p>
+            <Card className="p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                {t('importListings.step2Title')}
+              </h2>
+              <p className="text-muted-foreground text-sm mb-3 sm:mb-4">
+                {t('importListings.step2Desc')}
+              </p>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
-                className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-primary/50 active:border-primary/50 active:bg-muted/30 transition-colors"
               >
                 <input
                   type="file"
@@ -261,8 +292,10 @@ export default function ImportListingsPage() {
 
                 {!selectedFile ? (
                   <div className="space-y-2">
-                    <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="text-muted-foreground">{t('importListings.dropOrClick')}</p>
+                    <Upload className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground" />
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                      {t('importListings.dropOrClick')}
+                    </p>
                     <p className="text-xs text-muted-foreground">{t('importListings.maxSize')}</p>
                   </div>
                 ) : (
@@ -333,8 +366,10 @@ export default function ImportListingsPage() {
 
             {/* Results */}
             {importResult && (
-              <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-4">{t('importListings.resultsTitle')}</h2>
+              <Card className="p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold mb-4">
+                  {t('importListings.resultsTitle')}
+                </h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                   <div className="p-4 bg-muted rounded-lg text-center">

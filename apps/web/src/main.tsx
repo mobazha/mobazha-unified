@@ -12,7 +12,6 @@ import './app/globals.css';
 // 导入 Provider 组件
 import { AuthProvider, MobileNav, ChatSystem, PWAInstall } from '@/components';
 import { OuterProviders } from '@/components/OuterProviders';
-import { BrandedSplash } from '@/components/BrandedSplash';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
@@ -31,9 +30,13 @@ const queryClient = new QueryClient({
 // 导入路由配置
 import { routes } from './routes';
 
-// 加载中的全局占位（与 layout.tsx Suspense fallback 保持一致）
+// 加载中的全局占位
 function GlobalLoading() {
-  return <BrandedSplash />;
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+  );
 }
 
 // 内部布局组件 - 在 Router 上下文内使用路由 hooks
@@ -89,7 +92,6 @@ function App() {
 // 挂载应用
 const container = document.getElementById('root');
 if (container) {
-  document.getElementById('mbz-splash')?.remove();
   const root = createRoot(container);
   root.render(
     <StrictMode>
