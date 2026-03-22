@@ -3427,6 +3427,20 @@ export interface TranslationResource {
   store?: TranslationSection & {
     offlineBanner?: string;
     offlinePriceDisclaimer?: string;
+    pausedBanner?: string;
+    pausedBannerAdmin?: string;
+    pauseStore?: string;
+    resumeStore?: string;
+    pauseStoreDesc?: string;
+    pauseConfirmTitle?: string;
+    pauseConfirmDesc?: string;
+    pauseConfirmAction?: string;
+    resumeConfirmTitle?: string;
+    resumeConfirmDesc?: string;
+    resumeConfirmAction?: string;
+    storeStatus?: string;
+    statusActive?: string;
+    statusPaused?: string;
   };
 
   categories?: {

@@ -30,6 +30,8 @@ export interface UserContext {
   isPureBuyer: boolean;
   /** SaaS 用户天然双角色（既能买也能管理店铺，如果有店铺的话） */
   isDualRole: boolean;
+  /** 当前用户的店铺是否处于暂停状态（度假模式） */
+  isStorePaused: boolean;
 }
 
 /**
@@ -66,6 +68,8 @@ export function useUserContext(): UserContext {
     // SaaS 用户天然双角色
     const isDualRole = !standaloneMode && isAuthenticated;
 
+    const isStorePaused = hasStore && profile?.storePaused === true;
+
     return {
       isAuthenticated,
       hasStore,
@@ -73,6 +77,14 @@ export function useUserContext(): UserContext {
       isPureSeller,
       isPureBuyer,
       isDualRole,
+      isStorePaused,
     };
-  }, [isAuthenticated, profile?.vendor, profile?.peerID, authMode, standaloneMode]);
+  }, [
+    isAuthenticated,
+    profile?.vendor,
+    profile?.peerID,
+    profile?.storePaused,
+    authMode,
+    standaloneMode,
+  ]);
 }

@@ -71,6 +71,7 @@ import {
   FollowTab,
   OfflineBanner,
 } from '@/components/store';
+import { StorePausedBanner } from '@/components/store/StorePausedBanner';
 import { StoreSections } from '@/components/store-sections';
 import { BrandedHeroHeader } from '@/components/store-sections/BrandedHeroHeader';
 import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
@@ -801,6 +802,7 @@ export default function StorePage() {
         </button>
       )}
       {isOffline && <OfflineBanner />}
+      {!isOwnStore && store.storePaused && <StorePausedBanner variant="buyer" />}
 
       <main>
         {heroMode === 'fused' ? (

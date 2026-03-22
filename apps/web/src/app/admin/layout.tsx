@@ -5,7 +5,8 @@ import { AuthGuard } from '@/components';
 import { AdminSidebar, AdminHeader } from '@/components/admin';
 import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs';
 import { AIChatPanel } from '@/components/AIChatPanel';
-import { isStandalone } from '@mobazha/core';
+import { StorePausedBanner } from '@/components/store/StorePausedBanner';
+import { isStandalone, useUserContext } from '@mobazha/core';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 
 interface AdminLayoutProps {
@@ -14,6 +15,7 @@ interface AdminLayoutProps {
 
 function AdminLayoutShell({ children }: AdminLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { isStorePaused } = useUserContext();
 
   const toggleCollapse = useCallback(() => setCollapsed(prev => !prev), []);
 
@@ -27,6 +29,7 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <AdminHeader />
+        {isStorePaused && <StorePausedBanner variant="admin" />}
 
         <main className="flex-1 overflow-y-auto" role="main">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 lg:pb-6">

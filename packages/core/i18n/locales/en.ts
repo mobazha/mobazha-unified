@@ -5045,6 +5045,22 @@ export const en: TranslationResource = {
   store: {
     offlineBanner: 'This store is currently offline. Showing cached data.',
     offlinePriceDisclaimer: 'Prices may have changed',
+    pausedBanner: 'This store is currently on vacation and not accepting orders.',
+    pausedBannerAdmin: 'Your store is paused. Buyers cannot place new orders.',
+    pauseStore: 'Pause Store',
+    resumeStore: 'Resume Store',
+    pauseStoreDesc: 'Temporarily close your store. Existing orders will not be affected.',
+    pauseConfirmTitle: 'Pause your store?',
+    pauseConfirmDesc:
+      'While paused, your store will be hidden from search results and buyers cannot place new orders. You can resume at any time.',
+    pauseConfirmAction: 'Pause Store',
+    resumeConfirmTitle: 'Resume your store?',
+    resumeConfirmDesc:
+      'Your store will be visible in search results and buyers can place orders again.',
+    resumeConfirmAction: 'Resume Store',
+    storeStatus: 'Store Status',
+    statusActive: 'Active',
+    statusPaused: 'Paused',
   },
 };
 
