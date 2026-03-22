@@ -141,10 +141,12 @@ export function FollowTab({ peerID, type }: FollowTabProps) {
 
     return (
       <Container size="xl">
-        <Card className="p-8 text-center">
-          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">{emptyMessage}</p>
-        </Card>
+        <div className="text-center py-10 sm:py-12">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
       </Container>
     );
   }

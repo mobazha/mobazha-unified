@@ -54,7 +54,15 @@ import {
   ImageIcon,
   FileText,
   ChevronLeft,
+  Sparkles,
+  MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { ShareButton } from '@/components/Share';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
@@ -162,9 +170,6 @@ export default function StorePage() {
   // 筛选相关状态
   const [filter, setFilter] = useState<FilterState>(defaultFilterState);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-
-  // Welcome 弹窗状态
-  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
   // 编辑相关状态
   const [isEditing, setIsEditing] = useState(false);
@@ -319,22 +324,6 @@ export default function StorePage() {
 
     checkBlockStatus();
   }, [peerId, isAuthenticated, isOwnStore]);
-
-  // 检查是否显示 Welcome 弹窗（仅当是自己的店铺、商品为空、且未关闭过时）
-  useEffect(() => {
-    if (isOwnStore && !productsLoading && products.length === 0) {
-      const dismissed = localStorage.getItem('dismissedStoreWelcome');
-      if (!dismissed) {
-        setShowWelcomeDialog(true);
-      }
-    }
-  }, [isOwnStore, productsLoading, products.length]);
-
-  // 关闭 Welcome 弹窗
-  const handleCloseWelcome = useCallback(() => {
-    setShowWelcomeDialog(false);
-    localStorage.setItem('dismissedStoreWelcome', 'true');
-  }, []);
 
   // 关注/取消关注处理
   const handleFollowToggle = async () => {
@@ -900,7 +889,7 @@ export default function StorePage() {
             {/* Store Info - 白色背景卡片 */}
             <Container size="xl" className="relative">
               <div className="bg-background -mt-12 sm:-mt-16 rounded-t-2xl pt-4 px-4 sm:px-6">
-                {/* 头像和信息 */}
+                {/* 头像 + 核心信息行 */}
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0 -mt-10 sm:-mt-12">
@@ -935,16 +924,14 @@ export default function StorePage() {
                     )}
                   </div>
 
-                  {/* 信息区域 */}
+                  {/* 头像旁信息：移动端只放名称+评分，桌面端放全部 */}
                   <div className="flex-1 min-w-0 pt-1">
-                    {/* 名称和操作按钮 */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
+                    {isOwnStore ? (
+                      <>
                         <div className="flex items-center gap-2">
-                          <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                          <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
                             {store.name || peerId.slice(0, 8)}
                           </h1>
-                          {/* 隐私店铺徽标 */}
                           {store.private && (
                             <span
                               className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
@@ -955,18 +942,16 @@ export default function StorePage() {
                             </span>
                           )}
                         </div>
-                        {/* 位置 + 评分（桌面端） */}
-                        <div className="flex items-center gap-3 mt-0.5">
+                        <div className="flex items-center gap-2 sm:gap-3 mt-0.5">
                           {store.location && (
                             <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                               <span>📍</span>
                               <span>{store.location}</span>
                             </p>
                           )}
-                          {/* 评分 - 点击进入评价 Tab */}
                           <button
                             onClick={() => setActiveTab('reviews')}
-                            className="hover:opacity-80 transition-opacity"
+                            className="hover:opacity-80 transition-opacity min-h-[44px] inline-flex items-center"
                           >
                             <SellerTrustBadge
                               compact
@@ -975,12 +960,14 @@ export default function StorePage() {
                             />
                           </button>
                         </div>
-                      </div>
-
-                      {/* Actions — wrap on mobile for better touch targets */}
-                      <div className="flex flex-wrap gap-2 flex-shrink-0">
-                        {isOwnStore ? (
-                          <>
+                        {/* 桌面端：简介和按钮在头像旁 */}
+                        {store.shortDescription && (
+                          <p className="hidden sm:block text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                            {stripHtmlTags(store.shortDescription)}
+                          </p>
+                        )}
+                        {(productsLoading || products.length > 0 || activeTab !== 'products') && (
+                          <div className="hidden sm:flex gap-2 mt-2.5">
                             <Button
                               variant="outline"
                               onClick={() =>
@@ -989,46 +976,79 @@ export default function StorePage() {
                                 )
                               }
                               size="sm"
-                              className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                              className="touch-feedback gap-1.5"
                             >
-                              <Settings className="h-4 w-4" />
-                              <span className="hidden sm:inline">
-                                {t('settingsModal.customize')}
-                              </span>
+                              <Settings className="h-3.5 w-3.5" />
+                              {t('settingsModal.customize')}
                             </Button>
                             <Link href="/listing/new">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                                className="touch-feedback gap-1.5"
                               >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">
-                                  {t('userPage.createListing')}
-                                </span>
+                                <Plus className="h-3.5 w-3.5" />
+                                {t('userPage.createListing')}
                               </Button>
                             </Link>
                             <Link href="/listing/import">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="touch-feedback gap-1.5 min-h-[44px] sm:min-h-0"
+                                className="touch-feedback gap-1.5"
                               >
-                                <Upload className="h-4 w-4" />
-                                <span className="hidden sm:inline">
-                                  {t('userPage.importListings')}
-                                </span>
+                                <Upload className="h-3.5 w-3.5" />
+                                {t('userPage.importListings')}
                               </Button>
                             </Link>
-                          </>
-                        ) : (
-                          <>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {/* 访客视图 */}
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
+                                {store.name || peerId.slice(0, 8)}
+                              </h1>
+                              {store.private && (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning shrink-0"
+                                  title={t('storeAccess.privateStore')}
+                                >
+                                  <Lock className="h-3 w-3" />
+                                  {t('storeAccess.privateStoreBadge') || t('common.private')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-3 mt-0.5">
+                              {store.location && (
+                                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                                  <span>📍</span>
+                                  <span>{store.location}</span>
+                                </p>
+                              )}
+                              <button
+                                onClick={() => setActiveTab('reviews')}
+                                className="hover:opacity-80 transition-opacity"
+                              >
+                                <SellerTrustBadge
+                                  compact
+                                  rating={stats.averageRating}
+                                  reviewCount={stats.ratingCount}
+                                />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
                             <Button
                               variant={isFollowing ? 'outline' : 'default'}
                               onClick={handleFollowToggle}
                               disabled={followLoading || !isAuthenticated}
                               size="sm"
-                              className="touch-feedback min-h-[44px] sm:min-h-0"
+                              className="touch-feedback h-9 sm:h-auto"
                             >
                               {followLoading ? (
                                 <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
@@ -1041,7 +1061,7 @@ export default function StorePage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="touch-feedback min-h-[44px] sm:min-h-0"
+                              className="touch-feedback h-9 sm:h-auto"
                               onClick={handleMessage}
                             >
                               {t('profile.message')}
@@ -1051,7 +1071,7 @@ export default function StorePage() {
                               onClick={handleBlockToggle}
                               disabled={blockLoading || !isAuthenticated}
                               size="sm"
-                              className="touch-feedback min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
+                              className="touch-feedback h-9 w-9 sm:h-auto sm:w-auto"
                               title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
                             >
                               {blockLoading ? (
@@ -1075,19 +1095,63 @@ export default function StorePage() {
                               embedType="store"
                               embedIdentifier={peerId}
                             />
-                          </>
+                          </div>
+                        </div>
+                        {/* 桌面端：简介在头像旁 */}
+                        {store.shortDescription && (
+                          <p className="hidden sm:block text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                            {stripHtmlTags(store.shortDescription)}
+                          </p>
                         )}
-                      </div>
-                    </div>
-
-                    {/* 简介 */}
-                    {store.shortDescription && (
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                        {stripHtmlTags(store.shortDescription)}
-                      </p>
+                      </>
                     )}
                   </div>
                 </div>
+
+                {/* 移动端：简介和店主按钮在头像行下方，全宽展示 */}
+                {store.shortDescription && (
+                  <p className="sm:hidden text-xs text-muted-foreground mt-2 line-clamp-2">
+                    {stripHtmlTags(store.shortDescription)}
+                  </p>
+                )}
+                {isOwnStore &&
+                  (productsLoading || products.length > 0 || activeTab !== 'products') && (
+                    <div className="flex gap-2 mt-2 sm:hidden">
+                      <Link href="/listing/new">
+                        <Button size="sm" className="touch-feedback gap-1.5 min-h-[44px] text-xs">
+                          <Plus className="h-3.5 w-3.5" />
+                          {t('userPage.createListing')}
+                        </Button>
+                      </Link>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="touch-feedback min-h-[44px] w-11 p-0"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(
+                                hasSections ? '/admin/storefront' : '/settings/page-profile'
+                              )
+                            }
+                          >
+                            <Settings className="h-4 w-4" />
+                            {t('settingsModal.customize')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push('/listing/import')}>
+                            <Upload className="h-4 w-4" />
+                            {t('userPage.importListings')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
 
                 {/* 统计数据：关注中 / 粉丝 - 点击可查看列表 */}
                 <div className="flex items-center gap-4 md:gap-6 mt-3 pt-3 border-t border-border text-sm md:text-base">
@@ -1142,7 +1206,7 @@ export default function StorePage() {
                     {/* 简介 Tab */}
                     <button
                       onClick={() => setActiveTab('about')}
-                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                      className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
                         activeTab === 'about'
                           ? 'border-primary text-primary'
                           : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1154,7 +1218,7 @@ export default function StorePage() {
                     {/* 商品 Tab */}
                     <button
                       onClick={() => setActiveTab('products')}
-                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                      className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
                         activeTab === 'products'
                           ? 'border-primary text-primary'
                           : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1171,7 +1235,7 @@ export default function StorePage() {
                     {/* RWA 数字资产 Tab */}
                     <button
                       onClick={() => setActiveTab('rwa')}
-                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                      className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
                         activeTab === 'rwa'
                           ? 'border-primary text-primary'
                           : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1188,7 +1252,7 @@ export default function StorePage() {
                     {/* 评价 Tab */}
                     <button
                       onClick={() => setActiveTab('reviews')}
-                      className={`whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                      className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
                         activeTab === 'reviews'
                           ? 'border-primary text-primary'
                           : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1353,8 +1417,40 @@ export default function StorePage() {
                           {t('empty.tryAdjustingFilters')}
                         </p>
                       </div>
+                    ) : isOwnStore ? (
+                      <div className="text-center py-10 sm:py-12 px-4">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+                        </div>
+                        <h3 className="text-base font-semibold text-foreground mb-1">
+                          {t('userPage.storeWelcomeCalloutTitle')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+                          {t('userPage.storeWelcomeCalloutBody')}
+                        </p>
+                        <div className="flex flex-col items-center gap-2 max-w-xs mx-auto">
+                          <Link href="/listing/new" className="w-full">
+                            <Button size="sm" className="w-full">
+                              {t('userPage.createListing')}
+                            </Button>
+                          </Link>
+                          <div className="flex gap-2">
+                            <Link href="/listing/import">
+                              <Button size="sm" variant="outline" className="gap-1.5">
+                                <Upload className="h-3.5 w-3.5" />
+                                {t('userPage.importListings')}
+                              </Button>
+                            </Link>
+                            <Link href="/settings/page-profile">
+                              <Button size="sm" variant="outline" className="gap-1.5">
+                                <Settings className="h-3.5 w-3.5" />
+                                {t('settingsModal.customize')}
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
-                      // 店铺本身没有普通商品（但可能有 RWA 商品）
                       <div className="text-center py-12">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                           <Package className="w-8 h-8 text-muted-foreground" />
@@ -1600,38 +1696,6 @@ export default function StorePage() {
         onFilterChange={setFilter}
         categories={categories}
       />
-
-      {/* Welcome 弹窗 - 新店铺首次进入时显示 */}
-      <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">{t('userPage.storeWelcomeCalloutTitle')}</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-muted-foreground">{t('userPage.storeWelcomeCalloutBody')}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={handleCloseWelcome} className="flex-1">
-              {t('userPage.storeWelcomeCalloutBtnClose')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                handleCloseWelcome();
-                router.push('/settings/page-profile');
-              }}
-              className="flex-1"
-            >
-              {t('settingsModal.customize')}
-            </Button>
-            <Link href="/listing/new" className="flex-1">
-              <Button onClick={handleCloseWelcome} className="w-full">
-                {t('userPage.createListing')}
-              </Button>
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <ConfirmDialog
         open={deleteDialogOpen}

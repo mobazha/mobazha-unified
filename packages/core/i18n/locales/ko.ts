@@ -3282,9 +3282,9 @@ export const ko: TranslationResource = {
     instantTrade: '즉시 거래',
     confirmRequired: '확인 필요',
     foundItems: '{{count}}개 항목 발견',
-    noRwaYet: '아직 RWA 디지털 자산 없음',
-    noRwaInStore: '이 스토어에 RWA 디지털 자산 없음',
-    createFirstRwa: 'RWA 토큰 유형으로 리스팅을 만들어 디지털 자산 판매 시작',
+    noRwaYet: '아직 디지털 자산 없음',
+    noRwaInStore: '이 스토어에 디지털 자산 없음',
+    createFirstRwa: '디지털 자산 리스팅을 만들어 판매를 시작하세요',
     purchase: {
       connectWallet: '지갑 연결',
       connectDesc: '결제 토큰을 승인하려면 지갑을 연결하세요',

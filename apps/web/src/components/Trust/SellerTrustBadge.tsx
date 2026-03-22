@@ -42,9 +42,27 @@ export function SellerTrustBadge({
   const fullStars = Math.floor(displayRating);
 
   if (compact) {
+    if (reviewCount === 0) {
+      return (
+        <span
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary',
+            className
+          )}
+          data-testid="seller-trust-badge"
+        >
+          {t('trust.newStore')}
+        </span>
+      );
+    }
+
     return (
       <div
-        className={cn('inline-flex items-center gap-2 min-h-[44px]', 'text-foreground', className)}
+        className={cn(
+          'inline-flex items-center gap-1 sm:gap-2 whitespace-nowrap',
+          'text-foreground',
+          className
+        )}
         data-testid="seller-trust-badge"
       >
         <div className="flex items-center gap-0.5" aria-label={t('trust.sellerRating')}>
@@ -52,15 +70,17 @@ export function SellerTrustBadge({
             <Star
               key={i}
               className={cn(
-                'w-4 h-4',
+                'w-3.5 h-3.5 sm:w-4 sm:h-4',
                 i <= fullStars ? 'text-warning fill-warning' : 'text-muted-foreground/30'
               )}
               aria-hidden
             />
           ))}
         </div>
-        <span className="text-sm font-medium text-foreground">{displayRating.toFixed(1)}</span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-xs sm:text-sm font-medium text-foreground">
+          {displayRating.toFixed(1)}
+        </span>
+        <span className="text-xs sm:text-sm text-muted-foreground">
           ({t('trust.reviews', { count: reviewCount })})
         </span>
       </div>

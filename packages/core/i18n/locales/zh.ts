@@ -3231,9 +3231,9 @@ export const zh: TranslationResource = {
     instantTrade: '即时交易',
     confirmRequired: '需确认',
     foundItems: '找到 {{count}} 件商品',
-    noRwaYet: '还没有 RWA 数字资产商品',
-    noRwaInStore: '该店铺暂无 RWA 数字资产商品',
-    createFirstRwa: '创建商品时选择 RWA Token 类型，开始销售数字资产',
+    noRwaYet: '还没有数字资产',
+    noRwaInStore: '该店铺暂无数字资产',
+    createFirstRwa: '创建数字资产商品，开始销售',
     purchase: {
       connectWallet: '连接钱包',
       connectDesc: '请连接钱包以授权支付代币',
