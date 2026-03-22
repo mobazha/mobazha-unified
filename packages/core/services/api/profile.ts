@@ -122,7 +122,15 @@ export async function createBuyerProfile(
 export async function setProfile(
   profile: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
-  return authPut(NODE_API.PROFILES, { ...profile, vendor: true });
+  try {
+    await authPut(NODE_API.PROFILES, { ...profile, vendor: true });
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Update failed',
+    };
+  }
 }
 
 /**
@@ -131,7 +139,15 @@ export async function setProfile(
 export async function setAcceptedCoins(
   coins: string[]
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.PREFERENCES_CURRENCY, { currencies: coins });
+  try {
+    await authPost(NODE_API.PREFERENCES_CURRENCY, { currencies: coins });
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Update failed',
+    };
+  }
 }
 
 /**
@@ -153,7 +169,15 @@ export async function getSettings(): Promise<UserSettings | null> {
 export async function setSettings(
   settings: Partial<UserSettings>
 ): Promise<{ success: boolean; error?: string }> {
-  return authPut(NODE_API.PREFERENCES, settings);
+  try {
+    await authPut(NODE_API.PREFERENCES, settings);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Update failed',
+    };
+  }
 }
 
 /**
