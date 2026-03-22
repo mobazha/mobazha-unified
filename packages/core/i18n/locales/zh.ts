@@ -2769,6 +2769,7 @@ export const zh: TranslationResource = {
       stepReview: '确认发布',
       stepOf: '第 {{current}} 步，共 {{total}} 步',
       readinessCheck: '发布前检查',
+      requiredMissing: '请填写{{field}}',
       takePhoto: '拍照',
       chooseFromLibrary: '从相册选择',
     },

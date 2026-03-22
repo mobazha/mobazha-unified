@@ -282,19 +282,21 @@ export function MediaSection({
   );
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`${isMobile ? 'space-y-4' : 'space-y-6'} ${className}`}>
       {/* 图片上传区域 */}
       <Card
-        className={`p-6 transition-colors ${isFileDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+        className={`${isMobile ? 'p-4' : 'p-6'} transition-colors ${isFileDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
         onDragOver={handleFileDragOver}
         onDragLeave={handleFileDragLeave}
         onDrop={handleFileDrop}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
+        <div className={`flex items-center justify-between ${isMobile ? 'mb-3' : 'mb-4'}`}>
+          <h2
+            className={`${isMobile ? 'text-base font-medium' : 'text-lg font-semibold'} text-foreground`}
+          >
             {t('listing.photos')} <span className="text-destructive">*</span>
           </h2>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {images.length} / {maxImages}
           </span>
         </div>
@@ -359,7 +361,9 @@ export function MediaSection({
 
               {/* 主图标记 */}
               {index === 0 && (
-                <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded">
+                <div
+                  className={`absolute bottom-1 left-1 bg-primary text-primary-foreground rounded ${isMobile ? 'px-1 py-px text-[10px] leading-tight' : 'px-2 py-0.5 text-xs'}`}
+                >
                   {t('listing.primaryPhoto')}
                 </div>
               )}
@@ -414,27 +418,27 @@ export function MediaSection({
             <Button
               type="button"
               variant="default"
-              className="flex-1 h-12"
+              className="flex-1 h-10"
               onClick={() => cameraInputRef.current?.click()}
               disabled={isUploading}
             >
-              <Camera className="w-5 h-5 mr-2" />
+              <Camera className="w-4 h-4 mr-1.5" />
               {t('listing.mobile.takePhoto')}
             </Button>
             <Button
               type="button"
               variant="outline"
-              className="flex-1 h-12"
+              className="flex-1 h-10"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
             >
-              <ImageIcon className="w-5 h-5 mr-2" />
+              <ImageIcon className="w-4 h-4 mr-1.5" />
               {t('listing.mobile.chooseFromLibrary')}
             </Button>
           </div>
         )}
 
-        <p className="text-xs text-muted-foreground mt-3">
+        <p className="text-xs text-muted-foreground mt-2">
           {isMobile ? t('listing.photosHelperMobile') : t('listing.photosHelper')}
         </p>
 
@@ -459,23 +463,25 @@ export function MediaSection({
 
       {/* 视频上传区域 */}
       <Card
-        className={`p-6 transition-colors ${isVideoDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+        className={`${isMobile ? 'p-4' : 'p-6'} transition-colors ${isVideoDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
         onDragOver={handleVideoDragOver}
         onDragLeave={handleVideoDragLeave}
         onDrop={handleVideoDrop}
       >
-        <h2 className="text-lg font-semibold text-foreground mb-4">
+        <h2
+          className={`${isMobile ? 'text-base font-medium' : 'text-lg font-semibold'} text-foreground ${isMobile ? 'mb-3' : 'mb-4'}`}
+        >
           {t('listing.introVideo')} (mp4, &lt;{maxVideoSize}MB)
         </h2>
 
-        <div className="space-y-4">
+        <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
           {/* 上传视频按钮 */}
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => videoInputRef.current?.click()}
               disabled={isUploading}
-              className="w-24 h-24 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
+              className={`${isMobile ? 'w-20 h-20' : 'w-24 h-24'} rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary`}
             >
               {introVideo ? (
                 <Video className="w-8 h-8 text-primary" />
@@ -512,8 +518,10 @@ export function MediaSection({
           />
 
           {/* 外部视频链接 */}
-          <div className="border-t border-border pt-4">
-            <label className="block text-sm font-medium text-muted-foreground mb-2">
+          <div className={`border-t border-border ${isMobile ? 'pt-3' : 'pt-4'}`}>
+            <label
+              className={`block text-sm ${isMobile ? '' : 'font-medium'} text-muted-foreground ${isMobile ? 'mb-1.5' : 'mb-2'}`}
+            >
               {t('listing.externalVideoLink')}
             </label>
             <div className="flex gap-2">
