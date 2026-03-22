@@ -802,7 +802,9 @@ export default function StorePage() {
         </button>
       )}
       {isOffline && <OfflineBanner />}
-      {!isOwnStore && store.storePaused && <StorePausedBanner variant="buyer" />}
+      {(isOwnStore ? currentUserProfile?.storePaused : store.storePaused) && (
+        <StorePausedBanner variant={isOwnStore ? 'admin' : 'buyer'} />
+      )}
 
       <main>
         {heroMode === 'fused' ? (
