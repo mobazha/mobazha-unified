@@ -4,7 +4,6 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
-import { useTGBackButton } from '@/hooks/useTGBackButton';
 
 export interface MobilePageHeaderProps {
   /** 页面标题 */
@@ -44,8 +43,6 @@ export function MobilePageHeader({
   // - Discord: Activity frame has its own navigation
   // Exception: if a custom onBack is provided, always show it (e.g. close modal)
   const effectiveShowBack = isEmbeddedApp && !onBack ? false : showBack;
-
-  useTGBackButton({ onBack, visible: showBack });
 
   const handleBack = () => {
     if (onBack) {

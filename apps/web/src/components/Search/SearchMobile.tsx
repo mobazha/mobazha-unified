@@ -8,8 +8,6 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Button } from '@/components/ui/button';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { useSearch } from '@/hooks/useSearch';
-import { useTGBackButton } from '@/hooks/useTGBackButton';
-import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import type { DisplayProduct, SearchUser } from '@/hooks/useSearch';
 
 function SearchIcon({ className }: { className?: string }) {
@@ -49,9 +47,6 @@ function XIcon({ className }: { className?: string }) {
 export function SearchMobile() {
   const search = useSearch();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isAvailable: isTG } = useTGMiniApp();
-
-  useTGBackButton({ visible: isTG });
 
   useEffect(() => {
     if (!search.queryParam && inputRef.current) {

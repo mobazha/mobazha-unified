@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { StarRating } from '@/components/ui/star-rating';
 import { cn } from '@/lib/utils';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
-import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import {
@@ -445,8 +444,6 @@ export function ProductDetail({
     visible: isTG && !!product && !isModal,
     disabled: tgStock === 0 || isStorePaused,
   });
-
-  useTGBackButton({ visible: isTG && !isModal });
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;

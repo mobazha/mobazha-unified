@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { useCart, buildCheckoutUrl } from '@/hooks/useCart';
 import { useTGMainButton } from '@/hooks/useTGMainButton';
-import { useTGBackButton } from '@/hooks/useTGBackButton';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import type { VendorGroup } from '@/hooks/useCart';
@@ -280,8 +279,6 @@ export function CartMobile() {
     onClick: handleTGCheckout,
     visible: isTG && items.length > 0 && groups.length === 1,
   });
-
-  useTGBackButton({ visible: isTG });
 
   if (items.length === 0) {
     return (
