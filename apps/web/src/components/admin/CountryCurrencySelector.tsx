@@ -8,7 +8,9 @@ import {
   FIAT_CURRENCIES,
   getPopularCurrencies,
   getDefaultCurrencyForCountry,
+  getCurrencyFlag,
 } from '@mobazha/core';
+import type { CurrencyInfo } from '@mobazha/core';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -52,10 +54,7 @@ export default function CountryCurrencySelector({
     [allCountries, popularCountryCodes]
   );
 
-  const popularCurrencies = useMemo(
-    () => getPopularCurrencies().filter(c => c.type === 'fiat'),
-    []
-  );
+  const popularCurrencies = useMemo(() => getPopularCurrencies(), []);
   const otherFiatCurrencies = useMemo(() => {
     const popularCodes = new Set(popularCurrencies.map(c => c.code));
     return FIAT_CURRENCIES.filter(c => !popularCodes.has(c.code));
@@ -77,15 +76,23 @@ export default function CountryCurrencySelector({
     [onCurrencyChange]
   );
 
+  const currencyLabel = useCallback((c: CurrencyInfo) => {
+    if (c.type === 'crypto') return c.code;
+    const flag = getCurrencyFlag(c.code);
+    return flag ? `${flag} ${c.code}` : c.code;
+  }, []);
+
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">{t('onboarding.country')}</Label>
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label className="text-xs sm:text-sm font-medium text-foreground">
+          {t('onboarding.country')}
+        </Label>
         <Select value={country} onValueChange={onCountryChange} disabled={disabled}>
           <SelectTrigger className="w-full" data-testid="country-select">
             <SelectValue placeholder={t('onboarding.countryPlaceholder')} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-w-[min(320px,calc(100vw-2rem))]">
             <SelectGroup>
               <SelectLabel>{t('onboarding.popularCountries') || 'Popular'}</SelectLabel>
               {popularCountries.map(c => (
@@ -107,8 +114,8 @@ export default function CountryCurrencySelector({
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label className="text-xs sm:text-sm font-medium text-foreground">
           {t('onboarding.currency') || 'Display Currency'}
         </Label>
         <Select value={currency} onValueChange={handleCurrencyChange} disabled={disabled}>
@@ -117,19 +124,19 @@ export default function CountryCurrencySelector({
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>{t('onboarding.popularCountries') || 'Popular'}</SelectLabel>
+              <SelectLabel>{t('onboarding.popularCurrencies') || 'Popular'}</SelectLabel>
               {popularCurrencies.map(c => (
                 <SelectItem key={c.code} value={c.code}>
-                  {c.symbol} {c.code}
+                  {currencyLabel(c)}
                 </SelectItem>
               ))}
             </SelectGroup>
             <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>{t('onboarding.allCountries') || 'All'}</SelectLabel>
+              <SelectLabel>{t('onboarding.fiatCurrencies') || 'Fiat'}</SelectLabel>
               {otherFiatCurrencies.map(c => (
                 <SelectItem key={c.code} value={c.code}>
-                  {c.symbol} {c.code}
+                  {currencyLabel(c)}
                 </SelectItem>
               ))}
             </SelectGroup>

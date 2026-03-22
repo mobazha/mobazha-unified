@@ -2954,6 +2954,8 @@ export const en: TranslationResource = {
     countrySearch: 'Search countries...',
     popularCountries: 'Popular',
     allCountries: 'All Countries',
+    popularCurrencies: 'Popular',
+    fiatCurrencies: 'Fiat',
     currency: 'Display Currency',
     currencyPlaceholder: 'Select currency',
     currencyHint: 'Used for displaying prices',
@@ -2974,7 +2976,7 @@ export const en: TranslationResource = {
     importListings: 'Import Listings',
     storeWelcomeCalloutTitle: 'Welcome to your store!',
     storeWelcomeCalloutBody:
-      'Your Mobazha store is now live on the network. Get started by creating some listings or customizing your page.',
+      'Your store is ready! Create your first listing to start selling, or customize your page.',
     storeWelcomeCalloutBtnClose: 'Close',
   },
 

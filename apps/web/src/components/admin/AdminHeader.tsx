@@ -46,10 +46,10 @@ export function AdminHeader({ title }: AdminHeaderProps) {
 
   return (
     <header
-      className="h-14 border-b border-border bg-background/95 backdrop-blur-sm flex items-center justify-between px-4 shrink-0 relative z-50"
+      className="h-14 border-b border-border bg-background/95 backdrop-blur-sm flex items-center justify-between px-2 sm:px-4 shrink-0 relative z-50"
       data-testid="admin-header"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {standaloneMode ? (
           <button
             onClick={handleViewStore}
@@ -63,7 +63,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
           <>
             <Link
               href="/me"
-              className="lg:hidden flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+              className="lg:hidden flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-0.5 sm:mr-2"
               data-testid="admin-back-mobile"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -87,7 +87,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
         {title && <h1 className="text-lg font-semibold text-foreground">{title}</h1>}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <button
           onClick={toggleAIChat}
           className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -97,13 +97,11 @@ export function AdminHeader({ title }: AdminHeaderProps) {
           <MessageSquare className="w-4 h-4" />
         </button>
         <NotificationDropdown />
-        <div className="hidden md:block">
-          <LanguageSwitcher compact />
-        </div>
+        <LanguageSwitcher compact />
         <ThemeSwitcher compact />
 
         {profile && (
-          <div className="ml-2 pl-2 border-l border-border">
+          <div className="ml-1 pl-1 sm:ml-2 sm:pl-2 border-l border-border">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
