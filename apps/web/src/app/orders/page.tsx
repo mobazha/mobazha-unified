@@ -23,8 +23,6 @@ import {
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop, useIsMobile } from '@/hooks/useMediaQuery';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
-import { useTGBackButton } from '@/hooks/useTGBackButton';
-import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import { useToast } from '@/components/ui/use-toast';
 import { transformOrderListItem } from '@/components/admin/orders/utils';
 
@@ -47,9 +45,6 @@ function OrdersPageContent() {
   const isDesktop = useIsDesktop();
   const isMobile = useIsMobile();
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isAvailable: isTG } = useTGMiniApp();
-
-  useTGBackButton({ visible: isTG });
 
   // Mobile: redirect ?tab=sales to Admin Orders (sales managed via Store Admin)
   useEffect(() => {

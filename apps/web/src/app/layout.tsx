@@ -17,6 +17,7 @@ import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
 import { BrandedSplash, INLINE_SPLASH_HTML } from '@/components/BrandedSplash';
+import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 
@@ -103,6 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <OuterProviders>
             <Suspense fallback={<BrandedSplash />}>
+              <TGBackButtonManager />
               <AuthProvider>
                 <ProductModalProvider>
                   <PaymentSelectorProvider>

@@ -13,6 +13,7 @@ import './app/globals.css';
 import { AuthProvider, MobileNav, ChatSystem, PWAInstall } from '@/components';
 import { OuterProviders } from '@/components/OuterProviders';
 import { BrandedSplash } from '@/components/BrandedSplash';
+import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 
@@ -39,6 +40,7 @@ function GlobalLoading() {
 function AppLayout() {
   return (
     <AuthProvider>
+      <TGBackButtonManager />
       <Suspense fallback={<GlobalLoading />}>
         <ProductModalProvider>
           <PaymentSelectorProvider>
