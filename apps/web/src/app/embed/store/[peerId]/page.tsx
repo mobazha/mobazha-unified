@@ -11,6 +11,7 @@ interface ProfileData {
   peerID?: string;
   name?: string;
   handle?: string;
+  location?: string;
   about?: string;
   shortDescription?: string;
   avatarHashes?: { medium?: string; small?: string; original?: string };
@@ -162,7 +163,13 @@ export default async function EmbedStorePage({
               {name}
             </a>
             {about && <p className={`text-xs ${textSecondary} mt-0.5 line-clamp-1`}>{about}</p>}
-            <div className={`flex items-center gap-2 text-xs ${textMuted} mt-0.5`}>
+            <div className={`flex items-center gap-1.5 text-xs ${textMuted} mt-0.5 flex-wrap`}>
+              {profile.location && (
+                <>
+                  <span>📍 {profile.location}</span>
+                  <span>·</span>
+                </>
+              )}
               <span>
                 {listingCount} {listingCount === 1 ? 'product' : 'products'}
               </span>
