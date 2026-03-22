@@ -1,9 +1,9 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { EmbedResizer } from '../../_components/EmbedResizer';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
 
 export const revalidate = 300;
 
@@ -24,14 +24,36 @@ function getImageUrl(hash?: string): string | undefined {
   return `${API_BASE}/v1/media/images/${hash}`;
 }
 
-async function fetchProduct(slug: string): Promise<ProductData | null> {
+function unwrapEnvelope<T>(json: unknown): T {
+  if (json && typeof json === 'object' && 'data' in json) {
+    return (json as { data: T }).data;
+  }
+  return json as T;
+}
+
+async function getSiteUrl(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   try {
-    const res = await fetch(`${API_BASE}/v1/listings/${slug}`, {
+    const h = await headers();
+    const host = h.get('x-forwarded-host') || h.get('host');
+    if (host) {
+      const proto = h.get('x-forwarded-proto') || 'https';
+      return `${proto}://${host}`;
+    }
+  } catch {
+    /* fallback below */
+  }
+  return 'https://app.mobazha.org';
+}
+
+async function fetchProduct(slug: string, peerID: string): Promise<ProductData | null> {
+  try {
+    const res = await fetch(`${API_BASE}/v1/listings/${peerID}/${slug}?usecache=true`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data?.listing || data || null;
+    const raw = unwrapEnvelope<{ listing?: ProductData } & ProductData>(await res.json());
+    return raw?.listing ?? raw ?? null;
   } catch {
     return null;
   }
@@ -62,11 +84,15 @@ function stripHtml(html: string): string {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ peerID?: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await fetchProduct(slug);
+  const { peerID } = await searchParams;
+  if (!peerID) return { title: 'Mobazha Embed', robots: { index: false, follow: false } };
+  const product = await fetchProduct(slug, peerID);
   const title = product?.item?.title || slug;
   return {
     title: `${title} — Mobazha Embed`,
@@ -83,8 +109,19 @@ export default async function EmbedProductPage({
 }) {
   const { slug } = await params;
   const { peerID, theme } = await searchParams;
-  const product = await fetchProduct(slug);
   const isDark = theme === 'dark';
+
+  if (!peerID) {
+    return (
+      <div
+        className={`flex items-center justify-center p-8 ${isDark ? 'bg-zinc-900 text-zinc-400' : 'bg-white text-zinc-500'}`}
+      >
+        <p>Missing peerID parameter</p>
+      </div>
+    );
+  }
+
+  const [product, siteUrl] = await Promise.all([fetchProduct(slug, peerID), getSiteUrl()]);
 
   if (!product?.item) {
     return (
@@ -106,11 +143,11 @@ export default async function EmbedProductPage({
   const vendorPeerID = peerID || vendorID?.peerID || '';
 
   const productUrl = vendorPeerID
-    ? `${SITE_URL}/product/${slug}?peerID=${vendorPeerID}&utm_source=embed&utm_medium=iframe&utm_campaign=product_card`
-    : `${SITE_URL}/product/${slug}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`;
+    ? `${siteUrl}/product/${slug}?peerID=${vendorPeerID}&utm_source=embed&utm_medium=iframe&utm_campaign=product_card`
+    : `${siteUrl}/product/${slug}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`;
 
   const storeUrl = vendorPeerID
-    ? `${SITE_URL}/store/${vendorPeerID}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`
+    ? `${siteUrl}/store/${vendorPeerID}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`
     : '';
 
   const bg = isDark ? 'bg-zinc-900' : 'bg-white';

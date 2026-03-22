@@ -9,6 +9,12 @@
  * - hosted: 托管模式，使用 Mobazha 中心化 Casdoor 认证
  * - basic: VPS 模式，使用简单的用户名/密码 Basic Auth
  */
+/**
+ * SaaS 前端默认域名 — 当 NEXT_PUBLIC_SITE_URL 未设置时的终极回退值。
+ * 域名迁移（如 store.mobazha.org → app.mobazha.org）只需改这一处。
+ */
+export const DEFAULT_SITE_URL = 'https://app.mobazha.org';
+
 export type AuthMode = 'hosted' | 'basic' | 'standalone';
 
 /**

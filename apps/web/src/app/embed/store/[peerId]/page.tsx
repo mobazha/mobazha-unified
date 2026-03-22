@@ -1,9 +1,9 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { EmbedResizer } from '../../_components/EmbedResizer';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
 
 export const revalidate = 300;
 
@@ -14,7 +14,8 @@ interface ProfileData {
   about?: string;
   shortDescription?: string;
   avatarHashes?: { medium?: string; small?: string; original?: string };
-  stats?: { listingCount?: number };
+  headerHashes?: { large?: string; medium?: string; original?: string };
+  stats?: { listingCount?: number; averageRating?: number; ratingCount?: number };
 }
 
 function getImageUrl(hash?: string): string | undefined {
@@ -27,6 +28,21 @@ function unwrapEnvelope<T>(json: unknown): T {
     return (json as { data: T }).data;
   }
   return json as T;
+}
+
+async function getSiteUrl(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    const h = await headers();
+    const host = h.get('x-forwarded-host') || h.get('host');
+    if (host) {
+      const proto = h.get('x-forwarded-proto') || 'https';
+      return `${proto}://${host}`;
+    }
+  } catch {
+    /* fallback below */
+  }
+  return 'https://app.mobazha.org';
 }
 
 async function fetchProfile(peerId: string): Promise<ProfileData | null> {
@@ -64,7 +80,7 @@ export default async function EmbedStorePage({
 }) {
   const { peerId } = await params;
   const { theme } = await searchParams;
-  const profile = await fetchProfile(peerId);
+  const [profile, siteUrl] = await Promise.all([fetchProfile(peerId), getSiteUrl()]);
   const isDark = theme === 'dark';
 
   if (!profile) {
@@ -82,9 +98,14 @@ export default async function EmbedStorePage({
   const avatarUrl = getImageUrl(
     profile.avatarHashes?.medium || profile.avatarHashes?.small || profile.avatarHashes?.original
   );
+  const headerUrl = getImageUrl(
+    profile.headerHashes?.large || profile.headerHashes?.medium || profile.headerHashes?.original
+  );
   const listingCount = profile.stats?.listingCount ?? 0;
+  const avgRating = profile.stats?.averageRating ?? 0;
+  const ratingCount = profile.stats?.ratingCount ?? 0;
 
-  const storeUrl = `${SITE_URL}/store/${peerId}?utm_source=embed&utm_medium=iframe&utm_campaign=store_card`;
+  const storeUrl = `${siteUrl}/store/${peerId}?utm_source=embed&utm_medium=iframe&utm_campaign=store_card`;
 
   const bg = isDark ? 'bg-zinc-900' : 'bg-white';
   const border = isDark ? 'border-zinc-700' : 'border-zinc-200';
@@ -100,6 +121,15 @@ export default async function EmbedStorePage({
         className={`border ${border} rounded-xl overflow-hidden max-w-[600px] mx-auto`}
         data-testid="embed-store-card"
       >
+        {/* Header banner */}
+        {headerUrl && (
+          <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="block">
+            <div className="h-16 overflow-hidden">
+              <img src={headerUrl} alt="" className="w-full h-full object-cover" loading="eager" />
+            </div>
+          </a>
+        )}
+
         <div className="flex flex-row items-center p-4 gap-3">
           {/* Avatar */}
           <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
@@ -132,9 +162,20 @@ export default async function EmbedStorePage({
               {name}
             </a>
             {about && <p className={`text-xs ${textSecondary} mt-0.5 line-clamp-1`}>{about}</p>}
-            <p className={`text-xs ${textMuted} mt-0.5`}>
-              {listingCount} {listingCount === 1 ? 'product' : 'products'}
-            </p>
+            <div className={`flex items-center gap-2 text-xs ${textMuted} mt-0.5`}>
+              <span>
+                {listingCount} {listingCount === 1 ? 'product' : 'products'}
+              </span>
+              {ratingCount > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="text-yellow-500">★</span>
+                  <span>
+                    {avgRating.toFixed(1)} ({ratingCount})
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           {/* CTA */}
