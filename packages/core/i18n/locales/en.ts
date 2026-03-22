@@ -2991,7 +2991,7 @@ export const en: TranslationResource = {
     downloadError: 'Failed to download template',
     step2Title: 'Step 2: Upload ZIP File',
     step2Desc: 'Upload a ZIP file containing your Excel file and product images.',
-    dropOrClick: 'Drop your ZIP file here or click to browse',
+    dropOrClick: 'Tap to select or drop your ZIP file here',
     maxSize: 'Maximum file size: 300MB',
     fileTooLarge: 'File is too large. Maximum size is 300MB.',
     clearFile: 'Clear',

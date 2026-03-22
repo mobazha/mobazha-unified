@@ -845,24 +845,25 @@ export default function StorePage() {
             </div>
           )}
 
-          {/* Cover upload button */}
+          {/* Cover upload button — use <label> instead of programmatic input.click()
+             so file picker works reliably in Telegram Mini App WebView */}
           {isOwnStore && !headerUploading && (
             <>
               <input
                 ref={headerInputRef}
+                id="header-image-upload"
                 type="file"
                 accept="image/*"
                 onChange={e => handleFileSelect(e, 'cover')}
                 className="hidden"
               />
-              <button
-                type="button"
-                onClick={() => headerInputRef.current?.click()}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
+              <label
+                htmlFor="header-image-upload"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm transition-colors cursor-pointer"
               >
                 <Camera className="h-4 w-4" />
                 <span className="hidden sm:inline">{t('settings.loadHeader')}</span>
-              </button>
+              </label>
             </>
           )}
 
@@ -882,15 +883,15 @@ export default function StorePage() {
                     <>
                       <input
                         ref={avatarInputRef}
+                        id="avatar-image-upload"
                         type="file"
                         accept="image/*"
                         onChange={e => handleFileSelect(e, 'avatar')}
                         className="hidden"
                       />
-                      <button
-                        type="button"
-                        onClick={() => avatarInputRef.current?.click()}
-                        disabled={avatarUploading}
+                      <label
+                        htmlFor={avatarUploading ? undefined : 'avatar-image-upload'}
+                        aria-disabled={avatarUploading}
                         className="absolute -bottom-1 -right-1 z-10 w-7 h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center shadow-md transition-colors border-2 border-white/30 cursor-pointer"
                       >
                         {avatarUploading ? (
@@ -898,7 +899,7 @@ export default function StorePage() {
                         ) : (
                           <Camera className="h-3.5 w-3.5" />
                         )}
-                      </button>
+                      </label>
                     </>
                   )}
                 </div>

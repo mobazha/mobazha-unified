@@ -2713,7 +2713,7 @@ export const zh: TranslationResource = {
     downloadError: '下载模板失败',
     step2Title: '第二步：上传 ZIP 文件',
     step2Desc: '上传包含 Excel 文件和商品图片的 ZIP 文件。',
-    dropOrClick: '拖拽 ZIP 文件到此处或点击浏览',
+    dropOrClick: '点击选择或拖入 ZIP 文件',
     maxSize: '最大文件大小：300MB',
     fileTooLarge: '文件太大，最大支持 300MB。',
     clearFile: '清除',
