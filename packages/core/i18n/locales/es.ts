@@ -3348,9 +3348,9 @@ export const es: TranslationResource = {
     instantTrade: 'Comercio instantáneo',
     confirmRequired: 'Confirmación requerida',
     foundItems: 'Se encontraron {{count}} artículos',
-    noRwaYet: 'Aún no hay activos RWA',
-    noRwaInStore: 'Esta tienda no tiene activos RWA',
-    createFirstRwa: 'Crea un listado con tipo Token RWA para comenzar a vender activos digitales',
+    noRwaYet: 'Aún no hay activos digitales',
+    noRwaInStore: 'Esta tienda no tiene activos digitales',
+    createFirstRwa: 'Crea un listado de activo digital para comenzar a vender',
     purchase: {
       connectWallet: 'Conectar billetera',
       connectDesc: 'Conecta tu billetera para autorizar tokens de pago',

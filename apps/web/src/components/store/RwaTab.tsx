@@ -265,15 +265,15 @@ export const RwaTab: React.FC<RwaTabProps> = ({
 
         {/* 空状态 - 没有 RWA 商品 */}
         {rwaProducts.length === 0 && !error && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <Coins className="w-8 h-8 text-muted-foreground" />
+          <div className="text-center py-10 sm:py-12">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+              <Coins className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
+            <h3 className="text-base font-medium text-foreground mb-1">
               {isOwnStore ? t('rwa.noRwaYet') : t('rwa.noRwaInStore')}
             </h3>
             {isOwnStore && (
-              <p className="text-muted-foreground text-sm mb-4">{t('rwa.createFirstRwa')}</p>
+              <p className="text-muted-foreground text-sm">{t('rwa.createFirstRwa')}</p>
             )}
           </div>
         )}

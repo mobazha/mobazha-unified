@@ -7,7 +7,7 @@ import { Container } from '@/components/layouts';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { useStoreRatings, useI18n } from '@mobazha/core';
 import { ReviewCard } from './ReviewCard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Star } from 'lucide-react';
 
 interface StoreReviewsTabProps {
   peerID: string;
@@ -76,30 +76,42 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
   const count = ratingIndex?.count ?? 0;
   const average = ratingIndex?.average ?? 0;
 
+  if (count === 0) {
+    return (
+      <Container size="xl">
+        <div className="text-center py-10 sm:py-12">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+            <Star className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground">{t('product.noReviews')}</p>
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <Container size="xl">
       <div className="space-y-4">
         {/* 评价统计卡片 */}
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-around">
-            {/* 平均评分 */}
             <div className="text-center">
               <div className="flex items-center justify-center gap-2">
-                <span className="text-warning text-3xl sm:text-4xl">★</span>
-                <span className="text-3xl sm:text-4xl font-bold text-foreground">
+                <span className="text-warning text-2xl sm:text-3xl">★</span>
+                <span className="text-2xl sm:text-3xl font-bold text-foreground">
                   {average.toFixed(1)}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">{t('product.overallRating')}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                {t('product.overallRating')}
+              </p>
             </div>
 
-            {/* 分隔线 */}
-            <div className="h-16 w-px bg-border" />
+            <div className="h-12 sm:h-16 w-px bg-border" />
 
-            {/* 总评价数 */}
             <div className="text-center">
-              <span className="text-3xl sm:text-4xl font-bold text-foreground">{count}</span>
-              <p className="text-sm text-muted-foreground mt-1">
+              <span className="text-2xl sm:text-3xl font-bold text-foreground">{count}</span>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 {count === 1 ? t('profile.review') : t('profile.reviews')}
               </p>
             </div>
@@ -107,38 +119,31 @@ export function StoreReviewsTab({ peerID }: StoreReviewsTabProps) {
         </Card>
 
         {/* 评价列表 */}
-        {ratings.length > 0 ? (
-          <div className="space-y-3">
-            {ratings.map((review, index) => (
-              <ReviewCard key={review.ratingID || index} review={review} />
-            ))}
+        <div className="space-y-3">
+          {ratings.map((review, index) => (
+            <ReviewCard key={review.ratingID || index} review={review} />
+          ))}
 
-            {/* 加载更多按钮 */}
-            {hasMore && (
-              <div className="flex justify-center pt-2">
-                <Button
-                  variant="outline"
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  className="min-w-[140px]"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('common.loading')}
-                    </>
-                  ) : (
-                    t('common.loadMore')
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <Card className="p-6">
-            <p className="text-center text-muted-foreground">{t('product.noReviews')}</p>
-          </Card>
-        )}
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="outline"
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                className="min-w-[140px]"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('common.loading')}
+                  </>
+                ) : (
+                  t('common.loadMore')
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </Container>
   );

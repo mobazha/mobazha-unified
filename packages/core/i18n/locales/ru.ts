@@ -3319,9 +3319,9 @@ export const ru: TranslationResource = {
     instantTrade: 'Мгновенная сделка',
     confirmRequired: 'Требуется подтверждение',
     foundItems: 'Найдено {{count}} товаров',
-    noRwaYet: 'Пока нет RWA активов',
-    noRwaInStore: 'В этом магазине нет RWA активов',
-    createFirstRwa: 'Создайте объявление с типом RWA токен для продажи цифровых активов',
+    noRwaYet: 'Пока нет цифровых активов',
+    noRwaInStore: 'В этом магазине нет цифровых активов',
+    createFirstRwa: 'Создайте объявление с цифровым активом для начала продаж',
     purchase: {
       connectWallet: 'Подключить кошелёк',
       connectDesc: 'Подключите кошелёк для авторизации платёжных токенов',

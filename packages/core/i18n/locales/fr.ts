@@ -3366,9 +3366,9 @@ export const fr: TranslationResource = {
     instantTrade: 'Transaction instantanée',
     confirmRequired: 'Confirmation requise',
     foundItems: '{{count}} éléments trouvés',
-    noRwaYet: "Pas encore d'actifs RWA numériques",
-    noRwaInStore: "Cette boutique n'a pas d'actifs RWA",
-    createFirstRwa: 'Créez une annonce de type Token RWA pour vendre des actifs numériques',
+    noRwaYet: "Pas encore d'actifs numériques",
+    noRwaInStore: "Cette boutique n'a pas d'actifs numériques",
+    createFirstRwa: "Créez une annonce d'actif numérique pour commencer à vendre",
     purchase: {
       connectWallet: 'Connecter le portefeuille',
       connectDesc: 'Connectez votre portefeuille pour autoriser les tokens de paiement',

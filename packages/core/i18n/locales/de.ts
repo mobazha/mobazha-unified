@@ -3373,10 +3373,10 @@ export const de: TranslationResource = {
     instantTrade: 'Soforthandel',
     confirmRequired: 'Bestätigung erforderlich',
     foundItems: '{{count}} Artikel gefunden',
-    noRwaYet: 'Noch keine RWA-Vermögenswerte',
-    noRwaInStore: 'Dieser Shop hat keine RWA-Vermögenswerte',
+    noRwaYet: 'Noch keine digitalen Vermögenswerte',
+    noRwaInStore: 'Dieser Shop hat keine digitalen Vermögenswerte',
     createFirstRwa:
-      'Erstellen Sie ein Angebot mit RWA-Token-Typ, um digitale Vermögenswerte zu verkaufen',
+      'Erstellen Sie ein Angebot für digitale Vermögenswerte, um mit dem Verkauf zu beginnen',
     purchase: {
       connectWallet: 'Wallet verbinden',
       connectDesc: 'Verbinden Sie Ihr Wallet, um Zahlungs-Token zu autorisieren',

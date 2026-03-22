@@ -3585,9 +3585,9 @@ export const en: TranslationResource = {
     instantTrade: 'Instant Trade',
     confirmRequired: 'Confirm Required',
     foundItems: 'Found {{count}} items',
-    noRwaYet: 'No RWA digital assets yet',
-    noRwaInStore: 'This store has no RWA digital assets',
-    createFirstRwa: 'Create a listing with RWA Token type to start selling digital assets',
+    noRwaYet: 'No digital assets yet',
+    noRwaInStore: 'This store has no digital assets',
+    createFirstRwa: 'Create a digital asset listing to start selling',
     // Atomic swap purchase flow
     purchase: {
       connectWallet: 'Connect Wallet',

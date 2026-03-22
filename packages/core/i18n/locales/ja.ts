@@ -3295,9 +3295,9 @@ export const ja: TranslationResource = {
     instantTrade: '即時取引',
     confirmRequired: '確認必要',
     foundItems: '{{count}}件見つかりました',
-    noRwaYet: 'まだRWAデジタル資産がありません',
-    noRwaInStore: 'このストアにはRWAデジタル資産がありません',
-    createFirstRwa: 'RWAトークンタイプでリスティングを作成してデジタル資産の販売を開始',
+    noRwaYet: 'まだデジタル資産がありません',
+    noRwaInStore: 'このストアにはデジタル資産がありません',
+    createFirstRwa: 'デジタル資産のリスティングを作成して販売を開始',
     purchase: {
       connectWallet: 'ウォレットを接続',
       connectDesc: '支払いトークンを承認するためにウォレットを接続してください',
