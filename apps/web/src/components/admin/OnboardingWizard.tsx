@@ -30,11 +30,14 @@ import {
   Wallet,
   CircleCheck,
   ShieldCheck,
-  Globe,
+  Shield,
   Zap,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
+import { Switch } from '@/components/ui';
 import CountryCurrencySelector from './CountryCurrencySelector';
 
 const STORAGE_KEY = 'sellerOnboardingDismissed';
@@ -184,6 +187,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('USD');
+  const [isPrivate, setIsPrivate] = useState(false);
 
   const stepLabels = [
     t('admin.onboarding.step1Label') || 'Store',
@@ -215,6 +219,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
         name: storeName.trim(),
         shortDescription: shortDescription.trim(),
         vendor: true,
+        private: isPrivate,
       };
 
       const created = await apiCreateProfile(profileData);
@@ -294,10 +299,9 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 'Built-in escrow for secure transactions',
             },
             {
-              icon: <Globe className="w-5 h-5 text-primary" />,
-              title: t('admin.onboarding.landingFeature3') || 'Sell Globally',
-              desc:
-                t('admin.onboarding.landingFeature3Desc') || 'Accept crypto & fiat from anywhere',
+              icon: <Shield className="w-5 h-5 text-primary" />,
+              title: t('admin.onboarding.landingFeaturePrivacy'),
+              desc: t('admin.onboarding.landingFeaturePrivacyDesc'),
             },
           ].map((feat, i) => (
             <div
@@ -470,6 +474,30 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               onCurrencyChange={setCurrency}
               disabled={saving}
             />
+          </div>
+
+          {/* Store Visibility */}
+          <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+            <h3 className="text-xs sm:text-sm font-medium text-foreground">
+              {t('admin.onboarding.storeVisibility')}
+            </h3>
+            <div className="flex items-start gap-3 rounded-lg border p-3 sm:p-4">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                {isPrivate ? (
+                  <EyeOff className="w-4.5 h-4.5 text-primary" />
+                ) : (
+                  <Eye className="w-4.5 h-4.5 text-primary" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('admin.onboarding.privateStore')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('admin.onboarding.privateStoreDesc')}
+                </p>
+              </div>
+              <Switch checked={isPrivate} onCheckedChange={setIsPrivate} disabled={saving} />
+            </div>
+            <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
           </div>
 
           <div className="flex items-center justify-between pt-1 sm:pt-2">
@@ -662,6 +690,20 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 'Your store profile is set up. Add products anytime from the admin panel.'}
             </p>
           </div>
+
+          {isPrivate && (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <EyeOff className="w-4 h-4 shrink-0" />
+              <span>{t('admin.onboarding.storeIsPrivate')}</span>
+              <span className="text-border">|</span>
+              <Link
+                href="/admin/settings/access-control/privacy"
+                className="text-primary hover:underline"
+              >
+                {t('admin.onboarding.manageAccess')}
+              </Link>
+            </div>
+          )}
 
           <button
             onClick={() => {

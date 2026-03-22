@@ -23,6 +23,7 @@ import {
   Palette,
   AlertCircle,
   AlertTriangle,
+  Lock,
   Tag,
   Layers,
 } from 'lucide-react';
@@ -283,6 +284,25 @@ export default function AdminDashboardPage() {
       <div data-testid="admin-dashboard">
         <DashboardHeader name={displayName} />
         <SetupChecklist hasProducts={false} productsLoading={false} />
+        {profile?.private && (
+          <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
+            <Lock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">
+                {t('admin.dashboard.privateStoreActive')}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('admin.dashboard.privateStoreActiveDesc')}
+              </p>
+              <Link
+                href="/admin/settings/access-control/privacy"
+                className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
+              >
+                {t('admin.dashboard.managePrivacy')} →
+              </Link>
+            </div>
+          </div>
+        )}
         <EmptyState />
       </div>
     );
@@ -295,6 +315,26 @@ export default function AdminDashboardPage() {
       <SetupChecklist hasProducts={hasProducts} productsLoading={productsLoading} />
 
       <MnemonicBackupBanner />
+
+      {profile?.private && (
+        <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
+          <Lock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.dashboard.privateStoreActive')}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {t('admin.dashboard.privateStoreActiveDesc')}
+            </p>
+            <Link
+              href="/admin/settings/access-control/privacy"
+              className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
+            >
+              {t('admin.dashboard.managePrivacy')} →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {productsError && <ErrorBanner message={productsError} />}
       {salesError && <ErrorBanner message={salesError} />}

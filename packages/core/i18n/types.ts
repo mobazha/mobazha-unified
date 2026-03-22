@@ -2517,6 +2517,9 @@ export interface TranslationResource {
       viewAll?: string;
       noOrdersYet?: string;
       noProductsYet?: string;
+      privateStoreActive?: string;
+      privateStoreActiveDesc?: string;
+      managePrivacy?: string;
       noPaymentMethodsWarning?: string;
       setUpPayments?: string;
       setUpPaymentsDesc?: string;
@@ -2855,6 +2858,14 @@ export interface TranslationResource {
       skip?: string;
       skipStep?: string;
       locationCurrencyTitle?: string;
+      storeVisibility?: string;
+      privateStore?: string;
+      privateStoreDesc?: string;
+      visibilityNote?: string;
+      storeIsPrivate?: string;
+      manageAccess?: string;
+      landingFeaturePrivacy?: string;
+      landingFeaturePrivacyDesc?: string;
     };
     settings?: {
       title?: string;
@@ -3431,6 +3442,9 @@ export interface TranslationResource {
     offlinePriceDisclaimer?: string;
     pausedBanner?: string;
     pausedBannerAdmin?: string;
+    privateBannerAdmin?: string;
+    privateBannerBuyer?: string;
+    manageAccess?: string;
     pauseStore?: string;
     resumeStore?: string;
     pauseStoreDesc?: string;
