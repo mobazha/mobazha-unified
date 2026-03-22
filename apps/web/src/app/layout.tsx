@@ -16,22 +16,7 @@ import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
-
-/**
- * AuthProvider 加载状态
- * 用于 Suspense fallback，在 useSearchParams 初始化期间显示
- * 样式与 AuthProvider 内部的加载状态保持一致
- */
-function AuthProviderLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    </div>
-  );
-}
+import { BrandedSplash, INLINE_SPLASH_HTML } from '@/components/BrandedSplash';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 
@@ -113,9 +98,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${defaultFont.className} ${storeFontVariableClasses}`}>
+        {/* Inline splash: paints immediately before JS loads, removed by BrandedSplash on mount */}
+        <div dangerouslySetInnerHTML={{ __html: INLINE_SPLASH_HTML }} />
         <QueryProvider>
           <OuterProviders>
-            <Suspense fallback={<AuthProviderLoading />}>
+            <Suspense fallback={<BrandedSplash />}>
               <AuthProvider>
                 <ProductModalProvider>
                   <PaymentSelectorProvider>
