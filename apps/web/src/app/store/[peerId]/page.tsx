@@ -80,6 +80,7 @@ import {
   OfflineBanner,
 } from '@/components/store';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
+import { StorePrivateBanner } from '@/components/store/StorePrivateBanner';
 import { StoreSections } from '@/components/store-sections';
 import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
 
@@ -798,6 +799,7 @@ export default function StorePage() {
       {(isOwnStore ? currentUserProfile?.storePaused : store.storePaused) && (
         <StorePausedBanner variant={isOwnStore ? 'admin' : 'buyer'} />
       )}
+      {store.private && isOwnStore && <StorePrivateBanner variant="admin" />}
 
       <main>
         {/* ── Unified Hero Header ── */}
@@ -911,7 +913,7 @@ export default function StorePage() {
                       {store.name || peerId.slice(0, 8)}
                     </h1>
                     {store.private && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-white/20 text-white shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-black/40 text-white backdrop-blur-sm border border-white/20 shrink-0">
                         <Lock className="h-3 w-3" />
                         {t('storeAccess.privateStoreBadge') || t('common.private')}
                       </span>
@@ -1641,10 +1643,10 @@ export default function StorePage() {
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title={t('listingCard.confirmDelete.title')}
+        title={t('listing.deleteConfirmTitle')}
         description={
           <>
-            {t('listingCard.confirmDelete.body')}
+            {t('listing.deleteConfirmDesc')}
             {productToDelete && (
               <span className="block mt-2 font-medium text-foreground">
                 &quot;{productToDelete.title}&quot;

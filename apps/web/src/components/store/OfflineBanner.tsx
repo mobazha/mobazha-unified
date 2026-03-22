@@ -18,7 +18,7 @@ export function OfflineBanner({ className = '' }: OfflineBannerProps) {
   return (
     <div
       role="status"
-      className={`sticky top-0 z-30 flex items-center gap-2 px-4 py-2.5 bg-warning/10 border-b border-warning/20 text-sm ${className}`}
+      className={`sticky top-0 z-30 flex items-center gap-2 pl-12 pr-4 lg:px-4 py-2.5 bg-warning/10 border-b border-warning/20 text-sm ${className}`}
     >
       <WifiOff className="w-4 h-4 text-warning flex-shrink-0" />
       <span className="text-warning font-medium">{t('store.offlineBanner')}</span>

@@ -4167,6 +4167,10 @@ export const en: TranslationResource = {
       viewAll: 'View All',
       noOrdersYet: 'No orders yet. Share your store to get started!',
       noProductsYet: 'No products yet. Create your first listing!',
+      privateStoreActive: 'Your store is private',
+      privateStoreActiveDesc:
+        'Only approved users can discover and view your products. Your store is hidden from search and browsing.',
+      managePrivacy: 'Manage privacy settings',
       noPaymentMethodsWarning:
         "You haven't set up any payment methods yet. Buyers won't be able to purchase your products.",
       setUpPayments: 'Set Up Payments',
@@ -4505,6 +4509,15 @@ export const en: TranslationResource = {
       skip: 'Skip setup',
       skipStep: 'Skip this step',
       locationCurrencyTitle: 'Location & Currency',
+      storeVisibility: 'Store Visibility',
+      privateStore: 'Private Store',
+      privateStoreDesc: 'Only approved users can view your store and products',
+      visibilityNote:
+        'You can change this anytime in Settings. Private stores are hidden from search and browsing.',
+      storeIsPrivate: 'Your store is private',
+      manageAccess: 'Manage access settings',
+      landingFeaturePrivacy: 'Privacy First',
+      landingFeaturePrivacyDesc: 'Choose who can see your store — go public or stay private',
     },
     settings: {
       title: 'Settings',
@@ -5050,6 +5063,9 @@ export const en: TranslationResource = {
     offlinePriceDisclaimer: 'Prices may have changed',
     pausedBanner: 'This store is currently on vacation and not accepting orders.',
     pausedBannerAdmin: 'Your store is paused. Buyers cannot place new orders.',
+    privateBannerAdmin: 'Your store is private — only approved users can see your products',
+    privateBannerBuyer: 'This is a private store',
+    manageAccess: 'Manage Access',
     pauseStore: 'Pause Store',
     resumeStore: 'Resume Store',
     pauseStoreDesc: 'Temporarily close your store. Existing orders will not be affected.',

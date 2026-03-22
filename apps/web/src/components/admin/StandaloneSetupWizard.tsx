@@ -26,6 +26,7 @@ import {
   Palette,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Switch } from '@/components/ui';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import CountryCurrencySelector from './CountryCurrencySelector';
@@ -157,6 +158,7 @@ export default function StandaloneSetupWizard({
   const [shortDescription, setShortDescription] = useState(profile?.shortDescription || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isPrivate, setIsPrivate] = useState(false);
 
   // Step 3: Location & Currency
   const [country, setCountry] = useState('');
@@ -272,6 +274,7 @@ export default function StandaloneSetupWizard({
         name: storeName.trim(),
         shortDescription: shortDescription.trim(),
         vendor: true,
+        private: isPrivate,
       };
 
       const createResult = await apiCreateProfile(profileData);
@@ -575,6 +578,30 @@ export default function StandaloneSetupWizard({
                 {shortDescription.length}/160
               </p>
             </div>
+          </div>
+
+          {/* Store Visibility */}
+          <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+            <h3 className="text-xs sm:text-sm font-medium text-foreground">
+              {t('admin.onboarding.storeVisibility')}
+            </h3>
+            <div className="flex items-start gap-3 rounded-lg border p-3 sm:p-4">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                {isPrivate ? (
+                  <EyeOff className="w-4.5 h-4.5 text-primary" />
+                ) : (
+                  <Eye className="w-4.5 h-4.5 text-primary" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('admin.onboarding.privateStore')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('admin.onboarding.privateStoreDesc')}
+                </p>
+              </div>
+              <Switch checked={isPrivate} onCheckedChange={setIsPrivate} disabled={saving} />
+            </div>
+            <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
           </div>
 
           <div className="flex items-center justify-between pt-2">
