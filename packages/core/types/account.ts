@@ -8,6 +8,20 @@
 export type OAuthProvider = 'discord' | 'telegram' | 'google' | 'github' | 'apple' | 'wechat';
 
 /**
+ * OAuthProvider → Casdoor provider name 映射
+ * Casdoor 的 provider_hint 和 state 解析都使用 provider.name（数据库中的 name 字段），
+ * 而非 provider type。名称不一致会导致回调时 "提供商不存在" 错误。
+ */
+export const CASDOOR_PROVIDER_NAMES: Record<OAuthProvider, string> = {
+  discord: 'provider_discord',
+  telegram: 'provider_telegram',
+  google: 'provider_casdoor_google',
+  github: 'provider_casdoor_github',
+  apple: 'casdoor_provider_apple',
+  wechat: 'provider_casdoor_wechat',
+};
+
+/**
  * 已绑定的账号信息
  */
 export interface LinkedAccount {

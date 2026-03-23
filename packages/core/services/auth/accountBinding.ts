@@ -14,6 +14,7 @@ import type {
   LinkCallbackResponse,
   OAuthProvider,
 } from '../../types/account';
+import { CASDOOR_PROVIDER_NAMES } from '../../types/account';
 
 /**
  * 获取已绑定的账号列表
@@ -70,14 +71,18 @@ export function getLinkUrl(provider: OAuthProvider, redirectUri: string): LinkUr
   // 构建 state: link:<username>
   const state = `link:${claims.name}`;
 
-  // 构建 OAuth URL
+  const casdoorProviderName = CASDOOR_PROVIDER_NAMES[provider];
+
+  // provider_hint 是 Casdoor 的自动跳转参数，值必须是 Casdoor 数据库中的 provider name。
+  // 注意：不能用 "provider" 参数，否则会与 Casdoor 内部追加的 provider 参数冲突，
+  // 导致 state 中出现两个 provider 值，回调时取到错误的那个。
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid profile email',
     state,
-    provider,
+    provider_hint: casdoorProviderName,
   });
 
   const url = `${serverUrl}/login/oauth/authorize?${params.toString()}`;
