@@ -49,6 +49,22 @@ function extractErrorMessage(errBody: unknown): string {
   return 'Request failed';
 }
 
+// ============ Store Links: Resolve (public, no auth) ============
+
+export async function resolveStoreShortCode(shortCode: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_LINKS_RESOLVE(shortCode)}`, {
+      method: 'GET',
+    });
+    if (!response.ok) return null;
+    const raw = await response.json();
+    const data = unwrapData<{ peerID: string }>(raw);
+    return data?.peerID || null;
+  } catch {
+    return null;
+  }
+}
+
 // ============ Store Links ============
 
 export async function getStoreLink(): Promise<StoreLinkInfo> {
@@ -114,6 +130,7 @@ export async function unbindStoreBot(peerID: string): Promise<void> {
 }
 
 export const salesChannelsApi = {
+  resolveStoreShortCode,
   getStoreLink,
   regenerateStoreLink,
   getStoreBot,

@@ -13,6 +13,7 @@ import {
   parseBindSessionFromStartParam,
   storeContextService,
   standaloneStoresApi,
+  resolveStoreShortCode,
 } from '@mobazha/core';
 import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
 import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
@@ -297,6 +298,34 @@ export function AuthProvider({
     searchParams,
     needsOnboarding,
   ]);
+
+  // Resolve store short-code deep links:
+  //   TMA platform bot: startapp=s_{shortCode}
+  //   Direct/custom bot: ?s={shortCode}
+  const shortCodeHandled = useRef(false);
+  useEffect(() => {
+    if (!isInitialized || shortCodeHandled.current) return;
+
+    let shortCode: string | null = null;
+
+    if (isTGMiniApp && tg.initDataUnsafe?.start_param?.startsWith('s_')) {
+      shortCode = tg.initDataUnsafe.start_param.slice(2);
+    }
+
+    if (!shortCode) {
+      shortCode = searchParams.get('s');
+    }
+
+    if (!shortCode?.trim()) return;
+
+    shortCodeHandled.current = true;
+
+    resolveStoreShortCode(shortCode).then(peerID => {
+      if (peerID) {
+        router.replace(`/store/${peerID}`);
+      }
+    });
+  }, [isInitialized, isTGMiniApp, tg.initDataUnsafe, searchParams, router]);
 
   // 正在处理 OAuth 回调 or Mini App auth
   if (isProcessingOAuth || (!isInitialized && (isLoading || loadingMessage))) {

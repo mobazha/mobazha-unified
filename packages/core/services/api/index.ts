@@ -161,6 +161,9 @@ export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from
 export * as systemApi from './system';
 export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } from './system';
 
+// Sales Channels API (Store Links + Store Bot)
+export { resolveStoreShortCode } from './salesChannels';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type {

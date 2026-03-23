@@ -372,6 +372,7 @@ export const HOSTING_API = {
 
   // --- Sales Channels: Store Links ---
   STORE_LINKS: '/platform/v1/store-links',
+  STORE_LINKS_RESOLVE: (shortCode: string) => `/platform/v1/store-links/resolve/${shortCode}`,
   STORE_LINKS_REGENERATE: '/platform/v1/store-links/regenerate',
 
   // --- Sales Channels: Store Bots ---
