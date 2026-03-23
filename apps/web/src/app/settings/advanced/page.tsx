@@ -5,8 +5,9 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useI18n } from '@mobazha/core';
-import { ChevronRight, Download, Upload, Terminal, Trash2 } from 'lucide-react';
+import { ChevronRight, Download, Upload, Terminal, Trash2, Smartphone } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
+import { usePWAInstall } from '@/components/PWAInstall';
 
 export default function AdvancedSettingsPage() {
   const { t } = useI18n();
@@ -14,6 +15,7 @@ export default function AdvancedSettingsPage() {
 
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { canInstall, install } = usePWAInstall();
 
   const handleBackup = () => {
     toast({
@@ -117,6 +119,40 @@ export default function AdvancedSettingsPage() {
             </div>
           </Card>
         </SettingsSection>
+
+        {/* Install App */}
+        {canInstall && (
+          <SettingsSection
+            className="py-5 md:py-8"
+            title={t('settingsExtended.installApp', { defaultValue: 'Install App' })}
+            description={t('settingsExtended.installAppDesc', {
+              defaultValue: 'Add Mobazha to your home screen for faster access',
+            })}
+          >
+            <Card className="p-4 md:p-6">
+              <button
+                type="button"
+                onClick={install}
+                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-success/10">
+                  <Smartphone className="w-4 h-4 text-success" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-medium text-sm">
+                    {t('settingsExtended.installApp', { defaultValue: 'Install App' })}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t('settingsExtended.installAppDesc', {
+                      defaultValue: 'Add Mobazha to your home screen for faster access',
+                    })}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </Card>
+          </SettingsSection>
+        )}
 
         {/* Developer Options */}
         <SettingsSection

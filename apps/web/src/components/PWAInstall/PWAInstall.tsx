@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -9,12 +10,73 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const DISMISS_KEY = 'pwa-install-dismissed';
+const DISMISS_COUNT_KEY = 'pwa-install-dismiss-count';
+const DISMISS_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const MAX_DISMISSALS = 3;
+const SHOW_DELAY_MS = 60_000; // 60 seconds of engagement before showing
+
+const SUPPRESSED_PATHS = ['/onboarding', '/auth', '/login', '/signup', '/checkout', '/payment'];
+
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e: Event) => {
+    globalDeferredPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
+export function usePWAInstall() {
+  const [canInstall, setCanInstall] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true;
+    return !isStandalone && globalDeferredPrompt !== null;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true;
+    if (isStandalone) return;
+
+    const handlePrompt = (e: Event) => {
+      globalDeferredPrompt = e as BeforeInstallPromptEvent;
+      setCanInstall(true);
+    };
+    const handleInstalled = () => {
+      globalDeferredPrompt = null;
+      setCanInstall(false);
+    };
+    window.addEventListener('beforeinstallprompt', handlePrompt);
+    window.addEventListener('appinstalled', handleInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handlePrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
+  }, []);
+
+  const install = useCallback(async () => {
+    if (!globalDeferredPrompt) return;
+    await globalDeferredPrompt.prompt();
+    const { outcome } = await globalDeferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      globalDeferredPrompt = null;
+      setCanInstall(false);
+    }
+  }, []);
+
+  return { canInstall, install };
+}
+
 export const PWAInstall: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const pathname = usePathname();
 
-  // Check if app is installed using useMemo (computed once)
   const isInstalled = useMemo(() => {
     if (typeof window === 'undefined') return false;
     return (
@@ -23,44 +85,46 @@ export const PWAInstall: React.FC = () => {
     );
   }, []);
 
-  // Check if user previously dismissed and if iOS
-  useEffect(() => {
-    if (isInstalled) return;
+  const isSuppressedPage = useMemo(
+    () => SUPPRESSED_PATHS.some(p => pathname?.startsWith(p)),
+    [pathname]
+  );
 
-    // Check if user previously dismissed the prompt
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
+  const [shouldSuppress] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const count = parseInt(localStorage.getItem(DISMISS_COUNT_KEY) || '0', 10);
+    if (count >= MAX_DISMISSALS) return true;
+
+    const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) {
       const dismissedTime = parseInt(dismissed, 10);
-      // Show again after 7 days
-      if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
-        return;
-      }
+      if (Date.now() - dismissedTime < DISMISS_COOLDOWN_MS) return true;
     }
+    return false;
+  });
 
-    // Detect iOS
+  useEffect(() => {
+    if (isInstalled || isSuppressedPage || shouldSuppress) return;
+
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
     const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
     if (isIOS && isSafari) {
-      // Delay showing iOS prompt
-      const timer = setTimeout(() => setShowIOSPrompt(true), 3000);
+      const timer = setTimeout(() => setShowIOSPrompt(true), SHOW_DELAY_MS);
       return () => clearTimeout(timer);
     }
-  }, [isInstalled]);
+  }, [isInstalled, isSuppressedPage, shouldSuppress]);
 
-  // Listen for beforeinstallprompt event
   useEffect(() => {
     if (isInstalled) return;
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-
-      // Delay showing prompt to not be intrusive
-      setTimeout(() => setShowPrompt(true), 5000);
     };
 
     const handleAppInstalled = () => {
+      globalDeferredPrompt = null;
       setShowPrompt(false);
       setDeferredPrompt(null);
     };
@@ -74,6 +138,12 @@ export const PWAInstall: React.FC = () => {
     };
   }, [isInstalled]);
 
+  useEffect(() => {
+    if (!deferredPrompt || shouldSuppress) return;
+    const timer = setTimeout(() => setShowPrompt(true), SHOW_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [deferredPrompt, shouldSuppress]);
+
   const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return;
 
@@ -81,6 +151,7 @@ export const PWAInstall: React.FC = () => {
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === 'accepted') {
+      globalDeferredPrompt = null;
       setShowPrompt(false);
     }
 
@@ -88,7 +159,9 @@ export const PWAInstall: React.FC = () => {
   }, [deferredPrompt]);
 
   const handleDismiss = useCallback(() => {
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    const count = parseInt(localStorage.getItem(DISMISS_COUNT_KEY) || '0', 10);
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    localStorage.setItem(DISMISS_COUNT_KEY, (count + 1).toString());
     setShowPrompt(false);
     setShowIOSPrompt(false);
   }, []);
@@ -97,7 +170,7 @@ export const PWAInstall: React.FC = () => {
   if (isInstalled) return null;
 
   // iOS Install Instructions
-  if (showIOSPrompt) {
+  if (showIOSPrompt && !isSuppressedPage) {
     return (
       <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
         <Card className="shadow-xl border border-border">
@@ -143,7 +216,7 @@ export const PWAInstall: React.FC = () => {
   }
 
   // Standard Install Prompt
-  if (!showPrompt || !deferredPrompt) return null;
+  if (!showPrompt || !deferredPrompt || isSuppressedPage) return null;
 
   return (
     <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
