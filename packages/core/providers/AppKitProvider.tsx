@@ -18,7 +18,8 @@ import {
 } from 'react';
 import { createAppKit, type AppKit } from '@reown/appkit/react';
 import { EthersAdapter } from '@reown/appkit-adapter-ethers';
-import { sepolia, mainnet } from '@reown/appkit/networks';
+import { sepolia, mainnet, solana, solanaDevnet } from '@reown/appkit/networks';
+import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
 import { APPKIT_PROJECT_ID, APPKIT_METADATA } from '../config/appkit';
 import { getEnvConfig } from '../config/env';
 
@@ -73,6 +74,8 @@ export interface AppKitContextValue {
   connect: (options?: ConnectOptions) => Promise<ConnectResult>;
   /** 连接 EVM 钱包 */
   connectEVM: () => Promise<ConnectResult>;
+  /** 连接 Solana 钱包 */
+  connectSolana: () => Promise<ConnectResult>;
   /** 断开连接 */
   disconnect: () => Promise<DisconnectResult>;
   /** 切换网络 */
@@ -154,7 +157,7 @@ export function AppKitProvider({
 
   // 获取网络列表 — 在 'use client' 组件内解析 AppKit 网络对象，
   // 避免 server bundle 触达 @reown/appkit
-  const supportedNetworks = networks ?? (getEnvConfig().isTestEnv ? [sepolia] : [mainnet]);
+  const supportedNetworks = networks ?? (getEnvConfig().isTestEnv ? [sepolia, solanaDevnet] : [mainnet, solana]);
 
   /**
    * 检查并断开不支持的网络连接
@@ -233,16 +236,19 @@ export function AppKitProvider({
         console.log('🚀 开始初始化 AppKit...');
 
         const ethersAdapter = new EthersAdapter();
+        const solanaAdapter = new SolanaAdapter({
+          wallets: [],
+        });
 
         const kit = createAppKit({
-          adapters: [ethersAdapter],
+          adapters: [ethersAdapter, solanaAdapter],
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           networks: supportedNetworks as any,
           metadata: APPKIT_METADATA,
           projectId,
           allowUnsupportedChain: true,
           features: {
-            analytics: true,
+            analytics: false,
             swaps: false,
             onramp: false,
             email: false,
@@ -306,6 +312,13 @@ export function AppKitProvider({
    */
   const connectEVM = useCallback(async (): Promise<ConnectResult> => {
     return connect({ view: 'Connect', namespace: 'eip155' });
+  }, [connect]);
+
+  /**
+   * 连接 Solana 钱包
+   */
+  const connectSolana = useCallback(async (): Promise<ConnectResult> => {
+    return connect({ view: 'Connect', namespace: 'solana' });
   }, [connect]);
 
   /**
@@ -445,6 +458,7 @@ export function AppKitProvider({
     initialize,
     connect,
     connectEVM,
+    connectSolana,
     disconnect,
     switchNetwork,
     getWalletProvider,

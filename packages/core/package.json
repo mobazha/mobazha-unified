@@ -49,6 +49,8 @@
     "@matrix-org/matrix-sdk-crypto-wasm": "^16.0.0",
     "@reown/appkit": "1.8.15",
     "@reown/appkit-adapter-ethers": "1.8.15",
+    "@reown/appkit-adapter-solana": "1.8.15",
+    "@solana/web3.js": "^1.95.0",
     "bignumber.js": "^9.3.1",
     "dompurify": "^3.3.1",
     "ethers": "^6.14.1",

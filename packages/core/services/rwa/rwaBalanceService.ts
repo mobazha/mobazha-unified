@@ -14,6 +14,7 @@ import type {
 import { ChainId } from '../payment/types';
 import { getExplorerBaseUrl } from '../payment/explorers';
 import { getCurrentChainId } from '../../config/appkit';
+import { getEvmFallbackRpcUrls } from '../../config/rpc';
 
 // 导出 Sepolia Chain ID 常量以保持向后兼容
 export const SEPOLIA_CHAIN_ID = ChainId.ETHEREUM_SEPOLIA;
@@ -21,15 +22,7 @@ export const SEPOLIA_CHAIN_ID = ChainId.ETHEREUM_SEPOLIA;
 // 默认 Chain ID
 const DEFAULT_CHAIN_ID = getCurrentChainId();
 
-// 备用公共 RPC URLs（需支持 CORS，且不需要 API Key）
-// 注意：Ankr 现在需要 API Key，已移除
-// 优先使用与桌面端/移动端一致的节点顺序
-const FALLBACK_RPC_URLS = [
-  'https://ethereum-sepolia-rpc.publicnode.com', // Publicnode - 支持 CORS，无需 API Key
-  'https://eth-sepolia.public.blastapi.io', // Blast - 支持 CORS
-  'https://sepolia.drpc.org', // DRPC - 支持 CORS
-  'https://1rpc.io/sepolia', // 1RPC - 支持 CORS
-];
+const FALLBACK_RPC_URLS = getEvmFallbackRpcUrls(DEFAULT_CHAIN_ID);
 
 // 缓存配置
 const CACHE_TTL = 120 * 1000; // 120秒（2分钟）缓存，减少重复链上查询

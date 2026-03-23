@@ -19,6 +19,7 @@ import type {
   OrderStatus,
 } from '../../types/rwa';
 import { TokenStandardEnum, getChainConfig } from '../../types/rwa';
+import { getEvmRpcUrl, ChainId } from '../../config/rpc';
 
 // 交易模式枚举
 export const TradeMode = {
@@ -259,14 +260,12 @@ export class UniversalSwapService {
 
       this.contractAddress = chainConfig.universalSwapAddress;
 
-      // 公共 RPC 端点
-      const rpcUrls: Record<string, string> = {
-        sepolia: 'https://ethereum-sepolia-rpc.publicnode.com',
-        ethereum: 'https://eth.llamarpc.com',
-        mainnet: 'https://eth.llamarpc.com',
+      const chainIdMap: Record<string, ChainId> = {
+        sepolia: ChainId.ETHEREUM_SEPOLIA,
+        ethereum: ChainId.ETHEREUM,
+        mainnet: ChainId.ETHEREUM,
       };
-
-      const rpcUrl = rpcUrls[chain] || rpcUrls.sepolia;
+      const rpcUrl = getEvmRpcUrl(chainIdMap[chain] ?? ChainId.ETHEREUM_SEPOLIA);
 
       // 使用 JsonRpcProvider 创建只读 provider (ethers v6)
       this.provider = new ethers.JsonRpcProvider(rpcUrl);
