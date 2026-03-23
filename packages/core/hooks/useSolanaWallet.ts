@@ -1,7 +1,16 @@
 /**
  * useSolanaWallet Hook
  * Solana 钱包连接 Hook
+ *
+ * @deprecated Use AppKit connectSolana() + SolanaPaymentExecutor instead.
  */
+
+declare global {
+  interface Window {
+    solana?: unknown;
+    phantom?: { solana?: unknown };
+  }
+}
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {

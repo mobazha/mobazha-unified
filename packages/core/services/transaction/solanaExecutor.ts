@@ -1,17 +1,13 @@
 /**
  * Solana Payment Executor
- * Solana 链支付执行器
  *
- * 实现 ChainPaymentExecutor 接口。当前 Solana escrow 支付尚未实现
- * （后端 relay 未就绪，前端缺少 @solana/web3.js + AppKit Solana adapter），
- * 执行器返回明确的"不支持"错误，引导用户使用其他支付方式。
- *
- * 当 Solana 支付就绪后，此文件需要：
- * 1. 添加 @solana/web3.js 依赖
- * 2. 添加 @reown/appkit-adapter-solana 依赖
- * 3. 实现 Go 指令 → Solana Transaction 转换
- * 4. 实现 signAndSendTransaction + confirmTransaction 流程
+ * Implements ChainPaymentExecutor for Solana chains.
+ * Ported from mobazha-mobile/services/solanaTransaction.js —
+ * converts backend Go-shaped instructions to @solana/web3.js transactions,
+ * signs via the wallet provider (AppKit Solana adapter), and confirms.
  */
+
+import { Connection, PublicKey, Transaction, type TransactionSignature } from '@solana/web3.js';
 
 import type {
   ChainPaymentExecutor,
@@ -20,20 +16,33 @@ import type {
   ContractPaymentDetails,
 } from './types';
 
-// ── Go 后端 Solana 指令格式类型定义 ──────────────────
+import {
+  convertSolanaGoInstructions,
+  confirmSolanaTransaction,
+  isValidSolanaGoInstructions,
+  getSolanaRpcEndpoint,
+  type SolanaGoInstruction,
+} from '../../utils/solana';
 
-/** Solana Go 后端返回的单个账户 */
-export interface SolanaGoAccountValue {
-  PublicKey: string;
-  IsSigner: boolean;
-  IsWritable: boolean;
+// ── Wallet provider interface (subset of AppKit Solana provider) ──
+
+interface SolanaWalletProvider {
+  signAndSendTransaction(
+    transaction: Transaction
+  ): Promise<TransactionSignature | { signature: string }>;
 }
 
-/** Solana Go 后端返回的单条指令 */
-export interface SolanaGoInstruction {
-  ProgID: string;
-  AccountValues: SolanaGoAccountValue[];
-  DataBytes: string; // base64 encoded
+// ── Initialize params ────────────────────────────────
+
+export interface SolanaExecutorInitParams {
+  /** Solana JSON-RPC connection (or RPC URL string) */
+  connection?: Connection | string;
+  /** Wallet provider obtained from AppKit */
+  walletProvider: SolanaWalletProvider;
+  /** Wallet public key (base58 string) */
+  walletAddress: string;
+  /** Whether this is devnet (default: auto-detect from connection) */
+  isDevnet?: boolean;
 }
 
 // ── Solana Payment Executor ─────────────────────────
@@ -41,41 +50,92 @@ export interface SolanaGoInstruction {
 export class SolanaPaymentExecutor implements ChainPaymentExecutor {
   readonly category: ChainCategory = 'solana';
 
-  /**
-   * 初始化 Solana 执行器
-   * 当前为占位实现 — Solana 支付暂不支持
-   *
-   * 未来实现：接收 Solana Connection + WalletProvider
-   * @param _params - 保留参数（未来用于 Connection / WalletProvider）
-   */
-  async initialize(_params: unknown): Promise<boolean> {
-    // 占位：当 @solana/web3.js 和 AppKit Solana adapter 集成后实现
-    console.warn('[SolanaPaymentExecutor] Solana payment execution not yet supported');
-    return false;
+  private connection: Connection | null = null;
+  private walletProvider: SolanaWalletProvider | null = null;
+  private walletAddress: string | null = null;
+
+  async initialize(params: unknown): Promise<boolean> {
+    const p = params as SolanaExecutorInitParams;
+    if (!p?.walletProvider || !p?.walletAddress) {
+      console.warn('[SolanaPaymentExecutor] Missing walletProvider or walletAddress');
+      return false;
+    }
+
+    this.walletProvider = p.walletProvider;
+    this.walletAddress = p.walletAddress;
+
+    if (p.connection instanceof Connection) {
+      this.connection = p.connection;
+    } else if (typeof p.connection === 'string') {
+      this.connection = new Connection(p.connection, 'confirmed');
+    } else {
+      const rpcUrl = getSolanaRpcEndpoint(p.isDevnet ?? false);
+      this.connection = new Connection(rpcUrl, 'confirmed');
+    }
+
+    return true;
   }
 
-  /**
-   * 执行 Solana 交易
-   * 当前返回"不支持"错误
-   *
-   * 未来实现流程：
-   * 1. convertSolanaGoInstructions(instructions) → TransactionInstruction[]
-   * 2. 构建 Transaction，设置 blockhash + feePayer
-   * 3. simulateTransaction() 预检
-   * 4. walletProvider.signAndSendTransaction()
-   * 5. confirmTransaction() 轮询确认
-   */
-  async executeTransaction(_instructions: unknown): Promise<TxExecutionResult> {
-    return {
-      success: false,
-      error: 'Solana payment execution not yet supported. Please use an EVM chain for payment.',
-    };
+  async executeTransaction(instructions: unknown): Promise<TxExecutionResult> {
+    if (!this.connection || !this.walletProvider || !this.walletAddress) {
+      return { success: false, error: 'Solana executor not initialized. Call initialize() first.' };
+    }
+
+    if (!isValidSolanaGoInstructions(instructions)) {
+      return { success: false, error: 'Invalid Solana instructions format' };
+    }
+
+    try {
+      const goInstructions = instructions as SolanaGoInstruction[];
+      const txInstructions = convertSolanaGoInstructions(goInstructions);
+
+      const transaction = new Transaction();
+      txInstructions.forEach(ix => transaction.add(ix));
+
+      const wallet = new PublicKey(this.walletAddress);
+      const { blockhash } = await this.connection.getLatestBlockhash('confirmed');
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = wallet;
+
+      const simulation = await this.connection.simulateTransaction(transaction);
+      if (simulation.value.err) {
+        const errMsg = JSON.stringify(simulation.value.err);
+        const logs = simulation.value.logs?.join('\n') ?? '';
+        return {
+          success: false,
+          error: `Transaction simulation failed: ${errMsg}\n${logs}`,
+        };
+      }
+
+      const balance = await this.connection.getBalance(wallet);
+      if (balance < 5000) {
+        return { success: false, error: 'Insufficient SOL balance for transaction fees' };
+      }
+
+      const result = await this.walletProvider.signAndSendTransaction(transaction);
+      const signature = typeof result === 'string' ? result : result.signature;
+
+      await confirmSolanaTransaction(this.connection, signature, {
+        maxRetries: 10,
+        retryInterval: 2000,
+      });
+
+      const status = await this.connection.getSignatureStatus(signature);
+      if (status.value?.err) {
+        return {
+          success: false,
+          transactionHash: signature,
+          error: `Transaction failed on-chain: ${JSON.stringify(status.value.err)}`,
+        };
+      }
+
+      return { success: true, transactionHash: signature };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Solana transaction failed: ${message}` };
+    }
   }
 
-  /**
-   * 执行 Solana 合约支付
-   * Solana 不需要单独的 approve 步骤，直接执行 program instructions
-   */
   async executeContractPayment(
     instructions: unknown,
     _details?: ContractPaymentDetails
@@ -84,27 +144,12 @@ export class SolanaPaymentExecutor implements ChainPaymentExecutor {
   }
 
   isReady(): boolean {
-    // Solana executor 当前始终返回 false
-    return false;
+    return !!(this.connection && this.walletProvider && this.walletAddress);
   }
 
   cleanup(): void {
-    // No-op for stub implementation
+    this.connection = null;
+    this.walletProvider = null;
+    this.walletAddress = null;
   }
-}
-
-// ── Solana 指令转换工具（供未来实现使用）──────────────
-
-/**
- * 验证 Solana Go 指令格式是否合法
- * 可在 Solana 支付就绪前用于 API 响应验证
- */
-export function isValidSolanaGoInstructions(data: unknown): data is SolanaGoInstruction[] {
-  if (!Array.isArray(data)) return false;
-  return data.every(
-    (item: Record<string, unknown>) =>
-      typeof item.ProgID === 'string' &&
-      Array.isArray(item.AccountValues) &&
-      typeof item.DataBytes === 'string'
-  );
 }
