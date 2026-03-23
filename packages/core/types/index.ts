@@ -256,7 +256,7 @@ export type {
   ProviderInfo,
 } from './account';
 
-export { SUPPORTED_PROVIDERS, getProviderInfo } from './account';
+export { SUPPORTED_PROVIDERS, CASDOOR_PROVIDER_NAMES, getProviderInfo } from './account';
 
 // RWA types
 export type {
