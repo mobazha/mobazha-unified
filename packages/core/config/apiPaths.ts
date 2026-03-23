@@ -370,6 +370,13 @@ export const HOSTING_API = {
   FIAT_ONBOARDING_START: (provider: string) => `/platform/v1/fiat/providers/${provider}/onboarding`,
   FIAT_ONBOARDING_STATUS: (provider: string) => `/platform/v1/fiat/providers/${provider}/status`,
 
+  // --- Sales Channels: Store Links ---
+  STORE_LINKS: '/platform/v1/store-links',
+  STORE_LINKS_REGENERATE: '/platform/v1/store-links/regenerate',
+
+  // --- Sales Channels: Store Bots ---
+  STORE_BOTS: '/platform/v1/store-bots',
+
   // --- Standalone Store Registry ---
   STORES_MY_STORES: '/platform/v1/stores/my-stores',
   STORES_BIND_START: '/platform/v1/stores/bind/start',

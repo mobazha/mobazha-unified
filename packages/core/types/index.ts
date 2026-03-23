@@ -393,5 +393,8 @@ export {
   ADDABLE_SECTION_TYPES,
 } from './storeConfig';
 
+// Sales Channels (Store Links + Store Bot)
+export type { StoreLinkInfo, StoreBotInfo, BindStoreBotRequest } from './salesChannels';
+
 // OpenAPI auto-generated types (from hosting openapi.yaml)
 export type { paths as ApiPaths, components as ApiComponents } from './api-generated';

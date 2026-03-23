@@ -3,7 +3,17 @@
 import React, { useState, useCallback } from 'react';
 import { useI18n, useUserContext } from '@mobazha/core';
 import { useUserStore } from '@mobazha/core/stores/userStore';
-import { Shield, Truck, Scale, User, Plug, Wallet, PauseCircle, PlayCircle } from 'lucide-react';
+import {
+  Shield,
+  Truck,
+  Scale,
+  User,
+  Plug,
+  Wallet,
+  PauseCircle,
+  PlayCircle,
+  Megaphone,
+} from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -196,6 +206,16 @@ export default function AdminSettingsPage() {
             title={t('admin.settings.moderators')}
             description={t('admin.settings.moderatorsDesc')}
             href="/admin/settings/moderators"
+          />
+        </SettingsSection>
+
+        {/* Growth */}
+        <SettingsSection title={t('admin.settings.sectionGrowth')}>
+          <SettingsCard
+            icon={Megaphone}
+            title={t('admin.settings.salesChannels')}
+            description={t('admin.settings.salesChannelsDesc')}
+            href="/admin/settings/sales-channels"
           />
         </SettingsSection>
 
