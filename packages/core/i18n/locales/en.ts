@@ -2332,6 +2332,7 @@ export const en: TranslationResource = {
       'Are you sure you want to log out? You will need to sign in again to access your account.',
     comingSoon: 'Coming Soon',
     backupComingSoon: 'Backup wallet feature coming soon!',
+    backupProfileComingSoon: 'Backup profile feature coming soon!',
     restoreComingSoon: 'Restore profile feature coming soon!',
     followingSystem: 'Following system',
     returnToPreviousPage: 'You came from another page',

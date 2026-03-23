@@ -2163,6 +2163,7 @@ export const ko: TranslationResource = {
     logoutConfirmDesc: '로그아웃하시겠습니까? 다시 로그인해야 합니다.',
     comingSoon: '곧 출시',
     backupComingSoon: '지갑 백업 기능이 곧 출시됩니다!',
+    backupProfileComingSoon: '프로필 백업 기능이 곧 제공됩니다!',
     restoreComingSoon: '프로필 복원 기능이 곧 출시됩니다!',
     followingSystem: '시스템 설정 따름',
     returnToPreviousPage: '다른 페이지에서 왔습니다',

@@ -951,6 +951,7 @@ export interface TranslationResource {
     logoutConfirmDesc: string;
     comingSoon: string;
     backupComingSoon: string;
+    backupProfileComingSoon: string;
     restoreComingSoon: string;
     followingSystem: string;
     returnToPreviousPage: string;

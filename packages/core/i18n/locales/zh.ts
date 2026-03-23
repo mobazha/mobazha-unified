@@ -2121,6 +2121,7 @@ export const zh: TranslationResource = {
     logoutConfirmDesc: '确定要退出登录吗？您需要重新登录才能访问您的账户。',
     comingSoon: '即将推出',
     backupComingSoon: '备份钱包功能即将推出！',
+    backupProfileComingSoon: '备份资料功能即将推出！',
     restoreComingSoon: '恢复资料功能即将推出！',
     followingSystem: '跟随系统',
     returnToPreviousPage: '您是从其他页面进入的',

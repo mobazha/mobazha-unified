@@ -2206,6 +2206,7 @@ export const es: TranslationResource = {
     logoutConfirmDesc: '¿Seguro que quieres cerrar sesión? Necesitarás iniciar sesión de nuevo.',
     comingSoon: 'Próximamente',
     backupComingSoon: '¡Función de respaldo de cartera próximamente!',
+    backupProfileComingSoon: '¡La función de respaldo de perfil estará disponible pronto!',
     restoreComingSoon: '¡Función de restaurar perfil próximamente!',
     followingSystem: 'Siguiendo sistema',
     returnToPreviousPage: 'Viniste de otra página',

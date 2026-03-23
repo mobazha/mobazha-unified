@@ -2186,6 +2186,7 @@ export const ru: TranslationResource = {
     logoutConfirmDesc: 'Вы уверены, что хотите выйти? Вам потребуется снова войти в систему.',
     comingSoon: 'Скоро',
     backupComingSoon: 'Функция резервного копирования кошелька скоро появится!',
+    backupProfileComingSoon: 'Функция резервного копирования профиля скоро появится!',
     restoreComingSoon: 'Функция восстановления профиля скоро появится!',
     followingSystem: 'Системная',
     returnToPreviousPage: 'Вы пришли с другой страницы',
