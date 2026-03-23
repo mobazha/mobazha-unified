@@ -17,10 +17,17 @@ export default function AdvancedSettingsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { canInstall, install } = usePWAInstall();
 
-  const handleBackup = () => {
+  const handleBackupWallet = () => {
     toast({
       title: t('settingsExtended.comingSoon'),
       description: t('settingsExtended.backupComingSoon'),
+    });
+  };
+
+  const handleBackupProfile = () => {
+    toast({
+      title: t('settingsExtended.comingSoon'),
+      description: t('settingsExtended.backupProfileComingSoon'),
     });
   };
 
@@ -66,7 +73,7 @@ export default function AdvancedSettingsPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={handleBackup}
+                  onClick={handleBackupWallet}
                   className="flex items-center text-muted-foreground hover:text-foreground"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -87,7 +94,7 @@ export default function AdvancedSettingsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={handleBackup}
+                    onClick={handleBackupProfile}
                     className="flex items-center text-muted-foreground hover:text-foreground"
                   >
                     <ChevronRight className="w-4 h-4" />

@@ -2174,6 +2174,7 @@ export const ja: TranslationResource = {
     logoutConfirmDesc: 'ログアウトしますか？再度サインインする必要があります。',
     comingSoon: '近日公開',
     backupComingSoon: 'ウォレットバックアップ機能は近日公開！',
+    backupProfileComingSoon: 'プロフィールバックアップ機能は近日公開予定です！',
     restoreComingSoon: 'プロフィール復元機能は近日公開！',
     followingSystem: 'システムに従う',
     returnToPreviousPage: '別のページから来ました',

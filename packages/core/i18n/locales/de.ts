@@ -2224,6 +2224,7 @@ export const de: TranslationResource = {
     logoutConfirmDesc: 'Möchten Sie sich wirklich abmelden? Sie müssen sich erneut anmelden.',
     comingSoon: 'Demnächst',
     backupComingSoon: 'Wallet-Backup-Funktion kommt bald!',
+    backupProfileComingSoon: 'Profil-Backup-Funktion kommt bald!',
     restoreComingSoon: 'Profil-Wiederherstellungsfunktion kommt bald!',
     followingSystem: 'Systemeinstellung',
     returnToPreviousPage: 'Du kamst von einer anderen Seite',

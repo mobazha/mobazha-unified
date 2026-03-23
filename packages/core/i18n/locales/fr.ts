@@ -2220,6 +2220,7 @@ export const fr: TranslationResource = {
     logoutConfirmDesc: 'Voulez-vous vraiment vous déconnecter ? Vous devrez vous reconnecter.',
     comingSoon: 'Bientôt Disponible',
     backupComingSoon: 'Fonction de sauvegarde du portefeuille bientôt disponible !',
+    backupProfileComingSoon: 'La fonction de sauvegarde du profil arrive bientôt !',
     restoreComingSoon: 'Fonction de restauration du profil bientôt disponible !',
     followingSystem: 'Selon le système',
     returnToPreviousPage: "Vous venez d'une autre page",
