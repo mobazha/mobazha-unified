@@ -91,6 +91,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Telegram Mini App SDK — must load SYNCHRONOUSLY before React hydration.
+            Inside Telegram WebView, window.Telegram is pre-injected by the native app.
+            We detect its presence and use document.write to load the full SDK script
+            so that window.Telegram.WebApp is ready before TGMiniAppProvider mounts. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              var _tg = window.Telegram;
+              var _hash = location.hash || '';
+              var _hasTgHash = _hash.indexOf('tgWebAppData') !== -1;
+              if (_tg || _hasTgHash) {
+                window.__EMBEDDED_APP__ = true;
+                document.write('<scr' + 'ipt src="https://telegram.org/js/telegram-web-app.js"></scr' + 'ipt>');
+              }
+            `,
+          }}
+        />
         {/* 防闪烁脚本 - 在页面加载前立即应用主题 */}
         <script
           dangerouslySetInnerHTML={{
