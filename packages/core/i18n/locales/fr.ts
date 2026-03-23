@@ -2804,6 +2804,8 @@ export const fr: TranslationResource = {
     countrySearch: 'Rechercher des pays...',
     popularCountries: 'Populaires',
     allCountries: 'Tous les pays',
+    popularCurrencies: 'Populaires',
+    fiatCurrencies: 'Fiat',
     currency: "Devise d'affichage",
     currencyPlaceholder: 'Sélectionnez la devise',
     currencyHint: 'Utilisée pour afficher les prix',

@@ -2759,6 +2759,8 @@ export const ru: TranslationResource = {
     countrySearch: 'Поиск стран...',
     popularCountries: 'Популярные',
     allCountries: 'Все страны',
+    popularCurrencies: 'Популярные',
+    fiatCurrencies: 'Фиат',
     currency: 'Валюта отображения',
     currencyPlaceholder: 'Выберите валюту',
     currencyHint: 'Для отображения цен',

@@ -2808,6 +2808,8 @@ export const de: TranslationResource = {
     countrySearch: 'Länder suchen...',
     popularCountries: 'Beliebt',
     allCountries: 'Alle Länder',
+    popularCurrencies: 'Beliebt',
+    fiatCurrencies: 'Fiat',
     currency: 'Anzeigewährung',
     currencyPlaceholder: 'Währung auswählen',
     currencyHint: 'Für die Preisanzeige verwendet',
