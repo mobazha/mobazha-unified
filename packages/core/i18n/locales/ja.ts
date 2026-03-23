@@ -2742,6 +2742,8 @@ export const ja: TranslationResource = {
     countrySearch: '国を検索...',
     popularCountries: '人気',
     allCountries: 'すべての国',
+    popularCurrencies: '人気',
+    fiatCurrencies: '法定通貨',
     currency: '表示通貨',
     currencyPlaceholder: '通貨を選択',
     currencyHint: '価格表示に使用',

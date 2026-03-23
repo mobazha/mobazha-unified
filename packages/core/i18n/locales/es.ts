@@ -2786,6 +2786,8 @@ export const es: TranslationResource = {
     countrySearch: 'Buscar países...',
     popularCountries: 'Populares',
     allCountries: 'Todos los países',
+    popularCurrencies: 'Populares',
+    fiatCurrencies: 'Fiat',
     currency: 'Moneda de visualización',
     currencyPlaceholder: 'Selecciona moneda',
     currencyHint: 'Usada para mostrar precios',

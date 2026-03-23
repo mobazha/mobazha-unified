@@ -1,16 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo, useRef, memo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  useUserStore,
-  useI18n,
-  getAllCountries,
-  POPULAR_COUNTRIES,
-  FIAT_CURRENCIES,
-  getPopularCurrencies,
-  getLoginRedirectPath,
-} from '@mobazha/core';
+import { useUserStore, useI18n, getLoginRedirectPath } from '@mobazha/core';
 import { parseJwtToken, getStoredToken } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
 import { Button } from '@/components/ui/button';
@@ -18,17 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
+import CountryCurrencySelector from '@/components/admin/CountryCurrencySelector';
 
 const ValueIcon = memo(function ValueIcon({
   icon,
@@ -49,7 +32,7 @@ const ValueIcon = memo(function ValueIcon({
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { toast } = useToast();
 
   const profile = useUserStore(state => state.profile);
@@ -57,6 +40,7 @@ export default function OnboardingPage() {
   const needsOnboarding = useUserStore(state => state.needsOnboarding);
   const createProfile = useUserStore(state => state.createProfile);
   const updateSettings = useUserStore(state => state.updateSettings);
+  const fetchProfile = useUserStore(state => state.fetchProfile);
   const isLoading = useUserStore(state => state.isLoading);
 
   const [displayName, setDisplayName] = useState('');
@@ -71,28 +55,6 @@ export default function OnboardingPage() {
   // Country / Currency state
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('USD');
-
-  // Country data
-  const allCountries = useMemo(() => getAllCountries(locale), [locale]);
-  const popularCountryCodes = useMemo(() => new Set(POPULAR_COUNTRIES), []);
-  const popularCountries = useMemo(
-    () => allCountries.filter(c => popularCountryCodes.has(c.code)),
-    [allCountries, popularCountryCodes]
-  );
-  const otherCountries = useMemo(
-    () => allCountries.filter(c => !popularCountryCodes.has(c.code)),
-    [allCountries, popularCountryCodes]
-  );
-
-  // Currency data
-  const popularCurrencies = useMemo(
-    () => getPopularCurrencies().filter(c => c.type === 'fiat'),
-    []
-  );
-  const otherFiatCurrencies = useMemo(() => {
-    const popularCodes = new Set(popularCurrencies.map(c => c.code));
-    return FIAT_CURRENCIES.filter(c => !popularCodes.has(c.code));
-  }, [popularCurrencies]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -199,6 +161,10 @@ export default function OnboardingPage() {
         await Promise.all(sideEffects);
       }
 
+      if (avatarFile) {
+        await fetchProfile();
+      }
+
       const savedRedirect = getLoginRedirectPath();
       router.replace(savedRedirect && savedRedirect !== '/' ? savedRedirect : '/');
     } catch {
@@ -217,6 +183,7 @@ export default function OnboardingPage() {
     currency,
     createProfile,
     updateSettings,
+    fetchProfile,
     router,
     toast,
     t,
@@ -354,69 +321,13 @@ export default function OnboardingPage() {
           </div>
 
           {/* Country + Currency row */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Country */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">
-                {t('onboarding.country')}
-              </Label>
-              <Select value={country} onValueChange={setCountry} disabled={isFormDisabled}>
-                <SelectTrigger className="w-full" data-testid="onboarding-country">
-                  <SelectValue placeholder={t('onboarding.countryPlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>{t('onboarding.popularCountries') || 'Popular'}</SelectLabel>
-                    {popularCountries.map(c => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  <SelectSeparator />
-                  <SelectGroup>
-                    <SelectLabel>{t('onboarding.allCountries') || 'All Countries'}</SelectLabel>
-                    {otherCountries.map(c => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Currency */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">
-                {t('onboarding.currency') || 'Display Currency'}
-              </Label>
-              <Select value={currency} onValueChange={setCurrency} disabled={isFormDisabled}>
-                <SelectTrigger className="w-full" data-testid="onboarding-currency">
-                  <SelectValue placeholder={t('onboarding.currencyPlaceholder') || 'Select'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>{t('onboarding.popularCountries') || 'Popular'}</SelectLabel>
-                    {popularCurrencies.map(c => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.symbol} {c.code}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  <SelectSeparator />
-                  <SelectGroup>
-                    <SelectLabel>{t('onboarding.allCountries') || 'All'}</SelectLabel>
-                    {otherFiatCurrencies.map(c => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.symbol} {c.code}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <CountryCurrencySelector
+            country={country}
+            currency={currency}
+            onCountryChange={setCountry}
+            onCurrencyChange={setCurrency}
+            disabled={isFormDisabled}
+          />
 
           {/* Submit */}
           <Button

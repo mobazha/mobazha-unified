@@ -2730,6 +2730,8 @@ export const ko: TranslationResource = {
     countrySearch: '국가 검색...',
     popularCountries: '인기',
     allCountries: '모든 국가',
+    popularCurrencies: '인기',
+    fiatCurrencies: '법정화폐',
     currency: '표시 통화',
     currencyPlaceholder: '통화 선택',
     currencyHint: '가격 표시에 사용',

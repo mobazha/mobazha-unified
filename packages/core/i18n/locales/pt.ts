@@ -2783,6 +2783,8 @@ export const pt: TranslationResource = {
     countrySearch: 'Pesquisar países...',
     popularCountries: 'Populares',
     allCountries: 'Todos os países',
+    popularCurrencies: 'Populares',
+    fiatCurrencies: 'Fiat',
     currency: 'Moeda de exibição',
     currencyPlaceholder: 'Selecione a moeda',
     currencyHint: 'Usado para exibir preços',

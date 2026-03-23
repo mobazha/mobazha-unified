@@ -2684,6 +2684,8 @@ export const zh: TranslationResource = {
     countrySearch: '搜索国家...',
     popularCountries: '热门',
     allCountries: '所有国家',
+    popularCurrencies: '热门',
+    fiatCurrencies: '法币',
     currency: '显示货币',
     currencyPlaceholder: '选择货币',
     currencyHint: '用于价格显示',
