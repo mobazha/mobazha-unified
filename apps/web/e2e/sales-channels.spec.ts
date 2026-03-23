@@ -137,14 +137,13 @@ authenticatedTest.describe('Store Short Code Resolution', () => {
       const shortCode = shortCodeMatch[1];
 
       // Step 2: Resolve short code via in-browser fetch (same proxy as the app)
-      // Backend may return {"data":{"peerID":"..."}} or {"peerID":"..."} (cached)
       const peerID = await authedPage.evaluate(async (code: string) => {
         const resp = await fetch(`/platform/v1/store-links/resolve/${code}`, {
           headers: { Accept: 'application/json' },
         });
         if (!resp.ok) return null;
         const json = await resp.json();
-        return json?.data?.peerID || json?.peerID || null;
+        return json?.data?.peerID || null;
       }, shortCode);
       expect(peerID).toBeTruthy();
 
@@ -195,18 +194,5 @@ test.describe('Store Link Resolution API', () => {
 
     const data = await resp.json();
     expect(data?.error?.code).toBe('NOT_FOUND');
-  });
-
-  test('should resolve valid short code to peerID (needs browser test to seed)', async ({
-    request,
-  }) => {
-    // This test verifies the public resolve API when a short code exists.
-    // Short codes are created by authenticated browser tests.
-    // If no short codes exist yet, this test will be skipped.
-
-    // Try a known short code pattern by calling a well-known test endpoint
-    // Since we can't authenticate without browser OAuth flow, we verify API contract only.
-    // The full resolution flow is covered by the browser-based test above.
-    test.skip(true, 'Full resolution tested in browser test; API contract verified by 404 test');
   });
 });

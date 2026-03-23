@@ -6,7 +6,6 @@
  */
 
 export interface StoreLinkInfo {
-  link: string;
   shortCode: string;
   telegramLink?: string;
   directLink?: string;
