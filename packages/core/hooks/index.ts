@@ -125,6 +125,9 @@ export * from './useVisitorTracker';
 // Mini App 角色相关
 export * from './useMiniAppRole';
 
+// Sales Channels (Store Links + Store Bot)
+export * from './useSalesChannels';
+
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
 export { formatQueryError } from './queryUtils';

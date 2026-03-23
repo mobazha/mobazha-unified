@@ -278,6 +278,10 @@ const routes: RouteObject[] = [
         element: lazyPage(() => import('./app/admin/settings/integrations/page')),
       },
       {
+        path: 'settings/sales-channels',
+        element: lazyPage(() => import('./app/admin/settings/sales-channels/page')),
+      },
+      {
         path: 'settings/access-control',
         element: lazyPage(() => import('./app/admin/settings/access-control/page')),
       },
