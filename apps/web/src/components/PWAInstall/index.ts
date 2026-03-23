@@ -1,1 +1,1 @@
-export { PWAInstall } from './PWAInstall';
+export { PWAInstall, usePWAInstall } from './PWAInstall';
