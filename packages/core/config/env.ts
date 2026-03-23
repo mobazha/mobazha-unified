@@ -116,9 +116,9 @@ export const PROD_ENV: EnvConfig = {
   },
   casdoor: {
     serverUrl: 'https://login.mobazha.org',
-    clientId: '44b16199e0b7b1d64b25',
+    clientId: 'abf0d355830c72755440',
     organizationName: 'mobazha',
-    appName: 'app_mobazha',
+    appName: 'app-mobazha',
     redirectPath: '/',
   },
   api: {

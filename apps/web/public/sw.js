@@ -5,7 +5,7 @@
  */
 
 // 版本号：每次部署更新时递增此版本号
-const CACHE_VERSION = '2';
+const CACHE_VERSION = '3';
 const CACHE_NAME = `mobazha-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
