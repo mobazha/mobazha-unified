@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useI18n, useUserStore } from '@mobazha/core';
 import { useSalesChannels } from '@mobazha/core/hooks/useSalesChannels';
+import type { UseSalesChannelsReturn } from '@mobazha/core/hooks/useSalesChannels';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ import {
 } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -44,7 +46,8 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={handleCopy}
       className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-      title="Copy"
+      aria-label={copied ? t('common.copied') : t('common.copy')}
+      title={copied ? t('common.copied') : t('common.copy')}
     >
       {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
     </button>
@@ -86,12 +89,17 @@ function LinkRow({
   );
 }
 
-function StoreLinkSection() {
+function StoreLinkSection({
+  storeLink,
+  storeLinkLoading,
+  loadStoreLink,
+  regenerateLink,
+}: Pick<
+  UseSalesChannelsReturn,
+  'storeLink' | 'storeLinkLoading' | 'loadStoreLink' | 'regenerateLink'
+>) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { storeLink, storeLinkLoading, loadStoreLink, regenerateLink } = useSalesChannels({
-    autoLoad: true,
-  });
 
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -191,16 +199,18 @@ function StoreLinkSection() {
   );
 }
 
-function TelegramBotSection() {
+function TelegramBotSection({
+  storeBot,
+  storeBotLoading,
+  storeBotNotFound,
+  bindBot,
+  unbindBot,
+}: Pick<
+  UseSalesChannelsReturn,
+  'storeBot' | 'storeBotLoading' | 'storeBotNotFound' | 'bindBot' | 'unbindBot'
+>) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const profile = useUserStore(s => s.profile);
-  const peerID = profile?.peerID || '';
-
-  const { storeBot, storeBotLoading, storeBotNotFound, bindBot, unbindBot } = useSalesChannels({
-    peerID,
-    autoLoad: true,
-  });
 
   const [botToken, setBotToken] = useState('');
   const [binding, setBinding] = useState(false);
@@ -345,6 +355,20 @@ function TelegramBotSection() {
 
 export default function SalesChannelsContent() {
   const { t } = useI18n();
+  const { toast } = useToast();
+  const profile = useUserStore(s => s.profile);
+  const peerID = profile?.peerID || '';
+
+  const salesChannels = useSalesChannels({ peerID, autoLoad: true });
+
+  // Surface hook-level errors via toast
+  const prevErrorRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (salesChannels.error && salesChannels.error !== prevErrorRef.current) {
+      toast({ variant: 'destructive', title: salesChannels.error });
+    }
+    prevErrorRef.current = salesChannels.error;
+  }, [salesChannels.error, toast]);
 
   return (
     <div className="space-y-8">
@@ -353,7 +377,12 @@ export default function SalesChannelsContent() {
         description={t('admin.salesChannels.storeLinksDesc')}
       >
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
-          <StoreLinkSection />
+          <StoreLinkSection
+            storeLink={salesChannels.storeLink}
+            storeLinkLoading={salesChannels.storeLinkLoading}
+            loadStoreLink={salesChannels.loadStoreLink}
+            regenerateLink={salesChannels.regenerateLink}
+          />
         </div>
       </SettingsSection>
 
@@ -362,7 +391,13 @@ export default function SalesChannelsContent() {
         description={t('admin.salesChannels.telegramBotDesc')}
       >
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
-          <TelegramBotSection />
+          <TelegramBotSection
+            storeBot={salesChannels.storeBot}
+            storeBotLoading={salesChannels.storeBotLoading}
+            storeBotNotFound={salesChannels.storeBotNotFound}
+            bindBot={salesChannels.bindBot}
+            unbindBot={salesChannels.unbindBot}
+          />
         </div>
       </SettingsSection>
     </div>

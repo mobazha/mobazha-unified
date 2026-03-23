@@ -180,15 +180,30 @@ export function MobileListingWizard({
     setPublishError(null);
 
     if (!validate()) {
+      const isRwa = formData.contractType === 'RWA_TOKEN';
       const errorChecks: { check: boolean; step: WizardStep; label: string }[] = [
         { check: !formData.title.trim(), step: 'essentials', label: t('listing.title') },
         {
-          check: !formData.price || parseFloat(formData.price) <= 0,
+          check: !isRwa && (!formData.price || parseFloat(formData.price) <= 0),
           step: 'essentials',
           label: t('listing.price'),
         },
         { check: formData.images.length === 0, step: 'media', label: t('listing.photos') },
       ];
+      if (isRwa) {
+        errorChecks.push(
+          {
+            check: !formData.tokenAddress?.trim(),
+            step: 'details',
+            label: t('listing.tokenAddress', { defaultValue: 'Token Address' }),
+          },
+          {
+            check: !formData.blockchain,
+            step: 'details',
+            label: t('listing.blockchain', { defaultValue: 'Blockchain' }),
+          }
+        );
+      }
       const firstError = errorChecks.find(e => e.check);
       if (firstError) {
         setPublishError(
@@ -202,7 +217,17 @@ export function MobileListingWizard({
       return;
     }
     onSubmit();
-  }, [validate, onSubmit, formData.title, formData.price, formData.images.length, t]);
+  }, [
+    validate,
+    onSubmit,
+    formData.title,
+    formData.price,
+    formData.images.length,
+    formData.contractType,
+    formData.tokenAddress,
+    formData.blockchain,
+    t,
+  ]);
 
   const normalizeTag = useCallback((input: string) => {
     return input
