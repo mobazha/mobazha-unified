@@ -3,49 +3,19 @@
  *
  * 钱包连接配置，支持多链
  * 使用 Reown AppKit 1.8.15
+ *
+ * IMPORTANT: This file must NOT import from @reown/appkit or viem.
+ * Those packages contain browser-only code that breaks SSR when resolved
+ * by the Next.js server bundler. AppKit network objects are resolved in
+ * AppKitProvider.tsx (which has 'use client').
  */
 
-import { sepolia, mainnet } from '@reown/appkit/networks';
 import { getExplorerResourceUrl } from '../services/payment/explorers';
 import { getEnvConfig } from './env';
 
 // ============= Project ID =============
 // 从 Reown Dashboard (https://dashboard.reown.com) 获取
 export const APPKIT_PROJECT_ID = 'aee7e021e1d2b5d8e9ec92a4c7e78464';
-
-// ============= 网络配置 =============
-
-// 网络类型 (使用 any 避免 viem 类型问题)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type NetworkType = any;
-
-/**
- * 测试网络配置
- * - Sepolia: Ethereum 测试网
- */
-export const TEST_NETWORKS: NetworkType[] = [sepolia];
-
-/**
- * 主网网络配置
- * - Ethereum Mainnet
- */
-export const PROD_NETWORKS: NetworkType[] = [mainnet];
-
-/**
- * 获取当前环境支持的网络
- */
-export function getSupportedNetworks(): NetworkType[] {
-  const env = getEnvConfig();
-  return env.isTestEnv ? TEST_NETWORKS : PROD_NETWORKS;
-}
-
-/**
- * 获取默认网络
- */
-export function getDefaultNetwork(): NetworkType {
-  const env = getEnvConfig();
-  return env.isTestEnv ? sepolia : mainnet;
-}
 
 // ============= Metadata =============
 

@@ -18,7 +18,9 @@ import {
 } from 'react';
 import { createAppKit, type AppKit } from '@reown/appkit/react';
 import { EthersAdapter } from '@reown/appkit-adapter-ethers';
-import { APPKIT_PROJECT_ID, APPKIT_METADATA, getSupportedNetworks } from '../config/appkit';
+import { sepolia, mainnet } from '@reown/appkit/networks';
+import { APPKIT_PROJECT_ID, APPKIT_METADATA } from '../config/appkit';
+import { getEnvConfig } from '../config/env';
 
 // ============= Theme Utils =============
 
@@ -150,8 +152,9 @@ export function AppKitProvider({
     chain: (() => void) | null | void;
   }>({ account: null, chain: null });
 
-  // 获取网络列表
-  const supportedNetworks = networks ?? getSupportedNetworks();
+  // 获取网络列表 — 在 'use client' 组件内解析 AppKit 网络对象，
+  // 避免 server bundle 触达 @reown/appkit
+  const supportedNetworks = networks ?? (getEnvConfig().isTestEnv ? [sepolia] : [mainnet]);
 
   /**
    * 检查并断开不支持的网络连接
