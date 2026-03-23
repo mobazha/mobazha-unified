@@ -19,6 +19,7 @@ import {
   ordersApi,
   useOrderAction,
   batchGetProfileDisplayInfo,
+  useRoleStore,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop, useIsMobile } from '@/hooks/useMediaQuery';
@@ -44,6 +45,7 @@ function OrdersPageContent() {
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const isDesktop = useIsDesktop();
   const isMobile = useIsMobile();
+  const isSeller = useRoleStore(state => state.roleState.isSeller);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Mobile: redirect ?tab=sales to Admin Orders (sales managed via Store Admin)
@@ -56,9 +58,10 @@ function OrdersPageContent() {
   // 从 URL 参数读取 tab 值（使用 useMemo 响应 URL 变化）
   const orderType = useMemo<OrderType>(() => {
     if (isMobile) return 'purchases';
+    if (!isSeller) return 'purchases';
     const tab = searchParams.get('tab');
     return tab === 'sales' ? 'sales' : 'purchases';
-  }, [searchParams, isMobile]);
+  }, [searchParams, isMobile, isSeller]);
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>('all');
   const [showStatusSheet, setShowStatusSheet] = useState(false);
@@ -327,8 +330,8 @@ function OrdersPageContent() {
             {isMobile ? t('order.managePurchases') : t('order.manageOrders')}
           </p>
 
-          {/* Order Type Toggle — desktop only (mobile always shows purchases) */}
-          {!isMobile && (
+          {/* Order Type Toggle — desktop only, hidden for pure buyers */}
+          {!isMobile && isSeller && (
             <div className="mb-3 sm:mb-6">
               <div className="inline-flex rounded-lg bg-muted p-1">
                 {(['purchases', 'sales'] as OrderType[]).map(type => (
