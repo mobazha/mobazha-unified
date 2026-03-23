@@ -240,6 +240,7 @@ export function AppKitProvider({
           networks: supportedNetworks as any,
           metadata: APPKIT_METADATA,
           projectId,
+          allowUnsupportedChain: true,
           features: {
             analytics: true,
             swaps: false,
