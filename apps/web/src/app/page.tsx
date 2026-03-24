@@ -12,6 +12,7 @@ import {
   FeaturedStoresSection,
   ValuePropsSection,
   PlatformStatsSection,
+  AudienceSection,
 } from '@/components/SaaSHome';
 import {
   useI18n,
@@ -228,6 +229,11 @@ function SaaSHomePage() {
         <BrowseQuickLinks />
 
         <ValuePropsSection />
+
+        {/* Who: Audience Scenarios (mobile only) */}
+        <div className="md:hidden">
+          <AudienceSection />
+        </div>
 
         {/* What: Featured Stores */}
         <FeaturedStoresSection stores={featuredStores} isLoading={isLoadingStores} />

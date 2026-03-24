@@ -1632,6 +1632,28 @@ export const zh: TranslationResource = {
       activeStores: '活跃店铺',
       productsListed: '上架商品',
       chainsSupported: '支持的链',
+      poweredBy: '支持的支付方式',
+      andMore: '已支持 {{count}} 条区块链 + 法币支付，持续增加中',
+    },
+    audience: {
+      title: '为每一位卖家打造',
+      subtitle: '从独立创作者到全球品牌',
+      creators: {
+        title: '创作者 & 艺术家',
+        description: '向全球销售数字艺术、模板和创意作品',
+      },
+      crossBorder: {
+        title: '跨境卖家',
+        description: '通过加密货币触达全球买家，无汇率壁垒',
+      },
+      digitalGoods: {
+        title: '数字产品',
+        description: '独家内容、会员权益、数字收藏品 — 即时交付',
+      },
+      communityCommerce: {
+        title: '社群商家',
+        description: '通过 Telegram 群组或 Discord 社区直接销售',
+      },
     },
   },
   footer: {
