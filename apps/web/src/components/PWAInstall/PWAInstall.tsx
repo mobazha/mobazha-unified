@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { isTelegramMiniApp } from '@mobazha/core/services/storage';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -12,9 +13,20 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = 'pwa-install-dismissed';
 const DISMISS_COUNT_KEY = 'pwa-install-dismiss-count';
-const DISMISS_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const MAX_DISMISSALS = 3;
-const SHOW_DELAY_MS = 60_000; // 60 seconds of engagement before showing
+
+function isMobileWeb(): boolean {
+  if (typeof window === 'undefined') return false;
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|Opera Mini|IEMobile/i.test(navigator.userAgent);
+}
+
+function getDismissCooldownMs(): number {
+  return isMobileWeb() ? 3 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+}
+
+function getShowDelayMs(): number {
+  return isMobileWeb() ? 15_000 : 30_000;
+}
 
 const SUPPRESSED_PATHS = ['/onboarding', '/auth', '/login', '/signup', '/checkout', '/payment'];
 
@@ -92,13 +104,15 @@ export const PWAInstall: React.FC = () => {
 
   const [shouldSuppress] = useState(() => {
     if (typeof window === 'undefined') return true;
+    if (isTelegramMiniApp()) return true;
+
     const count = parseInt(localStorage.getItem(DISMISS_COUNT_KEY) || '0', 10);
     if (count >= MAX_DISMISSALS) return true;
 
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) {
       const dismissedTime = parseInt(dismissed, 10);
-      if (Date.now() - dismissedTime < DISMISS_COOLDOWN_MS) return true;
+      if (Date.now() - dismissedTime < getDismissCooldownMs()) return true;
     }
     return false;
   });
@@ -110,7 +124,7 @@ export const PWAInstall: React.FC = () => {
     const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
     if (isIOS && isSafari) {
-      const timer = setTimeout(() => setShowIOSPrompt(true), SHOW_DELAY_MS);
+      const timer = setTimeout(() => setShowIOSPrompt(true), getShowDelayMs());
       return () => clearTimeout(timer);
     }
   }, [isInstalled, isSuppressedPage, shouldSuppress]);
@@ -140,7 +154,7 @@ export const PWAInstall: React.FC = () => {
 
   useEffect(() => {
     if (!deferredPrompt || shouldSuppress) return;
-    const timer = setTimeout(() => setShowPrompt(true), SHOW_DELAY_MS);
+    const timer = setTimeout(() => setShowPrompt(true), getShowDelayMs());
     return () => clearTimeout(timer);
   }, [deferredPrompt, shouldSuppress]);
 
