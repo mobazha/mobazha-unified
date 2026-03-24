@@ -8,6 +8,52 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n, useUserStore, getImageUrl, isStandalone, stripHtmlTags } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
+const FOOTER_CRYPTO_TOKENS = [
+  { id: 'BTC', name: 'Bitcoin' },
+  { id: 'ETH', name: 'Ethereum' },
+  { id: 'SOL', name: 'Solana' },
+  { id: 'BNB', name: 'BNB Chain' },
+  { id: 'LTC', name: 'Litecoin' },
+  { id: 'USDT', name: 'Tether (USDT)' },
+  { id: 'USDC', name: 'USD Coin (USDC)' },
+];
+
+const FOOTER_FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
+  {
+    id: 'visa',
+    name: 'Visa',
+    icon: (
+      <svg className="h-5 w-auto" viewBox="0 0 48 16" fill="currentColor">
+        <path d="M19.4 1l-3.8 14h-3.1L16.3 1h3.1zm15.2 9l1.6-4.5.9 4.5h-2.5zm3.5 5l.3-1.5h-3.8l-.6 1.5h-3.3L35 1.3c.1-.4.5-.6.9-.6h2.8l3.4 14.3h-3zm-8.6 0L26 1h3l2.4 10.5L33.2 1h2.9l-4.5 14h-2.1zM11.5 1L7 15H3.8L1.5 3.5C1.4 3 1.1 2.6.5 2.3 0 2 .8 1.7 1.5 1.5l.2-1h4.9c.6 0 1.2.5 1.3 1.1l1.2 6.5L12.5 1h3z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'mastercard',
+    name: 'Mastercard',
+    icon: (
+      <svg className="h-5 w-auto" viewBox="0 0 24 16" fill="none">
+        <circle cx="8.5" cy="8" r="7" fill="#EB001B" opacity="0.8" />
+        <circle cx="15.5" cy="8" r="7" fill="#F79E1B" opacity="0.8" />
+        <path
+          d="M12 2.8a6.97 6.97 0 012.5 5.2A6.97 6.97 0 0112 13.2a6.97 6.97 0 01-2.5-5.2A6.97 6.97 0 0112 2.8z"
+          fill="#FF5F00"
+          opacity="0.9"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal',
+    icon: (
+      <svg className="h-5 w-auto" viewBox="0 0 24 16" fill="currentColor">
+        <path d="M9.5 14.8H7.2l.2-1.3 1.5-9.3h2.8c1.8 0 3 .7 2.7 2.5-.4 2.4-2 3.5-4 3.5H9l-.5 3.3-.3 1.3zm1.1-5.8h1c1 0 1.8-.5 2-1.6.1-.8-.4-1.2-1.3-1.2h-.9l-.8 2.8zm7.3-4.8c1.8 0 3 .7 2.7 2.5-.4 2.4-2 3.5-4 3.5h-1.4L14.7 13l-.2 1.3h-2.3l2-12.1h3.7zm-.6 4.3h1c1 0 1.8-.5 2-1.6.1-.8-.4-1.2-1.3-1.2h-.9l-.8 2.8z" />
+      </svg>
+    ),
+  },
+];
+
 const socialLinks = [
   {
     label: 'Twitter',
@@ -259,8 +305,16 @@ export const Footer: React.FC = () => {
               {t('footer.paymentMethods')}
             </span>
             <div className="flex items-center gap-2 opacity-60">
-              {['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'LTC', 'USDT', 'USDC'].map(token => (
-                <TokenIcon key={token} token={token} size={20} />
+              {FOOTER_CRYPTO_TOKENS.map(({ id, name }) => (
+                <span key={id} title={name}>
+                  <TokenIcon token={id} size={20} />
+                </span>
+              ))}
+              <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+              {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
+                <span key={id} title={name} className="flex items-center">
+                  {icon}
+                </span>
               ))}
             </div>
           </div>
