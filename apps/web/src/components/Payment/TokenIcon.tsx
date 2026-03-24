@@ -68,6 +68,9 @@ const FIAT_CURRENCIES = new Set([
   'NOK',
 ]);
 
+// CDN 中不存在的 symbol，直接从 local 开始加载
+const CDN_MISSING = new Set(['base', 'mbz']);
+
 // 本地图标文件名映射（用于 fallback）
 const LOCAL_ICON_MAP: Record<string, string> = {
   btc: 'BTC',
@@ -152,13 +155,11 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
   showChainBadge = false,
   chainId,
 }) => {
-  // 检查是否为法币
-  const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
-  const [iconState, setIconState] = useState<'cdn' | 'local' | 'default'>(
-    isFiat ? 'default' : 'cdn'
-  );
-
   const symbol = getSymbol(token);
+  const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
+  const initialState = isFiat ? 'default' : CDN_MISSING.has(symbol) ? 'local' : 'cdn';
+  const [iconState, setIconState] = useState<'cdn' | 'local' | 'default'>(initialState);
+
   const chainSymbol = chainId ? getSymbol(chainId) : null;
 
   // 根据当前状态获取图标 URL

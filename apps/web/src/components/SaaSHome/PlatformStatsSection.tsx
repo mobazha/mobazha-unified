@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Container } from '@/components/layouts';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getSupportedChains } from '@mobazha/core';
 
 interface PlatformStatsSectionProps {
   storeCount: number;
@@ -10,7 +10,7 @@ interface PlatformStatsSectionProps {
   isLoading: boolean;
 }
 
-const CHAINS_SUPPORTED = 3; // BNB, ETH, SOL
+const CHAINS_SUPPORTED = getSupportedChains().length;
 
 export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.memo(
   ({ storeCount, listingCount, isLoading }) => {
