@@ -39,7 +39,7 @@ const defaultConfig: AppConfig = {
   useMockData: true, // Default to mock data for development
   apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   matrixHomeserver: process.env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org',
-  matrixEnabled: false, // Set to true to enable Matrix chat (disabled by default for development)
+  matrixEnabled: true, // Set to true to enable Matrix chat (disabled by default for development)
   debug: process.env.NODE_ENV === 'development',
 };
 
