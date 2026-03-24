@@ -1792,6 +1792,28 @@ export const en: TranslationResource = {
       activeStores: 'Active Stores',
       productsListed: 'Products Listed',
       chainsSupported: 'Chains Supported',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
 

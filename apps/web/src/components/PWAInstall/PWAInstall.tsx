@@ -13,6 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = 'pwa-install-dismissed';
 const DISMISS_COUNT_KEY = 'pwa-install-dismiss-count';
+const INSTALLED_KEY = 'pwa-installed';
 const MAX_DISMISSALS = 3;
 
 function isMobileWeb(): boolean {
@@ -34,31 +35,43 @@ let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e: Event) => {
+    if (localStorage.getItem(INSTALLED_KEY) === 'true') {
+      e.preventDefault();
+      return;
+    }
     globalDeferredPrompt = e as BeforeInstallPromptEvent;
   });
+  window.addEventListener('appinstalled', () => {
+    localStorage.setItem(INSTALLED_KEY, 'true');
+    globalDeferredPrompt = null;
+  });
+}
+
+function isPWAInstalledOrStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (localStorage.getItem(INSTALLED_KEY) === 'true') return true;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true
+  );
 }
 
 export function usePWAInstall() {
   const [canInstall, setCanInstall] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true;
-    return !isStandalone && globalDeferredPrompt !== null;
+    return !isPWAInstalledOrStandalone() && globalDeferredPrompt !== null;
   });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true;
-    if (isStandalone) return;
+    if (isPWAInstalledOrStandalone()) return;
 
     const handlePrompt = (e: Event) => {
       globalDeferredPrompt = e as BeforeInstallPromptEvent;
       setCanInstall(true);
     };
     const handleInstalled = () => {
+      localStorage.setItem(INSTALLED_KEY, 'true');
       globalDeferredPrompt = null;
       setCanInstall(false);
     };
@@ -75,6 +88,7 @@ export function usePWAInstall() {
     await globalDeferredPrompt.prompt();
     const { outcome } = await globalDeferredPrompt.userChoice;
     if (outcome === 'accepted') {
+      localStorage.setItem(INSTALLED_KEY, 'true');
       globalDeferredPrompt = null;
       setCanInstall(false);
     }
@@ -89,13 +103,7 @@ export const PWAInstall: React.FC = () => {
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const pathname = usePathname();
 
-  const isInstalled = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as typeof window.navigator & { standalone?: boolean }).standalone === true
-    );
-  }, []);
+  const isInstalled = useMemo(() => isPWAInstalledOrStandalone(), []);
 
   const isSuppressedPage = useMemo(
     () => SUPPRESSED_PATHS.some(p => pathname?.startsWith(p)),
@@ -138,6 +146,7 @@ export const PWAInstall: React.FC = () => {
     };
 
     const handleAppInstalled = () => {
+      localStorage.setItem(INSTALLED_KEY, 'true');
       globalDeferredPrompt = null;
       setShowPrompt(false);
       setDeferredPrompt(null);
@@ -165,6 +174,7 @@ export const PWAInstall: React.FC = () => {
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === 'accepted') {
+      localStorage.setItem(INSTALLED_KEY, 'true');
       globalDeferredPrompt = null;
       setShowPrompt(false);
     }
