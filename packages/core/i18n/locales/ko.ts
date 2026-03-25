@@ -1212,6 +1212,7 @@ export const ko: TranslationResource = {
     offline: '오프라인',
     offlineHint: '채팅 연결이 끊어졌습니다. 재연결 중…',
     deleteFailed: '메시지 삭제에 실패했습니다',
+    sendImageFailed: '이미지 전송에 실패했습니다',
     lastSeen: '{{time}} 전 접속',
     typing: '입력 중...',
     encrypted: '메시지는 암호화되어 있습니다',

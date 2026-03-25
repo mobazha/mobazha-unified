@@ -1321,6 +1321,7 @@ export const en: TranslationResource = {
     offline: 'Offline',
     offlineHint: 'Chat is disconnected. Reconnecting...',
     deleteFailed: 'Failed to delete message',
+    sendImageFailed: 'Failed to send image',
     lastSeen: 'Last seen {{time}}',
     typing: 'typing...',
     encrypted: 'End-to-end encrypted',

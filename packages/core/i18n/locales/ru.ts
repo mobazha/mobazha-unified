@@ -1229,6 +1229,7 @@ export const ru: TranslationResource = {
     offline: 'Не в сети',
     offlineHint: 'Чат отключен. Переподключение…',
     deleteFailed: 'Не удалось удалить сообщение',
+    sendImageFailed: 'Не удалось отправить изображение',
     lastSeen: 'Был {{time}} назад',
     typing: 'печатает...',
     encrypted: 'Сквозное шифрование',

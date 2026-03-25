@@ -1196,6 +1196,7 @@ export const zh: TranslationResource = {
     offline: '离线',
     offlineHint: '聊天已断开连接，正在重连…',
     deleteFailed: '删除消息失败',
+    sendImageFailed: '发送图片失败',
     lastSeen: '{{time}} 前在线',
     typing: '正在输入...',
     encrypted: '端到端加密',

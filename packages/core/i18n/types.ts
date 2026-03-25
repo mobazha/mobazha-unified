@@ -452,6 +452,7 @@ export interface TranslationResource {
     offline: string;
     offlineHint: string;
     deleteFailed: string;
+    sendImageFailed: string;
     lastSeen: string;
     typing: string;
     encrypted: string;

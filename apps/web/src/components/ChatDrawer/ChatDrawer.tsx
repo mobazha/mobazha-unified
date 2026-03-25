@@ -355,7 +355,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         console.error('[ChatDrawer] Failed to send image:', err);
         toast({
           title: t('common.error'),
-          description: 'Failed to send image',
+          description: t('chat.sendImageFailed'),
           variant: 'destructive',
         });
       }

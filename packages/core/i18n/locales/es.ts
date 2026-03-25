@@ -1235,6 +1235,7 @@ export const es: TranslationResource = {
     offline: 'Desconectado',
     offlineHint: 'Chat desconectado. Reconectando…',
     deleteFailed: 'Error al eliminar el mensaje',
+    sendImageFailed: 'Error al enviar la imagen',
     lastSeen: 'Visto hace {{time}}',
     typing: 'escribiendo...',
     encrypted: 'Mensajes cifrados de extremo a extremo',
