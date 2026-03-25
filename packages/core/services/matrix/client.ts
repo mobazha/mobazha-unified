@@ -39,6 +39,40 @@ declare const indexedDB: typeof globalThis.indexedDB | undefined;
 
 declare const localStorage: typeof globalThis.localStorage | undefined;
 
+type MatrixClientInstance = import('matrix-js-sdk').MatrixClient;
+
+interface MatrixVerificationRequest {
+  phase: number;
+  transactionId: string;
+  otherUserId: string;
+  cancellingUserId?: string;
+  verifier?: MatrixVerifier;
+  on(event: string, handler: () => void): void;
+  accept(): Promise<void>;
+  startVerification(method: string): Promise<MatrixVerifier>;
+  cancel(): Promise<void>;
+}
+
+interface MatrixVerifier {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on(event: string, handler: (...args: any[]) => void): void;
+  verify(): Promise<void>;
+  cancel(error: Error): void;
+}
+
+interface MatrixSasCallbacks {
+  sas?: { emoji?: unknown[]; decimal?: unknown[] };
+  emoji?: unknown[];
+  decimal?: unknown[];
+  confirm(): Promise<void>;
+  cancel(): void;
+}
+
+interface IgnoreListClient {
+  getIgnoredUsers(): string[];
+  setIgnoredUsers(users: string[]): Promise<void>;
+}
+
 // 默认配置
 const DEFAULT_CONFIG: Partial<MatrixConfig> = {
   homeserverUrl: 'https://matrix.org',
@@ -56,7 +90,7 @@ const BACKUP_DEBOUNCE_DELAY = 30 * 1000;
  * Matrix 客户端服务类
  */
 class MatrixClientService {
-  private client: unknown = null; // matrix-js-sdk client
+  private client: MatrixClientInstance | null = null;
   private config: MatrixConfig | null = null;
   private serverConfig: { homeserverURL: string; serverName: string } | null = null;
   private isInitialized = false;
@@ -70,9 +104,9 @@ class MatrixClientService {
   private autoBackupTimer: ReturnType<typeof setInterval> | null = null;
 
   // Verification state
-  private pendingVerificationRequest: unknown = null;
-  private currentVerifier: unknown = null;
-  private sasCallbacks: unknown = null;
+  private pendingVerificationRequest: MatrixVerificationRequest | null = null;
+  private currentVerifier: MatrixVerifier | null = null;
+  private sasCallbacks: MatrixSasCallbacks | null = null;
   private verificationDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private verifierListenersAttached = new WeakSet<object>();
   private verificationListenersSetup = false;
@@ -205,7 +239,7 @@ class MatrixClientService {
       this.client = sdk.createClient(clientOpts);
 
       // 5. 初始化 E2EE 加密 (在 startClient 之前)
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       const cryptoDbPrefix = `matrix-crypto-${userId}`;
 
       try {
@@ -250,7 +284,7 @@ class MatrixClientService {
             if (deviceId) {
               this._markCryptoStoreDevice(userId, deviceId);
             }
-            console.info(
+            console.warn(
               '[Matrix] Crypto re-initialized successfully after clearing corrupted data'
             );
           } catch (retryError) {
@@ -589,8 +623,7 @@ class MatrixClientService {
     }
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const response = await matrixClient.login('m.login.password', {
         user: username,
@@ -627,8 +660,7 @@ class MatrixClientService {
 
     if (this.client) {
       try {
-        const sdk = await import('matrix-js-sdk');
-        const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+        const matrixClient = this.client!;
         await matrixClient.logout();
       } catch (error) {
         console.warn('[Matrix] Logout error:', error);
@@ -661,7 +693,7 @@ class MatrixClientService {
     }
 
     const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
 
     // 返回一个 Promise，等待初始同步完成
     return new Promise((resolve, reject) => {
@@ -677,8 +709,7 @@ class MatrixClientService {
             clearTimeout(timeout);
             this.isConnected = true;
             matrixEvents.emit(MATRIX_EVENTS.CONNECTED);
-            // eslint-disable-next-line no-console
-            console.info('[Matrix] Sync prepared, initial sync complete');
+            console.warn('[Matrix] Sync prepared, initial sync complete');
 
             // 执行 E2EE 密钥恢复（异步，不阻塞）
             this._setupE2EEAfterSync().catch(error => {
@@ -754,8 +785,7 @@ class MatrixClientService {
   private async _setupE2EEAfterSync(): Promise<void> {
     if (!this.client) return;
 
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const { matrixCrypto } = await import('./crypto');
     const { getGatewayUrl, getAuthHeaders } = await import('../api/config');
 
@@ -797,7 +827,7 @@ class MatrixClientService {
                 // 提供 UIA 回调处理 401 认证请求
 
                 authUploadDeviceSigningKeys: async (
-                  makeRequest: (authData: any) => Promise<any>
+                  makeRequest: (authData: Record<string, unknown>) => Promise<unknown>
                 ) => {
                   // 尝试不带认证先请求
                   try {
@@ -851,8 +881,7 @@ class MatrixClientService {
    */
   async stopSync(): Promise<void> {
     if (this.client) {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       matrixClient.stopClient();
     }
     this.isConnected = false;
@@ -865,8 +894,7 @@ class MatrixClientService {
   async getRooms(): Promise<MatrixRoom[]> {
     if (!this.client) return [];
 
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const rooms = matrixClient.getRooms();
 
     return rooms.map(room => this.formatRoom(room));
@@ -879,7 +907,7 @@ class MatrixClientService {
     if (!this.client) return [];
 
     const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const room = matrixClient.getRoom(roomId);
 
     if (!room) {
@@ -988,7 +1016,7 @@ class MatrixClientService {
     if (!this.client) return [];
 
     const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const room = matrixClient.getRoom(roomId);
     if (!room) return [];
 
@@ -1295,7 +1323,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       // Auto-join if we're only invited (not yet a member)
       const room = matrixClient.getRoom(roomId);
@@ -1354,7 +1382,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const uploadResponse = await matrixClient.uploadContent(file, {
         type: file.type,
@@ -1422,7 +1450,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const uploadResponse = await matrixClient.uploadContent(file, {
         type: file.type,
@@ -1579,7 +1607,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       // 检查是否已有直接聊天
       const existingRoom = await this.findDirectRoom(userId);
@@ -1617,8 +1645,7 @@ class MatrixClientService {
     if (!this.client) return;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       // 获取当前 m.direct 数据
       // 使用类型断言因为 'm.direct' 不在标准 AccountDataEvents 类型中
@@ -1655,8 +1682,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.joinRoom(roomIdOrAlias);
       matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId: roomIdOrAlias });
       return true;
@@ -1673,8 +1699,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.leave(roomId);
       matrixEvents.emit(MATRIX_EVENTS.ROOM_LEFT, { roomId });
       return true;
@@ -1751,8 +1776,7 @@ class MatrixClientService {
 
     if (shouldAutoAccept) {
       try {
-        const sdk = await import('matrix-js-sdk');
-        const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+        const matrixClient = this.client!;
         await matrixClient.joinRoom(roomId);
         matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId });
         console.warn('[Matrix] Auto-joined room based on invite policy:', roomId);
@@ -1797,7 +1821,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const roomName = orderInfo?.title
         ? `Order: ${orderInfo.title}`
@@ -1854,7 +1878,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const response = await matrixClient.createRoom({
         name: `${storeInfo.name} Community`,
@@ -1908,7 +1932,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const response = await matrixClient.createRoom({
         name: `Dispute: ${orderId.slice(0, 8)}`,
@@ -1945,7 +1969,7 @@ class MatrixClientService {
 
     try {
       const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const initialState: any[] = [
@@ -1987,8 +2011,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.invite(roomId, userId);
       return true;
     } catch (error) {
@@ -2004,8 +2027,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.kick(roomId, userId, reason);
       return true;
     } catch (error) {
@@ -2021,8 +2043,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.setRoomName(roomId, name);
       return true;
     } catch (error) {
@@ -2038,8 +2059,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.setRoomTopic(roomId, topic);
       return true;
     } catch (error) {
@@ -2055,8 +2075,7 @@ class MatrixClientService {
     if (!this.client) return;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       await matrixClient.sendTyping(roomId, isTyping, timeout);
     } catch (error) {
       console.warn('[Matrix] Send typing failed:', error);
@@ -2070,8 +2089,7 @@ class MatrixClientService {
     if (!this.client) return false;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       const room = matrixClient.getRoom(roomId);
 
       if (room) {
@@ -2093,8 +2111,7 @@ class MatrixClientService {
     if (!this.client) return {};
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
       const room = matrixClient.getRoom(roomId);
       if (!room) return {};
 
@@ -2119,8 +2136,7 @@ class MatrixClientService {
   async redactEvent(roomId: string, eventId: string, reason?: string): Promise<void> {
     if (!this.client) throw new Error('Matrix client not initialized');
 
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     await matrixClient.redactEvent(roomId, eventId, undefined, reason ? { reason } : undefined);
   }
 
@@ -2131,9 +2147,16 @@ class MatrixClientService {
     if (!this.client) throw new Error('Matrix client not initialized');
 
     const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
-    // SDK types don't cover m.replace relation; cast to bypass
-    await (matrixClient as any).sendMessage(roomId, {
+    const matrixClient = this.client!;
+    // m.replace relation is not covered by SDK's strict content types
+    await (
+      matrixClient as unknown as {
+        sendMessage(
+          roomId: string,
+          content: Record<string, unknown>
+        ): Promise<{ event_id: string }>;
+      }
+    ).sendMessage(roomId, {
       msgtype: sdk.MsgType.Text,
       body: `* ${newContent}`,
       'm.new_content': {
@@ -2158,9 +2181,16 @@ class MatrixClientService {
   async sendReaction(roomId: string, eventId: string, emoji: string): Promise<void> {
     if (!this.client) throw new Error('Matrix client not initialized');
 
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
-    await (matrixClient as any).sendEvent(roomId, 'm.reaction', {
+    const matrixClient = this.client!;
+    await (
+      matrixClient as unknown as {
+        sendEvent(
+          roomId: string,
+          eventType: string,
+          content: Record<string, unknown>
+        ): Promise<{ event_id: string }>;
+      }
+    ).sendEvent(roomId, 'm.reaction', {
       'm.relates_to': {
         rel_type: 'm.annotation',
         event_id: eventId,
@@ -2174,8 +2204,7 @@ class MatrixClientService {
    */
   async setDisplayName(displayName: string): Promise<void> {
     if (!this.client) return;
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     await matrixClient.setDisplayName(displayName);
   }
 
@@ -2185,8 +2214,7 @@ class MatrixClientService {
    */
   async syncProfileToMatrix(displayName: string, avatarUrl?: string): Promise<void> {
     if (!this.client) return;
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
 
     try {
       await matrixClient.setDisplayName(displayName);
@@ -2223,8 +2251,7 @@ class MatrixClientService {
   async setMyPeerIDInRoom(roomId: string): Promise<void> {
     if (!this.client || !this.currentPeerID || !this.config?.userId) return;
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       const room = matrixClient.getRoom(roomId);
       if (room) {
@@ -2260,9 +2287,18 @@ class MatrixClientService {
         }
       }
 
-      await matrixClient.sendStateEvent(
+      await (
+        matrixClient as unknown as {
+          sendStateEvent(
+            roomId: string,
+            eventType: string,
+            content: Record<string, unknown>,
+            stateKey: string
+          ): Promise<unknown>;
+        }
+      ).sendStateEvent(
         roomId,
-        'org.mobazha.member_peerid' as any,
+        'org.mobazha.member_peerid',
         { peer_id: this.currentPeerID },
         this.config.userId
       );
@@ -2331,15 +2367,18 @@ class MatrixClientService {
   async setupVerificationListeners(): Promise<void> {
     if (!this.client || this.verificationListenersSetup) return;
     this.verificationListenersSetup = true;
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const crypto = matrixClient.getCrypto?.();
     if (!crypto) return;
 
     const { CryptoEvent } = await import('matrix-js-sdk/lib/crypto-api');
     const { VerificationPhase } = await import('matrix-js-sdk/lib/crypto-api/verification');
 
-    (crypto as any).on(CryptoEvent.VerificationRequestReceived, (request: any) => {
+    (
+      crypto as unknown as {
+        on: (event: string, handler: (req: MatrixVerificationRequest) => void) => void;
+      }
+    ).on(CryptoEvent.VerificationRequestReceived, (request: MatrixVerificationRequest) => {
       if (this.verificationDebounceTimer) {
         clearTimeout(this.verificationDebounceTimer);
         this.verificationDebounceTimer = null;
@@ -2358,7 +2397,9 @@ class MatrixClientService {
     });
   }
 
-  private async _setupVerificationRequestListeners(request: any): Promise<void> {
+  private async _setupVerificationRequestListeners(
+    request: MatrixVerificationRequest
+  ): Promise<void> {
     const { VerificationPhase } = await import('matrix-js-sdk/lib/crypto-api/verification');
     let completedEmitted = false;
 
@@ -2404,12 +2445,15 @@ class MatrixClientService {
     });
   }
 
-  private async _setupVerifierListeners(verifier: any, request: any): Promise<void> {
+  private async _setupVerifierListeners(
+    verifier: MatrixVerifier,
+    request: MatrixVerificationRequest
+  ): Promise<void> {
     const { VerifierEvent } = await import('matrix-js-sdk/lib/crypto-api/verification');
     if (this.verifierListenersAttached.has(verifier)) return;
     this.verifierListenersAttached.add(verifier);
 
-    verifier.on(VerifierEvent.ShowSas, (sas: any) => {
+    verifier.on(VerifierEvent.ShowSas, (sas: MatrixSasCallbacks) => {
       if (this.sasCallbacks) return;
       const sasData = sas.sas || sas;
       matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_SHOW_SAS, {
@@ -2436,8 +2480,7 @@ class MatrixClientService {
    */
   async requestVerification(userId: string): Promise<void> {
     if (!this.client) throw new Error('Client not initialized');
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const crypto = matrixClient.getCrypto?.();
     if (!crypto) throw new Error('Crypto not available');
 
@@ -2452,7 +2495,11 @@ class MatrixClientService {
     if (!directRoom) {
       throw new Error('No direct message room exists with this user. Start a conversation first.');
     }
-    const request: any = await (crypto as any).requestVerificationDM(userId, directRoom.roomId);
+    const request = await (
+      crypto as unknown as {
+        requestVerificationDM(userId: string, roomId: string): Promise<MatrixVerificationRequest>;
+      }
+    ).requestVerificationDM(userId, directRoom.roomId);
 
     this.pendingVerificationRequest = request;
     this._setupVerificationRequestListeners(request);
@@ -2462,7 +2509,7 @@ class MatrixClientService {
    * Accept incoming verification request
    */
   async acceptVerificationRequest(): Promise<boolean> {
-    const request = this.pendingVerificationRequest as any;
+    const request = this.pendingVerificationRequest;
     if (!request) return false;
 
     const { VerificationPhase } = await import('matrix-js-sdk/lib/crypto-api/verification');
@@ -2484,14 +2531,14 @@ class MatrixClientService {
    * Confirm SAS emoji match
    */
   async confirmVerification(): Promise<boolean> {
-    const sas = this.sasCallbacks as any;
+    const sas = this.sasCallbacks;
     if (sas && typeof sas.confirm === 'function') {
       await sas.confirm();
       this.currentVerifier = null;
       this.sasCallbacks = null;
       return true;
     }
-    const verifier = this.currentVerifier as any;
+    const verifier = this.currentVerifier;
     if (verifier) {
       await verifier.verify();
       this.currentVerifier = null;
@@ -2505,17 +2552,17 @@ class MatrixClientService {
    */
   async cancelVerification(): Promise<boolean> {
     try {
-      const sas = this.sasCallbacks as any;
+      const sas = this.sasCallbacks;
       if (sas && typeof sas.cancel === 'function') {
         sas.cancel();
         this.sasCallbacks = null;
       }
-      const verifier = this.currentVerifier as any;
+      const verifier = this.currentVerifier;
       if (verifier) {
         verifier.cancel(new Error('User cancelled'));
         this.currentVerifier = null;
       }
-      const request = this.pendingVerificationRequest as any;
+      const request = this.pendingVerificationRequest;
       if (request) {
         await request.cancel();
         this.pendingVerificationRequest = null;
@@ -2531,8 +2578,7 @@ class MatrixClientService {
    */
   async isUserVerified(userId: string): Promise<boolean> {
     if (!this.client) return false;
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
     const crypto = matrixClient.getCrypto?.();
     if (!crypto) return false;
     try {
@@ -2545,9 +2591,8 @@ class MatrixClientService {
 
   async getIgnoredUsers(): Promise<string[]> {
     if (!this.client) return [];
-    const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
-    return (matrixClient as any).getIgnoredUsers?.() ?? [];
+    const matrixClient = this.client!;
+    return (matrixClient as unknown as IgnoreListClient).getIgnoredUsers?.() ?? [];
   }
 
   async isUserIgnored(userId: string): Promise<boolean> {
@@ -2569,12 +2614,12 @@ class MatrixClientService {
   private async mutateIgnoredUsers(mutator: (current: string[]) => string[]): Promise<void> {
     const task = this.ignoreMutex.then(async () => {
       if (!this.client) return;
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
-      const current: string[] = (matrixClient as any).getIgnoredUsers?.() ?? [];
+      const matrixClient = this.client!;
+      const ignoreClient = matrixClient as unknown as IgnoreListClient;
+      const current: string[] = ignoreClient.getIgnoredUsers?.() ?? [];
       const next = mutator(current);
       if (next !== current) {
-        await (matrixClient as any).setIgnoredUsers(next);
+        await ignoreClient.setIgnoredUsers(next);
       }
     });
     this.ignoreMutex = task.catch(() => {});
@@ -2603,7 +2648,7 @@ class MatrixClientService {
     if (!this.client) return;
 
     const sdk = await import('matrix-js-sdk');
-    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const matrixClient = this.client!;
 
     // 同步状态
     matrixClient.on(sdk.ClientEvent.Sync, (state: string) => {
@@ -2748,8 +2793,7 @@ class MatrixClientService {
     if (!this.client) return null;
 
     try {
-      const sdk = await import('matrix-js-sdk');
-      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const matrixClient = this.client!;
 
       // 获取 m.direct 账户数据
       // 使用类型断言因为 'm.direct' 不在标准 AccountDataEvents 类型中
