@@ -10,14 +10,16 @@ import {
   Download,
   Copy,
   Trash2,
-  Play,
   Paperclip,
   Search,
   ChevronUp,
   ChevronDown,
   X,
+  Pencil,
+  Check,
+  SmilePlus,
 } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useAuthenticatedImage } from '@mobazha/core';
 
 export interface Message {
   id: string;
@@ -28,8 +30,11 @@ export interface Message {
   senderRawMxcAvatarUrl?: string;
   timestamp: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+  uploadProgress?: number;
   isSystem?: boolean;
+  isEdited?: boolean;
   type?: 'text' | 'image' | 'file' | 'audio' | 'video';
+  reactions?: Record<string, string[]>;
   attachments?: Array<{
     url: string;
     filename?: string;
@@ -58,6 +63,8 @@ export interface ChatMessagesProps {
   onTyping?: (isTyping: boolean) => void;
   onRetryMessage?: (messageId: string) => void;
   onDeleteMessage?: (messageId: string) => void;
+  onEditMessage?: (messageId: string, newContent: string) => void;
+  onReaction?: (messageId: string, emoji: string) => void;
   isConnected?: boolean;
   onLoadMore?: () => void;
   hasMoreMessages?: boolean;
@@ -217,6 +224,210 @@ function shortenSystemContent(text: string): string {
   );
 }
 
+function needsMatrixAuth(url?: string): boolean {
+  if (!url) return false;
+  return url.startsWith('mxc://') || url.includes('/_matrix/');
+}
+
+function useResolvedMediaUrl(url?: string): string | undefined {
+  const needs = url ? needsMatrixAuth(url) : false;
+  const { imageUrl } = useAuthenticatedImage(needs ? url : undefined, !needs ? url : undefined);
+  return imageUrl || url;
+}
+
+interface ChatMediaProps {
+  attachment: NonNullable<Message['attachments']>[number];
+  isOwn: boolean;
+  status?: Message['status'];
+  uploadProgress?: number;
+  onRetry?: () => void;
+}
+
+const ChatImageContent: React.FC<ChatMediaProps> = React.memo(
+  ({ attachment, isOwn, status, uploadProgress, onRetry }) => {
+    const displaySrc = useResolvedMediaUrl(attachment.thumbnailUrl || attachment.url);
+    const fullSrc = useResolvedMediaUrl(attachment.url);
+
+    return (
+      <div className="relative">
+        <a href={fullSrc || '#'} target="_blank" rel="noopener noreferrer" className="block">
+          <img
+            src={displaySrc || ''}
+            alt={attachment.filename || 'Image'}
+            className={`max-w-[260px] max-h-[260px] rounded-2xl object-cover shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
+              isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+            }`}
+            loading="lazy"
+          />
+        </a>
+        {status === 'sending' && uploadProgress != null && uploadProgress < 100 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
+            <div className="flex flex-col items-center gap-1">
+              <svg className="w-10 h-10" viewBox="0 0 36 36">
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15"
+                  fill="none"
+                  stroke="white"
+                  strokeOpacity="0.3"
+                  strokeWidth="3"
+                />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={`${uploadProgress * 0.942} 94.2`}
+                  transform="rotate(-90 18 18)"
+                  className="transition-all duration-300"
+                />
+              </svg>
+              <span className="text-white text-xs font-medium">{uploadProgress}%</span>
+            </div>
+          </div>
+        )}
+        {status === 'failed' && onRetry && (
+          <button
+            onClick={onRetry}
+            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+            aria-label="Retry"
+          >
+            ↻
+          </button>
+        )}
+      </div>
+    );
+  }
+);
+ChatImageContent.displayName = 'ChatImageContent';
+
+const ChatFileContent: React.FC<ChatMediaProps & { formatFileSize: (bytes?: number) => string }> =
+  React.memo(({ attachment, isOwn, status, uploadProgress, onRetry, formatFileSize }) => {
+    const fileSrc = useResolvedMediaUrl(attachment.url);
+
+    return (
+      <div className="relative">
+        <a
+          href={fileSrc || '#'}
+          download={attachment.filename || 'file'}
+          className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 ${
+            isOwn
+              ? 'bg-gradient-to-br from-primary via-primary to-primary/85 text-white rounded-br-sm shadow-lg shadow-primary/25 hover:shadow-xl'
+              : 'bg-card/95 backdrop-blur-sm text-foreground rounded-bl-sm shadow-md border border-border/40 hover:shadow-lg hover:border-border/60'
+          }`}
+        >
+          <div
+            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+              isOwn ? 'bg-white/20' : 'bg-primary/10'
+            }`}
+          >
+            <FileText className={`w-5 h-5 ${isOwn ? 'text-white' : 'text-primary'}`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{attachment.filename || 'File'}</p>
+            {attachment.size && (
+              <p className={`text-xs mt-0.5 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}>
+                {formatFileSize(attachment.size)}
+              </p>
+            )}
+          </div>
+          {status === 'sending' && uploadProgress != null && uploadProgress < 100 ? (
+            <span
+              className={`shrink-0 text-xs font-medium tabular-nums ${isOwn ? 'text-white/80' : 'text-muted-foreground'}`}
+            >
+              {uploadProgress}%
+            </span>
+          ) : (
+            <Download
+              className={`shrink-0 w-4 h-4 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}
+            />
+          )}
+        </a>
+        {status === 'sending' && uploadProgress != null && uploadProgress < 100 && (
+          <div
+            className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl overflow-hidden ${isOwn ? 'bg-white/20' : 'bg-border/40'}`}
+          >
+            <div
+              className={`h-full transition-all duration-300 ${isOwn ? 'bg-white/60' : 'bg-primary/60'}`}
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        )}
+        {status === 'failed' && onRetry && (
+          <button
+            onClick={onRetry}
+            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+            aria-label="Retry"
+          >
+            ↻
+          </button>
+        )}
+      </div>
+    );
+  });
+ChatFileContent.displayName = 'ChatFileContent';
+
+const ChatAudioContent: React.FC<ChatMediaProps> = React.memo(
+  ({ attachment, isOwn, status, onRetry }) => {
+    const audioSrc = useResolvedMediaUrl(attachment.url);
+
+    return (
+      <div
+        className={`relative rounded-2xl overflow-hidden shadow-md ${
+          isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+        } ${isOwn ? 'bg-gradient-to-br from-primary via-primary to-primary/85' : 'bg-card/95 backdrop-blur-sm border border-border/40'}`}
+      >
+        <audio controls preload="metadata" className="block w-[260px] h-11" src={audioSrc || ''} />
+        {status === 'failed' && onRetry && (
+          <button
+            onClick={onRetry}
+            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+            aria-label="Retry"
+          >
+            ↻
+          </button>
+        )}
+      </div>
+    );
+  }
+);
+ChatAudioContent.displayName = 'ChatAudioContent';
+
+const ChatVideoContent: React.FC<ChatMediaProps> = React.memo(
+  ({ attachment, isOwn, status, onRetry }) => {
+    const videoSrc = useResolvedMediaUrl(attachment.url);
+    const posterSrc = useResolvedMediaUrl(attachment.thumbnailUrl);
+
+    return (
+      <div className="relative">
+        <video
+          controls
+          preload="metadata"
+          poster={posterSrc || undefined}
+          className={`max-w-[260px] max-h-[260px] rounded-2xl shadow-md ${
+            isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+          }`}
+          src={videoSrc || ''}
+        />
+        {status === 'failed' && onRetry && (
+          <button
+            onClick={onRetry}
+            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+            aria-label="Retry"
+          >
+            ↻
+          </button>
+        )}
+      </div>
+    );
+  }
+);
+ChatVideoContent.displayName = 'ChatVideoContent';
+
 export const ChatMessages: React.FC<ChatMessagesProps> = ({
   roomName,
   roomAvatar,
@@ -233,6 +444,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   onTyping,
   onRetryMessage,
   onDeleteMessage,
+  onEditMessage,
+  onReaction,
   isConnected = true,
   onLoadMore,
   hasMoreMessages = false,
@@ -255,6 +468,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   const [searchResults, setSearchResults] = useState<number[]>([]);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
   const [showSearch, setShowSearch] = useState(false);
+
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -408,6 +625,40 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       /* clipboard may be blocked in some contexts */
     }
   }, []);
+
+  const handleStartEdit = useCallback((msg: Message) => {
+    setEditingMessageId(msg.id);
+    setEditingContent(msg.content);
+    setLongPressMenuId(null);
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  }, []);
+
+  const handleConfirmEdit = useCallback(() => {
+    if (editingMessageId && editingContent.trim() && onEditMessage) {
+      onEditMessage(editingMessageId, editingContent.trim());
+    }
+    setEditingMessageId(null);
+    setEditingContent('');
+  }, [editingMessageId, editingContent, onEditMessage]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessageId(null);
+    setEditingContent('');
+  }, []);
+
+  const handleEditKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleConfirmEdit();
+      } else if (e.key === 'Escape') {
+        handleCancelEdit();
+      }
+    },
+    [handleConfirmEdit, handleCancelEdit]
+  );
+
+  const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -814,201 +1065,168 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                     onTouchMove={handleTouchEnd}
                   >
                     {/* Desktop: hover action bar */}
-                    {!message.isSystem && message.status !== 'sending' && (
-                      <div
-                        className={`absolute top-0 ${isOwn ? '-left-16' : '-right-16'} hidden md:group-hover/msg:flex items-center gap-0.5 z-10`}
-                      >
-                        <button
-                          onClick={() => handleCopy(message)}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
-                          title={copiedId === message.id ? t('common.copied') : t('common.copy')}
+                    {!message.isSystem &&
+                      message.status !== 'sending' &&
+                      editingMessageId !== message.id && (
+                        <div
+                          className={`absolute top-0 ${isOwn ? '-left-24' : '-right-24'} hidden md:group-hover:flex items-center gap-0.5 z-10`}
                         >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        {isOwn && onDeleteMessage && (
+                          {onReaction && (
+                            <button
+                              onClick={() => onReaction(message.id, '👍')}
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                              title={t('chat.react')}
+                            >
+                              <SmilePlus className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => onDeleteMessage(message.id)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-error hover:bg-error/10 transition-colors"
-                            title={t('common.delete')}
+                            onClick={() => handleCopy(message)}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                            title={copiedId === message.id ? t('common.copied') : t('common.copy')}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Copy className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                      </div>
-                    )}
+                          {isOwn && onEditMessage && message.type === 'text' && (
+                            <button
+                              onClick={() => handleStartEdit(message)}
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                              title={t('common.edit')}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {isOwn && onDeleteMessage && (
+                            <button
+                              onClick={() => onDeleteMessage(message.id)}
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-error hover:bg-error/10 transition-colors"
+                              title={t('common.delete')}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     {/* Mobile: long-press popup */}
-                    {longPressMenuId === message.id && (
+                    {longPressMenuId === message.id && editingMessageId !== message.id && (
                       <>
                         <div
                           className="fixed inset-0 z-40"
                           onClick={() => setLongPressMenuId(null)}
                         />
                         <div
-                          className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-10 z-50 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 duration-150`}
+                          className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-10 z-50 flex flex-col gap-1 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 duration-150`}
                         >
-                          <button
-                            onClick={() => {
-                              handleCopy(message);
-                              setLongPressMenuId(null);
-                            }}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg hover:bg-muted/60 transition-colors"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                            {t('common.copy')}
-                          </button>
-                          {isOwn && onDeleteMessage && (
+                          {onReaction && (
+                            <div className="flex items-center gap-0.5 px-2 pt-1.5">
+                              {QUICK_REACTIONS.map(emoji => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => {
+                                    onReaction(message.id, emoji);
+                                    setLongPressMenuId(null);
+                                  }}
+                                  className="w-8 h-8 flex items-center justify-center text-base rounded-lg hover:bg-muted/60 transition-colors"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 px-2 pb-1.5">
                             <button
                               onClick={() => {
-                                onDeleteMessage(message.id);
+                                handleCopy(message);
                                 setLongPressMenuId(null);
                               }}
-                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-error hover:bg-error/10 transition-colors"
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg hover:bg-muted/60 transition-colors"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              {t('common.delete')}
+                              <Copy className="w-3.5 h-3.5" />
+                              {t('common.copy')}
                             </button>
-                          )}
+                            {isOwn && onEditMessage && message.type === 'text' && (
+                              <button
+                                onClick={() => handleStartEdit(message)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg hover:bg-muted/60 transition-colors"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                {t('common.edit')}
+                              </button>
+                            )}
+                            {isOwn && onDeleteMessage && (
+                              <button
+                                onClick={() => {
+                                  onDeleteMessage(message.id);
+                                  setLongPressMenuId(null);
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-error hover:bg-error/10 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                {t('common.delete')}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </>
                     )}
                     {message.type === 'image' && message.attachments?.[0]?.url ? (
-                      <div className="relative">
-                        <a
-                          href={message.attachments[0].url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block"
-                        >
-                          <img
-                            src={message.attachments[0].thumbnailUrl || message.attachments[0].url}
-                            alt={message.attachments[0].filename || 'Image'}
-                            className={`max-w-[260px] max-h-[260px] rounded-2xl object-cover shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
-                              isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
-                            }`}
-                            loading="lazy"
-                          />
-                        </a>
-                        {message.status === 'failed' && (
-                          <button
-                            onClick={() => onRetryMessage?.(message.id)}
-                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
-                            aria-label="Retry"
-                          >
-                            ↻
-                          </button>
-                        )}
-                      </div>
+                      <ChatImageContent
+                        attachment={message.attachments[0]}
+                        isOwn={isOwn}
+                        status={message.status}
+                        uploadProgress={message.uploadProgress}
+                        onRetry={onRetryMessage ? () => onRetryMessage(message.id) : undefined}
+                      />
                     ) : message.type === 'file' && message.attachments?.[0]?.url ? (
-                      <div className="relative">
-                        <a
-                          href={message.attachments[0].url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 ${
-                            isOwn
-                              ? 'bg-gradient-to-br from-primary via-primary to-primary/85 text-white rounded-br-sm shadow-lg shadow-primary/25 hover:shadow-xl'
-                              : 'bg-card/95 backdrop-blur-sm text-foreground rounded-bl-sm shadow-md border border-border/40 hover:shadow-lg hover:border-border/60'
-                          }`}
-                        >
-                          <div
-                            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                              isOwn ? 'bg-white/20' : 'bg-primary/10'
-                            }`}
-                          >
-                            <FileText
-                              className={`w-5 h-5 ${isOwn ? 'text-white' : 'text-primary'}`}
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">
-                              {message.attachments[0].filename || 'File'}
-                            </p>
-                            {message.attachments[0].size && (
-                              <p
-                                className={`text-xs mt-0.5 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}
-                              >
-                                {formatFileSize(message.attachments[0].size)}
-                              </p>
-                            )}
-                          </div>
-                          <Download
-                            className={`shrink-0 w-4 h-4 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}
-                          />
-                        </a>
-                        {message.status === 'failed' && (
-                          <button
-                            onClick={() => onRetryMessage?.(message.id)}
-                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
-                            aria-label="Retry"
-                          >
-                            ↻
-                          </button>
-                        )}
-                      </div>
+                      <ChatFileContent
+                        attachment={message.attachments[0]}
+                        isOwn={isOwn}
+                        status={message.status}
+                        uploadProgress={message.uploadProgress}
+                        onRetry={onRetryMessage ? () => onRetryMessage(message.id) : undefined}
+                        formatFileSize={formatFileSize}
+                      />
                     ) : message.type === 'audio' && message.attachments?.[0]?.url ? (
-                      <div
-                        className={`relative rounded-2xl overflow-hidden shadow-md ${
-                          isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
-                        } ${isOwn ? 'bg-gradient-to-br from-primary via-primary to-primary/85' : 'bg-card/95 backdrop-blur-sm border border-border/40'}`}
-                      >
-                        <audio
-                          controls
-                          preload="metadata"
-                          className="block w-[260px] h-11"
-                          src={message.attachments[0].url}
-                        />
-                        {message.status === 'failed' && (
-                          <button
-                            onClick={() => onRetryMessage?.(message.id)}
-                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
-                            aria-label="Retry"
-                          >
-                            ↻
-                          </button>
-                        )}
-                      </div>
+                      <ChatAudioContent
+                        attachment={message.attachments[0]}
+                        isOwn={isOwn}
+                        status={message.status}
+                        onRetry={onRetryMessage ? () => onRetryMessage(message.id) : undefined}
+                      />
                     ) : message.type === 'video' && message.attachments?.[0]?.url ? (
-                      <div className="relative">
-                        {message.attachments[0].thumbnailUrl ? (
-                          <a
-                            href={message.attachments[0].url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block relative"
-                          >
-                            <img
-                              src={message.attachments[0].thumbnailUrl}
-                              alt={message.attachments[0].filename || 'Video'}
-                              className={`max-w-[260px] max-h-[260px] rounded-2xl object-cover shadow-md ${
-                                isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
-                              }`}
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                                <Play className="w-6 h-6 text-white ml-0.5" />
-                              </div>
-                            </div>
-                          </a>
-                        ) : (
-                          <video
-                            controls
-                            preload="metadata"
-                            className={`max-w-[260px] max-h-[260px] rounded-2xl shadow-md ${
-                              isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
-                            }`}
-                            src={message.attachments[0].url}
-                          />
-                        )}
-                        {message.status === 'failed' && (
+                      <ChatVideoContent
+                        attachment={message.attachments[0]}
+                        isOwn={isOwn}
+                        status={message.status}
+                        onRetry={onRetryMessage ? () => onRetryMessage(message.id) : undefined}
+                      />
+                    ) : editingMessageId === message.id ? (
+                      <div
+                        className={`relative px-3 py-2 rounded-2xl border-2 border-primary/60 bg-card shadow-lg ${
+                          isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+                        }`}
+                      >
+                        <input
+                          ref={editInputRef}
+                          value={editingContent}
+                          onChange={e => setEditingContent(e.target.value)}
+                          onKeyDown={handleEditKeyDown}
+                          className="w-full bg-transparent text-[14px] text-foreground outline-none"
+                        />
+                        <div className="flex items-center justify-end gap-1 mt-1.5">
                           <button
-                            onClick={() => onRetryMessage?.(message.id)}
-                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
-                            aria-label="Retry"
+                            onClick={handleCancelEdit}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                           >
-                            ↻
+                            <X className="w-3.5 h-3.5" />
                           </button>
-                        )}
+                          <button
+                            onClick={handleConfirmEdit}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div
@@ -1021,6 +1239,13 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                         <p className="text-[14px] whitespace-pre-wrap break-words leading-relaxed">
                           {message.content}
                         </p>
+                        {message.isEdited && (
+                          <span
+                            className={`text-[10px] ${isOwn ? 'text-white/50' : 'text-muted-foreground/50'}`}
+                          >
+                            {t('chat.edited')}
+                          </span>
+                        )}
 
                         {message.status === 'failed' && (
                           <button
@@ -1031,6 +1256,29 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                             ↻
                           </button>
                         )}
+                      </div>
+                    )}
+                    {/* Reactions display */}
+                    {message.reactions && Object.keys(message.reactions).length > 0 && (
+                      <div
+                        className={`flex flex-wrap gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                      >
+                        {Object.entries(message.reactions).map(([emoji, senders]) => (
+                          <button
+                            key={emoji}
+                            onClick={() => onReaction?.(message.id, emoji)}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                              senders.includes(currentUserId)
+                                ? 'bg-primary/15 border-primary/30 text-primary'
+                                : 'bg-muted/50 border-border/40 text-muted-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <span>{emoji}</span>
+                            {senders.length > 1 && (
+                              <span className="text-[10px] font-medium">{senders.length}</span>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     )}
                     <HStack

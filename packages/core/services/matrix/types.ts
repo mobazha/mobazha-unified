@@ -22,6 +22,9 @@ export const MATRIX_EVENTS = {
   MEMBER_CHANGED: 'matrix_member_changed',
   TYPING: 'matrix_typing',
   PRESENCE_CHANGED: 'matrix_presence_changed',
+  UPLOAD_PROGRESS: 'matrix_upload_progress',
+  MESSAGE_EDITED: 'matrix_message_edited',
+  MESSAGE_REACTION: 'matrix_message_reaction',
   ERROR: 'matrix_error',
   AUTH_REQUIRED: 'matrix_auth_required', // Token 过期需要重新登录
   // Verification events
@@ -156,7 +159,11 @@ export interface MatrixMessage {
   isSystem?: boolean;
   replyTo?: string;
   attachments?: MatrixAttachment[];
+  isEdited?: boolean;
+  replacesEventId?: string;
+  reactions?: Record<string, string[]>; // emoji -> [senderUserId, ...]
   // 房间事件相关
+  uploadProgress?: number; // 0-100, only present during file/image upload
   isRoomEvent?: boolean;
   roomEventType?: RoomEventType;
   targetUserId?: string; // 被操作的用户（如被邀请/踢出的人）

@@ -59,16 +59,19 @@ function toDisplayMessage(msg: MatrixMessage): Message {
   return {
     id: msg.id,
     content: msg.content,
-    senderId: msg.sender, // MatrixMessage uses 'sender', Message uses 'senderId'
+    senderId: msg.sender,
     senderName: msg.senderName,
     senderAvatar: msg.senderAvatar,
-    senderRawMxcAvatarUrl: msg.senderRawMxcAvatarUrl, // 原始 mxc URL 用于认证下载
+    senderRawMxcAvatarUrl: msg.senderRawMxcAvatarUrl,
     timestamp: safeTimestamp(msg.timestamp),
     status: msg.status,
     isSystem: msg.isSystem,
+    isEdited: msg.isEdited,
     type: (['image', 'file', 'audio', 'video'] as const).includes(msg.type as never)
       ? (msg.type as 'image' | 'file' | 'audio' | 'video')
       : 'text',
+    uploadProgress: msg.uploadProgress,
+    reactions: msg.reactions,
     attachments: msg.attachments?.map(a => ({
       url: a.url,
       filename: a.filename,
@@ -343,6 +346,60 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     };
   }, [currentRoomId, currentUserId]);
 
+  // Upload progress tracking
+  useEffect(() => {
+    const handleUploadProgress = (raw: unknown) => {
+      const data = raw as { localId: string; roomId: string; progress: number };
+      if (!data?.localId || !data?.roomId) return;
+      useChatStore.getState().updateMessage(data.roomId, data.localId, {
+        uploadProgress: data.progress,
+      });
+    };
+
+    const unsub = matrixEvents.on(MATRIX_EVENTS.UPLOAD_PROGRESS, handleUploadProgress);
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  // Listen for remote edit events
+  useEffect(() => {
+    const handleRemoteEdit = (raw: unknown) => {
+      const data = raw as { roomId: string; eventId: string; newContent: string };
+      if (!data?.roomId || !data?.eventId) return;
+      useChatStore.getState().updateMessage(data.roomId, data.eventId, {
+        content: data.newContent,
+        isEdited: true,
+      });
+    };
+    const unsub = matrixEvents.on(MATRIX_EVENTS.MESSAGE_EDITED, handleRemoteEdit);
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  // Listen for remote reaction events
+  useEffect(() => {
+    const handleRemoteReaction = (raw: unknown) => {
+      const data = raw as { roomId: string; eventId: string; emoji: string; sender: string };
+      if (!data?.roomId || !data?.eventId || !data?.emoji) return;
+      const store = useChatStore.getState();
+      const msgs = store.messages[data.roomId] || [];
+      const msg = msgs.find(m => m.id === data.eventId);
+      const existing = msg?.reactions || {};
+      const senders = existing[data.emoji] || [];
+      if (!senders.includes(data.sender)) {
+        store.updateMessage(data.roomId, data.eventId, {
+          reactions: { ...existing, [data.emoji]: [...senders, data.sender] },
+        });
+      }
+    };
+    const unsub = matrixEvents.on(MATRIX_EVENTS.MESSAGE_REACTION, handleRemoteReaction);
+    return () => {
+      unsub();
+    };
+  }, []);
+
   // 加载更多历史消息（向上滚动分页）
   const handleLoadMore = useCallback(async () => {
     if (!currentRoomId) return;
@@ -416,22 +473,69 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         return;
       }
 
+      const localId = `local_${Date.now()}`;
+      let messageType: MatrixMessage['type'] = 'file';
+      if (file.type.startsWith('image/')) messageType = 'image';
+      else if (file.type.startsWith('audio/')) messageType = 'audio';
+      else if (file.type.startsWith('video/')) messageType = 'video';
+
+      const localUrl = messageType === 'image' ? URL.createObjectURL(file) : undefined;
+
+      const placeholder: MatrixMessage = {
+        id: localId,
+        localId,
+        roomId: currentRoomId,
+        sender: currentUserId,
+        content: file.name || 'file',
+        type: messageType,
+        timestamp: Date.now(),
+        status: 'sending',
+        uploadProgress: 0,
+        attachments: [
+          {
+            url: localUrl || '',
+            filename: file.name || 'file',
+            mimetype: file.type,
+            size: file.size,
+          },
+        ],
+      };
+
+      const store = useChatStore.getState();
+      store.addMessage(currentRoomId, placeholder);
+
       try {
+        let result: MatrixMessage | null;
         if (file.type.startsWith('image/')) {
-          await matrixClient.sendImage(currentRoomId, file);
+          result = await matrixClient.sendImage(currentRoomId, file, localId);
         } else {
-          await matrixClient.sendFile(currentRoomId, file);
+          result = await matrixClient.sendFile(currentRoomId, file, localId);
+        }
+
+        if (result) {
+          store.updateMessage(currentRoomId, localId, {
+            id: result.id,
+            status: 'sent',
+            uploadProgress: undefined,
+            attachments: result.attachments,
+          });
         }
       } catch (err) {
         console.error('[ChatDrawer] Failed to send file:', err);
+        store.updateMessage(currentRoomId, localId, {
+          status: 'failed',
+          uploadProgress: undefined,
+        });
         toast({
           title: t('common.error'),
           description: t('chat.sendFileFailed'),
           variant: 'destructive',
         });
+      } finally {
+        if (localUrl) URL.revokeObjectURL(localUrl);
       }
     },
-    [currentRoomId, toast, t]
+    [currentRoomId, currentUserId, toast, t]
   );
 
   // 重发失败消息
@@ -476,6 +580,39 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       }
     },
     [currentRoomId, toast, t]
+  );
+
+  // 编辑消息
+  const handleEditMessage = useCallback(
+    async (messageId: string, newContent: string) => {
+      if (!currentRoomId) return;
+      try {
+        await matrixClient.editMessage(currentRoomId, messageId, newContent);
+        const updateMessage = useChatStore.getState().updateMessage;
+        updateMessage(currentRoomId, messageId, { content: newContent, isEdited: true });
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to edit message:', err);
+        toast({
+          title: t('common.error'),
+          description: t('chat.editFailed'),
+          variant: 'destructive',
+        });
+      }
+    },
+    [currentRoomId, toast, t]
+  );
+
+  // 发送 reaction
+  const handleReaction = useCallback(
+    async (messageId: string, emoji: string) => {
+      if (!currentRoomId) return;
+      try {
+        await matrixClient.sendReaction(currentRoomId, messageId, emoji);
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to send reaction:', err);
+      }
+    },
+    [currentRoomId]
   );
 
   // 切换展开/收缩
@@ -641,6 +778,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           onTyping={isTyping => matrixClient.sendTyping(currentRoomId, isTyping)}
           onRetryMessage={handleRetryMessage}
           onDeleteMessage={handleDeleteMessage}
+          onEditMessage={handleEditMessage}
+          onReaction={handleReaction}
           isConnected={isConnected}
           onLoadMore={handleLoadMore}
           hasMoreMessages={hasMoreMessages[currentRoomId] ?? true}
