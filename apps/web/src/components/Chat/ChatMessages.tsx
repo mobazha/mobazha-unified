@@ -844,12 +844,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             )}
           </HStack>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            {isOnline === true ? (
-              <span className="text-primary">{t('chat.online')}</span>
-            ) : isOnline === false ? (
-              t('chat.offline')
-            ) : isDirect ? (
-              t('chat.directMessage')
+            {isDirect ? (
+              isOnline === true ? (
+                <span className="text-primary">{t('chat.online')}</span>
+              ) : isOnline === false ? (
+                t('chat.offline')
+              ) : (
+                t('chat.directMessage')
+              )
             ) : (
               t('chat.groupChat')
             )}

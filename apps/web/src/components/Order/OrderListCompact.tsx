@@ -25,7 +25,7 @@ export interface OrderListCompactProps {
   /** 拒绝订单回调 */
   onReject?: (orderId: string, paymentCoin?: string) => void;
   /** 联系对方回调 */
-  onContact?: (vendorId: string) => void;
+  onContact?: (vendorId: string, displayName?: string) => void;
   /** 确认收货回调（买家视角） */
   onConfirmDelivery?: (orderId: string) => void;
   className?: string;

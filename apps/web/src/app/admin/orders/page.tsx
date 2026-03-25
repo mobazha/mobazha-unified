@@ -340,8 +340,8 @@ export default function AdminOrdersPage() {
   );
 
   const handleContact = useCallback(
-    (peerId: string) => {
-      openDrawerWithPeer(peerId);
+    (peerId: string, displayName?: string) => {
+      openDrawerWithPeer(peerId, displayName);
     },
     [openDrawerWithPeer]
   );

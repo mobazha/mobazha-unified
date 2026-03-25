@@ -80,12 +80,12 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
   }, [trimmed, isPeerID, open]);
 
   const handleSelectUser = useCallback(
-    (peerID: string) => {
+    (peerID: string, displayName?: string) => {
       setError('');
       onOpenChange(false);
       setQuery('');
       setSearchResults([]);
-      openDrawerWithPeer(peerID);
+      openDrawerWithPeer(peerID, displayName);
     },
     [onOpenChange, openDrawerWithPeer]
   );
@@ -152,7 +152,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
                   key={user.peerID}
                   type="button"
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
-                  onClick={() => handleSelectUser(user.peerID)}
+                  onClick={() => handleSelectUser(user.peerID, user.name || user.handle)}
                 >
                   {user.avatar ? (
                     <img
