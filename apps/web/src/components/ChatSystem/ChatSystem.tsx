@@ -55,10 +55,11 @@ export const ChatSystem: React.FC = () => {
   const handleAcceptInvite = useCallback(async (roomId: string) => {
     try {
       await matrixClient.joinRoom(roomId);
-      // 刷新房间列表
-      const rooms = await matrixClient.getRooms();
-      useChatStore.getState().setRooms(rooms);
-      useChatStore.getState().setCurrentRoom(roomId);
+      const allRooms = await matrixClient.getRooms();
+      const store = useChatStore.getState();
+      store.setRooms(allRooms.filter(r => r.membership !== 'invite'));
+      store.setInvites(allRooms.filter(r => r.membership === 'invite'));
+      store.setCurrentRoom(roomId);
     } catch (error) {
       console.error('[ChatSystem] Failed to accept invite:', error);
     }
@@ -68,9 +69,10 @@ export const ChatSystem: React.FC = () => {
   const handleRejectInvite = useCallback(async (roomId: string) => {
     try {
       await matrixClient.leaveRoom(roomId);
-      // 刷新房间列表
-      const rooms = await matrixClient.getRooms();
-      useChatStore.getState().setRooms(rooms);
+      const allRooms = await matrixClient.getRooms();
+      const store = useChatStore.getState();
+      store.setRooms(allRooms.filter(r => r.membership !== 'invite'));
+      store.setInvites(allRooms.filter(r => r.membership === 'invite'));
     } catch (error) {
       console.error('[ChatSystem] Failed to reject invite:', error);
     }
