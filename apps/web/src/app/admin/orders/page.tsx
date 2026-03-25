@@ -102,7 +102,7 @@ export default function AdminOrdersPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const router = useRouter();
-  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
   const isDesktop = useIsDesktop();
 
   const { orders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch } = useAdminOrders();
@@ -340,10 +340,10 @@ export default function AdminOrdersPage() {
   );
 
   const handleContact = useCallback(
-    (_peerId: string) => {
-      openChatDrawer();
+    (peerId: string) => {
+      openDrawerWithPeer(peerId);
     },
-    [openChatDrawer]
+    [openDrawerWithPeer]
   );
 
   const hasActiveFilters = statusFilter !== 'all' || searchTerm.trim() || dateFrom || dateTo;

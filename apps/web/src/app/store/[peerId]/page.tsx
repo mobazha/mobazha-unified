@@ -112,7 +112,7 @@ export default function StorePage() {
     updateProfile,
     fetchProfile: refreshCurrentUserProfile,
   } = useUserStore();
-  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
 
   // 判断是否是自己的店铺
   const isOwnStore = isAuthenticated && currentUserProfile?.peerID === peerId;
@@ -643,11 +643,10 @@ export default function StorePage() {
     setIsEditing(false);
   }, [store, previewAvatarUrl, previewHeaderUrl]);
 
-  // 发消息
+  // 发消息 — 打开/创建与该卖家的 DM
   const handleMessage = () => {
-    // Open chat drawer
-    // TODO: 后续可以添加逻辑来自动选择或创建与该用户的聊天房间
-    openChatDrawer();
+    if (!peerId) return;
+    openDrawerWithPeer(peerId as string, store?.name);
   };
 
   // 编辑商品
@@ -1070,6 +1069,7 @@ export default function StorePage() {
                       variant="secondary"
                       size="sm"
                       onClick={handleMessage}
+                      disabled={!isAuthenticated}
                       className="min-h-[36px] sm:min-h-0 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
                     >
                       {t('profile.message')}

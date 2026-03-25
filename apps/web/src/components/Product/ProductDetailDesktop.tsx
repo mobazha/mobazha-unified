@@ -86,7 +86,7 @@ export function ProductDetailDesktop({
     handleAddToCart,
     handleBuyNow,
     handleCopyLink,
-    openChatDrawer,
+    openChatWithVendor,
     t,
     renderPairedPrice,
     router,
@@ -189,7 +189,7 @@ export function ProductDetailDesktop({
                 variant="outline"
                 size="sm"
                 className="h-11 px-3 text-xs sm:h-9"
-                onClick={() => openChatDrawer()}
+                onClick={() => openChatWithVendor()}
               >
                 {t('profile.message')}
               </Button>

@@ -433,7 +433,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             </div>
 
             <div className="relative z-10">
-              <div className="w-20 h-20 mb-5 rounded-2xl bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-sm flex items-center justify-center shadow-lg border border-border/30 rotate-3 hover:rotate-0 transition-transform duration-300">
+              <div className="w-20 h-20 mb-5 rounded-2xl bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-sm flex items-center justify-center shadow-lg border border-border/30">
                 <svg
                   className="w-10 h-10 text-muted-foreground/60"
                   fill="none"

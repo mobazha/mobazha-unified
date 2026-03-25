@@ -5,7 +5,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { ChatList, type ChatRoom } from '@/components/Chat/ChatList';
 import { ChatMessages, type Message } from '@/components/Chat/ChatMessages';
-import { useChatStore, selectTotalUnreadCount, matrixClient } from '@mobazha/core';
+import {
+  useChatStore,
+  selectTotalUnreadCount,
+  selectPendingPeerID,
+  selectPendingPeerDisplayName,
+  matrixClient,
+} from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
 import type { MatrixRoom, MatrixMessage } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -118,6 +124,48 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const searchQuery = useChatStore(state => state.searchQuery);
   const setSearchQuery = useChatStore(state => state.setSearchQuery);
   const totalUnread = useChatStore(selectTotalUnreadCount);
+  const pendingPeerID = useChatStore(selectPendingPeerID);
+  const pendingPeerDisplayName = useChatStore(selectPendingPeerDisplayName);
+  const clearPendingPeer = useChatStore(state => state.clearPendingPeer);
+  const setRooms = useChatStore(state => state.setRooms);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
+  // Resolve pendingPeerID → create/find DM room and focus it
+  useEffect(() => {
+    if (!pendingPeerID) return;
+
+    let cancelled = false;
+    setIsCreatingRoom(true);
+
+    (async () => {
+      try {
+        const roomId = await matrixClient.getOrCreateDirectRoom(
+          pendingPeerID,
+          pendingPeerDisplayName ?? undefined
+        );
+        if (cancelled) return;
+
+        if (roomId) {
+          const freshRooms = await matrixClient.getRooms();
+          if (!cancelled) {
+            setRooms(freshRooms);
+            setCurrentRoom(roomId);
+          }
+        }
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to open DM with peer:', err);
+      } finally {
+        if (!cancelled) {
+          setIsCreatingRoom(false);
+          clearPendingPeer();
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingPeerID, pendingPeerDisplayName, clearPendingPeer, setRooms, setCurrentRoom]);
 
   // 当前房间
   const currentRoom = useMemo(() => {
@@ -303,6 +351,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
   // 渲染视图
   const renderView = () => {
+    // Creating a DM room for a peer
+    if (isCreatingRoom) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full gap-3">
+          <span className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">{t('chat.openingConversation')}</p>
+        </div>
+      );
+    }
+
     // 邀请确认视图
     if (currentInvite) {
       return (
