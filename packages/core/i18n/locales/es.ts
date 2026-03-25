@@ -1236,6 +1236,7 @@ export const es: TranslationResource = {
     offlineHint: 'Chat desconectado. Reconectando…',
     deleteFailed: 'Error al eliminar el mensaje',
     sendImageFailed: 'Error al enviar la imagen',
+    sendFileFailed: 'Error al enviar el archivo',
     lastSeen: 'Visto hace {{time}}',
     typing: 'escribiendo...',
     encrypted: 'Mensajes cifrados de extremo a extremo',
@@ -1244,6 +1245,8 @@ export const es: TranslationResource = {
     selectConversation:
       'Selecciona una conversación para comenzar a chatear, o crea una nueva para conectar con vendedores y compradores.',
     searchConversations: 'Buscar conversaciones...',
+    searchMessages: 'Buscar mensajes...',
+    attachFile: 'Adjuntar archivo',
     loginRequired: 'Inicio de sesión requerido',
     loginToChat: 'Inicia sesión para acceder a tus mensajes y chatear con otros.',
     connecting: 'Conectando al chat...',

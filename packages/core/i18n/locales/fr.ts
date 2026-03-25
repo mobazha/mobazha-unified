@@ -1244,6 +1244,7 @@ export const fr: TranslationResource = {
     offlineHint: 'Chat déconnecté. Reconnexion en cours…',
     deleteFailed: 'Échec de la suppression du message',
     sendImageFailed: "Échec de l'envoi de l'image",
+    sendFileFailed: "Échec de l'envoi du fichier",
     lastSeen: 'Vu il y a {{time}}',
     typing: 'écrit...',
     encrypted: 'Messages chiffrés de bout en bout',
@@ -1252,6 +1253,8 @@ export const fr: TranslationResource = {
     selectConversation:
       'Sélectionnez une conversation pour commencer à discuter, ou créez-en une nouvelle pour vous connecter avec les vendeurs et acheteurs.',
     searchConversations: 'Rechercher des conversations...',
+    searchMessages: 'Rechercher des messages...',
+    attachFile: 'Joindre un fichier',
     loginRequired: 'Connexion requise',
     loginToChat: 'Veuillez vous connecter pour accéder à vos messages et discuter.',
     connecting: 'Connexion au chat...',

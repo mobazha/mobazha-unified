@@ -4,7 +4,19 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { VStack, HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { Send, ImagePlus, FileText, Download, Copy, Trash2, Play } from 'lucide-react';
+import {
+  Send,
+  FileText,
+  Download,
+  Copy,
+  Trash2,
+  Play,
+  Paperclip,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  X,
+} from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
 export interface Message {
@@ -42,7 +54,7 @@ export interface ChatMessagesProps {
   isLoading?: boolean;
   typingUsers?: string[];
   onSendMessage: (content: string) => void;
-  onSendImage?: (file: File) => void;
+  onSendFile?: (file: File) => void;
   onTyping?: (isTyping: boolean) => void;
   onRetryMessage?: (messageId: string) => void;
   onDeleteMessage?: (messageId: string) => void;
@@ -217,7 +229,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   isLoading = false,
   typingUsers = [],
   onSendMessage,
-  onSendImage,
+  onSendFile,
   onTyping,
   onRetryMessage,
   onDeleteMessage,
@@ -238,6 +250,11 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<number[]>([]);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
+  const [showSearch, setShowSearch] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -297,16 +314,57 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     }
   }, [onLoadMore, hasMoreMessages, isLoadingMore]);
 
-  const handleImageSelect = useCallback(
+  const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file && onSendImage) {
-        onSendImage(file);
+      if (file && onSendFile) {
+        onSendFile(file);
       }
       // Reset so same file can be re-selected
       e.target.value = '';
     },
-    [onSendImage]
+    [onSendFile]
+  );
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      if (!query.trim()) {
+        setSearchResults([]);
+        setCurrentSearchIndex(-1);
+        return;
+      }
+      const lowerQuery = query.toLowerCase();
+      const indices: number[] = [];
+      messages.forEach((msg, idx) => {
+        if (msg.content?.toLowerCase().includes(lowerQuery)) {
+          indices.push(idx);
+        }
+      });
+      setSearchResults(indices);
+      setCurrentSearchIndex(indices.length > 0 ? 0 : -1);
+    },
+    [messages]
+  );
+
+  const jumpToSearchResult = useCallback(
+    (direction: 'next' | 'prev') => {
+      if (searchResults.length === 0) return;
+      let newIndex = currentSearchIndex;
+      if (direction === 'next') {
+        newIndex = (currentSearchIndex + 1) % searchResults.length;
+      } else {
+        newIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+      }
+      setCurrentSearchIndex(newIndex);
+
+      const msgIndex = searchResults[newIndex];
+      const msgElement = document.getElementById(`msg-${messages[msgIndex]?.id}`);
+      if (msgElement) {
+        msgElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+    [searchResults, currentSearchIndex, messages]
   );
 
   const formatFileSize = (bytes?: number) => {
@@ -381,7 +439,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   // 按日期分组消息
   const messagesWithDates = useMemo(() => {
     const result: Array<
-      { type: 'date'; date: string } | { type: 'message'; message: Message; showAvatar: boolean }
+      | { type: 'date'; date: string }
+      | { type: 'message'; message: Message; showAvatar: boolean; messageIndex: number }
     > = [];
     let lastDate = '';
 
@@ -395,7 +454,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       const isOwn = message.senderId === currentUserId;
       const showAvatar =
         !isOwn && (index === 0 || messages[index - 1].senderId !== message.senderId);
-      result.push({ type: 'message', message, showAvatar });
+      result.push({ type: 'message', message, showAvatar, messageIndex: index });
     });
 
     return result;
@@ -476,6 +535,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
 
         <HStack gap="xs">
+          <button
+            type="button"
+            onClick={() => setShowSearch(s => !s)}
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
+            aria-label={t('chat.searchMessages')}
+          >
+            <Search className="w-5 h-5 text-muted-foreground" />
+          </button>
           {onCall && (
             <button
               onClick={onCall}
@@ -518,6 +585,53 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </button>
         </HStack>
       </div>
+
+      {showSearch && (
+        <div className="px-3 py-2 border-b border-border/40 bg-card flex items-center gap-2">
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => handleSearch(e.target.value)}
+            placeholder={t('chat.searchMessages')}
+            className="flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground/50"
+            autoFocus
+          />
+          {searchResults.length > 0 && (
+            <span className="text-xs text-muted-foreground shrink-0">
+              {currentSearchIndex + 1}/{searchResults.length}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => jumpToSearchResult('prev')}
+            disabled={searchResults.length === 0}
+            className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => jumpToSearchResult('next')}
+            disabled={searchResults.length === 0}
+            className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowSearch(false);
+              setSearchQuery('');
+              setSearchResults([]);
+              setCurrentSearchIndex(-1);
+            }}
+            className="p-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Messages */}
       <div
@@ -633,15 +747,27 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                 return <DateSeparator key={`date-${idx}`} date={item.date} />;
               }
 
-              const { message, showAvatar } = item;
+              const { message, showAvatar, messageIndex } = item;
               const isOwn = message.senderId === currentUserId;
               const itemKey = message.id || `msg-${idx}`;
+
+              const isSearchMatch =
+                Boolean(searchQuery.trim()) &&
+                Boolean(message.content?.toLowerCase().includes(searchQuery.toLowerCase()));
+              const isCurrentSearchMatch =
+                isSearchMatch && searchResults[currentSearchIndex] === messageIndex;
+              const searchHighlightClass = isCurrentSearchMatch
+                ? 'ring-2 ring-primary/50'
+                : isSearchMatch
+                  ? 'ring-1 ring-primary/20'
+                  : '';
 
               if (message.isSystem) {
                 return (
                   <div
                     key={itemKey}
-                    className="flex justify-center py-3 animate-in fade-in duration-300"
+                    id={`msg-${message.id}`}
+                    className={`flex justify-center py-3 animate-in fade-in duration-300 ${searchHighlightClass}`}
                   >
                     <span className="inline-block max-w-[85%] text-xs text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-xl font-medium border border-border/20 break-words text-center">
                       {shortenSystemContent(message.content)}
@@ -653,7 +779,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               return (
                 <div
                   key={itemKey}
-                  className={`flex gap-2.5 group animate-in fade-in slide-in-from-bottom-2 duration-300 ${isOwn ? 'flex-row-reverse' : ''}`}
+                  id={`msg-${message.id}`}
+                  className={`flex gap-2.5 group animate-in fade-in slide-in-from-bottom-2 duration-300 ${isOwn ? 'flex-row-reverse' : ''} ${searchHighlightClass}`}
                 >
                   {!isOwn && (
                     <div className="w-9 flex-shrink-0">
@@ -935,23 +1062,23 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </div>
         )}
         <HStack gap="xs" align="center">
-          {onSendImage && (
+          {onSendFile && (
             <>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
+                onChange={handleFileSelect}
                 className="hidden"
                 disabled={!isConnected}
               />
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!isConnected}
                 className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-muted-foreground/60"
-                aria-label="Send image"
+                aria-label={t('chat.attachFile')}
               >
-                <ImagePlus className="w-[18px] h-[18px]" />
+                <Paperclip className="w-[18px] h-[18px]" />
               </button>
             </>
           )}

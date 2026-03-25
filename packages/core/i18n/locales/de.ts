@@ -1251,6 +1251,7 @@ export const de: TranslationResource = {
     offlineHint: 'Chat ist getrennt. Verbindung wird wiederhergestellt…',
     deleteFailed: 'Nachricht konnte nicht gelöscht werden',
     sendImageFailed: 'Bild konnte nicht gesendet werden',
+    sendFileFailed: 'Datei konnte nicht gesendet werden',
     lastSeen: 'Zuletzt online {{time}}',
     typing: 'tippt...',
     encrypted: 'Ende-zu-Ende verschlüsselt',
@@ -1259,6 +1260,8 @@ export const de: TranslationResource = {
     selectConversation:
       'Wählen Sie eine Unterhaltung aus oder erstellen Sie eine neue, um mit Verkäufern und Käufern in Kontakt zu treten.',
     searchConversations: 'Unterhaltungen suchen...',
+    searchMessages: 'Nachrichten durchsuchen...',
+    attachFile: 'Datei anhängen',
     loginRequired: 'Anmeldung erforderlich',
     loginToChat:
       'Bitte melden Sie sich an, um auf Ihre Nachrichten zuzugreifen und mit anderen zu chatten.',

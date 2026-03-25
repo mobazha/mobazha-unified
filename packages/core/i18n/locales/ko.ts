@@ -1213,6 +1213,7 @@ export const ko: TranslationResource = {
     offlineHint: '채팅 연결이 끊어졌습니다. 재연결 중…',
     deleteFailed: '메시지 삭제에 실패했습니다',
     sendImageFailed: '이미지 전송에 실패했습니다',
+    sendFileFailed: '파일 전송에 실패했습니다',
     lastSeen: '{{time}} 전 접속',
     typing: '입력 중...',
     encrypted: '메시지는 암호화되어 있습니다',
@@ -1221,6 +1222,8 @@ export const ko: TranslationResource = {
     selectConversation:
       '대화를 선택하여 채팅을 시작하거나 새 대화를 만들어 판매자 및 구매자와 연결하세요.',
     searchConversations: '대화 검색...',
+    searchMessages: '메시지 검색...',
+    attachFile: '파일 첨부',
     loginRequired: '로그인 필요',
     loginToChat: '메시지에 접근하고 다른 사람과 채팅하려면 로그인해 주세요.',
     connecting: '채팅에 연결 중...',

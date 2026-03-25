@@ -11,6 +11,8 @@ import {
   selectPendingPeerID,
   selectPendingPeerDisplayName,
   matrixClient,
+  matrixEvents,
+  MATRIX_EVENTS,
 } from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
 import type { MatrixRoom, MatrixMessage } from '@mobazha/core';
@@ -269,6 +271,29 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         console.warn('[ChatDrawer] Failed to mark room as read:', err);
       });
 
+    // 加载初始已读回执状态
+    matrixClient
+      .getReadReceiptForRoom(currentRoomId)
+      .then(receipts => {
+        const msgs = useChatStore.getState().messages[currentRoomId];
+        if (!msgs) return;
+        const otherReceipts = Object.entries(receipts).filter(([uid]) => uid !== currentUserId);
+        if (otherReceipts.length === 0) return;
+
+        const latestReadEventIds = new Set(otherReceipts.map(([, eid]) => eid));
+        let found = false;
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          const msg = msgs[i];
+          if (latestReadEventIds.has(msg.id)) found = true;
+          if (found && msg.sender === currentUserId && msg.status !== 'read') {
+            useChatStore
+              .getState()
+              .updateMessage(currentRoomId, msg.id, { status: 'read' as const });
+          }
+        }
+      })
+      .catch(() => {});
+
     // 如果该房间已经加载过消息，跳过加载
     if (loadedRoomsRef.current.has(currentRoomId)) {
       return;
@@ -285,7 +310,38 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     };
 
     loadMessages();
-  }, [currentRoomId, setMessages, updateRoom]);
+  }, [currentRoomId, setMessages, updateRoom, currentUserId]);
+
+  // 监听已读回执事件，更新消息状态
+  useEffect(() => {
+    if (!currentRoomId || !currentUserId) return;
+
+    const handleReadReceipt = (data: unknown) => {
+      const { roomId, userId, eventId } = data as {
+        roomId: string;
+        userId: string;
+        eventId: string;
+      };
+      if (roomId !== currentRoomId) return;
+
+      const msgs = useChatStore.getState().messages[roomId];
+      if (!msgs) return;
+
+      let found = false;
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        const msg = msgs[i];
+        if (msg.id === eventId) found = true;
+        if (found && msg.sender === currentUserId && msg.status !== 'read') {
+          useChatStore.getState().updateMessage(roomId, msg.id, { status: 'read' as const });
+        }
+      }
+    };
+
+    const unsub = matrixEvents.on(MATRIX_EVENTS.READ_RECEIPT, handleReadReceipt);
+    return () => {
+      unsub();
+    };
+  }, [currentRoomId, currentUserId]);
 
   // 加载更多历史消息（向上滚动分页）
   const handleLoadMore = useCallback(async () => {
@@ -345,17 +401,21 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, onSendMessage]
   );
 
-  // 发送图片
-  const handleSendImage = useCallback(
+  // 发送文件（图片、音频、视频、文档等）
+  const handleSendFile = useCallback(
     async (file: File) => {
       if (!currentRoomId) return;
       try {
-        await matrixClient.sendImage(currentRoomId, file);
+        if (file.type.startsWith('image/')) {
+          await matrixClient.sendImage(currentRoomId, file);
+        } else {
+          await matrixClient.sendFile(currentRoomId, file);
+        }
       } catch (err) {
-        console.error('[ChatDrawer] Failed to send image:', err);
+        console.error('[ChatDrawer] Failed to send file:', err);
         toast({
           title: t('common.error'),
-          description: t('chat.sendImageFailed'),
+          description: t('chat.sendFileFailed'),
           variant: 'destructive',
         });
       }
@@ -566,7 +626,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           isLoading={false}
           typingUsers={currentTypingUsers}
           onSendMessage={handleSendMessage}
-          onSendImage={file => handleSendImage(file)}
+          onSendFile={file => handleSendFile(file)}
           onTyping={isTyping => matrixClient.sendTyping(currentRoomId, isTyping)}
           onRetryMessage={handleRetryMessage}
           onDeleteMessage={handleDeleteMessage}

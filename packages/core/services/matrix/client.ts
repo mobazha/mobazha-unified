@@ -706,6 +706,26 @@ class MatrixClientService {
         }
       };
 
+      // Read receipt events
+      matrixClient.on(sdk.RoomEvent.Receipt, (event, room) => {
+        if (!room) return;
+        const content = event.getContent();
+        for (const eventId of Object.keys(content)) {
+          const readers = content[eventId]?.['m.read'];
+          if (readers) {
+            for (const userId of Object.keys(readers)) {
+              if (userId !== this.config?.userId) {
+                matrixEvents.emit(MATRIX_EVENTS.READ_RECEIPT, {
+                  roomId: room.roomId,
+                  userId,
+                  eventId,
+                });
+              }
+            }
+          }
+        }
+      });
+
       matrixClient.on(sdk.ClientEvent.Sync, onSync);
 
       // 开始同步
@@ -1352,6 +1372,92 @@ class MatrixClientService {
   }
 
   /**
+   * Send an arbitrary file (image, audio, video, or generic file) to a room.
+   * Uploads to the Matrix content repository first, then sends the appropriate m.* message.
+   * Prefer {@link sendImage} for images when you want the dedicated image path.
+   */
+  async sendFile(roomId: string, file: File): Promise<MatrixMessage | null> {
+    if (!this.client) return null;
+
+    const localId = `local_${Date.now()}`;
+    matrixEvents.emit(MATRIX_EVENTS.MESSAGE_SENDING, { localId, roomId });
+
+    try {
+      const sdk = await import('matrix-js-sdk');
+      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+
+      const uploadResponse = await matrixClient.uploadContent(file, {
+        type: file.type,
+      });
+
+      const mxcUrl =
+        typeof uploadResponse === 'string'
+          ? uploadResponse
+          : (uploadResponse as { content_uri: string }).content_uri;
+
+      const body = file.name || 'file';
+      const info = { mimetype: file.type, size: file.size };
+
+      let messageType: MessageType;
+      let response: { event_id: string };
+
+      if (file.type.startsWith('image/')) {
+        messageType = 'image';
+        response = await matrixClient.sendMessage(roomId, {
+          msgtype: sdk.MsgType.Image,
+          body,
+          url: mxcUrl,
+          info,
+        });
+      } else if (file.type.startsWith('audio/')) {
+        messageType = 'audio';
+        response = await matrixClient.sendMessage(roomId, {
+          msgtype: sdk.MsgType.Audio,
+          body,
+          url: mxcUrl,
+          info,
+        });
+      } else if (file.type.startsWith('video/')) {
+        messageType = 'video';
+        response = await matrixClient.sendMessage(roomId, {
+          msgtype: sdk.MsgType.Video,
+          body,
+          url: mxcUrl,
+          info,
+        });
+      } else {
+        messageType = 'file';
+        response = await matrixClient.sendMessage(roomId, {
+          msgtype: sdk.MsgType.File,
+          body,
+          url: mxcUrl,
+          info,
+        });
+      }
+
+      const message: MatrixMessage = {
+        id: response.event_id,
+        localId,
+        roomId,
+        sender: this.config!.userId!,
+        content: file.name || 'file',
+        type: messageType,
+        timestamp: Date.now(),
+        status: MESSAGE_STATUS.SENT,
+        attachments: [{ url: mxcUrl, filename: file.name, mimetype: file.type, size: file.size }],
+      };
+
+      matrixEvents.emit(MATRIX_EVENTS.MESSAGE_SENT, message);
+      this._scheduleKeyBackup();
+      return message;
+    } catch (error) {
+      console.error('[Matrix] Send file failed:', error);
+      matrixEvents.emit(MATRIX_EVENTS.MESSAGE_FAILED, { localId, roomId, error });
+      return null;
+    }
+  }
+
+  /**
    * 调度密钥备份（防抖，避免频繁备份）
    */
   private _scheduleKeyBackup(): void {
@@ -1927,6 +2033,30 @@ class MatrixClientService {
     } catch (error) {
       console.error('[Matrix] Mark room as read failed:', error);
       return false;
+    }
+  }
+
+  async getReadReceiptForRoom(roomId: string): Promise<Record<string, string>> {
+    if (!this.client) return {};
+
+    try {
+      const sdk = await import('matrix-js-sdk');
+      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const room = matrixClient.getRoom(roomId);
+      if (!room) return {};
+
+      const receipts: Record<string, string> = {};
+      const members = room.getJoinedMembers();
+      for (const member of members) {
+        const receipt = room.getReadReceiptForUserId(member.userId);
+        if (receipt?.eventId) {
+          receipts[member.userId] = receipt.eventId;
+        }
+      }
+      return receipts;
+    } catch (error) {
+      console.warn('[Matrix] Get read receipts failed:', error);
+      return {};
     }
   }
 
