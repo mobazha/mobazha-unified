@@ -211,11 +211,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const displayRooms = useMemo(() => {
     return rooms.map(room => {
       const displayRoom = toDisplayRoom(room, defaultRoomName);
-      // 更新在线状态
       if (room.isDirect && room.members?.length) {
         const otherMember = room.members.find(m => m.userId !== currentUserId);
         if (otherMember) {
-          displayRoom.isOnline = userPresence[otherMember.userId] === 'online';
+          const presence = userPresence[otherMember.userId];
+          if (presence !== undefined) {
+            displayRoom.isOnline = presence === 'online';
+          }
         }
       }
       return displayRoom;

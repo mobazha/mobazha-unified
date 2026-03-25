@@ -1590,6 +1590,11 @@ class MatrixClientService {
         invite: [userId],
         name: displayName,
         preset: sdk.Preset.TrustedPrivateChat,
+        power_level_content_override: {
+          events: {
+            'org.mobazha.member_peerid': 0,
+          },
+        },
       });
 
       // 更新 m.direct 账户数据
@@ -2213,12 +2218,48 @@ class MatrixClientService {
   /**
    * Write own peerID into room state as `org.mobazha.member_peerid`.
    * Other users read this to resolve Matrix userId → Mobazha peerID.
+   * Checks power levels first to avoid 403 spam on rooms we didn't create.
    */
   async setMyPeerIDInRoom(roomId: string): Promise<void> {
     if (!this.client || !this.currentPeerID || !this.config?.userId) return;
     try {
       const sdk = await import('matrix-js-sdk');
       const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+
+      const room = matrixClient.getRoom(roomId);
+      if (room) {
+        const state = (
+          room as { currentState?: { getStateEvents?: (t: string, k?: string) => unknown } }
+        ).currentState;
+        if (state?.getStateEvents) {
+          // Check if we already wrote the same value (skip redundant writes)
+          const existing = state.getStateEvents(
+            'org.mobazha.member_peerid',
+            this.config.userId
+          ) as {
+            getContent?: () => { peer_id?: string };
+          } | null;
+          if (existing?.getContent?.().peer_id === this.currentPeerID) return;
+
+          // Check power level before attempting (avoid 403 on rooms we didn't create)
+          const plEvent = state.getStateEvents('m.room.power_levels', '') as {
+            getContent?: () => {
+              users?: Record<string, number>;
+              users_default?: number;
+              state_default?: number;
+              events?: Record<string, number>;
+            };
+          } | null;
+          if (plEvent?.getContent) {
+            const pl = plEvent.getContent();
+            const myLevel = pl.users?.[this.config.userId] ?? pl.users_default ?? 0;
+            const requiredLevel =
+              pl.events?.['org.mobazha.member_peerid'] ?? pl.state_default ?? 50;
+            if (myLevel < requiredLevel) return;
+          }
+        }
+      }
+
       await matrixClient.sendStateEvent(
         roomId,
         'org.mobazha.member_peerid' as any,

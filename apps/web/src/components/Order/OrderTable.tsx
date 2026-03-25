@@ -27,7 +27,7 @@ export interface OrderTableProps {
   /** 查看详情回调 */
   onViewDetails: (orderId: string) => void;
   /** 联系对方回调 */
-  onContact?: (peerId: string) => void;
+  onContact?: (peerId: string, displayName?: string) => void;
   /** 接受订单回调 */
   onAccept?: (orderId: string, paymentCoin?: string) => void;
   /** 拒绝订单回调 */
