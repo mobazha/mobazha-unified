@@ -1242,6 +1242,7 @@ export const fr: TranslationResource = {
     online: 'En ligne',
     offline: 'Hors ligne',
     offlineHint: 'Chat déconnecté. Reconnexion en cours…',
+    deleteFailed: 'Échec de la suppression du message',
     lastSeen: 'Vu il y a {{time}}',
     typing: 'écrit...',
     encrypted: 'Messages chiffrés de bout en bout',

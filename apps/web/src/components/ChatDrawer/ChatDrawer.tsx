@@ -64,7 +64,9 @@ function toDisplayMessage(msg: MatrixMessage): Message {
     timestamp: safeTimestamp(msg.timestamp),
     status: msg.status,
     isSystem: msg.isSystem,
-    type: msg.type === 'image' ? 'image' : msg.type === 'file' ? 'file' : 'text',
+    type: (['image', 'file', 'audio', 'video'] as const).includes(msg.type as never)
+      ? (msg.type as 'image' | 'file' | 'audio' | 'video')
+      : 'text',
     attachments: msg.attachments?.map(a => ({
       url: a.url,
       filename: a.filename,
@@ -385,6 +387,26 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, allMessages, onSendMessage]
   );
 
+  // 删除消息（redact）
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!currentRoomId) return;
+      try {
+        await matrixClient.redactEvent(currentRoomId, messageId);
+        const removeMessage = useChatStore.getState().removeMessage;
+        removeMessage(currentRoomId, messageId);
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to delete message:', err);
+        toast({
+          title: t('common.error'),
+          description: t('chat.deleteFailed'),
+          variant: 'destructive',
+        });
+      }
+    },
+    [currentRoomId, toast, t]
+  );
+
   // 切换展开/收缩
   const toggleExpand = useCallback(() => {
     setDrawerExpanded(!drawerExpanded);
@@ -547,6 +569,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           onSendImage={file => handleSendImage(file)}
           onTyping={isTyping => matrixClient.sendTyping(currentRoomId, isTyping)}
           onRetryMessage={handleRetryMessage}
+          onDeleteMessage={handleDeleteMessage}
           isConnected={isConnected}
           onLoadMore={handleLoadMore}
           hasMoreMessages={hasMoreMessages[currentRoomId] ?? true}
