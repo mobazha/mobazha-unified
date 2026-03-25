@@ -728,6 +728,11 @@ export const useUserStore = create<UserState>()(
               set({
                 profile: profile ? { ...profile, ...updates } : null,
               });
+              if (updates.name) {
+                import('../services/matrix/client')
+                  .then(({ matrixClient }) => matrixClient.setDisplayName(updates.name!))
+                  .catch(() => {});
+              }
               return true;
             }
 

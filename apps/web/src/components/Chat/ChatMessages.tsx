@@ -20,6 +20,16 @@ import {
   SmilePlus,
 } from 'lucide-react';
 import { useI18n, useAuthenticatedImage } from '@mobazha/core';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export interface Message {
   id: string;
@@ -243,14 +253,18 @@ interface ChatMediaProps {
   onRetry?: () => void;
 }
 
-const ChatImageContent: React.FC<ChatMediaProps> = React.memo(
-  ({ attachment, isOwn, status, uploadProgress, onRetry }) => {
+const ChatImageContent: React.FC<ChatMediaProps & { onPreview?: (src: string) => void }> =
+  React.memo(({ attachment, isOwn, status, uploadProgress, onRetry, onPreview }) => {
     const displaySrc = useResolvedMediaUrl(attachment.thumbnailUrl || attachment.url);
     const fullSrc = useResolvedMediaUrl(attachment.url);
 
     return (
       <div className="relative">
-        <a href={fullSrc || '#'} target="_blank" rel="noopener noreferrer" className="block">
+        <button
+          type="button"
+          onClick={() => fullSrc && onPreview?.(fullSrc)}
+          className="block cursor-zoom-in"
+        >
           <img
             src={displaySrc || ''}
             alt={attachment.filename || 'Image'}
@@ -259,7 +273,7 @@ const ChatImageContent: React.FC<ChatMediaProps> = React.memo(
             }`}
             loading="lazy"
           />
-        </a>
+        </button>
         {status === 'sending' && uploadProgress != null && uploadProgress < 100 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
             <div className="flex flex-col items-center gap-1">
@@ -301,8 +315,7 @@ const ChatImageContent: React.FC<ChatMediaProps> = React.memo(
         )}
       </div>
     );
-  }
-);
+  });
 ChatImageContent.displayName = 'ChatImageContent';
 
 const ChatFileContent: React.FC<ChatMediaProps & { formatFileSize: (bytes?: number) => string }> =
@@ -471,7 +484,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const [reactionPickerMsgId, setReactionPickerMsgId] = useState<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -601,6 +617,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   }, []);
 
   const handleTouchStart = useCallback((msgId: string) => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
     longPressTimer.current = setTimeout(() => {
       setLongPressMenuId(msgId);
     }, 500);
@@ -1072,13 +1089,43 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                           className={`absolute top-0 ${isOwn ? '-left-24' : '-right-24'} hidden md:group-hover:flex items-center gap-0.5 z-10`}
                         >
                           {onReaction && (
-                            <button
-                              onClick={() => onReaction(message.id, '👍')}
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
-                              title={t('chat.react')}
-                            >
-                              <SmilePlus className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="relative">
+                              <button
+                                onClick={() =>
+                                  setReactionPickerMsgId(prev =>
+                                    prev === message.id ? null : message.id
+                                  )
+                                }
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                                title={t('chat.react')}
+                              >
+                                <SmilePlus className="w-3.5 h-3.5" />
+                              </button>
+                              {reactionPickerMsgId === message.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setReactionPickerMsgId(null)}
+                                  />
+                                  <div
+                                    className={`absolute ${isOwn ? 'right-0' : 'left-0'} top-8 z-50 flex items-center gap-0.5 px-1.5 py-1 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 duration-150`}
+                                  >
+                                    {QUICK_REACTIONS.map(emoji => (
+                                      <button
+                                        key={emoji}
+                                        onClick={() => {
+                                          onReaction(message.id, emoji);
+                                          setReactionPickerMsgId(null);
+                                        }}
+                                        className="w-8 h-8 flex items-center justify-center text-base rounded-lg hover:bg-muted/60 transition-colors"
+                                      >
+                                        {emoji}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           )}
                           <button
                             onClick={() => handleCopy(message)}
@@ -1098,7 +1145,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                           )}
                           {isOwn && onDeleteMessage && (
                             <button
-                              onClick={() => onDeleteMessage(message.id)}
+                              onClick={() => setDeleteConfirmId(message.id)}
                               className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-error hover:bg-error/10 transition-colors"
                               title={t('common.delete')}
                             >
@@ -1156,7 +1203,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                             {isOwn && onDeleteMessage && (
                               <button
                                 onClick={() => {
-                                  onDeleteMessage(message.id);
+                                  setDeleteConfirmId(message.id);
                                   setLongPressMenuId(null);
                                 }}
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-error hover:bg-error/10 transition-colors"
@@ -1176,6 +1223,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                         status={message.status}
                         uploadProgress={message.uploadProgress}
                         onRetry={onRetryMessage ? () => onRetryMessage(message.id) : undefined}
+                        onPreview={setLightboxSrc}
                       />
                     ) : message.type === 'file' && message.attachments?.[0]?.url ? (
                       <ChatFileContent
@@ -1355,6 +1403,55 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </button>
         </HStack>
       </div>
+
+      {/* Image lightbox */}
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setLightboxSrc(null)}
+        >
+          <button
+            onClick={() => setLightboxSrc(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={lightboxSrc}
+            alt="Preview"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        open={!!deleteConfirmId}
+        onOpenChange={open => !open && setDeleteConfirmId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('chat.deleteMessageTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('chat.deleteMessageDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-error text-white hover:bg-error/90"
+              onClick={() => {
+                if (deleteConfirmId && onDeleteMessage) {
+                  onDeleteMessage(deleteConfirmId);
+                }
+                setDeleteConfirmId(null);
+              }}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

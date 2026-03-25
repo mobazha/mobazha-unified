@@ -1196,6 +1196,8 @@ export const zh: TranslationResource = {
     offline: '离线',
     offlineHint: '聊天已断开连接，正在重连…',
     deleteFailed: '删除消息失败',
+    deleteMessageTitle: '确定删除消息？',
+    deleteMessageDescription: '消息将被永久删除，无法恢复。',
     editFailed: '编辑消息失败',
     edited: '(已编辑)',
     react: '回应',

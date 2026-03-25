@@ -2134,6 +2134,16 @@ class MatrixClientService {
   }
 
   /**
+   * Sync profile display name to Matrix account
+   */
+  async setDisplayName(displayName: string): Promise<void> {
+    if (!this.client) return;
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    await matrixClient.setDisplayName(displayName);
+  }
+
+  /**
    * 按类型获取房间
    */
   async getRoomsByType(

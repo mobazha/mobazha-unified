@@ -1321,6 +1321,8 @@ export const en: TranslationResource = {
     offline: 'Offline',
     offlineHint: 'Chat is disconnected. Reconnecting...',
     deleteFailed: 'Failed to delete message',
+    deleteMessageTitle: 'Delete message?',
+    deleteMessageDescription: 'This message will be permanently deleted and cannot be recovered.',
     editFailed: 'Failed to edit message',
     edited: '(edited)',
     react: 'React',
