@@ -1319,19 +1319,27 @@ class MatrixClientService {
    * Send an image message to a room.
    * Uploads the file to the Matrix content repository first, then sends an m.image event.
    */
-  async sendImage(roomId: string, file: File): Promise<MatrixMessage | null> {
+  async sendImage(
+    roomId: string,
+    file: File,
+    externalLocalId?: string
+  ): Promise<MatrixMessage | null> {
     if (!this.client) return null;
 
-    const localId = `local_${Date.now()}`;
+    const localId = externalLocalId || `local_${Date.now()}`;
     matrixEvents.emit(MATRIX_EVENTS.MESSAGE_SENDING, { localId, roomId });
 
     try {
       const sdk = await import('matrix-js-sdk');
       const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
 
-      // Upload file to Matrix content repository
       const uploadResponse = await matrixClient.uploadContent(file, {
         type: file.type,
+        progressHandler: (progress: { loaded: number; total: number }) => {
+          const percent =
+            progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0;
+          matrixEvents.emit(MATRIX_EVENTS.UPLOAD_PROGRESS, { localId, roomId, progress: percent });
+        },
       });
 
       const mxcUrl =
@@ -1339,7 +1347,7 @@ class MatrixClientService {
           ? uploadResponse
           : (uploadResponse as { content_uri: string }).content_uri;
 
-      await matrixClient.sendMessage(roomId, {
+      const response = await matrixClient.sendMessage(roomId, {
         msgtype: sdk.MsgType.Image,
         body: file.name || 'image',
         url: mxcUrl,
@@ -1350,7 +1358,7 @@ class MatrixClientService {
       });
 
       const message: MatrixMessage = {
-        id: localId,
+        id: (response as { event_id: string }).event_id,
         localId,
         roomId,
         sender: this.config!.userId!,
@@ -1376,10 +1384,14 @@ class MatrixClientService {
    * Uploads to the Matrix content repository first, then sends the appropriate m.* message.
    * Prefer {@link sendImage} for images when you want the dedicated image path.
    */
-  async sendFile(roomId: string, file: File): Promise<MatrixMessage | null> {
+  async sendFile(
+    roomId: string,
+    file: File,
+    externalLocalId?: string
+  ): Promise<MatrixMessage | null> {
     if (!this.client) return null;
 
-    const localId = `local_${Date.now()}`;
+    const localId = externalLocalId || `local_${Date.now()}`;
     matrixEvents.emit(MATRIX_EVENTS.MESSAGE_SENDING, { localId, roomId });
 
     try {
@@ -1388,6 +1400,11 @@ class MatrixClientService {
 
       const uploadResponse = await matrixClient.uploadContent(file, {
         type: file.type,
+        progressHandler: (progress: { loaded: number; total: number }) => {
+          const percent =
+            progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0;
+          matrixEvents.emit(MATRIX_EVENTS.UPLOAD_PROGRESS, { localId, roomId, progress: percent });
+        },
       });
 
       const mxcUrl =
@@ -2072,6 +2089,51 @@ class MatrixClientService {
   }
 
   /**
+   * 编辑消息（Matrix m.replace）
+   */
+  async editMessage(roomId: string, originalEventId: string, newContent: string): Promise<void> {
+    if (!this.client) throw new Error('Matrix client not initialized');
+
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    // SDK types don't cover m.replace relation; cast to bypass
+    await (matrixClient as any).sendMessage(roomId, {
+      msgtype: sdk.MsgType.Text,
+      body: `* ${newContent}`,
+      'm.new_content': {
+        msgtype: sdk.MsgType.Text,
+        body: newContent,
+      },
+      'm.relates_to': {
+        rel_type: 'm.replace',
+        event_id: originalEventId,
+      },
+    });
+    matrixEvents.emit(MATRIX_EVENTS.MESSAGE_EDITED, {
+      roomId,
+      eventId: originalEventId,
+      newContent,
+    });
+  }
+
+  /**
+   * 发送 Emoji 回应（Matrix m.reaction）
+   */
+  async sendReaction(roomId: string, eventId: string, emoji: string): Promise<void> {
+    if (!this.client) throw new Error('Matrix client not initialized');
+
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    await (matrixClient as any).sendEvent(roomId, 'm.reaction', {
+      'm.relates_to': {
+        rel_type: 'm.annotation',
+        event_id: eventId,
+        key: emoji,
+      },
+    });
+  }
+
+  /**
    * 按类型获取房间
    */
   async getRoomsByType(
@@ -2106,15 +2168,48 @@ class MatrixClientService {
       }
     });
 
-    // 新消息（包括加密和未加密）
+    // 新消息（包括加密和未加密）+ 编辑 + reaction
     matrixClient.on(sdk.RoomEvent.Timeline, (event, room, toStartOfTimeline) => {
       const eventType = event.getType();
 
-      // 跳过历史消息加载（toStartOfTimeline 为 true 表示是历史消息）
       if (toStartOfTimeline) return;
+      if (!room) return;
 
-      // 只处理消息类型（包括加密消息）
-      if (!room || (eventType !== 'm.room.message' && eventType !== 'm.room.encrypted')) return;
+      // Handle m.reaction events
+      if (eventType === 'm.reaction') {
+        const content = event.getContent() as Record<string, unknown>;
+        const relatesTo = content['m.relates_to'] as
+          | { rel_type?: string; event_id?: string; key?: string }
+          | undefined;
+        if (relatesTo?.rel_type === 'm.annotation' && relatesTo.event_id && relatesTo.key) {
+          matrixEvents.emit(MATRIX_EVENTS.MESSAGE_REACTION, {
+            roomId: room.roomId,
+            eventId: relatesTo.event_id,
+            emoji: relatesTo.key,
+            sender: event.getSender(),
+          });
+        }
+        return;
+      }
+
+      if (eventType !== 'm.room.message' && eventType !== 'm.room.encrypted') return;
+
+      // Handle m.replace (message edit)
+      const content = event.getContent() as Record<string, unknown>;
+      const relatesTo = content['m.relates_to'] as
+        | { rel_type?: string; event_id?: string }
+        | undefined;
+      if (relatesTo?.rel_type === 'm.replace' && relatesTo.event_id) {
+        const newContent = content['m.new_content'] as { body?: string } | undefined;
+        if (newContent?.body) {
+          matrixEvents.emit(MATRIX_EVENTS.MESSAGE_EDITED, {
+            roomId: room.roomId,
+            eventId: relatesTo.event_id,
+            newContent: newContent.body,
+          });
+        }
+        return;
+      }
 
       const eventId = event.getId();
       if (!eventId || this.processedMessageIds.has(eventId)) return;
