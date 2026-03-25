@@ -1378,7 +1378,7 @@ export const en: TranslationResource = {
       placeholder: 'Enter Peer ID (e.g. Qm...)',
       start: 'Start Chat',
       errorEmpty: 'Please enter a Peer ID',
-      errorInvalid: 'Invalid Peer ID format',
+      errorInvalid: 'Invalid Peer ID format. It should start with "Qm" or "12D3Koo".',
     },
   },
 

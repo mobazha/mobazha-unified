@@ -70,6 +70,9 @@ function toDisplayMessage(msg: MatrixMessage): Message {
       filename: a.filename,
       mimetype: a.mimetype,
       size: a.size,
+      width: a.width,
+      height: a.height,
+      thumbnailUrl: a.thumbnailUrl,
     })),
   };
 }
@@ -282,7 +285,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     loadMessages();
   }, [currentRoomId, setMessages, updateRoom]);
 
-  // 加载更多历史消息
+  // 加载更多历史消息（向上滚动分页）
   const handleLoadMore = useCallback(async () => {
     if (!currentRoomId) return;
     const isAlreadyLoading = loadingMessages[currentRoomId];
@@ -290,11 +293,11 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
     setLoadingMessages(currentRoomId, true);
     try {
-      const olderMessages = await matrixClient.getMessages(currentRoomId, 50);
+      const olderMessages = await matrixClient.loadOlderMessages(currentRoomId, 50);
       if (olderMessages.length > 0) {
         prependMessages(currentRoomId, olderMessages);
       }
-      setHasMoreMessages(currentRoomId, olderMessages.length >= 50);
+      setHasMoreMessages(currentRoomId, olderMessages.length > 0);
     } catch (err) {
       console.warn('[ChatDrawer] Failed to load more messages:', err);
     } finally {
