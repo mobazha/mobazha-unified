@@ -197,7 +197,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   }, [rooms, currentRoomId]);
 
   const displayRooms = useMemo(() => {
-    return rooms.map(room => {
+    const sorted = [...rooms].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    return sorted.map(room => {
       const displayRoom = toDisplayRoom(room, defaultRoomName);
       if (room.isDirect && room.members?.length) {
         const otherMember = room.members.find(m => m.userId !== currentUserId);

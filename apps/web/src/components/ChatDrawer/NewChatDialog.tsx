@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useI18n, useChatStore } from '@mobazha/core';
+import { useI18n, useChatStore, useUserStore } from '@mobazha/core';
 import { searchProfiles, type SearchedUser } from '@mobazha/core/services/api/products';
 import { Search, Loader2, User, MapPin, Star, Package } from 'lucide-react';
 
@@ -28,6 +28,7 @@ interface NewChatDialogProps {
 export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange }) => {
   const { t } = useI18n();
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
+  const myPeerID = useUserStore(state => state.profile?.peerID);
 
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
@@ -59,7 +60,10 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
       try {
         const result = await searchProfiles({ query: trimmed, pageSize: 10 });
         if (seq === searchSeqRef.current) {
-          setSearchResults(result.users);
+          const filtered = myPeerID
+            ? result.users.filter(u => u.peerID !== myPeerID)
+            : result.users;
+          setSearchResults(filtered);
         }
       } catch {
         if (seq === searchSeqRef.current) {
@@ -77,7 +81,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
         clearTimeout(debounceRef.current);
       }
     };
-  }, [trimmed, isPeerID, open]);
+  }, [trimmed, isPeerID, open, myPeerID]);
 
   const handleSelectUser = useCallback(
     (peerID: string, displayName?: string) => {

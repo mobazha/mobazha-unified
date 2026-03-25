@@ -194,8 +194,9 @@ export async function syncProfileToMatrix(displayName: string, avatarHash?: stri
 // ============= 店铺空间 API =============
 
 export interface StoreSpaceCreateResponse {
-  spaceId: string;
-  generalRoomId: string;
+  spaceID: string;
+  communityRoomID: string;
+  storeID: string;
 }
 
 /**
