@@ -60,10 +60,13 @@ export const Header: React.FC = () => {
   const peerID = profile?.peerID;
   const handleCopyPeerID = useCallback(() => {
     if (!peerID) return;
-    navigator.clipboard.writeText(peerID).then(() => {
-      setPeerIdCopied(true);
-      setTimeout(() => setPeerIdCopied(false), 2000);
-    });
+    navigator.clipboard
+      .writeText(peerID)
+      .then(() => {
+        setPeerIdCopied(true);
+        setTimeout(() => setPeerIdCopied(false), 2000);
+      })
+      .catch(() => {});
   }, [peerID]);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const [searchQuery, setSearchQuery] = useState('');
