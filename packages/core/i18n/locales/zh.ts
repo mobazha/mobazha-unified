@@ -1223,6 +1223,7 @@ export const zh: TranslationResource = {
     sendImageFailed: '发送图片失败',
     sendFileFailed: '发送文件失败',
     chatFileTooLarge: '文件过大，最大允许 50MB。',
+    dropFilesHere: '拖放文件到此处发送',
     lastSeen: '{{time}} 前在线',
     typing: '正在输入...',
     encrypted: '端到端加密',

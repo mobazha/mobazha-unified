@@ -1224,6 +1224,7 @@ export const ja: TranslationResource = {
     sendImageFailed: '画像の送信に失敗しました',
     sendFileFailed: 'ファイルの送信に失敗しました',
     chatFileTooLarge: 'ファイルが大きすぎます。最大サイズは50MBです。',
+    dropFilesHere: 'ファイルをここにドロップして送信',
     lastSeen: '{{time}}前にオンライン',
     typing: '入力中...',
     encrypted: 'エンドツーエンド暗号化',

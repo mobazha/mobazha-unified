@@ -1349,6 +1349,7 @@ export const en: TranslationResource = {
     sendImageFailed: 'Failed to send image',
     sendFileFailed: 'Failed to send file',
     chatFileTooLarge: 'File is too large. Maximum size is 50MB.',
+    dropFilesHere: 'Drop files here to send',
     lastSeen: 'Last seen {{time}}',
     typing: 'typing...',
     encrypted: 'End-to-end encrypted',

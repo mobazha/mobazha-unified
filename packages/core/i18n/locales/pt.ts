@@ -1240,6 +1240,7 @@ export const pt: TranslationResource = {
     sendImageFailed: 'Falha ao enviar a imagem',
     sendFileFailed: 'Falha ao enviar o arquivo',
     chatFileTooLarge: 'O arquivo é muito grande. O tamanho máximo é 50 MB.',
+    dropFilesHere: 'Solte os arquivos aqui para enviar',
     lastSeen: 'Visto há {{time}}',
     typing: 'digitando...',
     encrypted: 'Criptografia de ponta a ponta',

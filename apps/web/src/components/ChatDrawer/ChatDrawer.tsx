@@ -624,6 +624,50 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, currentUserId, toast, t]
   );
 
+  // Drag-and-drop event handlers
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current++;
+      if (e.dataTransfer.types.includes('Files') && currentRoomId) {
+        setIsDragging(true);
+      }
+    },
+    [currentRoomId]
+  );
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      dragCounterRef.current = 0;
+
+      if (!currentRoomId) return;
+
+      const files = Array.from(e.dataTransfer.files);
+      for (const file of files) {
+        handleSendFile(file);
+      }
+    },
+    [currentRoomId, handleSendFile]
+  );
+
   // 重发失败消息
   const handleRetryMessage = useCallback(
     async (messageId: string) => {
@@ -1100,7 +1144,37 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         </SheetHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">{renderView()}</div>
+        <div
+          className="flex-1 overflow-hidden relative"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {renderView()}
+
+          {/* Drop overlay */}
+          {isDragging && currentRoomId && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-primary/5 backdrop-blur-[2px] border-2 border-dashed border-primary/40 rounded-lg m-2 transition-all duration-200">
+              <div className="flex flex-col items-center gap-3 text-primary">
+                <svg
+                  className="w-12 h-12 opacity-80"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{t('chat.dropFilesHere')}</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Room Settings Panel */}
         {showRoomSettings && currentRoom && (
